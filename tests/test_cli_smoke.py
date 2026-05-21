@@ -116,6 +116,38 @@ def test_cli_eval_missing_index_returns_error_without_traceback(tmp_path, capsys
     assert "Traceback" not in captured.err
 
 
+def test_cli_index_malformed_skill_frontmatter_returns_error_without_traceback(tmp_path, capsys):
+    skills_root = tmp_path / "skills"
+    skill_dir = skills_root / "coding" / "bad-skill"
+    skill_dir.mkdir(parents=True)
+    skill_path = skill_dir / "SKILL.md"
+    skill_path.write_text(
+        "---\n"
+        "name: Bad Skill\n"
+        "description: [unterminated\n"
+        "---\n"
+        "# Bad Skill\n",
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "index",
+            "--skills-path",
+            str(skills_root),
+            "--output",
+            str(tmp_path / "index" / "skills.json"),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "error:" in captured.err
+    assert "malformed skill frontmatter" in captured.err
+    assert str(skill_path) in captured.err
+    assert "Traceback" not in captured.err
+
+
 def test_cli_report_missing_results_returns_error_without_traceback(tmp_path, capsys):
     run_dir = tmp_path / "run"
     run_dir.mkdir()

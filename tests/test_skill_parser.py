@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from hermes_skilleval.skill_parser import parse_skill_file, scan_skills
 
 
@@ -42,6 +44,29 @@ def test_parse_skill_with_crlf_frontmatter(tmp_path):
         "# CRLF Skill Body",
         "This body content should survive.",
     ]
+
+
+def test_parse_skill_rejects_malformed_frontmatter_with_path_context(tmp_path):
+    skills_root = tmp_path / "skills"
+    skill_dir = skills_root / "coding" / "bad-skill"
+    skill_dir.mkdir(parents=True)
+    skill_path = skill_dir / "SKILL.md"
+    skill_path.write_text(
+        "---\n"
+        "name: Bad Skill\n"
+        "description: [unterminated\n"
+        "---\n"
+        "# Bad Skill\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        parse_skill_file(skill_path, skills_root)
+
+    message = str(exc_info.value)
+    assert "malformed skill frontmatter" in message
+    assert str(skill_path) in message
+    assert "SKILL.md" in message
 
 
 def test_parse_skill_without_frontmatter_uses_fallbacks():

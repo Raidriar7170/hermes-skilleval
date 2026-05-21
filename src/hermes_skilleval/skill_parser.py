@@ -29,7 +29,7 @@ def parse_skill_file(path: Path | str, skills_root: Path | str) -> Skill:
     skill_path = Path(path)
     root = Path(skills_root)
     text = skill_path.read_text(encoding="utf-8")
-    metadata, body = _split_frontmatter(text)
+    metadata, body = _split_frontmatter(text, skill_path)
 
     skill_id = _skill_id(skill_path)
     name = str(metadata.get("name") or _fallback_name(body, skill_id))
@@ -49,12 +49,15 @@ def parse_skill_file(path: Path | str, skills_root: Path | str) -> Skill:
     )
 
 
-def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
+def _split_frontmatter(text: str, path: Path) -> tuple[dict[str, Any], str]:
     match = FRONTMATTER_RE.match(text)
     if not match:
         return {}, text
     raw_meta, body = match.groups()
-    loaded = yaml.safe_load(raw_meta) or {}
+    try:
+        loaded = yaml.safe_load(raw_meta) or {}
+    except yaml.YAMLError as exc:
+        raise ValueError(f"malformed skill frontmatter: {path}: {exc}") from exc
     if not isinstance(loaded, dict):
         return {}, body
     return loaded, body
