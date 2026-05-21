@@ -1,9 +1,113 @@
 from __future__ import annotations
 
-import sys
+import argparse
+import json
+from pathlib import Path
+from typing import Sequence
+
+from hermes_skilleval.metrics import (
+    mean_reciprocal_rank,
+    ndcg_at_k,
+    negative_hit_rate,
+    precision_at_k,
+    recall_at_k,
+)
+from hermes_skilleval.report import write_markdown_report
+from hermes_skilleval.routers.hybrid import HybridRouter
+from hermes_skilleval.routers.keyword import KeywordRouter
+from hermes_skilleval.skill_index import load_skill_index, save_skill_index
+from hermes_skilleval.skill_parser import scan_skills
+from hermes_skilleval.storage import ensure_dir
+from hermes_skilleval.task_loader import load_tasks
 
 
-def main(argv: list[str] | None = None) -> int:
-    del argv
-    print("skilleval CLI not implemented yet.", file=sys.stderr)
-    return 1
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    if args.command is None:
+        parser.print_help()
+        return 1
+
+    args.handler(args)
+    return 0
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="skilleval")
+    subparsers = parser.add_subparsers(dest="command")
+
+    index_parser = subparsers.add_parser("index", help="scan skills and write an index")
+    index_parser.add_argument("--skills-path", required=True)
+    index_parser.add_argument("--output", default="index/skills.json")
+    index_parser.set_defaults(handler=_run_index)
+
+    eval_parser = subparsers.add_parser("eval", help="evaluate a router against tasks")
+    eval_parser.add_argument("--index", required=True)
+    eval_parser.add_argument("--tasks", required=True)
+    eval_parser.add_argument("--router", choices=["keyword", "hybrid"], default="keyword")
+    eval_parser.add_argument("--top-k", type=int, default=5)
+    eval_parser.add_argument("--output-dir", default="runs/latest")
+    eval_parser.set_defaults(handler=_run_eval)
+
+    report_parser = subparsers.add_parser("report", help="write a markdown run report")
+    report_parser.add_argument("--runs", required=True)
+    report_parser.set_defaults(handler=_run_report)
+
+    return parser
+
+
+def _run_index(args: argparse.Namespace) -> None:
+    skills = scan_skills(args.skills_path)
+    save_skill_index(skills, args.output)
+    print(f"Indexed {len(skills)} skills to {args.output}")
+
+
+def _run_eval(args: argparse.Namespace) -> None:
+    skills = load_skill_index(args.index)
+    tasks = load_tasks(args.tasks)
+    router = HybridRouter() if args.router == "hybrid" else KeywordRouter()
+    output_dir = ensure_dir(args.output_dir)
+    results_path = output_dir / "results.jsonl"
+
+    with results_path.open("w", encoding="utf-8") as file:
+        for task in tasks:
+            result = router.route(task, skills, args.top_k)
+            file.write(json.dumps(_result_record(task, result), sort_keys=True) + "\n")
+
+    print(f"Wrote {len(tasks)} results to {results_path}")
+
+
+def _run_report(args: argparse.Namespace) -> None:
+    run_dir = Path(args.runs)
+    results_path = run_dir / "results.jsonl"
+    report_path = run_dir / "report.md"
+    write_markdown_report(results_path, report_path)
+    print(f"Wrote report to {report_path}")
+
+
+def _result_record(task, result) -> dict[str, object]:
+    selected = result.selected_skill_ids
+    gold = task.gold_skills
+    negative = task.negative_skills
+    return {
+        "task_id": task.id,
+        "category": task.category,
+        "difficulty": task.difficulty,
+        "router": result.router,
+        "selected_skill_ids": selected,
+        "scores": result.scores,
+        "gold_skills": gold,
+        "negative_skills": negative,
+        "latency_ms": result.latency_ms,
+        "recall_at_1": recall_at_k(selected, gold, 1),
+        "recall_at_3": recall_at_k(selected, gold, 3),
+        "recall_at_5": recall_at_k(selected, gold, 5),
+        "precision_at_5": precision_at_k(selected, gold, 5),
+        "mrr": mean_reciprocal_rank(selected, gold),
+        "ndcg_at_5": ndcg_at_k(selected, gold, 5),
+        "negative_hit_rate": negative_hit_rate(selected, negative, 5),
+    }
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

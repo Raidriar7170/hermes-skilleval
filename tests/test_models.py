@@ -96,8 +96,8 @@ def test_metric_summary_dataclass_fields():
     assert summary.ndcg_at_5 == 0.75
 
 
-def test_cli_placeholder_main_contract(capsys):
+def test_cli_main_returns_one_and_prints_help_without_command(capsys):
     from hermes_skilleval.cli import main
 
     assert main([]) == 1
-    assert "CLI not implemented yet" in capsys.readouterr().err
+    assert "usage: skilleval" in capsys.readouterr().out
