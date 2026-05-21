@@ -38,8 +38,10 @@ def ndcg_at_k(selected: list[str], gold: list[str], k: int) -> float:
     if not gold_set:
         return 0.0
     dcg = 0.0
+    credited_gold: set[str] = set()
     for index, skill_id in enumerate(selected[:k], start=1):
-        if skill_id in gold_set:
+        if skill_id in gold_set and skill_id not in credited_gold:
+            credited_gold.add(skill_id)
             dcg += 1.0 / math.log2(index + 1)
     ideal_hits = min(len(gold_set), k)
     ideal = sum(1.0 / math.log2(index + 1) for index in range(1, ideal_hits + 1))
