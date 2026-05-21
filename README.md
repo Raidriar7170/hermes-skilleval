@@ -2,7 +2,7 @@
 
 Hermes SkillEval is an offline CLI harness for evaluating skill routing in Hermes-style agent skill libraries.
 
-The MVP indexes `skills/**/SKILL.md`, loads labeled benchmark tasks, compares routers, and writes reproducible JSONL and Markdown reports. It does not require Hermes Agent, network access, or an LLM API key.
+The MVP indexes `skills/**/SKILL.md`, loads labeled benchmark tasks, compares routers, and writes deterministic routing records with latency metadata and Markdown reports. It does not require Hermes Agent, network access, or an LLM API key.
 
 ## Quickstart
 

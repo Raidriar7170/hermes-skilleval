@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 
 import yaml
 
+
+DEFAULT_TASK_ROOT = Path(__file__).resolve().parents[1] / "benchmarks" / "tasks"
 
 TASKS = [
     ("coding-debugging-001", "coding", "easy", ["systematic-debugging", "test-driven-development"], ["songwriting-and-ai-music"], "A Python test suite is failing after a refactor. Reproduce the failure, identify the root cause, write a regression test, and implement the minimal fix."),
@@ -39,9 +42,13 @@ TASKS = [
 ]
 
 
-def main() -> None:
-    root = Path("benchmarks/tasks")
+def generate_tasks(root: Path) -> None:
     root.mkdir(parents=True, exist_ok=True)
+    task_ids = {task[0] for task in TASKS}
+    for child in root.iterdir():
+        if child.is_dir() and child.name not in task_ids:
+            shutil.rmtree(child)
+
     for task_id, category, difficulty, gold_skills, negative_skills, prompt in TASKS:
         task_dir = root / task_id
         task_dir.mkdir(parents=True, exist_ok=True)
@@ -58,6 +65,10 @@ def main() -> None:
             encoding="utf-8",
         )
         (task_dir / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
+
+
+def main(root: Path | None = None) -> None:
+    generate_tasks(root or DEFAULT_TASK_ROOT)
 
 
 if __name__ == "__main__":
