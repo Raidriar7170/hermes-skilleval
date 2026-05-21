@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -24,7 +25,9 @@ REQUIRED_FIELDS = {
 
 
 def write_markdown_report(results_path: Path | str, output_path: Path | str) -> None:
-    results = _read_results(Path(results_path))
+    results_path = Path(results_path)
+    results = _read_results(results_path)
+    _validate_single_router(results, results_path)
     router = results[0]["router"]
 
     rows = [_metric_row(record) for record in results]
@@ -73,6 +76,12 @@ def _read_results(path: Path) -> list[dict[str, Any]]:
     return records
 
 
+def _validate_single_router(records: list[dict[str, Any]], path: Path) -> None:
+    routers = sorted({record["router"] for record in records})
+    if len(routers) != 1:
+        raise ValueError(f"mixed routers in {path}: {', '.join(routers)}")
+
+
 def _validate_record(record: dict[str, Any], path: Path, line_number: int) -> None:
     missing = sorted(REQUIRED_FIELDS - record.keys())
     if missing:
@@ -90,8 +99,16 @@ def _validate_record(record: dict[str, Any], path: Path, line_number: int) -> No
         raise ValueError(
             f"fields 'task_id' and 'router' must be strings in {path} at line {line_number}"
         )
-    if not isinstance(record["latency_ms"], int | float):
+    if isinstance(record["latency_ms"], bool) or not isinstance(
+        record["latency_ms"], int | float
+    ):
         raise ValueError(f"field 'latency_ms' must be numeric in {path} at line {line_number}")
+    if not math.isfinite(float(record["latency_ms"])):
+        raise ValueError(f"field 'latency_ms' must be finite in {path} at line {line_number}")
+    if len(record["selected_skill_ids"]) != len(set(record["selected_skill_ids"])):
+        raise ValueError(
+            f"duplicate selected_skill_ids in {path} at line {line_number}"
+        )
 
 
 def _metric_row(record: dict[str, Any]) -> dict[str, float]:
@@ -138,7 +155,7 @@ def _render_report(
     lines = [
         "# Hermes SkillEval Report",
         "",
-        f"- Router: {router}",
+        f"- Router: {_escape_table_cell(router)}",
         f"- Records: {record_count}",
         "",
         "## Metrics",
@@ -159,7 +176,10 @@ def _render_report(
     ]
     if top_selected:
         lines.extend(["| Skill | Count |", "| --- | ---: |"])
-        lines.extend(f"| {skill_id} | {count} |" for skill_id, count in top_selected)
+        lines.extend(
+            f"| {_escape_table_cell(skill_id)} | {count} |"
+            for skill_id, count in top_selected
+        )
     else:
         lines.append("No selected skills.")
 
@@ -175,7 +195,7 @@ def _render_report(
             "| "
             + " | ".join(
                 [
-                    record["task_id"],
+                    _escape_table_cell(record["task_id"]),
                     _format_metric(row["recall@5"]),
                     _format_metric(row["negative_hit_rate"]),
                     _format_metric(row["latency_ms"]),
@@ -197,9 +217,9 @@ def _render_report(
                 "| "
                 + " | ".join(
                     [
-                        record["task_id"],
-                        ", ".join(record["selected_skill_ids"]),
-                        ", ".join(record["gold_skills"]),
+                        _escape_table_cell(record["task_id"]),
+                        _escape_table_cell(", ".join(record["selected_skill_ids"])),
+                        _escape_table_cell(", ".join(record["gold_skills"])),
                         _format_metric(row["recall@5"]),
                         _format_metric(row["negative_hit_rate"]),
                     ]
@@ -214,3 +234,7 @@ def _render_report(
 
 def _format_metric(value: float) -> str:
     return f"{value:.3f}"
+
+
+def _escape_table_cell(value: object) -> str:
+    return str(value).replace("\n", " ").replace("\r", " ").replace("|", "\\|")
