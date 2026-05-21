@@ -16,6 +16,8 @@ class KeywordRouter(SkillRouter):
     name = "keyword"
 
     def route(self, task: BenchmarkTask, skills: list[Skill], top_k: int) -> RouteResult:
+        if not isinstance(top_k, int) or top_k <= 0:
+            raise ValueError("top_k must be positive")
         if not skills:
             raise ValueError("skill index is empty")
         started = time.perf_counter()
@@ -55,7 +57,7 @@ def _score(query_terms: Counter[str], skill: Skill) -> float:
     overlap = set(query_terms) & set(skill_terms)
     weighted_overlap = sum(
         query_terms[term] * (1.0 + math.log1p(skill_terms[term]))
-        for term in overlap
+        for term in sorted(overlap)
     )
     category_boost = (
         0.5 if skill.category and skill.category.lower() in query_terms else 0.0
