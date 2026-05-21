@@ -9,7 +9,7 @@ import yaml
 from hermes_skilleval.models import Skill
 
 
-FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
+FRONTMATTER_RE = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n(.*)$", re.DOTALL)
 WORD_RE = re.compile(r"[A-Za-z0-9]+")
 
 

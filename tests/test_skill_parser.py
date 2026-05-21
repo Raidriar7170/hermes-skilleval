@@ -18,6 +18,32 @@ def test_parse_skill_with_frontmatter():
     assert skill.token_count_estimate > 0
 
 
+def test_parse_skill_with_crlf_frontmatter(tmp_path):
+    skills_root = tmp_path / "skills"
+    skill_dir = skills_root / "coding" / "crlf-skill"
+    skill_dir.mkdir(parents=True)
+    skill_path = skill_dir / "SKILL.md"
+    skill_path.write_bytes(
+        b"---\r\n"
+        b"name: CRLF Skill\r\n"
+        b"description: Handles Windows line endings.\r\n"
+        b"---\r\n"
+        b"# CRLF Skill Body\r\n"
+        b"This body content should survive.\r\n"
+    )
+
+    skill = parse_skill_file(skill_path, skills_root)
+
+    assert skill.id == "crlf-skill"
+    assert skill.name == "CRLF Skill"
+    assert skill.category == "coding"
+    assert skill.description == "Handles Windows line endings."
+    assert skill.body.splitlines() == [
+        "# CRLF Skill Body",
+        "This body content should survive.",
+    ]
+
+
 def test_parse_skill_without_frontmatter_uses_fallbacks():
     skill = parse_skill_file(
         FIXTURES / "creative" / "songwriting-and-ai-music" / "SKILL.md",
