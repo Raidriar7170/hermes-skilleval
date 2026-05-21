@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from hermes_skilleval.cli import main
+from hermes_skilleval.task_loader import load_tasks
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -24,6 +25,12 @@ EXPECTED_RESULT_KEYS = {
     "ndcg_at_5",
     "negative_hit_rate",
 }
+
+
+def test_builtin_benchmark_has_30_tasks():
+    tasks = load_tasks(Path("benchmarks/tasks"))
+
+    assert len(tasks) == 30
 
 
 def test_cli_index_eval_report_smoke(tmp_path):
