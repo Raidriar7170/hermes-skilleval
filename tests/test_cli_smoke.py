@@ -70,10 +70,89 @@ def test_cli_index_eval_report_smoke(tmp_path):
         for line in results_path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
-    assert records
+    assert len(records) == 1
     assert set(records[0]) == EXPECTED_RESULT_KEYS
+    assert records[0]["router"] == "hybrid"
+    assert len(records[0]["selected_skill_ids"]) <= 3
 
     assert main(["report", "--runs", str(run_dir)]) == 0
     report_path = run_dir / "report.md"
     assert report_path.exists()
-    assert "# Hermes SkillEval Report" in report_path.read_text(encoding="utf-8")
+    report = report_path.read_text(encoding="utf-8")
+    assert "# Hermes SkillEval Report" in report
+    assert "## Metrics" in report
+    assert "## Top Selected Skills" in report
+    assert "## Task Results" in report
+
+
+def test_cli_main_returns_one_and_prints_help_without_command(capsys):
+    assert main([]) == 1
+    assert "usage: skilleval" in capsys.readouterr().out
+
+
+def test_cli_eval_missing_index_returns_error_without_traceback(tmp_path, capsys):
+    result = main(
+        [
+            "eval",
+            "--index",
+            str(tmp_path / "missing-skills.json"),
+            "--tasks",
+            str(FIXTURES / "tasks"),
+            "--output-dir",
+            str(tmp_path / "run"),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "error:" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_cli_report_missing_results_returns_error_without_traceback(tmp_path, capsys):
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+
+    result = main(["report", "--runs", str(run_dir)])
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "error:" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_cli_eval_rejects_non_positive_top_k_before_creating_output(tmp_path, capsys):
+    index_path = tmp_path / "index" / "skills.json"
+    run_dir = tmp_path / "run"
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    result = main(
+        [
+            "eval",
+            "--index",
+            str(index_path),
+            "--tasks",
+            str(FIXTURES / "tasks"),
+            "--top-k",
+            "0",
+            "--output-dir",
+            str(run_dir),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "top-k" in captured.err
+    assert not (run_dir / "results.jsonl").exists()
+    assert not run_dir.exists()

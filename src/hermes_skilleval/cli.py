@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -12,6 +13,7 @@ from hermes_skilleval.metrics import (
     precision_at_k,
     recall_at_k,
 )
+from hermes_skilleval.models import BenchmarkTask, RouteResult
 from hermes_skilleval.report import write_markdown_report
 from hermes_skilleval.routers.hybrid import HybridRouter
 from hermes_skilleval.routers.keyword import KeywordRouter
@@ -28,7 +30,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return 1
 
-    args.handler(args)
+    try:
+        args.handler(args)
+    except (ValueError, OSError, json.JSONDecodeError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
     return 0
 
 
@@ -63,6 +69,9 @@ def _run_index(args: argparse.Namespace) -> None:
 
 
 def _run_eval(args: argparse.Namespace) -> None:
+    if args.top_k <= 0:
+        raise ValueError("--top-k must be positive")
+
     skills = load_skill_index(args.index)
     tasks = load_tasks(args.tasks)
     router = HybridRouter() if args.router == "hybrid" else KeywordRouter()
@@ -85,7 +94,7 @@ def _run_report(args: argparse.Namespace) -> None:
     print(f"Wrote report to {report_path}")
 
 
-def _result_record(task, result) -> dict[str, object]:
+def _result_record(task: BenchmarkTask, result: RouteResult) -> dict[str, object]:
     selected = result.selected_skill_ids
     gold = task.gold_skills
     negative = task.negative_skills
