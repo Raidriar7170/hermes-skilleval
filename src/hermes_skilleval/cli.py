@@ -193,6 +193,23 @@ def _add_gated_args(parser: argparse.ArgumentParser) -> None:
         default=0.5,
         help="minimum normalized confidence for selective gated routing",
     )
+    parser.add_argument(
+        "--contrastive-selective",
+        action="store_true",
+        help="apply ambiguity-aware selective gating to same-category candidates",
+    )
+    parser.add_argument(
+        "--contrastive-margin",
+        type=float,
+        default=6.0,
+        help="maximum evidence gap allowed for contrastive same-category acceptance",
+    )
+    parser.add_argument(
+        "--min-evidence",
+        type=float,
+        default=2.0,
+        help="minimum prompt evidence for non-first same-category candidates",
+    )
 
 
 def _run_index(args: argparse.Namespace) -> None:
@@ -355,6 +372,9 @@ def _gated_router(args: argparse.Namespace | None) -> VerificationGatedRouter:
         candidate_pool_size=candidate_pool_size,
         selective=getattr(args, "selective", False),
         min_confidence=getattr(args, "min_confidence", 0.5),
+        contrastive_selective=getattr(args, "contrastive_selective", False),
+        contrastive_margin=getattr(args, "contrastive_margin", 6.0),
+        min_evidence=getattr(args, "min_evidence", 2.0),
     )
 
 

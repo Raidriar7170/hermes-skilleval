@@ -501,6 +501,66 @@ def test_cli_eval_gated_router_supports_selective_confidence_filter(tmp_path):
     assert record["negative_accepted_rate"] == 0.0
 
 
+def test_cli_eval_gated_router_passes_contrastive_options(tmp_path, monkeypatch):
+    from hermes_skilleval.routers.gated import VerificationGatedRouter
+
+    captured = {}
+    original_init = VerificationGatedRouter.__init__
+
+    def capture_init(self, *args, **kwargs):
+        captured.update(kwargs)
+        original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(VerificationGatedRouter, "__init__", capture_init)
+    index_path = tmp_path / "index" / "skills.json"
+    run_dir = tmp_path / "contrastive-run"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    assert (
+        main(
+            [
+                "eval",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--router",
+                "gated",
+                "--selective",
+                "--contrastive-selective",
+                "--contrastive-margin",
+                "4.5",
+                "--min-evidence",
+                "1.5",
+                "--gated-pool-size",
+                "3",
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(run_dir),
+            ]
+        )
+        == 0
+    )
+
+    assert captured["selective"] is True
+    assert captured["contrastive_selective"] is True
+    assert captured["contrastive_margin"] == 4.5
+    assert captured["min_evidence"] == 1.5
+
+
 def test_cli_analyze_failures_writes_report_from_comparison_dir(tmp_path):
     output_dir = tmp_path / "comparison"
     for router in ("embedding-hashing", "embedding-minilm"):
