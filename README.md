@@ -19,6 +19,8 @@ do not require Hermes Agent, network access, or an LLM API key.
   Negative Hit Rate, top selected skills, and failure cases.
 - Includes a 30-task benchmark corpus and a reproducible generator that keeps
   the committed benchmark directory in sync with its source list.
+- Includes a generated 20-skill benchmark library so every benchmark gold and
+  negative label has a corresponding Hermes-style `SKILL.md`.
 - Provides robust CLI error handling, schema validation, Markdown escaping,
   and pytest coverage for parser, loader, router, metrics, report, and CLI
   edge cases.
@@ -106,6 +108,9 @@ Phase 2 also includes a committed router comparison at
 The implementation notes are in [`docs/phase2.md`](docs/phase2.md).
 Phase 3A adds the optional real embedding backend documented in
 [`docs/phase3a.md`](docs/phase3a.md).
+Phase 3B adds a committed MiniLM comparison run at
+[`docs/demo/phase3b-real-embedding/comparison.md`](docs/demo/phase3b-real-embedding/comparison.md)
+with implementation notes in [`docs/phase3b.md`](docs/phase3b.md).
 
 To regenerate it:
 
@@ -114,6 +119,16 @@ skilleval index --skills-path tests/fixtures/skills --output docs/demo/skills.js
 skilleval eval --index docs/demo/skills.json --tasks benchmarks/tasks --router hybrid --top-k 5 --output-dir docs/demo/benchmark-hybrid
 skilleval report --runs docs/demo/benchmark-hybrid
 skilleval compare --index docs/demo/skills.json --tasks benchmarks/tasks --routers keyword,hybrid,embedding --top-k 5 --output-dir docs/demo/router-comparison
+python scripts/generate_benchmark_skills.py
+skilleval index --skills-path benchmarks/skills --output docs/demo/phase3b-real-embedding/skills.json
+skilleval compare \
+  --index docs/demo/phase3b-real-embedding/skills.json \
+  --tasks benchmarks/tasks \
+  --routers keyword,hybrid,embedding-hashing=embedding:hashing,embedding-minilm=embedding:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase3b-minilm-cache.json \
+  --top-k 5 \
+  --output-dir docs/demo/phase3b-real-embedding
 ```
 
 ## Benchmark Corpus
@@ -129,6 +144,13 @@ Regenerate the corpus from its source list:
 
 ```bash
 python scripts/generate_benchmark_tasks.py
+```
+
+The companion benchmark skill library lives in `benchmarks/skills` and covers
+all labels used by the task corpus. Regenerate it with:
+
+```bash
+python scripts/generate_benchmark_skills.py
 ```
 
 ## Architecture

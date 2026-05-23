@@ -4,6 +4,7 @@ import importlib.util
 import yaml
 
 from hermes_skilleval.task_loader import load_tasks
+from hermes_skilleval.skill_parser import scan_skills
 
 
 GENERATOR_PATH = Path(__file__).resolve().parents[1] / "scripts" / "generate_benchmark_tasks.py"
@@ -12,6 +13,9 @@ assert SPEC is not None
 assert SPEC.loader is not None
 generate_benchmark_tasks = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(generate_benchmark_tasks)
+SKILL_GENERATOR_PATH = (
+    Path(__file__).resolve().parents[1] / "scripts" / "generate_benchmark_skills.py"
+)
 
 
 def test_generation_removes_stale_task_directories(tmp_path):
@@ -65,3 +69,29 @@ def test_default_task_root_is_anchored_to_script_location():
     )
 
     assert generate_benchmark_tasks.DEFAULT_TASK_ROOT == expected_root
+
+
+def test_generated_benchmark_skills_cover_all_task_labels(tmp_path):
+    spec = importlib.util.spec_from_file_location(
+        "generate_benchmark_skills",
+        SKILL_GENERATOR_PATH,
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    generate_benchmark_skills = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generate_benchmark_skills)
+
+    generate_benchmark_skills.main(root=tmp_path)
+
+    skills = scan_skills(tmp_path)
+    skill_ids = {skill.id for skill in skills}
+    task_labels = {
+        label
+        for _, _, _, gold_skills, negative_skills, _ in generate_benchmark_tasks.TASKS
+        for label in gold_skills + negative_skills
+    }
+
+    assert task_labels <= skill_ids
+    assert len(skills) == len(generate_benchmark_skills.SKILLS)
+    assert "systematic-debugging" in skill_ids
+    assert "citation-checking" in skill_ids

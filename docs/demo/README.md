@@ -23,3 +23,8 @@ Artifacts:
 - `router-comparison/comparison.md`: keyword, hybrid, and embedding router
   comparison table.
 - `router-comparison/*/report.md`: per-router Markdown reports.
+- `phase3b-real-embedding/comparison.md`: four-way benchmark over the generated
+  20-skill library, comparing keyword, hybrid, hashing embedding, and MiniLM
+  sentence-transformer routing.
+- `phase3b-real-embedding/*/report.md`: per-router reports for the Phase 3B
+  real embedding experiment.

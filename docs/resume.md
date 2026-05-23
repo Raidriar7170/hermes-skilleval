@@ -21,9 +21,12 @@ validated CLI runs and Markdown reports.
 - Added an optional `sentence-transformers` embedding backend with configurable
   model names and a JSON skill-vector cache, while keeping the hashing backend
   as the default Mac-friendly path.
+- Ran a real MiniLM embedding benchmark on a generated 20-skill Hermes-style
+  library, improving embedding Recall@1 from 0.717 to 0.867 and MRR from 0.873
+  to 0.967 versus the hashing embedding baseline.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  93 pytest tests covering parser, loader, router, metric, report, and CLI edge
+  95 pytest tests covering parser, loader, router, metric, report, and CLI edge
   cases.
 - Designed the system as an offline MVP that runs locally on a Mac while leaving
   clear extension points for cross-encoder reranking, embedding fine-tuning,
@@ -35,7 +38,7 @@ validated CLI runs and Markdown reports.
 Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, 30 labeled benchmark tasks, keyword/hybrid/embedding
 routers, optional `sentence-transformers` retrieval, Recall@K, MRR, NDCG,
-negative-hit metrics, CLI comparison reports, and 93-test validation.
+negative-hit metrics, CLI comparison reports, and 95-test validation.
 
 ## Interview Talking Points
 
@@ -51,6 +54,9 @@ negative-hit metrics, CLI comparison reports, and 93-test validation.
 - Phase 3A: the embedding router can switch from hashing to a real
   `sentence-transformers` model, cache skill vectors on disk, and keep query
   encoding live for each task.
+- Phase 3B: a generated 20-skill benchmark library covers all 30 task labels,
+  and the real MiniLM run reaches Recall@5 1.000 and MRR 0.967 with warm
+  skill-vector caching on a local Mac CPU.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.

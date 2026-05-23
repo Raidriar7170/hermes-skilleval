@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
@@ -33,6 +35,14 @@ from hermes_skilleval.task_loader import load_tasks
 
 ROUTER_NAMES = ("keyword", "hybrid", "embedding")
 EMBEDDING_BACKENDS = ("hashing", "sentence-transformers")
+ROUTER_LABEL_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+
+
+@dataclass(frozen=True)
+class RouterSpec:
+    label: str
+    router_name: str
+    embedding_backend: str | None = None
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -135,22 +145,24 @@ def _run_compare(args: argparse.Namespace) -> None:
     if args.top_k <= 0:
         raise ValueError("--top-k must be positive")
 
-    router_names = _parse_router_names(args.routers)
+    router_specs = _parse_router_specs(args.routers)
     skills = load_skill_index(args.index)
     tasks = load_tasks(args.tasks)
     output_dir = ensure_dir(args.output_dir)
     result_paths = {}
-    for router_name in router_names:
-        router = _router(router_name, args)
-        router_dir = ensure_dir(output_dir / router_name)
-        result_paths[router_name] = _write_eval_results(
+    for spec in router_specs:
+        router_args = _args_for_router_spec(args, spec)
+        router = _router(spec.router_name, router_args)
+        router_dir = ensure_dir(output_dir / spec.label)
+        result_paths[spec.label] = _write_eval_results(
             tasks,
             skills,
             router,
             args.top_k,
             router_dir,
+            router_label=spec.label,
         )
-        write_markdown_report(result_paths[router_name], router_dir / "report.md")
+        write_markdown_report(result_paths[spec.label], router_dir / "report.md")
     comparison_path = output_dir / "comparison.md"
     write_comparison_report(result_paths, comparison_path)
 
@@ -163,13 +175,20 @@ def _write_eval_results(
     router: SkillRouter,
     top_k: int,
     output_dir: Path,
+    router_label: str | None = None,
 ) -> Path:
     results_path = output_dir / "results.jsonl"
 
     with results_path.open("w", encoding="utf-8") as file:
         for task in tasks:
             result = router.route(task, skills, top_k)
-            file.write(json.dumps(_result_record(task, result), sort_keys=True) + "\n")
+            file.write(
+                json.dumps(
+                    _result_record(task, result, router_label=router_label),
+                    sort_keys=True,
+                )
+                + "\n"
+            )
 
     return results_path
 
@@ -211,16 +230,81 @@ def _embedding_router(args: argparse.Namespace | None) -> EmbeddingRouter:
 
 
 def _parse_router_names(value: str) -> list[str]:
-    names = [name.strip() for name in value.split(",") if name.strip()]
-    if not names:
+    return [spec.router_name for spec in _parse_router_specs(value)]
+
+
+def _parse_router_specs(value: str) -> list[RouterSpec]:
+    raw_specs = [name.strip() for name in value.split(",") if name.strip()]
+    if not raw_specs:
         raise ValueError("--routers must include at least one router")
-    unknown = sorted(set(names) - set(ROUTER_NAMES))
-    if unknown:
-        raise ValueError(f"unknown router(s): {', '.join(unknown)}")
-    return names
+    specs = [_parse_router_spec(raw_spec) for raw_spec in raw_specs]
+    duplicate_labels = sorted(
+        label
+        for label in {spec.label for spec in specs}
+        if _count_labels(specs, label) > 1
+    )
+    if duplicate_labels:
+        raise ValueError(f"duplicate router label(s): {', '.join(duplicate_labels)}")
+    return specs
 
 
-def _result_record(task: BenchmarkTask, result: RouteResult) -> dict[str, object]:
+def _parse_router_spec(value: str) -> RouterSpec:
+    label: str | None = None
+    target = value
+    if "=" in value:
+        label, target = [part.strip() for part in value.split("=", maxsplit=1)]
+        if not label:
+            raise ValueError("router label must not be empty")
+
+    router_name, _, embedding_backend = target.partition(":")
+    router_name = router_name.strip()
+    embedding_backend = embedding_backend.strip() or None
+    if router_name not in ROUTER_NAMES:
+        raise ValueError(f"unknown router(s): {router_name}")
+    if embedding_backend is not None:
+        if router_name != "embedding":
+            raise ValueError("only embedding router specs can include a backend")
+        if embedding_backend not in EMBEDDING_BACKENDS:
+            raise ValueError(f"unknown embedding backend: {embedding_backend}")
+
+    label = label or _default_router_label(router_name, embedding_backend)
+    if not ROUTER_LABEL_RE.match(label):
+        raise ValueError(
+            "router labels may only contain letters, numbers, dots, underscores, and hyphens"
+        )
+    return RouterSpec(
+        label=label,
+        router_name=router_name,
+        embedding_backend=embedding_backend,
+    )
+
+
+def _count_labels(specs: list[RouterSpec], label: str) -> int:
+    return sum(1 for spec in specs if spec.label == label)
+
+
+def _default_router_label(router_name: str, embedding_backend: str | None) -> str:
+    if router_name == "embedding" and embedding_backend is not None:
+        return f"embedding-{embedding_backend}"
+    return router_name
+
+
+def _args_for_router_spec(
+    args: argparse.Namespace,
+    spec: RouterSpec,
+) -> argparse.Namespace:
+    if spec.embedding_backend is None:
+        return args
+    router_args = argparse.Namespace(**vars(args))
+    router_args.embedding_backend = spec.embedding_backend
+    return router_args
+
+
+def _result_record(
+    task: BenchmarkTask,
+    result: RouteResult,
+    router_label: str | None = None,
+) -> dict[str, object]:
     selected = result.selected_skill_ids
     gold = task.gold_skills
     negative = task.negative_skills
@@ -228,7 +312,7 @@ def _result_record(task: BenchmarkTask, result: RouteResult) -> dict[str, object
         "task_id": task.id,
         "category": task.category,
         "difficulty": task.difficulty,
-        "router": result.router,
+        "router": router_label or result.router,
         "selected_skill_ids": selected,
         "scores": result.scores,
         "gold_skills": gold,

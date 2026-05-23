@@ -297,6 +297,81 @@ def test_cli_compare_writes_router_runs_and_summary(tmp_path):
     assert "Recall@5" in comparison
 
 
+def test_cli_compare_supports_labeled_embedding_backend_specs(tmp_path, monkeypatch):
+    class FakeSentenceTransformer:
+        def __init__(self, model_name):
+            self.model_name = model_name
+
+        def encode(self, sentences, normalize_embeddings=True):
+            return [
+                [1.0, 0.0] if "debug" in sentence.lower() else [0.0, 1.0]
+                for sentence in sentences
+            ]
+
+    monkeypatch.setitem(
+        sys.modules,
+        "sentence_transformers",
+        types.SimpleNamespace(SentenceTransformer=FakeSentenceTransformer),
+    )
+    index_path = tmp_path / "index" / "skills.json"
+    output_dir = tmp_path / "comparison"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    assert (
+        main(
+            [
+                "compare",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--routers",
+                ",".join(
+                    [
+                        "keyword",
+                        "embedding-hashing=embedding:hashing",
+                        "embedding-fake=embedding:sentence-transformers",
+                    ]
+                ),
+                "--embedding-model",
+                "fake-model",
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(output_dir),
+            ]
+        )
+        == 0
+    )
+
+    hashing_record = json.loads(
+        (output_dir / "embedding-hashing" / "results.jsonl").read_text(
+            encoding="utf-8"
+        )
+    )
+    fake_record = json.loads(
+        (output_dir / "embedding-fake" / "results.jsonl").read_text(encoding="utf-8")
+    )
+    comparison = (output_dir / "comparison.md").read_text(encoding="utf-8")
+
+    assert hashing_record["router"] == "embedding-hashing"
+    assert fake_record["router"] == "embedding-fake"
+    assert "| embedding-hashing |" in comparison
+    assert "| embedding-fake |" in comparison
+
+
 def test_cli_main_returns_one_and_prints_help_without_command(capsys):
     assert main([]) == 1
     assert "usage: skilleval" in capsys.readouterr().out
