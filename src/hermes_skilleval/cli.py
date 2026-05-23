@@ -38,6 +38,13 @@ from hermes_skilleval.routers.embedding import (
 from hermes_skilleval.routers.gated import VerificationGatedRouter
 from hermes_skilleval.routers.hybrid import HybridRouter
 from hermes_skilleval.routers.keyword import KeywordRouter
+from hermes_skilleval.self_improvement import (
+    apply_skill_patches,
+    propose_skill_patches,
+    write_acceptance_report,
+    write_patch_report,
+    write_patches_json,
+)
 from hermes_skilleval.skill_index import load_skill_index, save_skill_index
 from hermes_skilleval.skill_parser import scan_skills
 from hermes_skilleval.storage import ensure_dir
@@ -122,6 +129,29 @@ def _build_parser() -> argparse.ArgumentParser:
     failures_parser.add_argument("--baseline", default=None)
     failures_parser.add_argument("--candidate", default=None)
     failures_parser.set_defaults(handler=_run_analyze_failures)
+
+    improve_parser = subparsers.add_parser(
+        "improve-skills",
+        help="propose skill metadata patches from failed routing records",
+    )
+    improve_parser.add_argument("--runs", required=True)
+    improve_parser.add_argument("--router", required=True)
+    improve_parser.add_argument("--index", required=True)
+    improve_parser.add_argument("--tasks", required=True)
+    improve_parser.add_argument("--output", required=True)
+    improve_parser.add_argument("--patched-index", default=None)
+    improve_parser.add_argument("--report", default=None)
+    improve_parser.set_defaults(handler=_run_improve_skills)
+
+    judge_parser = subparsers.add_parser(
+        "judge-improvement",
+        help="accept or reject a patched skill run against a baseline run",
+    )
+    judge_parser.add_argument("--runs", required=True)
+    judge_parser.add_argument("--baseline", required=True)
+    judge_parser.add_argument("--candidate", required=True)
+    judge_parser.add_argument("--output", required=True)
+    judge_parser.set_defaults(handler=_run_judge_improvement)
 
     return parser
 
@@ -256,6 +286,38 @@ def _run_analyze_failures(args: argparse.Namespace) -> None:
     print(f"Wrote failure analysis to {output_path}")
 
 
+def _run_improve_skills(args: argparse.Namespace) -> None:
+    result_path = Path(args.runs) / args.router / "results.jsonl"
+    if not result_path.exists():
+        raise ValueError(f"router results do not exist: {result_path}")
+
+    records = _read_jsonl_records(result_path)
+    skills = load_skill_index(args.index)
+    tasks = load_tasks(args.tasks)
+    patches = propose_skill_patches(records, skills, tasks)
+    write_patches_json(patches, args.output)
+
+    if args.patched_index:
+        save_skill_index(apply_skill_patches(skills, patches), args.patched_index)
+    if args.report:
+        write_patch_report(patches, args.report)
+
+    print(f"Wrote {len(patches)} skill patch proposals to {args.output}")
+
+
+def _run_judge_improvement(args: argparse.Namespace) -> None:
+    baseline_records = _read_router_records(args.runs, args.baseline)
+    candidate_records = _read_router_records(args.runs, args.candidate)
+    status = write_acceptance_report(
+        baseline_records,
+        candidate_records,
+        args.output,
+        baseline_name=args.baseline,
+        candidate_name=args.candidate,
+    )
+    print(f"Wrote improvement acceptance report to {args.output}: {status}")
+
+
 def _router(name: str, args: argparse.Namespace | None = None) -> SkillRouter:
     if name == "keyword":
         return KeywordRouter()
@@ -367,6 +429,27 @@ def _args_for_router_spec(
     router_args = argparse.Namespace(**vars(args))
     router_args.embedding_backend = spec.embedding_backend
     return router_args
+
+
+def _read_jsonl_records(path: Path) -> list[dict[str, object]]:
+    records = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if not records:
+        raise ValueError(f"no result records found in {path}")
+    for index, record in enumerate(records, start=1):
+        if not isinstance(record, dict):
+            raise ValueError(f"expected object in {path} at line {index}")
+    return records
+
+
+def _read_router_records(runs_dir: Path | str, router: str) -> list[dict[str, object]]:
+    result_path = Path(runs_dir) / router / "results.jsonl"
+    if not result_path.exists():
+        raise ValueError(f"router results do not exist: {result_path}")
+    return _read_jsonl_records(result_path)
 
 
 def _result_record(

@@ -30,6 +30,8 @@ do not require Hermes Agent, network access, or an LLM API key.
   table for experiment tracking.
 - Analyzes failed routes by failure mode, including top-1 misses, missing gold
   skills, negative hits, and candidate-vs-baseline trade-offs.
+- Proposes failure-driven skill metadata patches, writes patched skill indexes,
+  and verifies before/after runs with an acceptance gate.
 
 ## Quickstart
 
@@ -86,6 +88,25 @@ skilleval analyze-failures \
   --runs runs/comparison \
   --baseline embedding-hashing \
   --candidate embedding-minilm
+```
+
+Propose and verify skill metadata improvements:
+
+```bash
+skilleval improve-skills \
+  --runs runs/comparison \
+  --router embedding-minilm \
+  --index index/skills.json \
+  --tasks benchmarks/tasks \
+  --output runs/improvement/patches.json \
+  --patched-index runs/improvement/patched-skills.json \
+  --report runs/improvement/patches.md
+
+skilleval judge-improvement \
+  --runs runs/improvement \
+  --baseline embedding-minilm-before \
+  --candidate embedding-minilm-patched \
+  --output runs/improvement/acceptance.md
 ```
 
 Run the real embedding router with a cached sentence-transformer model:
@@ -166,6 +187,9 @@ with notes in [`docs/phase4a.md`](docs/phase4a.md).
 Phase 4B adds selective verification-gated routing at
 [`docs/demo/phase4b-selective-routing/comparison.md`](docs/demo/phase4b-selective-routing/comparison.md)
 with notes in [`docs/phase4b.md`](docs/phase4b.md).
+Phase 5 adds a failure-driven self-improvement loop at
+[`docs/demo/phase5-self-improvement/comparison.md`](docs/demo/phase5-self-improvement/comparison.md)
+with notes in [`docs/phase5.md`](docs/phase5.md).
 
 To regenerate it:
 
@@ -219,6 +243,28 @@ skilleval analyze-failures \
   --baseline embedding-minilm \
   --candidate gated-minilm-selective \
   --output docs/demo/phase4b-selective-routing/failure-analysis.md
+skilleval improve-skills \
+  --runs docs/demo/phase4b-selective-routing \
+  --router embedding-minilm \
+  --index docs/demo/phase3b-real-embedding/skills.json \
+  --tasks benchmarks/tasks \
+  --output docs/demo/phase5-self-improvement/patches.json \
+  --patched-index docs/demo/phase5-self-improvement/patched-skills.json \
+  --report docs/demo/phase5-self-improvement/patches.md
+skilleval eval \
+  --index docs/demo/phase5-self-improvement/patched-skills.json \
+  --tasks benchmarks/tasks \
+  --router embedding \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase5-patched-minilm-cache.json \
+  --top-k 5 \
+  --output-dir docs/demo/phase5-self-improvement/embedding-minilm-patched
+skilleval judge-improvement \
+  --runs docs/demo/phase5-self-improvement \
+  --baseline embedding-minilm-before \
+  --candidate embedding-minilm-patched \
+  --output docs/demo/phase5-self-improvement/acceptance.md
 ```
 
 ## Benchmark Corpus
@@ -288,13 +334,15 @@ Core modules:
 - `comparison.py`: aggregate router comparison reports.
 - `failure_analysis.py`: failure-mode summaries and candidate-vs-baseline
   diagnostics for comparison runs.
-- `cli.py`: `index`, `eval`, `report`, `compare`, and `analyze-failures`
-  commands.
+- `self_improvement.py`: deterministic failure-driven metadata patch proposals
+  and improvement acceptance reports.
+- `cli.py`: `index`, `eval`, `report`, `compare`, `analyze-failures`,
+  `improve-skills`, and `judge-improvement` commands.
 
 ## Scope
 
 This MVP evaluates skill selection only. Real Hermes execution, LLM judges,
-embedding fine-tuning, cross-encoder reranking, automatic skill patching, and
+embedding fine-tuning, cross-encoder reranking, source `SKILL.md` editing, and
 web dashboards are planned future extensions.
 
 ## Portfolio Notes

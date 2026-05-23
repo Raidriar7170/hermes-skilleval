@@ -545,6 +545,125 @@ def test_cli_analyze_failures_writes_report_from_comparison_dir(tmp_path):
     assert "# Hermes SkillEval Failure Analysis" in report.read_text(encoding="utf-8")
 
 
+def test_cli_improve_skills_writes_patch_outputs(tmp_path):
+    index_path = tmp_path / "index" / "skills.json"
+    runs_dir = tmp_path / "runs"
+    router_dir = runs_dir / "embedding-minilm"
+    router_dir.mkdir(parents=True)
+    patches_path = tmp_path / "improvement" / "patches.json"
+    patched_index_path = tmp_path / "improvement" / "patched-skills.json"
+    report_path = tmp_path / "improvement" / "patches.md"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+    record = {
+        "task_id": "python-debugging-001",
+        "category": "coding",
+        "difficulty": "easy",
+        "router": "embedding-minilm",
+        "selected_skill_ids": ["songwriting-and-ai-music", "systematic-debugging"],
+        "scores": {},
+        "gold_skills": ["systematic-debugging", "test-driven-development"],
+        "negative_skills": ["songwriting-and-ai-music"],
+        "latency_ms": 1.0,
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.5,
+        "recall_at_5": 0.5,
+        "precision_at_5": 0.2,
+        "mrr": 0.5,
+        "ndcg_at_5": 0.5,
+        "negative_hit_rate": 1.0,
+    }
+    (router_dir / "results.jsonl").write_text(
+        json.dumps(record, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "improve-skills",
+            "--runs",
+            str(runs_dir),
+            "--router",
+            "embedding-minilm",
+            "--index",
+            str(index_path),
+            "--tasks",
+            str(FIXTURES / "tasks"),
+            "--output",
+            str(patches_path),
+            "--patched-index",
+            str(patched_index_path),
+            "--report",
+            str(report_path),
+        ]
+    )
+
+    payload = json.loads(patches_path.read_text(encoding="utf-8"))
+    patched = json.loads(patched_index_path.read_text(encoding="utf-8"))
+    report = report_path.read_text(encoding="utf-8")
+
+    assert result == 0
+    assert payload["patch_count"] >= 1
+    assert any(patch["skill_id"] == "test-driven-development" for patch in payload["patches"])
+    assert any("refactor" in skill["trigger_terms"] for skill in patched)
+    assert "# Hermes SkillEval Self-Improvement Patches" in report
+
+
+def test_cli_judge_improvement_writes_acceptance_report(tmp_path):
+    runs_dir = tmp_path / "runs"
+    for router, recall in (("before", 0.5), ("patched", 1.0)):
+        router_dir = runs_dir / router
+        router_dir.mkdir(parents=True)
+        record = {
+            "task_id": "task-001",
+            "router": router,
+            "selected_skill_ids": ["gold"],
+            "gold_skills": ["gold"],
+            "negative_skills": [],
+            "latency_ms": 1.0,
+            "recall_at_1": recall,
+            "recall_at_3": recall,
+            "recall_at_5": recall,
+            "precision_at_5": 0.2,
+            "mrr": recall,
+            "ndcg_at_5": recall,
+            "negative_hit_rate": 0.0,
+        }
+        (router_dir / "results.jsonl").write_text(
+            json.dumps(record, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    output = tmp_path / "acceptance.md"
+
+    result = main(
+        [
+            "judge-improvement",
+            "--runs",
+            str(runs_dir),
+            "--baseline",
+            "before",
+            "--candidate",
+            "patched",
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert result == 0
+    assert "- Status: accepted" in output.read_text(encoding="utf-8")
+
+
 def test_cli_main_returns_one_and_prints_help_without_command(capsys):
     assert main([]) == 1
     assert "usage: skilleval" in capsys.readouterr().out

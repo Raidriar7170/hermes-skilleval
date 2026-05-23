@@ -33,9 +33,13 @@ validated CLI runs and Markdown reports.
 - Added selective confidence gating so the router can return fewer skills
   instead of padding low-confidence results, reducing accepted negative-skill
   rate from 0.033 to 0.000 while preserving Recall@5 at 1.000.
+- Built a failure-driven self-improvement harness that proposes metadata
+  patches from routing failures, writes a patched skill index, reruns
+  evaluation, and accepts the patch set only when Recall@1/MRR/NDCG improve
+  without negative-hit regression.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  109 pytest tests covering parser, loader, router, metric, report, and CLI
+  116 pytest tests covering parser, loader, router, metric, report, and CLI
   edge cases.
 - Designed the system as an offline MVP that runs locally on a Mac while leaving
   clear extension points for cross-encoder reranking, embedding fine-tuning,
@@ -48,7 +52,8 @@ Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, 30 labeled benchmark tasks, keyword/hybrid/embedding
 routers, optional `sentence-transformers` retrieval, verification-gated
 reranking, selective confidence gating, Recall@K, MRR, NDCG, negative-hit
-metrics, CLI comparison/failure reports, and 109-test validation.
+metrics, failure-driven metadata patching, CLI comparison/failure reports, and
+116-test validation.
 
 ## Interview Talking Points
 
@@ -77,12 +82,15 @@ metrics, CLI comparison/failure reports, and 109-test validation.
 - Phase 4B: selective confidence gating suppresses weak cross-category filler
   skills, dropping accepted negative-skill rate from 0.033 to 0.000 while
   keeping benchmark coverage at 1.000.
+- Phase 5: failure-driven metadata patching improves MiniLM Recall@1 from
+  0.867 to 0.933 and MRR from 0.967 to 1.000, with an acceptance gate that
+  rejects metric regressions.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
-- Agent relevance: the harness can be extended from offline lexical routing to
-  embedding retrieval, verifier-gated reranking, LLM judges, execution checks,
-  and self-improvement loops.
+- Agent relevance: the harness now covers offline lexical routing, embedding
+  retrieval, verifier-gated reranking, selective acceptance, and failure-driven
+  self-improvement loops.
 - Hardware story: the current MVP runs on a local Mac. A remote 8xA100 machine
   becomes useful for future embedding index experiments, LLM reranker training,
   large-scale benchmark sweeps, and verifier/self-improvement runs.
@@ -97,13 +105,13 @@ generation.
 
 - Add cross-encoder or LLM reranking after embedding retrieval and compare it
   against the deterministic gated reranker.
-- Add failure-driven skill patching that edits descriptions or trigger terms
-  from observed misses, then re-runs the benchmark to verify gains.
+- Extend failure-driven patching from generated skill indexes to source
+  `SKILL.md` editing with human review.
 - Fine-tune or distill the embedding model on benchmark failures and measure
   retrieval gains against the hashing and off-the-shelf baselines.
 - Add variable-k abstention where low-confidence selected skills are suppressed
   instead of forcing exactly five results.
-- Add self-improvement harness that proposes skill metadata patches from failure
-  cases and re-runs the benchmark to measure improvement.
+- Add an LLM-assisted patch proposer and compare it with the deterministic
+  trigger-term proposer.
 - Add a lightweight dashboard for comparing router runs across benchmark
   versions.
