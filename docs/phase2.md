@@ -26,6 +26,10 @@ normalized sparse vectors and cosine similarity scores.
 This gives the project a stable embedding-style baseline and a clean extension
 point for later sentence-transformer, BGE, E5, or reranker models.
 
+Phase 3A uses that extension point to add an optional real
+`sentence-transformers` backend while keeping this local hashing router as the
+default. See [`phase3a.md`](phase3a.md).
+
 ## Demo Command
 
 ```bash

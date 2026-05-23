@@ -18,20 +18,24 @@ validated CLI runs and Markdown reports.
 - Added a dependency-free hashing embedding router and multi-router comparison
   command to benchmark keyword, hybrid, and embedding strategies from one CLI
   run.
+- Added an optional `sentence-transformers` embedding backend with configurable
+  model names and a JSON skill-vector cache, while keeping the hashing backend
+  as the default Mac-friendly path.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  88 pytest tests covering parser, loader, router, metric, report, and CLI edge
+  93 pytest tests covering parser, loader, router, metric, report, and CLI edge
   cases.
 - Designed the system as an offline MVP that runs locally on a Mac while leaving
-  clear extension points for embedding retrieval, LLM reranking, verifier-gated
-  routing, and self-improving skill patches on larger GPU infrastructure.
+  clear extension points for cross-encoder reranking, embedding fine-tuning,
+  verifier-gated routing, and self-improving skill patches on larger GPU
+  infrastructure.
 
 ## Short Resume Version
 
 Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, 30 labeled benchmark tasks, keyword/hybrid/embedding
-routers, Recall@K/MRR/NDCG/negative-hit metrics, CLI comparison reports, and
-88-test validation.
+routers, optional `sentence-transformers` retrieval, Recall@K, MRR, NDCG,
+negative-hit metrics, CLI comparison reports, and 93-test validation.
 
 ## Interview Talking Points
 
@@ -44,6 +48,9 @@ routers, Recall@K/MRR/NDCG/negative-hit metrics, CLI comparison reports, and
 - Phase 2: a local hashing embedding router gives a no-download semantic-ish
   retrieval baseline, and `skilleval compare` writes side-by-side router
   metrics for experiment tracking.
+- Phase 3A: the embedding router can switch from hashing to a real
+  `sentence-transformers` model, cache skill vectors on disk, and keep query
+  encoding live for each task.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
@@ -62,8 +69,10 @@ generation.
 
 ## Future Extension Bullets
 
-- Replace the local hashing embedding baseline with cached sentence-transformer
-  indexes and compare neural retrieval against keyword/hybrid baselines.
+- Add cross-encoder or LLM reranking after embedding retrieval to improve
+  ambiguous skill choices.
+- Fine-tune or distill the embedding model on benchmark failures and measure
+  retrieval gains against the hashing and off-the-shelf baselines.
 - Add verifier-gated routing where selected skills must pass executable or
   rubric-based checks before being counted as successful.
 - Add self-improvement harness that proposes skill metadata patches from failure

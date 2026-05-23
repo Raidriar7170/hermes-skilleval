@@ -17,7 +17,12 @@ from hermes_skilleval.metrics import (
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.report import write_markdown_report
 from hermes_skilleval.routers.base import SkillRouter
-from hermes_skilleval.routers.embedding import EmbeddingRouter
+from hermes_skilleval.routers.embedding import (
+    EmbeddingDependencyError,
+    EmbeddingRouter,
+    HashingEmbeddingModel,
+    SentenceTransformerEmbeddingModel,
+)
 from hermes_skilleval.routers.hybrid import HybridRouter
 from hermes_skilleval.routers.keyword import KeywordRouter
 from hermes_skilleval.skill_index import load_skill_index, save_skill_index
@@ -27,6 +32,7 @@ from hermes_skilleval.task_loader import load_tasks
 
 
 ROUTER_NAMES = ("keyword", "hybrid", "embedding")
+EMBEDDING_BACKENDS = ("hashing", "sentence-transformers")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -38,7 +44,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         args.handler(args)
-    except (ValueError, OSError, json.JSONDecodeError) as error:
+    except (
+        EmbeddingDependencyError,
+        ValueError,
+        OSError,
+        json.JSONDecodeError,
+    ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     return 0
@@ -57,6 +68,7 @@ def _build_parser() -> argparse.ArgumentParser:
     eval_parser.add_argument("--index", required=True)
     eval_parser.add_argument("--tasks", required=True)
     eval_parser.add_argument("--router", choices=ROUTER_NAMES, default="keyword")
+    _add_embedding_args(eval_parser)
     eval_parser.add_argument("--top-k", type=int, default=5)
     eval_parser.add_argument("--output-dir", default="runs/latest")
     eval_parser.set_defaults(handler=_run_eval)
@@ -69,6 +81,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default="keyword,hybrid,embedding",
         help="comma-separated router names",
     )
+    _add_embedding_args(compare_parser)
     compare_parser.add_argument("--top-k", type=int, default=5)
     compare_parser.add_argument("--output-dir", default="runs/comparison")
     compare_parser.set_defaults(handler=_run_compare)
@@ -78,6 +91,25 @@ def _build_parser() -> argparse.ArgumentParser:
     report_parser.set_defaults(handler=_run_report)
 
     return parser
+
+
+def _add_embedding_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--embedding-backend",
+        choices=EMBEDDING_BACKENDS,
+        default="hashing",
+        help="backend used when router is embedding",
+    )
+    parser.add_argument(
+        "--embedding-model",
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        help="sentence-transformers model name",
+    )
+    parser.add_argument(
+        "--embedding-cache",
+        default=None,
+        help="optional JSON cache path for skill embeddings",
+    )
 
 
 def _run_index(args: argparse.Namespace) -> None:
@@ -92,7 +124,7 @@ def _run_eval(args: argparse.Namespace) -> None:
 
     skills = load_skill_index(args.index)
     tasks = load_tasks(args.tasks)
-    router = _router(args.router)
+    router = _router(args.router, args)
     output_dir = ensure_dir(args.output_dir)
     results_path = _write_eval_results(tasks, skills, router, args.top_k, output_dir)
 
@@ -109,7 +141,7 @@ def _run_compare(args: argparse.Namespace) -> None:
     output_dir = ensure_dir(args.output_dir)
     result_paths = {}
     for router_name in router_names:
-        router = _router(router_name)
+        router = _router(router_name, args)
         router_dir = ensure_dir(output_dir / router_name)
         result_paths[router_name] = _write_eval_results(
             tasks,
@@ -150,14 +182,32 @@ def _run_report(args: argparse.Namespace) -> None:
     print(f"Wrote report to {report_path}")
 
 
-def _router(name: str) -> SkillRouter:
+def _router(name: str, args: argparse.Namespace | None = None) -> SkillRouter:
     if name == "keyword":
         return KeywordRouter()
     if name == "hybrid":
         return HybridRouter()
     if name == "embedding":
-        return EmbeddingRouter()
+        return _embedding_router(args)
     raise ValueError(f"unknown router: {name}")
+
+
+def _embedding_router(args: argparse.Namespace | None) -> EmbeddingRouter:
+    backend = getattr(args, "embedding_backend", "hashing")
+    cache_path = getattr(args, "embedding_cache", None)
+    if backend == "hashing":
+        return EmbeddingRouter(model=HashingEmbeddingModel(), cache_path=cache_path)
+    if backend == "sentence-transformers":
+        model_name = getattr(
+            args,
+            "embedding_model",
+            "sentence-transformers/all-MiniLM-L6-v2",
+        )
+        return EmbeddingRouter(
+            model=SentenceTransformerEmbeddingModel(model_name),
+            cache_path=cache_path,
+        )
+    raise ValueError(f"unknown embedding backend: {backend}")
 
 
 def _parse_router_names(value: str) -> list[str]:

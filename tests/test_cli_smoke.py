@@ -1,4 +1,6 @@
 import json
+import sys
+import types
 from pathlib import Path
 
 from hermes_skilleval.cli import main
@@ -131,6 +133,121 @@ def test_cli_eval_embedding_router_smoke(tmp_path):
     record = json.loads((run_dir / "results.jsonl").read_text(encoding="utf-8"))
     assert record["router"] == "embedding"
     assert len(record["selected_skill_ids"]) <= 3
+
+
+def test_cli_eval_sentence_transformer_embedding_backend_smoke(
+    tmp_path,
+    monkeypatch,
+):
+    class FakeSentenceTransformer:
+        def __init__(self, model_name):
+            self.model_name = model_name
+
+        def encode(self, sentences, normalize_embeddings=True):
+            return [
+                [1.0, 0.0] if "debug" in sentence.lower() else [0.0, 1.0]
+                for sentence in sentences
+            ]
+
+    monkeypatch.setitem(
+        sys.modules,
+        "sentence_transformers",
+        types.SimpleNamespace(SentenceTransformer=FakeSentenceTransformer),
+    )
+    index_path = tmp_path / "index" / "skills.json"
+    run_dir = tmp_path / "embedding-run"
+    cache_path = tmp_path / "cache" / "embeddings.json"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    assert (
+        main(
+            [
+                "eval",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--router",
+                "embedding",
+                "--embedding-backend",
+                "sentence-transformers",
+                "--embedding-model",
+                "fake-model",
+                "--embedding-cache",
+                str(cache_path),
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(run_dir),
+            ]
+        )
+        == 0
+    )
+
+    record = json.loads((run_dir / "results.jsonl").read_text(encoding="utf-8"))
+    assert record["router"] == "embedding"
+    assert cache_path.exists()
+
+
+def test_cli_eval_sentence_transformer_missing_dependency_returns_error_without_traceback(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    monkeypatch.setitem(sys.modules, "sentence_transformers", None)
+    index_path = tmp_path / "index" / "skills.json"
+    run_dir = tmp_path / "embedding-run"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    result = main(
+        [
+            "eval",
+            "--index",
+            str(index_path),
+            "--tasks",
+            str(FIXTURES / "tasks"),
+            "--router",
+            "embedding",
+            "--embedding-backend",
+            "sentence-transformers",
+            "--embedding-model",
+            "missing-model",
+            "--top-k",
+            "3",
+            "--output-dir",
+            str(run_dir),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "sentence-transformers backend requires optional dependency" in captured.err
+    assert "Traceback" not in captured.err
+    assert not run_dir.exists()
 
 
 def test_cli_compare_writes_router_runs_and_summary(tmp_path):

@@ -5,15 +5,16 @@ Hermes-style agent skill libraries.
 
 The project indexes `skills/**/SKILL.md`, loads labeled benchmark tasks,
 compares routing strategies, and writes JSONL records plus Markdown reports
-with deterministic routing metrics and latency metadata. It does not require
-Hermes Agent, network access, or an LLM API key.
+with deterministic routing metrics and latency metadata. The default workflows
+do not require Hermes Agent, network access, or an LLM API key.
 
 ## Highlights
 
 - Parses Hermes-style skill files with YAML frontmatter, fallback metadata,
   category inference, trigger terms, and token estimates.
-- Evaluates keyword, hybrid, and local hashing-embedding skill routers with
-  deterministic ranking, top-k validation, score traces, and latency tracking.
+- Evaluates keyword, hybrid, and embedding skill routers with deterministic
+  ranking, top-k validation, score traces, latency tracking, and an optional
+  `sentence-transformers` backend with a JSON skill-embedding cache.
 - Reports Recall@1, Recall@3, Recall@5, Precision@5, MRR, NDCG@5,
   Negative Hit Rate, top selected skills, and failure cases.
 - Includes a 30-task benchmark corpus and a reproducible generator that keeps
@@ -30,6 +31,12 @@ Install in editable mode:
 
 ```bash
 python -m pip install -e ".[dev]"
+```
+
+Install the optional neural embedding backend:
+
+```bash
+python -m pip install -e ".[dev,embedding]"
 ```
 
 Index a skills directory:
@@ -66,6 +73,20 @@ skilleval compare \
   --output-dir runs/comparison
 ```
 
+Run the real embedding router with a cached sentence-transformer model:
+
+```bash
+skilleval eval \
+  --index index/skills.json \
+  --tasks benchmarks/tasks \
+  --router embedding \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache runs/embeddings/all-MiniLM-L6-v2.json \
+  --top-k 5 \
+  --output-dir runs/embedding-real
+```
+
 Run tests:
 
 ```bash
@@ -83,6 +104,8 @@ than a production routing score.
 Phase 2 also includes a committed router comparison at
 [`docs/demo/router-comparison/comparison.md`](docs/demo/router-comparison/comparison.md).
 The implementation notes are in [`docs/phase2.md`](docs/phase2.md).
+Phase 3A adds the optional real embedding backend documented in
+[`docs/phase3a.md`](docs/phase3a.md).
 
 To regenerate it:
 
@@ -140,7 +163,8 @@ Core modules:
 - `routers/keyword.py`: deterministic lexical baseline.
 - `routers/hybrid.py`: offline hybrid router with category and explicit skill-id
   boosts.
-- `routers/embedding.py`: dependency-free local hashing embedding router.
+- `routers/embedding.py`: dependency-free local hashing router plus optional
+  `sentence-transformers` embedding router with a disk cache for skill vectors.
 - `metrics.py`: ranking metrics and negative-skill checks.
 - `report.py`: validated JSONL-to-Markdown reporting.
 - `comparison.py`: aggregate router comparison reports.
@@ -149,8 +173,8 @@ Core modules:
 ## Scope
 
 This MVP evaluates skill selection only. Real Hermes execution, LLM judges,
-neural embedding models, automatic skill patching, and web dashboards are
-planned future extensions.
+embedding fine-tuning, cross-encoder reranking, automatic skill patching, and
+web dashboards are planned future extensions.
 
 ## Portfolio Notes
 
