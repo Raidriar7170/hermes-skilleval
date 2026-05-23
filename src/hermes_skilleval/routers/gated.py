@@ -22,11 +22,17 @@ class VerificationGatedRouter(SkillRouter):
         self,
         base_router: SkillRouter | None = None,
         candidate_pool_size: int = 10,
+        selective: bool = False,
+        min_confidence: float = 0.5,
     ) -> None:
         if candidate_pool_size <= 0:
             raise ValueError("candidate_pool_size must be positive")
+        if min_confidence < 0.0 or min_confidence > 1.0:
+            raise ValueError("min_confidence must be between 0.0 and 1.0")
         self.base_router = base_router or EmbeddingRouter()
         self.candidate_pool_size = candidate_pool_size
+        self.selective = selective
+        self.min_confidence = min_confidence
 
     def route(self, task: BenchmarkTask, skills: list[Skill], top_k: int) -> RouteResult:
         if not isinstance(top_k, int) or top_k <= 0:
@@ -63,6 +69,12 @@ class VerificationGatedRouter(SkillRouter):
                 skill.id,
             ),
         )
+        if self.selective:
+            ranked_candidates = [
+                skill
+                for skill in ranked_candidates
+                if _confidence(scores[skill.id]) >= self.min_confidence
+            ]
 
         latency_ms = (time.perf_counter() - started) * 1000
         return RouteResult(
@@ -85,6 +97,10 @@ def _verification_score(
     category_score = 100.0 if _same_category(task, skill) else 0.0
     exact_id_score = 3.0 if _prompt_mentions_skill_id(task.prompt, skill.id) else 0.0
     return category_score + exact_id_score + lexical_score + base_score
+
+
+def _confidence(score: float) -> float:
+    return max(0.0, min(1.0, score / 100.0))
 
 
 def _terms(text: str) -> Counter[str]:

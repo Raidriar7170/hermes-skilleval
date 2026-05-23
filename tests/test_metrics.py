@@ -1,9 +1,15 @@
 from hermes_skilleval.metrics import (
+    abstention_rate,
+    accepted_count,
+    accepted_recall_at_k,
+    coverage,
     mean_reciprocal_rank,
     ndcg_at_k,
+    negative_accepted_rate,
     negative_hit_rate,
     precision_at_k,
     recall_at_k,
+    selection_rate_at_k,
 )
 
 
@@ -71,3 +77,25 @@ def test_at_k_metrics_ignore_non_positive_k():
     assert precision_at_k(["gold"], ["gold"], 0) == 0.0
     assert ndcg_at_k(["gold", "other"], ["gold"], -1) == 0.0
     assert negative_hit_rate(["bad", "other"], ["bad"], -1) == 0.0
+
+
+def test_selective_metrics_measure_accepted_outputs():
+    selected = ["gold", "helper"]
+
+    assert accepted_count(selected) == 2
+    assert coverage(selected) == 1.0
+    assert abstention_rate(selected) == 0.0
+    assert selection_rate_at_k(selected, 5) == 0.4
+    assert accepted_recall_at_k(selected, ["gold"], 5) == 1.0
+    assert negative_accepted_rate(selected, ["bad"], 5) == 0.0
+
+
+def test_selective_metrics_measure_full_abstention():
+    selected = []
+
+    assert accepted_count(selected) == 0
+    assert coverage(selected) == 0.0
+    assert abstention_rate(selected) == 1.0
+    assert selection_rate_at_k(selected, 5) == 0.0
+    assert accepted_recall_at_k(selected, ["gold"], 5) == 0.0
+    assert negative_accepted_rate(selected, ["bad"], 5) == 0.0

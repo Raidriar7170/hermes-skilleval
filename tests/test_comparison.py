@@ -37,8 +37,9 @@ def test_write_comparison_report_summarizes_router_metrics(tmp_path):
 
     text = output.read_text(encoding="utf-8")
     assert "# Hermes SkillEval Router Comparison" in text
-    assert "| embedding | 1 | 1.000 | 1.000 | 1.000 | 0.200 | 1.000 | 1.000 | 0.000 | 4.000 |" in text
-    assert "| keyword | 1 | 0.000 | 0.000 | 0.000 | 0.200 | 0.000 | 0.000 | 0.000 | 2.000 |" in text
+    assert "Selection Rate@5" in text
+    assert "| embedding | 1 | 1.000 | 1.000 | 1.000 | 0.200 | 1.000 | 1.000 | 0.000 | 1.000 | 0.200 | 0.000 | 1.000 | 0.000 | 4.000 |" in text
+    assert "| keyword | 1 | 0.000 | 0.000 | 0.000 | 0.200 | 0.000 | 0.000 | 0.000 | 1.000 | 0.200 | 0.000 | 1.000 | 0.000 | 2.000 |" in text
 
 
 def test_write_comparison_report_rejects_empty_router_results(tmp_path):

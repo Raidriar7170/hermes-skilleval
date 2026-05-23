@@ -30,9 +30,12 @@ validated CLI runs and Markdown reports.
 - Built a verification-gated reranker on top of MiniLM retrieval, improving
   embedding Recall@1 from 0.867 to 0.933 and eliminating top-choice misses
   without using benchmark gold or negative labels at routing time.
+- Added selective confidence gating so the router can return fewer skills
+  instead of padding low-confidence results, reducing accepted negative-skill
+  rate from 0.033 to 0.000 while preserving Recall@5 at 1.000.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  103 pytest tests covering parser, loader, router, metric, report, and CLI
+  109 pytest tests covering parser, loader, router, metric, report, and CLI
   edge cases.
 - Designed the system as an offline MVP that runs locally on a Mac while leaving
   clear extension points for cross-encoder reranking, embedding fine-tuning,
@@ -44,8 +47,8 @@ validated CLI runs and Markdown reports.
 Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, 30 labeled benchmark tasks, keyword/hybrid/embedding
 routers, optional `sentence-transformers` retrieval, verification-gated
-reranking, Recall@K, MRR, NDCG, negative-hit metrics, CLI comparison/failure
-reports, and 103-test validation.
+reranking, selective confidence gating, Recall@K, MRR, NDCG, negative-hit
+metrics, CLI comparison/failure reports, and 109-test validation.
 
 ## Interview Talking Points
 
@@ -71,6 +74,9 @@ reports, and 103-test validation.
   prompt-skill lexical evidence to resolve MiniLM top-choice ambiguity,
   improving Recall@1 from 0.867 to 0.933 and reducing top-choice failures from
   2 to 0.
+- Phase 4B: selective confidence gating suppresses weak cross-category filler
+  skills, dropping accepted negative-skill rate from 0.033 to 0.000 while
+  keeping benchmark coverage at 1.000.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.

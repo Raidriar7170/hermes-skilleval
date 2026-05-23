@@ -17,7 +17,8 @@ do not require Hermes Agent, network access, or an LLM API key.
   and an optional `sentence-transformers` backend with a JSON skill-embedding
   cache.
 - Reports Recall@1, Recall@3, Recall@5, Precision@5, MRR, NDCG@5,
-  Negative Hit Rate, top selected skills, and failure cases.
+  Negative Hit Rate, selective accepted-output metrics, top selected skills,
+  and failure cases.
 - Includes a 30-task benchmark corpus and a reproducible generator that keeps
   the committed benchmark directory in sync with its source list.
 - Includes a generated 20-skill benchmark library so every benchmark gold and
@@ -117,6 +118,23 @@ skilleval eval \
   --output-dir runs/gated-real
 ```
 
+Enable selective routing to suppress low-confidence candidates:
+
+```bash
+skilleval eval \
+  --index index/skills.json \
+  --tasks benchmarks/tasks \
+  --router gated \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache runs/embeddings/all-MiniLM-L6-v2.json \
+  --selective \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir runs/gated-selective
+```
+
 Run tests:
 
 ```bash
@@ -145,6 +163,9 @@ with notes in [`docs/phase3c.md`](docs/phase3c.md).
 Phase 4A adds a verification-gated reranker over MiniLM retrieval at
 [`docs/demo/phase4a-gated-reranker/comparison.md`](docs/demo/phase4a-gated-reranker/comparison.md)
 with notes in [`docs/phase4a.md`](docs/phase4a.md).
+Phase 4B adds selective verification-gated routing at
+[`docs/demo/phase4b-selective-routing/comparison.md`](docs/demo/phase4b-selective-routing/comparison.md)
+with notes in [`docs/phase4b.md`](docs/phase4b.md).
 
 To regenerate it:
 
@@ -182,6 +203,22 @@ skilleval analyze-failures \
   --baseline embedding-minilm \
   --candidate gated-minilm \
   --output docs/demo/phase4a-gated-reranker/failure-analysis.md
+skilleval compare \
+  --index docs/demo/phase3b-real-embedding/skills.json \
+  --tasks benchmarks/tasks \
+  --routers keyword,hybrid,embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase4b-minilm-cache.json \
+  --selective \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase4b-selective-routing
+skilleval analyze-failures \
+  --runs docs/demo/phase4b-selective-routing \
+  --baseline embedding-minilm \
+  --candidate gated-minilm-selective \
+  --output docs/demo/phase4b-selective-routing/failure-analysis.md
 ```
 
 ## Benchmark Corpus

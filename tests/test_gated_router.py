@@ -110,6 +110,91 @@ def test_gated_router_requests_larger_candidate_pool_than_top_k():
     assert base_router.requested_top_k == 3
 
 
+def test_selective_gated_router_filters_low_confidence_cross_category_candidates():
+    skills = [
+        _skill(
+            "systematic-debugging",
+            "coding",
+            "Systematic Debugging",
+            "Diagnose failing tests and command-line bugs.",
+        ),
+        _skill(
+            "test-driven-development",
+            "coding",
+            "Test-Driven Development",
+            "Preserve behavior through focused tests.",
+        ),
+        _skill(
+            "ascii-art",
+            "creative",
+            "ASCII Art",
+            "Create terminal illustrations.",
+        ),
+    ]
+    task = _task(
+        "coding-debugging-002",
+        "coding",
+        "A CLI command exits without writing output. Diagnose the bug with tests.",
+        ["systematic-debugging"],
+        ["ascii-art"],
+    )
+    base_router = StubRouter(
+        ["systematic-debugging", "test-driven-development", "ascii-art"],
+        {
+            "systematic-debugging": 0.8,
+            "test-driven-development": 0.7,
+            "ascii-art": 0.6,
+        },
+    )
+
+    result = VerificationGatedRouter(
+        base_router=base_router,
+        selective=True,
+        min_confidence=0.5,
+    ).route(task, skills, top_k=5)
+
+    assert result.selected_skill_ids == [
+        "systematic-debugging",
+        "test-driven-development",
+    ]
+    assert "ascii-art" not in result.selected_skill_ids
+
+
+def test_non_selective_gated_router_keeps_requested_candidate_count():
+    skills = [
+        _skill("systematic-debugging", "coding", "Systematic Debugging", "debug bugs"),
+        _skill("ascii-art", "creative", "ASCII Art", "draw terminals"),
+    ]
+    task = _task("coding-debugging-002", "coding", "debug a CLI", ["systematic-debugging"], ["ascii-art"])
+    base_router = StubRouter(
+        ["systematic-debugging", "ascii-art"],
+        {"systematic-debugging": 0.8, "ascii-art": 0.6},
+    )
+
+    result = VerificationGatedRouter(base_router=base_router).route(
+        task,
+        skills,
+        top_k=2,
+    )
+
+    assert result.selected_skill_ids == ["systematic-debugging", "ascii-art"]
+
+
+def test_gated_router_rejects_invalid_min_confidence():
+    base_router = StubRouter([], {})
+
+    try:
+        VerificationGatedRouter(
+            base_router=base_router,
+            selective=True,
+            min_confidence=1.1,
+        )
+    except ValueError as error:
+        assert "min_confidence" in str(error)
+    else:
+        raise AssertionError("expected min_confidence validation error")
+
+
 def _skill(skill_id, category, name, description):
     return Skill(
         id=skill_id,

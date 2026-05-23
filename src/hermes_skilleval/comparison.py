@@ -4,6 +4,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+from hermes_skilleval.metrics import (
+    abstention_rate,
+    accepted_recall_at_k,
+    coverage,
+    negative_accepted_rate,
+    selection_rate_at_k,
+)
+
 
 METRIC_FIELDS = (
     "recall_at_1",
@@ -13,6 +21,11 @@ METRIC_FIELDS = (
     "mrr",
     "ndcg_at_5",
     "negative_hit_rate",
+    "coverage",
+    "selection_rate_at_5",
+    "abstention_rate",
+    "accepted_recall_at_5",
+    "negative_accepted_rate",
     "latency_ms",
 )
 
@@ -49,7 +62,7 @@ def _summary_row(router: str, records: list[dict[str, Any]]) -> dict[str, float 
         "router": router,
         "tasks": len(records),
         **{
-            field: sum(float(record[field]) for record in records) / len(records)
+            field: sum(_metric_value(record, field) for record in records) / len(records)
             for field in METRIC_FIELDS
         },
     }
@@ -59,8 +72,8 @@ def _render_comparison(rows: list[dict[str, float | str | int]]) -> str:
     lines = [
         "# Hermes SkillEval Router Comparison",
         "",
-        "| Router | Tasks | Recall@1 | Recall@3 | Recall@5 | Precision@5 | MRR | NDCG@5 | Negative Hit Rate | Avg Latency ms |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Router | Tasks | Recall@1 | Recall@3 | Recall@5 | Precision@5 | MRR | NDCG@5 | Negative Hit Rate | Coverage | Selection Rate@5 | Abstention Rate | Accepted Recall@5 | Negative Accepted Rate | Avg Latency ms |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
         lines.append(
@@ -76,6 +89,11 @@ def _render_comparison(rows: list[dict[str, float | str | int]]) -> str:
                     _fmt(row["mrr"]),
                     _fmt(row["ndcg_at_5"]),
                     _fmt(row["negative_hit_rate"]),
+                    _fmt(row["coverage"]),
+                    _fmt(row["selection_rate_at_5"]),
+                    _fmt(row["abstention_rate"]),
+                    _fmt(row["accepted_recall_at_5"]),
+                    _fmt(row["negative_accepted_rate"]),
                     _fmt(row["latency_ms"]),
                 ]
             )
@@ -87,3 +105,24 @@ def _render_comparison(rows: list[dict[str, float | str | int]]) -> str:
 
 def _fmt(value: float | str | int) -> str:
     return f"{float(value):.3f}"
+
+
+def _metric_value(record: dict[str, Any], field: str) -> float:
+    value = record.get(field)
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return float(value)
+
+    selected = list(record["selected_skill_ids"])
+    gold = list(record["gold_skills"])
+    negative = list(record["negative_skills"])
+    if field == "coverage":
+        return coverage(selected)
+    if field == "selection_rate_at_5":
+        return selection_rate_at_k(selected, 5)
+    if field == "abstention_rate":
+        return abstention_rate(selected)
+    if field == "accepted_recall_at_5":
+        return accepted_recall_at_k(selected, gold, 5)
+    if field == "negative_accepted_rate":
+        return negative_accepted_rate(selected, negative, 5)
+    raise KeyError(f"missing metric field: {field}")

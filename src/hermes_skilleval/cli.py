@@ -14,11 +14,17 @@ from hermes_skilleval.failure_analysis import (
     write_failure_analysis_report,
 )
 from hermes_skilleval.metrics import (
+    abstention_rate,
+    accepted_count,
+    accepted_recall_at_k,
+    coverage,
     mean_reciprocal_rank,
     ndcg_at_k,
+    negative_accepted_rate,
     negative_hit_rate,
     precision_at_k,
     recall_at_k,
+    selection_rate_at_k,
 )
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.report import write_markdown_report
@@ -145,6 +151,17 @@ def _add_gated_args(parser: argparse.ArgumentParser) -> None:
         type=int,
         default=10,
         help="candidate pool size reranked by the gated router",
+    )
+    parser.add_argument(
+        "--selective",
+        action="store_true",
+        help="allow the gated router to return fewer than top-k skills",
+    )
+    parser.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.5,
+        help="minimum normalized confidence for selective gated routing",
     )
 
 
@@ -274,6 +291,8 @@ def _gated_router(args: argparse.Namespace | None) -> VerificationGatedRouter:
     return VerificationGatedRouter(
         base_router=_embedding_router(args),
         candidate_pool_size=candidate_pool_size,
+        selective=getattr(args, "selective", False),
+        min_confidence=getattr(args, "min_confidence", 0.5),
     )
 
 
@@ -375,6 +394,12 @@ def _result_record(
         "mrr": mean_reciprocal_rank(selected, gold),
         "ndcg_at_5": ndcg_at_k(selected, gold, 5),
         "negative_hit_rate": negative_hit_rate(selected, negative, 5),
+        "accepted_count": accepted_count(selected),
+        "coverage": coverage(selected),
+        "selection_rate_at_5": selection_rate_at_k(selected, 5),
+        "abstention_rate": abstention_rate(selected),
+        "accepted_recall_at_5": accepted_recall_at_k(selected, gold, 5),
+        "negative_accepted_rate": negative_accepted_rate(selected, negative, 5),
     }
 
 

@@ -26,6 +26,12 @@ EXPECTED_RESULT_KEYS = {
     "mrr",
     "ndcg_at_5",
     "negative_hit_rate",
+    "accepted_count",
+    "coverage",
+    "selection_rate_at_5",
+    "abstention_rate",
+    "accepted_recall_at_5",
+    "negative_accepted_rate",
 }
 
 
@@ -434,6 +440,63 @@ def test_cli_compare_supports_gated_embedding_backend_specs(tmp_path, monkeypatc
 
     assert record["router"] == "gated-fake"
     assert "| gated-fake |" in comparison
+
+
+def test_cli_eval_gated_router_supports_selective_confidence_filter(tmp_path):
+    index_path = tmp_path / "index" / "skills.json"
+    run_dir = tmp_path / "selective-run"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    assert (
+        main(
+            [
+                "eval",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--router",
+                "gated",
+                "--selective",
+                "--min-confidence",
+                "0.5",
+                "--gated-pool-size",
+                "3",
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(run_dir),
+            ]
+        )
+        == 0
+    )
+
+    record = json.loads((run_dir / "results.jsonl").read_text(encoding="utf-8"))
+
+    assert record["router"] == "gated"
+    assert set(record["selected_skill_ids"]) == {
+        "systematic-debugging",
+        "test-driven-development",
+    }
+    assert "songwriting-and-ai-music" not in record["selected_skill_ids"]
+    assert record["accepted_count"] == 2
+    assert record["coverage"] == 1.0
+    assert record["selection_rate_at_5"] == 0.4
+    assert record["abstention_rate"] == 0.0
+    assert record["accepted_recall_at_5"] == 1.0
+    assert record["negative_accepted_rate"] == 0.0
 
 
 def test_cli_analyze_failures_writes_report_from_comparison_dir(tmp_path):

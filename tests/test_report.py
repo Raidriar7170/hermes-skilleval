@@ -51,6 +51,11 @@ def test_write_markdown_report_includes_metrics_and_failures(tmp_path):
     assert "| MRR | 0.500 |" in text
     assert "| NDCG@5 | 0.500 |" in text
     assert "| Negative Hit Rate | 0.500 |" in text
+    assert "| Coverage | 1.000 |" in text
+    assert "| Selection Rate@5 | 0.200 |" in text
+    assert "| Abstention Rate | 0.000 |" in text
+    assert "| Accepted Recall@5 | 0.500 |" in text
+    assert "| Negative Accepted Rate | 0.500 |" in text
     assert "| Average Latency (ms) | 2.000 |" in text
 
 

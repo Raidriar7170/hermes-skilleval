@@ -7,11 +7,17 @@ from pathlib import Path
 from typing import Any
 
 from hermes_skilleval.metrics import (
+    abstention_rate,
+    accepted_count,
+    accepted_recall_at_k,
+    coverage,
     mean_reciprocal_rank,
     ndcg_at_k,
+    negative_accepted_rate,
     negative_hit_rate,
     precision_at_k,
     recall_at_k,
+    selection_rate_at_k,
 )
 
 REQUIRED_FIELDS = {
@@ -123,6 +129,32 @@ def _metric_row(record: dict[str, Any]) -> dict[str, float]:
         "mrr": mean_reciprocal_rank(selected, gold),
         "ndcg@5": ndcg_at_k(selected, gold, 5),
         "negative_hit_rate": negative_hit_rate(selected, negative, 5),
+        "accepted_count": _record_metric(
+            record,
+            "accepted_count",
+            accepted_count(selected),
+        ),
+        "coverage": _record_metric(record, "coverage", coverage(selected)),
+        "selection_rate@5": _record_metric(
+            record,
+            "selection_rate_at_5",
+            selection_rate_at_k(selected, 5),
+        ),
+        "abstention_rate": _record_metric(
+            record,
+            "abstention_rate",
+            abstention_rate(selected),
+        ),
+        "accepted_recall@5": _record_metric(
+            record,
+            "accepted_recall_at_5",
+            accepted_recall_at_k(selected, gold, 5),
+        ),
+        "negative_accepted_rate": _record_metric(
+            record,
+            "negative_accepted_rate",
+            negative_accepted_rate(selected, negative, 5),
+        ),
         "latency_ms": float(record["latency_ms"]),
     }
 
@@ -138,6 +170,12 @@ def _mean_metrics(rows: list[dict[str, float]]) -> dict[str, float]:
             "mrr",
             "ndcg@5",
             "negative_hit_rate",
+            "accepted_count",
+            "coverage",
+            "selection_rate@5",
+            "abstention_rate",
+            "accepted_recall@5",
+            "negative_accepted_rate",
             "latency_ms",
         )
     }
@@ -169,6 +207,12 @@ def _render_report(
         f"| MRR | {_format_metric(metrics['mrr'])} |",
         f"| NDCG@5 | {_format_metric(metrics['ndcg@5'])} |",
         f"| Negative Hit Rate | {_format_metric(metrics['negative_hit_rate'])} |",
+        f"| Accepted Count | {_format_metric(metrics['accepted_count'])} |",
+        f"| Coverage | {_format_metric(metrics['coverage'])} |",
+        f"| Selection Rate@5 | {_format_metric(metrics['selection_rate@5'])} |",
+        f"| Abstention Rate | {_format_metric(metrics['abstention_rate'])} |",
+        f"| Accepted Recall@5 | {_format_metric(metrics['accepted_recall@5'])} |",
+        f"| Negative Accepted Rate | {_format_metric(metrics['negative_accepted_rate'])} |",
         f"| Average Latency (ms) | {_format_metric(metrics['latency_ms'])} |",
         "",
         "## Top Selected Skills",
@@ -234,6 +278,13 @@ def _render_report(
 
 def _format_metric(value: float) -> str:
     return f"{value:.3f}"
+
+
+def _record_metric(record: dict[str, Any], field: str, fallback: float) -> float:
+    value = record.get(field, fallback)
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return fallback
+    return float(value)
 
 
 def _escape_table_cell(value: object) -> str:

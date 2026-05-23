@@ -71,6 +71,9 @@ This points to two future extensions:
 - add a stricter cross-category suppression policy for production routing,
   evaluated separately from the fixed top-5 benchmark metric.
 
+Phase 4B implements the first extension as selective verification-gated
+routing.
+
 ## Reproduce
 
 ```bash

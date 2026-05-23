@@ -27,6 +27,22 @@ skilleval analyze-failures \
   --baseline embedding-minilm \
   --candidate gated-minilm \
   --output docs/demo/phase4a-gated-reranker/failure-analysis.md
+skilleval compare \
+  --index docs/demo/phase3b-real-embedding/skills.json \
+  --tasks benchmarks/tasks \
+  --routers keyword,hybrid,embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase4b-minilm-cache.json \
+  --selective \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase4b-selective-routing
+skilleval analyze-failures \
+  --runs docs/demo/phase4b-selective-routing \
+  --baseline embedding-minilm \
+  --candidate gated-minilm-selective \
+  --output docs/demo/phase4b-selective-routing/failure-analysis.md
 ```
 
 Artifacts:
@@ -50,3 +66,9 @@ Artifacts:
   reranker experiment.
 - `phase4a-gated-reranker/failure-analysis.md`: MiniLM-vs-gated failure-mode
   analysis showing which top-choice errors the reranker fixes.
+- `phase4b-selective-routing/comparison.md`: Phase 4B comparison including
+  selective verification-gated MiniLM routing.
+- `phase4b-selective-routing/*/report.md`: per-router reports with accepted
+  output metrics.
+- `phase4b-selective-routing/failure-analysis.md`: failure-mode analysis
+  showing selective gating removes the remaining accepted negative skill.

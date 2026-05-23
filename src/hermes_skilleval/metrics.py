@@ -55,3 +55,29 @@ def negative_hit_rate(selected: list[str], negative: list[str], k: int) -> float
     if not negative_set:
         return 0.0
     return 1.0 if set(selected[:k]) & negative_set else 0.0
+
+
+def accepted_count(selected: list[str]) -> int:
+    return len(selected)
+
+
+def coverage(selected: list[str]) -> float:
+    return 1.0 if selected else 0.0
+
+
+def selection_rate_at_k(selected: list[str], k: int) -> float:
+    if k <= 0:
+        return 0.0
+    return min(len(selected), k) / k
+
+
+def abstention_rate(selected: list[str]) -> float:
+    return 0.0 if selected else 1.0
+
+
+def accepted_recall_at_k(selected: list[str], gold: list[str], k: int) -> float:
+    return recall_at_k(selected, gold, k)
+
+
+def negative_accepted_rate(selected: list[str], negative: list[str], k: int) -> float:
+    return negative_hit_rate(selected, negative, k)
