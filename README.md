@@ -195,6 +195,9 @@ Phase 6A expands the benchmark into an 80-task, 45-skill robustness pack with
 dev/test split metadata at
 [`docs/demo/phase6a-robustness/comparison.md`](docs/demo/phase6a-robustness/comparison.md)
 and summary notes in [`docs/phase6a.md`](docs/phase6a.md).
+Phase 6B adds contrastive selective gating for same-category ambiguous skills at
+[`docs/demo/phase6b-contrastive-gating/comparison.md`](docs/demo/phase6b-contrastive-gating/comparison.md)
+with notes in [`docs/phase6b.md`](docs/phase6b.md).
 
 To regenerate it:
 
@@ -291,6 +294,42 @@ skilleval analyze-failures \
   --baseline embedding-minilm \
   --candidate gated-minilm-selective \
   --output docs/demo/phase6a-robustness/failure-analysis.md
+skilleval index \
+  --skills-path benchmarks/skills \
+  --output docs/demo/phase6b-contrastive-gating/skills.json
+skilleval compare \
+  --index docs/demo/phase6b-contrastive-gating/skills.json \
+  --tasks benchmarks/tasks \
+  --routers embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase6b-minilm-cache.json \
+  --selective \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase6b-contrastive-gating
+skilleval eval \
+  --index docs/demo/phase6b-contrastive-gating/skills.json \
+  --tasks benchmarks/tasks \
+  --router gated \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase6b-minilm-cache.json \
+  --selective \
+  --contrastive-selective \
+  --contrastive-margin 6.0 \
+  --min-evidence 2.0 \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase6b-contrastive-gating/gated-minilm-contrastive
+skilleval report \
+  --runs docs/demo/phase6b-contrastive-gating/gated-minilm-contrastive
+skilleval analyze-failures \
+  --runs docs/demo/phase6b-contrastive-gating \
+  --baseline gated-minilm-selective \
+  --candidate gated-minilm-contrastive \
+  --output docs/demo/phase6b-contrastive-gating/failure-analysis.md
 ```
 
 ## Benchmark Corpus

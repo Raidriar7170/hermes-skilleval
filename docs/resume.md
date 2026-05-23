@@ -40,6 +40,10 @@ validated CLI runs and Markdown reports.
 - Expanded the benchmark into an 80-task, 45-skill robustness pack with
   dev/test split metadata and challenge tags, then measured selective gated
   MiniLM at 0.881 Recall@1, 0.981 Recall@5, and 0.985 MRR.
+- Added contrastive selective gating for ambiguous same-category skills,
+  reducing full-benchmark Negative Hit Rate from 0.113 to 0.037 and held-out
+  ambiguous-pair Negative Hit Rate from 0.900 to 0.300 while preserving
+  Recall@1 at 0.881 and Recall@5 at 0.969.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
   119 pytest tests covering parser, loader, router, metric, report, and CLI
@@ -91,12 +95,15 @@ comparison/failure reports, and 119-test validation.
 - Phase 6A: the robustness pack expands the benchmark from 30 to 80 tasks and
   20 to 45 skills, adds dev/test splits plus challenge tags, and surfaces
   held-out ambiguous-pair weaknesses for future reranking work.
+- Phase 6B: contrastive selective gating reduces same-category negative hits
+  by comparing each accepted candidate's prompt evidence against the strongest
+  accepted skill, cutting full Negative Hit Rate to 0.037.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
 - Agent relevance: the harness now covers offline lexical routing, embedding
-  retrieval, verifier-gated reranking, selective acceptance, and failure-driven
-  self-improvement loops.
+  retrieval, verifier-gated reranking, selective and contrastive acceptance,
+  and failure-driven self-improvement loops.
 - Hardware story: the current MVP and Phase 6A benchmark run on a local Mac. A
   remote 8xA100 machine becomes useful for future embedding fine-tuning,
   cross-encoder reranking, larger benchmark sweeps, and LLM-assisted verifier

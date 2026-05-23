@@ -4,8 +4,9 @@ This directory contains committed demo runs for Hermes SkillEval.
 
 The original `benchmark-hybrid` and `router-comparison` artifacts use the tiny
 fixture skill library in `tests/fixtures/skills` and are smoke/demo artifacts
-for CLI reporting. The main current benchmark artifact is the Phase 6A
-robustness run over the generated 80-task, 45-skill corpus.
+for CLI reporting. The main current benchmark artifacts are the Phase 6A
+robustness run and the Phase 6B contrastive gating run over the generated
+80-task, 45-skill corpus.
 
 Regenerate the demo from the repository root:
 
@@ -87,6 +88,42 @@ skilleval analyze-failures \
   --baseline embedding-minilm \
   --candidate gated-minilm-selective \
   --output docs/demo/phase6a-robustness/failure-analysis.md
+skilleval index \
+  --skills-path benchmarks/skills \
+  --output docs/demo/phase6b-contrastive-gating/skills.json
+skilleval compare \
+  --index docs/demo/phase6b-contrastive-gating/skills.json \
+  --tasks benchmarks/tasks \
+  --routers embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase6b-minilm-cache.json \
+  --selective \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase6b-contrastive-gating
+skilleval eval \
+  --index docs/demo/phase6b-contrastive-gating/skills.json \
+  --tasks benchmarks/tasks \
+  --router gated \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase6b-minilm-cache.json \
+  --selective \
+  --contrastive-selective \
+  --contrastive-margin 6.0 \
+  --min-evidence 2.0 \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase6b-contrastive-gating/gated-minilm-contrastive
+skilleval report \
+  --runs docs/demo/phase6b-contrastive-gating/gated-minilm-contrastive
+skilleval analyze-failures \
+  --runs docs/demo/phase6b-contrastive-gating \
+  --baseline gated-minilm-selective \
+  --candidate gated-minilm-contrastive \
+  --output docs/demo/phase6b-contrastive-gating/failure-analysis.md
 ```
 
 Artifacts:
@@ -131,3 +168,10 @@ Artifacts:
   diagnostics for the expanded benchmark.
 - `phase6a-robustness/failure-analysis.md`: failure-mode analysis comparing
   MiniLM against selective gated MiniLM on the robustness pack.
+- `phase6b-contrastive-gating/comparison.md`: Phase 6B comparison for MiniLM,
+  selective gated MiniLM, and contrastive gated MiniLM over the 80-task
+  robustness benchmark.
+- `phase6b-contrastive-gating/contrastive-summary.md`: acceptance-check
+  summary for negative-hit, ambiguous-pair, Recall@1, and Recall@5 deltas.
+- `phase6b-contrastive-gating/failure-analysis.md`: failure-mode comparison
+  between standard selective gating and contrastive selective gating.

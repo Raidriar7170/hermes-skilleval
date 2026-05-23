@@ -40,7 +40,7 @@
 - Modify: `tests/test_gated_router.py`
 - Later modify: `src/hermes_skilleval/routers/gated.py`
 
-- [ ] **Step 1: Write failing tests for same-category contrastive acceptance**
+- [x] **Step 1: Write failing tests for same-category contrastive acceptance**
 
 Append these tests above `test_non_selective_gated_router_keeps_requested_candidate_count` in `tests/test_gated_router.py`:
 
@@ -145,7 +145,7 @@ def test_gated_router_rejects_invalid_contrastive_thresholds():
             raise AssertionError("expected contrastive threshold validation error")
 ```
 
-- [ ] **Step 2: Run tests to verify RED**
+- [x] **Step 2: Run tests to verify RED**
 
 Run:
 
@@ -155,7 +155,7 @@ pytest tests/test_gated_router.py::test_contrastive_selective_filters_same_categ
 
 Expected: FAIL because `VerificationGatedRouter.__init__()` does not accept `contrastive_selective`, `contrastive_margin`, or `min_evidence`.
 
-- [ ] **Step 3: Add router constructor options and validation**
+- [x] **Step 3: Add router constructor options and validation**
 
 In `src/hermes_skilleval/routers/gated.py`, update `VerificationGatedRouter.__init__`:
 
@@ -187,7 +187,7 @@ In `src/hermes_skilleval/routers/gated.py`, update `VerificationGatedRouter.__in
         self.min_evidence = min_evidence
 ```
 
-- [ ] **Step 4: Add prompt evidence and candidate acceptance helpers**
+- [x] **Step 4: Add prompt evidence and candidate acceptance helpers**
 
 In `src/hermes_skilleval/routers/gated.py`, replace the current selective list comprehension:
 
@@ -259,7 +259,7 @@ def _prompt_evidence_score(task: BenchmarkTask, skill: Skill) -> float:
     return lexical_score + exact_id_score
 ```
 
-- [ ] **Step 5: Run tests to verify GREEN**
+- [x] **Step 5: Run tests to verify GREEN**
 
 Run:
 
@@ -269,7 +269,7 @@ pytest tests/test_gated_router.py::test_contrastive_selective_filters_same_categ
 
 Expected: PASS.
 
-- [ ] **Step 6: Run existing gated router tests**
+- [x] **Step 6: Run existing gated router tests**
 
 Run:
 
@@ -279,7 +279,7 @@ pytest tests/test_gated_router.py -q
 
 Expected: all gated router tests pass.
 
-- [ ] **Step 7: Commit router behavior**
+- [x] **Step 7: Commit router behavior**
 
 Run:
 
@@ -294,7 +294,7 @@ git commit -m "feat: add contrastive gated selection"
 - Modify: `src/hermes_skilleval/cli.py`
 - Modify: `tests/test_cli_smoke.py`
 
-- [ ] **Step 1: Write failing CLI wiring test**
+- [x] **Step 1: Write failing CLI wiring test**
 
 Append this test after `test_cli_eval_gated_router_supports_selective_confidence_filter` in `tests/test_cli_smoke.py`:
 
@@ -359,7 +359,7 @@ def test_cli_eval_gated_router_passes_contrastive_options(tmp_path, monkeypatch)
     assert captured["min_evidence"] == 1.5
 ```
 
-- [ ] **Step 2: Run test to verify RED**
+- [x] **Step 2: Run test to verify RED**
 
 Run:
 
@@ -369,7 +369,7 @@ pytest tests/test_cli_smoke.py::test_cli_eval_gated_router_passes_contrastive_op
 
 Expected: FAIL with an argparse error for unrecognized `--contrastive-selective`, `--contrastive-margin`, or `--min-evidence`.
 
-- [ ] **Step 3: Add CLI arguments**
+- [x] **Step 3: Add CLI arguments**
 
 In `src/hermes_skilleval/cli.py`, extend `_add_gated_args`:
 
@@ -393,7 +393,7 @@ In `src/hermes_skilleval/cli.py`, extend `_add_gated_args`:
     )
 ```
 
-- [ ] **Step 4: Pass CLI arguments into the gated router**
+- [x] **Step 4: Pass CLI arguments into the gated router**
 
 In `_gated_router`, update the constructor call:
 
@@ -409,7 +409,7 @@ In `_gated_router`, update the constructor call:
     )
 ```
 
-- [ ] **Step 5: Run CLI wiring test**
+- [x] **Step 5: Run CLI wiring test**
 
 Run:
 
@@ -419,7 +419,7 @@ pytest tests/test_cli_smoke.py::test_cli_eval_gated_router_passes_contrastive_op
 
 Expected: PASS.
 
-- [ ] **Step 6: Run relevant CLI smoke tests**
+- [x] **Step 6: Run relevant CLI smoke tests**
 
 Run:
 
@@ -429,7 +429,7 @@ pytest tests/test_cli_smoke.py::test_cli_eval_gated_router_supports_selective_co
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit CLI wiring**
+- [x] **Step 7: Commit CLI wiring**
 
 Run:
 
@@ -445,7 +445,7 @@ git commit -m "feat: expose contrastive gated routing"
 - Create: `docs/demo/phase6b-contrastive-gating/contrastive-summary.md`
 - Modify: generated result files under `docs/demo/phase6b-contrastive-gating/`
 
-- [ ] **Step 1: Index the expanded benchmark skill library**
+- [x] **Step 1: Index the expanded benchmark skill library**
 
 Run:
 
@@ -457,7 +457,7 @@ python -m hermes_skilleval.cli index \
 
 Expected: `Indexed 45 skills to docs/demo/phase6b-contrastive-gating/skills.json`.
 
-- [ ] **Step 2: Run MiniLM and standard selective gated baselines**
+- [x] **Step 2: Run MiniLM and standard selective gated baselines**
 
 Run:
 
@@ -477,7 +477,7 @@ python -m hermes_skilleval.cli compare \
 
 Expected: `comparison.md` contains rows for `embedding-minilm` and `gated-minilm-selective`.
 
-- [ ] **Step 3: Run contrastive gated evaluation into the same demo directory**
+- [x] **Step 3: Run contrastive gated evaluation into the same demo directory**
 
 Run:
 
@@ -503,7 +503,7 @@ python -m hermes_skilleval.cli report \
 
 Expected: `gated-minilm-contrastive/results.jsonl` has 80 records and `gated-minilm-contrastive/report.md` exists.
 
-- [ ] **Step 4: Rebuild comparison report with all three result paths**
+- [x] **Step 4: Rebuild comparison report with all three result paths**
 
 Run:
 
@@ -526,7 +526,7 @@ PY
 
 Expected: `comparison.md` contains rows for all three routers.
 
-- [ ] **Step 5: Write failure analysis**
+- [x] **Step 5: Write failure analysis**
 
 Run:
 
@@ -540,7 +540,7 @@ python -m hermes_skilleval.cli analyze-failures \
 
 Expected: `failure-analysis.md` contains a Candidate vs Baseline section comparing selective and contrastive gated MiniLM.
 
-- [ ] **Step 6: Generate contrastive summary and assert acceptance criteria**
+- [x] **Step 6: Generate contrastive summary and assert acceptance criteria**
 
 Run:
 
@@ -624,7 +624,7 @@ PY
 
 Expected: script exits 0 and writes `contrastive-summary.md`.
 
-- [ ] **Step 7: Commit benchmark artifacts**
+- [x] **Step 7: Commit benchmark artifacts**
 
 Run:
 
@@ -641,7 +641,7 @@ git commit -m "test: add phase6b contrastive benchmark run"
 - Modify: `docs/demo/README.md`
 - Modify: `docs/resume.md`
 
-- [ ] **Step 1: Create Phase 6B documentation from generated summary**
+- [x] **Step 1: Create Phase 6B documentation from generated summary**
 
 Run this script after `docs/demo/phase6b-contrastive-gating/contrastive-summary.md` exists:
 
@@ -694,7 +694,7 @@ PY
 
 Expected: `docs/phase6b.md` exists and contains the router table from `contrastive-summary.md`.
 
-- [ ] **Step 2: Update README demo section**
+- [x] **Step 2: Update README demo section**
 
 In `README.md`, add a Phase 6B paragraph after the Phase 6A paragraph:
 
@@ -706,7 +706,7 @@ with notes in [`docs/phase6b.md`](docs/phase6b.md).
 
 Also add the Phase 6B reproduction commands after the Phase 6A commands, using the commands from Task 3.
 
-- [ ] **Step 3: Update demo README**
+- [x] **Step 3: Update demo README**
 
 In `docs/demo/README.md`, add artifacts:
 
@@ -720,7 +720,7 @@ In `docs/demo/README.md`, add artifacts:
   between standard selective gating and contrastive selective gating.
 ```
 
-- [ ] **Step 4: Update resume notes**
+- [x] **Step 4: Update resume notes**
 
 In `docs/resume.md`, add a resume bullet after the Phase 6A bullet. Use the generated metrics from `contrastive-summary.md`:
 
@@ -733,7 +733,7 @@ In `docs/resume.md`, add a resume bullet after the Phase 6A bullet. Use the gene
 
 If the generated metrics are strong and stable, include exact values in this bullet.
 
-- [ ] **Step 5: Run documentation consistency search**
+- [x] **Step 5: Run documentation consistency search**
 
 Run:
 
@@ -743,7 +743,7 @@ rg -n "Phase 6B|phase6b|contrastive|Negative Hit Rate|Recall@5" README.md docs/p
 
 Expected: Phase 6B references appear in all four docs.
 
-- [ ] **Step 6: Commit docs**
+- [x] **Step 6: Commit docs**
 
 Run:
 
@@ -757,7 +757,7 @@ git commit -m "docs: document phase6b contrastive gating"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-05-23-phase6b-contrastive-gating.md`
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 Run:
 
@@ -767,7 +767,7 @@ pytest -q
 
 Expected: all tests pass.
 
-- [ ] **Step 2: Re-run acceptance script**
+- [x] **Step 2: Re-run acceptance script**
 
 Run the Python script from Task 3 Step 6 again.
 
@@ -778,7 +778,7 @@ Expected:
 - Recall@1 is no more than 0.02 below `gated-minilm-selective`.
 - Recall@5 is at least 0.95.
 
-- [ ] **Step 3: Confirm result file counts**
+- [x] **Step 3: Confirm result file counts**
 
 Run:
 
@@ -800,7 +800,7 @@ PY
 
 Expected: `phase6b_result_counts=ok`.
 
-- [ ] **Step 4: Check working tree**
+- [x] **Step 4: Check working tree**
 
 Run:
 
@@ -810,7 +810,7 @@ git status --short
 
 Expected: only the plan file may be modified because checkboxes were updated.
 
-- [ ] **Step 5: Mark final plan checkboxes and amend docs commit**
+- [x] **Step 5: Mark final plan checkboxes and amend docs commit**
 
 After the final verification passes, check off Task 5 in this plan and amend the docs commit:
 
