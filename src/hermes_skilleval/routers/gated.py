@@ -24,15 +24,25 @@ class VerificationGatedRouter(SkillRouter):
         candidate_pool_size: int = 10,
         selective: bool = False,
         min_confidence: float = 0.5,
+        contrastive_selective: bool = False,
+        contrastive_margin: float = 6.0,
+        min_evidence: float = 2.0,
     ) -> None:
         if candidate_pool_size <= 0:
             raise ValueError("candidate_pool_size must be positive")
         if min_confidence < 0.0 or min_confidence > 1.0:
             raise ValueError("min_confidence must be between 0.0 and 1.0")
+        if contrastive_margin < 0.0:
+            raise ValueError("contrastive_margin must be non-negative")
+        if min_evidence < 0.0:
+            raise ValueError("min_evidence must be non-negative")
         self.base_router = base_router or EmbeddingRouter()
         self.candidate_pool_size = candidate_pool_size
         self.selective = selective
         self.min_confidence = min_confidence
+        self.contrastive_selective = contrastive_selective
+        self.contrastive_margin = contrastive_margin
+        self.min_evidence = min_evidence
 
     def route(self, task: BenchmarkTask, skills: list[Skill], top_k: int) -> RouteResult:
         if not isinstance(top_k, int) or top_k <= 0:
@@ -70,11 +80,15 @@ class VerificationGatedRouter(SkillRouter):
             ),
         )
         if self.selective:
-            ranked_candidates = [
-                skill
-                for skill in ranked_candidates
-                if _confidence(scores[skill.id]) >= self.min_confidence
-            ]
+            ranked_candidates = _select_candidates(
+                task,
+                ranked_candidates,
+                scores,
+                min_confidence=self.min_confidence,
+                contrastive_selective=self.contrastive_selective,
+                contrastive_margin=self.contrastive_margin,
+                min_evidence=self.min_evidence,
+            )
 
         latency_ms = (time.perf_counter() - started) * 1000
         return RouteResult(
@@ -97,6 +111,47 @@ def _verification_score(
     category_score = 100.0 if _same_category(task, skill) else 0.0
     exact_id_score = 3.0 if _prompt_mentions_skill_id(task.prompt, skill.id) else 0.0
     return category_score + exact_id_score + lexical_score + base_score
+
+
+def _select_candidates(
+    task: BenchmarkTask,
+    ranked_candidates: list[Skill],
+    scores: dict[str, float],
+    *,
+    min_confidence: float,
+    contrastive_selective: bool,
+    contrastive_margin: float,
+    min_evidence: float,
+) -> list[Skill]:
+    accepted: list[Skill] = []
+    accepted_evidence: dict[str, float] = {}
+    for skill in ranked_candidates:
+        if _confidence(scores[skill.id]) < min_confidence:
+            continue
+        if contrastive_selective and accepted and _same_category(task, skill):
+            evidence = _prompt_evidence_score(task, skill)
+            same_category_evidence = [
+                accepted_evidence[accepted_skill.id]
+                for accepted_skill in accepted
+                if _same_category(task, accepted_skill)
+            ]
+            if same_category_evidence:
+                best_evidence = max(same_category_evidence)
+                if evidence < min_evidence:
+                    continue
+                if best_evidence - evidence > contrastive_margin:
+                    continue
+        accepted.append(skill)
+        accepted_evidence[skill.id] = _prompt_evidence_score(task, skill)
+    return accepted
+
+
+def _prompt_evidence_score(task: BenchmarkTask, skill: Skill) -> float:
+    query_terms = _terms(task.prompt)
+    skill_terms = _terms(_skill_text(skill))
+    lexical_score = _weighted_overlap(query_terms, skill_terms)
+    exact_id_score = 3.0 if _prompt_mentions_skill_id(task.prompt, skill.id) else 0.0
+    return lexical_score + exact_id_score
 
 
 def _confidence(score: float) -> float:

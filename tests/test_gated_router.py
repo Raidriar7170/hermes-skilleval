@@ -160,6 +160,106 @@ def test_selective_gated_router_filters_low_confidence_cross_category_candidates
     assert "ascii-art" not in result.selected_skill_ids
 
 
+def test_contrastive_selective_filters_same_category_weak_evidence():
+    skills = [
+        _skill(
+            "citation-checking",
+            "research",
+            "Citation Checking",
+            "Verify cited evidence for empirical claims.",
+        ),
+        _skill(
+            "literature-review",
+            "research",
+            "Literature Review",
+            "Compare related papers and organize prior work.",
+        ),
+    ]
+    task = _task(
+        "robustness-ambiguous-005",
+        "research",
+        "Verify that each cited paper actually supports a draft's empirical claims.",
+        ["citation-checking"],
+        ["literature-review"],
+    )
+    base_router = StubRouter(
+        ["citation-checking", "literature-review"],
+        {"citation-checking": 0.9, "literature-review": 0.9},
+    )
+
+    result = VerificationGatedRouter(
+        base_router=base_router,
+        selective=True,
+        min_confidence=0.5,
+        contrastive_selective=True,
+        contrastive_margin=3.0,
+        min_evidence=2.0,
+    ).route(task, skills, top_k=5)
+
+    assert result.selected_skill_ids == ["citation-checking"]
+
+
+def test_contrastive_selective_keeps_same_category_candidate_with_strong_evidence():
+    skills = [
+        _skill(
+            "citation-checking",
+            "research",
+            "Citation Checking",
+            "Verify cited evidence and citations for empirical claims.",
+        ),
+        _skill(
+            "literature-review",
+            "research",
+            "Literature Review",
+            "Compare related papers and organize prior work.",
+        ),
+    ]
+    task = _task(
+        "research-combined",
+        "research",
+        "Compare related papers and verify that each citation supports the empirical claims.",
+        ["citation-checking", "literature-review"],
+        [],
+    )
+    base_router = StubRouter(
+        ["citation-checking", "literature-review"],
+        {"citation-checking": 0.9, "literature-review": 0.9},
+    )
+
+    result = VerificationGatedRouter(
+        base_router=base_router,
+        selective=True,
+        min_confidence=0.5,
+        contrastive_selective=True,
+        contrastive_margin=6.0,
+        min_evidence=2.0,
+    ).route(task, skills, top_k=5)
+
+    assert result.selected_skill_ids == [
+        "citation-checking",
+        "literature-review",
+    ]
+
+
+def test_gated_router_rejects_invalid_contrastive_thresholds():
+    base_router = StubRouter([], {})
+
+    for kwargs in (
+        {"contrastive_margin": -0.1},
+        {"min_evidence": -0.1},
+    ):
+        try:
+            VerificationGatedRouter(
+                base_router=base_router,
+                contrastive_selective=True,
+                **kwargs,
+            )
+        except ValueError as error:
+            assert "contrastive" in str(error) or "min_evidence" in str(error)
+        else:
+            raise AssertionError("expected contrastive threshold validation error")
+
+
 def test_non_selective_gated_router_keeps_requested_candidate_count():
     skills = [
         _skill("systematic-debugging", "coding", "Systematic Debugging", "debug bugs"),
