@@ -12,8 +12,8 @@ Hermes Agent, network access, or an LLM API key.
 
 - Parses Hermes-style skill files with YAML frontmatter, fallback metadata,
   category inference, trigger terms, and token estimates.
-- Evaluates keyword and hybrid skill routers with deterministic ranking,
-  top-k validation, score traces, and latency tracking.
+- Evaluates keyword, hybrid, and local hashing-embedding skill routers with
+  deterministic ranking, top-k validation, score traces, and latency tracking.
 - Reports Recall@1, Recall@3, Recall@5, Precision@5, MRR, NDCG@5,
   Negative Hit Rate, top selected skills, and failure cases.
 - Includes a 30-task benchmark corpus and a reproducible generator that keeps
@@ -21,6 +21,8 @@ Hermes Agent, network access, or an LLM API key.
 - Provides robust CLI error handling, schema validation, Markdown escaping,
   and pytest coverage for parser, loader, router, metrics, report, and CLI
   edge cases.
+- Compares multiple routers in one command and writes a Markdown comparison
+  table for experiment tracking.
 
 ## Quickstart
 
@@ -53,6 +55,17 @@ Generate a report:
 skilleval report --runs runs/latest
 ```
 
+Compare routers:
+
+```bash
+skilleval compare \
+  --index index/skills.json \
+  --tasks benchmarks/tasks \
+  --routers keyword,hybrid,embedding \
+  --top-k 5 \
+  --output-dir runs/comparison
+```
+
 Run tests:
 
 ```bash
@@ -67,12 +80,17 @@ It was generated with the tiny fixture skill library in `tests/fixtures/skills`
 against the 30 built-in benchmark tasks, so it is a smoke/demo artifact rather
 than a production routing score.
 
+Phase 2 also includes a committed router comparison at
+[`docs/demo/router-comparison/comparison.md`](docs/demo/router-comparison/comparison.md).
+The implementation notes are in [`docs/phase2.md`](docs/phase2.md).
+
 To regenerate it:
 
 ```bash
 skilleval index --skills-path tests/fixtures/skills --output docs/demo/skills.json
 skilleval eval --index docs/demo/skills.json --tasks benchmarks/tasks --router hybrid --top-k 5 --output-dir docs/demo/benchmark-hybrid
 skilleval report --runs docs/demo/benchmark-hybrid
+skilleval compare --index docs/demo/skills.json --tasks benchmarks/tasks --routers keyword,hybrid,embedding --top-k 5 --output-dir docs/demo/router-comparison
 ```
 
 ## Benchmark Corpus
@@ -102,16 +120,17 @@ skills/**/SKILL.md      benchmarks/tasks
                    v
              CLI eval command
                    |
-       +-----------+-----------+
-       v                       v
- keyword router           hybrid router
-       |                       |
-       +-----------+-----------+
+       +-----------+-----------+-----------+
+       v                       v           v
+ keyword router           hybrid router   embedding router
+       |                       |           |
+       +-----------+-----------+-----------+
                    v
           metrics + JSONL results
                    |
-                   v
-             Markdown report
+          +--------+--------+
+          v                 v
+    Markdown report   comparison report
 ```
 
 Core modules:
@@ -121,15 +140,17 @@ Core modules:
 - `routers/keyword.py`: deterministic lexical baseline.
 - `routers/hybrid.py`: offline hybrid router with category and explicit skill-id
   boosts.
+- `routers/embedding.py`: dependency-free local hashing embedding router.
 - `metrics.py`: ranking metrics and negative-skill checks.
 - `report.py`: validated JSONL-to-Markdown reporting.
-- `cli.py`: `index`, `eval`, and `report` commands.
+- `comparison.py`: aggregate router comparison reports.
+- `cli.py`: `index`, `eval`, `report`, and `compare` commands.
 
 ## Scope
 
 This MVP evaluates skill selection only. Real Hermes execution, LLM judges,
-embedding retrieval, automatic skill patching, and web dashboards are planned
-future extensions.
+neural embedding models, automatic skill patching, and web dashboards are
+planned future extensions.
 
 ## Portfolio Notes
 

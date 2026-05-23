@@ -12,6 +12,7 @@ Regenerate the demo from the repository root:
 skilleval index --skills-path tests/fixtures/skills --output docs/demo/skills.json
 skilleval eval --index docs/demo/skills.json --tasks benchmarks/tasks --router hybrid --top-k 5 --output-dir docs/demo/benchmark-hybrid
 skilleval report --runs docs/demo/benchmark-hybrid
+skilleval compare --index docs/demo/skills.json --tasks benchmarks/tasks --routers keyword,hybrid,embedding --top-k 5 --output-dir docs/demo/router-comparison
 ```
 
 Artifacts:
@@ -19,3 +20,6 @@ Artifacts:
 - `skills.json`: parsed fixture skill index.
 - `benchmark-hybrid/results.jsonl`: per-task routing records and metrics.
 - `benchmark-hybrid/report.md`: Markdown summary report.
+- `router-comparison/comparison.md`: keyword, hybrid, and embedding router
+  comparison table.
+- `router-comparison/*/report.md`: per-router Markdown reports.

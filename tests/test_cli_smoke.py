@@ -92,6 +92,94 @@ def test_cli_index_eval_report_smoke(tmp_path):
     assert "## Task Results" in report
 
 
+def test_cli_eval_embedding_router_smoke(tmp_path):
+    index_path = tmp_path / "index" / "skills.json"
+    run_dir = tmp_path / "embedding-run"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    assert (
+        main(
+            [
+                "eval",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--router",
+                "embedding",
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(run_dir),
+            ]
+        )
+        == 0
+    )
+
+    record = json.loads((run_dir / "results.jsonl").read_text(encoding="utf-8"))
+    assert record["router"] == "embedding"
+    assert len(record["selected_skill_ids"]) <= 3
+
+
+def test_cli_compare_writes_router_runs_and_summary(tmp_path):
+    index_path = tmp_path / "index" / "skills.json"
+    output_dir = tmp_path / "comparison"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    assert (
+        main(
+            [
+                "compare",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--routers",
+                "keyword,embedding",
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(output_dir),
+            ]
+        )
+        == 0
+    )
+
+    assert (output_dir / "keyword" / "results.jsonl").exists()
+    assert (output_dir / "keyword" / "report.md").exists()
+    assert (output_dir / "embedding" / "results.jsonl").exists()
+    assert (output_dir / "embedding" / "report.md").exists()
+    comparison = (output_dir / "comparison.md").read_text(encoding="utf-8")
+    assert "# Hermes SkillEval Router Comparison" in comparison
+    assert "| keyword |" in comparison
+    assert "| embedding |" in comparison
+    assert "Recall@5" in comparison
+
+
 def test_cli_main_returns_one_and_prints_help_without_command(capsys):
     assert main([]) == 1
     assert "usage: skilleval" in capsys.readouterr().out
