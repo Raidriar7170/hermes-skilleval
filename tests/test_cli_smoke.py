@@ -372,6 +372,70 @@ def test_cli_compare_supports_labeled_embedding_backend_specs(tmp_path, monkeypa
     assert "| embedding-fake |" in comparison
 
 
+def test_cli_compare_supports_gated_embedding_backend_specs(tmp_path, monkeypatch):
+    class FakeSentenceTransformer:
+        def __init__(self, model_name):
+            self.model_name = model_name
+
+        def encode(self, sentences, normalize_embeddings=True):
+            return [
+                [1.0, 0.0] if "debug" in sentence.lower() else [0.0, 1.0]
+                for sentence in sentences
+            ]
+
+    monkeypatch.setitem(
+        sys.modules,
+        "sentence_transformers",
+        types.SimpleNamespace(SentenceTransformer=FakeSentenceTransformer),
+    )
+    index_path = tmp_path / "index" / "skills.json"
+    output_dir = tmp_path / "comparison"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    assert (
+        main(
+            [
+                "compare",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--routers",
+                "gated-fake=gated:sentence-transformers",
+                "--embedding-model",
+                "fake-model",
+                "--gated-pool-size",
+                "3",
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(output_dir),
+            ]
+        )
+        == 0
+    )
+
+    record = json.loads(
+        (output_dir / "gated-fake" / "results.jsonl").read_text(encoding="utf-8")
+    )
+    comparison = (output_dir / "comparison.md").read_text(encoding="utf-8")
+
+    assert record["router"] == "gated-fake"
+    assert "| gated-fake |" in comparison
+
+
 def test_cli_analyze_failures_writes_report_from_comparison_dir(tmp_path):
     output_dir = tmp_path / "comparison"
     for router in ("embedding-hashing", "embedding-minilm"):

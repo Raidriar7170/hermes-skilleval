@@ -12,9 +12,10 @@ do not require Hermes Agent, network access, or an LLM API key.
 
 - Parses Hermes-style skill files with YAML frontmatter, fallback metadata,
   category inference, trigger terms, and token estimates.
-- Evaluates keyword, hybrid, and embedding skill routers with deterministic
-  ranking, top-k validation, score traces, latency tracking, and an optional
-  `sentence-transformers` backend with a JSON skill-embedding cache.
+- Evaluates keyword, hybrid, embedding, and verification-gated skill routers
+  with deterministic ranking, top-k validation, score traces, latency tracking,
+  and an optional `sentence-transformers` backend with a JSON skill-embedding
+  cache.
 - Reports Recall@1, Recall@3, Recall@5, Precision@5, MRR, NDCG@5,
   Negative Hit Rate, top selected skills, and failure cases.
 - Includes a 30-task benchmark corpus and a reproducible generator that keeps
@@ -100,6 +101,22 @@ skilleval eval \
   --output-dir runs/embedding-real
 ```
 
+Run the verification-gated reranker on top of a cached sentence-transformer
+retriever:
+
+```bash
+skilleval eval \
+  --index index/skills.json \
+  --tasks benchmarks/tasks \
+  --router gated \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache runs/embeddings/all-MiniLM-L6-v2.json \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir runs/gated-real
+```
+
 Run tests:
 
 ```bash
@@ -125,6 +142,9 @@ with implementation notes in [`docs/phase3b.md`](docs/phase3b.md).
 Phase 3C adds failure analysis for that run at
 [`docs/demo/phase3b-real-embedding/failure-analysis.md`](docs/demo/phase3b-real-embedding/failure-analysis.md)
 with notes in [`docs/phase3c.md`](docs/phase3c.md).
+Phase 4A adds a verification-gated reranker over MiniLM retrieval at
+[`docs/demo/phase4a-gated-reranker/comparison.md`](docs/demo/phase4a-gated-reranker/comparison.md)
+with notes in [`docs/phase4a.md`](docs/phase4a.md).
 
 To regenerate it:
 
@@ -148,6 +168,20 @@ skilleval analyze-failures \
   --baseline embedding-hashing \
   --candidate embedding-minilm \
   --output docs/demo/phase3b-real-embedding/failure-analysis.md
+skilleval compare \
+  --index docs/demo/phase3b-real-embedding/skills.json \
+  --tasks benchmarks/tasks \
+  --routers keyword,hybrid,embedding-hashing=embedding:hashing,embedding-minilm=embedding:sentence-transformers,gated-minilm=gated:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase4a-minilm-cache.json \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase4a-gated-reranker
+skilleval analyze-failures \
+  --runs docs/demo/phase4a-gated-reranker \
+  --baseline embedding-minilm \
+  --candidate gated-minilm \
+  --output docs/demo/phase4a-gated-reranker/failure-analysis.md
 ```
 
 ## Benchmark Corpus
@@ -188,6 +222,9 @@ skills/**/SKILL.md      benchmarks/tasks
        v                       v           v
  keyword router           hybrid router   embedding router
        |                       |           |
+       |                       |           v
+       |                       |    gated reranker
+       |                       |           |
        +-----------+-----------+-----------+
                    v
           metrics + JSONL results
@@ -206,6 +243,9 @@ Core modules:
   boosts.
 - `routers/embedding.py`: dependency-free local hashing router plus optional
   `sentence-transformers` embedding router with a disk cache for skill vectors.
+- `routers/gated.py`: verification-gated reranker that reranks embedding
+  candidates with category agreement, lexical evidence, and base retriever
+  scores.
 - `metrics.py`: ranking metrics and negative-skill checks.
 - `report.py`: validated JSONL-to-Markdown reporting.
 - `comparison.py`: aggregate router comparison reports.

@@ -29,6 +29,7 @@ from hermes_skilleval.routers.embedding import (
     HashingEmbeddingModel,
     SentenceTransformerEmbeddingModel,
 )
+from hermes_skilleval.routers.gated import VerificationGatedRouter
 from hermes_skilleval.routers.hybrid import HybridRouter
 from hermes_skilleval.routers.keyword import KeywordRouter
 from hermes_skilleval.skill_index import load_skill_index, save_skill_index
@@ -37,7 +38,7 @@ from hermes_skilleval.storage import ensure_dir
 from hermes_skilleval.task_loader import load_tasks
 
 
-ROUTER_NAMES = ("keyword", "hybrid", "embedding")
+ROUTER_NAMES = ("keyword", "hybrid", "embedding", "gated")
 EMBEDDING_BACKENDS = ("hashing", "sentence-transformers")
 ROUTER_LABEL_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 
@@ -83,6 +84,7 @@ def _build_parser() -> argparse.ArgumentParser:
     eval_parser.add_argument("--tasks", required=True)
     eval_parser.add_argument("--router", choices=ROUTER_NAMES, default="keyword")
     _add_embedding_args(eval_parser)
+    _add_gated_args(eval_parser)
     eval_parser.add_argument("--top-k", type=int, default=5)
     eval_parser.add_argument("--output-dir", default="runs/latest")
     eval_parser.set_defaults(handler=_run_eval)
@@ -96,6 +98,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="comma-separated router names",
     )
     _add_embedding_args(compare_parser)
+    _add_gated_args(compare_parser)
     compare_parser.add_argument("--top-k", type=int, default=5)
     compare_parser.add_argument("--output-dir", default="runs/comparison")
     compare_parser.set_defaults(handler=_run_compare)
@@ -122,7 +125,7 @@ def _add_embedding_args(parser: argparse.ArgumentParser) -> None:
         "--embedding-backend",
         choices=EMBEDDING_BACKENDS,
         default="hashing",
-        help="backend used when router is embedding",
+        help="backend used when router is embedding or gated",
     )
     parser.add_argument(
         "--embedding-model",
@@ -133,6 +136,15 @@ def _add_embedding_args(parser: argparse.ArgumentParser) -> None:
         "--embedding-cache",
         default=None,
         help="optional JSON cache path for skill embeddings",
+    )
+
+
+def _add_gated_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--gated-pool-size",
+        type=int,
+        default=10,
+        help="candidate pool size reranked by the gated router",
     )
 
 
@@ -234,6 +246,8 @@ def _router(name: str, args: argparse.Namespace | None = None) -> SkillRouter:
         return HybridRouter()
     if name == "embedding":
         return _embedding_router(args)
+    if name == "gated":
+        return _gated_router(args)
     raise ValueError(f"unknown router: {name}")
 
 
@@ -253,6 +267,14 @@ def _embedding_router(args: argparse.Namespace | None) -> EmbeddingRouter:
             cache_path=cache_path,
         )
     raise ValueError(f"unknown embedding backend: {backend}")
+
+
+def _gated_router(args: argparse.Namespace | None) -> VerificationGatedRouter:
+    candidate_pool_size = getattr(args, "gated_pool_size", 10)
+    return VerificationGatedRouter(
+        base_router=_embedding_router(args),
+        candidate_pool_size=candidate_pool_size,
+    )
 
 
 def _parse_router_names(value: str) -> list[str]:
@@ -288,8 +310,10 @@ def _parse_router_spec(value: str) -> RouterSpec:
     if router_name not in ROUTER_NAMES:
         raise ValueError(f"unknown router(s): {router_name}")
     if embedding_backend is not None:
-        if router_name != "embedding":
-            raise ValueError("only embedding router specs can include a backend")
+        if router_name not in ("embedding", "gated"):
+            raise ValueError(
+                "only embedding or gated router specs can include a backend"
+            )
         if embedding_backend not in EMBEDDING_BACKENDS:
             raise ValueError(f"unknown embedding backend: {embedding_backend}")
 
@@ -310,8 +334,8 @@ def _count_labels(specs: list[RouterSpec], label: str) -> int:
 
 
 def _default_router_label(router_name: str, embedding_backend: str | None) -> str:
-    if router_name == "embedding" and embedding_backend is not None:
-        return f"embedding-{embedding_backend}"
+    if router_name in ("embedding", "gated") and embedding_backend is not None:
+        return f"{router_name}-{embedding_backend}"
     return router_name
 
 

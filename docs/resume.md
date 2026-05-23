@@ -27,21 +27,25 @@ validated CLI runs and Markdown reports.
 - Added failure-mode analysis for router experiments, surfacing top-1 misses,
   missing gold skills, negative hits, and MiniLM-vs-hashing trade-offs; reduced
   embedding-router failure cases from 11 to 3 in the Phase 3B benchmark.
+- Built a verification-gated reranker on top of MiniLM retrieval, improving
+  embedding Recall@1 from 0.867 to 0.933 and eliminating top-choice misses
+  without using benchmark gold or negative labels at routing time.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  99 pytest tests covering parser, loader, router, metric, report, and CLI edge
-  cases.
+  103 pytest tests covering parser, loader, router, metric, report, and CLI
+  edge cases.
 - Designed the system as an offline MVP that runs locally on a Mac while leaving
   clear extension points for cross-encoder reranking, embedding fine-tuning,
-  verifier-gated routing, and self-improving skill patches on larger GPU
+  abstention policies, and self-improving skill patches on larger GPU
   infrastructure.
 
 ## Short Resume Version
 
 Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, 30 labeled benchmark tasks, keyword/hybrid/embedding
-routers, optional `sentence-transformers` retrieval, Recall@K, MRR, NDCG,
-negative-hit metrics, CLI comparison/failure reports, and 99-test validation.
+routers, optional `sentence-transformers` retrieval, verification-gated
+reranking, Recall@K, MRR, NDCG, negative-hit metrics, CLI comparison/failure
+reports, and 103-test validation.
 
 ## Interview Talking Points
 
@@ -63,12 +67,16 @@ negative-hit metrics, CLI comparison/failure reports, and 99-test validation.
 - Phase 3C: failure analysis shows MiniLM cuts embedding-router failures from
   11 to 3 versus hashing, with remaining errors concentrated in top-1 ambiguity
   and negative-skill suppression.
+- Phase 4A: a verification-gated reranker uses category agreement and
+  prompt-skill lexical evidence to resolve MiniLM top-choice ambiguity,
+  improving Recall@1 from 0.867 to 0.933 and reducing top-choice failures from
+  2 to 0.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
 - Agent relevance: the harness can be extended from offline lexical routing to
-  embedding retrieval, LLM reranking, verification-gated execution, and
-  self-improvement loops.
+  embedding retrieval, verifier-gated reranking, LLM judges, execution checks,
+  and self-improvement loops.
 - Hardware story: the current MVP runs on a local Mac. A remote 8xA100 machine
   becomes useful for future embedding index experiments, LLM reranker training,
   large-scale benchmark sweeps, and verifier/self-improvement runs.
@@ -81,14 +89,14 @@ generation.
 
 ## Future Extension Bullets
 
-- Add cross-encoder or LLM reranking after embedding retrieval to improve
-  ambiguous skill choices.
+- Add cross-encoder or LLM reranking after embedding retrieval and compare it
+  against the deterministic gated reranker.
 - Add failure-driven skill patching that edits descriptions or trigger terms
   from observed misses, then re-runs the benchmark to verify gains.
 - Fine-tune or distill the embedding model on benchmark failures and measure
   retrieval gains against the hashing and off-the-shelf baselines.
-- Add verifier-gated routing where selected skills must pass executable or
-  rubric-based checks before being counted as successful.
+- Add variable-k abstention where low-confidence selected skills are suppressed
+  instead of forcing exactly five results.
 - Add self-improvement harness that proposes skill metadata patches from failure
   cases and re-runs the benchmark to measure improvement.
 - Add a lightweight dashboard for comparing router runs across benchmark

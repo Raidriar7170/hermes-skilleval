@@ -46,14 +46,15 @@ negative hit rate from `0.100` to `0.033`.
 
 The failure pattern points to reranking and verification as the next useful
 layer. MiniLM is good enough to retrieve the right region of the skill space,
-but top-1 precision and negative-skill suppression still need help.
+but top-1 precision and negative-skill suppression still need help. Phase 4A
+implements the first follow-up as a deterministic verification-gated reranker.
 
 Concrete next improvements:
 
-- Add a lightweight reranker that scores the top retrieved skills using task,
-  skill description, trigger terms, and category agreement.
-- Add a negative-skill guardrail that penalizes skills explicitly labeled as
-  negative in benchmark/evaluation mode.
+- Compare the Phase 4A deterministic reranker with a cross-encoder or LLM
+  reranker.
+- Add a production abstention policy that suppresses low-confidence extra
+  results instead of forcing a fixed top-5 list.
 - Add hierarchy-aware metadata for near-duplicate skills such as
   `data-analysis` and `python-data-analysis`.
 - Use failure cases to propose targeted skill description or trigger-term
