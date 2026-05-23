@@ -28,3 +28,5 @@ Artifacts:
   sentence-transformer routing.
 - `phase3b-real-embedding/*/report.md`: per-router reports for the Phase 3B
   real embedding experiment.
+- `phase3b-real-embedding/failure-analysis.md`: Phase 3C failure-mode analysis
+  comparing MiniLM against the hashing embedding baseline.

@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Sequence
 
 from hermes_skilleval.comparison import write_comparison_report
+from hermes_skilleval.failure_analysis import (
+    result_paths_from_comparison_dir,
+    write_failure_analysis_report,
+)
 from hermes_skilleval.metrics import (
     mean_reciprocal_rank,
     ndcg_at_k,
@@ -99,6 +103,16 @@ def _build_parser() -> argparse.ArgumentParser:
     report_parser = subparsers.add_parser("report", help="write a markdown run report")
     report_parser.add_argument("--runs", required=True)
     report_parser.set_defaults(handler=_run_report)
+
+    failures_parser = subparsers.add_parser(
+        "analyze-failures",
+        help="write a markdown failure analysis for a comparison run",
+    )
+    failures_parser.add_argument("--runs", required=True)
+    failures_parser.add_argument("--output", default=None)
+    failures_parser.add_argument("--baseline", default=None)
+    failures_parser.add_argument("--candidate", default=None)
+    failures_parser.set_defaults(handler=_run_analyze_failures)
 
     return parser
 
@@ -199,6 +213,18 @@ def _run_report(args: argparse.Namespace) -> None:
     report_path = run_dir / "report.md"
     write_markdown_report(results_path, report_path)
     print(f"Wrote report to {report_path}")
+
+
+def _run_analyze_failures(args: argparse.Namespace) -> None:
+    run_dir = Path(args.runs)
+    output_path = Path(args.output) if args.output else run_dir / "failure-analysis.md"
+    write_failure_analysis_report(
+        result_paths_from_comparison_dir(run_dir),
+        output_path,
+        baseline=args.baseline,
+        candidate=args.candidate,
+    )
+    print(f"Wrote failure analysis to {output_path}")
 
 
 def _router(name: str, args: argparse.Namespace | None = None) -> SkillRouter:

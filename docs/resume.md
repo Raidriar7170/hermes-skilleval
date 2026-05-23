@@ -24,9 +24,12 @@ validated CLI runs and Markdown reports.
 - Ran a real MiniLM embedding benchmark on a generated 20-skill Hermes-style
   library, improving embedding Recall@1 from 0.717 to 0.867 and MRR from 0.873
   to 0.967 versus the hashing embedding baseline.
+- Added failure-mode analysis for router experiments, surfacing top-1 misses,
+  missing gold skills, negative hits, and MiniLM-vs-hashing trade-offs; reduced
+  embedding-router failure cases from 11 to 3 in the Phase 3B benchmark.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  95 pytest tests covering parser, loader, router, metric, report, and CLI edge
+  99 pytest tests covering parser, loader, router, metric, report, and CLI edge
   cases.
 - Designed the system as an offline MVP that runs locally on a Mac while leaving
   clear extension points for cross-encoder reranking, embedding fine-tuning,
@@ -38,7 +41,7 @@ validated CLI runs and Markdown reports.
 Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, 30 labeled benchmark tasks, keyword/hybrid/embedding
 routers, optional `sentence-transformers` retrieval, Recall@K, MRR, NDCG,
-negative-hit metrics, CLI comparison reports, and 95-test validation.
+negative-hit metrics, CLI comparison/failure reports, and 99-test validation.
 
 ## Interview Talking Points
 
@@ -57,6 +60,9 @@ negative-hit metrics, CLI comparison reports, and 95-test validation.
 - Phase 3B: a generated 20-skill benchmark library covers all 30 task labels,
   and the real MiniLM run reaches Recall@5 1.000 and MRR 0.967 with warm
   skill-vector caching on a local Mac CPU.
+- Phase 3C: failure analysis shows MiniLM cuts embedding-router failures from
+  11 to 3 versus hashing, with remaining errors concentrated in top-1 ambiguity
+  and negative-skill suppression.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
@@ -77,6 +83,8 @@ generation.
 
 - Add cross-encoder or LLM reranking after embedding retrieval to improve
   ambiguous skill choices.
+- Add failure-driven skill patching that edits descriptions or trigger terms
+  from observed misses, then re-runs the benchmark to verify gains.
 - Fine-tune or distill the embedding model on benchmark failures and measure
   retrieval gains against the hashing and off-the-shelf baselines.
 - Add verifier-gated routing where selected skills must pass executable or

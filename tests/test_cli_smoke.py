@@ -372,6 +372,52 @@ def test_cli_compare_supports_labeled_embedding_backend_specs(tmp_path, monkeypa
     assert "| embedding-fake |" in comparison
 
 
+def test_cli_analyze_failures_writes_report_from_comparison_dir(tmp_path):
+    output_dir = tmp_path / "comparison"
+    for router in ("embedding-hashing", "embedding-minilm"):
+        router_dir = output_dir / router
+        router_dir.mkdir(parents=True)
+        record = {
+            "task_id": "task-001",
+            "category": "coding",
+            "difficulty": "easy",
+            "router": router,
+            "selected_skill_ids": ["gold-skill"],
+            "scores": {"gold-skill": 1.0},
+            "gold_skills": ["gold-skill"],
+            "negative_skills": ["negative-skill"],
+            "latency_ms": 1.0,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0,
+            "recall_at_5": 1.0,
+            "precision_at_5": 0.2,
+            "mrr": 1.0,
+            "ndcg_at_5": 1.0,
+            "negative_hit_rate": 0.0,
+        }
+        (router_dir / "results.jsonl").write_text(
+            json.dumps(record, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+    result = main(
+        [
+            "analyze-failures",
+            "--runs",
+            str(output_dir),
+            "--baseline",
+            "embedding-hashing",
+            "--candidate",
+            "embedding-minilm",
+        ]
+    )
+
+    report = output_dir / "failure-analysis.md"
+    assert result == 0
+    assert report.exists()
+    assert "# Hermes SkillEval Failure Analysis" in report.read_text(encoding="utf-8")
+
+
 def test_cli_main_returns_one_and_prints_help_without_command(capsys):
     assert main([]) == 1
     assert "usage: skilleval" in capsys.readouterr().out

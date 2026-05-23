@@ -26,6 +26,8 @@ do not require Hermes Agent, network access, or an LLM API key.
   edge cases.
 - Compares multiple routers in one command and writes a Markdown comparison
   table for experiment tracking.
+- Analyzes failed routes by failure mode, including top-1 misses, missing gold
+  skills, negative hits, and candidate-vs-baseline trade-offs.
 
 ## Quickstart
 
@@ -75,6 +77,15 @@ skilleval compare \
   --output-dir runs/comparison
 ```
 
+Analyze comparison failures:
+
+```bash
+skilleval analyze-failures \
+  --runs runs/comparison \
+  --baseline embedding-hashing \
+  --candidate embedding-minilm
+```
+
 Run the real embedding router with a cached sentence-transformer model:
 
 ```bash
@@ -111,6 +122,9 @@ Phase 3A adds the optional real embedding backend documented in
 Phase 3B adds a committed MiniLM comparison run at
 [`docs/demo/phase3b-real-embedding/comparison.md`](docs/demo/phase3b-real-embedding/comparison.md)
 with implementation notes in [`docs/phase3b.md`](docs/phase3b.md).
+Phase 3C adds failure analysis for that run at
+[`docs/demo/phase3b-real-embedding/failure-analysis.md`](docs/demo/phase3b-real-embedding/failure-analysis.md)
+with notes in [`docs/phase3c.md`](docs/phase3c.md).
 
 To regenerate it:
 
@@ -129,6 +143,11 @@ skilleval compare \
   --embedding-cache /tmp/skilleval-phase3b-minilm-cache.json \
   --top-k 5 \
   --output-dir docs/demo/phase3b-real-embedding
+skilleval analyze-failures \
+  --runs docs/demo/phase3b-real-embedding \
+  --baseline embedding-hashing \
+  --candidate embedding-minilm \
+  --output docs/demo/phase3b-real-embedding/failure-analysis.md
 ```
 
 ## Benchmark Corpus
@@ -190,7 +209,10 @@ Core modules:
 - `metrics.py`: ranking metrics and negative-skill checks.
 - `report.py`: validated JSONL-to-Markdown reporting.
 - `comparison.py`: aggregate router comparison reports.
-- `cli.py`: `index`, `eval`, `report`, and `compare` commands.
+- `failure_analysis.py`: failure-mode summaries and candidate-vs-baseline
+  diagnostics for comparison runs.
+- `cli.py`: `index`, `eval`, `report`, `compare`, and `analyze-failures`
+  commands.
 
 ## Scope
 

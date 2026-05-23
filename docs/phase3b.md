@@ -39,6 +39,7 @@ Full artifacts:
 - [`docs/demo/phase3b-real-embedding/comparison.md`](demo/phase3b-real-embedding/comparison.md)
 - [`docs/demo/phase3b-real-embedding/embedding-minilm/report.md`](demo/phase3b-real-embedding/embedding-minilm/report.md)
 - [`docs/demo/phase3b-real-embedding/embedding-hashing/report.md`](demo/phase3b-real-embedding/embedding-hashing/report.md)
+- [`docs/demo/phase3b-real-embedding/failure-analysis.md`](demo/phase3b-real-embedding/failure-analysis.md)
 
 ## Interpretation
 
