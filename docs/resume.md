@@ -14,7 +14,7 @@ validated CLI runs and Markdown reports.
   reporting.
 - Implemented ranking metrics for agent skill selection, including Recall@K,
   Precision@5, MRR, NDCG@5, Negative Hit Rate, latency tracking, top-skill
-  analysis, and failure-case reporting over a 30-task benchmark corpus.
+  analysis, and failure-case reporting over an 80-task benchmark corpus.
 - Added a dependency-free hashing embedding router and multi-router comparison
   command to benchmark keyword, hybrid, and embedding strategies from one CLI
   run.
@@ -37,9 +37,12 @@ validated CLI runs and Markdown reports.
   patches from routing failures, writes a patched skill index, reruns
   evaluation, and accepts the patch set only when Recall@1/MRR/NDCG improve
   without negative-hit regression.
+- Expanded the benchmark into an 80-task, 45-skill robustness pack with
+  dev/test split metadata and challenge tags, then measured selective gated
+  MiniLM at 0.881 Recall@1, 0.981 Recall@5, and 0.985 MRR.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  116 pytest tests covering parser, loader, router, metric, report, and CLI
+  119 pytest tests covering parser, loader, router, metric, report, and CLI
   edge cases.
 - Designed the system as an offline MVP that runs locally on a Mac while leaving
   clear extension points for cross-encoder reranking, embedding fine-tuning,
@@ -49,11 +52,11 @@ validated CLI runs and Markdown reports.
 ## Short Resume Version
 
 Built a Python evaluation harness for Hermes-style agent skill routing, with
-Markdown skill indexing, 30 labeled benchmark tasks, keyword/hybrid/embedding
-routers, optional `sentence-transformers` retrieval, verification-gated
-reranking, selective confidence gating, Recall@K, MRR, NDCG, negative-hit
-metrics, failure-driven metadata patching, CLI comparison/failure reports, and
-116-test validation.
+Markdown skill indexing, an 80-task/45-skill robustness benchmark,
+keyword/hybrid/embedding routers, optional `sentence-transformers` retrieval,
+verification-gated reranking, selective confidence gating, Recall@K, MRR,
+NDCG, negative-hit metrics, failure-driven metadata patching, CLI
+comparison/failure reports, and 119-test validation.
 
 ## Interview Talking Points
 
@@ -85,15 +88,19 @@ metrics, failure-driven metadata patching, CLI comparison/failure reports, and
 - Phase 5: failure-driven metadata patching improves MiniLM Recall@1 from
   0.867 to 0.933 and MRR from 0.967 to 1.000, with an acceptance gate that
   rejects metric regressions.
+- Phase 6A: the robustness pack expands the benchmark from 30 to 80 tasks and
+  20 to 45 skills, adds dev/test splits plus challenge tags, and surfaces
+  held-out ambiguous-pair weaknesses for future reranking work.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
 - Agent relevance: the harness now covers offline lexical routing, embedding
   retrieval, verifier-gated reranking, selective acceptance, and failure-driven
   self-improvement loops.
-- Hardware story: the current MVP runs on a local Mac. A remote 8xA100 machine
-  becomes useful for future embedding index experiments, LLM reranker training,
-  large-scale benchmark sweeps, and verifier/self-improvement runs.
+- Hardware story: the current MVP and Phase 6A benchmark run on a local Mac. A
+  remote 8xA100 machine becomes useful for future embedding fine-tuning,
+  cross-encoder reranking, larger benchmark sweeps, and LLM-assisted verifier
+  or self-improvement runs.
 
 ## Suggested GitHub Description
 

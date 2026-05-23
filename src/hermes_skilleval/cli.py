@@ -464,6 +464,8 @@ def _result_record(
         "task_id": task.id,
         "category": task.category,
         "difficulty": task.difficulty,
+        "split": task.split,
+        "robustness_tags": task.robustness_tags,
         "router": router_label or result.router,
         "selected_skill_ids": selected,
         "scores": result.scores,

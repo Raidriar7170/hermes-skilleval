@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,8 @@ class BenchmarkTask:
     gold_skills: list[str]
     negative_skills: list[str]
     verifier: str
+    split: str = "dev"
+    robustness_tags: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

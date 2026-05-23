@@ -13,6 +13,8 @@ EXPECTED_RESULT_KEYS = {
     "task_id",
     "category",
     "difficulty",
+    "split",
+    "robustness_tags",
     "router",
     "selected_skill_ids",
     "scores",
@@ -35,10 +37,10 @@ EXPECTED_RESULT_KEYS = {
 }
 
 
-def test_builtin_benchmark_has_30_tasks():
+def test_builtin_benchmark_has_80_tasks():
     tasks = load_tasks(Path("benchmarks/tasks"))
 
-    assert len(tasks) == 30
+    assert len(tasks) == 80
 
 
 def test_cli_index_eval_report_smoke(tmp_path):

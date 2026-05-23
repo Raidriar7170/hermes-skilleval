@@ -32,7 +32,35 @@ def test_load_task_reads_yaml_and_prompt():
     assert task.category == "coding"
     assert task.gold_skills == ["systematic-debugging", "test-driven-development"]
     assert task.negative_skills == ["songwriting-and-ai-music"]
+    assert task.split == "dev"
+    assert task.robustness_tags == ["legacy"]
     assert "test suite is failing" in task.prompt
+
+
+def test_load_task_reads_split_and_robustness_tags(tmp_path):
+    task_dir = _write_task(
+        tmp_path,
+        VALID_TASK_YAML
+        + "split: test\n"
+        + "robustness_tags:\n"
+        + "  - heldout-generalization\n"
+        + "  - ambiguous-skill-pair\n",
+    )
+
+    task = load_task(task_dir)
+
+    assert task.split == "test"
+    assert task.robustness_tags == [
+        "heldout-generalization",
+        "ambiguous-skill-pair",
+    ]
+
+
+def test_load_task_rejects_invalid_split(tmp_path):
+    task_dir = _write_task(tmp_path, VALID_TASK_YAML + "split: train\n")
+
+    with pytest.raises(ValueError, match="split.*dev.*test"):
+        load_task(task_dir)
 
 
 def test_load_tasks_recursively():

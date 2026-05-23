@@ -39,7 +39,7 @@ def test_generation_removes_stale_task_directories(tmp_path):
 
     assert not stale_dir.exists()
     assert keep_file.exists()
-    assert len(list(tmp_path.glob("*/task.yaml"))) == 30
+    assert len(list(tmp_path.glob("*/task.yaml"))) == 80
 
 
 def test_generated_directory_names_match_task_yaml_ids(tmp_path):
@@ -47,7 +47,7 @@ def test_generated_directory_names_match_task_yaml_ids(tmp_path):
 
     task_dirs = sorted(path for path in tmp_path.iterdir() if path.is_dir())
 
-    assert len(task_dirs) == 30
+    assert len(task_dirs) == 80
     for task_dir in task_dirs:
         task_yaml = yaml.safe_load((task_dir / "task.yaml").read_text(encoding="utf-8"))
         assert task_dir.name == task_yaml["id"]
@@ -58,7 +58,27 @@ def test_generated_tasks_load_from_temp_root(tmp_path):
 
     tasks = load_tasks(tmp_path)
 
-    assert len(tasks) == 30
+    assert len(tasks) == 80
+    assert {task.split for task in tasks} == {"dev", "test"}
+    assert all(task.robustness_tags for task in tasks)
+
+
+def test_generated_tasks_include_split_and_robustness_tags(tmp_path):
+    generate_benchmark_tasks.main(root=tmp_path)
+
+    splits = set()
+    tags = set()
+    for task_yaml_path in tmp_path.glob("*/task.yaml"):
+        task_yaml = yaml.safe_load(task_yaml_path.read_text(encoding="utf-8"))
+        assert task_yaml["split"] in {"dev", "test"}
+        assert isinstance(task_yaml["robustness_tags"], list)
+        assert task_yaml["robustness_tags"]
+        splits.add(task_yaml["split"])
+        tags.update(task_yaml["robustness_tags"])
+
+    assert splits == {"dev", "test"}
+    assert "ambiguous-skill-pair" in tags
+    assert "heldout-generalization" in tags
 
 
 def test_default_task_root_is_anchored_to_script_location():
@@ -87,11 +107,12 @@ def test_generated_benchmark_skills_cover_all_task_labels(tmp_path):
     skill_ids = {skill.id for skill in skills}
     task_labels = {
         label
-        for _, _, _, gold_skills, negative_skills, _ in generate_benchmark_tasks.TASKS
+        for _, _, _, gold_skills, negative_skills, _, _, _ in generate_benchmark_tasks.all_task_specs()
         for label in gold_skills + negative_skills
     }
 
     assert task_labels <= skill_ids
+    assert len(skills) == 45
     assert len(skills) == len(generate_benchmark_skills.SKILLS)
     assert "systematic-debugging" in skill_ids
     assert "citation-checking" in skill_ids

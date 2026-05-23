@@ -1,10 +1,11 @@
 # Demo Run
 
-This directory contains a committed demo run for Hermes SkillEval.
+This directory contains committed demo runs for Hermes SkillEval.
 
-The demo uses the tiny fixture skill library in `tests/fixtures/skills` against
-the 30 built-in benchmark tasks. It is intended to show the CLI/reporting
-workflow, not to represent production routing performance.
+The original `benchmark-hybrid` and `router-comparison` artifacts use the tiny
+fixture skill library in `tests/fixtures/skills` and are smoke/demo artifacts
+for CLI reporting. The main current benchmark artifact is the Phase 6A
+robustness run over the generated 80-task, 45-skill corpus.
 
 Regenerate the demo from the repository root:
 
@@ -65,6 +66,27 @@ skilleval judge-improvement \
   --baseline embedding-minilm-before \
   --candidate embedding-minilm-patched \
   --output docs/demo/phase5-self-improvement/acceptance.md
+python scripts/generate_benchmark_tasks.py
+python scripts/generate_benchmark_skills.py
+skilleval index \
+  --skills-path benchmarks/skills \
+  --output docs/demo/phase6a-robustness/skills.json
+skilleval compare \
+  --index docs/demo/phase6a-robustness/skills.json \
+  --tasks benchmarks/tasks \
+  --routers keyword,hybrid,embedding-hashing=embedding:hashing,embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase6a-minilm-cache.json \
+  --selective \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase6a-robustness
+skilleval analyze-failures \
+  --runs docs/demo/phase6a-robustness \
+  --baseline embedding-minilm \
+  --candidate gated-minilm-selective \
+  --output docs/demo/phase6a-robustness/failure-analysis.md
 ```
 
 Artifacts:
@@ -102,3 +124,10 @@ Artifacts:
   patched MiniLM embedding run.
 - `phase5-self-improvement/acceptance.md`: verification gate result for the
   patch set.
+- `phase6a-robustness/comparison.md`: Phase 6A comparison across keyword,
+  hybrid, hashing embedding, MiniLM embedding, and selective gated MiniLM over
+  the 80-task benchmark.
+- `phase6a-robustness/robustness-summary.md`: corpus counts plus split-level
+  diagnostics for the expanded benchmark.
+- `phase6a-robustness/failure-analysis.md`: failure-mode analysis comparing
+  MiniLM against selective gated MiniLM on the robustness pack.

@@ -19,9 +19,10 @@ do not require Hermes Agent, network access, or an LLM API key.
 - Reports Recall@1, Recall@3, Recall@5, Precision@5, MRR, NDCG@5,
   Negative Hit Rate, selective accepted-output metrics, top selected skills,
   and failure cases.
-- Includes a 30-task benchmark corpus and a reproducible generator that keeps
-  the committed benchmark directory in sync with its source list.
-- Includes a generated 20-skill benchmark library so every benchmark gold and
+- Includes an 80-task benchmark corpus with `dev`/`test` splits,
+  robustness tags, and a reproducible generator that keeps the committed
+  benchmark directory in sync with its source list.
+- Includes a generated 45-skill benchmark library so every benchmark gold and
   negative label has a corresponding Hermes-style `SKILL.md`.
 - Provides robust CLI error handling, schema validation, Markdown escaping,
   and pytest coverage for parser, loader, router, metrics, report, and CLI
@@ -167,8 +168,8 @@ pytest -v
 A committed demo run is available at
 [`docs/demo/benchmark-hybrid/report.md`](docs/demo/benchmark-hybrid/report.md).
 It was generated with the tiny fixture skill library in `tests/fixtures/skills`
-against the 30 built-in benchmark tasks, so it is a smoke/demo artifact rather
-than a production routing score.
+against the original 30-task benchmark snapshot, so it is a historical
+smoke/demo artifact rather than a production routing score.
 
 Phase 2 also includes a committed router comparison at
 [`docs/demo/router-comparison/comparison.md`](docs/demo/router-comparison/comparison.md).
@@ -190,6 +191,10 @@ with notes in [`docs/phase4b.md`](docs/phase4b.md).
 Phase 5 adds a failure-driven self-improvement loop at
 [`docs/demo/phase5-self-improvement/comparison.md`](docs/demo/phase5-self-improvement/comparison.md)
 with notes in [`docs/phase5.md`](docs/phase5.md).
+Phase 6A expands the benchmark into an 80-task, 45-skill robustness pack with
+dev/test split metadata at
+[`docs/demo/phase6a-robustness/comparison.md`](docs/demo/phase6a-robustness/comparison.md)
+and summary notes in [`docs/phase6a.md`](docs/phase6a.md).
 
 To regenerate it:
 
@@ -265,6 +270,27 @@ skilleval judge-improvement \
   --baseline embedding-minilm-before \
   --candidate embedding-minilm-patched \
   --output docs/demo/phase5-self-improvement/acceptance.md
+python scripts/generate_benchmark_tasks.py
+python scripts/generate_benchmark_skills.py
+skilleval index \
+  --skills-path benchmarks/skills \
+  --output docs/demo/phase6a-robustness/skills.json
+skilleval compare \
+  --index docs/demo/phase6a-robustness/skills.json \
+  --tasks benchmarks/tasks \
+  --routers keyword,hybrid,embedding-hashing=embedding:hashing,embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase6a-minilm-cache.json \
+  --selective \
+  --min-confidence 0.5 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase6a-robustness
+skilleval analyze-failures \
+  --runs docs/demo/phase6a-robustness \
+  --baseline embedding-minilm \
+  --candidate gated-minilm-selective \
+  --output docs/demo/phase6a-robustness/failure-analysis.md
 ```
 
 ## Benchmark Corpus
@@ -273,7 +299,7 @@ The built-in benchmark suite lives in `benchmarks/tasks`. Each task directory
 contains:
 
 - `task.yaml`: task id, category, difficulty, gold skill labels, negative skill
-  labels, and verifier type.
+  labels, verifier type, split, and robustness tags.
 - `prompt.md`: the user request to route.
 
 Regenerate the corpus from its source list:

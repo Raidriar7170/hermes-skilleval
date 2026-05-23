@@ -58,6 +58,13 @@ def load_task(task_dir: Path | str) -> BenchmarkTask:
     }
     gold_skills = _string_list(raw["gold_skills"], yaml_path, "gold_skills", min_items=1)
     negative_skills = _string_list(raw["negative_skills"], yaml_path, "negative_skills")
+    split = _optional_split(raw.get("split", "dev"), yaml_path)
+    robustness_tags = _string_list(
+        raw.get("robustness_tags", ["legacy"]),
+        yaml_path,
+        "robustness_tags",
+        min_items=1,
+    )
     prompt = prompt_path.read_text(encoding="utf-8").strip()
     if not prompt:
         raise ValueError(f"prompt.md is empty: {prompt_path}")
@@ -70,6 +77,8 @@ def load_task(task_dir: Path | str) -> BenchmarkTask:
         gold_skills=gold_skills,
         negative_skills=negative_skills,
         verifier=scalars["verifier"],
+        split=split,
+        robustness_tags=robustness_tags,
     )
 
 
@@ -87,4 +96,10 @@ def _string_list(value: Any, path: Path, field: str, *, min_items: int = 0) -> l
     for index, item in enumerate(value):
         if not isinstance(item, str) or not item.strip():
             raise ValueError(f"{path} field {field}[{index}] must be a non-empty string")
+    return value
+
+
+def _optional_split(value: Any, path: Path) -> str:
+    if value not in {"dev", "test"}:
+        raise ValueError(f"{path} field split must be 'dev' or 'test'")
     return value
