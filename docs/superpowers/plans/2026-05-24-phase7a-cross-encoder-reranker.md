@@ -1174,7 +1174,7 @@ git commit -m "docs: add phase7a cross encoder benchmark"
 **Files:**
 - Inspect: source files, tests, docs, benchmark artifacts
 
-- [ ] **Step 1: Run final local tests**
+- [x] **Step 1: Run final local tests**
 
 Run:
 
@@ -1184,7 +1184,9 @@ pytest -q
 
 Expected: full suite passes.
 
-- [ ] **Step 2: Inspect final git state**
+Result: `136 passed in 0.32s`.
+
+- [x] **Step 2: Inspect final git state**
 
 Run:
 
@@ -1195,7 +1197,9 @@ git log --oneline -8
 
 Expected: working tree is clean after committed work, and recent commits include Phase 7A design, plan, implementation, benchmark, and docs.
 
-- [ ] **Step 3: Verify Phase 7A acceptance criteria**
+Result: branch `codex/hermes-skilleval`; recent commits include Phase 7A design, plan, implementation, benchmark docs, and audit.
+
+- [x] **Step 3: Verify Phase 7A acceptance criteria**
 
 Check:
 
@@ -1209,6 +1213,10 @@ rg -n "cross-encoder|Phase 7A|CUDA_VISIBLE_DEVICES=3" docs/phase7a.md docs/resum
 
 Expected: all files exist and docs mention the cross-encoder reranker and single-GPU safety.
 
-- [ ] **Step 4: Decide if the full project is complete**
+Result: required local artifacts exist; docs mention `cross-encoder`, `Phase 7A`, and `CUDA_VISIBLE_DEVICES=3`. Remote deployment was verified under `/mnt/data/minghongsun`, stale `/root/code/hermes-skilleval` and `/mnt/data/hermes-skilleval-models` paths were absent, and remote `pytest -q` returned `136 passed in 14.02s`.
+
+- [x] **Step 4: Decide if the full project is complete**
 
 Review the active objective and the Phase 7A acceptance criteria. If every required source change, test, remote benchmark, artifact, and resume-ready document is present and verified, mark the active goal complete. If a requirement remains unverified, keep the goal active and continue with the missing work.
+
+Result: full project scope through Phase 7A is complete. Remaining future work is optional Phase 7B calibration, not required for the current completion target.
