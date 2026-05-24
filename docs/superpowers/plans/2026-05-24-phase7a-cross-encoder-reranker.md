@@ -357,7 +357,7 @@ git commit -m "refactor: share verification gating helpers"
 - Create: `tests/test_cross_encoder_router.py`
 - Test: `tests/test_cross_encoder_router.py`
 
-- [ ] **Step 1: Write failing cross-encoder router tests**
+- [x] **Step 1: Write failing cross-encoder router tests**
 
 Create `tests/test_cross_encoder_router.py` with tests for:
 
@@ -525,7 +525,7 @@ def _task(task_id, category, prompt):
     )
 ```
 
-- [ ] **Step 2: Run cross-encoder tests to verify RED**
+- [x] **Step 2: Run cross-encoder tests to verify RED**
 
 Run:
 
@@ -535,7 +535,7 @@ pytest tests/test_cross_encoder_router.py -q
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'hermes_skilleval.routers.cross_encoder'`.
 
-- [ ] **Step 3: Implement cross-encoder model wrappers and router**
+- [x] **Step 3: Implement cross-encoder model wrappers and router**
 
 Create `src/hermes_skilleval/routers/cross_encoder.py` with a focused implementation:
 
@@ -692,7 +692,7 @@ class CrossEncoderReranker(SkillRouter):
         )
 ```
 
-- [ ] **Step 4: Run cross-encoder tests**
+- [x] **Step 4: Run cross-encoder tests**
 
 Run:
 
@@ -702,7 +702,7 @@ pytest tests/test_cross_encoder_router.py -q
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit cross-encoder router**
+- [x] **Step 5: Commit cross-encoder router**
 
 Run:
 
