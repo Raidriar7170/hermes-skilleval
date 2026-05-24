@@ -48,7 +48,7 @@
 - Modify: `src/hermes_skilleval/routers/gated.py`
 - Test: `tests/test_verification_helpers.py`, `tests/test_gated_router.py`
 
-- [ ] **Step 1: Write failing helper tests**
+- [x] **Step 1: Write failing helper tests**
 
 Create `tests/test_verification_helpers.py` with:
 
@@ -169,7 +169,7 @@ def _task(task_id, category, prompt):
     )
 ```
 
-- [ ] **Step 2: Run helper tests to verify RED**
+- [x] **Step 2: Run helper tests to verify RED**
 
 Run:
 
@@ -179,7 +179,7 @@ pytest tests/test_verification_helpers.py -q
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'hermes_skilleval.routers.verification'`.
 
-- [ ] **Step 3: Add shared verification implementation**
+- [x] **Step 3: Add shared verification implementation**
 
 Create `src/hermes_skilleval/routers/verification.py` with:
 
@@ -293,7 +293,7 @@ def prompt_mentions_skill_id(prompt: str, skill_id: str) -> bool:
     return re.search(pattern, prompt, flags=re.IGNORECASE) is not None
 ```
 
-- [ ] **Step 4: Refactor gated router to use shared helpers**
+- [x] **Step 4: Refactor gated router to use shared helpers**
 
 In `src/hermes_skilleval/routers/gated.py`, remove local `math`, `re`, `Counter`, `WORD_RE`, `_verification_score`, `_select_candidates`, `_prompt_evidence_score`, `_confidence`, `_terms`, `_weighted_overlap`, `_skill_text`, `_same_category`, and `_prompt_mentions_skill_id`. Add:
 
@@ -331,7 +331,7 @@ Update selective filtering:
             )
 ```
 
-- [ ] **Step 5: Run targeted tests**
+- [x] **Step 5: Run targeted tests**
 
 Run:
 
@@ -341,7 +341,7 @@ pytest tests/test_verification_helpers.py tests/test_gated_router.py -q
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit helper extraction**
+- [x] **Step 6: Commit helper extraction**
 
 Run:
 

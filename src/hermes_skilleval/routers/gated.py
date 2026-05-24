@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import math
-import re
 import time
-from collections import Counter
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.routers.base import SkillRouter
 from hermes_skilleval.routers.embedding import EmbeddingRouter
-
-
-WORD_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
+from hermes_skilleval.routers.verification import (
+    select_candidates,
+    verification_score,
+)
 
 
 class VerificationGatedRouter(SkillRouter):
@@ -64,7 +62,7 @@ class VerificationGatedRouter(SkillRouter):
 
         base_rank = {skill_id: index for index, skill_id in enumerate(candidate_ids)}
         scores = {
-            skill.id: _verification_score(
+            skill.id: verification_score(
                 task,
                 skill,
                 float(base_result.scores.get(skill.id, 0.0)),
@@ -80,7 +78,7 @@ class VerificationGatedRouter(SkillRouter):
             ),
         )
         if self.selective:
-            ranked_candidates = _select_candidates(
+            ranked_candidates = select_candidates(
                 task,
                 ranked_candidates,
                 scores,
@@ -98,100 +96,3 @@ class VerificationGatedRouter(SkillRouter):
             scores=scores,
             latency_ms=latency_ms,
         )
-
-
-def _verification_score(
-    task: BenchmarkTask,
-    skill: Skill,
-    base_score: float,
-) -> float:
-    query_terms = _terms(f"{task.category} {task.prompt}")
-    skill_terms = _terms(_skill_text(skill))
-    lexical_score = _weighted_overlap(query_terms, skill_terms)
-    category_score = 100.0 if _same_category(task, skill) else 0.0
-    exact_id_score = 3.0 if _prompt_mentions_skill_id(task.prompt, skill.id) else 0.0
-    return category_score + exact_id_score + lexical_score + base_score
-
-
-def _select_candidates(
-    task: BenchmarkTask,
-    ranked_candidates: list[Skill],
-    scores: dict[str, float],
-    *,
-    min_confidence: float,
-    contrastive_selective: bool,
-    contrastive_margin: float,
-    min_evidence: float,
-) -> list[Skill]:
-    accepted: list[Skill] = []
-    accepted_evidence: dict[str, float] = {}
-    for skill in ranked_candidates:
-        if _confidence(scores[skill.id]) < min_confidence:
-            continue
-        if contrastive_selective and accepted and _same_category(task, skill):
-            evidence = _prompt_evidence_score(task, skill)
-            same_category_evidence = [
-                accepted_evidence[accepted_skill.id]
-                for accepted_skill in accepted
-                if _same_category(task, accepted_skill)
-            ]
-            if same_category_evidence:
-                best_evidence = max(same_category_evidence)
-                if evidence < min_evidence:
-                    continue
-                if best_evidence - evidence > contrastive_margin:
-                    continue
-        accepted.append(skill)
-        accepted_evidence[skill.id] = _prompt_evidence_score(task, skill)
-    return accepted
-
-
-def _prompt_evidence_score(task: BenchmarkTask, skill: Skill) -> float:
-    query_terms = _terms(task.prompt)
-    skill_terms = _terms(_skill_text(skill))
-    lexical_score = _weighted_overlap(query_terms, skill_terms)
-    exact_id_score = 3.0 if _prompt_mentions_skill_id(task.prompt, skill.id) else 0.0
-    return lexical_score + exact_id_score
-
-
-def _confidence(score: float) -> float:
-    return max(0.0, min(1.0, score / 100.0))
-
-
-def _terms(text: str) -> Counter[str]:
-    return Counter(term.lower() for term in WORD_RE.findall(text) if len(term) >= 3)
-
-
-def _weighted_overlap(
-    query_terms: Counter[str],
-    skill_terms: Counter[str],
-) -> float:
-    if not query_terms or not skill_terms:
-        return 0.0
-    overlap = set(query_terms) & set(skill_terms)
-    return sum(
-        query_terms[term] * (1.0 + math.log1p(skill_terms[term]))
-        for term in sorted(overlap)
-    )
-
-
-def _skill_text(skill: Skill) -> str:
-    return " ".join(
-        [
-            skill.id.replace("-", " "),
-            skill.name,
-            skill.category or "",
-            skill.description,
-            " ".join(skill.trigger_terms),
-            skill.body,
-        ]
-    )
-
-
-def _same_category(task: BenchmarkTask, skill: Skill) -> bool:
-    return (skill.category or "").casefold() == task.category.casefold()
-
-
-def _prompt_mentions_skill_id(prompt: str, skill_id: str) -> bool:
-    pattern = rf"(?<![A-Za-z0-9_-]){re.escape(skill_id)}(?![A-Za-z0-9_-])"
-    return re.search(pattern, prompt, flags=re.IGNORECASE) is not None
