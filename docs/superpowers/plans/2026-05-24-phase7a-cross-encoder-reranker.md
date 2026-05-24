@@ -1014,7 +1014,7 @@ git commit -m "docs: track phase7a implementation progress"
 - Modify: `docs/resume.md`
 - Test: remote `nvidia-smi`, remote `pytest -q`, remote benchmark command, local artifact inspection
 
-- [ ] **Step 1: Check remote GPU availability without modifying processes**
+- [x] **Step 1: Check remote GPU availability without modifying processes**
 
 Run:
 
@@ -1024,54 +1024,58 @@ ssh volcano 'nvidia-smi --query-gpu=index,memory.used,memory.total,utilization.g
 
 Expected: choose one GPU with low memory and utilization. Use GPU `3` if it remains idle.
 
-- [ ] **Step 2: Sync repository to remote workspace**
+- [x] **Step 2: Sync repository to remote workspace**
 
 Run from local repo:
 
 ```bash
-ssh volcano 'mkdir -p /root/code/hermes-skilleval'
-rsync -az --delete \
+ssh volcano 'mkdir -p /mnt/data/minghongsun/hermes-skilleval'
+COPYFILE_DISABLE=1 tar \
   --exclude .git \
   --exclude .pytest_cache \
   --exclude __pycache__ \
-  ./ volcano:/root/code/hermes-skilleval/
+  --exclude '*.pyc' \
+  -czf - . | ssh volcano 'cd /mnt/data/minghongsun/hermes-skilleval && tar -xzf -'
 ```
 
 Expected: remote workspace contains current source and benchmark files.
 
-- [ ] **Step 3: Install package on remote**
+- [x] **Step 3: Stage local model snapshots under the user's NAS directory**
 
 Run:
 
 ```bash
-ssh volcano 'cd /root/code/hermes-skilleval && python -m pip install -e ".[dev,embedding]"'
+ssh volcano 'mkdir -p /mnt/data/minghongsun/hermes-skilleval-models'
+COPYFILE_DISABLE=1 tar --no-xattrs \
+  -C /tmp/hermes-skilleval-models-min \
+  -czf - . | ssh volcano 'cd /mnt/data/minghongsun/hermes-skilleval-models && tar -xzf -'
 ```
 
-Expected: install succeeds without changing GPU state.
+Expected: local model paths exist at `/mnt/data/minghongsun/hermes-skilleval-models/all-MiniLM-L6-v2` and `/mnt/data/minghongsun/hermes-skilleval-models/ms-marco-MiniLM-L-6-v2`.
 
-- [ ] **Step 4: Verify tests remotely**
+- [x] **Step 4: Verify tests remotely**
 
 Run:
 
 ```bash
-ssh volcano 'cd /root/code/hermes-skilleval && pytest -q'
+ssh volcano 'cd /mnt/data/minghongsun/hermes-skilleval && HF_HOME=/mnt/data/minghongsun/hf-cache TMPDIR=/mnt/data/minghongsun/tmp PYTHONPATH=src pytest -q'
 ```
 
 Expected: full test suite passes on the remote Python environment.
 
-- [ ] **Step 5: Run benchmark on one idle GPU**
+- [x] **Step 5: Run benchmark on one idle GPU**
 
 Run:
 
 ```bash
-ssh volcano 'cd /root/code/hermes-skilleval && CUDA_VISIBLE_DEVICES=3 skilleval compare \
+ssh volcano 'cd /mnt/data/minghongsun/hermes-skilleval && CUDA_VISIBLE_DEVICES=3 HF_HOME=/mnt/data/minghongsun/hf-cache HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TMPDIR=/mnt/data/minghongsun/tmp PYTHONPATH=src python -m hermes_skilleval.cli compare \
   --index docs/demo/phase6b-contrastive-gating/skills.json \
   --tasks benchmarks/tasks \
   --routers embedding-minilm=embedding:sentence-transformers,gated-minilm-contrastive=gated:sentence-transformers,cross-encoder-minilm=cross-encoder:sentence-transformers \
   --embedding-backend sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-model /mnt/data/minghongsun/hermes-skilleval-models/all-MiniLM-L6-v2 \
   --embedding-cache docs/demo/phase7a-cross-encoder/embedding-cache.json \
-  --cross-encoder-model cross-encoder/ms-marco-MiniLM-L-6-v2 \
+  --cross-encoder-model /mnt/data/minghongsun/hermes-skilleval-models/ms-marco-MiniLM-L-6-v2 \
   --gated-pool-size 10 \
   --selective \
   --contrastive-selective \
@@ -1080,12 +1084,12 @@ ssh volcano 'cd /root/code/hermes-skilleval && CUDA_VISIBLE_DEVICES=3 skilleval 
 
 Expected: benchmark writes `comparison.md` and router subdirectories without using GPUs other than visible GPU `3`.
 
-- [ ] **Step 6: Generate failure analysis**
+- [x] **Step 6: Generate failure analysis**
 
 Run:
 
 ```bash
-ssh volcano 'cd /root/code/hermes-skilleval && skilleval analyze-failures \
+ssh volcano 'cd /mnt/data/minghongsun/hermes-skilleval && PYTHONPATH=src python -m hermes_skilleval.cli analyze-failures \
   --runs docs/demo/phase7a-cross-encoder \
   --baseline gated-minilm-contrastive \
   --candidate cross-encoder-minilm \
@@ -1094,17 +1098,18 @@ ssh volcano 'cd /root/code/hermes-skilleval && skilleval analyze-failures \
 
 Expected: failure analysis markdown is written.
 
-- [ ] **Step 7: Copy remote artifacts back**
+- [x] **Step 7: Copy remote artifacts back**
 
 Run:
 
 ```bash
-rsync -az volcano:/root/code/hermes-skilleval/docs/demo/phase7a-cross-encoder/ docs/demo/phase7a-cross-encoder/
+rm -rf docs/demo/phase7a-cross-encoder
+ssh volcano 'cd /mnt/data/minghongsun/hermes-skilleval && tar -czf - docs/demo/phase7a-cross-encoder' | tar -xzf -
 ```
 
 Expected: local `docs/demo/phase7a-cross-encoder/` contains router results, reports, comparison, failure analysis, and embedding cache.
 
-- [ ] **Step 8: Write Phase 7A summary**
+- [x] **Step 8: Write Phase 7A summary**
 
 Create `docs/phase7a.md` with:
 
@@ -1151,16 +1156,16 @@ This phase demonstrates single-GPU deployment of a learned verifier reranker, co
 
 Replace the metric summary with actual values from the generated reports before committing.
 
-- [ ] **Step 9: Update demo and resume docs**
+- [x] **Step 9: Update demo and resume docs**
 
-Update `docs/demo/README.md` with a Phase 7A artifact link. Update `docs/resume.md` with Phase 7A as the latest project phase and correct the final test count from the actual `pytest -q` result.
+Update `README.md` and `docs/demo/README.md` with Phase 7A artifact links. Update `docs/resume.md` with Phase 7A as the latest project phase and correct the final test count from the actual `pytest -q` result.
 
-- [ ] **Step 10: Commit benchmark docs and artifacts**
+- [x] **Step 10: Commit benchmark docs and artifacts**
 
 Run:
 
 ```bash
-git add docs/demo/phase7a-cross-encoder docs/phase7a.md docs/demo/README.md docs/resume.md
+git add README.md docs/demo/phase7a-cross-encoder docs/phase7a.md docs/demo/README.md docs/resume.md docs/superpowers/specs/2026-05-24-phase7a-cross-encoder-reranker-design.md docs/superpowers/plans/2026-05-24-phase7a-cross-encoder-reranker.md
 git commit -m "docs: add phase7a cross encoder benchmark"
 ```
 

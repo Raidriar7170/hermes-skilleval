@@ -44,23 +44,25 @@ validated CLI runs and Markdown reports.
   reducing full-benchmark Negative Hit Rate from 0.113 to 0.037 and held-out
   ambiguous-pair Negative Hit Rate from 0.900 to 0.300 while preserving
   Recall@1 at 0.881 and Recall@5 at 0.969.
+- Added a pretrained cross-encoder reranker deployed on a single idle A100,
+  improving rank-only Recall@5 from 0.969 to 0.994 and NDCG@5 from 0.964 to
+  0.978 versus contrastive gating, while revealing the precision/recall trade
+  off of applying selective acceptance directly to cross-encoder logits.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  119 pytest tests covering parser, loader, router, metric, report, and CLI
+  136 pytest tests covering parser, loader, router, metric, report, and CLI
   edge cases.
-- Designed the system as an offline MVP that runs locally on a Mac while leaving
-  clear extension points for cross-encoder reranking, embedding fine-tuning,
-  abstention policies, and self-improving skill patches on larger GPU
-  infrastructure.
+- Designed the system as an offline MVP that runs locally on a Mac while
+  supporting controlled single-GPU experiments on shared A100 infrastructure.
 
 ## Short Resume Version
 
 Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, an 80-task/45-skill robustness benchmark,
 keyword/hybrid/embedding routers, optional `sentence-transformers` retrieval,
-verification-gated reranking, selective confidence gating, Recall@K, MRR,
-NDCG, negative-hit metrics, failure-driven metadata patching, CLI
-comparison/failure reports, and 119-test validation.
+verification-gated reranking, pretrained cross-encoder reranking, selective
+confidence gating, Recall@K, MRR, NDCG, negative-hit metrics, failure-driven
+metadata patching, CLI comparison/failure reports, and 136-test validation.
 
 ## Interview Talking Points
 
@@ -98,16 +100,20 @@ comparison/failure reports, and 119-test validation.
 - Phase 6B: contrastive selective gating reduces same-category negative hits
   by comparing each accepted candidate's prompt evidence against the strongest
   accepted skill, cutting full Negative Hit Rate to 0.037.
+- Phase 7A: a pretrained MS MARCO MiniLM cross-encoder reranker improves
+  rank-only Recall@5 to 0.994 and NDCG@5 to 0.978 on the 80-task benchmark,
+  but needs a calibrated acceptance layer because rank-only reranking raises
+  Negative Hit Rate to 0.125 and direct selective gating is too conservative.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
 - Agent relevance: the harness now covers offline lexical routing, embedding
-  retrieval, verifier-gated reranking, selective and contrastive acceptance,
-  and failure-driven self-improvement loops.
-- Hardware story: the current MVP and Phase 6A benchmark run on a local Mac. A
-  remote 8xA100 machine becomes useful for future embedding fine-tuning,
-  cross-encoder reranking, larger benchmark sweeps, and LLM-assisted verifier
-  or self-improvement runs.
+  retrieval, verifier-gated reranking, cross-encoder reranking, selective and
+  contrastive acceptance, and failure-driven self-improvement loops.
+- Hardware story: the main harness runs on a local Mac, while Phase 7A staged
+  local model snapshots under `/mnt/data/minghongsun`, selected an idle A100
+  with `nvidia-smi`, and ran the benchmark with `CUDA_VISIBLE_DEVICES=3`
+  without killing or resetting any existing GPU process.
 
 ## Suggested GitHub Description
 
@@ -117,8 +123,8 @@ generation.
 
 ## Future Extension Bullets
 
-- Add cross-encoder or LLM reranking after embedding retrieval and compare it
-  against the deterministic gated reranker.
+- Calibrate cross-encoder acceptance thresholds or add pairwise margins so the
+  rank-only Recall@5 gains do not reintroduce same-category negative hits.
 - Extend failure-driven patching from generated skill indexes to source
   `SKILL.md` editing with human review.
 - Fine-tune or distill the embedding model on benchmark failures and measure

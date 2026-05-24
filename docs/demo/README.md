@@ -5,8 +5,8 @@ This directory contains committed demo runs for Hermes SkillEval.
 The original `benchmark-hybrid` and `router-comparison` artifacts use the tiny
 fixture skill library in `tests/fixtures/skills` and are smoke/demo artifacts
 for CLI reporting. The main current benchmark artifacts are the Phase 6A
-robustness run and the Phase 6B contrastive gating run over the generated
-80-task, 45-skill corpus.
+robustness run, the Phase 6B contrastive gating run, and the Phase 7A
+cross-encoder reranker run over the generated 80-task, 45-skill corpus.
 
 Regenerate the demo from the repository root:
 
@@ -124,6 +124,22 @@ skilleval analyze-failures \
   --baseline gated-minilm-selective \
   --candidate gated-minilm-contrastive \
   --output docs/demo/phase6b-contrastive-gating/failure-analysis.md
+skilleval compare \
+  --index docs/demo/phase6b-contrastive-gating/skills.json \
+  --tasks benchmarks/tasks \
+  --routers embedding-minilm=embedding:sentence-transformers,gated-minilm-contrastive=gated:sentence-transformers,cross-encoder-minilm=cross-encoder:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase7a-minilm-cache.json \
+  --cross-encoder-model cross-encoder/ms-marco-MiniLM-L-6-v2 \
+  --gated-pool-size 10 \
+  --selective \
+  --contrastive-selective \
+  --output-dir docs/demo/phase7a-cross-encoder
+skilleval analyze-failures \
+  --runs docs/demo/phase7a-cross-encoder \
+  --baseline gated-minilm-contrastive \
+  --candidate cross-encoder-minilm \
+  --output docs/demo/phase7a-cross-encoder/failure-analysis.md
 ```
 
 Artifacts:
@@ -175,3 +191,9 @@ Artifacts:
   summary for negative-hit, ambiguous-pair, Recall@1, and Recall@5 deltas.
 - `phase6b-contrastive-gating/failure-analysis.md`: failure-mode comparison
   between standard selective gating and contrastive selective gating.
+- `phase7a-cross-encoder/comparison.md`: Phase 7A comparison for MiniLM
+  embedding, contrastive gated MiniLM, and selective cross-encoder MiniLM.
+- `phase7a-cross-encoder/cross-encoder-minilm-rank-only/report.md`: rank-only
+  cross-encoder run used to separate reranking gains from acceptance filtering.
+- `phase7a-cross-encoder/failure-analysis.md`: failure-mode comparison between
+  contrastive gated MiniLM and selective cross-encoder MiniLM.

@@ -12,10 +12,10 @@ do not require Hermes Agent, network access, or an LLM API key.
 
 - Parses Hermes-style skill files with YAML frontmatter, fallback metadata,
   category inference, trigger terms, and token estimates.
-- Evaluates keyword, hybrid, embedding, and verification-gated skill routers
-  with deterministic ranking, top-k validation, score traces, latency tracking,
-  and an optional `sentence-transformers` backend with a JSON skill-embedding
-  cache.
+- Evaluates keyword, hybrid, embedding, verification-gated, and cross-encoder
+  skill routers with deterministic ranking, top-k validation, score traces,
+  latency tracking, and optional `sentence-transformers` backends with a JSON
+  skill-embedding cache.
 - Reports Recall@1, Recall@3, Recall@5, Precision@5, MRR, NDCG@5,
   Negative Hit Rate, selective accepted-output metrics, top selected skills,
   and failure cases.
@@ -33,6 +33,8 @@ do not require Hermes Agent, network access, or an LLM API key.
   skills, negative hits, and candidate-vs-baseline trade-offs.
 - Proposes failure-driven skill metadata patches, writes patched skill indexes,
   and verifies before/after runs with an acceptance gate.
+- Deploys an optional pretrained cross-encoder reranker after embedding
+  retrieval for learned pairwise verification experiments.
 
 ## Quickstart
 
@@ -157,6 +159,22 @@ skilleval eval \
   --output-dir runs/gated-selective
 ```
 
+Run a pretrained cross-encoder reranker over embedding candidates:
+
+```bash
+skilleval eval \
+  --index index/skills.json \
+  --tasks benchmarks/tasks \
+  --router cross-encoder \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache runs/embeddings/all-MiniLM-L6-v2.json \
+  --cross-encoder-model cross-encoder/ms-marco-MiniLM-L-6-v2 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir runs/cross-encoder
+```
+
 Run tests:
 
 ```bash
@@ -198,6 +216,9 @@ and summary notes in [`docs/phase6a.md`](docs/phase6a.md).
 Phase 6B adds contrastive selective gating for same-category ambiguous skills at
 [`docs/demo/phase6b-contrastive-gating/comparison.md`](docs/demo/phase6b-contrastive-gating/comparison.md)
 with notes in [`docs/phase6b.md`](docs/phase6b.md).
+Phase 7A adds a pretrained cross-encoder reranker benchmark at
+[`docs/demo/phase7a-cross-encoder/comparison.md`](docs/demo/phase7a-cross-encoder/comparison.md)
+with notes in [`docs/phase7a.md`](docs/phase7a.md).
 
 To regenerate it:
 
@@ -330,6 +351,22 @@ skilleval analyze-failures \
   --baseline gated-minilm-selective \
   --candidate gated-minilm-contrastive \
   --output docs/demo/phase6b-contrastive-gating/failure-analysis.md
+skilleval compare \
+  --index docs/demo/phase6b-contrastive-gating/skills.json \
+  --tasks benchmarks/tasks \
+  --routers embedding-minilm=embedding:sentence-transformers,gated-minilm-contrastive=gated:sentence-transformers,cross-encoder-minilm=cross-encoder:sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase7a-minilm-cache.json \
+  --cross-encoder-model cross-encoder/ms-marco-MiniLM-L-6-v2 \
+  --gated-pool-size 10 \
+  --selective \
+  --contrastive-selective \
+  --output-dir docs/demo/phase7a-cross-encoder
+skilleval analyze-failures \
+  --runs docs/demo/phase7a-cross-encoder \
+  --baseline gated-minilm-contrastive \
+  --candidate cross-encoder-minilm \
+  --output docs/demo/phase7a-cross-encoder/failure-analysis.md
 ```
 
 ## Benchmark Corpus
@@ -370,9 +407,10 @@ skills/**/SKILL.md      benchmarks/tasks
        v                       v           v
  keyword router           hybrid router   embedding router
        |                       |           |
-       |                       |           v
-       |                       |    gated reranker
-       |                       |           |
+       |                       |           +-----------+
+       |                       |           v           v
+       |                       |    gated reranker   cross-encoder reranker
+       |                       |           |           |
        +-----------+-----------+-----------+
                    v
           metrics + JSONL results
@@ -394,6 +432,10 @@ Core modules:
 - `routers/gated.py`: verification-gated reranker that reranks embedding
   candidates with category agreement, lexical evidence, and base retriever
   scores.
+- `routers/cross_encoder.py`: optional pretrained cross-encoder reranker over
+  embedding candidates.
+- `routers/verification.py`: shared verification evidence and selective
+  acceptance helpers.
 - `metrics.py`: ranking metrics and negative-skill checks.
 - `report.py`: validated JSONL-to-Markdown reporting.
 - `comparison.py`: aggregate router comparison reports.
@@ -407,8 +449,8 @@ Core modules:
 ## Scope
 
 This MVP evaluates skill selection only. Real Hermes execution, LLM judges,
-embedding fine-tuning, cross-encoder reranking, source `SKILL.md` editing, and
-web dashboards are planned future extensions.
+embedding fine-tuning, calibrated cross-encoder acceptance, source `SKILL.md`
+editing, and web dashboards are planned future extensions.
 
 ## Portfolio Notes
 

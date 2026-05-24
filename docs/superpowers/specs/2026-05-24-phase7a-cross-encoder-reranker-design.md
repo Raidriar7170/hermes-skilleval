@@ -16,6 +16,8 @@ Phase 7A should test whether a pretrained cross-encoder can improve semantic rer
 
 The current dev machine exposes eight A100-80GB GPUs. A read-only check showed GPUs `0`, `1`, and `2` occupied by existing work and GPUs `3`, `4`, `5`, `6`, and `7` effectively idle. Phase 7A runs must pin to one idle GPU with `CUDA_VISIBLE_DEVICES=3` by default and must not kill or inspect-modify other users' processes.
 
+Remote project files, model snapshots, caches, and benchmark artifacts must be staged under the user's own NAS directory, `/mnt/data/minghongsun`, not under other users' shared directories.
+
 ## Design Summary
 
 Introduce a new `cross-encoder` router that wraps the existing embedding router:
