@@ -1,169 +1,199 @@
 # Hermes SkillEval
 
-Hermes SkillEval is an offline CLI harness for evaluating skill routing in
-Hermes-style agent skill libraries.
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen.svg)](tests)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Benchmark](https://img.shields.io/badge/benchmark-80%20tasks%20%2F%2045%20skills-purple.svg)](benchmarks)
+[![A100 Validated](https://img.shields.io/badge/A100-validated-orange.svg)](docs/phase7a.md)
 
-The project indexes `skills/**/SKILL.md`, loads labeled benchmark tasks,
-compares routing strategies, and writes JSONL records plus Markdown reports
-with deterministic routing metrics and latency metadata. The default workflows
-do not require Hermes Agent, network access, or an LLM API key.
+**A verification-gated skill routing and self-improvement harness for Hermes-style agent skills.**
 
-## Highlights
+面向 Hermes / Skill / Agent 工作流的离线评测系统：它能索引 `SKILL.md` 技能库，构建带负样本的 benchmark，比较 keyword、hybrid、embedding、verification-gated、cross-encoder 等路由策略，并输出可复现的指标、失败分析和自改进报告。
 
-- Parses Hermes-style skill files with YAML frontmatter, fallback metadata,
-  category inference, trigger terms, and token estimates.
-- Evaluates keyword, hybrid, embedding, verification-gated, and cross-encoder
-  skill routers with deterministic ranking, top-k validation, score traces,
-  latency tracking, and optional `sentence-transformers` backends with a JSON
-  skill-embedding cache.
-- Reports Recall@1, Recall@3, Recall@5, Precision@5, MRR, NDCG@5,
-  Negative Hit Rate, selective accepted-output metrics, top selected skills,
-  and failure cases.
-- Includes an 80-task benchmark corpus with `dev`/`test` splits,
-  robustness tags, and a reproducible generator that keeps the committed
-  benchmark directory in sync with its source list.
-- Includes a generated 45-skill benchmark library so every benchmark gold and
-  negative label has a corresponding Hermes-style `SKILL.md`.
-- Provides robust CLI error handling, schema validation, Markdown escaping,
-  and pytest coverage for parser, loader, router, metrics, report, and CLI
-  edge cases.
-- Compares multiple routers in one command and writes a Markdown comparison
-  table for experiment tracking.
-- Analyzes failed routes by failure mode, including top-1 misses, missing gold
-  skills, negative hits, and candidate-vs-baseline trade-offs.
-- Proposes failure-driven skill metadata patches, writes patched skill indexes,
-  and verifies before/after runs with an acceptance gate.
-- Deploys an optional pretrained cross-encoder reranker after embedding
-  retrieval for learned pairwise verification experiments.
+---
 
-## Quickstart
+## Motivation / 为什么需要这个项目
 
-Install in editable mode:
+Modern agent frameworks increasingly rely on external skill libraries. The hard part is not only writing skills, but **routing the right skill at the right time while avoiding tempting negative skills**.
+
+现代 Agent 框架越来越依赖外部 Skill 库。真正困难的不只是写 Skill，而是在相似技能很多、请求含糊、负样本诱导明显时，稳定地选中正确技能并拒绝错误技能。
+
+| Scenario | Naive Router | Hermes SkillEval |
+|---|:-:|:-:|
+| Similar skills in one category | Often selects semantically close negatives | Measures negative hits and same-category confusion |
+| Skill library grows over time | Hard to compare regressions | Produces comparable JSONL and Markdown reports |
+| Embedding router misses edge cases | Failure reasons are opaque | Generates failure-mode analysis and candidate-vs-baseline diffs |
+| Skill descriptions are weak | Manual patching is ad hoc | Proposes metadata patches and verifies before/after gains |
+| Learned rerankers look promising | Hard to quantify trade-offs | Benchmarks cross-encoder ranking quality vs selective acceptance |
+
+---
+
+## Key Results / 核心效果
+
+### Benchmark Scale
+
+| Item | Value |
+|---|---:|
+| Benchmark tasks | 80 |
+| Hermes-style benchmark skills | 45 |
+| Router families | 5 |
+| Test cases | 136 |
+| Remote hardware validation | Single idle A100 GPU |
+
+### Best Verified Routing Results
+
+| Router / Setting | Recall@1 | Recall@5 | MRR | NDCG@5 | Negative Hit Rate | Selection Rate@5 |
+|---|---:|---:|---:|---:|---:|---:|
+| MiniLM embedding | 0.812 | 0.956 | 0.934 | 0.930 | 0.100 | 1.000 |
+| Contrastive gated MiniLM | **0.881** | 0.969 | **0.985** | 0.964 | **0.037** | 0.320 |
+| Cross-encoder selective | 0.775 | 0.781 | 0.838 | 0.794 | **0.000** | 0.175 |
+| Cross-encoder rank-only | **0.881** | **0.994** | **0.985** | **0.978** | 0.125 | 1.000 |
+
+**Takeaway:** contrastive gated routing is the best current selective router, while the cross-encoder is a strong learned reranker. Phase 7A shows that pairwise cross-encoder scoring improves ranking quality, but its acceptance policy needs calibration before replacing the contrastive gate.
+
+**结论:** Contrastive gated routing 是当前最稳的 selective router；cross-encoder 在排序质量上表现更强，但直接用 logits 做接受/拒绝会过于保守或误伤，需要下一步做阈值校准。
+
+---
+
+## Architecture / 系统架构
+
+```text
+skills/**/SKILL.md                  benchmarks/tasks
+        |                                  |
+        v                                  v
+  Skill parser                      Task loader
+        |                                  |
+        +---------------+------------------+
+                        v
+                   CLI evaluator
+                        |
+     +------------------+-------------------+------------------+
+     v                  v                   v                  v
+ Keyword router    Hybrid router      Embedding router    Gated router
+                                           |                  |
+                                           +--------+---------+
+                                                    v
+                                           Cross-encoder reranker
+                                                    |
+                                                    v
+                                      metrics + JSONL traces
+                                                    |
+                       +----------------------------+-------------------+
+                       v                                                v
+             Markdown benchmark reports                       Failure analysis
+                       |                                                |
+                       +----------------------------+-------------------+
+                                                    v
+                                      Skill metadata improvement loop
+```
+
+Core design principles:
+
+- **Offline-first:** default keyword, hybrid, and hashing embedding workflows run without network access, Hermes Agent, or LLM API keys.
+- **Verifier-aware:** reports track both gold skill recall and negative skill hits, so a router cannot hide unsafe selections behind high recall.
+- **Failure-driven:** the harness turns missed gold skills and negative hits into concrete metadata patch proposals.
+- **Extensible:** optional `sentence-transformers` and cross-encoder backends plug into the same evaluation surface.
+
+---
+
+## Project Structure / 项目结构
+
+```text
+hermes-skilleval/
+├── benchmarks/
+│   ├── skills/                         # 45 generated Hermes-style skills
+│   └── tasks/                          # 80 labeled routing tasks
+├── docs/
+│   ├── demo/                           # committed benchmark outputs
+│   ├── phase2.md ... phase7a.md        # implementation and experiment notes
+│   └── resume.md                       # resume-ready project framing
+├── scripts/
+│   ├── generate_benchmark_skills.py    # reproducible skill corpus generator
+│   └── generate_benchmark_tasks.py     # reproducible task corpus generator
+├── src/hermes_skilleval/
+│   ├── cli.py                          # index, eval, compare, analyze, improve
+│   ├── metrics.py                      # Recall, Precision, MRR, NDCG, negatives
+│   ├── failure_analysis.py             # failure-mode summaries
+│   ├── self_improvement.py             # metadata patch proposals
+│   └── routers/
+│       ├── keyword.py                  # lexical baseline
+│       ├── hybrid.py                   # category + lexical + explicit id boosts
+│       ├── embedding.py                # hashing and sentence-transformers retrievers
+│       ├── gated.py                    # verification-gated reranker
+│       ├── verification.py             # shared selective evidence logic
+│       └── cross_encoder.py            # pretrained pairwise reranker
+├── tests/                              # 136 pytest cases
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+## Quick Start / 快速开始
+
+### Installation
 
 ```bash
+git clone https://github.com/Raidriar7170/hermes-skilleval.git
+cd hermes-skilleval
+
+python -m venv .venv
+source .venv/bin/activate
+
 python -m pip install -e ".[dev]"
 ```
 
-Install the optional neural embedding backend:
+Install optional neural routing backends:
 
 ```bash
 python -m pip install -e ".[dev,embedding]"
 ```
 
-Index a skills directory:
+### 1. Index a Hermes-style Skill Library
 
 ```bash
-skilleval index --skills-path /path/to/hermes/skills --output index/skills.json
+skilleval index \
+  --skills-path benchmarks/skills \
+  --output runs/skills.json
 ```
 
-Run an evaluation:
+### 2. Run a Router Evaluation
 
 ```bash
 skilleval eval \
-  --index index/skills.json \
+  --index runs/skills.json \
   --tasks benchmarks/tasks \
   --router hybrid \
   --top-k 5 \
-  --output-dir runs/latest
+  --output-dir runs/hybrid
 ```
 
-Generate a report:
-
-```bash
-skilleval report --runs runs/latest
-```
-
-Compare routers:
+### 3. Compare Multiple Routers
 
 ```bash
 skilleval compare \
-  --index index/skills.json \
+  --index runs/skills.json \
   --tasks benchmarks/tasks \
-  --routers keyword,hybrid,embedding \
+  --routers keyword,hybrid,embedding-hashing=embedding:hashing \
   --top-k 5 \
   --output-dir runs/comparison
 ```
 
-Analyze comparison failures:
+### 4. Analyze Failures
 
 ```bash
 skilleval analyze-failures \
   --runs runs/comparison \
-  --baseline embedding-hashing \
-  --candidate embedding-minilm
+  --baseline hybrid \
+  --candidate embedding-hashing \
+  --output runs/comparison/failure-analysis.md
 ```
 
-Propose and verify skill metadata improvements:
-
-```bash
-skilleval improve-skills \
-  --runs runs/comparison \
-  --router embedding-minilm \
-  --index index/skills.json \
-  --tasks benchmarks/tasks \
-  --output runs/improvement/patches.json \
-  --patched-index runs/improvement/patched-skills.json \
-  --report runs/improvement/patches.md
-
-skilleval judge-improvement \
-  --runs runs/improvement \
-  --baseline embedding-minilm-before \
-  --candidate embedding-minilm-patched \
-  --output runs/improvement/acceptance.md
-```
-
-Run the real embedding router with a cached sentence-transformer model:
+### 5. Run the Cross-Encoder Reranker
 
 ```bash
 skilleval eval \
-  --index index/skills.json \
-  --tasks benchmarks/tasks \
-  --router embedding \
-  --embedding-backend sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache runs/embeddings/all-MiniLM-L6-v2.json \
-  --top-k 5 \
-  --output-dir runs/embedding-real
-```
-
-Run the verification-gated reranker on top of a cached sentence-transformer
-retriever:
-
-```bash
-skilleval eval \
-  --index index/skills.json \
-  --tasks benchmarks/tasks \
-  --router gated \
-  --embedding-backend sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache runs/embeddings/all-MiniLM-L6-v2.json \
-  --gated-pool-size 10 \
-  --top-k 5 \
-  --output-dir runs/gated-real
-```
-
-Enable selective routing to suppress low-confidence candidates:
-
-```bash
-skilleval eval \
-  --index index/skills.json \
-  --tasks benchmarks/tasks \
-  --router gated \
-  --embedding-backend sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache runs/embeddings/all-MiniLM-L6-v2.json \
-  --selective \
-  --min-confidence 0.5 \
-  --gated-pool-size 10 \
-  --top-k 5 \
-  --output-dir runs/gated-selective
-```
-
-Run a pretrained cross-encoder reranker over embedding candidates:
-
-```bash
-skilleval eval \
-  --index index/skills.json \
+  --index runs/skills.json \
   --tasks benchmarks/tasks \
   --router cross-encoder \
   --embedding-backend sentence-transformers \
@@ -175,284 +205,125 @@ skilleval eval \
   --output-dir runs/cross-encoder
 ```
 
-Run tests:
+### 6. Run Tests
 
 ```bash
-pytest -v
+pytest -q
 ```
 
-## Demo
-
-A committed demo run is available at
-[`docs/demo/benchmark-hybrid/report.md`](docs/demo/benchmark-hybrid/report.md).
-It was generated with the tiny fixture skill library in `tests/fixtures/skills`
-against the original 30-task benchmark snapshot, so it is a historical
-smoke/demo artifact rather than a production routing score.
-
-Phase 2 also includes a committed router comparison at
-[`docs/demo/router-comparison/comparison.md`](docs/demo/router-comparison/comparison.md).
-The implementation notes are in [`docs/phase2.md`](docs/phase2.md).
-Phase 3A adds the optional real embedding backend documented in
-[`docs/phase3a.md`](docs/phase3a.md).
-Phase 3B adds a committed MiniLM comparison run at
-[`docs/demo/phase3b-real-embedding/comparison.md`](docs/demo/phase3b-real-embedding/comparison.md)
-with implementation notes in [`docs/phase3b.md`](docs/phase3b.md).
-Phase 3C adds failure analysis for that run at
-[`docs/demo/phase3b-real-embedding/failure-analysis.md`](docs/demo/phase3b-real-embedding/failure-analysis.md)
-with notes in [`docs/phase3c.md`](docs/phase3c.md).
-Phase 4A adds a verification-gated reranker over MiniLM retrieval at
-[`docs/demo/phase4a-gated-reranker/comparison.md`](docs/demo/phase4a-gated-reranker/comparison.md)
-with notes in [`docs/phase4a.md`](docs/phase4a.md).
-Phase 4B adds selective verification-gated routing at
-[`docs/demo/phase4b-selective-routing/comparison.md`](docs/demo/phase4b-selective-routing/comparison.md)
-with notes in [`docs/phase4b.md`](docs/phase4b.md).
-Phase 5 adds a failure-driven self-improvement loop at
-[`docs/demo/phase5-self-improvement/comparison.md`](docs/demo/phase5-self-improvement/comparison.md)
-with notes in [`docs/phase5.md`](docs/phase5.md).
-Phase 6A expands the benchmark into an 80-task, 45-skill robustness pack with
-dev/test split metadata at
-[`docs/demo/phase6a-robustness/comparison.md`](docs/demo/phase6a-robustness/comparison.md)
-and summary notes in [`docs/phase6a.md`](docs/phase6a.md).
-Phase 6B adds contrastive selective gating for same-category ambiguous skills at
-[`docs/demo/phase6b-contrastive-gating/comparison.md`](docs/demo/phase6b-contrastive-gating/comparison.md)
-with notes in [`docs/phase6b.md`](docs/phase6b.md).
-Phase 7A adds a pretrained cross-encoder reranker benchmark at
-[`docs/demo/phase7a-cross-encoder/comparison.md`](docs/demo/phase7a-cross-encoder/comparison.md)
-with notes in [`docs/phase7a.md`](docs/phase7a.md).
-
-To regenerate it:
-
-```bash
-skilleval index --skills-path tests/fixtures/skills --output docs/demo/skills.json
-skilleval eval --index docs/demo/skills.json --tasks benchmarks/tasks --router hybrid --top-k 5 --output-dir docs/demo/benchmark-hybrid
-skilleval report --runs docs/demo/benchmark-hybrid
-skilleval compare --index docs/demo/skills.json --tasks benchmarks/tasks --routers keyword,hybrid,embedding --top-k 5 --output-dir docs/demo/router-comparison
-python scripts/generate_benchmark_skills.py
-skilleval index --skills-path benchmarks/skills --output docs/demo/phase3b-real-embedding/skills.json
-skilleval compare \
-  --index docs/demo/phase3b-real-embedding/skills.json \
-  --tasks benchmarks/tasks \
-  --routers keyword,hybrid,embedding-hashing=embedding:hashing,embedding-minilm=embedding:sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase3b-minilm-cache.json \
-  --top-k 5 \
-  --output-dir docs/demo/phase3b-real-embedding
-skilleval analyze-failures \
-  --runs docs/demo/phase3b-real-embedding \
-  --baseline embedding-hashing \
-  --candidate embedding-minilm \
-  --output docs/demo/phase3b-real-embedding/failure-analysis.md
-skilleval compare \
-  --index docs/demo/phase3b-real-embedding/skills.json \
-  --tasks benchmarks/tasks \
-  --routers keyword,hybrid,embedding-hashing=embedding:hashing,embedding-minilm=embedding:sentence-transformers,gated-minilm=gated:sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase4a-minilm-cache.json \
-  --gated-pool-size 10 \
-  --top-k 5 \
-  --output-dir docs/demo/phase4a-gated-reranker
-skilleval analyze-failures \
-  --runs docs/demo/phase4a-gated-reranker \
-  --baseline embedding-minilm \
-  --candidate gated-minilm \
-  --output docs/demo/phase4a-gated-reranker/failure-analysis.md
-skilleval compare \
-  --index docs/demo/phase3b-real-embedding/skills.json \
-  --tasks benchmarks/tasks \
-  --routers keyword,hybrid,embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase4b-minilm-cache.json \
-  --selective \
-  --min-confidence 0.5 \
-  --gated-pool-size 10 \
-  --top-k 5 \
-  --output-dir docs/demo/phase4b-selective-routing
-skilleval analyze-failures \
-  --runs docs/demo/phase4b-selective-routing \
-  --baseline embedding-minilm \
-  --candidate gated-minilm-selective \
-  --output docs/demo/phase4b-selective-routing/failure-analysis.md
-skilleval improve-skills \
-  --runs docs/demo/phase4b-selective-routing \
-  --router embedding-minilm \
-  --index docs/demo/phase3b-real-embedding/skills.json \
-  --tasks benchmarks/tasks \
-  --output docs/demo/phase5-self-improvement/patches.json \
-  --patched-index docs/demo/phase5-self-improvement/patched-skills.json \
-  --report docs/demo/phase5-self-improvement/patches.md
-skilleval eval \
-  --index docs/demo/phase5-self-improvement/patched-skills.json \
-  --tasks benchmarks/tasks \
-  --router embedding \
-  --embedding-backend sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase5-patched-minilm-cache.json \
-  --top-k 5 \
-  --output-dir docs/demo/phase5-self-improvement/embedding-minilm-patched
-skilleval judge-improvement \
-  --runs docs/demo/phase5-self-improvement \
-  --baseline embedding-minilm-before \
-  --candidate embedding-minilm-patched \
-  --output docs/demo/phase5-self-improvement/acceptance.md
-python scripts/generate_benchmark_tasks.py
-python scripts/generate_benchmark_skills.py
-skilleval index \
-  --skills-path benchmarks/skills \
-  --output docs/demo/phase6a-robustness/skills.json
-skilleval compare \
-  --index docs/demo/phase6a-robustness/skills.json \
-  --tasks benchmarks/tasks \
-  --routers keyword,hybrid,embedding-hashing=embedding:hashing,embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase6a-minilm-cache.json \
-  --selective \
-  --min-confidence 0.5 \
-  --gated-pool-size 10 \
-  --top-k 5 \
-  --output-dir docs/demo/phase6a-robustness
-skilleval analyze-failures \
-  --runs docs/demo/phase6a-robustness \
-  --baseline embedding-minilm \
-  --candidate gated-minilm-selective \
-  --output docs/demo/phase6a-robustness/failure-analysis.md
-skilleval index \
-  --skills-path benchmarks/skills \
-  --output docs/demo/phase6b-contrastive-gating/skills.json
-skilleval compare \
-  --index docs/demo/phase6b-contrastive-gating/skills.json \
-  --tasks benchmarks/tasks \
-  --routers embedding-minilm=embedding:sentence-transformers,gated-minilm-selective=gated:sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase6b-minilm-cache.json \
-  --selective \
-  --min-confidence 0.5 \
-  --gated-pool-size 10 \
-  --top-k 5 \
-  --output-dir docs/demo/phase6b-contrastive-gating
-skilleval eval \
-  --index docs/demo/phase6b-contrastive-gating/skills.json \
-  --tasks benchmarks/tasks \
-  --router gated \
-  --embedding-backend sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase6b-minilm-cache.json \
-  --selective \
-  --contrastive-selective \
-  --contrastive-margin 6.0 \
-  --min-evidence 2.0 \
-  --min-confidence 0.5 \
-  --gated-pool-size 10 \
-  --top-k 5 \
-  --output-dir docs/demo/phase6b-contrastive-gating/gated-minilm-contrastive
-skilleval report \
-  --runs docs/demo/phase6b-contrastive-gating/gated-minilm-contrastive
-skilleval analyze-failures \
-  --runs docs/demo/phase6b-contrastive-gating \
-  --baseline gated-minilm-selective \
-  --candidate gated-minilm-contrastive \
-  --output docs/demo/phase6b-contrastive-gating/failure-analysis.md
-skilleval compare \
-  --index docs/demo/phase6b-contrastive-gating/skills.json \
-  --tasks benchmarks/tasks \
-  --routers embedding-minilm=embedding:sentence-transformers,gated-minilm-contrastive=gated:sentence-transformers,cross-encoder-minilm=cross-encoder:sentence-transformers \
-  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
-  --embedding-cache /tmp/skilleval-phase7a-minilm-cache.json \
-  --cross-encoder-model cross-encoder/ms-marco-MiniLM-L-6-v2 \
-  --gated-pool-size 10 \
-  --selective \
-  --contrastive-selective \
-  --output-dir docs/demo/phase7a-cross-encoder
-skilleval analyze-failures \
-  --runs docs/demo/phase7a-cross-encoder \
-  --baseline gated-minilm-contrastive \
-  --candidate cross-encoder-minilm \
-  --output docs/demo/phase7a-cross-encoder/failure-analysis.md
-```
-
-## Benchmark Corpus
-
-The built-in benchmark suite lives in `benchmarks/tasks`. Each task directory
-contains:
-
-- `task.yaml`: task id, category, difficulty, gold skill labels, negative skill
-  labels, verifier type, split, and robustness tags.
-- `prompt.md`: the user request to route.
-
-Regenerate the corpus from its source list:
-
-```bash
-python scripts/generate_benchmark_tasks.py
-```
-
-The companion benchmark skill library lives in `benchmarks/skills` and covers
-all labels used by the task corpus. Regenerate it with:
-
-```bash
-python scripts/generate_benchmark_skills.py
-```
-
-## Architecture
+Expected:
 
 ```text
-skills/**/SKILL.md      benchmarks/tasks
-        |                       |
-        v                       v
-  skill_parser.py        task_loader.py
-        |                       |
-        +----------+------------+
-                   v
-             CLI eval command
-                   |
-       +-----------+-----------+-----------+
-       v                       v           v
- keyword router           hybrid router   embedding router
-       |                       |           |
-       |                       |           +-----------+
-       |                       |           v           v
-       |                       |    gated reranker   cross-encoder reranker
-       |                       |           |           |
-       +-----------+-----------+-----------+
-                   v
-          metrics + JSONL results
-                   |
-          +--------+--------+
-          v                 v
-    Markdown report   comparison report
+136 passed
 ```
 
-Core modules:
+---
 
-- `skill_parser.py`: Hermes-style skill discovery and parsing.
-- `task_loader.py`: benchmark task loading and validation.
-- `routers/keyword.py`: deterministic lexical baseline.
-- `routers/hybrid.py`: offline hybrid router with category and explicit skill-id
-  boosts.
-- `routers/embedding.py`: dependency-free local hashing router plus optional
-  `sentence-transformers` embedding router with a disk cache for skill vectors.
-- `routers/gated.py`: verification-gated reranker that reranks embedding
-  candidates with category agreement, lexical evidence, and base retriever
-  scores.
-- `routers/cross_encoder.py`: optional pretrained cross-encoder reranker over
-  embedding candidates.
-- `routers/verification.py`: shared verification evidence and selective
-  acceptance helpers.
-- `metrics.py`: ranking metrics and negative-skill checks.
-- `report.py`: validated JSONL-to-Markdown reporting.
-- `comparison.py`: aggregate router comparison reports.
-- `failure_analysis.py`: failure-mode summaries and candidate-vs-baseline
-  diagnostics for comparison runs.
-- `self_improvement.py`: deterministic failure-driven metadata patch proposals
-  and improvement acceptance reports.
-- `cli.py`: `index`, `eval`, `report`, `compare`, `analyze-failures`,
-  `improve-skills`, and `judge-improvement` commands.
+## Experiment Timeline / 实验演进
 
-## Scope
+| Phase | Feature | Artifact |
+|---|---|---|
+| Phase 2 | Router comparison baseline | [`docs/phase2.md`](docs/phase2.md) |
+| Phase 3A | Real embedding backend | [`docs/phase3a.md`](docs/phase3a.md) |
+| Phase 3B | MiniLM embedding benchmark | [`docs/demo/phase3b-real-embedding/comparison.md`](docs/demo/phase3b-real-embedding/comparison.md) |
+| Phase 3C | Failure analysis | [`docs/demo/phase3b-real-embedding/failure-analysis.md`](docs/demo/phase3b-real-embedding/failure-analysis.md) |
+| Phase 4A | Verification-gated reranking | [`docs/demo/phase4a-gated-reranker/comparison.md`](docs/demo/phase4a-gated-reranker/comparison.md) |
+| Phase 4B | Selective routing | [`docs/demo/phase4b-selective-routing/comparison.md`](docs/demo/phase4b-selective-routing/comparison.md) |
+| Phase 5 | Failure-driven skill improvement | [`docs/demo/phase5-self-improvement/acceptance.md`](docs/demo/phase5-self-improvement/acceptance.md) |
+| Phase 6A | 80-task robustness benchmark | [`docs/demo/phase6a-robustness/comparison.md`](docs/demo/phase6a-robustness/comparison.md) |
+| Phase 6B | Contrastive selective gating | [`docs/demo/phase6b-contrastive-gating/comparison.md`](docs/demo/phase6b-contrastive-gating/comparison.md) |
+| Phase 7A | A100 cross-encoder reranker | [`docs/phase7a.md`](docs/phase7a.md) |
 
-This MVP evaluates skill selection only. Real Hermes execution, LLM judges,
-embedding fine-tuning, calibrated cross-encoder acceptance, source `SKILL.md`
-editing, and web dashboards are planned future extensions.
+---
 
-## Portfolio Notes
+## Technical Details / 技术细节
 
-Resume-ready project framing and interview talking points are in
-[`docs/resume.md`](docs/resume.md).
+### 1. Skill Parsing and Indexing
+
+`skill_parser.py` discovers `skills/**/SKILL.md`, reads YAML frontmatter, infers categories from paths, extracts trigger terms, estimates token counts, and writes a portable JSON skill index.
+
+### 2. Router Families
+
+| Router | Role |
+|---|---|
+| `keyword` | Deterministic lexical baseline |
+| `hybrid` | Lexical retrieval with category and explicit skill-id boosts |
+| `embedding` | Hashing baseline or real `sentence-transformers` embedding retriever |
+| `gated` | Verification-gated reranker with confidence and contrastive selective logic |
+| `cross-encoder` | Learned pairwise reranker over embedding candidates |
+
+### 3. Verification and Negative Controls
+
+The benchmark includes both `gold_skills` and `negative_skills`. Reports track:
+
+- `Recall@1`, `Recall@3`, `Recall@5`
+- `Precision@5`
+- `MRR`
+- `NDCG@5`
+- `Negative Hit Rate`
+- selective accepted-output metrics
+- per-task score traces and latency
+
+### 4. Self-Improvement Harness
+
+`improve-skills` proposes deterministic metadata patches from observed misses and negative hits. `judge-improvement` compares before/after runs and writes an acceptance report, turning routing failures into measurable skill-library edits.
+
+### 5. A100 Deployment
+
+Phase 7A staged MiniLM embedding and MS MARCO MiniLM cross-encoder models under the user-owned remote path, selected an idle A100 with `CUDA_VISIBLE_DEVICES=3`, and validated learned reranking on the full 80-task benchmark. See [`docs/phase7a.md`](docs/phase7a.md).
+
+---
+
+## Tech Stack / 技术栈
+
+| Component | Technology | Purpose |
+|---|---|---|
+| Core Runtime | Python 3.11 | CLI and benchmark harness |
+| CLI | argparse | `skilleval` command suite |
+| Data Models | dataclasses + PyYAML | Skill and task schemas |
+| Retrieval | keyword, hybrid, hashing embeddings | Offline deterministic baselines |
+| Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
+| Reranking | verification gate + cross-encoder | Selective and learned ranking |
+| Reports | JSONL + Markdown | Reproducible experiment artifacts |
+| Testing | pytest | 136 unit and smoke tests |
+| Hardware | Mac + A100 dev machine | Local development and remote model validation |
+
+---
+
+## Roadmap
+
+- [x] Hermes-style `SKILL.md` parser and skill indexer
+- [x] 80-task / 45-skill benchmark corpus with negative labels
+- [x] Keyword, hybrid, hashing embedding, and real embedding routers
+- [x] Verification-gated reranker and selective acceptance
+- [x] Failure analysis reports and self-improvement acceptance gate
+- [x] Contrastive gating for same-category ambiguous negatives
+- [x] Cross-encoder reranker deployed on a single idle A100
+- [ ] Calibrated cross-encoder acceptance thresholds
+- [ ] Learned skill metadata patch ranking
+- [ ] Web dashboard for interactive failure inspection
+- [ ] Fine-tuned embedding router for domain-specific skill libraries
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Project Summary / 项目总结
+
+> **For recruiters and hiring managers:**
+>
+> Hermes SkillEval demonstrates end-to-end agent evaluation engineering:
+>
+> - **Agent Systems:** designed a benchmark harness for Hermes-style skill routing, including parsing, indexing, routing, reporting, and failure-driven improvement.
+> - **Retrieval and Ranking:** implemented keyword, hybrid, embedding, verification-gated, contrastive, and cross-encoder routing strategies.
+> - **ML Evaluation:** built an 80-task benchmark with negative controls and ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
+> - **Infrastructure:** validated neural reranking on shared A100 infrastructure while selecting idle GPUs and preserving user-owned storage paths.
+> - **Engineering Quality:** shipped a typed Python CLI with 136 passing tests, reproducible benchmark artifacts, and resume-ready experiment documentation.
+>
+> **面向招聘者:**
+>
+> 这个项目展示了 Agent Skill 路由评测、检索排序、失败分析、自改进闭环和远端 GPU 部署能力。它不是一个单纯 demo，而是从 benchmark 构建、router 设计、metric 评估、cross-encoder 验证到简历材料整理的一套完整工程闭环。
