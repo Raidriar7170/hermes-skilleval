@@ -976,7 +976,7 @@ git commit -m "feat: expose cross encoder routing in cli"
 - Modify: `docs/superpowers/plans/2026-05-24-phase7a-cross-encoder-reranker.md`
 - Test: full local pytest suite
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 Run:
 
@@ -986,7 +986,7 @@ pytest -q
 
 Expected: every test passes.
 
-- [ ] **Step 2: Run local fake/CPU smoke command if sentence-transformers is available**
+- [x] **Step 2: Run local fake/CPU smoke command if sentence-transformers is available**
 
 Run:
 
@@ -996,7 +996,7 @@ skilleval --help
 
 Expected: command lists `eval`, `compare`, `report`, `analyze-failures`, `improve-skills`, and `judge-improvement`.
 
-- [ ] **Step 3: Commit checked plan progress**
+- [x] **Step 3: Commit checked plan progress**
 
 Run:
 
