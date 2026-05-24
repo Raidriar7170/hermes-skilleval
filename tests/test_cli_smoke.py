@@ -444,6 +444,185 @@ def test_cli_compare_supports_gated_embedding_backend_specs(tmp_path, monkeypatc
     assert "| gated-fake |" in comparison
 
 
+def test_cli_eval_cross_encoder_router_smoke(tmp_path, monkeypatch):
+    class FakeSentenceTransformer:
+        def __init__(self, model_name):
+            self.model_name = model_name
+
+        def encode(self, sentences, normalize_embeddings=True):
+            return [
+                [1.0, 0.0] if "debug" in sentence.lower() else [0.0, 1.0]
+                for sentence in sentences
+            ]
+
+    class FakeCrossEncoder:
+        def __init__(self, model_name):
+            self.model_name = model_name
+
+        def predict(self, pairs, batch_size=16):
+            return [
+                5.0 if "systematic debugging" in pair[1].lower() else 1.0
+                for pair in pairs
+            ]
+
+    monkeypatch.setitem(
+        sys.modules,
+        "sentence_transformers",
+        types.SimpleNamespace(
+            SentenceTransformer=FakeSentenceTransformer,
+            CrossEncoder=FakeCrossEncoder,
+        ),
+    )
+    index_path = tmp_path / "index" / "skills.json"
+    run_dir = tmp_path / "cross-encoder-run"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "eval",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--router",
+                "cross-encoder",
+                "--embedding-backend",
+                "sentence-transformers",
+                "--embedding-model",
+                "fake-embedding",
+                "--cross-encoder-model",
+                "fake-reranker",
+                "--cross-encoder-batch-size",
+                "4",
+                "--gated-pool-size",
+                "3",
+                "--top-k",
+                "3",
+                "--output-dir",
+                str(run_dir),
+            ]
+        )
+        == 0
+    )
+
+    record = json.loads((run_dir / "results.jsonl").read_text(encoding="utf-8"))
+    assert record["router"] == "cross-encoder"
+    assert len(record["selected_skill_ids"]) <= 3
+
+
+def test_cli_compare_accepts_cross_encoder_router_spec(tmp_path, monkeypatch):
+    class FakeSentenceTransformer:
+        def __init__(self, model_name):
+            self.model_name = model_name
+
+        def encode(self, sentences, normalize_embeddings=True):
+            return [[1.0, 0.0] for _ in sentences]
+
+    class FakeCrossEncoder:
+        def __init__(self, model_name):
+            self.model_name = model_name
+
+        def predict(self, pairs, batch_size=16):
+            return [2.0 for _ in pairs]
+
+    monkeypatch.setitem(
+        sys.modules,
+        "sentence_transformers",
+        types.SimpleNamespace(
+            SentenceTransformer=FakeSentenceTransformer,
+            CrossEncoder=FakeCrossEncoder,
+        ),
+    )
+    index_path = tmp_path / "index" / "skills.json"
+    output_dir = tmp_path / "comparison"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "compare",
+                "--index",
+                str(index_path),
+                "--tasks",
+                str(FIXTURES / "tasks"),
+                "--routers",
+                "embedding-fake=embedding:sentence-transformers,"
+                "cross-fake=cross-encoder:sentence-transformers",
+                "--embedding-model",
+                "fake-embedding",
+                "--cross-encoder-model",
+                "fake-reranker",
+                "--output-dir",
+                str(output_dir),
+            ]
+        )
+        == 0
+    )
+
+    assert (output_dir / "embedding-fake" / "results.jsonl").exists()
+    assert (output_dir / "cross-fake" / "results.jsonl").exists()
+    assert (output_dir / "comparison.md").exists()
+
+
+def test_cli_compare_rejects_invalid_cross_encoder_backend(tmp_path, capsys):
+    index_path = tmp_path / "index" / "skills.json"
+
+    assert (
+        main(
+            [
+                "index",
+                "--skills-path",
+                str(FIXTURES / "skills"),
+                "--output",
+                str(index_path),
+            ]
+        )
+        == 0
+    )
+
+    result = main(
+        [
+            "compare",
+            "--index",
+            str(index_path),
+            "--tasks",
+            str(FIXTURES / "tasks"),
+            "--routers",
+            "bad-cross=cross-encoder:hashing",
+            "--output-dir",
+            str(tmp_path / "comparison"),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "unknown cross-encoder backend: hashing" in captured.err
+    assert "Traceback" not in captured.err
+
+
 def test_cli_eval_gated_router_supports_selective_confidence_filter(tmp_path):
     index_path = tmp_path / "index" / "skills.json"
     run_dir = tmp_path / "selective-run"

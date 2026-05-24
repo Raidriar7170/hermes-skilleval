@@ -29,6 +29,10 @@ from hermes_skilleval.metrics import (
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.report import write_markdown_report
 from hermes_skilleval.routers.base import SkillRouter
+from hermes_skilleval.routers.cross_encoder import (
+    CrossEncoderReranker,
+    SentenceTransformerCrossEncoderModel,
+)
 from hermes_skilleval.routers.embedding import (
     EmbeddingDependencyError,
     EmbeddingRouter,
@@ -51,8 +55,9 @@ from hermes_skilleval.storage import ensure_dir
 from hermes_skilleval.task_loader import load_tasks
 
 
-ROUTER_NAMES = ("keyword", "hybrid", "embedding", "gated")
+ROUTER_NAMES = ("keyword", "hybrid", "embedding", "gated", "cross-encoder")
 EMBEDDING_BACKENDS = ("hashing", "sentence-transformers")
+RERANKER_BACKENDS = ("sentence-transformers",)
 ROUTER_LABEL_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 
@@ -98,6 +103,7 @@ def _build_parser() -> argparse.ArgumentParser:
     eval_parser.add_argument("--router", choices=ROUTER_NAMES, default="keyword")
     _add_embedding_args(eval_parser)
     _add_gated_args(eval_parser)
+    _add_cross_encoder_args(eval_parser)
     eval_parser.add_argument("--top-k", type=int, default=5)
     eval_parser.add_argument("--output-dir", default="runs/latest")
     eval_parser.set_defaults(handler=_run_eval)
@@ -112,6 +118,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_embedding_args(compare_parser)
     _add_gated_args(compare_parser)
+    _add_cross_encoder_args(compare_parser)
     compare_parser.add_argument("--top-k", type=int, default=5)
     compare_parser.add_argument("--output-dir", default="runs/comparison")
     compare_parser.set_defaults(handler=_run_compare)
@@ -209,6 +216,20 @@ def _add_gated_args(parser: argparse.ArgumentParser) -> None:
         type=float,
         default=2.0,
         help="minimum prompt evidence for non-first same-category candidates",
+    )
+
+
+def _add_cross_encoder_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--cross-encoder-model",
+        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        help="sentence-transformers CrossEncoder model name or local path",
+    )
+    parser.add_argument(
+        "--cross-encoder-batch-size",
+        type=int,
+        default=16,
+        help="batch size for cross-encoder pair scoring",
     )
 
 
@@ -344,6 +365,8 @@ def _router(name: str, args: argparse.Namespace | None = None) -> SkillRouter:
         return _embedding_router(args)
     if name == "gated":
         return _gated_router(args)
+    if name == "cross-encoder":
+        return _cross_encoder_router(args)
     raise ValueError(f"unknown router: {name}")
 
 
@@ -375,6 +398,26 @@ def _gated_router(args: argparse.Namespace | None) -> VerificationGatedRouter:
         contrastive_selective=getattr(args, "contrastive_selective", False),
         contrastive_margin=getattr(args, "contrastive_margin", 6.0),
         min_evidence=getattr(args, "min_evidence", 2.0),
+    )
+
+
+def _cross_encoder_router(args: argparse.Namespace | None) -> CrossEncoderReranker:
+    model_name = getattr(
+        args,
+        "cross_encoder_model",
+        "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    )
+    batch_size = getattr(args, "cross_encoder_batch_size", 16)
+    return CrossEncoderReranker(
+        base_router=_embedding_router(args),
+        model=SentenceTransformerCrossEncoderModel(model_name, batch_size=batch_size),
+        candidate_pool_size=getattr(args, "gated_pool_size", 10),
+        selective=getattr(args, "selective", False),
+        min_confidence=getattr(args, "min_confidence", 0.5),
+        contrastive_selective=getattr(args, "contrastive_selective", False),
+        contrastive_margin=getattr(args, "contrastive_margin", 6.0),
+        min_evidence=getattr(args, "min_evidence", 2.0),
+        cross_encoder_batch_size=batch_size,
     )
 
 
@@ -411,12 +454,17 @@ def _parse_router_spec(value: str) -> RouterSpec:
     if router_name not in ROUTER_NAMES:
         raise ValueError(f"unknown router(s): {router_name}")
     if embedding_backend is not None:
-        if router_name not in ("embedding", "gated"):
+        if router_name in ("embedding", "gated"):
+            if embedding_backend not in EMBEDDING_BACKENDS:
+                raise ValueError(f"unknown embedding backend: {embedding_backend}")
+        elif router_name == "cross-encoder":
+            if embedding_backend not in RERANKER_BACKENDS:
+                raise ValueError(f"unknown cross-encoder backend: {embedding_backend}")
+        else:
             raise ValueError(
-                "only embedding or gated router specs can include a backend"
+                "only embedding, gated, or cross-encoder router specs can "
+                "include a backend"
             )
-        if embedding_backend not in EMBEDDING_BACKENDS:
-            raise ValueError(f"unknown embedding backend: {embedding_backend}")
 
     label = label or _default_router_label(router_name, embedding_backend)
     if not ROUTER_LABEL_RE.match(label):

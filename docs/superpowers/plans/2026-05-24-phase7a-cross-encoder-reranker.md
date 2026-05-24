@@ -718,7 +718,7 @@ git commit -m "feat: add cross encoder reranker"
 - Modify: `tests/test_cli_smoke.py`
 - Test: `tests/test_cli_smoke.py`
 
-- [ ] **Step 1: Add failing CLI smoke tests**
+- [x] **Step 1: Add failing CLI smoke tests**
 
 Append to `tests/test_cli_smoke.py`:
 
@@ -846,7 +846,7 @@ def test_cli_compare_accepts_cross_encoder_router_spec(tmp_path, monkeypatch):
     assert (output_dir / "comparison.md").exists()
 ```
 
-- [ ] **Step 2: Run CLI tests to verify RED**
+- [x] **Step 2: Run CLI tests to verify RED**
 
 Run:
 
@@ -856,7 +856,7 @@ pytest tests/test_cli_smoke.py::test_cli_eval_cross_encoder_router_smoke tests/t
 
 Expected: FAIL because `cross-encoder` is not an accepted router name.
 
-- [ ] **Step 3: Wire CLI router options**
+- [x] **Step 3: Wire CLI router options**
 
 Modify `src/hermes_skilleval/cli.py`:
 
@@ -951,7 +951,7 @@ Update `_parse_router_spec` to allow `cross-encoder:sentence-transformers` and r
 
 The backend label for `cross-encoder` is accepted for compare-label clarity. The actual cross-encoder model is controlled by `--cross-encoder-model`.
 
-- [ ] **Step 4: Run CLI tests**
+- [x] **Step 4: Run CLI tests**
 
 Run:
 
@@ -961,7 +961,7 @@ pytest tests/test_cli_smoke.py::test_cli_eval_cross_encoder_router_smoke tests/t
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit CLI wiring**
+- [x] **Step 5: Commit CLI wiring**
 
 Run:
 
