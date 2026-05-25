@@ -301,6 +301,33 @@ def test_write_dashboard_creates_parent_directory(tmp_path: Path):
     assert "task-001" in output.read_text(encoding="utf-8")
 
 
+def test_render_dashboard_html_escapes_script_breaking_payload(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "unsafe-script-router",
+        [
+            {
+                "task_id": "task-</script><script>alert(1)</script>",
+                "router": "alpha",
+                "prompt": "<b>bold</b>\u2028\u2029",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": ["academic-writing"],
+                "latency_ms": 12.0,
+            }
+        ],
+    )
+
+    html = render_dashboard_html(build_dashboard_payload(tmp_path))
+
+    assert "<script>alert(1)</script>" not in html
+    assert "task-<\\/script><script>alert(1)<\\/script>" in html
+    assert "<b>bold</b>" not in html
+    assert "<b>bold<\\/b>" in html
+    assert "\\u2028" in html
+    assert "\\u2029" in html
+
+
 def _write_run(root: Path, label: str, records: list[dict[str, object]]) -> None:
     run_dir = root / label
     run_dir.mkdir(parents=True)
