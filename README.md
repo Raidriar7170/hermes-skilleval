@@ -1,14 +1,14 @@
 # Hermes SkillEval
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-145%20passing-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/tests-158%20passing-brightgreen.svg)](tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Benchmark](https://img.shields.io/badge/benchmark-80%20tasks%20%2F%2045%20skills-purple.svg)](benchmarks)
 [![A100 Validated](https://img.shields.io/badge/A100-validated-orange.svg)](docs/phase7a.md)
 
-**A verification-gated skill routing and self-improvement harness for Hermes-style agent skills.**
+**A verification-gated skill routing, dashboarding, and self-improvement harness for Hermes-style agent skills.**
 
-面向 Hermes / Skill / Agent 工作流的离线评测系统：它能索引 `SKILL.md` 技能库，构建带负样本的 benchmark，比较 keyword、hybrid、embedding、verification-gated、cross-encoder 等路由策略，并输出可复现的指标、失败分析和自改进报告。
+面向 Hermes / Skill / Agent 工作流的离线评测系统：它能索引 `SKILL.md` 技能库，构建带负样本的 benchmark，比较 keyword、hybrid、embedding、verification-gated、cross-encoder 等路由策略，并输出可复现的指标、失败分析、自改进报告和静态 HTML dashboard。
 
 ---
 
@@ -37,7 +37,7 @@ Modern agent frameworks increasingly rely on external skill libraries. The hard 
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 145 |
+| Test cases | 158 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -89,7 +89,7 @@ skills/**/SKILL.md                  benchmarks/tasks
                                                     |
                        +----------------------------+-------------------+
                        v                                                v
-             Markdown benchmark reports                       Failure analysis
+             Markdown reports + static dashboard              Failure analysis
                        |                                                |
                        +----------------------------+-------------------+
                                                     v
@@ -132,7 +132,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 145 pytest cases
+├── tests/                              # 158 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -237,7 +237,11 @@ skilleval dashboard \
 ```
 
 The generated file is self-contained and can be opened directly in a browser for
-interactive run filtering, failure inspection, score ranking, and raw JSON audit.
+interactive run filtering, failure inspection, score ranking, and raw JSON audit:
+[`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
+On GitHub's normal file view this link shows the committed HTML source; publish
+the repository with GitHub Pages to make the same file render as an interactive
+web page.
 
 ### 7. Run Tests
 
@@ -248,7 +252,7 @@ pytest -q
 Expected:
 
 ```text
-145 passed
+158 passed
 ```
 
 ---
@@ -320,8 +324,8 @@ Phase 7A staged MiniLM embedding and MS MARCO MiniLM cross-encoder models under 
 | Retrieval | keyword, hybrid, hashing embeddings | Offline deterministic baselines |
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
-| Reports | JSONL + Markdown | Reproducible experiment artifacts |
-| Testing | pytest | 145 unit and smoke tests |
+| Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
+| Testing | pytest | 158 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -358,7 +362,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 > - **Retrieval and Ranking:** implemented keyword, hybrid, embedding, verification-gated, contrastive, and cross-encoder routing strategies.
 > - **ML Evaluation:** built an 80-task benchmark with negative controls and ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 145 passing tests, reproducible benchmark artifacts, and resume-ready experiment documentation.
+> - **Engineering Quality:** shipped a typed Python CLI with 158 passing tests, reproducible benchmark artifacts, a static inspection dashboard, and resume-ready experiment documentation.
 >
 > **面向招聘者:**
 >
