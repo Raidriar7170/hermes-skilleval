@@ -219,6 +219,32 @@ def test_build_dashboard_payload_rejects_invalid_skill_list_with_context(tmp_pat
         build_dashboard_payload(tmp_path)
 
 
+def test_build_dashboard_payload_reports_physical_line_after_blank_lines(tmp_path: Path):
+    run_dir = tmp_path / "blank-lines"
+    run_dir.mkdir()
+    (run_dir / "results.jsonl").write_text(
+        "\n"
+        + json.dumps(
+            {
+                "task_id": "task-invalid",
+                "router": "alpha",
+                "selected_skill_ids": "docker",
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "latency_ms": 10.0,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"field 'selected_skill_ids' must be a list of strings .*results\.jsonl at line 2",
+    ):
+        build_dashboard_payload(tmp_path)
+
+
 def _write_run(root: Path, label: str, records: list[dict[str, object]]) -> None:
     run_dir = root / label
     run_dir.mkdir(parents=True)

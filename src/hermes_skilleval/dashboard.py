@@ -122,7 +122,7 @@ def build_dashboard_payload(runs_path: Path | str) -> DashboardPayload:
         raw_records = _read_jsonl(run_dir / "results.jsonl")
         normalized = [
             _normalize_record(record, run_dir / "results.jsonl", line_number)
-            for line_number, record in enumerate(raw_records, start=1)
+            for line_number, record in raw_records
         ]
         dashboard_records = [
             DashboardRecord(
@@ -171,8 +171,8 @@ def build_dashboard_payload(runs_path: Path | str) -> DashboardPayload:
     )
 
 
-def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    records: list[dict[str, Any]] = []
+def _read_jsonl(path: Path) -> list[tuple[int, dict[str, Any]]]:
+    records: list[tuple[int, dict[str, Any]]] = []
     with path.open(encoding="utf-8") as file:
         for line_number, line in enumerate(file, start=1):
             if not line.strip():
@@ -185,7 +185,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
                 ) from error
             if not isinstance(record, dict):
                 raise ValueError(f"expected object in {path} at line {line_number}")
-            records.append(record)
+            records.append((line_number, record))
     if not records:
         raise ValueError(f"no result records found in {path}")
     return records
