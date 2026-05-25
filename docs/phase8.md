@@ -8,6 +8,8 @@ artifacts without starting a web server or rerunning benchmarks.
 - Added `skilleval dashboard`.
 - Added `src/hermes_skilleval/dashboard.py` for run loading, summary metrics,
   failure tagging, and static HTML rendering.
+- Added an in-page data provenance section with source path, run count, held-out
+  task count, generator name, input run labels, and Git commit when available.
 - Added a committed dashboard artifact at
   `docs/demo/phase8-static-dashboard/dashboard.html`.
 
@@ -20,8 +22,8 @@ skilleval dashboard \
 ```
 
 The dashboard embeds all data, CSS, and JavaScript in one file. It supports
-search, filters, sortable task rows, task inspection, score ranking, and raw JSON
-inspection.
+search, filters, sortable task rows, task inspection, score ranking, raw JSON
+inspection, and provenance audit.
 
 ## Acceptance check
 

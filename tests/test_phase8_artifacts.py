@@ -13,6 +13,11 @@ def test_phase8_dashboard_artifact_is_committed_and_self_contained():
     assert "cross-encoder-calibrated-balanced-test" in html
     assert "cross-encoder-rank-only-test" in html
     assert "gated-minilm-contrastive-test" in html
+    assert "Data provenance" in html
+    assert "Generated from" in html
+    assert "4 test-split runs" in html
+    assert "30 held-out test records" in html
+    assert "skilleval dashboard" in html
     disallowed_resource_patterns = (
         r"<script\b[^>]*\bsrc\s*=",
         r"<link\b[^>]*\bhref\s*=",

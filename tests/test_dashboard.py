@@ -176,6 +176,82 @@ def test_build_dashboard_payload_preserves_source_prompt_and_raw(tmp_path: Path)
     ]
 
 
+def test_build_dashboard_payload_includes_data_provenance(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "alpha-router",
+        [
+            {
+                "task_id": "task-001",
+                "router": "alpha",
+                "split": "test",
+                "category": "infra",
+                "difficulty": "easy",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "latency_ms": 12.0,
+            }
+        ],
+    )
+    _write_run(
+        tmp_path,
+        "beta-router",
+        [
+            {
+                "task_id": "task-002",
+                "router": "beta",
+                "split": "test",
+                "category": "infra",
+                "difficulty": "easy",
+                "selected_skill_ids": ["python-packaging"],
+                "gold_skills": ["python-packaging"],
+                "negative_skills": [],
+                "latency_ms": 13.0,
+            }
+        ],
+    )
+
+    data = build_dashboard_payload(tmp_path).to_json_dict()
+
+    assert data["provenance"] == {
+        "data_source": str(tmp_path),
+        "generated_by": "skilleval dashboard",
+        "generated_from": "2 test-split runs",
+        "task_records": 2,
+        "task_summary": "2 held-out test records",
+        "run_labels": ["alpha-router", "beta-router"],
+    }
+
+
+def test_render_dashboard_html_exposes_data_provenance(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "alpha-router",
+        [
+            {
+                "task_id": "task-001",
+                "router": "alpha",
+                "split": "test",
+                "category": "infra",
+                "difficulty": "easy",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "latency_ms": 12.0,
+            }
+        ],
+    )
+
+    html = render_dashboard_html(build_dashboard_payload(tmp_path))
+
+    assert "Data provenance" in html
+    assert "Generated from" in html
+    assert "Tasks" in html
+    assert "1 held-out test record" in html
+    assert "skilleval dashboard" in html
+
+
 def test_build_dashboard_payload_rejects_invalid_present_metric(tmp_path: Path):
     _write_run(
         tmp_path,
