@@ -128,7 +128,9 @@ def build_dashboard_payload(runs_path: Path | str) -> DashboardPayload:
                 gold_skills=record["gold_skills"],
                 negative_skills=record["negative_skills"],
                 metrics=record["metrics"],
-                failure_tags=_failure_tags(record["metrics"]),
+                failure_tags=_failure_tags(
+                    record["metrics"], record["selected_skill_ids"]
+                ),
                 score_ranking=_score_ranking(record),
             )
             for record in normalized
@@ -262,15 +264,15 @@ def _finite_number(value: Any) -> float | None:
     return numeric
 
 
-def _failure_tags(metrics: dict[str, float]) -> list[str]:
+def _failure_tags(metrics: dict[str, float], selected: list[str]) -> list[str]:
     tags: list[str] = []
-    if metrics["recall_at_5"] <= 0.0:
+    if metrics["recall_at_5"] < 1.0:
         tags.append("recall-miss")
     if metrics["negative_hit_rate"] > 0.0:
         tags.append("negative-hit")
-    if metrics["abstention_rate"] >= 1.0:
+    if not selected or metrics["abstention_rate"] > 0.0:
         tags.append("abstained")
-    if metrics["selection_rate_at_5"] < 0.4:
+    if metrics["selection_rate_at_5"] < 1.0:
         tags.append("low-selection")
     return tags
 

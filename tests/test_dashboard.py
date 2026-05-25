@@ -90,6 +90,54 @@ def test_build_dashboard_payload_requires_run_results(tmp_path: Path):
         build_dashboard_payload(tmp_path)
 
 
+def test_build_dashboard_payload_failure_tags_follow_spec_thresholds(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "thresholds",
+        [
+            {
+                "task_id": "partial-recall",
+                "router": "alpha",
+                "selected_skill_ids": ["docker", "python-packaging"],
+                "gold_skills": ["docker", "observability"],
+                "negative_skills": [],
+                "recall_at_5": 0.5,
+                "abstention_rate": 0.0,
+                "selection_rate_at_5": 1.0,
+                "latency_ms": 10.0,
+            },
+            {
+                "task_id": "partial-abstention",
+                "router": "alpha",
+                "selected_skill_ids": ["docker", "python-packaging", "observability"],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "recall_at_5": 1.0,
+                "abstention_rate": 0.25,
+                "selection_rate_at_5": 1.0,
+                "latency_ms": 11.0,
+            },
+            {
+                "task_id": "partial-selection",
+                "router": "alpha",
+                "selected_skill_ids": ["docker", "python-packaging"],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "recall_at_5": 1.0,
+                "abstention_rate": 0.0,
+                "selection_rate_at_5": 0.4,
+                "latency_ms": 12.0,
+            },
+        ],
+    )
+
+    data = build_dashboard_payload(tmp_path).to_json_dict()
+
+    assert data["records"][0]["failure_tags"] == ["recall-miss"]
+    assert data["records"][1]["failure_tags"] == ["abstained"]
+    assert data["records"][2]["failure_tags"] == ["low-selection"]
+
+
 def _write_run(root: Path, label: str, records: list[dict[str, object]]) -> None:
     run_dir = root / label
     run_dir.mkdir(parents=True)
