@@ -15,6 +15,7 @@ from hermes_skilleval.calibration import (
     write_cross_encoder_calibration,
 )
 from hermes_skilleval.comparison import write_comparison_report
+from hermes_skilleval.dashboard import write_dashboard
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
     write_failure_analysis_report,
@@ -132,6 +133,14 @@ def _build_parser() -> argparse.ArgumentParser:
     report_parser = subparsers.add_parser("report", help="write a markdown run report")
     report_parser.add_argument("--runs", required=True)
     report_parser.set_defaults(handler=_run_report)
+
+    dashboard_parser = subparsers.add_parser(
+        "dashboard",
+        help="write a self-contained HTML dashboard for router run results",
+    )
+    dashboard_parser.add_argument("--runs", required=True)
+    dashboard_parser.add_argument("--output", required=True)
+    dashboard_parser.set_defaults(handler=_run_dashboard)
 
     failures_parser = subparsers.add_parser(
         "analyze-failures",
@@ -360,6 +369,11 @@ def _run_report(args: argparse.Namespace) -> None:
     report_path = run_dir / "report.md"
     write_markdown_report(results_path, report_path)
     print(f"Wrote report to {report_path}")
+
+
+def _run_dashboard(args: argparse.Namespace) -> None:
+    write_dashboard(args.runs, args.output)
+    print(f"Wrote dashboard to {args.output}")
 
 
 def _run_analyze_failures(args: argparse.Namespace) -> None:

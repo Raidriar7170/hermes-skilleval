@@ -1131,6 +1131,51 @@ def test_cli_report_missing_results_returns_error_without_traceback(tmp_path, ca
     assert "Traceback" not in captured.err
 
 
+def test_cli_dashboard_writes_static_html(tmp_path):
+    runs = tmp_path / "runs"
+    run_dir = runs / "sample-router"
+    run_dir.mkdir(parents=True)
+    (run_dir / "results.jsonl").write_text(
+        json.dumps(
+            {
+                "task_id": "task-001",
+                "router": "sample",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": ["academic-writing"],
+                "latency_ms": 7.0,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "dashboard" / "index.html"
+
+    result = main(["dashboard", "--runs", str(runs), "--output", str(output)])
+
+    assert result == 0
+    html = output.read_text(encoding="utf-8")
+    assert "Hermes SkillEval Dashboard" in html
+    assert "sample-router" in html
+    assert "task-001" in html
+
+
+def test_cli_dashboard_reports_empty_runs_dir(tmp_path, capsys):
+    result = main(
+        [
+            "dashboard",
+            "--runs",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "dashboard.html"),
+        ]
+    )
+
+    assert result == 2
+    captured = capsys.readouterr()
+    assert "no dashboard runs found" in captured.err
+
+
 def test_cli_eval_rejects_non_positive_top_k_before_creating_output(tmp_path, capsys):
     index_path = tmp_path / "index" / "skills.json"
     run_dir = tmp_path / "run"
