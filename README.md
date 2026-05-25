@@ -1,7 +1,7 @@
 # Hermes SkillEval
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/tests-145%20passing-brightgreen.svg)](tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Benchmark](https://img.shields.io/badge/benchmark-80%20tasks%20%2F%2045%20skills-purple.svg)](benchmarks)
 [![A100 Validated](https://img.shields.io/badge/A100-validated-orange.svg)](docs/phase7a.md)
@@ -37,7 +37,7 @@ Modern agent frameworks increasingly rely on external skill libraries. The hard 
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 136 |
+| Test cases | 145 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -49,9 +49,18 @@ Modern agent frameworks increasingly rely on external skill libraries. The hard 
 | Cross-encoder selective | 0.775 | 0.781 | 0.838 | 0.794 | **0.000** | 0.175 |
 | Cross-encoder rank-only | **0.881** | **0.994** | **0.985** | **0.978** | 0.125 | 1.000 |
 
-**Takeaway:** contrastive gated routing is the best current selective router, while the cross-encoder is a strong learned reranker. Phase 7A shows that pairwise cross-encoder scoring improves ranking quality, but its acceptance policy needs calibration before replacing the contrastive gate.
+### Phase 7B Held-Out Calibration Check
 
-**结论:** Contrastive gated routing 是当前最稳的 selective router；cross-encoder 在排序质量上表现更强，但直接用 logits 做接受/拒绝会过于保守或误伤，需要下一步做阈值校准。
+| Router / Setting | Split | Recall@1 | Recall@5 | MRR | NDCG@5 | Negative Hit Rate | Selection Rate@5 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Contrastive gated MiniLM | test | 0.850 | 0.950 | 1.000 | 0.959 | 0.100 | 0.360 |
+| Cross-encoder rank-only | test | 0.850 | **1.000** | 1.000 | **0.987** | 0.333 | 1.000 |
+| Cross-encoder calibrated strict | test | 0.850 | 0.950 | 1.000 | 0.957 | **0.033** | 0.320 |
+| Cross-encoder calibrated balanced | test | 0.850 | 0.967 | 1.000 | 0.970 | 0.100 | 0.393 |
+
+**Takeaway:** contrastive gated routing remains the strongest full-benchmark selective baseline, while Phase 7B shows that dev-split cross-encoder threshold calibration can turn the rank-only reranker into a safer acceptance policy. The strict calibrated policy cuts held-out test Negative Hit Rate from `0.333` to `0.033`; the balanced policy preserves more Recall@5 while matching the contrastive gated test negative-hit rate.
+
+**结论:** Contrastive gated routing 仍然是最稳的全量 selective baseline；cross-encoder 排序能力更强，Phase 7B 通过 dev split 阈值校准把 held-out test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从“需要校准”推进到“可控接受层”的阶段。
 
 ---
 
@@ -105,13 +114,14 @@ hermes-skilleval/
 │   └── tasks/                          # 80 labeled routing tasks
 ├── docs/
 │   ├── demo/                           # committed benchmark outputs
-│   ├── phase2.md ... phase7a.md        # implementation and experiment notes
+│   ├── phase2.md ... phase7b.md        # implementation and experiment notes
 │   └── resume.md                       # resume-ready project framing
 ├── scripts/
 │   ├── generate_benchmark_skills.py    # reproducible skill corpus generator
 │   └── generate_benchmark_tasks.py     # reproducible task corpus generator
 ├── src/hermes_skilleval/
 │   ├── cli.py                          # index, eval, compare, analyze, improve
+│   ├── calibration.py                  # cross-encoder acceptance thresholds
 │   ├── metrics.py                      # Recall, Precision, MRR, NDCG, negatives
 │   ├── failure_analysis.py             # failure-mode summaries
 │   ├── self_improvement.py             # metadata patch proposals
@@ -122,7 +132,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 136 pytest cases
+├── tests/                              # 145 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -205,7 +215,20 @@ skilleval eval \
   --output-dir runs/cross-encoder
 ```
 
-### 6. Run Tests
+### 6. Calibrate Cross-Encoder Acceptance
+
+```bash
+skilleval calibrate-cross-encoder \
+  --results docs/demo/phase7a-cross-encoder/cross-encoder-minilm-rank-only/results.jsonl \
+  --output runs/cross-encoder-calibration.json \
+  --calibrated-output runs/cross-encoder-calibrated-test/results.jsonl \
+  --fit-split dev \
+  --apply-split test \
+  --max-negative-hit-rate 0.05 \
+  --max-selection-rate-at-5 0.3
+```
+
+### 7. Run Tests
 
 ```bash
 pytest -q
@@ -214,7 +237,7 @@ pytest -q
 Expected:
 
 ```text
-136 passed
+145 passed
 ```
 
 ---
@@ -233,6 +256,7 @@ Expected:
 | Phase 6A | 80-task robustness benchmark | [`docs/demo/phase6a-robustness/comparison.md`](docs/demo/phase6a-robustness/comparison.md) |
 | Phase 6B | Contrastive selective gating | [`docs/demo/phase6b-contrastive-gating/comparison.md`](docs/demo/phase6b-contrastive-gating/comparison.md) |
 | Phase 7A | A100 cross-encoder reranker | [`docs/phase7a.md`](docs/phase7a.md) |
+| Phase 7B | Cross-encoder acceptance calibration | [`docs/phase7b.md`](docs/phase7b.md) |
 
 ---
 
@@ -270,7 +294,7 @@ The benchmark includes both `gold_skills` and `negative_skills`. Reports track:
 
 ### 5. A100 Deployment
 
-Phase 7A staged MiniLM embedding and MS MARCO MiniLM cross-encoder models under the user-owned remote path, selected an idle A100 with `CUDA_VISIBLE_DEVICES=3`, and validated learned reranking on the full 80-task benchmark. See [`docs/phase7a.md`](docs/phase7a.md).
+Phase 7A staged MiniLM embedding and MS MARCO MiniLM cross-encoder models under the user-owned remote path, selected an idle A100 with `CUDA_VISIBLE_DEVICES=3`, and validated learned reranking on the full 80-task benchmark. Phase 7B then fitted dev-split cross-encoder acceptance thresholds and evaluated the frozen policies on the held-out test split. See [`docs/phase7a.md`](docs/phase7a.md) and [`docs/phase7b.md`](docs/phase7b.md).
 
 ---
 
@@ -285,7 +309,7 @@ Phase 7A staged MiniLM embedding and MS MARCO MiniLM cross-encoder models under 
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown | Reproducible experiment artifacts |
-| Testing | pytest | 136 unit and smoke tests |
+| Testing | pytest | 145 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -299,7 +323,7 @@ Phase 7A staged MiniLM embedding and MS MARCO MiniLM cross-encoder models under 
 - [x] Failure analysis reports and self-improvement acceptance gate
 - [x] Contrastive gating for same-category ambiguous negatives
 - [x] Cross-encoder reranker deployed on a single idle A100
-- [ ] Calibrated cross-encoder acceptance thresholds
+- [x] Calibrated cross-encoder acceptance thresholds
 - [ ] Learned skill metadata patch ranking
 - [ ] Web dashboard for interactive failure inspection
 - [ ] Fine-tuned embedding router for domain-specific skill libraries
@@ -322,7 +346,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 > - **Retrieval and Ranking:** implemented keyword, hybrid, embedding, verification-gated, contrastive, and cross-encoder routing strategies.
 > - **ML Evaluation:** built an 80-task benchmark with negative controls and ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 136 passing tests, reproducible benchmark artifacts, and resume-ready experiment documentation.
+> - **Engineering Quality:** shipped a typed Python CLI with 145 passing tests, reproducible benchmark artifacts, and resume-ready experiment documentation.
 >
 > **面向招聘者:**
 >

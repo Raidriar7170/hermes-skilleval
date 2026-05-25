@@ -16,6 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0.0",
+  "types-PyYAML>=6.0.12",
 ]
 embedding = [
   "sentence-transformers>=3.0.0",
@@ -31,3 +32,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true

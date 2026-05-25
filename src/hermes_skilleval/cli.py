@@ -8,6 +8,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
+from hermes_skilleval.calibration import (
+    apply_cross_encoder_calibration,
+    fit_cross_encoder_calibration,
+    read_cross_encoder_calibration,
+    write_cross_encoder_calibration,
+)
 from hermes_skilleval.comparison import write_comparison_report
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
@@ -160,6 +166,33 @@ def _build_parser() -> argparse.ArgumentParser:
     judge_parser.add_argument("--output", required=True)
     judge_parser.set_defaults(handler=_run_judge_improvement)
 
+    calibrate_parser = subparsers.add_parser(
+        "calibrate-cross-encoder",
+        help="fit score and margin thresholds from cross-encoder rank-only results",
+    )
+    calibrate_parser.add_argument("--results", required=True)
+    calibrate_parser.add_argument("--output", required=True)
+    calibrate_parser.add_argument("--calibrated-output", default=None)
+    calibrate_parser.add_argument("--fit-split", choices=("dev", "test"), default="dev")
+    calibrate_parser.add_argument(
+        "--apply-split",
+        choices=("dev", "test", "all"),
+        default="test",
+    )
+    calibrate_parser.add_argument("--top-k", type=int, default=5)
+    calibrate_parser.add_argument("--max-negative-hit-rate", type=float, default=0.05)
+    calibrate_parser.add_argument(
+        "--max-selection-rate-at-5",
+        type=float,
+        default=1.0,
+        help="maximum mean Selection Rate@5 allowed on the fit split",
+    )
+    calibrate_parser.add_argument(
+        "--router-label",
+        default="cross-encoder-calibrated",
+    )
+    calibrate_parser.set_defaults(handler=_run_calibrate_cross_encoder)
+
     return parser
 
 
@@ -230,6 +263,23 @@ def _add_cross_encoder_args(parser: argparse.ArgumentParser) -> None:
         type=int,
         default=16,
         help="batch size for cross-encoder pair scoring",
+    )
+    parser.add_argument(
+        "--cross-encoder-calibration",
+        default=None,
+        help="JSON calibration file with cross-encoder score and margin thresholds",
+    )
+    parser.add_argument(
+        "--cross-encoder-score-threshold",
+        type=float,
+        default=None,
+        help="raw cross-encoder score threshold for calibrated selective acceptance",
+    )
+    parser.add_argument(
+        "--cross-encoder-margin-threshold",
+        type=float,
+        default=None,
+        help="top-1 minus top-2 score margin threshold for calibrated acceptance",
     )
 
 
@@ -356,6 +406,50 @@ def _run_judge_improvement(args: argparse.Namespace) -> None:
     print(f"Wrote improvement acceptance report to {args.output}: {status}")
 
 
+def _run_calibrate_cross_encoder(args: argparse.Namespace) -> None:
+    if args.top_k <= 0:
+        raise ValueError("--top-k must be positive")
+
+    records = _read_jsonl_records(Path(args.results))
+    calibration = fit_cross_encoder_calibration(
+        records,
+        fit_split=args.fit_split,
+        max_negative_hit_rate=args.max_negative_hit_rate,
+        max_selection_rate_at_5=args.max_selection_rate_at_5,
+        top_k=args.top_k,
+    )
+    write_cross_encoder_calibration(calibration, args.output)
+
+    if args.calibrated_output:
+        output_records = [
+            apply_cross_encoder_calibration(
+                record,
+                calibration,
+                top_k=args.top_k,
+                router=args.router_label,
+            )
+            for record in records
+            if args.apply_split == "all" or record.get("split", "dev") == args.apply_split
+        ]
+        if not output_records:
+            raise ValueError(f"no records matched apply split: {args.apply_split}")
+        output = Path(args.calibrated_output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            "".join(
+                json.dumps(record, sort_keys=True) + "\n"
+                for record in output_records
+            ),
+            encoding="utf-8",
+        )
+
+    print(
+        "Wrote cross-encoder calibration to "
+        f"{args.output}: score>={calibration.score_threshold:.6g}, "
+        f"margin>={calibration.margin_threshold:.6g}"
+    )
+
+
 def _router(name: str, args: argparse.Namespace | None = None) -> SkillRouter:
     if name == "keyword":
         return KeywordRouter()
@@ -408,17 +502,37 @@ def _cross_encoder_router(args: argparse.Namespace | None) -> CrossEncoderRerank
         "cross-encoder/ms-marco-MiniLM-L-6-v2",
     )
     batch_size = getattr(args, "cross_encoder_batch_size", 16)
+    score_threshold, margin_threshold = _cross_encoder_thresholds(args)
     return CrossEncoderReranker(
         base_router=_embedding_router(args),
         model=SentenceTransformerCrossEncoderModel(model_name, batch_size=batch_size),
         candidate_pool_size=getattr(args, "gated_pool_size", 10),
-        selective=getattr(args, "selective", False),
+        selective=getattr(args, "selective", False) or score_threshold is not None,
         min_confidence=getattr(args, "min_confidence", 0.5),
         contrastive_selective=getattr(args, "contrastive_selective", False),
         contrastive_margin=getattr(args, "contrastive_margin", 6.0),
         min_evidence=getattr(args, "min_evidence", 2.0),
+        raw_score_threshold=score_threshold,
+        margin_threshold=margin_threshold,
         cross_encoder_batch_size=batch_size,
     )
+
+
+def _cross_encoder_thresholds(args: argparse.Namespace | None) -> tuple[float | None, float]:
+    calibration_path = getattr(args, "cross_encoder_calibration", None)
+    calibration = (
+        read_cross_encoder_calibration(calibration_path)
+        if calibration_path
+        else None
+    )
+    score_threshold = getattr(args, "cross_encoder_score_threshold", None)
+    margin_threshold = getattr(args, "cross_encoder_margin_threshold", None)
+    if calibration is not None:
+        if score_threshold is None:
+            score_threshold = calibration.score_threshold
+        if margin_threshold is None:
+            margin_threshold = calibration.margin_threshold
+    return score_threshold, 0.0 if margin_threshold is None else margin_threshold
 
 
 def _parse_router_names(value: str) -> list[str]:
@@ -448,9 +562,9 @@ def _parse_router_spec(value: str) -> RouterSpec:
         if not label:
             raise ValueError("router label must not be empty")
 
-    router_name, _, embedding_backend = target.partition(":")
+    router_name, _, raw_embedding_backend = target.partition(":")
     router_name = router_name.strip()
-    embedding_backend = embedding_backend.strip() or None
+    embedding_backend = raw_embedding_backend.strip() or None
     if router_name not in ROUTER_NAMES:
         raise ValueError(f"unknown router(s): {router_name}")
     if embedding_backend is not None:

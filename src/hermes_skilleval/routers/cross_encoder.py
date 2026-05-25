@@ -75,6 +75,8 @@ class CrossEncoderReranker(SkillRouter):
         contrastive_selective: bool = False,
         contrastive_margin: float = 6.0,
         min_evidence: float = 2.0,
+        raw_score_threshold: float | None = None,
+        margin_threshold: float = 0.0,
         cross_encoder_batch_size: int = 16,
     ) -> None:
         if candidate_pool_size <= 0:
@@ -85,6 +87,10 @@ class CrossEncoderReranker(SkillRouter):
             raise ValueError("contrastive_margin must be non-negative")
         if min_evidence < 0.0:
             raise ValueError("min_evidence must be non-negative")
+        if raw_score_threshold is not None and not math.isfinite(raw_score_threshold):
+            raise ValueError("raw_score_threshold must be finite")
+        if margin_threshold < 0.0:
+            raise ValueError("margin_threshold must be non-negative")
         if cross_encoder_batch_size <= 0:
             raise ValueError("cross_encoder_batch_size must be positive")
 
@@ -99,6 +105,8 @@ class CrossEncoderReranker(SkillRouter):
         self.contrastive_selective = contrastive_selective
         self.contrastive_margin = contrastive_margin
         self.min_evidence = min_evidence
+        self.raw_score_threshold = raw_score_threshold
+        self.margin_threshold = margin_threshold
 
     def route(self, task: BenchmarkTask, skills: list[Skill], top_k: int) -> RouteResult:
         if not isinstance(top_k, int) or top_k <= 0:
@@ -135,7 +143,14 @@ class CrossEncoderReranker(SkillRouter):
             candidates,
             key=lambda skill: (-scores[skill.id], base_rank[skill.id], skill.id),
         )
-        if self.selective:
+        if self.selective and self.raw_score_threshold is not None:
+            ranked_candidates = _select_by_raw_score_and_margin(
+                ranked_candidates,
+                scores,
+                score_threshold=self.raw_score_threshold,
+                margin_threshold=self.margin_threshold,
+            )
+        elif self.selective:
             ranked_candidates = select_candidates(
                 task,
                 ranked_candidates,
@@ -158,6 +173,32 @@ class CrossEncoderReranker(SkillRouter):
 
 def _acceptance_scores(scores: dict[str, float]) -> dict[str, float]:
     return {skill_id: _sigmoid(score) * 100.0 for skill_id, score in scores.items()}
+
+
+def _select_by_raw_score_and_margin(
+    ranked_candidates: list[Skill],
+    scores: dict[str, float],
+    *,
+    score_threshold: float,
+    margin_threshold: float,
+) -> list[Skill]:
+    if not ranked_candidates:
+        return []
+    if scores[ranked_candidates[0].id] < score_threshold:
+        return []
+    if _top_margin(ranked_candidates, scores) < margin_threshold:
+        return []
+    return [
+        skill
+        for skill in ranked_candidates
+        if scores[skill.id] >= score_threshold
+    ]
+
+
+def _top_margin(ranked_candidates: list[Skill], scores: dict[str, float]) -> float:
+    if len(ranked_candidates) < 2:
+        return math.inf
+    return scores[ranked_candidates[0].id] - scores[ranked_candidates[1].id]
 
 
 def _sigmoid(value: float) -> float:

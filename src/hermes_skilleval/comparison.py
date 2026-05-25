@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +32,7 @@ METRIC_FIELDS = (
 
 
 def write_comparison_report(
-    router_results: dict[str, Path | str],
+    router_results: Mapping[str, Path | str],
     output_path: Path | str,
 ) -> None:
     if not router_results:

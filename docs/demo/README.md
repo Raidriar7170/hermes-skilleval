@@ -5,8 +5,9 @@ This directory contains committed demo runs for Hermes SkillEval.
 The original `benchmark-hybrid` and `router-comparison` artifacts use the tiny
 fixture skill library in `tests/fixtures/skills` and are smoke/demo artifacts
 for CLI reporting. The main current benchmark artifacts are the Phase 6A
-robustness run, the Phase 6B contrastive gating run, and the Phase 7A
-cross-encoder reranker run over the generated 80-task, 45-skill corpus.
+robustness run, the Phase 6B contrastive gating run, the Phase 7A
+cross-encoder reranker run, and the Phase 7B cross-encoder calibration run over
+the generated 80-task, 45-skill corpus.
 
 Regenerate the demo from the repository root:
 
@@ -140,6 +141,82 @@ skilleval analyze-failures \
   --baseline gated-minilm-contrastive \
   --candidate cross-encoder-minilm \
   --output docs/demo/phase7a-cross-encoder/failure-analysis.md
+skilleval eval \
+  --index docs/demo/phase6b-contrastive-gating/skills.json \
+  --tasks benchmarks/tasks \
+  --router cross-encoder \
+  --embedding-backend sentence-transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-cache /tmp/skilleval-phase7a-minilm-cache.json \
+  --cross-encoder-model cross-encoder/ms-marco-MiniLM-L-6-v2 \
+  --gated-pool-size 10 \
+  --top-k 5 \
+  --output-dir docs/demo/phase7a-cross-encoder/cross-encoder-minilm-rank-only
+skilleval calibrate-cross-encoder \
+  --results docs/demo/phase7a-cross-encoder/cross-encoder-minilm-rank-only/results.jsonl \
+  --output docs/demo/phase7b-cross-encoder-calibration/strict-calibration.json \
+  --calibrated-output docs/demo/phase7b-cross-encoder-calibration/cross-encoder-calibrated-strict-test/results.jsonl \
+  --fit-split dev \
+  --apply-split test \
+  --max-negative-hit-rate 0.05 \
+  --max-selection-rate-at-5 0.3
+skilleval report \
+  --runs docs/demo/phase7b-cross-encoder-calibration/cross-encoder-calibrated-strict-test
+skilleval calibrate-cross-encoder \
+  --results docs/demo/phase7a-cross-encoder/cross-encoder-minilm-rank-only/results.jsonl \
+  --output docs/demo/phase7b-cross-encoder-calibration/balanced-calibration.json \
+  --calibrated-output docs/demo/phase7b-cross-encoder-calibration/cross-encoder-calibrated-balanced-test/results.jsonl \
+  --fit-split dev \
+  --apply-split test \
+  --max-negative-hit-rate 0.05 \
+  --max-selection-rate-at-5 0.4
+skilleval report \
+  --runs docs/demo/phase7b-cross-encoder-calibration/cross-encoder-calibrated-balanced-test
+PYTHONPATH=src python - <<'PY'
+import json
+from pathlib import Path
+from hermes_skilleval.comparison import write_comparison_report
+from hermes_skilleval.report import write_markdown_report
+
+root = Path("docs/demo/phase7b-cross-encoder-calibration")
+sources = {
+    "gated-minilm-contrastive-test": Path(
+        "docs/demo/phase7a-cross-encoder/gated-minilm-contrastive/results.jsonl"
+    ),
+    "cross-encoder-rank-only-test": Path(
+        "docs/demo/phase7a-cross-encoder/cross-encoder-minilm-rank-only/results.jsonl"
+    ),
+}
+result_paths = {}
+for label, source in sources.items():
+    out_dir = root / label
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "results.jsonl"
+    records = [
+        json.loads(line)
+        for line in source.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    test_records = [record for record in records if record.get("split") == "test"]
+    out_path.write_text(
+        "".join(json.dumps(record, sort_keys=True) + "\n" for record in test_records),
+        encoding="utf-8",
+    )
+    write_markdown_report(out_path, out_dir / "report.md")
+    result_paths[label] = out_path
+
+result_paths.update(
+    {
+        "cross-encoder-calibrated-balanced-test": root
+        / "cross-encoder-calibrated-balanced-test"
+        / "results.jsonl",
+        "cross-encoder-calibrated-strict-test": root
+        / "cross-encoder-calibrated-strict-test"
+        / "results.jsonl",
+    }
+)
+write_comparison_report(result_paths, root / "comparison.md")
+PY
 ```
 
 Artifacts:
@@ -197,3 +274,12 @@ Artifacts:
   cross-encoder run used to separate reranking gains from acceptance filtering.
 - `phase7a-cross-encoder/failure-analysis.md`: failure-mode comparison between
   contrastive gated MiniLM and selective cross-encoder MiniLM.
+- `phase7b-cross-encoder-calibration/strict-calibration.json`: dev-split fitted
+  thresholds for the safer calibrated acceptance policy.
+- `phase7b-cross-encoder-calibration/balanced-calibration.json`: dev-split
+  fitted thresholds for the higher-recall calibrated acceptance policy.
+- `phase7b-cross-encoder-calibration/cross-encoder-calibrated-*-test/report.md`:
+  held-out test reports for strict and balanced calibrated policies.
+- `phase7b-cross-encoder-calibration/comparison.md`: same-test-split comparison
+  across contrastive gated, rank-only cross-encoder, and calibrated
+  cross-encoder policies.

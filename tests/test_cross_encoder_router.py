@@ -131,6 +131,64 @@ def test_cross_encoder_selective_mode_can_abstain_from_weak_candidates():
     assert result.selected_skill_ids == []
 
 
+def test_cross_encoder_calibrated_acceptance_requires_top_margin():
+    skills = [
+        _skill("systematic-debugging", "coding", "Systematic Debugging", "Debug."),
+        _skill("test-driven-development", "coding", "TDD", "Test first."),
+    ]
+    task = _task("ambiguous", "coding", "Debug failing tests.")
+    base_router = StubRouter(
+        ["systematic-debugging", "test-driven-development"],
+        {"systematic-debugging": 0.9, "test-driven-development": 0.8},
+    )
+    model = StaticCrossEncoderModel(
+        {
+            (task_text(task), skill_text(skills[0])): 5.0,
+            (task_text(task), skill_text(skills[1])): 4.6,
+        }
+    )
+
+    result = CrossEncoderReranker(
+        base_router=base_router,
+        model=model,
+        candidate_pool_size=2,
+        selective=True,
+        raw_score_threshold=3.0,
+        margin_threshold=1.0,
+    ).route(task, skills, top_k=2)
+
+    assert result.selected_skill_ids == []
+
+
+def test_cross_encoder_calibrated_acceptance_keeps_high_margin_candidates():
+    skills = [
+        _skill("systematic-debugging", "coding", "Systematic Debugging", "Debug."),
+        _skill("test-driven-development", "coding", "TDD", "Test first."),
+    ]
+    task = _task("clear", "coding", "Debug failing tests.")
+    base_router = StubRouter(
+        ["systematic-debugging", "test-driven-development"],
+        {"systematic-debugging": 0.9, "test-driven-development": 0.8},
+    )
+    model = StaticCrossEncoderModel(
+        {
+            (task_text(task), skill_text(skills[0])): 5.0,
+            (task_text(task), skill_text(skills[1])): 2.0,
+        }
+    )
+
+    result = CrossEncoderReranker(
+        base_router=base_router,
+        model=model,
+        candidate_pool_size=2,
+        selective=True,
+        raw_score_threshold=3.0,
+        margin_threshold=1.0,
+    ).route(task, skills, top_k=2)
+
+    assert result.selected_skill_ids == ["systematic-debugging"]
+
+
 def test_cross_encoder_rejects_invalid_thresholds():
     base_router = StubRouter([], {})
     model = StaticCrossEncoderModel()
@@ -142,6 +200,7 @@ def test_cross_encoder_rejects_invalid_thresholds():
         {"cross_encoder_batch_size": 0},
         {"contrastive_margin": -0.1},
         {"min_evidence": -0.1},
+        {"margin_threshold": -0.1},
     ):
         with pytest.raises(ValueError):
             CrossEncoderReranker(base_router=base_router, model=model, **kwargs)

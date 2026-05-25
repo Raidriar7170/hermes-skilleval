@@ -48,9 +48,13 @@ validated CLI runs and Markdown reports.
   improving rank-only Recall@5 from 0.969 to 0.994 and NDCG@5 from 0.964 to
   0.978 versus contrastive gating, while revealing the precision/recall trade
   off of applying selective acceptance directly to cross-encoder logits.
+- Added a dev-split calibrated cross-encoder acceptance layer, reducing held-out
+  test Negative Hit Rate from 0.333 to 0.033 in strict mode while preserving
+  Recall@5 at 0.950, and documenting a balanced 0.967 Recall@5 / 0.100
+  Negative Hit Rate trade-off.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
-  136 pytest tests covering parser, loader, router, metric, report, and CLI
+  145 pytest tests covering parser, loader, router, metric, report, and CLI
   edge cases.
 - Designed the system as an offline MVP that runs locally on a Mac while
   supporting controlled single-GPU experiments on shared A100 infrastructure.
@@ -60,9 +64,10 @@ validated CLI runs and Markdown reports.
 Built a Python evaluation harness for Hermes-style agent skill routing, with
 Markdown skill indexing, an 80-task/45-skill robustness benchmark,
 keyword/hybrid/embedding routers, optional `sentence-transformers` retrieval,
-verification-gated reranking, pretrained cross-encoder reranking, selective
-confidence gating, Recall@K, MRR, NDCG, negative-hit metrics, failure-driven
-metadata patching, CLI comparison/failure reports, and 136-test validation.
+verification-gated reranking, pretrained cross-encoder reranking, calibrated
+cross-encoder acceptance, selective confidence gating, Recall@K, MRR, NDCG,
+negative-hit metrics, failure-driven metadata patching, CLI comparison/failure
+reports, and 145-test validation.
 
 ## Interview Talking Points
 
@@ -104,6 +109,10 @@ metadata patching, CLI comparison/failure reports, and 136-test validation.
   rank-only Recall@5 to 0.994 and NDCG@5 to 0.978 on the 80-task benchmark,
   but needs a calibrated acceptance layer because rank-only reranking raises
   Negative Hit Rate to 0.125 and direct selective gating is too conservative.
+- Phase 7B: a dev-split calibrated threshold layer turns the rank-only
+  cross-encoder into an acceptance policy; on the held-out test split, strict
+  calibration lowers Negative Hit Rate from 0.333 to 0.033, while balanced
+  calibration keeps Recall@5 at 0.967 with Negative Hit Rate at 0.100.
 - Engineering depth: the MVP handles malformed YAML/frontmatter, invalid task
   labels, nonpositive top-k, duplicate selected skills, malformed JSONL,
   Markdown escaping, and repeatable benchmark generation.
@@ -123,8 +132,8 @@ generation.
 
 ## Future Extension Bullets
 
-- Calibrate cross-encoder acceptance thresholds or add pairwise margins so the
-  rank-only Recall@5 gains do not reintroduce same-category negative hits.
+- Add Platt scaling or isotonic probability calibration on top of the current
+  cross-encoder threshold layer.
 - Extend failure-driven patching from generated skill indexes to source
   `SKILL.md` editing with human review.
 - Fine-tune or distill the embedding model on benchmark failures and measure
