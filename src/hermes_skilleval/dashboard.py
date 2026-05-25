@@ -38,12 +38,14 @@ REQUIRED_FIELDS = {
 @dataclass(frozen=True)
 class DashboardRun:
     label: str
+    source_path: str
     task_count: int
     metrics: dict[str, float]
 
     def to_json_dict(self) -> dict[str, Any]:
         return {
             "label": self.label,
+            "source_path": self.source_path,
             "task_count": self.task_count,
             "metrics": self.metrics,
         }
@@ -57,12 +59,14 @@ class DashboardRecord:
     split: str
     category: str
     difficulty: str
+    prompt: str
     selected_skill_ids: list[str]
     gold_skills: list[str]
     negative_skills: list[str]
     metrics: dict[str, float]
     failure_tags: list[str]
     score_ranking: list[dict[str, float | str]]
+    raw: dict[str, Any]
 
     def to_json_dict(self) -> dict[str, Any]:
         return {
@@ -72,17 +76,20 @@ class DashboardRecord:
             "split": self.split,
             "category": self.category,
             "difficulty": self.difficulty,
+            "prompt": self.prompt,
             "selected_skill_ids": self.selected_skill_ids,
             "gold_skills": self.gold_skills,
             "negative_skills": self.negative_skills,
             "metrics": self.metrics,
             "failure_tags": self.failure_tags,
             "score_ranking": self.score_ranking,
+            "raw": self.raw,
         }
 
 
 @dataclass(frozen=True)
 class DashboardPayload:
+    source_path: str
     generated_at: str
     runs: list[DashboardRun]
     records: list[DashboardRecord]
@@ -90,6 +97,7 @@ class DashboardPayload:
 
     def to_json_dict(self) -> dict[str, Any]:
         return {
+            "source_path": self.source_path,
             "generated_at": self.generated_at,
             "runs": [run.to_json_dict() for run in self.runs],
             "records": [record.to_json_dict() for record in self.records],
@@ -124,6 +132,7 @@ def build_dashboard_payload(runs_path: Path | str) -> DashboardPayload:
                 split=record["split"],
                 category=record["category"],
                 difficulty=record["difficulty"],
+                prompt=record["prompt"],
                 selected_skill_ids=record["selected_skill_ids"],
                 gold_skills=record["gold_skills"],
                 negative_skills=record["negative_skills"],
@@ -132,12 +141,14 @@ def build_dashboard_payload(runs_path: Path | str) -> DashboardPayload:
                     record["metrics"], record["selected_skill_ids"]
                 ),
                 score_ranking=_score_ranking(record),
+                raw=record["raw"],
             )
             for record in normalized
         ]
         runs.append(
             DashboardRun(
                 label=run_dir.name,
+                source_path=str(run_dir / "results.jsonl"),
                 task_count=len(dashboard_records),
                 metrics=_mean_summary_metrics([record.metrics for record in dashboard_records]),
             )
@@ -152,6 +163,7 @@ def build_dashboard_payload(runs_path: Path | str) -> DashboardPayload:
         "failure_tags": _sorted_unique(tag for record in records for tag in record.failure_tags),
     }
     return DashboardPayload(
+        source_path=str(root),
         generated_at=datetime.now(UTC).replace(microsecond=0).isoformat(),
         runs=runs,
         records=records,
@@ -183,22 +195,26 @@ def _normalize_record(
     record: dict[str, Any], path: Path, line_number: int
 ) -> dict[str, Any]:
     _validate_record(record, path, line_number)
-    selected = _string_list(record["selected_skill_ids"])
-    gold = _string_list(record["gold_skills"])
-    negative = _string_list(record["negative_skills"])
+    selected = _string_list_field(record, "selected_skill_ids", path, line_number)
+    gold = _string_list_field(record, "gold_skills", path, line_number)
+    negative = _string_list_field(record, "negative_skills", path, line_number)
     normalized = {
         "task_id": record["task_id"],
         "router": record["router"],
         "split": record.get("split", ""),
         "category": record.get("category", ""),
         "difficulty": record.get("difficulty", ""),
+        "prompt": record.get("prompt", ""),
         "selected_skill_ids": selected,
         "gold_skills": gold,
         "negative_skills": negative,
         "latency_ms": float(record["latency_ms"]),
         "scores": record.get("scores", {}),
+        "raw": dict(record),
     }
-    normalized["metrics"] = _record_metrics(record, selected, gold, negative)
+    normalized["metrics"] = _record_metrics(
+        record, selected, gold, negative, path, line_number
+    )
     return normalized
 
 
@@ -218,41 +234,73 @@ def _validate_record(record: dict[str, Any], path: Path, line_number: int) -> No
             raise ValueError(
                 f"field {field!r} must be a string in {path} at line {line_number}"
             )
+    if "prompt" in record and not isinstance(record["prompt"], str):
+        raise ValueError(f"field 'prompt' must be a string in {path} at line {line_number}")
     for field in ("selected_skill_ids", "gold_skills", "negative_skills"):
-        _string_list(record[field])
+        _string_list_field(record, field, path, line_number)
     if _finite_number(record["latency_ms"]) is None:
         raise ValueError(f"field 'latency_ms' must be finite in {path} at line {line_number}")
 
 
-def _string_list(value: Any) -> list[str]:
+def _string_list_field(
+    record: dict[str, Any], field: str, path: Path, line_number: int
+) -> list[str]:
+    value = record[field]
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
-        raise ValueError("expected list of strings")
+        raise ValueError(
+            f"field {field!r} must be a list of strings in {path} at line {line_number}"
+        )
     return list(value)
 
 
 def _record_metrics(
-    record: dict[str, Any], selected: list[str], gold: list[str], negative: list[str]
+    record: dict[str, Any],
+    selected: list[str],
+    gold: list[str],
+    negative: list[str],
+    path: Path,
+    line_number: int,
 ) -> dict[str, float]:
     return {
-        "recall_at_5": _metric_or(record, "recall_at_5", recall_at_k(selected, gold, 5)),
-        "mrr": _metric_or(record, "mrr", mean_reciprocal_rank(selected, gold)),
-        "ndcg_at_5": _metric_or(record, "ndcg_at_5", ndcg_at_k(selected, gold, 5)),
+        "recall_at_5": _metric_or(
+            record, "recall_at_5", recall_at_k(selected, gold, 5), path, line_number
+        ),
+        "mrr": _metric_or(
+            record, "mrr", mean_reciprocal_rank(selected, gold), path, line_number
+        ),
+        "ndcg_at_5": _metric_or(
+            record, "ndcg_at_5", ndcg_at_k(selected, gold, 5), path, line_number
+        ),
         "negative_hit_rate": _metric_or(
-            record, "negative_hit_rate", negative_hit_rate(selected, negative, 5)
+            record,
+            "negative_hit_rate",
+            negative_hit_rate(selected, negative, 5),
+            path,
+            line_number,
         ),
         "abstention_rate": _metric_or(
-            record, "abstention_rate", abstention_rate(selected)
+            record, "abstention_rate", abstention_rate(selected), path, line_number
         ),
         "selection_rate_at_5": _metric_or(
-            record, "selection_rate_at_5", selection_rate_at_k(selected, 5)
+            record,
+            "selection_rate_at_5",
+            selection_rate_at_k(selected, 5),
+            path,
+            line_number,
         ),
-        "latency_ms": _metric_or(record, "latency_ms", 0.0),
+        "latency_ms": _metric_or(record, "latency_ms", 0.0, path, line_number),
     }
 
 
-def _metric_or(record: dict[str, Any], field: str, fallback: float) -> float:
-    value = _finite_number(record.get(field))
-    return value if value is not None else float(fallback)
+def _metric_or(
+    record: dict[str, Any], field: str, fallback: float, path: Path, line_number: int
+) -> float:
+    if field not in record:
+        return float(fallback)
+    value = _finite_number(record[field])
+    if value is None:
+        raise ValueError(f"field {field!r} must be finite in {path} at line {line_number}")
+    return value
 
 
 def _finite_number(value: Any) -> float | None:
@@ -281,11 +329,11 @@ def _score_ranking(record: dict[str, Any]) -> list[dict[str, float | str]]:
     scores = record.get("scores")
     if not isinstance(scores, dict):
         return []
-    rows = [
-        {"skill_id": skill_id, "score": score}
-        for skill_id, value in scores.items()
-        if isinstance(skill_id, str) and (score := _finite_number(value)) is not None
-    ]
+    rows: list[dict[str, float | str]] = []
+    for skill_id, value in scores.items():
+        score = _finite_number(value)
+        if isinstance(skill_id, str) and score is not None:
+            rows.append({"skill_id": skill_id, "score": score})
     return sorted(rows, key=lambda row: (-float(row["score"]), str(row["skill_id"])))
 
 

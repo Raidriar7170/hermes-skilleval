@@ -138,6 +138,87 @@ def test_build_dashboard_payload_failure_tags_follow_spec_thresholds(tmp_path: P
     assert data["records"][2]["failure_tags"] == ["low-selection"]
 
 
+def test_build_dashboard_payload_preserves_source_prompt_and_raw(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "with-context",
+        [
+            {
+                "task_id": "task-context",
+                "router": "alpha",
+                "prompt": "Use Docker to package the service.",
+                "split": "dev",
+                "category": "infra",
+                "difficulty": "easy",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "latency_ms": 15.0,
+                "scores": {"beta": 1.0, "alpha": 1.0, "ignored": "bad"},
+            }
+        ],
+    )
+
+    data = build_dashboard_payload(tmp_path).to_json_dict()
+
+    assert data["source_path"] == str(tmp_path)
+    assert data["runs"][0]["source_path"] == str(tmp_path / "with-context" / "results.jsonl")
+    assert data["records"][0]["prompt"] == "Use Docker to package the service."
+    assert data["records"][0]["raw"]["task_id"] == "task-context"
+    assert data["records"][0]["raw"]["prompt"] == "Use Docker to package the service."
+    assert data["records"][0]["score_ranking"] == [
+        {"skill_id": "alpha", "score": 1.0},
+        {"skill_id": "beta", "score": 1.0},
+    ]
+
+
+def test_build_dashboard_payload_rejects_invalid_present_metric(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "invalid-metric",
+        [
+            {
+                "task_id": "task-invalid",
+                "router": "alpha",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "recall_at_5": "1.0",
+                "latency_ms": 10.0,
+            }
+        ],
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"field 'recall_at_5' must be finite .*results\.jsonl at line 1",
+    ):
+        build_dashboard_payload(tmp_path)
+
+
+def test_build_dashboard_payload_rejects_invalid_skill_list_with_context(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "invalid-list",
+        [
+            {
+                "task_id": "task-invalid",
+                "router": "alpha",
+                "selected_skill_ids": ["docker", 42],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "latency_ms": 10.0,
+            }
+        ],
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"field 'selected_skill_ids' must be a list of strings .*results\.jsonl at line 1",
+    ):
+        build_dashboard_payload(tmp_path)
+
+
 def _write_run(root: Path, label: str, records: list[dict[str, object]]) -> None:
     run_dir = root / label
     run_dir.mkdir(parents=True)
