@@ -238,10 +238,9 @@ skilleval dashboard \
 
 The generated file is self-contained and can be opened directly in a browser for
 interactive run filtering, failure inspection, score ranking, and raw JSON audit:
+[`Live dashboard`](https://raidriar7170.github.io/hermes-skilleval/docs/demo/phase8-static-dashboard/dashboard.html).
+The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
-On GitHub's normal file view this link shows the committed HTML source; publish
-the repository with GitHub Pages to make the same file render as an interactive
-web page.
 
 ### 7. Run Tests
 
