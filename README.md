@@ -228,6 +228,17 @@ skilleval calibrate-cross-encoder \
   --max-selection-rate-at-5 0.3
 ```
 
+### Static Dashboard
+
+```bash
+skilleval dashboard \
+  --runs docs/demo/phase7b-cross-encoder-calibration \
+  --output docs/demo/phase8-static-dashboard/dashboard.html
+```
+
+The generated file is self-contained and can be opened directly in a browser for
+interactive run filtering, failure inspection, score ranking, and raw JSON audit.
+
 ### 7. Run Tests
 
 ```bash
@@ -257,6 +268,7 @@ Expected:
 | Phase 6B | Contrastive selective gating | [`docs/demo/phase6b-contrastive-gating/comparison.md`](docs/demo/phase6b-contrastive-gating/comparison.md) |
 | Phase 7A | A100 cross-encoder reranker | [`docs/phase7a.md`](docs/phase7a.md) |
 | Phase 7B | Cross-encoder acceptance calibration | [`docs/phase7b.md`](docs/phase7b.md) |
+| Phase 8 | Static failure inspection dashboard | [`docs/phase8.md`](docs/phase8.md) |
 
 ---
 
@@ -324,8 +336,8 @@ Phase 7A staged MiniLM embedding and MS MARCO MiniLM cross-encoder models under 
 - [x] Contrastive gating for same-category ambiguous negatives
 - [x] Cross-encoder reranker deployed on a single idle A100
 - [x] Calibrated cross-encoder acceptance thresholds
+- [x] Web dashboard for interactive failure inspection
 - [ ] Learned skill metadata patch ranking
-- [ ] Web dashboard for interactive failure inspection
 - [ ] Fine-tuned embedding router for domain-specific skill libraries
 
 ---

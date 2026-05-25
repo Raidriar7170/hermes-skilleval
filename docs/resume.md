@@ -52,6 +52,9 @@ validated CLI runs and Markdown reports.
   test Negative Hit Rate from 0.333 to 0.033 in strict mode while preserving
   Recall@5 at 0.950, and documenting a balanced 0.967 Recall@5 / 0.100
   Negative Hit Rate trade-off.
+- Phase 8: a static self-contained dashboard makes committed benchmark runs
+  inspectable in a browser with filters, sortable task rows, failure tags, score
+  rankings, and raw JSON audit views.
 - Hardened the evaluation pipeline with schema validation, deterministic
   benchmark generation, clean CLI error handling, Markdown table escaping, and
   145 pytest tests covering parser, loader, router, metric, report, and CLI
@@ -67,7 +70,7 @@ keyword/hybrid/embedding routers, optional `sentence-transformers` retrieval,
 verification-gated reranking, pretrained cross-encoder reranking, calibrated
 cross-encoder acceptance, selective confidence gating, Recall@K, MRR, NDCG,
 negative-hit metrics, failure-driven metadata patching, CLI comparison/failure
-reports, and 145-test validation.
+reports, static dashboard, and 145-test validation.
 
 ## Interview Talking Points
 

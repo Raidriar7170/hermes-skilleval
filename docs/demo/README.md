@@ -217,6 +217,9 @@ result_paths.update(
 )
 write_comparison_report(result_paths, root / "comparison.md")
 PY
+skilleval dashboard \
+  --runs docs/demo/phase7b-cross-encoder-calibration \
+  --output docs/demo/phase8-static-dashboard/dashboard.html
 ```
 
 Artifacts:
@@ -283,3 +286,6 @@ Artifacts:
 - `phase7b-cross-encoder-calibration/comparison.md`: same-test-split comparison
   across contrastive gated, rank-only cross-encoder, and calibrated
   cross-encoder policies.
+- `phase8-static-dashboard/dashboard.html`: self-contained interactive dashboard
+  for filtering Phase 7B runs, inspecting failures, viewing score rankings, and
+  auditing raw task records.
