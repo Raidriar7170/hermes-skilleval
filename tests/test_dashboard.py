@@ -3,7 +3,11 @@ from pathlib import Path
 
 import pytest
 
-from hermes_skilleval.dashboard import build_dashboard_payload
+from hermes_skilleval.dashboard import (
+    build_dashboard_payload,
+    render_dashboard_html,
+    write_dashboard,
+)
 
 
 def test_build_dashboard_payload_loads_child_runs_and_summaries(tmp_path: Path):
@@ -243,6 +247,58 @@ def test_build_dashboard_payload_reports_physical_line_after_blank_lines(tmp_pat
         match=r"field 'selected_skill_ids' must be a list of strings .*results\.jsonl at line 2",
     ):
         build_dashboard_payload(tmp_path)
+
+
+def test_render_dashboard_html_is_self_contained(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "alpha-router",
+        [
+            {
+                "task_id": "task-001",
+                "router": "alpha",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": ["academic-writing"],
+                "latency_ms": 12.0,
+            }
+        ],
+    )
+
+    payload = build_dashboard_payload(tmp_path)
+    html = render_dashboard_html(payload)
+
+    assert html.startswith("<!doctype html>")
+    assert "Hermes SkillEval Dashboard" in html
+    assert "window.__SKILLEVAL_DASHBOARD__" in html
+    assert "alpha-router" in html
+    assert "<script src=" not in html
+    assert "<link rel=" not in html
+    assert "https://" not in html
+    assert "http://" not in html
+
+
+def test_write_dashboard_creates_parent_directory(tmp_path: Path):
+    _write_run(
+        tmp_path / "runs",
+        "alpha-router",
+        [
+            {
+                "task_id": "task-001",
+                "router": "alpha",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": ["academic-writing"],
+                "latency_ms": 12.0,
+            }
+        ],
+    )
+
+    output = tmp_path / "nested" / "dashboard.html"
+    write_dashboard(tmp_path / "runs", output)
+
+    assert output.exists()
+    assert "task-001" in output.read_text(encoding="utf-8")
 
 
 def _write_run(root: Path, label: str, records: list[dict[str, object]]) -> None:
