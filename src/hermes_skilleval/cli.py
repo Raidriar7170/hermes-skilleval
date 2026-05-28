@@ -59,6 +59,7 @@ from hermes_skilleval.self_improvement import (
     write_patches_json,
 )
 from hermes_skilleval.skill_index import load_skill_index, save_skill_index
+from hermes_skilleval.skill_patch_ranking import rank_skill_patches
 from hermes_skilleval.skill_parser import scan_skills
 from hermes_skilleval.storage import ensure_dir
 from hermes_skilleval.task_loader import load_tasks
@@ -206,6 +207,17 @@ def _build_parser() -> argparse.ArgumentParser:
     judge_parser.add_argument("--candidate", required=True)
     judge_parser.add_argument("--output", required=True)
     judge_parser.set_defaults(handler=_run_judge_improvement)
+
+    rank_patches_parser = subparsers.add_parser(
+        "rank-skill-patches",
+        help="rank offline metadata patch candidates from failed agent-loop judge records",
+    )
+    rank_patches_parser.add_argument("--judge-results", required=True)
+    rank_patches_parser.add_argument("--routes", required=True)
+    rank_patches_parser.add_argument("--tasks", required=True)
+    rank_patches_parser.add_argument("--skills-index", required=True)
+    rank_patches_parser.add_argument("--output-dir", required=True)
+    rank_patches_parser.set_defaults(handler=_run_rank_skill_patches)
 
     calibrate_parser = subparsers.add_parser(
         "calibrate-cross-encoder",
@@ -480,6 +492,20 @@ def _run_judge_improvement(args: argparse.Namespace) -> None:
         candidate_name=args.candidate,
     )
     print(f"Wrote improvement acceptance report to {args.output}: {status}")
+
+
+def _run_rank_skill_patches(args: argparse.Namespace) -> None:
+    summary = rank_skill_patches(
+        judge_results_path=args.judge_results,
+        routes_path=args.routes,
+        tasks_path=args.tasks,
+        skills_index_path=args.skills_index,
+        output_dir=args.output_dir,
+    )
+    print(
+        "Wrote skill patch ranking artifacts to "
+        f"{args.output_dir}: {summary['candidate_count']} candidates"
+    )
 
 
 def _run_calibrate_cross_encoder(args: argparse.Namespace) -> None:

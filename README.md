@@ -163,7 +163,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 185 pytest cases
+├── tests/                              # 190 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -286,6 +286,22 @@ skilleval judge-agent-loop \
 The committed Phase 11 judge uses an offline `deterministic-rubric`; it does
 not require API keys, network access, or live LLM judging.
 
+### 9. Rank Offline Skill Metadata Patch Candidates
+
+```bash
+skilleval rank-skill-patches \
+  --judge-results docs/demo/phase11-evidence-judge-calibration/judge-agent-loop-hybrid/judge-results.jsonl \
+  --routes docs/demo/phase9-real-skill-library-migration/hybrid/results.jsonl \
+  --tasks benchmarks/migration-tasks \
+  --skills-index docs/demo/phase9-real-skill-library-migration/skills.json \
+  --output-dir docs/demo/phase12-skill-patch-ranking
+```
+
+Phase 12 joins Phase 11 routed-skill judge failures, Phase 9 routes, migration
+task metadata, and the migrated skills index to rank offline deterministic
+metadata patch candidates. It does not modify source `SKILL.md` files or write
+a patched skills index.
+
 ### Static Dashboard
 
 ```bash
@@ -300,7 +316,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 9. Run Tests
+### 10. Run Tests
 
 ```bash
 pytest -q
@@ -309,7 +325,7 @@ pytest -q
 Expected:
 
 ```text
-185 passed
+190 passed
 ```
 
 ---
@@ -333,6 +349,7 @@ Expected:
 | Phase 9 | Real skill-library migration evaluation | [`docs/phase9.md`](docs/phase9.md) |
 | Phase 10 | Agent-in-the-loop migration evaluation | [`docs/phase10.md`](docs/phase10.md) |
 | Phase 11 | Evidence judge calibration | [`docs/phase11.md`](docs/phase11.md) |
+| Phase 12 | Offline skill metadata patch ranking | [`docs/phase12.md`](docs/phase12.md) |
 
 ---
 
@@ -394,7 +411,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 185 unit and smoke tests |
+| Testing | pytest | 190 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -416,7 +433,8 @@ and [`docs/phase7b.md`](docs/phase7b.md).
       ([docs](docs/phase10.md), [demo](docs/demo/phase10-agent-in-the-loop/dashboard.html))
 - [x] Evidence judge calibration for agent-loop traces
       ([docs](docs/phase11.md), [demo](docs/demo/phase11-evidence-judge-calibration/dashboard.html))
-- [ ] Learned skill metadata patch ranking
+- [x] Offline skill metadata patch ranking
+      ([docs](docs/phase12.md), [demo](docs/demo/phase12-skill-patch-ranking/ranked-patches.md))
 - [ ] Fine-tuned embedding router for domain-specific skill libraries
 
 ---

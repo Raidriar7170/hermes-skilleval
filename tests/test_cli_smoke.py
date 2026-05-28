@@ -3,6 +3,8 @@ import sys
 import types
 from pathlib import Path
 
+import yaml
+
 from hermes_skilleval.cli import main
 from hermes_skilleval.task_loader import load_tasks
 
@@ -1337,6 +1339,124 @@ def test_cli_judge_agent_loop_writes_judge_artifacts(tmp_path):
     assert (output_dir / "results.jsonl").exists()
     assert (output_dir / "judge-summary.json").exists()
     assert (output_dir / "judge-rubric.md").exists()
+
+
+def test_cli_rank_skill_patches_writes_artifacts(tmp_path):
+    tasks = tmp_path / "tasks"
+    task_dir = tasks / "task-001"
+    task_dir.mkdir(parents=True)
+    (task_dir / "task.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "id": "task-001",
+                "category": "migration",
+                "difficulty": "medium",
+                "gold_skills": ["browser-smoke-testing"],
+                "negative_skills": ["systematic-debugging"],
+                "verifier": "manual",
+                "split": "test",
+                "robustness_tags": ["migration-evaluation"],
+                "expected_evidence": ["opened URL", "nonblank page"],
+                "migration_dimensions": ["evidence completeness"],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    (task_dir / "prompt.md").write_text(
+        "Open the local dashboard and verify a nonblank page.",
+        encoding="utf-8",
+    )
+    skills_index = tmp_path / "skills.json"
+    skills_index.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "browser-smoke-testing",
+                    "name": "Browser Smoke Testing",
+                    "path": "benchmarks/migrated-skills/test/browser-smoke-testing/SKILL.md",
+                    "category": "test",
+                    "description": "Open local pages.",
+                    "body": "Open local pages.",
+                    "trigger_terms": ["browser", "smoke"],
+                    "token_count_estimate": 10,
+                },
+                {
+                    "id": "systematic-debugging",
+                    "name": "Systematic Debugging",
+                    "path": "benchmarks/migrated-skills/test/systematic-debugging/SKILL.md",
+                    "category": "test",
+                    "description": "Debug failures.",
+                    "body": "Debug failures.",
+                    "trigger_terms": ["debug"],
+                    "token_count_estimate": 10,
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    routes = tmp_path / "routes.jsonl"
+    routes.write_text(
+        json.dumps(
+            {
+                "task_id": "task-001",
+                "router": "hybrid",
+                "selected_skill_ids": [
+                    "browser-smoke-testing",
+                    "systematic-debugging",
+                ],
+                "gold_skills": ["browser-smoke-testing"],
+                "negative_skills": ["systematic-debugging"],
+                "scores": {
+                    "browser-smoke-testing": 30.0,
+                    "systematic-debugging": 20.0,
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    judge = tmp_path / "judge-results.jsonl"
+    judge.write_text(
+        json.dumps(
+            {
+                "task_id": "task-001",
+                "trace_id": "agent-loop-hybrid:task-001",
+                "execution_condition": "routed-skill",
+                "judge_pass": False,
+                "judge_score": 0.0,
+                "evidence_score": 0.0,
+                "failure_type": "negative_skill_selected",
+                "penalties": ["missing-evidence", "negative-skill-failure"],
+                "expected_evidence": ["opened URL", "nonblank page"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "phase12"
+
+    result = main(
+        [
+            "rank-skill-patches",
+            "--judge-results",
+            str(judge),
+            "--routes",
+            str(routes),
+            "--tasks",
+            str(tasks),
+            "--skills-index",
+            str(skills_index),
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "patch-candidates.jsonl").exists()
+    assert (output_dir / "ranked-patches.jsonl").exists()
+    assert (output_dir / "ranking-summary.json").exists()
+    assert (output_dir / "ranked-patches.md").exists()
 
 
 def _rank_record(task_id, *, split, selected, scores, gold, negative):

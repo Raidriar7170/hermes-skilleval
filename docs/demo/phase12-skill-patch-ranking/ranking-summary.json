@@ -1,0 +1,31 @@
+{
+  "artifact_type": "phase12-skill-patch-ranking",
+  "candidate_count": 15,
+  "failed_task_count": 3,
+  "failure_types": [
+    "negative_skill_selected"
+  ],
+  "input_paths": {
+    "judge_results": "docs/demo/phase11-evidence-judge-calibration/judge-agent-loop-hybrid/judge-results.jsonl",
+    "routes": "docs/demo/phase9-real-skill-library-migration/hybrid/results.jsonl",
+    "skills_index": "docs/demo/phase9-real-skill-library-migration/skills.json",
+    "tasks": "benchmarks/migration-tasks"
+  },
+  "method": "offline deterministic metadata patch ranking",
+  "phase": "Phase 12",
+  "scoring_weights": {
+    "field_safety": 0.1,
+    "gold_boost": 0.35,
+    "minimality": 0.15,
+    "negative_separation": 0.25,
+    "source_support": 0.15
+  },
+  "source_mutation": "none; source SKILL.md files are not modified",
+  "top_candidate_ids": [
+    "browser-local-dashboard::browser-smoke-testing::description::append_sentence",
+    "browser-local-dashboard::visual-regression-review::description::append_sentence",
+    "claude-command-routing::slash-command-workflow::description::append_sentence",
+    "sp-debug-red-green::systematic-debugging::description::append_sentence",
+    "sp-debug-red-green::test-driven-development::description::append_sentence"
+  ]
+}
