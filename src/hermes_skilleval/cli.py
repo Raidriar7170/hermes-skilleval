@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
+from hermes_skilleval.agent_judge import judge_agent_loop
+from hermes_skilleval.agent_loop import run_agent_loop
 from hermes_skilleval.calibration import (
     apply_cross_encoder_calibration,
     fit_cross_encoder_calibration,
@@ -141,6 +143,36 @@ def _build_parser() -> argparse.ArgumentParser:
     dashboard_parser.add_argument("--runs", required=True)
     dashboard_parser.add_argument("--output", required=True)
     dashboard_parser.set_defaults(handler=_run_dashboard)
+
+    agent_loop_parser = subparsers.add_parser(
+        "run-agent-loop",
+        help="write deterministic agent-in-the-loop traces from router results",
+    )
+    agent_loop_parser.add_argument("--routes", required=True)
+    agent_loop_parser.add_argument("--tasks", required=True)
+    agent_loop_parser.add_argument("--skills-index", required=True)
+    agent_loop_parser.add_argument("--output-dir", required=True)
+    agent_loop_parser.add_argument(
+        "--condition",
+        choices=("no-skill", "routed-skill", "oracle-skill"),
+        default="routed-skill",
+    )
+    agent_loop_parser.add_argument("--run-label", default=None)
+    agent_loop_parser.set_defaults(handler=_run_agent_loop)
+
+    judge_loop_parser = subparsers.add_parser(
+        "judge-agent-loop",
+        help="judge Phase 10 agent-loop traces with a deterministic evidence rubric",
+    )
+    judge_loop_parser.add_argument("--traces", required=True)
+    judge_loop_parser.add_argument("--output-dir", required=True)
+    judge_loop_parser.add_argument("--run-label", default="judge-agent-loop")
+    judge_loop_parser.add_argument(
+        "--backend",
+        choices=("deterministic-rubric",),
+        default="deterministic-rubric",
+    )
+    judge_loop_parser.set_defaults(handler=_run_judge_agent_loop)
 
     failures_parser = subparsers.add_parser(
         "analyze-failures",
@@ -374,6 +406,36 @@ def _run_report(args: argparse.Namespace) -> None:
 def _run_dashboard(args: argparse.Namespace) -> None:
     write_dashboard(args.runs, args.output)
     print(f"Wrote dashboard to {args.output}")
+
+
+def _run_agent_loop(args: argparse.Namespace) -> None:
+    summary = run_agent_loop(
+        routes_path=args.routes,
+        tasks_path=args.tasks,
+        skills_index_path=args.skills_index,
+        output_dir=args.output_dir,
+        condition=args.condition,
+        run_label=args.run_label,
+    )
+    print(
+        "Wrote agent loop traces to "
+        f"{args.output_dir}: {summary['agent_success_count']}/"
+        f"{summary['task_count']} succeeded"
+    )
+
+
+def _run_judge_agent_loop(args: argparse.Namespace) -> None:
+    summary = judge_agent_loop(
+        traces_path=args.traces,
+        output_dir=args.output_dir,
+        run_label=args.run_label,
+        backend=args.backend,
+    )
+    print(
+        "Wrote agent-loop judge artifacts to "
+        f"{args.output_dir}: {summary['judge_pass_count']}/"
+        f"{summary['task_count']} passed"
+    )
 
 
 def _run_analyze_failures(args: argparse.Namespace) -> None:

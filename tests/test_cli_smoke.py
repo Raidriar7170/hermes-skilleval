@@ -1176,6 +1176,88 @@ def test_cli_dashboard_reports_empty_runs_dir(tmp_path, capsys):
     assert "no dashboard runs found" in captured.err
 
 
+def test_cli_run_agent_loop_writes_trace_artifacts(tmp_path):
+    tasks = tmp_path / "tasks"
+    task_dir = tasks / "task-001"
+    task_dir.mkdir(parents=True)
+    (task_dir / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: task-001",
+                "category: migration",
+                "difficulty: easy",
+                "gold_skills:",
+                "  - systematic-debugging",
+                "negative_skills:",
+                "  - visual-regression-review",
+                "verifier: manual",
+                "split: test",
+                "robustness_tags:",
+                "  - migration-evaluation",
+                "migration_source: superpowers",
+                "expected_evidence:",
+                "  - final evidence noted",
+                "migration_dimensions:",
+                "  - evidence completeness",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (task_dir / "prompt.md").write_text("Debug and report evidence.", encoding="utf-8")
+    skills_index = tmp_path / "skills.json"
+    skills_index.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "systematic-debugging",
+                    "name": "Systematic Debugging",
+                    "path": "skill/SKILL.md",
+                    "category": "superpowers",
+                    "description": "Debug failures.",
+                    "body": "Debug with evidence.",
+                    "trigger_terms": ["debug"],
+                    "token_count_estimate": 8,
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    routes = tmp_path / "routes.jsonl"
+    routes.write_text(
+        json.dumps(
+            {
+                "task_id": "task-001",
+                "router": "hybrid",
+                "selected_skill_ids": ["systematic-debugging"],
+                "scores": {"systematic-debugging": 1.0},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "agent-loop"
+
+    result = main(
+        [
+            "run-agent-loop",
+            "--routes",
+            str(routes),
+            "--tasks",
+            str(tasks),
+            "--skills-index",
+            str(skills_index),
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "results.jsonl").exists()
+    assert (output_dir / "agent-traces.jsonl").exists()
+    assert (output_dir / "agent-loop-summary.json").exists()
+
+
 def test_cli_eval_rejects_non_positive_top_k_before_creating_output(tmp_path, capsys):
     index_path = tmp_path / "index" / "skills.json"
     run_dir = tmp_path / "run"
@@ -1211,6 +1293,50 @@ def test_cli_eval_rejects_non_positive_top_k_before_creating_output(tmp_path, ca
     assert "top-k" in captured.err
     assert not (run_dir / "results.jsonl").exists()
     assert not run_dir.exists()
+
+
+def test_cli_judge_agent_loop_writes_judge_artifacts(tmp_path):
+    traces = tmp_path / "agent-traces.jsonl"
+    traces.write_text(
+        json.dumps(
+            {
+                "trace_schema_version": "phase10.agent-loop.v1",
+                "trace_id": "agent-loop-hybrid:task-001",
+                "task_id": "task-001",
+                "prompt": "Verify the final evidence.",
+                "execution_condition": "routed-skill",
+                "source_router": "hybrid",
+                "selected_skill_ids": ["verification-before-completion"],
+                "agent_status": "passed",
+                "agent_success": True,
+                "expected_evidence": ["test command shown"],
+                "evidence_checks": [{"name": "test command shown", "satisfied": True}],
+                "failure_type": None,
+                "failure_reason": None,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "judge"
+
+    result = main(
+        [
+            "judge-agent-loop",
+            "--traces",
+            str(traces),
+            "--output-dir",
+            str(output_dir),
+            "--run-label",
+            "judge-agent-loop-hybrid",
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "judge-results.jsonl").exists()
+    assert (output_dir / "results.jsonl").exists()
+    assert (output_dir / "judge-summary.json").exists()
+    assert (output_dir / "judge-rubric.md").exists()
 
 
 def _rank_record(task_id, *, split, selected, scores, gold, negative):

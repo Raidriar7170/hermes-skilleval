@@ -1,0 +1,699 @@
+{
+  "artifact_type": "phase9-migration-summary",
+  "phase": "Phase 9",
+  "task_count": 12,
+  "skill_count": 16,
+  "migration_sources": [
+    "browser-gui",
+    "claude-code",
+    "codex",
+    "superpowers"
+  ],
+  "source_provenance": {
+    "browser-gui": "Browser GUI adapters derived from openai-bundled Browser, Chrome, and Computer Use skill guides.",
+    "claude-code": "Claude Code-style adapters derived from hermes/autonomous-ai-agents/claude-code/SKILL.md; not copied Anthropic runtime text.",
+    "codex": "Codex orchestrator adapters derived from .codex/AGENTS.md#codex-orchestrator-apply-protocol.",
+    "superpowers": "Adapters migrated from local Superpowers SKILL.md workflow files."
+  },
+  "metadata_policy": "migration_source, expected_evidence, and migration_dimensions are Phase 9 audit metadata read from task.yaml; current router result records do not score these fields.",
+  "environment_limitations": [
+    "Neural MiniLM and cross-encoder migration runs are documented as follow-up work; committed Phase 9 artifacts use offline deterministic routers."
+  ],
+  "failure_taxonomy": [
+    "routing_miss",
+    "tool_adaptation_failure",
+    "instruction_drift",
+    "evidence_gap"
+  ],
+  "router_metrics": {
+    "embedding-hashing": {
+      "task_count": 12,
+      "recall_at_5": 1.0,
+      "negative_hit_rate": 0.167
+    },
+    "gated-hashing-selective": {
+      "task_count": 12,
+      "recall_at_5": 0.0,
+      "negative_hit_rate": 0.0
+    },
+    "hybrid": {
+      "task_count": 12,
+      "recall_at_5": 1.0,
+      "negative_hit_rate": 0.25
+    }
+  },
+  "per_task_routes": [
+    {
+      "task_id": "browser-accessibility-audit",
+      "migration_source": "browser-gui",
+      "gold_skills": [
+        "accessibility-tree-inspection"
+      ],
+      "negative_skills": [
+        "using-git-worktrees"
+      ],
+      "expected_evidence": [
+        "roles inspected",
+        "accessible names checked",
+        "ambiguous target noted"
+      ],
+      "migration_dimensions": [
+        "accessibility semantics",
+        "robust GUI control"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "accessibility-tree-inspection",
+            "form-interaction-flow",
+            "browser-smoke-testing",
+            "visual-regression-review",
+            "workspace-git-hygiene"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "accessibility-tree-inspection",
+            "browser-smoke-testing",
+            "form-interaction-flow",
+            "visual-regression-review",
+            "workspace-git-hygiene"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "browser-form-regression",
+      "migration_source": "browser-gui",
+      "gold_skills": [
+        "form-interaction-flow"
+      ],
+      "negative_skills": [
+        "evidence-backed-final"
+      ],
+      "expected_evidence": [
+        "controls changed",
+        "submitted value",
+        "resulting state"
+      ],
+      "migration_dimensions": [
+        "interaction fidelity",
+        "state verification"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "browser-smoke-testing",
+            "visual-regression-review",
+            "form-interaction-flow",
+            "accessibility-tree-inspection",
+            "systematic-debugging"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "browser-smoke-testing",
+            "visual-regression-review",
+            "form-interaction-flow",
+            "accessibility-tree-inspection",
+            "systematic-debugging"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "browser-local-dashboard",
+      "migration_source": "browser-gui",
+      "gold_skills": [
+        "browser-smoke-testing",
+        "visual-regression-review"
+      ],
+      "negative_skills": [
+        "systematic-debugging"
+      ],
+      "expected_evidence": [
+        "opened URL",
+        "nonblank page",
+        "layout observation"
+      ],
+      "migration_dimensions": [
+        "GUI verification",
+        "visual evidence"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "browser-smoke-testing",
+            "visual-regression-review",
+            "mcp-tool-routing",
+            "accessibility-tree-inspection",
+            "apply-patch-discipline"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "browser-smoke-testing",
+            "visual-regression-review",
+            "form-interaction-flow",
+            "test-driven-development",
+            "systematic-debugging"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 1.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": true
+        }
+      }
+    },
+    {
+      "task_id": "claude-command-routing",
+      "migration_source": "claude-code",
+      "gold_skills": [
+        "slash-command-workflow"
+      ],
+      "negative_skills": [
+        "apply-patch-discipline"
+      ],
+      "expected_evidence": [
+        "command phase",
+        "required artifacts",
+        "next lifecycle step"
+      ],
+      "migration_dimensions": [
+        "command semantics",
+        "process ordering"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "slash-command-workflow",
+            "mcp-tool-routing",
+            "visual-regression-review",
+            "systematic-debugging",
+            "plan-mode"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "slash-command-workflow",
+            "apply-patch-discipline",
+            "subagent-worker-protocol",
+            "workspace-git-hygiene",
+            "evidence-backed-final"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 1.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": true
+        }
+      }
+    },
+    {
+      "task_id": "claude-mcp-selection",
+      "migration_source": "claude-code",
+      "gold_skills": [
+        "mcp-tool-routing",
+        "task-tool-delegation"
+      ],
+      "negative_skills": [
+        "accessibility-tree-inspection"
+      ],
+      "expected_evidence": [
+        "selected MCP tool",
+        "delegated boundary",
+        "verified output"
+      ],
+      "migration_dimensions": [
+        "tool routing",
+        "delegation fit"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "mcp-tool-routing",
+            "browser-smoke-testing",
+            "evidence-backed-final",
+            "task-tool-delegation",
+            "visual-regression-review"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "mcp-tool-routing",
+            "task-tool-delegation",
+            "browser-smoke-testing",
+            "visual-regression-review",
+            "systematic-debugging"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "claude-plan-to-tasks",
+      "migration_source": "claude-code",
+      "gold_skills": [
+        "plan-mode"
+      ],
+      "negative_skills": [
+        "verification-before-completion"
+      ],
+      "expected_evidence": [
+        "assumptions",
+        "implementation steps",
+        "validation plan"
+      ],
+      "migration_dimensions": [
+        "planning trigger",
+        "approval checkpoint"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "plan-mode",
+            "visual-regression-review",
+            "evidence-backed-final",
+            "subagent-worker-protocol",
+            "verification-before-completion"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 1.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": true
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "plan-mode",
+            "evidence-backed-final",
+            "subagent-worker-protocol",
+            "systematic-debugging",
+            "apply-patch-discipline"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "codex-git-hygiene",
+      "migration_source": "codex",
+      "gold_skills": [
+        "workspace-git-hygiene"
+      ],
+      "negative_skills": [
+        "browser-smoke-testing"
+      ],
+      "expected_evidence": [
+        "git status",
+        "branch name",
+        "no reverted user edits"
+      ],
+      "migration_dimensions": [
+        "shared-workspace safety",
+        "source-control discipline"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "workspace-git-hygiene",
+            "using-git-worktrees",
+            "subagent-worker-protocol",
+            "accessibility-tree-inspection",
+            "verification-before-completion"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "workspace-git-hygiene",
+            "using-git-worktrees",
+            "apply-patch-discipline",
+            "slash-command-workflow",
+            "accessibility-tree-inspection"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "codex-minimal-diff",
+      "migration_source": "codex",
+      "gold_skills": [
+        "apply-patch-discipline"
+      ],
+      "negative_skills": [
+        "slash-command-workflow"
+      ],
+      "expected_evidence": [
+        "focused patch",
+        "preserved surrounding code",
+        "no unrelated formatting churn"
+      ],
+      "migration_dimensions": [
+        "edit discipline",
+        "reviewability"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "apply-patch-discipline",
+            "test-driven-development",
+            "browser-smoke-testing",
+            "systematic-debugging",
+            "accessibility-tree-inspection"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "apply-patch-discipline",
+            "subagent-worker-protocol",
+            "using-git-worktrees",
+            "workspace-git-hygiene",
+            "mcp-tool-routing"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "codex-worker-handoff",
+      "migration_source": "codex",
+      "gold_skills": [
+        "subagent-worker-protocol",
+        "evidence-backed-final"
+      ],
+      "negative_skills": [
+        "task-tool-delegation"
+      ],
+      "expected_evidence": [
+        "pre-edit checks",
+        "changed files",
+        "validation results"
+      ],
+      "migration_dimensions": [
+        "agent role preservation",
+        "handoff completeness"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "subagent-worker-protocol",
+            "evidence-backed-final",
+            "systematic-debugging",
+            "slash-command-workflow",
+            "visual-regression-review"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "subagent-worker-protocol",
+            "evidence-backed-final",
+            "using-git-worktrees",
+            "apply-patch-discipline",
+            "workspace-git-hygiene"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "sp-debug-red-green",
+      "migration_source": "superpowers",
+      "gold_skills": [
+        "systematic-debugging",
+        "test-driven-development"
+      ],
+      "negative_skills": [
+        "visual-regression-review"
+      ],
+      "expected_evidence": [
+        "failing test output",
+        "root cause note",
+        "passing targeted validation"
+      ],
+      "migration_dimensions": [
+        "trigger preservation",
+        "evidence discipline"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "test-driven-development",
+            "systematic-debugging",
+            "visual-regression-review",
+            "browser-smoke-testing",
+            "slash-command-workflow"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 1.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": true
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "test-driven-development",
+            "systematic-debugging",
+            "visual-regression-review",
+            "browser-smoke-testing",
+            "mcp-tool-routing"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 1.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": true
+        }
+      }
+    },
+    {
+      "task_id": "sp-isolated-worktree",
+      "migration_source": "superpowers",
+      "gold_skills": [
+        "using-git-worktrees"
+      ],
+      "negative_skills": [
+        "form-interaction-flow"
+      ],
+      "expected_evidence": [
+        "worktree path",
+        "branch status",
+        "scoped changed files"
+      ],
+      "migration_dimensions": [
+        "workspace isolation",
+        "concurrent-agent safety"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "using-git-worktrees",
+            "workspace-git-hygiene",
+            "accessibility-tree-inspection",
+            "browser-smoke-testing",
+            "task-tool-delegation"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "using-git-worktrees",
+            "workspace-git-hygiene",
+            "subagent-worker-protocol",
+            "evidence-backed-final",
+            "apply-patch-discipline"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    },
+    {
+      "task_id": "sp-verify-before-claim",
+      "migration_source": "superpowers",
+      "gold_skills": [
+        "verification-before-completion"
+      ],
+      "negative_skills": [
+        "plan-mode"
+      ],
+      "expected_evidence": [
+        "exact validation command",
+        "output status",
+        "remaining risk"
+      ],
+      "migration_dimensions": [
+        "claim gating",
+        "auditability"
+      ],
+      "routers": {
+        "embedding-hashing": {
+          "selected_skill_ids": [
+            "verification-before-completion",
+            "systematic-debugging",
+            "test-driven-development",
+            "slash-command-workflow",
+            "mcp-tool-routing"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        },
+        "gated-hashing-selective": {
+          "selected_skill_ids": [],
+          "recall_at_5": 0.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": false,
+          "negative_hit_at_5": false
+        },
+        "hybrid": {
+          "selected_skill_ids": [
+            "verification-before-completion",
+            "systematic-debugging",
+            "evidence-backed-final",
+            "subagent-worker-protocol",
+            "test-driven-development"
+          ],
+          "recall_at_5": 1.0,
+          "negative_hit_rate": 0.0,
+          "gold_hit_at_5": true,
+          "negative_hit_at_5": false
+        }
+      }
+    }
+  ]
+}

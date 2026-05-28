@@ -7,7 +7,7 @@ larger corpus.
 
 ## Goal
 
-Measure whether Hermes SkillEval can route, compare, and diagnose skills copied
+Measure whether Hermes SkillEval can route, compare, and diagnose skills adapted
 from real agent ecosystems instead of only evaluating generated Hermes-style
 skills.
 
@@ -19,12 +19,16 @@ The first migration set should include four families:
 |---|---:|---|
 | Superpowers skills | 4-6 skills | Process-heavy workflows such as TDD, debugging, verification, and planning |
 | Codex skills | 4-6 skills | Codex-native workflows with local repo, browser, document, spreadsheet, or presentation assumptions |
-| Claude Code style skills | 4-6 skills | Skills written around Claude Code conventions, command names, and tool affordances |
+| Claude Code style skills | 4-6 skills | Adapter skills written around Claude Code conventions, command names, and tool affordances, with provenance pointing to the actual guide used |
 | browser-use-vision / gui-agent-benchmark skills | 4-6 skills | GUI-agent and browser-automation workflows with visual evidence requirements |
 
-Each imported skill should preserve its original text plus a small migration
-metadata block that records source, original path, migration date, and any
-adapter notes.
+Each imported skill should preserve source identity plus a public-safe source
+snapshot and a small migration metadata block that records source, original
+path, migration date, and any adapter notes. Full local source text can be kept
+outside the public corpus when licensing or publication risk is unclear.
+If a family is an ecosystem-style adapter rather than a direct upstream copy,
+its metadata must say so explicitly and point `original_path` to the real guide
+or source document used for the adaptation.
 
 ## Task Set
 
@@ -54,6 +58,13 @@ Evaluate every run with both routing metrics and migration-specific checks:
 | failure recoverability | Whether the agent can identify and recover from a wrong or incomplete skill choice |
 | evidence completeness | Whether the run preserves commands, screenshots, summaries, and artifact paths needed for review |
 
+For the first offline Phase 9 round, these dimensions are preserved as audit
+metadata rather than scored as execution metrics. The committed router records
+measure routing only; `migration-summary.json` carries each task's expected
+evidence and migration dimensions beside selected skills, gold hits, and
+negative hits. First-class dimension scoring belongs in the later runtime
+adapter experiment, where the harness can inspect actual execution traces.
+
 ## Run Matrix
 
 Run the same 10-20 tasks against at least three router configurations:
@@ -68,12 +79,16 @@ If optional neural dependencies are unavailable, keep the hybrid-only output and
 record the missing backend as an environment limitation rather than deleting the
 task set.
 
+The committed offline Phase 9 artifact uses `hybrid`, `embedding-hashing`, and
+`gated-hashing-selective` as a Mac-local substitution for the neural rows above.
+MiniLM and calibrated cross-encoder migration runs remain follow-up work.
+
 ## Required Artifacts
 
 Each migration round should produce:
 
 - `summary JSON` with per-task route, selected skill, gold/negative hit, and
-  migration dimension scores.
+  the migration dimensions carried as audit metadata.
 - `failure taxonomy` separating routing misses, tool-adapter failures,
   instruction drift, evidence gaps, and irrecoverable environment failures.
 - `dashboard comparison` generated through `skilleval dashboard` so migrated
@@ -90,4 +105,5 @@ The first migration experiment is successful when:
 - all run artifacts are committed or deliberately excluded with a documented
   reason,
 - dashboard provenance names the migrated skill source and run folders,
-- failures are classified by migration dimension, not only by aggregate metric.
+- failures are classified by the migration failure taxonomy and retain task
+  migration dimensions as audit context, not only by aggregate metric.

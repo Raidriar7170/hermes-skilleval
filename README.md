@@ -58,7 +58,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 164 |
+| Test cases | 185 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -163,7 +163,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 164 pytest cases
+├── tests/                              # 185 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -259,6 +259,33 @@ skilleval calibrate-cross-encoder \
   --max-selection-rate-at-5 0.3
 ```
 
+### 7. Run Agent-in-the-loop Migration Evaluation
+
+```bash
+skilleval run-agent-loop \
+  --routes docs/demo/phase9-real-skill-library-migration/hybrid/results.jsonl \
+  --tasks benchmarks/migration-tasks \
+  --skills-index docs/demo/phase9-real-skill-library-migration/skills.json \
+  --condition routed-skill \
+  --output-dir runs/phase10-agent-loop/hybrid
+```
+
+The command writes dashboard-compatible `results.jsonl`,
+`agent-traces.jsonl`, `agent-loop-summary.json`, and `report.md` artifacts.
+Use `--condition no-skill` and `--condition oracle-skill` for the control runs.
+
+### 8. Judge Agent-loop Evidence
+
+```bash
+skilleval judge-agent-loop \
+  --traces docs/demo/phase10-agent-in-the-loop/agent-loop-hybrid/agent-traces.jsonl \
+  --output-dir runs/phase11-evidence-judge/hybrid \
+  --run-label judge-agent-loop-hybrid
+```
+
+The committed Phase 11 judge uses an offline `deterministic-rubric`; it does
+not require API keys, network access, or live LLM judging.
+
 ### Static Dashboard
 
 ```bash
@@ -273,7 +300,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 7. Run Tests
+### 9. Run Tests
 
 ```bash
 pytest -q
@@ -282,7 +309,7 @@ pytest -q
 Expected:
 
 ```text
-164 passed
+185 passed
 ```
 
 ---
@@ -303,6 +330,9 @@ Expected:
 | Phase 7A | A100 cross-encoder reranker | [`docs/phase7a.md`](docs/phase7a.md) |
 | Phase 7B | Cross-encoder acceptance calibration | [`docs/phase7b.md`](docs/phase7b.md) |
 | Phase 8 | Static failure inspection dashboard | [`docs/phase8.md`](docs/phase8.md) |
+| Phase 9 | Real skill-library migration evaluation | [`docs/phase9.md`](docs/phase9.md) |
+| Phase 10 | Agent-in-the-loop migration evaluation | [`docs/phase10.md`](docs/phase10.md) |
+| Phase 11 | Evidence judge calibration | [`docs/phase11.md`](docs/phase11.md) |
 
 ---
 
@@ -364,7 +394,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 164 unit and smoke tests |
+| Testing | pytest | 185 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -380,8 +410,12 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 - [x] Cross-encoder reranker deployed on a single idle A100
 - [x] Calibrated cross-encoder acceptance thresholds
 - [x] Web dashboard for interactive failure inspection
-- [ ] Real skill-library migration test protocol
-      ([docs](docs/skill-library-migration-protocol.md))
+- [x] Real skill-library migration test protocol
+      ([docs](docs/phase9.md), [protocol](docs/skill-library-migration-protocol.md))
+- [x] Agent-in-the-loop skill routing evaluation
+      ([docs](docs/phase10.md), [demo](docs/demo/phase10-agent-in-the-loop/dashboard.html))
+- [x] Evidence judge calibration for agent-loop traces
+      ([docs](docs/phase11.md), [demo](docs/demo/phase11-evidence-judge-calibration/dashboard.html))
 - [ ] Learned skill metadata patch ranking
 - [ ] Fine-tuned embedding router for domain-specific skill libraries
 
@@ -408,7 +442,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 164 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 185 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and
 >   resume-ready experiment documentation.
 >

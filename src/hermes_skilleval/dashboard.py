@@ -27,6 +27,11 @@ SUMMARY_FIELDS = (
     "selection_rate_at_5",
     "latency_ms",
 )
+OPTIONAL_SUMMARY_FIELDS = (
+    "judge_score",
+    "evidence_score",
+    "judge_pass_rate",
+)
 REQUIRED_FIELDS = {
     "task_id",
     "router",
@@ -97,6 +102,8 @@ class DashboardProvenance:
     task_records: int
     run_labels: list[str]
     task_summary: str
+    metric_note: str | None = None
+    migrated_sources: list[str] | None = None
     git_commit: str | None = None
 
     def to_json_dict(self) -> dict[str, Any]:
@@ -108,6 +115,10 @@ class DashboardProvenance:
             "run_labels": self.run_labels,
             "task_summary": self.task_summary,
         }
+        if self.metric_note:
+            data["metric_note"] = self.metric_note
+        if self.migrated_sources:
+            data["migrated_sources"] = self.migrated_sources
         if self.git_commit:
             data["git_commit"] = self.git_commit
         return data
@@ -273,6 +284,10 @@ def _render_provenance_html(payload: DashboardPayload) -> str:
         ("Generated at", payload.generated_at),
         ("Input runs", ", ".join(provenance.run_labels)),
     ]
+    if provenance.metric_note:
+        rows.insert(3, ("Metric note", provenance.metric_note))
+    if provenance.migrated_sources:
+        rows.insert(1, ("Migrated sources", ", ".join(provenance.migrated_sources)))
     if provenance.git_commit:
         rows.append(("Git commit", provenance.git_commit))
 
@@ -699,8 +714,47 @@ def _build_provenance(
         task_records=unique_task_count,
         task_summary=task_summary,
         run_labels=[run.label for run in runs],
+        metric_note=_metric_note(records),
+        migrated_sources=_migration_sources(root),
         git_commit=_git_commit(root),
     )
+
+
+def _metric_note(records: list[DashboardRecord]) -> str | None:
+    has_judge_metrics = any(
+        "judge_score" in record.metrics
+        or "evidence_score" in record.metrics
+        or "judge_pass_rate" in record.metrics
+        for record in records
+    )
+    if not has_judge_metrics:
+        return None
+    return (
+        "Phase 11 judge proxy metrics: Recall and Negative fields in judge runs "
+        "are dashboard-compatible proxies; use judge_score, evidence_score, "
+        "and judge_pass_rate for evidence judge calibration."
+    )
+
+
+def _migration_sources(root: Path) -> list[str] | None:
+    summary_path = root / "migration-summary.json"
+    if not summary_path.exists():
+        return None
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    raw_sources = summary.get("migration_sources")
+    if not isinstance(raw_sources, list):
+        return None
+    sources = sorted(
+        {
+            source
+            for source in raw_sources
+            if isinstance(source, str) and source.strip()
+        }
+    )
+    return sources or None
 
 
 def _git_commit(root: Path) -> str | None:
@@ -810,7 +864,7 @@ def _record_metrics(
     path: Path,
     line_number: int,
 ) -> dict[str, float]:
-    return {
+    metrics = {
         "recall_at_5": _metric_or(
             record, "recall_at_5", recall_at_k(selected, gold, 5), path, line_number
         ),
@@ -839,6 +893,10 @@ def _record_metrics(
         ),
         "latency_ms": _metric_or(record, "latency_ms", 0.0, path, line_number),
     }
+    for field in OPTIONAL_SUMMARY_FIELDS:
+        if field in record:
+            metrics[field] = _metric_or(record, field, 0.0, path, line_number)
+    return metrics
 
 
 def _metric_or(
@@ -887,9 +945,22 @@ def _score_ranking(record: dict[str, Any]) -> list[dict[str, float | str]]:
 
 
 def _mean_summary_metrics(rows: list[dict[str, float]]) -> dict[str, float]:
+    fields = list(SUMMARY_FIELDS) + sorted(
+        {
+            field
+            for row in rows
+            for field in row
+            if field not in SUMMARY_FIELDS
+        }
+    )
     return {
-        field: round(sum(row[field] for row in rows) / len(rows), 6)
-        for field in SUMMARY_FIELDS
+        field: round(
+            sum(row[field] for row in rows if field in row)
+            / sum(1 for row in rows if field in row),
+            6,
+        )
+        for field in fields
+        if any(field in row for row in rows)
     }
 
 

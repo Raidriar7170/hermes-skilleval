@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes SkillEval Dashboard</title>
+  <style>
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --text: #20242c;
+  --muted: #667085;
+  --line: #d9dee7;
+  --accent: #2563eb;
+  --ok: #0f766e;
+  --warn: #b45309;
+  --bad: #b91c1c;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0; }
+p { margin: 0; }
+#sourceLine { margin-top: 2px; color: var(--muted); font-size: 12px; }
+#searchInput {
+  width: min(420px, 42vw);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  background: #fff;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 220px minmax(520px, 1fr) 320px;
+  grid-template-areas:
+    "metrics metrics metrics"
+    "provenance provenance provenance"
+    "filters table inspector";
+  gap: 12px;
+  padding: 12px;
+}
+.metric-strip {
+  grid-area: metrics;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.provenance {
+  grid-area: provenance;
+  padding: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+.provenance h2 { margin: 0 0 8px; font-size: 14px; }
+.provenance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 14px;
+}
+.provenance-item { min-width: 0; }
+.provenance-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.provenance-value {
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+.metric, .filters, .table-panel, .inspector {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.metric { padding: 10px 12px; }
+.metric .label, .filter-title, .field-label { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+.metric .value { margin-top: 3px; font-size: 20px; font-weight: 700; }
+.filters {
+  grid-area: filters;
+  align-self: start;
+  padding: 10px;
+}
+.filter-group { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+.filter-group:last-child { margin-bottom: 0; border-bottom: 0; }
+.filter-title { margin-bottom: 6px; font-weight: 700; }
+label.check {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  padding: 3px 0;
+  color: #344054;
+}
+input[type="checkbox"] { margin: 0; }
+.table-panel {
+  grid-area: table;
+  min-width: 0;
+  overflow: auto;
+}
+.table-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+table { width: 100%; border-collapse: collapse; }
+th, td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #edf0f4;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+th {
+  position: sticky;
+  top: 0;
+  background: #fbfcfe;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: default;
+}
+th[data-sort] { cursor: pointer; }
+tr { cursor: pointer; }
+tr:hover, tr.selected { background: #eef5ff; }
+.num { font-variant-numeric: tabular-nums; }
+.pill {
+  display: inline-block;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 6px;
+  margin: 0 4px 4px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9fafb;
+  vertical-align: top;
+}
+.tag { border-color: #fed7aa; background: #fff7ed; color: var(--warn); }
+.tag.bad { border-color: #fecaca; background: #fff1f2; color: var(--bad); }
+.inspector {
+  grid-area: inspector;
+  align-self: start;
+  max-height: calc(100vh - 130px);
+  overflow: auto;
+  padding: 12px;
+}
+.inspector h2 { margin: 0 0 10px; font-size: 16px; }
+.field { margin-bottom: 11px; }
+.field-value { margin-top: 3px; overflow-wrap: anywhere; }
+pre {
+  overflow: auto;
+  padding: 8px;
+  border-radius: 6px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 12px;
+}
+.empty { color: var(--muted); padding: 18px; text-align: center; }
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "metrics" "provenance" "filters" "table" "inspector";
+  }
+  #searchInput { width: 100%; }
+  .topbar { align-items: stretch; flex-direction: column; }
+  .inspector { max-height: none; }
+}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Hermes SkillEval Dashboard</h1>
+      <p id="sourceLine"></p>
+    </div>
+    <input id="searchInput" type="search" aria-label="Search task, router, skill, category">
+  </header>
+  <main class="layout">
+    <section class="metric-strip" id="metricStrip"></section>
+        <section class="provenance" aria-labelledby="provenanceTitle">
+      <h2 id="provenanceTitle">Data provenance</h2>
+      <div class="provenance-grid">
+      <div class="provenance-item"><div class="provenance-label">Data source</div><div class="provenance-value">docs/demo/phase11-evidence-judge-calibration</div></div>
+      <div class="provenance-item"><div class="provenance-label">Generated from</div><div class="provenance-value">3 test-split runs</div></div>
+      <div class="provenance-item"><div class="provenance-label">Tasks</div><div class="provenance-value">12 held-out test records</div></div>
+      <div class="provenance-item"><div class="provenance-label">Metric note</div><div class="provenance-value">Phase 11 judge proxy metrics: Recall and Negative fields in judge runs are dashboard-compatible proxies; use judge_score, evidence_score, and judge_pass_rate for evidence judge calibration.</div></div>
+      <div class="provenance-item"><div class="provenance-label">Generated by</div><div class="provenance-value">skilleval dashboard</div></div>
+      <div class="provenance-item"><div class="provenance-label">Generated at</div><div class="provenance-value">2026-05-28T14:36:55+00:00</div></div>
+      <div class="provenance-item"><div class="provenance-label">Input runs</div><div class="provenance-value">judge-agent-loop-hybrid, judge-agent-loop-no-skill-hybrid, judge-agent-loop-oracle-skill-hybrid</div></div>
+      <div class="provenance-item"><div class="provenance-label">Git commit</div><div class="provenance-value">9e42985</div></div>
+      </div>
+    </section>
+    <aside class="filters" id="filters"></aside>
+    <section class="table-panel">
+      <div class="table-meta" id="tableMeta"></div>
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="run">Run</th>
+            <th data-sort="task_id">Task</th>
+            <th data-sort="split">Split</th>
+            <th data-sort="category">Category</th>
+            <th data-sort="difficulty">Difficulty</th>
+            <th data-sort="recall_at_5">Recall@5</th>
+            <th data-sort="negative_hit_rate">Neg Hit</th>
+            <th data-sort="abstention_rate">Abstain</th>
+            <th>Selected</th>
+            <th>Tags</th>
+          </tr>
+        </thead>
+        <tbody id="recordRows"></tbody>
+      </table>
+    </section>
+    <aside class="inspector" id="inspector"></aside>
+  </main>
+  <script>window.__SKILLEVAL_DASHBOARD__ = {"filters": {"categories": ["agent-loop-judge"], "difficulties": [], "failure_tags": ["abstained", "low-selection", "recall-miss"], "runs": ["judge-agent-loop-hybrid", "judge-agent-loop-no-skill-hybrid", "judge-agent-loop-oracle-skill-hybrid"], "splits": ["test"]}, "generated_at": "2026-05-28T14:36:55+00:00", "provenance": {"data_source": "docs/demo/phase11-evidence-judge-calibration", "generated_by": "skilleval dashboard", "generated_from": "3 test-split runs", "git_commit": "9e42985", "metric_note": "Phase 11 judge proxy metrics: Recall and Negative fields in judge runs are dashboard-compatible proxies; use judge_score, evidence_score, and judge_pass_rate for evidence judge calibration.", "run_labels": ["judge-agent-loop-hybrid", "judge-agent-loop-no-skill-hybrid", "judge-agent-loop-oracle-skill-hybrid"], "task_records": 12, "task_summary": "12 held-out test records"}, "records": [{"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["accessibility-tree-inspection", "browser-smoke-testing", "form-interaction-flow", "visual-regression-review", "workspace-git-hygiene"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "Inspect a web page's accessibility tree, identify controls by role and accessible name, and flag any important unlabeled interaction targets.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["accessibility-tree-inspection", "browser-smoke-testing", "form-interaction-flow", "visual-regression-review", "workspace-git-hygiene"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Inspect a web page's accessibility tree, identify controls by role and accessible name, and flag any important unlabeled interaction targets.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["accessibility-tree-inspection", "browser-smoke-testing", "form-interaction-flow", "visual-regression-review", "workspace-git-hygiene"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "browser-accessibility-audit"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["accessibility-tree-inspection", "browser-smoke-testing", "form-interaction-flow", "visual-regression-review", "workspace-git-hygiene"], "split": "test", "task_id": "browser-accessibility-audit"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["browser-smoke-testing", "visual-regression-review", "form-interaction-flow", "accessibility-tree-inspection", "systematic-debugging"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "Use a browser to fill in a settings form, submit it, and verify that the page displays the expected validation result.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["browser-smoke-testing", "visual-regression-review", "form-interaction-flow", "accessibility-tree-inspection", "systematic-debugging"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Use a browser to fill in a settings form, submit it, and verify that the page displays the expected validation result.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["browser-smoke-testing", "visual-regression-review", "form-interaction-flow", "accessibility-tree-inspection", "systematic-debugging"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "browser-form-regression"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["browser-smoke-testing", "visual-regression-review", "form-interaction-flow", "accessibility-tree-inspection", "systematic-debugging"], "split": "test", "task_id": "browser-form-regression"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss"], "gold_skills": [], "metrics": {"abstention_rate": 0.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "After a static HTML report is regenerated, open it through the available browser surface, confirm the page is not blank, exercise one filter or table interaction, and note any visible layout regression before handing it to a reviewer.", "raw": {"abstention_rate": 0.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "routed-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "negative-skill-failure", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "After a static HTML report is regenerated, open it through the available browser surface, confirm the page is not blank, exercise one filter or table interaction, and note any visible layout regression before handing it to a reviewer.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["browser-smoke-testing", "visual-regression-review", "form-interaction-flow", "test-driven-development", "systematic-debugging"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "browser-local-dashboard"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["browser-smoke-testing", "visual-regression-review", "form-interaction-flow", "test-driven-development", "systematic-debugging"], "split": "test", "task_id": "browser-local-dashboard"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss"], "gold_skills": [], "metrics": {"abstention_rate": 0.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "The user invokes /opsx:apply for an approved change. Follow the command workflow and avoid creating a parallel implementation plan.", "raw": {"abstention_rate": 0.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "routed-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "negative-skill-failure", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "The user invokes /opsx:apply for an approved change. Follow the command workflow and avoid creating a parallel implementation plan.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["slash-command-workflow", "apply-patch-discipline", "subagent-worker-protocol", "workspace-git-hygiene", "evidence-backed-final"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "claude-command-routing"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["slash-command-workflow", "apply-patch-discipline", "subagent-worker-protocol", "workspace-git-hygiene", "evidence-backed-final"], "split": "test", "task_id": "claude-command-routing"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["mcp-tool-routing", "task-tool-delegation", "browser-smoke-testing", "visual-regression-review", "systematic-debugging"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "One teammate needs local browser evidence while another can inspect repository files. Delegate the independent pieces to the correct tool surfaces, keep their write scopes separate, and integrate only the findings needed for the final answer.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["mcp-tool-routing", "task-tool-delegation", "browser-smoke-testing", "visual-regression-review", "systematic-debugging"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "One teammate needs local browser evidence while another can inspect repository files. Delegate the independent pieces to the correct tool surfaces, keep their write scopes separate, and integrate only the findings needed for the final answer.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["mcp-tool-routing", "task-tool-delegation", "browser-smoke-testing", "visual-regression-review", "systematic-debugging"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "claude-mcp-selection"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["mcp-tool-routing", "task-tool-delegation", "browser-smoke-testing", "visual-regression-review", "systematic-debugging"], "split": "test", "task_id": "claude-mcp-selection"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["plan-mode", "evidence-backed-final", "subagent-worker-protocol", "systematic-debugging", "apply-patch-discipline"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "A broad refactor request lacks acceptance criteria. Clarify the scope and produce a plan with files, steps, and validation before editing.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["plan-mode", "evidence-backed-final", "subagent-worker-protocol", "systematic-debugging", "apply-patch-discipline"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "A broad refactor request lacks acceptance criteria. Clarify the scope and produce a plan with files, steps, and validation before editing.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["plan-mode", "evidence-backed-final", "subagent-worker-protocol", "systematic-debugging", "apply-patch-discipline"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "claude-plan-to-tasks"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["plan-mode", "evidence-backed-final", "subagent-worker-protocol", "systematic-debugging", "apply-patch-discipline"], "split": "test", "task_id": "claude-plan-to-tasks"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["workspace-git-hygiene", "using-git-worktrees", "apply-patch-discipline", "slash-command-workflow", "accessibility-tree-inspection"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "You find uncommitted files that you did not edit. Inspect status, continue around unrelated changes, and do not use destructive git commands.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["workspace-git-hygiene", "using-git-worktrees", "apply-patch-discipline", "slash-command-workflow", "accessibility-tree-inspection"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "You find uncommitted files that you did not edit. Inspect status, continue around unrelated changes, and do not use destructive git commands.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["workspace-git-hygiene", "using-git-worktrees", "apply-patch-discipline", "slash-command-workflow", "accessibility-tree-inspection"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "codex-git-hygiene"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["workspace-git-hygiene", "using-git-worktrees", "apply-patch-discipline", "slash-command-workflow", "accessibility-tree-inspection"], "split": "test", "task_id": "codex-git-hygiene"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["apply-patch-discipline", "subagent-worker-protocol", "using-git-worktrees", "workspace-git-hygiene", "mcp-tool-routing"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "A repository has user-owned edits in neighboring files. Change the requested parser branch only, keep the patch reviewable, and avoid broad formatting or cleanup outside the owned file.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["apply-patch-discipline", "subagent-worker-protocol", "using-git-worktrees", "workspace-git-hygiene", "mcp-tool-routing"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "A repository has user-owned edits in neighboring files. Change the requested parser branch only, keep the patch reviewable, and avoid broad formatting or cleanup outside the owned file.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["apply-patch-discipline", "subagent-worker-protocol", "using-git-worktrees", "workspace-git-hygiene", "mcp-tool-routing"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "codex-minimal-diff"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["apply-patch-discipline", "subagent-worker-protocol", "using-git-worktrees", "workspace-git-hygiene", "mcp-tool-routing"], "split": "test", "task_id": "codex-minimal-diff"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["subagent-worker-protocol", "evidence-backed-final", "using-git-worktrees", "apply-patch-discipline", "workspace-git-hygiene"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "Act as the Worker for a scoped implementation task: run repository checks, make only owned edits, validate, and summarize changed files, commands, and remaining risks.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["subagent-worker-protocol", "evidence-backed-final", "using-git-worktrees", "apply-patch-discipline", "workspace-git-hygiene"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Act as the Worker for a scoped implementation task: run repository checks, make only owned edits, validate, and summarize changed files, commands, and remaining risks.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["subagent-worker-protocol", "evidence-backed-final", "using-git-worktrees", "apply-patch-discipline", "workspace-git-hygiene"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "codex-worker-handoff"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["subagent-worker-protocol", "evidence-backed-final", "using-git-worktrees", "apply-patch-discipline", "workspace-git-hygiene"], "split": "test", "task_id": "codex-worker-handoff"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss"], "gold_skills": [], "metrics": {"abstention_rate": 0.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "A regression test fails after a parser refactor. Reproduce the failing test, identify the root cause, add the smallest regression coverage, and implement the minimal fix.", "raw": {"abstention_rate": 0.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "routed-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "negative-skill-failure", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "A regression test fails after a parser refactor. Reproduce the failing test, identify the root cause, add the smallest regression coverage, and implement the minimal fix.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["test-driven-development", "systematic-debugging", "visual-regression-review", "browser-smoke-testing", "mcp-tool-routing"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "sp-debug-red-green"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["test-driven-development", "systematic-debugging", "visual-regression-review", "browser-smoke-testing", "mcp-tool-routing"], "split": "test", "task_id": "sp-debug-red-green"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["using-git-worktrees", "workspace-git-hygiene", "subagent-worker-protocol", "evidence-backed-final", "apply-patch-discipline"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "Start feature work in an isolated git worktree, confirm the current path and branch, and keep the implementation separate from another agent's edits.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["using-git-worktrees", "workspace-git-hygiene", "subagent-worker-protocol", "evidence-backed-final", "apply-patch-discipline"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Start feature work in an isolated git worktree, confirm the current path and branch, and keep the implementation separate from another agent's edits.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["using-git-worktrees", "workspace-git-hygiene", "subagent-worker-protocol", "evidence-backed-final", "apply-patch-discipline"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "sp-isolated-worktree"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["using-git-worktrees", "workspace-git-hygiene", "subagent-worker-protocol", "evidence-backed-final", "apply-patch-discipline"], "split": "test", "task_id": "sp-isolated-worktree"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": [], "gold_skills": ["verification-before-completion", "systematic-debugging", "evidence-backed-final", "subagent-worker-protocol", "test-driven-development"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 1.0}, "negative_skills": [], "prompt": "The implementation looks complete, but no fresh command has been run in this turn. Identify the proof command, execute it, read the result, and only then decide what status can honestly be reported.", "raw": {"abstention_rate": 0.0, "accepted_count": 5, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "routed-skill", "gold_skills": ["verification-before-completion", "systematic-debugging", "evidence-backed-final", "subagent-worker-protocol", "test-driven-development"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "The implementation looks complete, but no fresh command has been run in this turn. Identify the proof command, execute it, read the result, and only then decide what status can honestly be reported.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-hybrid", "selected_skill_ids": ["verification-before-completion", "systematic-debugging", "evidence-backed-final", "subagent-worker-protocol", "test-driven-development"], "selection_rate_at_5": 1.0, "split": "test", "task_id": "sp-verify-before-claim"}, "router": "judge-agent-loop-hybrid", "run": "judge-agent-loop-hybrid", "score_ranking": [], "selected_skill_ids": ["verification-before-completion", "systematic-debugging", "evidence-backed-final", "subagent-worker-protocol", "test-driven-development"], "split": "test", "task_id": "sp-verify-before-claim"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "Inspect a web page's accessibility tree, identify controls by role and accessible name, and flag any important unlabeled interaction targets.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "Inspect a web page's accessibility tree, identify controls by role and accessible name, and flag any important unlabeled interaction targets.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "browser-accessibility-audit"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "browser-accessibility-audit"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "Use a browser to fill in a settings form, submit it, and verify that the page displays the expected validation result.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "Use a browser to fill in a settings form, submit it, and verify that the page displays the expected validation result.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "browser-form-regression"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "browser-form-regression"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "After a static HTML report is regenerated, open it through the available browser surface, confirm the page is not blank, exercise one filter or table interaction, and note any visible layout regression before handing it to a reviewer.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "After a static HTML report is regenerated, open it through the available browser surface, confirm the page is not blank, exercise one filter or table interaction, and note any visible layout regression before handing it to a reviewer.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "browser-local-dashboard"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "browser-local-dashboard"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "The user invokes /opsx:apply for an approved change. Follow the command workflow and avoid creating a parallel implementation plan.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "The user invokes /opsx:apply for an approved change. Follow the command workflow and avoid creating a parallel implementation plan.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "claude-command-routing"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "claude-command-routing"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "One teammate needs local browser evidence while another can inspect repository files. Delegate the independent pieces to the correct tool surfaces, keep their write scopes separate, and integrate only the findings needed for the final answer.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "One teammate needs local browser evidence while another can inspect repository files. Delegate the independent pieces to the correct tool surfaces, keep their write scopes separate, and integrate only the findings needed for the final answer.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "claude-mcp-selection"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "claude-mcp-selection"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "A broad refactor request lacks acceptance criteria. Clarify the scope and produce a plan with files, steps, and validation before editing.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "A broad refactor request lacks acceptance criteria. Clarify the scope and produce a plan with files, steps, and validation before editing.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "claude-plan-to-tasks"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "claude-plan-to-tasks"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "You find uncommitted files that you did not edit. Inspect status, continue around unrelated changes, and do not use destructive git commands.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "You find uncommitted files that you did not edit. Inspect status, continue around unrelated changes, and do not use destructive git commands.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "codex-git-hygiene"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "codex-git-hygiene"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "A repository has user-owned edits in neighboring files. Change the requested parser branch only, keep the patch reviewable, and avoid broad formatting or cleanup outside the owned file.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "A repository has user-owned edits in neighboring files. Change the requested parser branch only, keep the patch reviewable, and avoid broad formatting or cleanup outside the owned file.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "codex-minimal-diff"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "codex-minimal-diff"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "Act as the Worker for a scoped implementation task: run repository checks, make only owned edits, validate, and summarize changed files, commands, and remaining risks.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "Act as the Worker for a scoped implementation task: run repository checks, make only owned edits, validate, and summarize changed files, commands, and remaining risks.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "codex-worker-handoff"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "codex-worker-handoff"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "A regression test fails after a parser refactor. Reproduce the failing test, identify the root cause, add the smallest regression coverage, and implement the minimal fix.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "A regression test fails after a parser refactor. Reproduce the failing test, identify the root cause, add the smallest regression coverage, and implement the minimal fix.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "sp-debug-red-green"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "sp-debug-red-green"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "Start feature work in an isolated git worktree, confirm the current path and branch, and keep the implementation separate from another agent's edits.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "Start feature work in an isolated git worktree, confirm the current path and branch, and keep the implementation separate from another agent's edits.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "sp-isolated-worktree"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "sp-isolated-worktree"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["recall-miss", "abstained", "low-selection"], "gold_skills": [], "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "negative_skills": [], "prompt": "The implementation looks complete, but no fresh command has been run in this turn. Identify the proof command, execute it, read the result, and only then decide what status can honestly be reported.", "raw": {"abstention_rate": 1.0, "accepted_count": 0, "accepted_recall_at_5": 0.0, "category": "agent-loop-judge", "coverage": 0.0, "difficulty": "", "evidence_score": 0.0, "execution_condition": "no-skill", "gold_skills": [], "judge_pass_rate": 0.0, "judge_score": 0.0, "judge_status": "failed", "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": ["missing-evidence", "agent-loop-failed"], "precision_at_5": 0.0, "prompt": "The implementation looks complete, but no fresh command has been run in this turn. Identify the proof command, execute it, read the result, and only then decide what status can honestly be reported.", "recall_at_1": 0.0, "recall_at_3": 0.0, "recall_at_5": 0.0, "router": "judge-agent-loop-no-skill-hybrid", "selected_skill_ids": [], "selection_rate_at_5": 0.0, "split": "test", "task_id": "sp-verify-before-claim"}, "router": "judge-agent-loop-no-skill-hybrid", "run": "judge-agent-loop-no-skill-hybrid", "score_ranking": [], "selected_skill_ids": [], "split": "test", "task_id": "sp-verify-before-claim"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["accessibility-tree-inspection"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "Inspect a web page's accessibility tree, identify controls by role and accessible name, and flag any important unlabeled interaction targets.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["accessibility-tree-inspection"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Inspect a web page's accessibility tree, identify controls by role and accessible name, and flag any important unlabeled interaction targets.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["accessibility-tree-inspection"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "browser-accessibility-audit"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["accessibility-tree-inspection"], "split": "test", "task_id": "browser-accessibility-audit"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["form-interaction-flow"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "Use a browser to fill in a settings form, submit it, and verify that the page displays the expected validation result.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["form-interaction-flow"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Use a browser to fill in a settings form, submit it, and verify that the page displays the expected validation result.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["form-interaction-flow"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "browser-form-regression"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["form-interaction-flow"], "split": "test", "task_id": "browser-form-regression"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["browser-smoke-testing", "visual-regression-review"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.4}, "negative_skills": [], "prompt": "After a static HTML report is regenerated, open it through the available browser surface, confirm the page is not blank, exercise one filter or table interaction, and note any visible layout regression before handing it to a reviewer.", "raw": {"abstention_rate": 0.0, "accepted_count": 2, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["browser-smoke-testing", "visual-regression-review"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "After a static HTML report is regenerated, open it through the available browser surface, confirm the page is not blank, exercise one filter or table interaction, and note any visible layout regression before handing it to a reviewer.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["browser-smoke-testing", "visual-regression-review"], "selection_rate_at_5": 0.4, "split": "test", "task_id": "browser-local-dashboard"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["browser-smoke-testing", "visual-regression-review"], "split": "test", "task_id": "browser-local-dashboard"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["slash-command-workflow"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "The user invokes /opsx:apply for an approved change. Follow the command workflow and avoid creating a parallel implementation plan.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["slash-command-workflow"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "The user invokes /opsx:apply for an approved change. Follow the command workflow and avoid creating a parallel implementation plan.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["slash-command-workflow"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "claude-command-routing"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["slash-command-workflow"], "split": "test", "task_id": "claude-command-routing"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["mcp-tool-routing", "task-tool-delegation"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.4}, "negative_skills": [], "prompt": "One teammate needs local browser evidence while another can inspect repository files. Delegate the independent pieces to the correct tool surfaces, keep their write scopes separate, and integrate only the findings needed for the final answer.", "raw": {"abstention_rate": 0.0, "accepted_count": 2, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["mcp-tool-routing", "task-tool-delegation"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "One teammate needs local browser evidence while another can inspect repository files. Delegate the independent pieces to the correct tool surfaces, keep their write scopes separate, and integrate only the findings needed for the final answer.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["mcp-tool-routing", "task-tool-delegation"], "selection_rate_at_5": 0.4, "split": "test", "task_id": "claude-mcp-selection"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["mcp-tool-routing", "task-tool-delegation"], "split": "test", "task_id": "claude-mcp-selection"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["plan-mode"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "A broad refactor request lacks acceptance criteria. Clarify the scope and produce a plan with files, steps, and validation before editing.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["plan-mode"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "A broad refactor request lacks acceptance criteria. Clarify the scope and produce a plan with files, steps, and validation before editing.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["plan-mode"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "claude-plan-to-tasks"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["plan-mode"], "split": "test", "task_id": "claude-plan-to-tasks"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["workspace-git-hygiene"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "You find uncommitted files that you did not edit. Inspect status, continue around unrelated changes, and do not use destructive git commands.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["workspace-git-hygiene"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "You find uncommitted files that you did not edit. Inspect status, continue around unrelated changes, and do not use destructive git commands.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["workspace-git-hygiene"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "codex-git-hygiene"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["workspace-git-hygiene"], "split": "test", "task_id": "codex-git-hygiene"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["apply-patch-discipline"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "A repository has user-owned edits in neighboring files. Change the requested parser branch only, keep the patch reviewable, and avoid broad formatting or cleanup outside the owned file.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["apply-patch-discipline"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "A repository has user-owned edits in neighboring files. Change the requested parser branch only, keep the patch reviewable, and avoid broad formatting or cleanup outside the owned file.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["apply-patch-discipline"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "codex-minimal-diff"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["apply-patch-discipline"], "split": "test", "task_id": "codex-minimal-diff"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["subagent-worker-protocol", "evidence-backed-final"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.4}, "negative_skills": [], "prompt": "Act as the Worker for a scoped implementation task: run repository checks, make only owned edits, validate, and summarize changed files, commands, and remaining risks.", "raw": {"abstention_rate": 0.0, "accepted_count": 2, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["subagent-worker-protocol", "evidence-backed-final"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Act as the Worker for a scoped implementation task: run repository checks, make only owned edits, validate, and summarize changed files, commands, and remaining risks.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["subagent-worker-protocol", "evidence-backed-final"], "selection_rate_at_5": 0.4, "split": "test", "task_id": "codex-worker-handoff"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["subagent-worker-protocol", "evidence-backed-final"], "split": "test", "task_id": "codex-worker-handoff"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["systematic-debugging", "test-driven-development"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.4}, "negative_skills": [], "prompt": "A regression test fails after a parser refactor. Reproduce the failing test, identify the root cause, add the smallest regression coverage, and implement the minimal fix.", "raw": {"abstention_rate": 0.0, "accepted_count": 2, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["systematic-debugging", "test-driven-development"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "A regression test fails after a parser refactor. Reproduce the failing test, identify the root cause, add the smallest regression coverage, and implement the minimal fix.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["systematic-debugging", "test-driven-development"], "selection_rate_at_5": 0.4, "split": "test", "task_id": "sp-debug-red-green"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["systematic-debugging", "test-driven-development"], "split": "test", "task_id": "sp-debug-red-green"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["using-git-worktrees"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "Start feature work in an isolated git worktree, confirm the current path and branch, and keep the implementation separate from another agent's edits.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["using-git-worktrees"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "Start feature work in an isolated git worktree, confirm the current path and branch, and keep the implementation separate from another agent's edits.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["using-git-worktrees"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "sp-isolated-worktree"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["using-git-worktrees"], "split": "test", "task_id": "sp-isolated-worktree"}, {"category": "agent-loop-judge", "difficulty": "", "failure_tags": ["low-selection"], "gold_skills": ["verification-before-completion"], "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.2}, "negative_skills": [], "prompt": "The implementation looks complete, but no fresh command has been run in this turn. Identify the proof command, execute it, read the result, and only then decide what status can honestly be reported.", "raw": {"abstention_rate": 0.0, "accepted_count": 1, "accepted_recall_at_5": 1.0, "category": "agent-loop-judge", "coverage": 1.0, "difficulty": "", "evidence_score": 1.0, "execution_condition": "oracle-skill", "gold_skills": ["verification-before-completion"], "judge_pass_rate": 1.0, "judge_score": 1.0, "judge_status": "passed", "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_accepted_rate": 0.0, "negative_hit_rate": 0.0, "negative_skills": [], "penalties": [], "precision_at_5": 1.0, "prompt": "The implementation looks complete, but no fresh command has been run in this turn. Identify the proof command, execute it, read the result, and only then decide what status can honestly be reported.", "recall_at_1": 1.0, "recall_at_3": 1.0, "recall_at_5": 1.0, "router": "judge-agent-loop-oracle-skill-hybrid", "selected_skill_ids": ["verification-before-completion"], "selection_rate_at_5": 0.2, "split": "test", "task_id": "sp-verify-before-claim"}, "router": "judge-agent-loop-oracle-skill-hybrid", "run": "judge-agent-loop-oracle-skill-hybrid", "score_ranking": [], "selected_skill_ids": ["verification-before-completion"], "split": "test", "task_id": "sp-verify-before-claim"}], "runs": [{"label": "judge-agent-loop-hybrid", "metrics": {"abstention_rate": 0.0, "evidence_score": 0.75, "judge_pass_rate": 0.75, "judge_score": 0.75, "latency_ms": 0.0, "mrr": 0.75, "ndcg_at_5": 0.75, "negative_hit_rate": 0.0, "recall_at_5": 0.75, "selection_rate_at_5": 1.0}, "source_path": "docs/demo/phase11-evidence-judge-calibration/judge-agent-loop-hybrid/results.jsonl", "task_count": 12}, {"label": "judge-agent-loop-no-skill-hybrid", "metrics": {"abstention_rate": 1.0, "evidence_score": 0.0, "judge_pass_rate": 0.0, "judge_score": 0.0, "latency_ms": 0.0, "mrr": 0.0, "ndcg_at_5": 0.0, "negative_hit_rate": 0.0, "recall_at_5": 0.0, "selection_rate_at_5": 0.0}, "source_path": "docs/demo/phase11-evidence-judge-calibration/judge-agent-loop-no-skill-hybrid/results.jsonl", "task_count": 12}, {"label": "judge-agent-loop-oracle-skill-hybrid", "metrics": {"abstention_rate": 0.0, "evidence_score": 1.0, "judge_pass_rate": 1.0, "judge_score": 1.0, "latency_ms": 0.0, "mrr": 1.0, "ndcg_at_5": 1.0, "negative_hit_rate": 0.0, "recall_at_5": 1.0, "selection_rate_at_5": 0.266667}, "source_path": "docs/demo/phase11-evidence-judge-calibration/judge-agent-loop-oracle-skill-hybrid/results.jsonl", "task_count": 12}], "source_path": "docs/demo/phase11-evidence-judge-calibration"};</script>
+  <script>
+(function () {
+  "use strict";
+
+  const payload = window.__SKILLEVAL_DASHBOARD__ || {};
+  const records = Array.isArray(payload.records) ? payload.records : [];
+  const filters = payload.filters || {};
+  const active = { run: new Set(), split: new Set(), category: new Set(), difficulty: new Set(), failure: new Set() };
+  const state = { search: "", sortKey: "run", sortDir: 1, selected: records[0] || null };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (value) => String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+  const metric = (record, key) => Number(record && record.metrics ? record.metrics[key] : 0) || 0;
+  const pct = (value) => (Number(value) * 100).toFixed(1) + "%";
+  const num = (value) => Number(value || 0).toFixed(3);
+  const list = (values, className) => {
+    const items = Array.isArray(values) ? values : [];
+    if (!items.length) return '<span class="field-value">None</span>';
+    return items.map((item) => '<span class="pill ' + className + '">' + esc(item) + "</span>").join("");
+  };
+  const getSortValue = (record, key) => {
+    if (key in (record.metrics || {})) return metric(record, key);
+    return String(record[key] == null ? "" : record[key]).toLowerCase();
+  };
+
+  function renderSourceLine() {
+    $("sourceLine").textContent = "Source: " + (payload.source_path || "") + " | Generated: " + (payload.generated_at || "");
+  }
+
+  function average(key) {
+    if (!records.length) return 0;
+    return records.reduce((sum, record) => sum + metric(record, key), 0) / records.length;
+  }
+
+  function renderMetrics() {
+    const totalRuns = Array.isArray(payload.runs) ? payload.runs.length : 0;
+    const rows = [
+      ["Runs", totalRuns],
+      ["Tasks", records.length],
+      ["Recall@5", pct(average("recall_at_5"))],
+      ["MRR", num(average("mrr"))],
+      ["Neg Hit", pct(average("negative_hit_rate"))],
+      ["Abstain", pct(average("abstention_rate"))],
+      ["Latency", Math.round(average("latency_ms")) + " ms"],
+    ];
+    $("metricStrip").innerHTML = rows.map(([label, value]) =>
+      '<div class="metric"><div class="label">' + esc(label) + '</div><div class="value">' + esc(value) + "</div></div>"
+    ).join("");
+  }
+
+  function filterGroup(title, key, values) {
+    const items = (values || []).map((value) => {
+      const id = "filter-" + key + "-" + String(value).replace(/[^a-z0-9_-]+/gi, "-");
+      return '<label class="check" for="' + esc(id) + '"><input id="' + esc(id) + '" type="checkbox" data-filter="' + esc(key) + '" value="' + esc(value) + '">' + esc(value) + "</label>";
+    }).join("");
+    return '<div class="filter-group"><div class="filter-title">' + esc(title) + "</div>" + (items || '<div class="field-value">None</div>') + "</div>";
+  }
+
+  function renderFilters() {
+    $("filters").innerHTML = [
+      filterGroup("Run", "run", filters.runs),
+      filterGroup("Split", "split", filters.splits),
+      filterGroup("Category", "category", filters.categories),
+      filterGroup("Difficulty", "difficulty", filters.difficulties),
+      filterGroup("Failure", "failure", filters.failure_tags),
+    ].join("");
+    $("filters").addEventListener("change", (event) => {
+      const target = event.target;
+      if (!target || target.type !== "checkbox") return;
+      const bucket = active[target.dataset.filter];
+      if (target.checked) bucket.add(target.value);
+      else bucket.delete(target.value);
+      renderTable();
+    });
+  }
+
+  function matchesFilters(record) {
+    if (active.run.size && !active.run.has(record.run)) return false;
+    if (active.split.size && !active.split.has(record.split || "")) return false;
+    if (active.category.size && !active.category.has(record.category || "")) return false;
+    if (active.difficulty.size && !active.difficulty.has(record.difficulty || "")) return false;
+    if (active.failure.size) {
+      const tags = new Set(record.failure_tags || []);
+      for (const tag of active.failure) if (!tags.has(tag)) return false;
+    }
+    if (!state.search) return true;
+    const haystack = [
+      record.run, record.task_id, record.router, record.split, record.category,
+      record.difficulty, record.prompt,
+      ...(record.selected_skill_ids || []),
+      ...(record.gold_skills || []),
+      ...(record.negative_skills || []),
+      ...(record.failure_tags || []),
+    ].join(" ").toLowerCase();
+    return haystack.includes(state.search);
+  }
+
+  function visibleRecords() {
+    return records.filter(matchesFilters).sort((left, right) => {
+      const a = getSortValue(left, state.sortKey);
+      const b = getSortValue(right, state.sortKey);
+      if (a < b) return -1 * state.sortDir;
+      if (a > b) return 1 * state.sortDir;
+      return String(left.task_id).localeCompare(String(right.task_id));
+    });
+  }
+
+  function renderTable() {
+    const rows = visibleRecords();
+    $("tableMeta").textContent = rows.length + " of " + records.length + " tasks";
+    if (!rows.length) {
+      $("recordRows").innerHTML = '<tr><td class="empty" colspan="10">No matching records</td></tr>';
+      renderInspector(null);
+      return;
+    }
+    if (!state.selected || !rows.includes(state.selected)) state.selected = rows[0];
+    $("recordRows").innerHTML = rows.map((record, index) =>
+      '<tr data-index="' + index + '"' + (record === state.selected ? ' class="selected"' : "") + ">" +
+      "<td>" + esc(record.run) + "</td>" +
+      "<td>" + esc(record.task_id) + "</td>" +
+      "<td>" + esc(record.split) + "</td>" +
+      "<td>" + esc(record.category) + "</td>" +
+      "<td>" + esc(record.difficulty) + "</td>" +
+      '<td class="num">' + pct(metric(record, "recall_at_5")) + "</td>" +
+      '<td class="num">' + pct(metric(record, "negative_hit_rate")) + "</td>" +
+      '<td class="num">' + pct(metric(record, "abstention_rate")) + "</td>" +
+      "<td>" + list(record.selected_skill_ids, "") + "</td>" +
+      "<td>" + list(record.failure_tags, "tag bad") + "</td>" +
+      "</tr>"
+    ).join("");
+    Array.from($("recordRows").querySelectorAll("tr[data-index]")).forEach((row) => {
+      row.addEventListener("click", () => {
+        state.selected = rows[Number(row.dataset.index)];
+        renderTable();
+      });
+    });
+    renderInspector(state.selected);
+  }
+
+  function renderRanking(record) {
+    const ranking = Array.isArray(record.score_ranking) ? record.score_ranking : [];
+    if (!ranking.length) return '<div class="field-value">No scores</div>';
+    return "<ol>" + ranking.map((row) => "<li>" + esc(row.skill_id) + " <span class=\"num\">" + num(row.score) + "</span></li>").join("") + "</ol>";
+  }
+
+  function renderInspector(record) {
+    if (!record) {
+      $("inspector").innerHTML = '<div class="empty">Select a task to inspect details</div>';
+      return;
+    }
+    $("inspector").innerHTML =
+      "<h2>" + esc(record.task_id) + "</h2>" +
+      '<div class="field"><div class="field-label">Run</div><div class="field-value">' + esc(record.run) + "</div></div>" +
+      '<div class="field"><div class="field-label">Router</div><div class="field-value">' + esc(record.router) + "</div></div>" +
+      '<div class="field"><div class="field-label">Prompt</div><div class="field-value">' + esc(record.prompt || "No prompt") + "</div></div>" +
+      '<div class="field"><div class="field-label">Selected</div><div class="field-value">' + list(record.selected_skill_ids, "") + "</div></div>" +
+      '<div class="field"><div class="field-label">Gold</div><div class="field-value">' + list(record.gold_skills, "") + "</div></div>" +
+      '<div class="field"><div class="field-label">Negative</div><div class="field-value">' + list(record.negative_skills, "") + "</div></div>" +
+      '<div class="field"><div class="field-label">Score Ranking</div>' + renderRanking(record) + "</div>" +
+      '<div class="field"><div class="field-label">Metrics</div><pre>' + esc(JSON.stringify(record.metrics || {}, null, 2)) + "</pre></div>" +
+      '<div class="field"><div class="field-label">Raw JSON</div><pre>' + esc(JSON.stringify(record.raw || {}, null, 2)) + "</pre></div>";
+  }
+
+  function bindSorting() {
+    document.querySelectorAll("th[data-sort]").forEach((heading) => {
+      heading.addEventListener("click", () => {
+        const key = heading.dataset.sort;
+        if (state.sortKey === key) state.sortDir *= -1;
+        else {
+          state.sortKey = key;
+          state.sortDir = 1;
+        }
+        renderTable();
+      });
+    });
+  }
+
+  $("searchInput").addEventListener("input", (event) => {
+    state.search = event.target.value.trim().toLowerCase();
+    renderTable();
+  });
+
+  renderSourceLine();
+  renderMetrics();
+  renderFilters();
+  bindSorting();
+  renderTable();
+}());
+</script>
+</body>
+</html>

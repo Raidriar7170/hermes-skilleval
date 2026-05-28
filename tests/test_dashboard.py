@@ -252,6 +252,46 @@ def test_render_dashboard_html_exposes_data_provenance(tmp_path: Path):
     assert "skilleval dashboard" in html
 
 
+def test_dashboard_provenance_includes_migrated_sources_from_summary(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "migration-router",
+        [
+            {
+                "task_id": "task-001",
+                "router": "alpha",
+                "selected_skill_ids": ["docker"],
+                "gold_skills": ["docker"],
+                "negative_skills": [],
+                "latency_ms": 12.0,
+            }
+        ],
+    )
+    (tmp_path / "migration-summary.json").write_text(
+        json.dumps(
+            {
+                "migration_sources": [
+                    "codex",
+                    "browser-gui",
+                    "superpowers",
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = build_dashboard_payload(tmp_path)
+    html = render_dashboard_html(payload)
+
+    assert payload.to_json_dict()["provenance"]["migrated_sources"] == [
+        "browser-gui",
+        "codex",
+        "superpowers",
+    ]
+    assert "Migrated sources" in html
+    assert "browser-gui, codex, superpowers" in html
+
+
 def test_build_dashboard_payload_rejects_invalid_present_metric(tmp_path: Path):
     _write_run(
         tmp_path,
@@ -274,6 +314,56 @@ def test_build_dashboard_payload_rejects_invalid_present_metric(tmp_path: Path):
         match=r"field 'recall_at_5' must be finite .*results\.jsonl at line 1",
     ):
         build_dashboard_payload(tmp_path)
+
+
+def test_dashboard_payload_summarizes_optional_judge_metrics(tmp_path: Path):
+    _write_run(
+        tmp_path,
+        "judge-agent-loop-hybrid",
+        [
+            {
+                "task_id": "task-001",
+                "router": "judge-agent-loop-hybrid",
+                "selected_skill_ids": ["verification-before-completion"],
+                "gold_skills": ["verification-before-completion"],
+                "negative_skills": [],
+                "latency_ms": 0.0,
+                "judge_score": 1.0,
+                "evidence_score": 1.0,
+                "judge_pass_rate": 1.0,
+            },
+            {
+                "task_id": "task-002",
+                "router": "judge-agent-loop-hybrid",
+                "selected_skill_ids": ["visual-regression-review"],
+                "gold_skills": [],
+                "negative_skills": [],
+                "latency_ms": 0.0,
+                "judge_score": 0.25,
+                "evidence_score": 0.5,
+                "judge_pass_rate": 0.0,
+            },
+            {
+                "task_id": "task-003",
+                "router": "judge-agent-loop-hybrid",
+                "selected_skill_ids": ["systematic-debugging"],
+                "gold_skills": ["systematic-debugging"],
+                "negative_skills": [],
+                "latency_ms": 0.0,
+            },
+        ],
+    )
+
+    payload = build_dashboard_payload(tmp_path)
+    html = render_dashboard_html(payload)
+    metrics = payload.to_json_dict()["runs"][0]["metrics"]
+    provenance = payload.to_json_dict()["provenance"]
+
+    assert metrics["judge_score"] == 0.625
+    assert metrics["evidence_score"] == 0.75
+    assert metrics["judge_pass_rate"] == 0.5
+    assert "judge proxy" in provenance["metric_note"]
+    assert "judge proxy" in html
 
 
 def test_build_dashboard_payload_rejects_invalid_skill_list_with_context(tmp_path: Path):

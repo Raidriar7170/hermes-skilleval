@@ -1,0 +1,1 @@
+One teammate needs local browser evidence while another can inspect repository files. Delegate the independent pieces to the correct tool surfaces, keep their write scopes separate, and integrate only the findings needed for the final answer.

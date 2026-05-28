@@ -1,0 +1,1 @@
+After a static HTML report is regenerated, open it through the available browser surface, confirm the page is not blank, exercise one filter or table interaction, and note any visible layout regression before handing it to a reviewer.
