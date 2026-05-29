@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -79,7 +80,9 @@ def test_rank_skill_patches_generates_ranked_candidates_for_failed_judge_run(
 
     assert summary["phase"] == "Phase 12"
     assert summary["failed_task_count"] == 1
-    assert summary["candidate_count"] >= 2
+    candidate_count = summary["candidate_count"]
+    assert isinstance(candidate_count, int)
+    assert candidate_count >= 2
     assert ranked[0]["rank"] == 1
     assert {candidate["rank"] for candidate in candidates} == {None}
     assert ranked[0]["source_task_id"] == "task-001"
@@ -196,7 +199,7 @@ def _skill(skill_id: str, trigger_terms: list[str], description: str) -> dict[st
     }
 
 
-def _read_jsonl(path: Path) -> list[dict[str, object]]:
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [
         json.loads(line)
         for line in path.read_text(encoding="utf-8").splitlines()

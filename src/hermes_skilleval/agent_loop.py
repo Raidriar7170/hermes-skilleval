@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -49,8 +50,8 @@ def run_agent_loop(
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
 
-    records: list[dict[str, object]] = []
-    traces: list[dict[str, object]] = []
+    records: list[dict[str, Any]] = []
+    traces: list[dict[str, Any]] = []
     for route in routes:
         task_id = _string_field(route, "task_id", Path(routes_path))
         task = tasks.get(task_id)
@@ -337,7 +338,9 @@ def _report(summary: dict[str, object], records: list[dict[str, object]]) -> str
         "| --- | --- | --- | --- |",
     ]
     for record in records:
-        selected = ", ".join(record["selected_skill_ids"]) or ""
+        selected = ", ".join(
+            _string_list(record["selected_skill_ids"], Path("<record>"), "selected_skill_ids")
+        )
         lines.append(
             f"| {record['task_id']} | {record['agent_success']} | "
             f"{selected} | {record['failure_type'] or ''} |"
@@ -378,7 +381,7 @@ def _default_run_label(condition: str, source_router: str) -> str:
 
 def _validate_selected_skills(
     selected: list[str],
-    skills: dict[str, object],
+    skills: Mapping[str, object],
     task_id: str,
 ) -> None:
     missing = sorted(skill_id for skill_id in selected if skill_id not in skills)
@@ -417,8 +420,8 @@ def _evidence_completion(value: object) -> float:
     return len(satisfied) / len(value)
 
 
-def _read_jsonl(path: Path) -> list[dict[str, object]]:
-    records = []
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
     for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         if not line.strip():
             continue

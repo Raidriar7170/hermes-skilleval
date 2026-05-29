@@ -136,7 +136,7 @@ def _dashboard_record(record: dict[str, object], run_label: str) -> dict[str, ob
 
 
 def _summary(
-    records: list[dict[str, object]],
+    records: list[dict[str, Any]],
     run_label: str,
     backend: str,
 ) -> dict[str, object]:

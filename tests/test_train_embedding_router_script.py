@@ -1,0 +1,291 @@
+import importlib.util
+import json
+import sys
+import types
+from pathlib import Path
+
+import pytest
+
+
+SCRIPT_PATH = Path("scripts/train_embedding_router.py")
+
+
+def test_train_script_runs_manual_training_loop_with_fake_dependencies(
+    monkeypatch, tmp_path: Path
+):
+    module = _load_train_script()
+    _install_fake_training_modules(monkeypatch)
+    monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
+
+    training_pairs = tmp_path / "training-pairs.jsonl"
+    training_pairs.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "query_text": "open dashboard",
+                        "skill_text": "browser smoke testing",
+                        "label": 1,
+                        "split": "dev",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "query_text": "validate before claiming",
+                        "skill_text": "verification before completion",
+                        "label": 1,
+                        "split": "train",
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    config = tmp_path / "train-config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "sentence-transformers/all-MiniLM-L6-v2",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "/mnt/data/minghongsun/phase14/models/minilm",
+                "seed": 7170,
+                "training_pairs": str(training_pairs),
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(sys, "argv", ["train_embedding_router.py", "--config", str(config)])
+
+    assert module.main() == 0
+
+    mapped_output = tmp_path / "mapped-mnt" / "phase14" / "models" / "minilm"
+    summary = json.loads((mapped_output / "train-run-summary.json").read_text())
+    assert summary["trained_pair_count"] == 2
+    assert summary["optimizer_step_count"] == 2
+    assert summary["device"] == "cuda"
+    assert summary["final_loss"] == 0.5
+    assert (mapped_output / "fake-model.txt").exists()
+    assert getattr(sys.modules["torch"], "seed_value") == 7170
+    assert FakeOptimizer.instances[0].lr == 2e-5
+    assert FakeLossValue.backward_count == 2
+
+
+def test_train_script_rejects_nonpositive_batch_size(monkeypatch, tmp_path: Path):
+    module = _load_train_script()
+    _install_fake_training_modules(monkeypatch)
+    monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
+
+    training_pairs = tmp_path / "training-pairs.jsonl"
+    training_pairs.write_text(
+        json.dumps(
+            {
+                "query_text": "open dashboard",
+                "skill_text": "browser smoke testing",
+                "label": 1,
+                "split": "dev",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    config = tmp_path / "train-config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "sentence-transformers/all-MiniLM-L6-v2",
+                "batch_size": 0,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "/mnt/data/minghongsun/phase14/models/minilm",
+                "seed": 7170,
+                "training_pairs": str(training_pairs),
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(sys, "argv", ["train_embedding_router.py", "--config", str(config)])
+
+    with pytest.raises(SystemExit, match="batch_size must be positive"):
+        module.main()
+
+
+def test_train_script_rejects_output_dir_traversal(monkeypatch, tmp_path: Path):
+    module = _load_train_script()
+    _install_fake_training_modules(monkeypatch)
+    monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
+
+    training_pairs = tmp_path / "training-pairs.jsonl"
+    training_pairs.write_text(
+        json.dumps(
+            {
+                "query_text": "open dashboard",
+                "skill_text": "browser smoke testing",
+                "label": 1,
+                "split": "dev",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    config = tmp_path / "train-config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "sentence-transformers/all-MiniLM-L6-v2",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "/mnt/data/minghongsun/../leak/model",
+                "seed": 7170,
+                "training_pairs": str(training_pairs),
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(sys, "argv", ["train_embedding_router.py", "--config", str(config)])
+
+    with pytest.raises(SystemExit, match="output_dir must be under /mnt/data/minghongsun/"):
+        module.main()
+
+    assert not (tmp_path / "leak" / "model").exists()
+
+
+def _load_train_script():
+    spec = importlib.util.spec_from_file_location("train_embedding_router", SCRIPT_PATH)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def _mapping_path_factory(tmp_path: Path):
+    real_path = Path
+
+    class MappingPath:
+        def __new__(cls, value):
+            text = str(value)
+            if text == "/mnt/data/minghongsun":
+                return real_path(tmp_path / "mapped-mnt")
+            if text.startswith("/mnt/data/minghongsun/"):
+                relative = text.removeprefix("/mnt/data/minghongsun/")
+                return real_path(tmp_path / "mapped-mnt" / relative)
+            return real_path(value)
+
+    return MappingPath
+
+
+def _install_fake_training_modules(monkeypatch) -> None:
+    FakeOptimizer.instances = []
+    FakeLossValue.backward_count = 0
+
+    fake_torch = types.ModuleType("torch")
+    setattr(fake_torch, "seed_value", None)
+    setattr(fake_torch, "cuda", types.SimpleNamespace(is_available=lambda: True))
+    setattr(fake_torch, "empty", lambda length, device: FakeTensor([0] * length, device))
+    setattr(fake_torch, "manual_seed", lambda seed: setattr(fake_torch, "seed_value", seed))
+    setattr(fake_torch, "optim", types.SimpleNamespace(AdamW=FakeOptimizer))
+
+    sentence_transformers = types.ModuleType("sentence_transformers")
+    setattr(sentence_transformers, "SentenceTransformer", FakeSentenceTransformer)
+    sentence_transformer_module = types.ModuleType("sentence_transformers.sentence_transformer")
+    losses_module = types.ModuleType("sentence_transformers.sentence_transformer.losses")
+    setattr(losses_module, "MultipleNegativesRankingLoss", FakeMultipleNegativesRankingLoss)
+    setattr(sentence_transformer_module, "losses", losses_module)
+
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "sentence_transformers", sentence_transformers)
+    monkeypatch.setitem(
+        sys.modules,
+        "sentence_transformers.sentence_transformer",
+        sentence_transformer_module,
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "sentence_transformers.sentence_transformer.losses",
+        losses_module,
+    )
+
+
+class FakeTensor:
+    def __init__(self, value, device: str = "cpu"):
+        self.value = value
+        self.device = device
+
+    def to(self, device: str):
+        return FakeTensor(self.value, device)
+
+
+class FakeSentenceTransformer:
+    def __init__(self, base_model: str):
+        self.base_model = base_model
+        self.device = "cpu"
+        self.trained = False
+
+    def to(self, device: str):
+        self.device = device
+        return self
+
+    def parameters(self):
+        return [object()]
+
+    def train(self):
+        self.trained = True
+
+    def tokenize(self, texts: list[str]):
+        return {"input_ids": FakeTensor(texts)}
+
+    def save(self, output_dir: str):
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        (Path(output_dir) / "fake-model.txt").write_text(self.base_model, encoding="utf-8")
+
+
+class FakeOptimizer:
+    instances: list["FakeOptimizer"] = []
+
+    def __init__(self, parameters, lr: float):
+        self.parameters = list(parameters)
+        self.lr = lr
+        self.step_count = 0
+        self.instances.append(self)
+
+    def zero_grad(self):
+        pass
+
+    def step(self):
+        assert FakeLossValue.backward_count > self.step_count
+        self.step_count += 1
+
+
+class FakeMultipleNegativesRankingLoss:
+    def __init__(self, model):
+        self.model = model
+
+    def __call__(self, features, labels):
+        assert self.model.trained is True
+        assert labels.device == self.model.device
+        for feature in features:
+            assert feature["input_ids"].device == self.model.device
+        return FakeLossValue(0.5)
+
+
+class FakeLossValue:
+    backward_count = 0
+
+    def __init__(self, value: float):
+        self.value = value
+
+    def backward(self):
+        type(self).backward_count += 1
+
+    def detach(self):
+        return self
+
+    def cpu(self):
+        return self
+
+    def __float__(self):
+        return self.value

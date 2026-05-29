@@ -73,15 +73,15 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     ]
 
 
-def _write_jsonl(path: Path, records: list[dict[str, object]]) -> None:
+def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
     path.write_text(
         "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
         encoding="utf-8",
     )
 
 
-def _load_tasks(root: Path) -> dict[str, dict[str, object]]:
-    tasks = {}
+def _load_tasks(root: Path) -> dict[str, dict[str, Any]]:
+    tasks: dict[str, dict[str, Any]] = {}
     for task_yaml in sorted(root.glob("*/task.yaml")):
         payload = yaml.safe_load(task_yaml.read_text(encoding="utf-8")) or {}
         if not isinstance(payload, dict):
@@ -102,9 +102,9 @@ def _load_tasks(root: Path) -> dict[str, dict[str, object]]:
 def _failure_input(
     record: dict[str, Any],
     routes: dict[str, dict[str, Any]],
-    tasks: dict[str, dict[str, object]],
+    tasks: dict[str, dict[str, Any]],
     skills: dict[str, Skill],
-) -> dict[str, object]:
+) -> dict[str, Any]:
     task_id = str(record.get("task_id"))
     if task_id not in routes:
         raise ValueError(f"missing Phase 9 route for failed task: {task_id}")
@@ -143,7 +143,7 @@ def _failure_input(
     }
 
 
-def _candidates_for_failure(failure: dict[str, object]) -> list[dict[str, object]]:
+def _candidates_for_failure(failure: dict[str, Any]) -> list[dict[str, Any]]:
     candidates = []
     terms = _source_terms(failure)
     evidence_text = ", ".join(failure["expected_evidence"])  # type: ignore[index]
@@ -184,14 +184,14 @@ def _candidates_for_failure(failure: dict[str, object]) -> list[dict[str, object
 
 
 def _candidate(
-    failure: dict[str, object],
+    failure: dict[str, Any],
     skill_id: str,
     patch_field: str,
     operation: str,
     added_terms: list[str],
     added_text: str,
-) -> dict[str, object]:
-    skill = failure["skills"][skill_id]  # type: ignore[index]
+) -> dict[str, Any]:
+    skill = failure["skills"][skill_id]
     before = _field_excerpt(skill, patch_field)
     after = _after_excerpt(before, patch_field, added_terms, added_text)
     candidate = {
@@ -212,11 +212,11 @@ def _candidate(
             f"{failure['failure_type']} judge failure."
         ),
         "evidence_inputs": {
-            "trace_id": failure["judge_record"].get("trace_id"),  # type: ignore[index]
+            "trace_id": failure["judge_record"].get("trace_id"),
             "expected_evidence": failure["expected_evidence"],
-            "migration_dimensions": failure["task"]["migration_dimensions"],  # type: ignore[index]
-            "prompt_terms": _tokens(str(failure["task"]["prompt"]))[:12],  # type: ignore[index]
-            "route_score": failure["route"].get("scores", {}).get(skill_id),  # type: ignore[index]
+            "migration_dimensions": failure["task"]["migration_dimensions"],
+            "prompt_terms": _tokens(str(failure["task"]["prompt"]))[:12],
+            "route_score": failure["route"].get("scores", {}).get(skill_id),
         },
         "deterministic_scores": {},
         "total_score": 0.0,
@@ -232,7 +232,7 @@ def _candidate(
     return candidate
 
 
-def _rank_candidates(candidates: list[dict[str, object]]) -> list[dict[str, object]]:
+def _rank_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ranked = sorted(
         (dict(candidate) for candidate in candidates),
         key=lambda candidate: (
@@ -248,18 +248,18 @@ def _rank_candidates(candidates: list[dict[str, object]]) -> list[dict[str, obje
 
 
 def _score_candidate(
-    candidate: dict[str, object],
-    failure: dict[str, object],
+    candidate: dict[str, Any],
+    failure: dict[str, Any],
 ) -> dict[str, float]:
-    added_terms = list(candidate["added_terms"])  # type: ignore[arg-type]
-    prompt_terms = set(_tokens(str(failure["task"]["prompt"])))  # type: ignore[index]
+    added_terms = list(candidate["added_terms"])
+    prompt_terms = set(_tokens(str(failure["task"]["prompt"])))
     evidence_terms = set(
-        _tokens(" ".join(str(item) for item in failure["expected_evidence"]))  # type: ignore[index]
+        _tokens(" ".join(str(item) for item in failure["expected_evidence"]))
     )
     source_terms = prompt_terms | evidence_terms
     support_hits = sum(1 for term in added_terms if term in source_terms)
-    selected = set(failure["selected_skill_ids"])  # type: ignore[arg-type]
-    demoted = set(failure["demote_skill_ids"])  # type: ignore[arg-type]
+    selected = set(failure["selected_skill_ids"])
+    demoted = set(failure["demote_skill_ids"])
     gold_boost = 1.0 if candidate["target_skill_id"] in selected else 0.75
     negative_separation = min(1.0, len(demoted) / max(1, len(selected)))
     minimality = 1.0 - min(0.8, max(0, len(added_terms) - 4) * 0.1)
@@ -286,8 +286,8 @@ def _tokens(text: str) -> list[str]:
 
 def _summary(
     *,
-    failures: list[dict[str, object]],
-    candidates: list[dict[str, object]],
+    failures: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
     judge_results_path: str,
     routes_path: str,
     tasks_path: str,
@@ -316,7 +316,7 @@ def _summary(
     }
 
 
-def _report(summary: dict[str, object], ranked: list[dict[str, object]]) -> str:
+def _report(summary: dict[str, object], ranked: list[dict[str, Any]]) -> str:
     lines = [
         "# Phase 12 Skill Patch Ranking",
         "",
@@ -354,12 +354,12 @@ def _report(summary: dict[str, object], ranked: list[dict[str, object]]) -> str:
     return "\n".join(lines)
 
 
-def _source_terms(failure: dict[str, object]) -> list[str]:
+def _source_terms(failure: dict[str, Any]) -> list[str]:
     text = " ".join(
         [
-            str(failure["task"]["prompt"]),  # type: ignore[index]
-            " ".join(str(item) for item in failure["expected_evidence"]),  # type: ignore[index]
-            " ".join(str(item) for item in failure["task"]["migration_dimensions"]),  # type: ignore[index]
+            str(failure["task"]["prompt"]),
+            " ".join(str(item) for item in failure["expected_evidence"]),
+            " ".join(str(item) for item in failure["task"]["migration_dimensions"]),
         ]
     )
     return _tokens(text)
