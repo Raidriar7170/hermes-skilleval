@@ -58,7 +58,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 185 |
+| Test cases | 199 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -145,13 +145,13 @@ hermes-skilleval/
 │   └── tasks/                          # 80 labeled routing tasks
 ├── docs/
 │   ├── demo/                           # committed benchmark outputs
-│   ├── phase2.md ... phase7b.md        # implementation and experiment notes
+│   ├── phase2.md ... phase13.md        # implementation and experiment notes
 │   └── resume.md                       # resume-ready project framing
 ├── scripts/
 │   ├── generate_benchmark_skills.py    # reproducible skill corpus generator
 │   └── generate_benchmark_tasks.py     # reproducible task corpus generator
 ├── src/hermes_skilleval/
-│   ├── cli.py                          # index, eval, compare, analyze, improve
+│   ├── cli.py                          # index, eval, compare, analyze, improve, simulate
 │   ├── calibration.py                  # cross-encoder acceptance thresholds
 │   ├── metrics.py                      # Recall, Precision, MRR, NDCG, negatives
 │   ├── failure_analysis.py             # failure-mode summaries
@@ -163,7 +163,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 190 pytest cases
+├── tests/                              # 199 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -302,6 +302,26 @@ task metadata, and the migrated skills index to rank offline deterministic
 metadata patch candidates. It does not modify source `SKILL.md` files or write
 a patched skills index.
 
+### 10. Simulate Ranked Skill Patches
+
+```bash
+skilleval simulate-skill-patches \
+  --ranked-patches docs/demo/phase12-skill-patch-ranking/ranked-patches.jsonl \
+  --baseline-routes docs/demo/phase9-real-skill-library-migration/hybrid/results.jsonl \
+  --tasks benchmarks/migration-tasks \
+  --skills-index docs/demo/phase9-real-skill-library-migration/skills.json \
+  --router hybrid \
+  --top-k 5 \
+  --max-patches 5 \
+  --output-dir docs/demo/phase13-patch-simulation
+```
+
+Phase 13 applies ranked metadata candidates to copied `Skill` records only,
+writes a shadow skill index, and compares shadow routing against the Phase 9
+baseline. It is an offline deterministic regression guard, not fine-tuning or
+learned training, and it does not modify source `SKILL.md` files or overwrite
+the original `skills.json`.
+
 ### Static Dashboard
 
 ```bash
@@ -316,7 +336,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 10. Run Tests
+### 11. Run Tests
 
 ```bash
 pytest -q
@@ -325,7 +345,7 @@ pytest -q
 Expected:
 
 ```text
-190 passed
+199 passed
 ```
 
 ---
@@ -350,6 +370,7 @@ Expected:
 | Phase 10 | Agent-in-the-loop migration evaluation | [`docs/phase10.md`](docs/phase10.md) |
 | Phase 11 | Evidence judge calibration | [`docs/phase11.md`](docs/phase11.md) |
 | Phase 12 | Offline skill metadata patch ranking | [`docs/phase12.md`](docs/phase12.md) |
+| Phase 13 | Patch simulation regression guard | [`docs/phase13.md`](docs/phase13.md) |
 
 ---
 
@@ -411,7 +432,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 190 unit and smoke tests |
+| Testing | pytest | 199 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -435,6 +456,8 @@ and [`docs/phase7b.md`](docs/phase7b.md).
       ([docs](docs/phase11.md), [demo](docs/demo/phase11-evidence-judge-calibration/dashboard.html))
 - [x] Offline skill metadata patch ranking
       ([docs](docs/phase12.md), [demo](docs/demo/phase12-skill-patch-ranking/ranked-patches.md))
+- [x] Patch simulation regression guard
+      ([docs](docs/phase13.md), [demo](docs/demo/phase13-patch-simulation/regression-report.md))
 - [ ] Fine-tuned embedding router for domain-specific skill libraries
 
 ---
@@ -460,7 +483,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 185 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 199 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and
 >   resume-ready experiment documentation.
 >

@@ -1459,6 +1459,131 @@ def test_cli_rank_skill_patches_writes_artifacts(tmp_path):
     assert (output_dir / "ranked-patches.md").exists()
 
 
+def test_cli_simulate_skill_patches_writes_artifacts(tmp_path):
+    tasks = tmp_path / "tasks"
+    task_dir = tasks / "task-001"
+    task_dir.mkdir(parents=True)
+    (task_dir / "task.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "id": "task-001",
+                "category": "migration",
+                "difficulty": "medium",
+                "gold_skills": ["browser-smoke-testing"],
+                "negative_skills": ["systematic-debugging"],
+                "verifier": "manual",
+                "split": "test",
+                "robustness_tags": ["migration-evaluation"],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    (task_dir / "prompt.md").write_text(
+        "Open the local browser dashboard and verify a nonblank page.",
+        encoding="utf-8",
+    )
+    skills_index = tmp_path / "skills.json"
+    skills_index.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "browser-smoke-testing",
+                    "name": "Browser Smoke Testing",
+                    "path": "benchmarks/migrated-skills/test/browser-smoke-testing/SKILL.md",
+                    "category": "test",
+                    "description": "Open local pages.",
+                    "body": "Open local pages.",
+                    "trigger_terms": ["browser", "smoke"],
+                    "token_count_estimate": 10,
+                },
+                {
+                    "id": "systematic-debugging",
+                    "name": "Systematic Debugging",
+                    "path": "benchmarks/migrated-skills/test/systematic-debugging/SKILL.md",
+                    "category": "test",
+                    "description": "Debug failures.",
+                    "body": "Debug failures.",
+                    "trigger_terms": ["debug"],
+                    "token_count_estimate": 10,
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    baseline_routes = tmp_path / "baseline-results.jsonl"
+    baseline_routes.write_text(
+        json.dumps(
+            {
+                "task_id": "task-001",
+                "category": "migration",
+                "difficulty": "medium",
+                "split": "test",
+                "robustness_tags": ["migration-evaluation"],
+                "selected_skill_ids": ["browser-smoke-testing"],
+                "gold_skills": ["browser-smoke-testing"],
+                "negative_skills": ["systematic-debugging"],
+                "recall_at_5": 1.0,
+                "mrr": 1.0,
+                "ndcg_at_5": 1.0,
+                "negative_hit_rate": 0.0,
+                "negative_accepted_rate": 0.0,
+                "selection_rate_at_5": 0.2,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    ranked_patches = tmp_path / "ranked-patches.jsonl"
+    ranked_patches.write_text(
+        json.dumps(
+            {
+                "candidate_id": "task-001::browser-smoke-testing::description::append_sentence",
+                "source_task_id": "task-001",
+                "target_skill_id": "browser-smoke-testing",
+                "patch_field": "description",
+                "operation": "append_sentence",
+                "added_terms": ["dashboard"],
+                "added_text": "Strengthen metadata for dashboard evidence.",
+                "rank": 1,
+                "status": "proposed",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "phase13"
+
+    result = main(
+        [
+            "simulate-skill-patches",
+            "--ranked-patches",
+            str(ranked_patches),
+            "--baseline-routes",
+            str(baseline_routes),
+            "--tasks",
+            str(tasks),
+            "--skills-index",
+            str(skills_index),
+            "--router",
+            "hybrid",
+            "--top-k",
+            "1",
+            "--max-patches",
+            "1",
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "shadow-skills.json").exists()
+    assert (output_dir / "shadow-results.jsonl").exists()
+    assert (output_dir / "route-diffs.jsonl").exists()
+    assert (output_dir / "regression-summary.json").exists()
+    assert (output_dir / "regression-report.md").exists()
+
+
 def _rank_record(task_id, *, split, selected, scores, gold, negative):
     return {
         "task_id": task_id,

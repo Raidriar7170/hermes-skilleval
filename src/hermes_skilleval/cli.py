@@ -59,6 +59,10 @@ from hermes_skilleval.self_improvement import (
     write_patches_json,
 )
 from hermes_skilleval.skill_index import load_skill_index, save_skill_index
+from hermes_skilleval.skill_patch_simulation import (
+    read_ranked_patches,
+    simulate_skill_patches,
+)
 from hermes_skilleval.skill_patch_ranking import rank_skill_patches
 from hermes_skilleval.skill_parser import scan_skills
 from hermes_skilleval.storage import ensure_dir
@@ -218,6 +222,30 @@ def _build_parser() -> argparse.ArgumentParser:
     rank_patches_parser.add_argument("--skills-index", required=True)
     rank_patches_parser.add_argument("--output-dir", required=True)
     rank_patches_parser.set_defaults(handler=_run_rank_skill_patches)
+
+    simulate_patches_parser = subparsers.add_parser(
+        "simulate-skill-patches",
+        help=(
+            "apply ranked metadata patches to a shadow skill index and check "
+            "route regressions"
+        ),
+    )
+    simulate_patches_parser.add_argument("--ranked-patches", required=True)
+    simulate_patches_parser.add_argument("--baseline-routes", required=True)
+    simulate_patches_parser.add_argument("--tasks", required=True)
+    simulate_patches_parser.add_argument("--skills-index", required=True)
+    simulate_patches_parser.add_argument(
+        "--router",
+        choices=ROUTER_NAMES,
+        default="hybrid",
+    )
+    _add_embedding_args(simulate_patches_parser)
+    _add_gated_args(simulate_patches_parser)
+    _add_cross_encoder_args(simulate_patches_parser)
+    simulate_patches_parser.add_argument("--top-k", type=int, default=5)
+    simulate_patches_parser.add_argument("--max-patches", type=int, default=5)
+    simulate_patches_parser.add_argument("--output-dir", required=True)
+    simulate_patches_parser.set_defaults(handler=_run_simulate_skill_patches)
 
     calibrate_parser = subparsers.add_parser(
         "calibrate-cross-encoder",
@@ -505,6 +533,37 @@ def _run_rank_skill_patches(args: argparse.Namespace) -> None:
     print(
         "Wrote skill patch ranking artifacts to "
         f"{args.output_dir}: {summary['candidate_count']} candidates"
+    )
+
+
+def _run_simulate_skill_patches(args: argparse.Namespace) -> None:
+    skills = load_skill_index(args.skills_index)
+    tasks = load_tasks(args.tasks)
+    router = _router(args.router, args)
+    router_label = (
+        f"{_default_router_label(args.router, getattr(args, 'embedding_backend', None))}"
+        "-shadow"
+    )
+    summary = simulate_skill_patches(
+        ranked_patches=read_ranked_patches(args.ranked_patches),
+        baseline_records_path=args.baseline_routes,
+        tasks=tasks,
+        skills=skills,
+        router=router,
+        router_label=router_label,
+        top_k=args.top_k,
+        max_patches=args.max_patches,
+        output_dir=args.output_dir,
+        input_paths={
+            "ranked_patches": args.ranked_patches,
+            "baseline_routes": args.baseline_routes,
+            "tasks": args.tasks,
+            "skills_index": args.skills_index,
+        },
+    )
+    print(
+        "Wrote patch simulation artifacts to "
+        f"{args.output_dir}: {summary['guard_status']}"
     )
 
 
