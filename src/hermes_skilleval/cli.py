@@ -18,10 +18,15 @@ from hermes_skilleval.calibration import (
 )
 from hermes_skilleval.comparison import write_comparison_report
 from hermes_skilleval.dashboard import write_dashboard
+from hermes_skilleval.embedding_training import (
+    export_embedding_training_pairs,
+    write_training_pairs,
+)
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
     write_failure_analysis_report,
 )
+from hermes_skilleval.finetuned_eval import write_finetuned_eval_summary
 from hermes_skilleval.metrics import (
     abstention_rate,
     accepted_count,
@@ -246,6 +251,30 @@ def _build_parser() -> argparse.ArgumentParser:
     simulate_patches_parser.add_argument("--max-patches", type=int, default=5)
     simulate_patches_parser.add_argument("--output-dir", required=True)
     simulate_patches_parser.set_defaults(handler=_run_simulate_skill_patches)
+
+    export_training_parser = subparsers.add_parser(
+        "export-embedding-training-data",
+        help="export task-skill pairs for supervised embedding-router training",
+    )
+    export_training_parser.add_argument("--tasks", required=True)
+    export_training_parser.add_argument("--skills-index", required=True)
+    export_training_parser.add_argument("--output-dir", required=True)
+    export_training_parser.set_defaults(handler=_run_export_embedding_training_data)
+
+    judge_finetuned_parser = subparsers.add_parser(
+        "judge-finetuned-embedding",
+        help="compare fine-tuned embedding results against a baseline embedding run",
+    )
+    judge_finetuned_parser.add_argument("--baseline-results", required=True)
+    judge_finetuned_parser.add_argument("--candidate-results", required=True)
+    judge_finetuned_parser.add_argument("--output-dir", required=True)
+    judge_finetuned_parser.add_argument("--baseline-router", default="embedding-minilm")
+    judge_finetuned_parser.add_argument(
+        "--candidate-router",
+        default="finetuned-embedding",
+    )
+    judge_finetuned_parser.add_argument("--model-dir", required=True)
+    judge_finetuned_parser.set_defaults(handler=_run_judge_finetuned_embedding)
 
     calibrate_parser = subparsers.add_parser(
         "calibrate-cross-encoder",
@@ -563,6 +592,39 @@ def _run_simulate_skill_patches(args: argparse.Namespace) -> None:
     )
     print(
         "Wrote patch simulation artifacts to "
+        f"{args.output_dir}: {summary['guard_status']}"
+    )
+
+
+def _run_export_embedding_training_data(args: argparse.Namespace) -> None:
+    tasks = load_tasks(args.tasks)
+    skills = load_skill_index(args.skills_index)
+    pairs, summary = export_embedding_training_pairs(
+        tasks=tasks,
+        skills=skills,
+        input_paths={"tasks": args.tasks, "skills_index": args.skills_index},
+    )
+    output_dir = ensure_dir(args.output_dir)
+    write_training_pairs(
+        pairs,
+        summary,
+        pairs_path=output_dir / "training-pairs.jsonl",
+        summary_path=output_dir / "training-summary.json",
+    )
+    print(f"Wrote {summary['pair_count']} embedding training pairs to {output_dir}")
+
+
+def _run_judge_finetuned_embedding(args: argparse.Namespace) -> None:
+    summary = write_finetuned_eval_summary(
+        baseline_results_path=args.baseline_results,
+        candidate_results_path=args.candidate_results,
+        output_dir=args.output_dir,
+        baseline_router=args.baseline_router,
+        candidate_router=args.candidate_router,
+        model_dir=args.model_dir,
+    )
+    print(
+        "Wrote fine-tuned embedding evaluation to "
         f"{args.output_dir}: {summary['guard_status']}"
     )
 

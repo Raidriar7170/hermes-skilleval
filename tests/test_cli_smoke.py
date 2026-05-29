@@ -1584,6 +1584,119 @@ def test_cli_simulate_skill_patches_writes_artifacts(tmp_path):
     assert (output_dir / "regression-report.md").exists()
 
 
+def test_cli_export_embedding_training_data_writes_pairs(tmp_path):
+    tasks = tmp_path / "tasks"
+    task_dir = tasks / "task-001"
+    task_dir.mkdir(parents=True)
+    (task_dir / "task.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "id": "task-001",
+                "category": "browser-gui",
+                "difficulty": "medium",
+                "gold_skills": ["browser-smoke-testing"],
+                "negative_skills": ["systematic-debugging"],
+                "verifier": "manual",
+                "split": "dev",
+                "robustness_tags": ["phase14"],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    (task_dir / "prompt.md").write_text(
+        "Open the local dashboard and verify it is nonblank.",
+        encoding="utf-8",
+    )
+    skills_index = tmp_path / "skills.json"
+    skills_index.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "browser-smoke-testing",
+                    "name": "Browser Smoke Testing",
+                    "path": "skills/browser-smoke-testing/SKILL.md",
+                    "category": "browser-gui",
+                    "description": "Open local dashboards.",
+                    "body": "# Browser Smoke Testing",
+                    "trigger_terms": ["browser", "dashboard"],
+                    "token_count_estimate": 10,
+                },
+                {
+                    "id": "systematic-debugging",
+                    "name": "Systematic Debugging",
+                    "path": "skills/systematic-debugging/SKILL.md",
+                    "category": "superpowers",
+                    "description": "Investigate bugs.",
+                    "body": "# Systematic Debugging",
+                    "trigger_terms": ["debug"],
+                    "token_count_estimate": 10,
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "phase14"
+
+    result = main(
+        [
+            "export-embedding-training-data",
+            "--tasks",
+            str(tasks),
+            "--skills-index",
+            str(skills_index),
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "training-pairs.jsonl").exists()
+    assert (output_dir / "training-summary.json").exists()
+
+
+def test_cli_judge_finetuned_embedding_writes_summary(tmp_path):
+    baseline = tmp_path / "baseline.jsonl"
+    candidate = tmp_path / "candidate.jsonl"
+    record = {
+        "task_id": "task-001",
+        "category": "browser-gui",
+        "difficulty": "medium",
+        "split": "test",
+        "robustness_tags": ["phase14"],
+        "selected_skill_ids": ["gold"],
+        "gold_skills": ["gold"],
+        "negative_skills": ["bad"],
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_5": 1.0,
+        "negative_hit_rate": 0.0,
+        "negative_accepted_rate": 0.0,
+        "selection_rate_at_5": 0.2,
+    }
+    baseline.write_text(json.dumps(record) + "\n", encoding="utf-8")
+    candidate.write_text(json.dumps(record) + "\n", encoding="utf-8")
+    output_dir = tmp_path / "phase14"
+
+    result = main(
+        [
+            "judge-finetuned-embedding",
+            "--baseline-results",
+            str(baseline),
+            "--candidate-results",
+            str(candidate),
+            "--output-dir",
+            str(output_dir),
+            "--model-dir",
+            "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "regression-summary.json").exists()
+    assert (output_dir / "comparison.md").exists()
+
+
 def _rank_record(task_id, *, split, selected, scores, gold, negative):
     return {
         "task_id": task_id,

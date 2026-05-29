@@ -322,7 +322,29 @@ baseline. It is an offline deterministic regression guard, not fine-tuning or
 learned training, and it does not modify source `SKILL.md` files or overwrite
 the original `skills.json`.
 
-### Static Dashboard
+### 11. Export Fine-Tuned Embedding Router Training Data
+
+```bash
+skilleval export-embedding-training-data \
+  --tasks benchmarks/migration-tasks \
+  --skills-index docs/demo/phase9-real-skill-library-migration/skills.json \
+  --output-dir docs/demo/phase14-finetuned-embedding-router
+```
+
+Phase 14 exports supervised task-skill pairs and a remote-ready training config
+for a domain-specific embedding router. It does not commit model checkpoints,
+embedding caches, or downloaded models. Fine-tuned evaluation artifacts are
+added only after a real model path is evaluated:
+
+```bash
+skilleval judge-finetuned-embedding \
+  --baseline-results docs/demo/phase14-finetuned-embedding-router/baseline-results.jsonl \
+  --candidate-results docs/demo/phase14-finetuned-embedding-router/finetuned-results.jsonl \
+  --output-dir docs/demo/phase14-finetuned-embedding-router \
+  --model-dir /mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router
+```
+
+### 12. Static Dashboard
 
 ```bash
 skilleval dashboard \
@@ -336,7 +358,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 11. Run Tests
+### 13. Run Tests
 
 ```bash
 pytest -q
@@ -345,7 +367,7 @@ pytest -q
 Expected:
 
 ```text
-199 passed
+211 passed
 ```
 
 ---
@@ -371,6 +393,7 @@ Expected:
 | Phase 11 | Evidence judge calibration | [`docs/phase11.md`](docs/phase11.md) |
 | Phase 12 | Offline skill metadata patch ranking | [`docs/phase12.md`](docs/phase12.md) |
 | Phase 13 | Patch simulation regression guard | [`docs/phase13.md`](docs/phase13.md) |
+| Phase 14 | Fine-tuned embedding router path | [`docs/phase14.md`](docs/phase14.md) |
 
 ---
 
@@ -432,7 +455,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 199 unit and smoke tests |
+| Testing | pytest | 211 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -459,6 +482,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 - [x] Patch simulation regression guard
       ([docs](docs/phase13.md), [demo](docs/demo/phase13-patch-simulation/regression-report.md))
 - [ ] Fine-tuned embedding router for domain-specific skill libraries
+      ([docs](docs/phase14.md), [training data](docs/demo/phase14-finetuned-embedding-router/training-summary.json))
 
 ---
 
