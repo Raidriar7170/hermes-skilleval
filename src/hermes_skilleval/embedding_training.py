@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from hermes_skilleval.models import BenchmarkTask, Skill
+from hermes_skilleval.remote_paths import validate_a100_user_path
 
 
 def export_embedding_training_pairs(
@@ -75,8 +76,7 @@ def build_train_config(
     learning_rate: float,
     seed: int,
 ) -> dict[str, Any]:
-    if not output_dir.startswith("/mnt/data/minghongsun/"):
-        raise ValueError("A100 training output_dir must be under /mnt/data/minghongsun/")
+    validated_output_dir = validate_a100_user_path(output_dir, field="output_dir")
     if epochs <= 0:
         raise ValueError("epochs must be positive")
     if batch_size <= 0:
@@ -87,7 +87,7 @@ def build_train_config(
         "phase": "Phase 14",
         "base_model": base_model,
         "training_pairs": training_pairs,
-        "output_dir": output_dir,
+        "output_dir": validated_output_dir,
         "epochs": epochs,
         "batch_size": batch_size,
         "learning_rate": learning_rate,

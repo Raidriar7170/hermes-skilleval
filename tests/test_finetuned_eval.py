@@ -61,6 +61,31 @@ def test_write_finetuned_eval_summary_rejects_model_dir_inside_repo(tmp_path: Pa
         )
 
 
+def test_write_finetuned_eval_summary_rejects_model_dir_traversal(tmp_path: Path):
+    baseline = tmp_path / "baseline.jsonl"
+    candidate = tmp_path / "candidate.jsonl"
+    baseline.write_text(
+        json.dumps(_record(selected=["gold"], recall=1.0, negative_hit=0.0))
+        + "\n",
+        encoding="utf-8",
+    )
+    candidate.write_text(
+        json.dumps(_record(selected=["gold"], recall=1.0, negative_hit=0.0))
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="/mnt/data/minghongsun"):
+        write_finetuned_eval_summary(
+            baseline_results_path=baseline,
+            candidate_results_path=candidate,
+            output_dir=tmp_path / "phase14",
+            baseline_router="embedding-minilm",
+            candidate_router="finetuned-embedding",
+            model_dir="/mnt/data/minghongsun/../leak/model",
+        )
+
+
 def _record(*, selected, recall, negative_hit):
     return {
         "task_id": "task-001",

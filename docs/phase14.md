@@ -68,6 +68,26 @@ skilleval judge-finetuned-embedding \
   --model-dir /mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router
 ```
 
+## Current Real Evaluation
+
+The current imported run used a real fine-tuned model path under
+`/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router`.
+It compares 12 Phase 9 migration tasks against the cached MiniLM baseline.
+
+| Metric | Baseline | Fine-tuned | Delta |
+|---|---:|---:|---:|
+| Recall@5 | 1.000000 | 1.000000 | +0.000000 |
+| MRR | 0.902778 | 0.916667 | +0.013889 |
+| NDCG@5 | 0.920888 | 0.938488 | +0.017600 |
+| Negative Hit Rate | 0.333333 | 0.250000 | -0.083333 |
+| Negative Accepted Rate | 0.333333 | 0.250000 | -0.083333 |
+
+The regression guard is `REVIEW_REQUIRED`, not `PASS`: the fine-tuned router
+improves aggregate ranking and reduces mean negative-hit rate, but
+`browser-local-dashboard` introduces a new negative skill selection. The README
+roadmap therefore remains unchecked until that per-task regression is removed
+or explicitly accepted with a stronger guard rationale.
+
 ## Limitations
 
 This is a self-built Hermes-style skill-routing benchmark. It is not a

@@ -39,6 +39,39 @@ def test_phase14_docs_do_not_overclaim_without_eval_artifacts():
         assert "- [ ] Fine-tuned embedding router" in readme
 
 
+def test_phase14_real_eval_artifacts_keep_review_required_guard_bounded():
+    summary_path = PHASE14_ROOT / "regression-summary.json"
+    if not summary_path.exists():
+        return
+
+    readme = README.read_text(encoding="utf-8")
+    phase14 = PHASE14_DOC.read_text(encoding="utf-8")
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    baseline = _read_jsonl(PHASE14_ROOT / "baseline-results.jsonl")
+    candidate = _read_jsonl(PHASE14_ROOT / "finetuned-results.jsonl")
+
+    assert len(baseline) == len(candidate) == summary["task_count"] == 12
+    assert summary["artifact_type"] == "phase14-finetuned-embedding-eval"
+    assert summary["model_checkpoint_committed"] is False
+    assert summary["guard_status"] == "REVIEW_REQUIRED"
+    assert summary["regression_count"] == 1
+    assert summary["metric_deltas"]["negative_hit_rate"] < 0
+    assert "- [ ] Fine-tuned embedding router" in readme
+    assert "REVIEW_REQUIRED" in phase14
+    assert "new negative skill" in phase14
+
+
+def test_readme_test_counts_match_verified_suite_size():
+    readme = README.read_text(encoding="utf-8")
+
+    assert "| Test cases | 218 |" in readme
+    assert "218 passed" in readme
+    assert "211 passed" not in readme
+    assert "214 passed" not in readme
+    assert "217 passed" not in readme
+    assert "| Test cases | 199 |" not in readme
+
+
 def _read_jsonl(path: Path) -> list[dict[str, object]]:
     return [
         json.loads(line)

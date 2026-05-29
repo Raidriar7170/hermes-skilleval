@@ -146,6 +146,19 @@ def test_build_train_config_rejects_outputs_outside_minghongsun_path():
         )
 
 
+def test_build_train_config_rejects_traversal_outside_minghongsun_path():
+    with pytest.raises(ValueError, match="/mnt/data/minghongsun"):
+        build_train_config(
+            training_pairs="training-pairs.jsonl",
+            output_dir="/mnt/data/minghongsun/../leak/model",
+            base_model="sentence-transformers/all-MiniLM-L6-v2",
+            epochs=1,
+            batch_size=16,
+            learning_rate=2e-5,
+            seed=7170,
+        )
+
+
 def test_write_train_config_writes_json(tmp_path: Path):
     config = build_train_config(
         training_pairs="docs/demo/phase14-finetuned-embedding-router/training-pairs.jsonl",

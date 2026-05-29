@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from hermes_skilleval.remote_paths import validate_a100_user_path
 from hermes_skilleval.skill_patch_simulation import compare_route_records
 
 
@@ -26,8 +27,7 @@ def write_finetuned_eval_summary(
     candidate_router: str,
     model_dir: str,
 ) -> dict[str, Any]:
-    if not model_dir.startswith("/mnt/data/minghongsun/"):
-        raise ValueError("fine-tuned model_dir must be under /mnt/data/minghongsun/")
+    validated_model_dir = validate_a100_user_path(model_dir, field="model_dir")
 
     baseline_records = _read_jsonl(baseline_results_path)
     candidate_records = _read_jsonl(candidate_results_path)
@@ -41,7 +41,7 @@ def write_finetuned_eval_summary(
         "artifact_type": "phase14-finetuned-embedding-eval",
         "baseline_router": baseline_router,
         "candidate_router": candidate_router,
-        "model_dir": model_dir,
+        "model_dir": validated_model_dir,
         "model_checkpoint_committed": False,
         "task_count": len(candidate_records),
         "guard_status": "PASS" if regression_count == 0 else "REVIEW_REQUIRED",
