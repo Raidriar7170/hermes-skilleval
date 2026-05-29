@@ -91,7 +91,8 @@ def build_train_config(
         "epochs": epochs,
         "batch_size": batch_size,
         "learning_rate": learning_rate,
-        "loss": "MultipleNegativesRankingLoss",
+        "loss": "MultipleNegativesRankingLoss+ContrastiveLoss",
+        "hard_negative_margin": 1.5,
         "seed": seed,
         "model_checkpoint_committed": False,
     }
@@ -125,6 +126,10 @@ def render_model_card(config: dict[str, Any], summary: dict[str, Any]) -> str:
             f"- Hard-negative pairs: {summary['hard_negative_count']}",
             "- Labels: gold skill positives and task negative hard negatives",
             "- Split policy: dev pairs for training, test pairs held out for reporting",
+            "",
+            "The training script consumes train-like positive pairs with "
+            "`MultipleNegativesRankingLoss` and train-like hard negatives "
+            "with `ContrastiveLoss` at margin 1.5.",
             "",
             "## Training Command",
             "",

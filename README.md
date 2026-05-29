@@ -481,7 +481,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
       ([docs](docs/phase12.md), [demo](docs/demo/phase12-skill-patch-ranking/ranked-patches.md))
 - [x] Patch simulation regression guard
       ([docs](docs/phase13.md), [demo](docs/demo/phase13-patch-simulation/regression-report.md))
-- [ ] Fine-tuned embedding router for domain-specific skill libraries
+- [x] Fine-tuned embedding router for domain-specific skill libraries
       ([docs](docs/phase14.md), [training data](docs/demo/phase14-finetuned-embedding-router/training-summary.json))
 
 ---

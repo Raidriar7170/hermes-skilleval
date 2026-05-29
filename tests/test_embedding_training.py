@@ -129,7 +129,8 @@ def test_build_train_config_keeps_outputs_under_minghongsun_path():
 
     assert config["phase"] == "Phase 14"
     assert config["output_dir"].startswith("/mnt/data/minghongsun/")
-    assert config["loss"] == "MultipleNegativesRankingLoss"
+    assert config["loss"] == "MultipleNegativesRankingLoss+ContrastiveLoss"
+    assert config["hard_negative_margin"] == 1.5
     assert config["model_checkpoint_committed"] is False
 
 

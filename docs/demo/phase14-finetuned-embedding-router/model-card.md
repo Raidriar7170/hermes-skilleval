@@ -14,9 +14,10 @@ Hermes-style skill routing. The model checkpoint is not committed to this repo.
 - Labels: gold skill positives and task negative hard negatives
 - Split policy: dev pairs for training, test pairs held out for reporting
 
-The current training script consumes positive dev pairs with
-`MultipleNegativesRankingLoss`. Hard negatives are exported for audit,
-interpretation, and future losses that use explicit negative labels.
+The current training script consumes train-like positive pairs with
+`MultipleNegativesRankingLoss` and train-like hard-negative pairs with
+`ContrastiveLoss` at margin `1.5`. Held-out test rows remain reserved for
+evaluation and regression judging.
 
 ## Training Command
 
@@ -27,9 +28,9 @@ python scripts/train_embedding_router.py \
 
 ## Evaluation
 
-The baseline and fine-tuned result files are committed only after a real
-fine-tuned model path is evaluated. The checkpoint itself remains outside the
-repository.
+The committed baseline and fine-tuned result files come from a real model path
+under `/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router`.
+The checkpoint itself remains outside the repository.
 
 ## Limitations
 

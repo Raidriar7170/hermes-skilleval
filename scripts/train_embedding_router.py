@@ -33,6 +33,10 @@ def main() -> int:
     epochs = _positive_int(config["epochs"], "epochs")
     batch_size = _positive_int(config["batch_size"], "batch_size")
     learning_rate = _positive_float(config["learning_rate"], "learning_rate")
+    hard_negative_margin = _positive_float(
+        config.get("hard_negative_margin", 1.5),
+        "hard_negative_margin",
+    )
     pairs = [
         json.loads(line)
         for line in Path(config["training_pairs"]).read_text(encoding="utf-8").splitlines()
@@ -43,6 +47,11 @@ def main() -> int:
         for pair in pairs
         if int(pair["label"]) == 1 and str(pair["split"]) in {"train", "dev"}
     ]
+    hard_negative_pairs = [
+        pair
+        for pair in pairs
+        if int(pair["label"]) == 0 and str(pair["split"]) in {"train", "dev"}
+    ]
     if not positive_pairs:
         raise SystemExit("no positive train/dev pairs found")
 
@@ -50,11 +59,17 @@ def main() -> int:
     if torch.cuda.is_available():
         model = model.to("cuda")
     train_loss = losses.MultipleNegativesRankingLoss(model)
+    hard_negative_loss = (
+        losses.ContrastiveLoss(model, margin=hard_negative_margin)
+        if hard_negative_pairs
+        else None
+    )
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
     model.train()
     observed_losses: list[float] = []
     optimizer_step_count = 0
+    hard_negative_optimizer_step_count = 0
     for _ in range(epochs):
         random.shuffle(positive_pairs)
         for start in range(0, len(positive_pairs), batch_size):
@@ -76,20 +91,53 @@ def main() -> int:
             optimizer.step()
             optimizer_step_count += 1
             observed_losses.append(float(loss.detach().cpu()))
+        if hard_negative_loss is None:
+            continue
+        random.shuffle(hard_negative_pairs)
+        for start in range(0, len(hard_negative_pairs), batch_size):
+            batch = hard_negative_pairs[start : start + batch_size]
+            features = [
+                _batch_to_device(
+                    model.tokenize([pair["query_text"] for pair in batch]),
+                    model.device,
+                ),
+                _batch_to_device(
+                    model.tokenize([pair["skill_text"] for pair in batch]),
+                    model.device,
+                ),
+            ]
+            labels = torch.zeros(len(batch), device=model.device)
+            optimizer.zero_grad()
+            loss = hard_negative_loss(features, labels)
+            loss.backward()
+            optimizer.step()
+            optimizer_step_count += 1
+            hard_negative_optimizer_step_count += 1
+            observed_losses.append(float(loss.detach().cpu()))
 
     model_output.mkdir(parents=True, exist_ok=True)
-    model.save(str(model_output))
+    try:
+        model.save(str(model_output), create_model_card=False)
+    except TypeError as exc:
+        if "create_model_card" not in str(exc):
+            raise
+        model.save(str(model_output))
     (model_output / "train-run-summary.json").write_text(
         json.dumps(
             {
                 "phase": "Phase 14",
-                "trained_pair_count": len(positive_pairs),
                 "base_model": config["base_model"],
                 "device": str(model.device),
                 "epoch_count": epochs,
                 "final_loss": observed_losses[-1] if observed_losses else None,
+                "hard_negative_margin": hard_negative_margin,
+                "hard_negative_optimizer_step_count": (
+                    hard_negative_optimizer_step_count
+                ),
                 "optimizer_step_count": optimizer_step_count,
                 "output_dir": output_dir,
+                "trained_hard_negative_pair_count": len(hard_negative_pairs),
+                "trained_pair_count": len(positive_pairs),
             },
             indent=2,
             sort_keys=True,

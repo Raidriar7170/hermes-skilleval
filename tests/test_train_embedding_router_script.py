@@ -37,6 +37,14 @@ def test_train_script_runs_manual_training_loop_with_fake_dependencies(
                         "split": "train",
                     }
                 ),
+                json.dumps(
+                    {
+                        "query_text": "open dashboard",
+                        "skill_text": "systematic debugging",
+                        "label": 0,
+                        "split": "dev",
+                    }
+                ),
             ]
         )
         + "\n",
@@ -49,6 +57,7 @@ def test_train_script_runs_manual_training_loop_with_fake_dependencies(
                 "base_model": "sentence-transformers/all-MiniLM-L6-v2",
                 "batch_size": 1,
                 "epochs": 1,
+                "hard_negative_margin": 1.5,
                 "learning_rate": 2e-5,
                 "output_dir": "/mnt/data/minghongsun/phase14/models/minilm",
                 "seed": 7170,
@@ -64,13 +73,19 @@ def test_train_script_runs_manual_training_loop_with_fake_dependencies(
     mapped_output = tmp_path / "mapped-mnt" / "phase14" / "models" / "minilm"
     summary = json.loads((mapped_output / "train-run-summary.json").read_text())
     assert summary["trained_pair_count"] == 2
-    assert summary["optimizer_step_count"] == 2
+    assert summary["trained_hard_negative_pair_count"] == 1
+    assert summary["hard_negative_margin"] == 1.5
+    assert summary["hard_negative_optimizer_step_count"] == 1
+    assert summary["optimizer_step_count"] == 3
     assert summary["device"] == "cuda"
-    assert summary["final_loss"] == 0.5
+    assert summary["final_loss"] == 0.25
     assert (mapped_output / "fake-model.txt").exists()
     assert getattr(sys.modules["torch"], "seed_value") == 7170
     assert FakeOptimizer.instances[0].lr == 2e-5
-    assert FakeLossValue.backward_count == 2
+    assert FakeLossValue.backward_count == 3
+    assert FakeContrastiveLoss.labels_seen == [[0]]
+    assert FakeContrastiveLoss.margin_seen == 1.5
+    assert FakeSentenceTransformer.save_kwargs == {"create_model_card": False}
 
 
 def test_train_script_rejects_nonpositive_batch_size(monkeypatch, tmp_path: Path):
@@ -181,11 +196,15 @@ def _mapping_path_factory(tmp_path: Path):
 def _install_fake_training_modules(monkeypatch) -> None:
     FakeOptimizer.instances = []
     FakeLossValue.backward_count = 0
+    FakeContrastiveLoss.labels_seen = []
+    FakeContrastiveLoss.margin_seen = None
+    FakeSentenceTransformer.save_kwargs = None
 
     fake_torch = types.ModuleType("torch")
     setattr(fake_torch, "seed_value", None)
     setattr(fake_torch, "cuda", types.SimpleNamespace(is_available=lambda: True))
     setattr(fake_torch, "empty", lambda length, device: FakeTensor([0] * length, device))
+    setattr(fake_torch, "zeros", lambda length, device: FakeTensor([0] * length, device))
     setattr(fake_torch, "manual_seed", lambda seed: setattr(fake_torch, "seed_value", seed))
     setattr(fake_torch, "optim", types.SimpleNamespace(AdamW=FakeOptimizer))
 
@@ -194,6 +213,7 @@ def _install_fake_training_modules(monkeypatch) -> None:
     sentence_transformer_module = types.ModuleType("sentence_transformers.sentence_transformer")
     losses_module = types.ModuleType("sentence_transformers.sentence_transformer.losses")
     setattr(losses_module, "MultipleNegativesRankingLoss", FakeMultipleNegativesRankingLoss)
+    setattr(losses_module, "ContrastiveLoss", FakeContrastiveLoss)
     setattr(sentence_transformer_module, "losses", losses_module)
 
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
@@ -220,6 +240,8 @@ class FakeTensor:
 
 
 class FakeSentenceTransformer:
+    save_kwargs: dict[str, object] | None = None
+
     def __init__(self, base_model: str):
         self.base_model = base_model
         self.device = "cpu"
@@ -238,7 +260,8 @@ class FakeSentenceTransformer:
     def tokenize(self, texts: list[str]):
         return {"input_ids": FakeTensor(texts)}
 
-    def save(self, output_dir: str):
+    def save(self, output_dir: str, **kwargs):
+        type(self).save_kwargs = kwargs
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         (Path(output_dir) / "fake-model.txt").write_text(self.base_model, encoding="utf-8")
 
@@ -270,6 +293,23 @@ class FakeMultipleNegativesRankingLoss:
         for feature in features:
             assert feature["input_ids"].device == self.model.device
         return FakeLossValue(0.5)
+
+
+class FakeContrastiveLoss:
+    labels_seen: list[list[int]] = []
+    margin_seen: float | None = None
+
+    def __init__(self, model, margin: float):
+        self.model = model
+        type(self).margin_seen = margin
+
+    def __call__(self, features, labels):
+        assert self.model.trained is True
+        assert labels.device == self.model.device
+        self.labels_seen.append(labels.value)
+        for feature in features:
+            assert feature["input_ids"].device == self.model.device
+        return FakeLossValue(0.25)
 
 
 class FakeLossValue:
