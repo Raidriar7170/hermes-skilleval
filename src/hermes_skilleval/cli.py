@@ -40,7 +40,9 @@ from hermes_skilleval.metrics import (
     recall_at_k,
     selection_rate_at_k,
 )
+from hermes_skilleval.model_manifest import write_model_manifest
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
+from hermes_skilleval.provenance import write_finetuned_provenance_pack
 from hermes_skilleval.report import write_markdown_report
 from hermes_skilleval.routers.base import SkillRouter
 from hermes_skilleval.routers.cross_encoder import (
@@ -274,7 +276,37 @@ def _build_parser() -> argparse.ArgumentParser:
         default="finetuned-embedding",
     )
     judge_finetuned_parser.add_argument("--model-dir", required=True)
+    judge_finetuned_parser.add_argument(
+        "--apply-split",
+        choices=("dev", "test", "all"),
+        default="all",
+    )
+    judge_finetuned_parser.add_argument(
+        "--write-filtered-results",
+        action="store_true",
+    )
     judge_finetuned_parser.set_defaults(handler=_run_judge_finetuned_embedding)
+
+    manifest_parser = subparsers.add_parser(
+        "write-model-manifest",
+        help="write a sanitized file manifest for a remote model directory",
+    )
+    manifest_parser.add_argument("--model-dir", required=True)
+    manifest_parser.add_argument("--local-model-dir", default=None)
+    manifest_parser.add_argument("--output", required=True)
+    manifest_parser.set_defaults(handler=_run_write_model_manifest)
+
+    provenance_parser = subparsers.add_parser(
+        "write-finetuned-provenance",
+        help="write a sanitized provenance pack for held-out fine-tuned evidence",
+    )
+    provenance_parser.add_argument("--training-summary", required=True)
+    provenance_parser.add_argument("--train-config", required=True)
+    provenance_parser.add_argument("--train-run-summary", required=True)
+    provenance_parser.add_argument("--model-manifest", required=True)
+    provenance_parser.add_argument("--regression-summary", required=True)
+    provenance_parser.add_argument("--output-dir", required=True)
+    provenance_parser.set_defaults(handler=_run_write_finetuned_provenance)
 
     calibrate_parser = subparsers.add_parser(
         "calibrate-cross-encoder",
@@ -622,10 +654,31 @@ def _run_judge_finetuned_embedding(args: argparse.Namespace) -> None:
         baseline_router=args.baseline_router,
         candidate_router=args.candidate_router,
         model_dir=args.model_dir,
+        apply_split=args.apply_split,
+        write_filtered_results=args.write_filtered_results,
     )
     print(
         "Wrote fine-tuned embedding evaluation to "
         f"{args.output_dir}: {summary['guard_status']}"
+    )
+
+
+def _run_write_model_manifest(args: argparse.Namespace) -> None:
+    write_model_manifest(
+        model_dir=args.local_model_dir or args.model_dir,
+        model_dir_label=args.model_dir,
+        output_path=args.output,
+    )
+
+
+def _run_write_finetuned_provenance(args: argparse.Namespace) -> None:
+    write_finetuned_provenance_pack(
+        training_summary_path=args.training_summary,
+        train_config_path=args.train_config,
+        train_run_summary_path=args.train_run_summary,
+        model_manifest_path=args.model_manifest,
+        regression_summary_path=args.regression_summary,
+        output_dir=args.output_dir,
     )
 
 

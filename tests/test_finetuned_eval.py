@@ -36,6 +36,46 @@ def test_write_finetuned_eval_summary_flags_negative_hit_regression(tmp_path: Pa
     assert (tmp_path / "phase14" / "comparison.md").exists()
 
 
+def test_write_finetuned_eval_summary_records_source_counts_by_router(
+    tmp_path: Path,
+):
+    baseline = tmp_path / "baseline.jsonl"
+    candidate = tmp_path / "candidate.jsonl"
+    baseline.write_text(
+        json.dumps(_record(selected=["gold"], recall=1.0, negative_hit=0.0))
+        + "\n"
+        + json.dumps(
+            {
+                **_record(selected=["gold"], recall=1.0, negative_hit=0.0),
+                "task_id": "dev-baseline-only",
+                "split": "dev",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    candidate.write_text(
+        json.dumps(_record(selected=["gold"], recall=1.0, negative_hit=0.0))
+        + "\n",
+        encoding="utf-8",
+    )
+
+    summary = write_finetuned_eval_summary(
+        baseline_results_path=baseline,
+        candidate_results_path=candidate,
+        output_dir=tmp_path / "phase15",
+        baseline_router="embedding-minilm",
+        candidate_router="finetuned-embedding",
+        model_dir="/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+        apply_split="test",
+    )
+
+    assert summary["source_task_count"] == 1
+    assert summary["baseline_source_task_count"] == 2
+    assert summary["candidate_source_task_count"] == 1
+    assert summary["task_count"] == 1
+
+
 def test_write_finetuned_eval_summary_rejects_model_dir_inside_repo(tmp_path: Path):
     baseline = tmp_path / "baseline.jsonl"
     candidate = tmp_path / "candidate.jsonl"

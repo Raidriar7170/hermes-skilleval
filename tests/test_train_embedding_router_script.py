@@ -79,7 +79,10 @@ def test_train_script_runs_manual_training_loop_with_fake_dependencies(
     assert summary["optimizer_step_count"] == 3
     assert summary["device"] == "cuda"
     assert summary["final_loss"] == 0.25
-    assert (mapped_output / "fake-model.txt").exists()
+    assert (mapped_output / "config.json").exists()
+    model_manifest = mapped_output / "model-manifest.json"
+    assert model_manifest.exists()
+    assert json.loads(model_manifest.read_text())["file_count"] == 1
     assert getattr(sys.modules["torch"], "seed_value") == 7170
     assert FakeOptimizer.instances[0].lr == 2e-5
     assert FakeLossValue.backward_count == 3
@@ -263,7 +266,7 @@ class FakeSentenceTransformer:
     def save(self, output_dir: str, **kwargs):
         type(self).save_kwargs = kwargs
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-        (Path(output_dir) / "fake-model.txt").write_text(self.base_model, encoding="utf-8")
+        (Path(output_dir) / "config.json").write_text("{}\n", encoding="utf-8")
 
 
 class FakeOptimizer:

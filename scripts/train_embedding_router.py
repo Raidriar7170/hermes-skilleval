@@ -6,6 +6,8 @@ import random
 from pathlib import Path
 from typing import Any
 
+from hermes_skilleval.model_manifest import write_model_manifest
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -122,6 +124,11 @@ def main() -> int:
         if "create_model_card" not in str(exc):
             raise
         model.save(str(model_output))
+    write_model_manifest(
+        model_dir=model_output,
+        model_dir_label=output_dir,
+        output_path=model_output / "model-manifest.json",
+    )
     (model_output / "train-run-summary.json").write_text(
         json.dumps(
             {

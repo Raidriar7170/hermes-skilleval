@@ -1,0 +1,96 @@
+{
+  "artifact_type": "phase15-heldout-provenance-pack",
+  "heldout_eval": {
+    "baseline_source_task_count": 12,
+    "candidate_source_task_count": 12,
+    "evaluated_split": "test",
+    "guard_status": "PASS",
+    "metric_deltas": {
+      "mrr": 0.0,
+      "ndcg_at_5": 0.0,
+      "negative_accepted_rate": 0.0,
+      "negative_hit_rate": 0.0,
+      "recall_at_5": 0.0,
+      "selection_rate_at_5": 0.0
+    },
+    "regression_count": 0,
+    "source_task_count": 12,
+    "task_count": 4
+  },
+  "limitations": [
+    "self-built Hermes-style skill-routing benchmark",
+    "standard external benchmark is not claimed",
+    "model checkpoint is not committed"
+  ],
+  "model_checkpoint_committed": false,
+  "model_manifest": {
+    "file_count": 8,
+    "files": [
+      {
+        "path": "1_Pooling/config.json",
+        "sha256": "4fef0a7e8c8ee36e74c0fad89bab60ade72324442d43f559ea219bb7c2580710",
+        "size_bytes": 90
+      },
+      {
+        "path": "config.json",
+        "sha256": "9d69dcb3606edc1e8d85a024d87238780e835b1e432db86c41561e5abdbdf080",
+        "size_bytes": 744
+      },
+      {
+        "path": "config_sentence_transformers.json",
+        "sha256": "d417c69136a620e48720573e6429d68425d9c8114b7d265def61169e4a31b092",
+        "size_bytes": 283
+      },
+      {
+        "path": "model.safetensors",
+        "sha256": "598dd3951d7636cb86e5f00cbb1d5243dbf96b9659887a9d4eb865fcf451e7c1",
+        "size_bytes": 90864176
+      },
+      {
+        "path": "modules.json",
+        "sha256": "fa7d796a215e1b2416773062891923b191fc5a4849bc44e322997433c90f459c",
+        "size_bytes": 429
+      },
+      {
+        "path": "sentence_bert_config.json",
+        "sha256": "3084164002c0bca01b0259c5327123803fce32e660a57feb93184ffead186fc8",
+        "size_bytes": 241
+      },
+      {
+        "path": "tokenizer.json",
+        "sha256": "851ca67100d372ca3ae031a6abd168f53489eebfd7d89523f35c5c9b4d372c3c",
+        "size_bytes": 711649
+      },
+      {
+        "path": "tokenizer_config.json",
+        "sha256": "ca2ab44edf2479d3a28df6d6456b7508aa70f451b398dde47fdddfaffa1c3862",
+        "size_bytes": 564
+      }
+    ],
+    "model_dir": "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+    "total_size_bytes": 91578176
+  },
+  "phase": "Phase 15",
+  "remote_run": {
+    "device": "cuda:0",
+    "epoch_count": 3,
+    "final_loss": 0.2228596806526184,
+    "hard_negative_optimizer_step_count": 3,
+    "optimizer_step_count": 6,
+    "trained_hard_negative_pair_count": 8,
+    "trained_pair_count": 11
+  },
+  "training": {
+    "base_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "batch_size": 16,
+    "epochs": 3,
+    "hard_negative_count": 12,
+    "hard_negative_margin": 1.5,
+    "leakage_guard": "PASS",
+    "learning_rate": 2e-05,
+    "loss": "MultipleNegativesRankingLoss+ContrastiveLoss",
+    "output_dir": "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+    "pair_count": 28,
+    "positive_count": 16
+  }
+}

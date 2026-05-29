@@ -1697,6 +1697,228 @@ def test_cli_judge_finetuned_embedding_writes_summary(tmp_path):
     assert (output_dir / "comparison.md").exists()
 
 
+def test_cli_judge_finetuned_embedding_filters_to_test_split(tmp_path):
+    baseline = tmp_path / "baseline.jsonl"
+    candidate = tmp_path / "candidate.jsonl"
+    baseline_records = [
+        _finetuned_eval_record("dev-task", split="dev", selected=["gold"]),
+        _finetuned_eval_record(
+            "test-task",
+            split="test",
+            selected=["gold", "bad"],
+            negative_hit_rate=1.0,
+            negative_accepted_rate=1.0,
+        ),
+    ]
+    candidate_records = [
+        _finetuned_eval_record(
+            "dev-task",
+            split="dev",
+            selected=["bad"],
+            recall_at_5=0.0,
+            mrr=0.0,
+            ndcg_at_5=0.0,
+            negative_hit_rate=1.0,
+            negative_accepted_rate=1.0,
+        ),
+        _finetuned_eval_record(
+            "test-task",
+            split="test",
+            selected=["gold", "bad"],
+            negative_hit_rate=1.0,
+            negative_accepted_rate=1.0,
+        ),
+    ]
+    baseline.write_text(
+        "".join(json.dumps(record) + "\n" for record in baseline_records),
+        encoding="utf-8",
+    )
+    candidate.write_text(
+        "".join(json.dumps(record) + "\n" for record in candidate_records),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "phase15"
+
+    result = main(
+        [
+            "judge-finetuned-embedding",
+            "--baseline-results",
+            str(baseline),
+            "--candidate-results",
+            str(candidate),
+            "--output-dir",
+            str(output_dir),
+            "--model-dir",
+            "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+            "--apply-split",
+            "test",
+            "--write-filtered-results",
+        ]
+    )
+
+    assert result == 0
+    summary = json.loads((output_dir / "regression-summary.json").read_text())
+    assert summary["evaluated_split"] == "test"
+    assert summary["split_policy"] == "records where split == 'test'"
+    assert summary["source_task_count"] == 2
+    assert summary["task_count"] == 1
+    assert summary["guard_status"] == "PASS"
+    assert summary["artifact_type"] == "phase15-heldout-finetuned-embedding-eval"
+    assert (output_dir / "baseline-test-results.jsonl").exists()
+    assert (output_dir / "finetuned-test-results.jsonl").exists()
+
+
+def test_cli_write_model_manifest_writes_manifest(tmp_path):
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
+    (model_dir / "config.json").write_text("{}\n", encoding="utf-8")
+    output = tmp_path / "model-manifest.json"
+
+    result = main(
+        [
+            "write-model-manifest",
+            "--model-dir",
+            "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+            "--local-model-dir",
+            str(model_dir),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert result == 0
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    assert manifest["file_count"] == 1
+    assert manifest["files"][0]["path"] == "config.json"
+
+
+def test_cli_write_finetuned_provenance_writes_pack(tmp_path):
+    training_summary = tmp_path / "training-summary.json"
+    train_config = tmp_path / "train-config.json"
+    train_run_summary = tmp_path / "train-run-summary.json"
+    model_manifest = tmp_path / "model-manifest.json"
+    regression_summary = tmp_path / "regression-summary.json"
+    training_summary.write_text(
+        json.dumps(
+            {
+                "pair_count": 28,
+                "positive_count": 16,
+                "hard_negative_count": 12,
+                "leakage_guard": "PASS",
+            }
+        ),
+        encoding="utf-8",
+    )
+    train_config.write_text(
+        json.dumps(
+            {
+                "loss": "MultipleNegativesRankingLoss+ContrastiveLoss",
+                "hard_negative_margin": 1.5,
+                "epochs": 3,
+                "batch_size": 8,
+                "learning_rate": 2e-5,
+                "base_model": "/mnt/data/minghongsun/hermes-skilleval-models/all-MiniLM-L6-v2",
+                "output_dir": "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+            }
+        ),
+        encoding="utf-8",
+    )
+    train_run_summary.write_text(
+        json.dumps(
+            {
+                "device": "cuda:0",
+                "epoch_count": 3,
+                "trained_pair_count": 11,
+                "trained_hard_negative_pair_count": 8,
+                "optimizer_step_count": 6,
+                "hard_negative_optimizer_step_count": 3,
+                "final_loss": 0.2228596806526184,
+            }
+        ),
+        encoding="utf-8",
+    )
+    model_manifest.write_text(
+        json.dumps(
+            {
+                "model_dir": "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+                "file_count": 1,
+                "total_size_bytes": 2,
+                "files": [
+                    {"path": "config.json", "size_bytes": 2, "sha256": "0" * 64}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    regression_summary.write_text(
+        json.dumps(
+            {
+                "evaluated_split": "test",
+                "source_task_count": 12,
+                "task_count": 4,
+                "guard_status": "PASS",
+                "regression_count": 0,
+                "metric_deltas": {"recall_at_5": 0.0},
+            }
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "phase15"
+
+    result = main(
+        [
+            "write-finetuned-provenance",
+            "--training-summary",
+            str(training_summary),
+            "--train-config",
+            str(train_config),
+            "--train-run-summary",
+            str(train_run_summary),
+            "--model-manifest",
+            str(model_manifest),
+            "--regression-summary",
+            str(regression_summary),
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "provenance.json").exists()
+    assert (output_dir / "provenance.md").exists()
+
+
+def _finetuned_eval_record(
+    task_id,
+    *,
+    split,
+    selected,
+    gold=("gold",),
+    negative=("bad",),
+    recall_at_5=1.0,
+    mrr=1.0,
+    ndcg_at_5=1.0,
+    negative_hit_rate=0.0,
+    negative_accepted_rate=0.0,
+):
+    return {
+        "task_id": task_id,
+        "category": "agent",
+        "difficulty": "medium",
+        "split": split,
+        "robustness_tags": ["phase15"],
+        "selected_skill_ids": list(selected),
+        "gold_skills": list(gold),
+        "negative_skills": list(negative),
+        "recall_at_5": recall_at_5,
+        "mrr": mrr,
+        "ndcg_at_5": ndcg_at_5,
+        "negative_hit_rate": negative_hit_rate,
+        "negative_accepted_rate": negative_accepted_rate,
+        "selection_rate_at_5": len(selected) / 5,
+    }
+
+
 def _rank_record(task_id, *, split, selected, scores, gold, negative):
     return {
         "task_id": task_id,

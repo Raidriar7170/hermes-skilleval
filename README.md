@@ -58,7 +58,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 218 |
+| Test cases | 244 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -145,7 +145,7 @@ hermes-skilleval/
 │   └── tasks/                          # 80 labeled routing tasks
 ├── docs/
 │   ├── demo/                           # committed benchmark outputs
-│   ├── phase2.md ... phase13.md        # implementation and experiment notes
+│   ├── phase2.md ... phase15.md        # implementation and experiment notes
 │   └── resume.md                       # resume-ready project framing
 ├── scripts/
 │   ├── generate_benchmark_skills.py    # reproducible skill corpus generator
@@ -163,7 +163,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 218 pytest cases
+├── tests/                              # 244 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -344,7 +344,31 @@ skilleval judge-finetuned-embedding \
   --model-dir /mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router
 ```
 
-### 12. Static Dashboard
+### 12. Build Held-Out Fine-Tuned Provenance Pack
+
+```bash
+skilleval judge-finetuned-embedding \
+  --baseline-results docs/demo/phase14-finetuned-embedding-router/baseline-results.jsonl \
+  --candidate-results docs/demo/phase14-finetuned-embedding-router/finetuned-results.jsonl \
+  --output-dir docs/demo/phase15-held-out-generalization \
+  --model-dir /mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router \
+  --apply-split test \
+  --write-filtered-results
+
+skilleval write-finetuned-provenance \
+  --training-summary docs/demo/phase14-finetuned-embedding-router/training-summary.json \
+  --train-config docs/demo/phase14-finetuned-embedding-router/train-config.json \
+  --train-run-summary docs/demo/phase15-held-out-generalization/train-run-summary.json \
+  --model-manifest docs/demo/phase15-held-out-generalization/model-manifest.json \
+  --regression-summary docs/demo/phase15-held-out-generalization/regression-summary.json \
+  --output-dir docs/demo/phase15-held-out-generalization
+```
+
+Phase 15 filters the Phase 14 result files to the strict held-out `test` split
+and adds a sanitized provenance pack. It records file hashes and training
+summaries while keeping model checkpoints out of the repository.
+
+### 13. Static Dashboard
 
 ```bash
 skilleval dashboard \
@@ -358,7 +382,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 13. Run Tests
+### 14. Run Tests
 
 ```bash
 pytest -q
@@ -367,7 +391,7 @@ pytest -q
 Expected:
 
 ```text
-218 passed
+244 passed
 ```
 
 ---
@@ -394,6 +418,7 @@ Expected:
 | Phase 12 | Offline skill metadata patch ranking | [`docs/phase12.md`](docs/phase12.md) |
 | Phase 13 | Patch simulation regression guard | [`docs/phase13.md`](docs/phase13.md) |
 | Phase 14 | Fine-tuned embedding router path | [`docs/phase14.md`](docs/phase14.md) |
+| Phase 15 | Held-out generalization and provenance pack | [`docs/phase15.md`](docs/phase15.md) |
 
 ---
 
@@ -455,7 +480,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 218 unit and smoke tests |
+| Testing | pytest | 244 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -483,6 +508,8 @@ and [`docs/phase7b.md`](docs/phase7b.md).
       ([docs](docs/phase13.md), [demo](docs/demo/phase13-patch-simulation/regression-report.md))
 - [x] Fine-tuned embedding router for domain-specific skill libraries
       ([docs](docs/phase14.md), [training data](docs/demo/phase14-finetuned-embedding-router/training-summary.json))
+- [x] Held-out fine-tuned provenance pack
+      ([docs](docs/phase15.md), [demo](docs/demo/phase15-held-out-generalization/provenance.md))
 
 ---
 
@@ -507,7 +534,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 218 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 244 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and
 >   resume-ready experiment documentation.
 >

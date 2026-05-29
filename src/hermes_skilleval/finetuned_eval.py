@@ -26,23 +26,44 @@ def write_finetuned_eval_summary(
     baseline_router: str,
     candidate_router: str,
     model_dir: str,
+    apply_split: str = "all",
+    write_filtered_results: bool = False,
 ) -> dict[str, Any]:
     validated_model_dir = validate_a100_user_path(model_dir, field="model_dir")
 
-    baseline_records = _read_jsonl(baseline_results_path)
-    candidate_records = _read_jsonl(candidate_results_path)
+    baseline_source_records = _read_jsonl(baseline_results_path)
+    candidate_source_records = _read_jsonl(candidate_results_path)
+    baseline_records = _filter_records_by_split(
+        baseline_source_records,
+        apply_split=apply_split,
+        label="baseline",
+    )
+    candidate_records = _filter_records_by_split(
+        candidate_source_records,
+        apply_split=apply_split,
+        label="candidate",
+    )
     diffs = compare_route_records(baseline_records, candidate_records)
     baseline_metrics = _mean_metrics(baseline_records)
     candidate_metrics = _mean_metrics(candidate_records)
     regression_count = sum(1 for diff in diffs if diff["regression_flags"])
     improvement_count = sum(1 for diff in diffs if diff["improvement_flags"])
     summary = {
-        "phase": "Phase 14",
-        "artifact_type": "phase14-finetuned-embedding-eval",
+        "phase": "Phase 15" if apply_split == "test" else "Phase 14",
+        "artifact_type": (
+            "phase15-heldout-finetuned-embedding-eval"
+            if apply_split == "test"
+            else "phase14-finetuned-embedding-eval"
+        ),
         "baseline_router": baseline_router,
         "candidate_router": candidate_router,
         "model_dir": validated_model_dir,
         "model_checkpoint_committed": False,
+        "evaluated_split": apply_split,
+        "split_policy": _split_policy(apply_split),
+        "source_task_count": len(candidate_source_records),
+        "baseline_source_task_count": len(baseline_source_records),
+        "candidate_source_task_count": len(candidate_source_records),
         "task_count": len(candidate_records),
         "guard_status": "PASS" if regression_count == 0 else "REVIEW_REQUIRED",
         "baseline_mean_metrics": baseline_metrics,
@@ -57,6 +78,10 @@ def write_finetuned_eval_summary(
 
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
+    if write_filtered_results:
+        suffix = "all" if apply_split == "all" else apply_split
+        _write_jsonl(output / f"baseline-{suffix}-results.jsonl", baseline_records)
+        _write_jsonl(output / f"finetuned-{suffix}-results.jsonl", candidate_records)
     (output / "regression-summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -83,12 +108,50 @@ def _mean_metrics(records: list[dict[str, Any]]) -> dict[str, float]:
     }
 
 
+def _filter_records_by_split(
+    records: list[dict[str, Any]],
+    *,
+    apply_split: str,
+    label: str,
+) -> list[dict[str, Any]]:
+    if apply_split not in {"dev", "test", "all"}:
+        raise ValueError("apply_split must be 'dev', 'test', or 'all'")
+    filtered = (
+        records
+        if apply_split == "all"
+        else [record for record in records if record.get("split") == apply_split]
+    )
+    if not filtered:
+        raise ValueError(f"no {label} records found for split {apply_split!r}")
+    return filtered
+
+
+def _split_policy(apply_split: str) -> str:
+    if apply_split == "all":
+        return "all source records"
+    return f"records where split == {apply_split!r}"
+
+
+def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
+    path.write_text(
+        "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
+        encoding="utf-8",
+    )
+
+
 def _report(summary: dict[str, Any], diffs: list[dict[str, Any]]) -> str:
     lines = [
-        "# Phase 14 Fine-Tuned Embedding Router Evaluation",
+        (
+            "# Phase 15 Held-Out Fine-Tuned Embedding Router Evaluation"
+            if summary["evaluated_split"] == "test"
+            else "# Phase 14 Fine-Tuned Embedding Router Evaluation"
+        ),
         "",
         f"- Baseline: `{summary['baseline_router']}`",
         f"- Candidate: `{summary['candidate_router']}`",
+        f"- Evaluated split: `{summary['evaluated_split']}`",
+        f"- Source task count: {summary['source_task_count']}",
+        f"- Evaluated task count: {summary['task_count']}",
         f"- Guard status: {summary['guard_status']}",
         f"- Model checkpoint committed: {summary['model_checkpoint_committed']}",
         "",
