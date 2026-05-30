@@ -1,0 +1,333 @@
+{
+  "approved_for_default": false,
+  "artifact_type": "phase17-calibrated-release-selector",
+  "baseline_router": "baseline-minilm",
+  "candidate_router": "finetuned-embedding",
+  "decision": "KEEP_BASELINE",
+  "improvement_count": 0,
+  "input_paths": {
+    "baseline_results": "docs/demo/phase16-blind-validation/baseline-minilm/results.jsonl",
+    "candidate_results": "docs/demo/phase16-blind-validation/finetuned-embedding/results.jsonl",
+    "regression_summary": "docs/demo/phase16-blind-validation/regression-summary.json",
+    "route_diffs": "docs/demo/phase16-blind-validation/route-diffs.jsonl",
+    "task_root": "benchmarks/blind-migration-tasks"
+  },
+  "metric_deltas": {
+    "mrr": -0.03125,
+    "ndcg_at_5": -0.023067,
+    "negative_accepted_rate": 0.0625,
+    "negative_hit_rate": 0.0625,
+    "recall_at_5": 0.0,
+    "selection_rate_at_5": 0.0
+  },
+  "phase": "Phase 17",
+  "policy": {
+    "max_negative_accepted_delta": 0.0,
+    "max_negative_hit_delta": 0.0,
+    "max_regressions": 0,
+    "min_mrr_delta": 0.0,
+    "min_ndcg_at_5_delta": 0.0,
+    "min_recall_at_5_delta": 0.0
+  },
+  "reasons": [
+    "source guard_status is not PASS",
+    "regression_count exceeds policy",
+    "negative_hit_rate delta exceeds policy",
+    "negative_accepted_rate delta exceeds policy",
+    "mrr delta is below policy",
+    "ndcg_at_5 delta is below policy"
+  ],
+  "regression_count": 2,
+  "regression_flag_counts": {
+    "mrr_decreased": 1,
+    "ndcg_at_5_decreased": 1,
+    "negative_accepted_rate_increased": 1,
+    "negative_hit_rate_increased": 1,
+    "new_negative_skill_selected": 1
+  },
+  "selected_router": "baseline-minilm",
+  "source_guard_status": "REVIEW_REQUIRED",
+  "source_phase": "Phase 16",
+  "task_count": 16,
+  "task_decisions": [
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-browser-accessibility-tree"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-browser-form-wizard"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": false,
+      "task_id": "blind-browser-smoke-console"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": false,
+      "task_id": "blind-browser-visual-diff"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "KEEP_BASELINE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 1.0,
+        "negative_hit_rate": 1.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [
+        "negative_hit_rate_increased",
+        "negative_accepted_rate_increased",
+        "new_negative_skill_selected"
+      ],
+      "selection_changed": true,
+      "task_id": "blind-claude-mcp-routing"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": false,
+      "task_id": "blind-claude-plan-session"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-claude-slash-command"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-claude-task-delegation"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-codex-apply-patch"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-codex-evidence-final"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": false,
+      "task_id": "blind-codex-git-hygiene"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "KEEP_BASELINE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": -0.5,
+        "ndcg_at_5": -0.36907,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [
+        "mrr_decreased",
+        "ndcg_at_5_decreased"
+      ],
+      "selection_changed": true,
+      "task_id": "blind-codex-worker-handoff"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-sp-debug-loop"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-sp-red-green"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-sp-verify-before-claim"
+    },
+    {
+      "aggregate_decision": "KEEP_BASELINE",
+      "decision": "NO_CHANGE",
+      "decision_scope": "task-level",
+      "improvement_flags": [],
+      "metric_deltas": {
+        "mrr": 0.0,
+        "ndcg_at_5": 0.0,
+        "negative_accepted_rate": 0.0,
+        "negative_hit_rate": 0.0,
+        "recall_at_5": 0.0,
+        "selection_rate_at_5": 0.0
+      },
+      "regression_flags": [],
+      "selection_changed": true,
+      "task_id": "blind-sp-worktree-isolation"
+    }
+  ]
+}

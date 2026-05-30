@@ -18,14 +18,17 @@ HTML artifacts.
 | Phase 14 | Fine-tuned embedding router path | `docs/phase14.md` |
 | Phase 15 | Held-out provenance pack | `docs/phase15.md` |
 | Phase 16 | Blind validation and release gate | `docs/phase16.md` |
+| Phase 17 | Calibrated release selector keeps baseline | `docs/phase17.md` |
 
 ## Reviewer Entry Points
 
 - Dashboard: `docs/demo/phase16-blind-validation/dashboard.html`
 - Blind validation summary: `docs/demo/phase16-blind-validation/regression-summary.json`
 - Phase 16 comparison: `docs/demo/phase16-blind-validation/comparison.md`
+- Phase 17 release decision: `docs/demo/phase17-calibrated-release-selector/release-decision.json`
+- Phase 17 task decisions: `docs/demo/phase17-calibrated-release-selector/task-decisions.jsonl`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
-- Release check: `docs/demo/phase16-blind-validation/release-check-summary.json`
+- Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
 ## Current Release Reading
 
@@ -34,6 +37,10 @@ than a pass because the fine-tuned router preserved Recall@5 but worsened
 negative-hit behavior on the blind task pack. This is useful release evidence:
 the project can show both positive provenance and a guard that refuses to hide a
 blind regression.
+
+Phase 17 makes that reading explicit for default-router selection. The release
+selector returns `KEEP_BASELINE`, keeps `baseline-minilm` as the default router,
+and records `approved_for_default: false` for `finetuned-embedding`.
 
 ## Boundaries
 

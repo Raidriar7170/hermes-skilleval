@@ -1965,6 +1965,35 @@ def test_cli_verify_release_returns_error_for_missing_required_path(tmp_path):
     assert summary["status"] == "REVIEW_REQUIRED"
 
 
+def test_cli_select_release_router_writes_decision_artifacts(tmp_path):
+    output_dir = tmp_path / "phase17"
+
+    assert (
+        main(
+            [
+                "select-release-router",
+                "--regression-summary",
+                "docs/demo/phase16-blind-validation/regression-summary.json",
+                "--route-diffs",
+                "docs/demo/phase16-blind-validation/route-diffs.jsonl",
+                "--output-dir",
+                str(output_dir),
+            ]
+        )
+        == 0
+    )
+
+    decision_path = output_dir / "release-decision.json"
+    assert decision_path.is_file()
+    decision = json.loads(decision_path.read_text(encoding="utf-8"))
+    assert decision["decision"] == "KEEP_BASELINE"
+    assert decision["selected_router"] == "baseline-minilm"
+    assert decision["candidate_router"] == "finetuned-embedding"
+    assert decision["approved_for_default"] is False
+    assert (output_dir / "release-decision.md").is_file()
+    assert (output_dir / "task-decisions.jsonl").is_file()
+
+
 def _finetuned_eval_record(
     task_id,
     *,

@@ -58,7 +58,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 274 |
+| Test cases | 296 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -145,7 +145,7 @@ hermes-skilleval/
 │   └── tasks/                          # 80 labeled routing tasks
 ├── docs/
 │   ├── demo/                           # committed benchmark outputs
-│   ├── phase2.md ... phase15.md        # implementation and experiment notes
+│   ├── phase2.md ... phase17.md        # implementation and experiment notes
 │   └── resume.md                       # resume-ready project framing
 ├── scripts/
 │   ├── generate_benchmark_skills.py    # reproducible skill corpus generator
@@ -163,7 +163,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 274 pytest cases
+├── tests/                              # 296 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -401,7 +401,24 @@ committed blind result is `REVIEW_REQUIRED`: the fine-tuned router preserves
 Recall@5 but increases negative-skill selection on the blind pack, so it should
 not replace the baseline without calibration or rollback logic.
 
-### 14. Static Dashboard
+### 14. Select the Default Release Router
+
+```bash
+skilleval select-release-router \
+  --regression-summary docs/demo/phase16-blind-validation/regression-summary.json \
+  --route-diffs docs/demo/phase16-blind-validation/route-diffs.jsonl \
+  --output-dir docs/demo/phase17-calibrated-release-selector
+```
+
+Phase 17 turns the Phase 16 blind-validation evidence into an explicit release
+decision:
+[`docs/demo/phase17-calibrated-release-selector/release-decision.json`](docs/demo/phase17-calibrated-release-selector/release-decision.json).
+The current selector result is `KEEP_BASELINE`: the default router remains
+`baseline-minilm`, and `finetuned-embedding` is not approved as the default.
+See [`docs/phase17.md`](docs/phase17.md) and
+[`docs/release-handoff.md`](docs/release-handoff.md).
+
+### 15. Static Dashboard
 
 ```bash
 skilleval dashboard \
@@ -415,7 +432,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 15. Run Tests
+### 16. Run Tests
 
 ```bash
 pytest -q
@@ -424,7 +441,7 @@ pytest -q
 Expected:
 
 ```text
-274 passed
+296 passed
 ```
 
 ---
@@ -453,6 +470,7 @@ Expected:
 | Phase 14 | Fine-tuned embedding router path | [`docs/phase14.md`](docs/phase14.md) |
 | Phase 15 | Held-out generalization and provenance pack | [`docs/phase15.md`](docs/phase15.md) |
 | Phase 16 | Blind validation and release handoff | [`docs/phase16.md`](docs/phase16.md) |
+| Phase 17 | Calibrated release selector | [`docs/phase17.md`](docs/phase17.md) |
 
 ---
 
@@ -514,7 +532,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 274 unit and smoke tests |
+| Testing | pytest | 296 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -546,6 +564,8 @@ and [`docs/phase7b.md`](docs/phase7b.md).
       ([docs](docs/phase15.md), [demo](docs/demo/phase15-held-out-generalization/provenance.md))
 - [x] Blind validation and release handoff gate
       ([docs](docs/phase16.md), [handoff](docs/release-handoff.md))
+- [x] Calibrated default-router release selector
+      ([docs](docs/phase17.md), [decision](docs/demo/phase17-calibrated-release-selector/release-decision.json))
 
 ---
 
@@ -570,7 +590,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 274 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 296 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and
 >   resume-ready experiment documentation.
 >

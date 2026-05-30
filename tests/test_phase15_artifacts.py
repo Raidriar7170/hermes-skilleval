@@ -74,8 +74,8 @@ def test_phase15_docs_and_readme_reference_the_pack_without_overclaiming():
     assert "does not establish SOTA" in phase15
     assert "standard external benchmark" in phase15
     assert "production readiness" in phase15
-    assert "| Test cases | 274 |" in readme
-    assert "274 passed" in readme
+    assert "| Test cases | 296 |" in readme
+    assert "296 passed" in readme
 
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:

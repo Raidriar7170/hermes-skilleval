@@ -45,6 +45,10 @@ from hermes_skilleval.model_manifest import write_model_manifest
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.provenance import write_finetuned_provenance_pack
 from hermes_skilleval.release_checks import write_release_check_summary
+from hermes_skilleval.release_selector import (
+    DEFAULT_RELEASE_POLICY,
+    write_release_decision,
+)
 from hermes_skilleval.report import write_markdown_report
 from hermes_skilleval.routers.base import SkillRouter
 from hermes_skilleval.routers.cross_encoder import (
@@ -313,6 +317,45 @@ def _build_parser() -> argparse.ArgumentParser:
     verify_release_parser.add_argument("--required-path", action="append", default=[])
     verify_release_parser.add_argument("--summary-output", required=True)
     verify_release_parser.set_defaults(handler=_run_verify_release)
+
+    release_selector_parser = subparsers.add_parser(
+        "select-release-router",
+        help="select the default router from Phase 16 blind-validation artifacts",
+    )
+    release_selector_parser.add_argument("--regression-summary", required=True)
+    release_selector_parser.add_argument("--route-diffs", required=True)
+    release_selector_parser.add_argument("--output-dir", required=True)
+    release_selector_parser.add_argument(
+        "--max-regressions",
+        type=int,
+        default=DEFAULT_RELEASE_POLICY["max_regressions"],
+    )
+    release_selector_parser.add_argument(
+        "--max-negative-hit-delta",
+        type=float,
+        default=DEFAULT_RELEASE_POLICY["max_negative_hit_delta"],
+    )
+    release_selector_parser.add_argument(
+        "--max-negative-accepted-delta",
+        type=float,
+        default=DEFAULT_RELEASE_POLICY["max_negative_accepted_delta"],
+    )
+    release_selector_parser.add_argument(
+        "--min-recall-at-5-delta",
+        type=float,
+        default=DEFAULT_RELEASE_POLICY["min_recall_at_5_delta"],
+    )
+    release_selector_parser.add_argument(
+        "--min-mrr-delta",
+        type=float,
+        default=DEFAULT_RELEASE_POLICY["min_mrr_delta"],
+    )
+    release_selector_parser.add_argument(
+        "--min-ndcg-at-5-delta",
+        type=float,
+        default=DEFAULT_RELEASE_POLICY["min_ndcg_at_5_delta"],
+    )
+    release_selector_parser.set_defaults(handler=_run_select_release_router)
 
     manifest_parser = subparsers.add_parser(
         "write-model-manifest",
@@ -716,6 +759,27 @@ def _run_verify_release(args: argparse.Namespace) -> None:
     print(f"Release check {summary['status']}: {args.summary_output}")
     if summary["status"] != "PASS":
         raise ValueError(f"release check status: {summary['status']}")
+
+
+def _run_select_release_router(args: argparse.Namespace) -> None:
+    policy = {
+        "max_regressions": args.max_regressions,
+        "max_negative_hit_delta": args.max_negative_hit_delta,
+        "max_negative_accepted_delta": args.max_negative_accepted_delta,
+        "min_recall_at_5_delta": args.min_recall_at_5_delta,
+        "min_mrr_delta": args.min_mrr_delta,
+        "min_ndcg_at_5_delta": args.min_ndcg_at_5_delta,
+    }
+    decision = write_release_decision(
+        regression_summary_path=Path(args.regression_summary),
+        route_diffs_path=Path(args.route_diffs),
+        output_dir=Path(args.output_dir),
+        policy=policy,
+    )
+    print(
+        "Wrote Phase 17 release decision to "
+        f"{args.output_dir}: {decision['decision']}"
+    )
 
 
 def _run_write_model_manifest(args: argparse.Namespace) -> None:
