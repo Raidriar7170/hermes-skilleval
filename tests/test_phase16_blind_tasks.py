@@ -116,8 +116,15 @@ EXPECTED_GOLD_SKILLS = {
 def _tasks() -> list[tuple[Path, dict]]:
     return [
         (path, yaml.safe_load(path.read_text(encoding="utf-8")))
-        for path in sorted(ROOT.glob("*/task.yaml"))
+        for path in sorted(ROOT.rglob("task.yaml"))
     ]
+
+
+def _skill_index_by_id() -> dict[str, dict]:
+    return {
+        skill["id"]: skill
+        for skill in json.loads(SKILLS_INDEX.read_text(encoding="utf-8"))
+    }
 
 
 def test_phase16_blind_pack_has_one_task_per_migrated_skill() -> None:
@@ -141,11 +148,25 @@ def test_phase16_blind_tasks_match_exact_catalog() -> None:
     assert actual == EXPECTED_TASK_CATALOG
 
 
-def test_phase16_blind_tasks_are_test_split_and_referenced_skills_exist() -> None:
-    skill_ids = {
-        skill["id"]
-        for skill in json.loads(SKILLS_INDEX.read_text(encoding="utf-8"))
+def test_phase16_blind_task_ids_match_directory_names() -> None:
+    for task_path, task in _tasks():
+        assert task["id"] == task_path.parent.name, task_path
+
+
+def test_phase16_blind_pack_has_no_prompt_only_directories() -> None:
+    prompt_dirs = {
+        path.parent
+        for path in ROOT.rglob("prompt.md")
     }
+    task_dirs = {
+        path.parent
+        for path in ROOT.rglob("task.yaml")
+    }
+    assert prompt_dirs == task_dirs
+
+
+def test_phase16_blind_tasks_are_test_split_and_referenced_skills_exist() -> None:
+    skill_ids = set(_skill_index_by_id())
     for path, task in _tasks():
         assert task["split"] == "test", path
         assert task["verifier"] == "skill_selection", path
@@ -160,11 +181,15 @@ def test_phase16_blind_tasks_are_test_split_and_referenced_skills_exist() -> Non
 
 
 def test_phase16_prompts_do_not_reveal_skill_ids() -> None:
+    skills_by_id = _skill_index_by_id()
     for task_path, task in _tasks():
         prompt = (task_path.parent / "prompt.md").read_text(encoding="utf-8")
+        prompt_lower = prompt.lower()
         assert prompt.strip(), task_path
         for skill_id in task["gold_skills"] + task["negative_skills"]:
             assert skill_id not in prompt, task_path
+            skill_name = skills_by_id[skill_id]["name"]
+            assert skill_name.lower() not in prompt_lower, task_path
 
 
 def test_phase16_blind_task_ids_not_used_in_phase14_training() -> None:
