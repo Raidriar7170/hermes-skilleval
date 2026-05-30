@@ -58,7 +58,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 244 |
+| Test cases | 274 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -163,7 +163,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 244 pytest cases
+├── tests/                              # 274 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -368,7 +368,40 @@ Phase 15 filters the Phase 14 result files to the strict held-out `test` split
 and adds a sanitized provenance pack. It records file hashes and training
 summaries while keeping model checkpoints out of the repository.
 
-### 13. Static Dashboard
+### 13. Run Blind Validation and Release Gate
+
+```bash
+skilleval write-blind-validation \
+  --baseline-results docs/demo/phase16-blind-validation/baseline-minilm/results.jsonl \
+  --candidate-results docs/demo/phase16-blind-validation/finetuned-embedding/results.jsonl \
+  --output-dir docs/demo/phase16-blind-validation \
+  --model-dir /mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router \
+  --task-root benchmarks/blind-migration-tasks
+
+skilleval verify-release \
+  --public-root README.md \
+  --public-root docs/phase9.md \
+  --public-root docs/phase10.md \
+  --public-root docs/phase11.md \
+  --public-root docs/phase12.md \
+  --public-root docs/phase13.md \
+  --public-root docs/phase14.md \
+  --public-root docs/phase15.md \
+  --public-root docs/phase16.md \
+  --public-root docs/release-handoff.md \
+  --public-root docs/demo/phase16-blind-validation \
+  --public-root benchmarks/blind-migration-tasks \
+  --required-path docs/demo/phase16-blind-validation/regression-summary.json \
+  --required-path docs/release-handoff.md \
+  --summary-output docs/demo/phase16-blind-validation/release-check-summary.json
+```
+
+Phase 16 adds a blind `test` task pack and a release verification gate. The
+committed blind result is `REVIEW_REQUIRED`: the fine-tuned router preserves
+Recall@5 but increases negative-skill selection on the blind pack, so it should
+not replace the baseline without calibration or rollback logic.
+
+### 14. Static Dashboard
 
 ```bash
 skilleval dashboard \
@@ -382,7 +415,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 14. Run Tests
+### 15. Run Tests
 
 ```bash
 pytest -q
@@ -391,7 +424,7 @@ pytest -q
 Expected:
 
 ```text
-244 passed
+274 passed
 ```
 
 ---
@@ -419,6 +452,7 @@ Expected:
 | Phase 13 | Patch simulation regression guard | [`docs/phase13.md`](docs/phase13.md) |
 | Phase 14 | Fine-tuned embedding router path | [`docs/phase14.md`](docs/phase14.md) |
 | Phase 15 | Held-out generalization and provenance pack | [`docs/phase15.md`](docs/phase15.md) |
+| Phase 16 | Blind validation and release handoff | [`docs/phase16.md`](docs/phase16.md) |
 
 ---
 
@@ -480,7 +514,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 244 unit and smoke tests |
+| Testing | pytest | 274 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -510,6 +544,8 @@ and [`docs/phase7b.md`](docs/phase7b.md).
       ([docs](docs/phase14.md), [training data](docs/demo/phase14-finetuned-embedding-router/training-summary.json))
 - [x] Held-out fine-tuned provenance pack
       ([docs](docs/phase15.md), [demo](docs/demo/phase15-held-out-generalization/provenance.md))
+- [x] Blind validation and release handoff gate
+      ([docs](docs/phase16.md), [handoff](docs/release-handoff.md))
 
 ---
 
@@ -534,7 +570,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 244 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 274 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and
 >   resume-ready experiment documentation.
 >

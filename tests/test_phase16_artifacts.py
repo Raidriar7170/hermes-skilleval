@@ -76,3 +76,24 @@ def test_phase16_artifact_pack_does_not_commit_checkpoints() -> None:
         if path.is_file() and path.suffix in CHECKPOINT_SUFFIXES
     ]
     assert checkpoint_files == []
+
+
+def test_phase16_docs_and_release_handoff_exist() -> None:
+    phase_doc = Path("docs/phase16.md")
+    handoff = Path("docs/release-handoff.md")
+    readme = Path("README.md")
+    for path in [phase_doc, handoff, readme]:
+        assert path.is_file(), path
+
+    phase_text = phase_doc.read_text(encoding="utf-8")
+    handoff_text = handoff.read_text(encoding="utf-8")
+    readme_text = readme.read_text(encoding="utf-8")
+    assert "Phase 16" in phase_text
+    assert "blind validation" in phase_text.lower()
+    assert "REVIEW_REQUIRED" in phase_text
+    assert "Phase 9" in handoff_text and "Phase 16" in handoff_text
+    assert "REVIEW_REQUIRED" in handoff_text
+    assert "docs/phase16.md" in readme_text
+    assert "docs/release-handoff.md" in readme_text
+    assert "| Test cases | 274 |" in readme_text
+    assert "274 passed" in readme_text
