@@ -156,3 +156,22 @@ def test_write_release_check_summary_writes_json(tmp_path: Path) -> None:
 
     assert summary["status"] == "PASS"
     assert json.loads(output.read_text(encoding="utf-8"))["status"] == "PASS"
+
+
+def test_write_release_check_summary_ignores_stale_output_file(tmp_path: Path) -> None:
+    public_file = tmp_path / "release.md"
+    output = tmp_path / "release-check-summary.json"
+    public_file.write_text("This is bounded release evidence.\n", encoding="utf-8")
+    output.write_text(
+        '{"matches": {"overclaims": [{"text": "external benchmark claims."}]}}\n',
+        encoding="utf-8",
+    )
+
+    summary = write_release_check_summary(
+        public_roots=[tmp_path],
+        required_paths=[public_file],
+        output_path=output,
+    )
+
+    assert summary["status"] == "PASS"
+    assert summary["match_count"] == 0

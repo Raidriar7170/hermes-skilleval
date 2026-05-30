@@ -97,14 +97,25 @@ def verify_required_paths(paths: list[Path]) -> ReleaseCheckResult:
 def run_release_checks(
     public_roots: list[Path],
     required_paths: list[Path],
+    ignored_paths: list[Path] | None = None,
 ) -> dict[str, object]:
     public_root_result = _verify_public_roots(public_roots)
     required_result = verify_required_paths(required_paths)
     existing_public_roots = [path for path in public_roots if path.exists()]
+    ignored_paths = ignored_paths or []
 
-    sensitive_matches = find_sensitive_matches(existing_public_roots)
-    overclaim_matches = find_overclaim_matches(existing_public_roots)
-    checkpoint_files = _find_checkpoint_files(existing_public_roots)
+    sensitive_matches = _find_text_matches(
+        existing_public_roots,
+        SENSITIVE_RE,
+        ignored_paths=ignored_paths,
+    )
+    overclaim_matches = _find_text_matches(
+        existing_public_roots,
+        OVERCLAIM_RE,
+        ignore_line_re=NEGATIVE_DISCLAIMER_RE,
+        ignored_paths=ignored_paths,
+    )
+    checkpoint_files = _find_checkpoint_files(existing_public_roots, ignored_paths)
 
     checks = [
         public_root_result,
@@ -145,6 +156,7 @@ def write_release_check_summary(
     summary = run_release_checks(
         public_roots=public_roots,
         required_paths=required_paths,
+        ignored_paths=[output_path],
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
@@ -159,9 +171,10 @@ def _find_text_matches(
     pattern: re.Pattern[str],
     *,
     ignore_line_re: re.Pattern[str] | None = None,
+    ignored_paths: list[Path] | None = None,
 ) -> list[TextMatch]:
     matches: list[TextMatch] = []
-    for path in _iter_text_files(paths):
+    for path in _iter_text_files(paths, ignored_paths=ignored_paths or []):
         for line_number, line in enumerate(
             path.read_text(encoding="utf-8", errors="replace").splitlines(),
             start=1,
@@ -173,8 +186,13 @@ def _find_text_matches(
     return matches
 
 
-def _iter_text_files(paths: Iterable[Path]) -> Iterator[Path]:
+def _iter_text_files(
+    paths: Iterable[Path],
+    *,
+    ignored_paths: Iterable[Path] = (),
+) -> Iterator[Path]:
     seen: set[Path] = set()
+    ignored = {path.resolve() for path in ignored_paths}
     for root in paths:
         if not root.exists():
             continue
@@ -192,16 +210,24 @@ def _iter_text_files(paths: Iterable[Path]) -> Iterator[Path]:
             if _is_docs_superpowers_path(path):
                 continue
             key = path.resolve()
+            if key in ignored:
+                continue
             if key in seen:
                 continue
             seen.add(key)
             yield path
 
 
-def _find_checkpoint_files(roots: Iterable[Path]) -> list[Path]:
+def _find_checkpoint_files(
+    roots: Iterable[Path],
+    ignored_paths: Iterable[Path] = (),
+) -> list[Path]:
     checkpoints: dict[Path, Path] = {}
+    ignored = {path.resolve() for path in ignored_paths}
     for root in roots:
         for path in find_checkpoint_files(root):
+            if path.resolve() in ignored:
+                continue
             checkpoints[path.resolve()] = path
     return sorted(checkpoints.values())
 
