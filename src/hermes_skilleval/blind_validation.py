@@ -16,6 +16,20 @@ METRIC_FIELDS = (
     "negative_accepted_rate",
     "selection_rate_at_5",
 )
+LIST_FIELDS = (
+    "robustness_tags",
+    "selected_skill_ids",
+    "gold_skills",
+    "negative_skills",
+)
+REQUIRED_FIELDS = (
+    "task_id",
+    "category",
+    "difficulty",
+    "split",
+    *LIST_FIELDS,
+    *METRIC_FIELDS,
+)
 
 
 def write_blind_validation_summary(
@@ -30,6 +44,16 @@ def write_blind_validation_summary(
 ) -> dict[str, Any]:
     baseline_records = _read_jsonl(baseline_results_path)
     candidate_records = _read_jsonl(candidate_results_path)
+    _validate_route_records(
+        baseline_records,
+        label="baseline",
+        path=baseline_results_path,
+    )
+    _validate_route_records(
+        candidate_records,
+        label="candidate",
+        path=candidate_results_path,
+    )
     _validate_test_split(baseline_records, label="baseline")
     _validate_test_split(candidate_records, label="candidate")
 
@@ -88,6 +112,35 @@ def _read_jsonl(path: Path | str) -> list[dict[str, Any]]:
     if not records:
         raise ValueError(f"no records found in {path}")
     return records
+
+
+def _validate_route_records(
+    records: list[dict[str, Any]],
+    *,
+    label: str,
+    path: Path | str,
+) -> None:
+    for index, record in enumerate(records):
+        for field in REQUIRED_FIELDS:
+            if field not in record:
+                raise ValueError(
+                    f"{label} route result {path} record {index} "
+                    f"task {record.get('task_id', '<missing-task-id>')} "
+                    f"missing required field: {field}"
+                )
+        for field in LIST_FIELDS:
+            if not isinstance(record[field], list):
+                raise ValueError(
+                    f"{label} route result {path} record {index} "
+                    f"task {record['task_id']} field {field} must be a list"
+                )
+        for field in METRIC_FIELDS:
+            value = record[field]
+            if isinstance(value, bool) or not isinstance(value, int | float):
+                raise ValueError(
+                    f"{label} route result {path} record {index} "
+                    f"task {record['task_id']} field {field} must be int or float"
+                )
 
 
 def _validate_test_split(records: list[dict[str, Any]], *, label: str) -> None:

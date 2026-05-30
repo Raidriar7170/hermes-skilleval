@@ -118,6 +118,35 @@ def test_write_blind_validation_summary_rejects_mismatched_task_ids(
         )
 
 
+def test_write_blind_validation_summary_rejects_missing_required_field(
+    tmp_path: Path,
+) -> None:
+    baseline = tmp_path / "baseline.jsonl"
+    candidate = tmp_path / "candidate.jsonl"
+    malformed = _record("blind-task", selected=["apply-patch-discipline"])
+    del malformed["recall_at_5"]
+    _write_jsonl(baseline, [malformed])
+    _write_jsonl(candidate, [_record("blind-task", selected=["apply-patch-discipline"])])
+
+    with pytest.raises(ValueError) as error:
+        write_blind_validation_summary(
+            baseline_results_path=baseline,
+            candidate_results_path=candidate,
+            output_dir=tmp_path / "out",
+            baseline_router="baseline-minilm",
+            candidate_router="finetuned-embedding",
+            model_dir="/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+            task_root="benchmarks/blind-migration-tasks",
+        )
+
+    message = str(error.value)
+    assert "missing required field" in message
+    assert "baseline" in message
+    assert str(baseline) in message
+    assert "blind-task" in message
+    assert "recall_at_5" in message
+
+
 def test_write_blind_validation_summary_rejects_non_test_split(
     tmp_path: Path,
 ) -> None:
