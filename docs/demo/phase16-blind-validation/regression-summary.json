@@ -1,0 +1,61 @@
+{
+  "artifact_type": "phase16-blind-validation",
+  "baseline_mean_metrics": {
+    "mrr": 1.0,
+    "ndcg_at_5": 1.0,
+    "negative_accepted_rate": 0.75,
+    "negative_hit_rate": 0.75,
+    "recall_at_5": 1.0,
+    "selection_rate_at_5": 1.0
+  },
+  "baseline_router": "baseline-minilm",
+  "blind_task_ids": [
+    "blind-browser-accessibility-tree",
+    "blind-browser-form-wizard",
+    "blind-browser-smoke-console",
+    "blind-browser-visual-diff",
+    "blind-claude-mcp-routing",
+    "blind-claude-plan-session",
+    "blind-claude-slash-command",
+    "blind-claude-task-delegation",
+    "blind-codex-apply-patch",
+    "blind-codex-evidence-final",
+    "blind-codex-git-hygiene",
+    "blind-codex-worker-handoff",
+    "blind-sp-debug-loop",
+    "blind-sp-red-green",
+    "blind-sp-verify-before-claim",
+    "blind-sp-worktree-isolation"
+  ],
+  "candidate_mean_metrics": {
+    "mrr": 0.96875,
+    "ndcg_at_5": 0.976933,
+    "negative_accepted_rate": 0.8125,
+    "negative_hit_rate": 0.8125,
+    "recall_at_5": 1.0,
+    "selection_rate_at_5": 1.0
+  },
+  "candidate_router": "finetuned-embedding",
+  "guard_status": "REVIEW_REQUIRED",
+  "improvement_count": 0,
+  "input_paths": {
+    "baseline_results": "docs/demo/phase16-blind-validation/baseline-minilm/results.jsonl",
+    "candidate_results": "docs/demo/phase16-blind-validation/finetuned-embedding/results.jsonl",
+    "task_root": "benchmarks/blind-migration-tasks"
+  },
+  "metric_deltas": {
+    "mrr": -0.03125,
+    "ndcg_at_5": -0.023067,
+    "negative_accepted_rate": 0.0625,
+    "negative_hit_rate": 0.0625,
+    "recall_at_5": 0.0,
+    "selection_rate_at_5": 0.0
+  },
+  "model_checkpoint_committed": false,
+  "model_dir": "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+  "phase": "Phase 16",
+  "regression_count": 2,
+  "split_policy": "blind task root; all records must use split == 'test'",
+  "task_count": 16,
+  "task_root": "benchmarks/blind-migration-tasks"
+}
