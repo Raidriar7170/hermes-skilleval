@@ -44,6 +44,7 @@ from hermes_skilleval.metrics import (
 from hermes_skilleval.model_manifest import write_model_manifest
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.provenance import write_finetuned_provenance_pack
+from hermes_skilleval.release_checks import write_release_check_summary
 from hermes_skilleval.report import write_markdown_report
 from hermes_skilleval.routers.base import SkillRouter
 from hermes_skilleval.routers.cross_encoder import (
@@ -303,6 +304,15 @@ def _build_parser() -> argparse.ArgumentParser:
     blind_validation_parser.add_argument("--model-dir", required=True)
     blind_validation_parser.add_argument("--task-root", required=True)
     blind_validation_parser.set_defaults(handler=_run_write_blind_validation)
+
+    verify_release_parser = subparsers.add_parser(
+        "verify-release",
+        help="scan public artifacts for required files, secrets, checkpoints, and overclaims",
+    )
+    verify_release_parser.add_argument("--public-root", action="append", required=True)
+    verify_release_parser.add_argument("--required-path", action="append", default=[])
+    verify_release_parser.add_argument("--summary-output", required=True)
+    verify_release_parser.set_defaults(handler=_run_verify_release)
 
     manifest_parser = subparsers.add_parser(
         "write-model-manifest",
@@ -695,6 +705,17 @@ def _run_write_blind_validation(args: argparse.Namespace) -> None:
         f"{args.output_dir}: guard={summary['guard_status']}, "
         f"tasks={summary['task_count']}"
     )
+
+
+def _run_verify_release(args: argparse.Namespace) -> None:
+    summary = write_release_check_summary(
+        public_roots=[Path(path) for path in args.public_root],
+        required_paths=[Path(path) for path in args.required_path],
+        output_path=Path(args.summary_output),
+    )
+    print(f"Release check {summary['status']}: {args.summary_output}")
+    if summary["status"] != "PASS":
+        raise ValueError(f"release check status: {summary['status']}")
 
 
 def _run_write_model_manifest(args: argparse.Namespace) -> None:

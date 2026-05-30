@@ -1922,6 +1922,27 @@ def test_cli_write_blind_validation_summary(tmp_path):
     assert summary["guard_status"] == "PASS"
 
 
+def test_cli_verify_release_reports_json_summary(tmp_path):
+    public_file = tmp_path / "README.md"
+    public_file.write_text("# Release\n", encoding="utf-8")
+
+    result = main(
+        [
+            "verify-release",
+            "--public-root",
+            str(tmp_path),
+            "--required-path",
+            str(public_file),
+            "--summary-output",
+            str(tmp_path / "release-check-summary.json"),
+        ]
+    )
+
+    assert result == 0
+    summary = json.loads((tmp_path / "release-check-summary.json").read_text())
+    assert summary["status"] == "PASS"
+
+
 def _finetuned_eval_record(
     task_id,
     *,
