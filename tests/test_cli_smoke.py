@@ -1943,6 +1943,28 @@ def test_cli_verify_release_reports_json_summary(tmp_path):
     assert summary["status"] == "PASS"
 
 
+def test_cli_verify_release_returns_error_for_missing_required_path(tmp_path):
+    public_file = tmp_path / "README.md"
+    public_file.write_text("# Release\n", encoding="utf-8")
+    summary_output = tmp_path / "release-check-summary.json"
+
+    result = main(
+        [
+            "verify-release",
+            "--public-root",
+            str(public_file),
+            "--required-path",
+            str(tmp_path / "missing.md"),
+            "--summary-output",
+            str(summary_output),
+        ]
+    )
+
+    assert result == 2
+    summary = json.loads(summary_output.read_text())
+    assert summary["status"] == "REVIEW_REQUIRED"
+
+
 def _finetuned_eval_record(
     task_id,
     *,
