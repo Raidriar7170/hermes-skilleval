@@ -10,6 +10,7 @@ from typing import Sequence
 
 from hermes_skilleval.agent_judge import judge_agent_loop
 from hermes_skilleval.agent_loop import run_agent_loop
+from hermes_skilleval.blind_validation import write_blind_validation_summary
 from hermes_skilleval.calibration import (
     apply_cross_encoder_calibration,
     fit_cross_encoder_calibration,
@@ -286,6 +287,22 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
     )
     judge_finetuned_parser.set_defaults(handler=_run_judge_finetuned_embedding)
+
+    blind_validation_parser = subparsers.add_parser(
+        "write-blind-validation",
+        help="write a Phase 16 blind validation summary from baseline and candidate results",
+    )
+    blind_validation_parser.add_argument("--baseline-results", required=True)
+    blind_validation_parser.add_argument("--candidate-results", required=True)
+    blind_validation_parser.add_argument("--output-dir", required=True)
+    blind_validation_parser.add_argument("--baseline-router", default="baseline-minilm")
+    blind_validation_parser.add_argument(
+        "--candidate-router",
+        default="finetuned-embedding",
+    )
+    blind_validation_parser.add_argument("--model-dir", required=True)
+    blind_validation_parser.add_argument("--task-root", required=True)
+    blind_validation_parser.set_defaults(handler=_run_write_blind_validation)
 
     manifest_parser = subparsers.add_parser(
         "write-model-manifest",
@@ -660,6 +677,23 @@ def _run_judge_finetuned_embedding(args: argparse.Namespace) -> None:
     print(
         "Wrote fine-tuned embedding evaluation to "
         f"{args.output_dir}: {summary['guard_status']}"
+    )
+
+
+def _run_write_blind_validation(args: argparse.Namespace) -> None:
+    summary = write_blind_validation_summary(
+        baseline_results_path=args.baseline_results,
+        candidate_results_path=args.candidate_results,
+        output_dir=args.output_dir,
+        baseline_router=args.baseline_router,
+        candidate_router=args.candidate_router,
+        model_dir=args.model_dir,
+        task_root=args.task_root,
+    )
+    print(
+        "Wrote Phase 16 blind validation summary to "
+        f"{args.output_dir}: guard={summary['guard_status']}, "
+        f"tasks={summary['task_count']}"
     )
 
 

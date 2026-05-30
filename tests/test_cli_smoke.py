@@ -1888,6 +1888,40 @@ def test_cli_write_finetuned_provenance_writes_pack(tmp_path):
     assert (output_dir / "provenance.md").exists()
 
 
+def test_cli_write_blind_validation_summary(tmp_path):
+    baseline = tmp_path / "baseline.jsonl"
+    candidate = tmp_path / "candidate.jsonl"
+    record = _finetuned_eval_record(
+        "blind-task",
+        split="test",
+        selected=["apply-patch-discipline"],
+        gold=("apply-patch-discipline",),
+        negative=("workspace-git-hygiene",),
+    )
+    baseline.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+    candidate.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+
+    result = main(
+        [
+            "write-blind-validation",
+            "--baseline-results",
+            str(baseline),
+            "--candidate-results",
+            str(candidate),
+            "--output-dir",
+            str(tmp_path / "out"),
+            "--model-dir",
+            "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+            "--task-root",
+            "benchmarks/blind-migration-tasks",
+        ]
+    )
+
+    assert result == 0
+    summary = json.loads((tmp_path / "out" / "regression-summary.json").read_text())
+    assert summary["guard_status"] == "PASS"
+
+
 def _finetuned_eval_record(
     task_id,
     *,
