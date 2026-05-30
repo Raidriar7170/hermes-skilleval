@@ -1,0 +1,1 @@
+A teammate asks a repository question while local resource providers may expose fresher context. Decide whether to use those resources or normal file reads, then explain the routing choice and evidence.
