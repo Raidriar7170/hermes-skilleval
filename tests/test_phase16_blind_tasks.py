@@ -9,23 +9,107 @@ import yaml
 ROOT = Path("benchmarks/blind-migration-tasks")
 SKILLS_INDEX = Path("docs/demo/phase9-real-skill-library-migration/skills.json")
 PHASE14_PAIRS = Path("docs/demo/phase14-finetuned-embedding-router/training-pairs.jsonl")
+EXPECTED_TASK_CATALOG = {
+    "blind-browser-accessibility-tree": {
+        "category": "browser-gui",
+        "difficulty": "hard",
+        "gold_skills": ["accessibility-tree-inspection"],
+        "negative_skills": ["browser-smoke-testing"],
+    },
+    "blind-browser-smoke-console": {
+        "category": "browser-gui",
+        "difficulty": "medium",
+        "gold_skills": ["browser-smoke-testing"],
+        "negative_skills": ["visual-regression-review"],
+    },
+    "blind-browser-form-wizard": {
+        "category": "browser-gui",
+        "difficulty": "hard",
+        "gold_skills": ["form-interaction-flow"],
+        "negative_skills": ["accessibility-tree-inspection"],
+    },
+    "blind-browser-visual-diff": {
+        "category": "browser-gui",
+        "difficulty": "medium",
+        "gold_skills": ["visual-regression-review"],
+        "negative_skills": ["browser-smoke-testing"],
+    },
+    "blind-claude-mcp-routing": {
+        "category": "claude-code",
+        "difficulty": "medium",
+        "gold_skills": ["mcp-tool-routing"],
+        "negative_skills": ["slash-command-workflow"],
+    },
+    "blind-claude-plan-session": {
+        "category": "claude-code",
+        "difficulty": "medium",
+        "gold_skills": ["plan-mode"],
+        "negative_skills": ["task-tool-delegation"],
+    },
+    "blind-claude-slash-command": {
+        "category": "claude-code",
+        "difficulty": "medium",
+        "gold_skills": ["slash-command-workflow"],
+        "negative_skills": ["mcp-tool-routing"],
+    },
+    "blind-claude-task-delegation": {
+        "category": "claude-code",
+        "difficulty": "hard",
+        "gold_skills": ["task-tool-delegation"],
+        "negative_skills": ["plan-mode"],
+    },
+    "blind-codex-apply-patch": {
+        "category": "codex",
+        "difficulty": "medium",
+        "gold_skills": ["apply-patch-discipline"],
+        "negative_skills": ["workspace-git-hygiene"],
+    },
+    "blind-codex-evidence-final": {
+        "category": "codex",
+        "difficulty": "medium",
+        "gold_skills": ["evidence-backed-final"],
+        "negative_skills": ["verification-before-completion"],
+    },
+    "blind-codex-worker-handoff": {
+        "category": "codex",
+        "difficulty": "hard",
+        "gold_skills": ["subagent-worker-protocol"],
+        "negative_skills": ["task-tool-delegation"],
+    },
+    "blind-codex-git-hygiene": {
+        "category": "codex",
+        "difficulty": "medium",
+        "gold_skills": ["workspace-git-hygiene"],
+        "negative_skills": ["apply-patch-discipline"],
+    },
+    "blind-sp-debug-loop": {
+        "category": "superpowers",
+        "difficulty": "hard",
+        "gold_skills": ["systematic-debugging"],
+        "negative_skills": ["test-driven-development"],
+    },
+    "blind-sp-red-green": {
+        "category": "superpowers",
+        "difficulty": "hard",
+        "gold_skills": ["test-driven-development"],
+        "negative_skills": ["systematic-debugging"],
+    },
+    "blind-sp-worktree-isolation": {
+        "category": "superpowers",
+        "difficulty": "medium",
+        "gold_skills": ["using-git-worktrees"],
+        "negative_skills": ["workspace-git-hygiene"],
+    },
+    "blind-sp-verify-before-claim": {
+        "category": "superpowers",
+        "difficulty": "medium",
+        "gold_skills": ["verification-before-completion"],
+        "negative_skills": ["evidence-backed-final"],
+    },
+}
 EXPECTED_GOLD_SKILLS = {
-    "accessibility-tree-inspection",
-    "browser-smoke-testing",
-    "form-interaction-flow",
-    "visual-regression-review",
-    "mcp-tool-routing",
-    "plan-mode",
-    "slash-command-workflow",
-    "task-tool-delegation",
-    "apply-patch-discipline",
-    "evidence-backed-final",
-    "subagent-worker-protocol",
-    "workspace-git-hygiene",
-    "systematic-debugging",
-    "test-driven-development",
-    "using-git-worktrees",
-    "verification-before-completion",
+    task["gold_skills"][0]
+    for task in EXPECTED_TASK_CATALOG.values()
 }
 
 
@@ -42,6 +126,19 @@ def test_phase16_blind_pack_has_one_task_per_migrated_skill() -> None:
     gold = [task["gold_skills"][0] for _, task in tasks]
     assert set(gold) == EXPECTED_GOLD_SKILLS
     assert len(gold) == len(set(gold))
+
+
+def test_phase16_blind_tasks_match_exact_catalog() -> None:
+    actual = {
+        task["id"]: {
+            "category": task["category"],
+            "difficulty": task["difficulty"],
+            "gold_skills": task["gold_skills"],
+            "negative_skills": task["negative_skills"],
+        }
+        for _, task in _tasks()
+    }
+    assert actual == EXPECTED_TASK_CATALOG
 
 
 def test_phase16_blind_tasks_are_test_split_and_referenced_skills_exist() -> None:
