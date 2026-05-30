@@ -90,6 +90,12 @@ def test_write_blind_validation_summary_detects_regression(tmp_path: Path) -> No
     assert summary["regression_count"] == 1
     assert (tmp_path / "out" / "route-diffs.jsonl").is_file()
     assert (tmp_path / "out" / "comparison.md").is_file()
+    comparison = (tmp_path / "out" / "comparison.md").read_text(encoding="utf-8")
+    assert "# Phase 16 Blind Validation" in comparison
+    assert "| Metric | Baseline | Candidate | Delta |" in comparison
+    assert "## Guard Flags" in comparison
+    assert "negative_hit_rate_increased" in comparison
+    assert "new_negative_skill_selected" in comparison
 
 
 def test_write_blind_validation_summary_rejects_mismatched_task_ids(
@@ -122,6 +128,29 @@ def test_write_blind_validation_summary_rejects_non_test_split(
         [_record("blind-task", selected=["apply-patch-discipline"], split="dev")],
     )
     _write_jsonl(candidate, [_record("blind-task", selected=["apply-patch-discipline"])])
+
+    with pytest.raises(ValueError, match="split == 'test'"):
+        write_blind_validation_summary(
+            baseline_results_path=baseline,
+            candidate_results_path=candidate,
+            output_dir=tmp_path / "out",
+            baseline_router="baseline-minilm",
+            candidate_router="finetuned-embedding",
+            model_dir="/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
+            task_root="benchmarks/blind-migration-tasks",
+        )
+
+
+def test_write_blind_validation_summary_rejects_candidate_non_test_split(
+    tmp_path: Path,
+) -> None:
+    baseline = tmp_path / "baseline.jsonl"
+    candidate = tmp_path / "candidate.jsonl"
+    _write_jsonl(baseline, [_record("blind-task", selected=["apply-patch-discipline"])])
+    _write_jsonl(
+        candidate,
+        [_record("blind-task", selected=["apply-patch-discipline"], split="dev")],
+    )
 
     with pytest.raises(ValueError, match="split == 'test'"):
         write_blind_validation_summary(
