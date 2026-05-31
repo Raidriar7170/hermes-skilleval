@@ -8,7 +8,7 @@ on:
 
 jobs:
   lightweight-tests:
-    name: Lightweight pytest
+    name: Lightweight pytest and release gate
     runs-on: ubuntu-latest
 
     steps:
@@ -25,3 +25,12 @@ jobs:
 
       - name: Run lightweight test suite
         run: pytest -q
+
+      - name: Run release reproducibility gate
+        run: |
+          skilleval release-check \
+            --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
+            --release-output-dir docs/demo/phase18-ci-release-reproducibility
+          git diff --exit-code \
+            docs/demo/phase17-calibrated-release-selector \
+            docs/demo/phase18-ci-release-reproducibility

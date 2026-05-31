@@ -45,6 +45,7 @@ from hermes_skilleval.model_manifest import write_model_manifest
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.provenance import write_finetuned_provenance_pack
 from hermes_skilleval.release_checks import write_release_check_summary
+from hermes_skilleval.release_manifest import write_release_manifest
 from hermes_skilleval.release_selector import (
     DEFAULT_RELEASE_POLICY,
     write_release_decision,
@@ -86,6 +87,27 @@ ROUTER_NAMES = ("keyword", "hybrid", "embedding", "gated", "cross-encoder")
 EMBEDDING_BACKENDS = ("hashing", "sentence-transformers")
 RERANKER_BACKENDS = ("sentence-transformers",)
 ROUTER_LABEL_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+DEFAULT_RELEASE_ROOTS = (
+    "README.md",
+    "docs/phase16.md",
+    "docs/phase17.md",
+    "docs/phase18.md",
+    "docs/release-handoff.md",
+    "docs/demo/phase16-blind-validation",
+    "docs/demo/phase17-calibrated-release-selector",
+    "docs/demo/phase18-ci-release-reproducibility",
+)
+DEFAULT_RELEASE_REQUIRED_PATHS = (
+    "docs/demo/phase16-blind-validation/regression-summary.json",
+    "docs/demo/phase16-blind-validation/route-diffs.jsonl",
+    "docs/demo/phase17-calibrated-release-selector/release-decision.json",
+    "docs/demo/phase17-calibrated-release-selector/task-decisions.jsonl",
+    "docs/demo/phase18-ci-release-reproducibility/release-manifest.json",
+    "docs/demo/phase18-ci-release-reproducibility/release-manifest.md",
+    "docs/phase17.md",
+    "docs/phase18.md",
+    "docs/release-handoff.md",
+)
 
 
 @dataclass(frozen=True)
@@ -356,6 +378,30 @@ def _build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_RELEASE_POLICY["min_ndcg_at_5_delta"],
     )
     release_selector_parser.set_defaults(handler=_run_select_release_router)
+
+    release_check_parser = subparsers.add_parser(
+        "release-check",
+        help="rerun release selection and write a reproducibility manifest",
+    )
+    release_check_parser.add_argument(
+        "--regression-summary",
+        default="docs/demo/phase16-blind-validation/regression-summary.json",
+    )
+    release_check_parser.add_argument(
+        "--route-diffs",
+        default="docs/demo/phase16-blind-validation/route-diffs.jsonl",
+    )
+    release_check_parser.add_argument(
+        "--phase17-output-dir",
+        default="docs/demo/phase17-calibrated-release-selector",
+    )
+    release_check_parser.add_argument(
+        "--release-output-dir",
+        default="docs/demo/phase18-ci-release-reproducibility",
+    )
+    release_check_parser.add_argument("--public-root", action="append", default=None)
+    release_check_parser.add_argument("--required-path", action="append", default=None)
+    release_check_parser.set_defaults(handler=_run_release_check)
 
     manifest_parser = subparsers.add_parser(
         "write-model-manifest",
@@ -779,6 +825,180 @@ def _run_select_release_router(args: argparse.Namespace) -> None:
     print(
         "Wrote Phase 17 release decision to "
         f"{args.output_dir}: {decision['decision']}"
+    )
+
+
+def _run_release_check(args: argparse.Namespace) -> None:
+    phase17_output = Path(args.phase17_output_dir)
+    release_output = ensure_dir(args.release_output_dir)
+    release_summary_path = release_output / "release-check-summary.json"
+
+    write_release_decision(
+        regression_summary_path=Path(args.regression_summary),
+        route_diffs_path=Path(args.route_diffs),
+        output_dir=phase17_output,
+    )
+
+    manifest_json = release_output / "release-manifest.json"
+    _write_placeholder_release_manifest(
+        decision_path=phase17_output / "release-decision.json",
+        release_check_summary_path=release_summary_path,
+        output_dir=release_output,
+    )
+    public_roots = _unique_paths(
+        [Path(path) for path in (args.public_root or DEFAULT_RELEASE_ROOTS)]
+        + [release_output]
+    )
+    required_paths = _unique_paths(
+        [Path(path) for path in (args.required_path or DEFAULT_RELEASE_REQUIRED_PATHS)]
+        + [manifest_json, release_output / "release-manifest.md"]
+    )
+    summary = write_release_check_summary(
+        public_roots=public_roots,
+        required_paths=required_paths,
+        output_path=release_summary_path,
+    )
+
+    verify_argv = _verify_release_argv(
+        public_roots=public_roots,
+        required_paths=required_paths,
+        release_summary_path=release_summary_path,
+    )
+
+    command_records = [
+        {
+            "name": "select-release-router",
+            "argv": [
+                "skilleval",
+                "select-release-router",
+                "--regression-summary",
+                args.regression_summary,
+                "--route-diffs",
+                args.route_diffs,
+                "--output-dir",
+                str(phase17_output),
+            ],
+            "outputs": [
+                str(phase17_output / "release-decision.json"),
+                str(phase17_output / "release-decision.md"),
+                str(phase17_output / "task-decisions.jsonl"),
+            ],
+        },
+        {
+            "name": "verify-release",
+            "argv": verify_argv,
+            "outputs": [str(release_summary_path)],
+        },
+    ]
+    artifact_paths = [
+        Path(args.regression_summary),
+        Path(args.route_diffs),
+        phase17_output / "release-decision.json",
+        phase17_output / "release-decision.md",
+        phase17_output / "task-decisions.jsonl",
+        release_summary_path,
+    ]
+    manifest, summary = _write_stable_release_manifest(
+        decision_path=phase17_output / "release-decision.json",
+        release_check_summary_path=release_summary_path,
+        artifact_paths=artifact_paths,
+        command_records=command_records,
+        output_dir=release_output,
+        public_roots=public_roots,
+        required_paths=required_paths,
+        initial_summary=summary,
+    )
+
+    if summary["status"] != "PASS":
+        raise ValueError(f"release check status: {summary['status']}")
+    if manifest["status"] != "PASS":
+        raise ValueError(f"release manifest status: {manifest['status']}")
+
+    print(f"Release reproducibility {manifest['status']}: {manifest_json}")
+
+
+def _verify_release_argv(
+    *,
+    public_roots: list[Path],
+    required_paths: list[Path],
+    release_summary_path: Path,
+) -> list[str]:
+    argv = ["skilleval", "verify-release"]
+    for path in public_roots:
+        argv.extend(["--public-root", str(path)])
+    for path in required_paths:
+        argv.extend(["--required-path", str(path)])
+    argv.extend(["--summary-output", str(release_summary_path)])
+    return argv
+
+
+def _unique_paths(paths: list[Path]) -> list[Path]:
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        key = str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(path)
+    return unique
+
+
+def _write_stable_release_manifest(
+    *,
+    decision_path: Path,
+    release_check_summary_path: Path,
+    artifact_paths: list[Path],
+    command_records: list[dict[str, object]],
+    output_dir: Path,
+    public_roots: list[Path],
+    required_paths: list[Path],
+    initial_summary: dict[str, object],
+) -> tuple[dict[str, object], dict[str, object]]:
+    summary = initial_summary
+    for _ in range(3):
+        manifest = write_release_manifest(
+            decision_path=decision_path,
+            release_check_summary_path=release_check_summary_path,
+            artifact_paths=artifact_paths,
+            command_records=command_records,
+            output_dir=output_dir,
+        )
+        next_summary = write_release_check_summary(
+            public_roots=public_roots,
+            required_paths=required_paths,
+            output_path=release_check_summary_path,
+        )
+        if next_summary == summary:
+            return manifest, next_summary
+        summary = next_summary
+    raise ValueError("release check summary did not stabilize")
+
+
+def _write_placeholder_release_manifest(
+    *,
+    decision_path: Path,
+    release_check_summary_path: Path,
+    output_dir: Path,
+) -> None:
+    placeholder_summary = {
+        "status": "PASS",
+        "match_count": 0,
+        "checks": [],
+        "matches": {"sensitive": [], "overclaims": [], "checkpoints": []},
+    }
+    release_check_summary_path.parent.mkdir(parents=True, exist_ok=True)
+    if not release_check_summary_path.exists():
+        release_check_summary_path.write_text(
+            json.dumps(placeholder_summary, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    write_release_manifest(
+        decision_path=decision_path,
+        release_check_summary_path=release_check_summary_path,
+        artifact_paths=[decision_path, release_check_summary_path],
+        command_records=[],
+        output_dir=output_dir,
     )
 
 

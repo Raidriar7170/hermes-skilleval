@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 18 Release Reproducibility Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f7f8fa; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 20px 56px; }
+    h1 { font-size: 30px; margin: 0 0 10px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #e9f7ef; color: #196f3d; font-weight: 700; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .item { background: white; border: 1px solid #d8dee4; border-radius: 8px; padding: 14px; }
+    code { background: #eef1f4; padding: 2px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Phase 18: CI Release Reproducibility Pack</h1>
+  <p><span class="status">结论: 默认继续使用 baseline-minilm</span></p>
+  <p>这一阶段把 Phase 17 的保守发布结论接进可复验的 release pack：本地和 CI 都能重新运行同一条命令，确认发布材料没有缺文件、泄露、checkpoint 或过度声明。</p>
+
+  <h2>本阶段改变</h2>
+  <div class="grid">
+    <div class="item"><strong>一键复验</strong><br><code>skilleval release-check</code> 重新生成 Phase 17 决策和 Phase 18 manifest。</div>
+    <div class="item"><strong>CI gate</strong><br>GitHub Actions 在 pytest 后运行 release reproducibility gate。</div>
+    <div class="item"><strong>证据 manifest</strong><br>记录关键输入、输出、命令和 SHA-256，方便 reviewer 复查。</div>
+  </div>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>docs/demo/phase18-ci-release-reproducibility/release-manifest.json</code></li>
+    <li><code>docs/demo/phase18-ci-release-reproducibility/release-manifest.md</code></li>
+    <li><code>docs/demo/phase18-ci-release-reproducibility/release-check-summary.json</code></li>
+    <li><code>.github/workflows/validate.yml</code></li>
+  </ul>
+
+  <h2>不要过度解读</h2>
+  <p>Phase 18 证明的是发布证据链可复验，不证明这是标准外部 benchmark、领先性结论，或生产就绪。当前 release decision 仍是 <code>KEEP_BASELINE</code>。</p>
+
+  <h2>验证命令</h2>
+  <p><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check --phase17-output-dir docs/demo/phase17-calibrated-release-selector --release-output-dir docs/demo/phase18-ci-release-reproducibility</code></p>
+  <p>结果：<code>Release reproducibility PASS: docs/demo/phase18-ci-release-reproducibility/release-manifest.json</code></p>
+
+  <h2>推荐下一步</h2>
+  <p>Phase 19 可以做 external blind pack，把评测从自建 Hermes-style corpus 推向更强的外部泛化证据。</p>
+</main>
+</body>
+</html>

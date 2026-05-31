@@ -1,0 +1,135 @@
+{
+  "artifact_type": "phase18-ci-release-reproducibility-pack",
+  "artifacts": [
+    {
+      "exists": true,
+      "path": "docs/demo/phase16-blind-validation/regression-summary.json",
+      "sha256": "c6063a141814d1f986c79f6b06c0a4fc81f4871583a36db27443ca974b55c8f6",
+      "size_bytes": 1947
+    },
+    {
+      "exists": true,
+      "path": "docs/demo/phase16-blind-validation/route-diffs.jsonl",
+      "sha256": "d787dd8b1a51964ef0370e4f59897011757b16b8e28cf146e799e44d84719333",
+      "size_bytes": 16435
+    },
+    {
+      "exists": true,
+      "path": "docs/demo/phase17-calibrated-release-selector/release-decision.json",
+      "sha256": "47c951630cae73c96f7ceae98c16ce7e15c263bac0b85abf4b9264bfcf24abdd",
+      "size_bytes": 9679
+    },
+    {
+      "exists": true,
+      "path": "docs/demo/phase17-calibrated-release-selector/release-decision.md",
+      "sha256": "90a76119c7c9ace581283d7366b7cf7a633585df70bc0aa39f092c6ec766dbf3",
+      "size_bytes": 1908
+    },
+    {
+      "exists": true,
+      "path": "docs/demo/phase17-calibrated-release-selector/task-decisions.jsonl",
+      "sha256": "164afe009addfb044f496bb0632f5e0fd1b3723719139d603dfaad5b60f45a2d",
+      "size_bytes": 6026
+    },
+    {
+      "exists": true,
+      "path": "docs/demo/phase18-ci-release-reproducibility/release-check-summary.json",
+      "sha256": "bad33f51a9b613740ad5d47c1a954165e34c5d98726a2ba11293e5c166084acf",
+      "size_bytes": 903
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "skilleval",
+        "select-release-router",
+        "--regression-summary",
+        "docs/demo/phase16-blind-validation/regression-summary.json",
+        "--route-diffs",
+        "docs/demo/phase16-blind-validation/route-diffs.jsonl",
+        "--output-dir",
+        "docs/demo/phase17-calibrated-release-selector"
+      ],
+      "name": "select-release-router",
+      "outputs": [
+        "docs/demo/phase17-calibrated-release-selector/release-decision.json",
+        "docs/demo/phase17-calibrated-release-selector/release-decision.md",
+        "docs/demo/phase17-calibrated-release-selector/task-decisions.jsonl"
+      ]
+    },
+    {
+      "argv": [
+        "skilleval",
+        "verify-release",
+        "--public-root",
+        "README.md",
+        "--public-root",
+        "docs/phase16.md",
+        "--public-root",
+        "docs/phase17.md",
+        "--public-root",
+        "docs/phase18.md",
+        "--public-root",
+        "docs/release-handoff.md",
+        "--public-root",
+        "docs/demo/phase16-blind-validation",
+        "--public-root",
+        "docs/demo/phase17-calibrated-release-selector",
+        "--public-root",
+        "docs/demo/phase18-ci-release-reproducibility",
+        "--required-path",
+        "docs/demo/phase16-blind-validation/regression-summary.json",
+        "--required-path",
+        "docs/demo/phase16-blind-validation/route-diffs.jsonl",
+        "--required-path",
+        "docs/demo/phase17-calibrated-release-selector/release-decision.json",
+        "--required-path",
+        "docs/demo/phase17-calibrated-release-selector/task-decisions.jsonl",
+        "--required-path",
+        "docs/demo/phase18-ci-release-reproducibility/release-manifest.json",
+        "--required-path",
+        "docs/demo/phase18-ci-release-reproducibility/release-manifest.md",
+        "--required-path",
+        "docs/phase17.md",
+        "--required-path",
+        "docs/phase18.md",
+        "--required-path",
+        "docs/release-handoff.md",
+        "--summary-output",
+        "docs/demo/phase18-ci-release-reproducibility/release-check-summary.json"
+      ],
+      "name": "verify-release",
+      "outputs": [
+        "docs/demo/phase18-ci-release-reproducibility/release-check-summary.json"
+      ]
+    }
+  ],
+  "phase": "Phase 18",
+  "reasons": [
+    "release decision, public release check, and artifact hashes are reproducible"
+  ],
+  "release_check": {
+    "check_count": 5,
+    "match_count": 0,
+    "status": "PASS"
+  },
+  "release_decision": {
+    "approved_for_default": false,
+    "baseline_router": "baseline-minilm",
+    "candidate_router": "finetuned-embedding",
+    "decision": "KEEP_BASELINE",
+    "metric_deltas": {
+      "mrr": -0.03125,
+      "ndcg_at_5": -0.023067,
+      "negative_accepted_rate": 0.0625,
+      "negative_hit_rate": 0.0625,
+      "recall_at_5": 0.0,
+      "selection_rate_at_5": 0.0
+    },
+    "regression_count": 2,
+    "selected_router": "baseline-minilm",
+    "task_count": 16
+  },
+  "source_phase": "Phase 17",
+  "status": "PASS"
+}

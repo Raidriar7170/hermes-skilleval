@@ -58,7 +58,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 296 |
+| Test cases | 311 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -163,7 +163,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 296 pytest cases
+├── tests/                              # 311 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -418,7 +418,20 @@ The current selector result is `KEEP_BASELINE`: the default router remains
 See [`docs/phase17.md`](docs/phase17.md) and
 [`docs/release-handoff.md`](docs/release-handoff.md).
 
-### 15. Static Dashboard
+### 15. Reproduce the Release Pack in CI Shape
+
+```bash
+skilleval release-check \
+  --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
+  --release-output-dir docs/demo/phase18-ci-release-reproducibility
+```
+
+Phase 18 reruns the release selector and public release guard, then records a
+deterministic manifest at
+[`docs/demo/phase18-ci-release-reproducibility/release-manifest.json`](docs/demo/phase18-ci-release-reproducibility/release-manifest.json).
+The current reproducible release reading remains `KEEP_BASELINE`.
+
+### 16. Static Dashboard
 
 ```bash
 skilleval dashboard \
@@ -432,7 +445,7 @@ interactive run filtering, failure inspection, score ranking, and raw JSON audit
 The committed source artifact is also available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
-### 16. Run Tests
+### 17. Run Tests
 
 ```bash
 pytest -q
@@ -441,7 +454,7 @@ pytest -q
 Expected:
 
 ```text
-296 passed
+311 passed
 ```
 
 ---
@@ -471,6 +484,7 @@ Expected:
 | Phase 15 | Held-out generalization and provenance pack | [`docs/phase15.md`](docs/phase15.md) |
 | Phase 16 | Blind validation and release handoff | [`docs/phase16.md`](docs/phase16.md) |
 | Phase 17 | Calibrated release selector | [`docs/phase17.md`](docs/phase17.md) |
+| Phase 18 | CI-backed release reproducibility pack | [`docs/phase18.md`](docs/phase18.md) |
 
 ---
 
@@ -532,7 +546,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 296 unit and smoke tests |
+| Testing | pytest | 311 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -566,6 +580,8 @@ and [`docs/phase7b.md`](docs/phase7b.md).
       ([docs](docs/phase16.md), [handoff](docs/release-handoff.md))
 - [x] Calibrated default-router release selector
       ([docs](docs/phase17.md), [decision](docs/demo/phase17-calibrated-release-selector/release-decision.json))
+- [x] CI-backed release reproducibility pack
+      ([docs](docs/phase18.md), [manifest](docs/demo/phase18-ci-release-reproducibility/release-manifest.json))
 
 ---
 
@@ -590,7 +606,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 296 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 311 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and
 >   resume-ready experiment documentation.
 >

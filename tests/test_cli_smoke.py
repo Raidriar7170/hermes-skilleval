@@ -5,6 +5,7 @@ from pathlib import Path
 
 import yaml
 
+import hermes_skilleval.cli as cli_module
 from hermes_skilleval.cli import main
 from hermes_skilleval.task_loader import load_tasks
 
@@ -1992,6 +1993,212 @@ def test_cli_select_release_router_writes_decision_artifacts(tmp_path):
     assert decision["approved_for_default"] is False
     assert (output_dir / "release-decision.md").is_file()
     assert (output_dir / "task-decisions.jsonl").is_file()
+
+
+def test_cli_release_check_writes_reproducibility_pack(tmp_path):
+    phase17_output = tmp_path / "phase17"
+    phase18_output = tmp_path / "phase18"
+
+    result = main(
+        [
+            "release-check",
+            "--regression-summary",
+            "docs/demo/phase16-blind-validation/regression-summary.json",
+            "--route-diffs",
+            "docs/demo/phase16-blind-validation/route-diffs.jsonl",
+            "--phase17-output-dir",
+            str(phase17_output),
+            "--release-output-dir",
+            str(phase18_output),
+            "--public-root",
+            "README.md",
+            "--public-root",
+            "docs/phase16.md",
+            "--public-root",
+            "docs/phase17.md",
+            "--public-root",
+            str(phase17_output),
+            "--required-path",
+            str(phase17_output / "release-decision.json"),
+            "--required-path",
+            str(phase17_output / "task-decisions.jsonl"),
+        ]
+    )
+
+    assert result == 0
+    manifest = json.loads((phase18_output / "release-manifest.json").read_text())
+    release_summary = json.loads(
+        (phase18_output / "release-check-summary.json").read_text()
+    )
+    assert manifest["status"] == "PASS"
+    assert manifest["release_decision"]["decision"] == "KEEP_BASELINE"
+    assert manifest["release_decision"]["selected_router"] == "baseline-minilm"
+    assert release_summary["status"] == "PASS"
+    assert (phase18_output / "release-manifest.md").is_file()
+    verify_argv = manifest["commands"][1]["argv"]
+    assert str(phase18_output) in verify_argv
+    assert str(phase18_output / "release-manifest.json") in verify_argv
+    assert str(phase18_output / "release-manifest.md") in verify_argv
+    assert all(
+        artifact["path"]
+        not in {
+            str(phase18_output / "release-manifest.json"),
+            str(phase18_output / "release-manifest.md"),
+        }
+        for artifact in manifest["artifacts"]
+    )
+
+
+def test_cli_release_check_scans_final_manifest_content(tmp_path):
+    phase17_output = tmp_path / "phase17"
+    phase18_output = tmp_path / "phase18"
+    regression_summary = tmp_path / "production-ready-regression-summary.json"
+    route_diffs = tmp_path / "route-diffs.jsonl"
+    regression_summary.write_text(
+        Path("docs/demo/phase16-blind-validation/regression-summary.json").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    route_diffs.write_text(
+        Path("docs/demo/phase16-blind-validation/route-diffs.jsonl").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "release-check",
+            "--regression-summary",
+            str(regression_summary),
+            "--route-diffs",
+            str(route_diffs),
+            "--phase17-output-dir",
+            str(phase17_output),
+            "--release-output-dir",
+            str(phase18_output),
+            "--public-root",
+            str(phase18_output),
+            "--required-path",
+            str(phase17_output / "release-decision.json"),
+            "--required-path",
+            str(phase17_output / "task-decisions.jsonl"),
+            "--required-path",
+            str(phase18_output / "release-manifest.json"),
+            "--required-path",
+            str(phase18_output / "release-manifest.md"),
+        ]
+    )
+
+    assert result == 2
+    release_summary = json.loads(
+        (phase18_output / "release-check-summary.json").read_text()
+    )
+    assert release_summary["status"] == "FAIL"
+    assert any(
+        match["path"]
+        in {
+            str(phase18_output / "release-manifest.json"),
+            str(phase18_output / "release-manifest.md"),
+        }
+        for match in release_summary["matches"]["overclaims"]
+    )
+
+
+def test_cli_release_check_forces_final_manifest_guard_with_custom_paths(tmp_path):
+    phase17_output = tmp_path / "phase17"
+    phase18_output = tmp_path / "phase18"
+    regression_summary = tmp_path / "production-ready-regression-summary.json"
+    route_diffs = tmp_path / "route-diffs.jsonl"
+    regression_summary.write_text(
+        Path("docs/demo/phase16-blind-validation/regression-summary.json").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    route_diffs.write_text(
+        Path("docs/demo/phase16-blind-validation/route-diffs.jsonl").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "release-check",
+            "--regression-summary",
+            str(regression_summary),
+            "--route-diffs",
+            str(route_diffs),
+            "--phase17-output-dir",
+            str(phase17_output),
+            "--release-output-dir",
+            str(phase18_output),
+            "--public-root",
+            str(phase17_output),
+            "--required-path",
+            str(phase17_output / "release-decision.json"),
+            "--required-path",
+            str(phase17_output / "task-decisions.jsonl"),
+        ]
+    )
+
+    assert result == 2
+    release_summary = json.loads(
+        (phase18_output / "release-check-summary.json").read_text()
+    )
+    assert release_summary["status"] == "FAIL"
+    guarded_paths = {
+        match["path"] for match in release_summary["matches"]["overclaims"]
+    }
+    assert str(phase18_output / "release-manifest.json") in guarded_paths or str(
+        phase18_output / "release-manifest.md"
+    ) in guarded_paths
+
+
+def test_cli_release_check_default_config_succeeds_in_repo_context():
+    result = main(["release-check"])
+
+    assert result == 0
+    manifest = json.loads(
+        Path(
+            "docs/demo/phase18-ci-release-reproducibility/release-manifest.json"
+        ).read_text()
+    )
+    assert manifest["status"] == "PASS"
+
+
+def test_cli_release_check_default_required_path_missing_returns_error(
+    tmp_path,
+    monkeypatch,
+):
+    public_root = tmp_path / "public"
+    public_root.mkdir()
+    missing_required_path = tmp_path / "missing-required.json"
+    monkeypatch.setattr(cli_module, "DEFAULT_RELEASE_ROOTS", (str(public_root),))
+    monkeypatch.setattr(
+        cli_module,
+        "DEFAULT_RELEASE_REQUIRED_PATHS",
+        (str(missing_required_path),),
+    )
+
+    result = main(
+        [
+            "release-check",
+            "--phase17-output-dir",
+            str(tmp_path / "phase17"),
+            "--release-output-dir",
+            str(tmp_path / "phase18"),
+        ]
+    )
+
+    assert result == 2
+    release_summary = json.loads(
+        (tmp_path / "phase18" / "release-check-summary.json").read_text()
+    )
+    assert release_summary["status"] == "REVIEW_REQUIRED"
+    assert str(missing_required_path) in release_summary["checks"][1]["details"]
 
 
 def _finetuned_eval_record(

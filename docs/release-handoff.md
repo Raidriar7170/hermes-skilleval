@@ -19,6 +19,7 @@ HTML artifacts.
 | Phase 15 | Held-out provenance pack | `docs/phase15.md` |
 | Phase 16 | Blind validation and release gate | `docs/phase16.md` |
 | Phase 17 | Calibrated release selector keeps baseline | `docs/phase17.md` |
+| Phase 18 | CI-backed release reproducibility pack | `docs/phase18.md` |
 
 ## Reviewer Entry Points
 
@@ -27,6 +28,8 @@ HTML artifacts.
 - Phase 16 comparison: `docs/demo/phase16-blind-validation/comparison.md`
 - Phase 17 release decision: `docs/demo/phase17-calibrated-release-selector/release-decision.json`
 - Phase 17 task decisions: `docs/demo/phase17-calibrated-release-selector/task-decisions.jsonl`
+- Phase 18 release manifest: `docs/demo/phase18-ci-release-reproducibility/release-manifest.json`
+- Phase 18 reproducibility check: `docs/demo/phase18-ci-release-reproducibility/release-check-summary.json`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
 - Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
@@ -41,6 +44,10 @@ blind regression.
 Phase 17 makes that reading explicit for default-router selection. The release
 selector returns `KEEP_BASELINE`, keeps `baseline-minilm` as the default router,
 and records `approved_for_default: false` for `finetuned-embedding`.
+
+Phase 18 makes the release reading CI-reproducible. The release-check command
+reruns the selector and public artifact guard, writes a manifest with artifact
+hashes, and keeps the default-router decision at `KEEP_BASELINE`.
 
 ## Boundaries
 
