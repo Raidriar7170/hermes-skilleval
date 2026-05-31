@@ -15,6 +15,47 @@ verification-gated、cross-encoder 等路由策略，并输出可复现的指标
 
 ---
 
+## For Recruiters / 3-minute review path
+
+**One-line positioning:** Hermes SkillEval turns agent skill routing into a
+reproducible offline evaluation and release-gate workflow: it measures whether
+a router selects the right skill, avoids tempting negative skills, and refuses
+to promote regressions as defaults.
+
+**Core capabilities:**
+
+- Builds an 80-task / 45-skill Hermes-style benchmark with gold and negative
+  skill labels.
+- Compares keyword, hybrid, embedding, verification-gated, contrastive, and
+  cross-encoder routers with Recall@K, MRR, NDCG, and Negative Hit Rate.
+- Converts blind-validation regressions into an explicit `KEEP_BASELINE`
+  release decision and a CI-reproducible release manifest.
+
+**High-signal evidence:**
+
+- [`docs/demo/phase16-blind-validation/comparison.md`](docs/demo/phase16-blind-validation/comparison.md)
+  shows the blind validation regression that blocked the fine-tuned router.
+- [`docs/demo/phase17-calibrated-release-selector/release-decision.md`](docs/demo/phase17-calibrated-release-selector/release-decision.md)
+  records `KEEP_BASELINE` and `approved_for_default: False`.
+- [`docs/demo/phase18-ci-release-reproducibility/release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md)
+  records the reproducible release check and artifact hashes.
+
+For the full evidence chain, start from
+[`docs/release-handoff.md`](docs/release-handoff.md).
+For interview prep, use
+[`docs/interview-project-overview.html`](docs/interview-project-overview.html)
+and [`docs/resume.md`](docs/resume.md).
+
+**Minimal reproduction command:**
+
+```bash
+PYTHONPATH=src python -m hermes_skilleval.cli release-check \
+  --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
+  --release-output-dir docs/demo/phase18-ci-release-reproducibility
+```
+
+---
+
 ## Motivation / 为什么需要这个项目
 
 Modern agent frameworks increasingly rely on external skill libraries. The hard
@@ -37,14 +78,30 @@ while avoiding tempting negative skills**.
 
 ## Key Results / 核心效果
 
+### Current Release Evidence
+
+The latest release reading comes from Phase 16-18, not from the earlier Phase 8
+dashboard. Phase 16 blind validation found that the fine-tuned embedding router
+preserved Recall@5 but worsened ranking and negative-skill behavior. Phase 17
+therefore keeps `baseline-minilm` as the default, and Phase 18 makes that
+release gate reproducible.
+
+| Evidence | Result | Link |
+|---|---|---|
+| Phase 16 blind validation | `REVIEW_REQUIRED`; two regressions and worse negative-hit behavior | [`comparison.md`](docs/demo/phase16-blind-validation/comparison.md), [`dashboard.html`](docs/demo/phase16-blind-validation/dashboard.html) |
+| Phase 17 release selector | `KEEP_BASELINE`; `finetuned-embedding` not approved as default | [`release-decision.md`](docs/demo/phase17-calibrated-release-selector/release-decision.md) |
+| Phase 18 reproducibility pack | `PASS`; release decision remains `KEEP_BASELINE` | [`release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md) |
+
 ### Live Dashboard
 
 Explore the committed Phase 8 dashboard:
 [`Open Hermes SkillEval Dashboard`](https://raidriar7170.github.io/hermes-skilleval/docs/demo/phase8-static-dashboard/dashboard.html).
 
 The dashboard supports run filtering, failure inspection, score ranking, and raw
-JSON audit over the Phase 7B comparison artifacts. The committed HTML artifact
-is also available at
+JSON audit over the Phase 7B comparison artifacts. It remains useful for
+inspection, while the current release evidence is the Phase 16-18 blind
+validation and release-gate chain above. The committed HTML artifact is also
+available at
 [`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
 
 Preview generated from the committed Phase 8 dashboard payload:
@@ -145,7 +202,7 @@ hermes-skilleval/
 │   └── tasks/                          # 80 labeled routing tasks
 ├── docs/
 │   ├── demo/                           # committed benchmark outputs
-│   ├── phase2.md ... phase17.md        # implementation and experiment notes
+│   ├── phase2.md ... phase18.md        # implementation and experiment notes
 │   └── resume.md                       # resume-ready project framing
 ├── scripts/
 │   ├── generate_benchmark_skills.py    # reproducible skill corpus generator
@@ -607,8 +664,9 @@ MIT License. See [LICENSE](LICENSE) for details.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
 > - **Engineering Quality:** shipped a typed Python CLI with 311 passing tests,
->   reproducible benchmark artifacts, a static inspection dashboard, and
->   resume-ready experiment documentation.
+>   reproducible benchmark artifacts, a static inspection dashboard, and a
+>   release gate that keeps `baseline-minilm` when blind validation finds a
+>   fine-tuned-router regression.
 >
 > **面向招聘者:**
 >

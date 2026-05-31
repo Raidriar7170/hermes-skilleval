@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes SkillEval 求职展示改进 Brief</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #17202a; background: #f6f8fa; }
+    main { max-width: 920px; margin: 0 auto; padding: 38px 20px 54px; }
+    h1 { margin: 0 0 10px; font-size: 30px; letter-spacing: 0; }
+    h2 { margin: 28px 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { line-height: 1.66; }
+    a { color: #0b6e69; }
+    code { padding: 2px 5px; border-radius: 4px; background: #eef2f6; }
+    .status { display: inline-block; padding: 5px 10px; border-radius: 6px; background: #e9f7ef; color: #196f3d; font-weight: 700; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .item { padding: 14px; border: 1px solid #d8dee4; border-radius: 8px; background: #fff; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Hermes SkillEval 求职展示改进</h1>
+  <p><span class="status">结论：已把项目叙事从阶段日志前移为招聘者入口</span></p>
+  <p>这次改动不扩展模型或 benchmark，而是让 README、简历材料和面试 HTML 更快说明项目价值：盲测发现回归，发布门禁拒绝把 <code>finetuned-embedding</code> 设为默认，并把该结论做成可复验 release evidence。</p>
+
+  <h2>当前状态</h2>
+  <p>Ready for review。主文档已更新，本地验证和只读 diff review 已通过；等待人工确认是否提交。</p>
+
+  <h2>本阶段改动</h2>
+  <div class="grid">
+    <div class="item"><strong>README 首屏</strong><br>新增 <code>For Recruiters / 3-minute review path</code>，放入一句话定位、3 个能力、3 个证据链接和最小复现命令。</div>
+    <div class="item"><strong>简历材料</strong><br><code>docs/resume.md</code> 改为 311-test 当前状态，并突出 Phase 16-18 的回归拒绝主线。</div>
+    <div class="item"><strong>面试 HTML</strong><br>新增 <code>docs/interview-project-overview.html</code>，覆盖 pitch、架构、Negative Hit Rate、Phase 14/16/17/18 讲法。</div>
+  </div>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><a href="../../README.md">README.md</a></li>
+    <li><a href="../resume.md">docs/resume.md</a></li>
+    <li><a href="../interview-project-overview.html">docs/interview-project-overview.html</a></li>
+    <li><a href="../release-handoff.md">docs/release-handoff.md</a></li>
+    <li><a href="../demo/phase16-blind-validation/comparison.md">Phase 16 comparison</a></li>
+    <li><a href="../demo/phase17-calibrated-release-selector/release-decision.md">Phase 17 release decision</a></li>
+    <li><a href="../demo/phase18-ci-release-reproducibility/release-manifest.md">Phase 18 manifest</a></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>pytest -q</code>: <code>311 passed</code></li>
+    <li><code>git diff --check</code>: pass, no output</li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check --phase17-output-dir docs/demo/phase17-calibrated-release-selector --release-output-dir docs/demo/phase18-ci-release-reproducibility</code>: <code>Release reproducibility PASS</code></li>
+  </ul>
+
+  <h2>不要过度声明</h2>
+  <p>这不是标准外部 benchmark、SOTA 结果或生产就绪证明。它适合表达为 self-built Hermes-style skill-routing benchmark、blind validation、release gate、<code>KEEP_BASELINE</code> 和可复验证据链。</p>
+
+  <h2>推荐下一步</h2>
+  <p>先让招聘者入口和面试 HTML 稳定下来；后续如果继续增强项目含金量，再考虑 external blind pack，而不是继续堆 Phase 编号。</p>
+</main>
+</body>
+</html>

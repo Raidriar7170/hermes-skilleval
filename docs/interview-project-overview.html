@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes SkillEval Interview Overview</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #586674;
+      --line: #d8dee4;
+      --paper: #ffffff;
+      --bg: #f5f7fa;
+      --accent: #0b6e69;
+      --warn: #9a5b00;
+      --code: #eef2f6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 36px 20px 56px;
+    }
+
+    header {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 30px 0 12px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    p, li {
+      font-size: 16px;
+      line-height: 1.68;
+    }
+
+    a { color: var(--accent); }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: var(--code);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .subhead {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .nav a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .card {
+      min-height: 120px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .metric {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 24px;
+      font-weight: 750;
+      color: var(--accent);
+    }
+
+    .warning .metric { color: var(--warn); }
+
+    .flow {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      align-items: stretch;
+    }
+
+    .step {
+      position: relative;
+      min-height: 112px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .step:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      right: -10px;
+      top: 42%;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .split {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .callout {
+      padding: 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      background: var(--paper);
+    }
+
+    .tight {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 820px) {
+      main { padding: 28px 16px 44px; }
+      .flow, .split { grid-template-columns: 1fr; }
+      .step:not(:last-child)::after { content: ""; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Hermes SkillEval</h1>
+    <p class="subhead">面试版项目总览：一个面向 Agent Skill 路由可靠性的离线评测与发布门禁项目，重点是可复验证据、负样本风险和保守上线判断。</p>
+    <nav class="nav" aria-label="Evidence links">
+      <a href="../README.md">README</a>
+      <a href="resume.md">Resume Notes</a>
+      <a href="release-handoff.md">Release Handoff</a>
+      <a href="phase16.md">Phase 16</a>
+      <a href="phase17.md">Phase 17</a>
+      <a href="phase18.md">Phase 18</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2>30 秒 pitch</h2>
+    <div class="callout">
+      <p class="tight">我做了一个 Hermes-style Agent Skill 路由评测系统。它把 Markdown 技能库、带 gold/negative 标签的任务集、多个 router、指标报告和 release gate 串起来，回答一个工程问题：当 Agent 有很多相似技能时，路由器能不能选对、能不能不选诱导性负样本；当微调候选看起来不错但盲测有退化时，系统能不能拒绝默认上线。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>当前证据读法</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="metric">311 tests</span>
+        <p>轻量 pytest 验证覆盖 parser、loader、router、metrics、reports、CLI 和 release gate。</p>
+      </div>
+      <div class="card">
+        <span class="metric">80 / 45</span>
+        <p>自建 Hermes-style benchmark：80 个任务、45 个技能，并显式标注 negative skills。</p>
+      </div>
+      <div class="card warning">
+        <span class="metric">REVIEW_REQUIRED</span>
+        <p>Phase 16 blind validation 发现 <code>finetuned-embedding</code> 有 ranking 和 negative-skill 回归。</p>
+      </div>
+      <div class="card">
+        <span class="metric">KEEP_BASELINE</span>
+        <p>Phase 17 选择继续使用 <code>baseline-minilm</code>，没有把候选微调路由器设为默认。</p>
+      </div>
+      <div class="card">
+        <span class="metric">PASS</span>
+        <p>Phase 18 release-check 复现发布决策并记录关键 artifact hashes。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>架构说明</h2>
+    <div class="flow" aria-label="Architecture flow">
+      <div class="step">
+        <h3>Skill Library</h3>
+        <p><code>SKILL.md</code> parser 生成可评测的 skill index。</p>
+      </div>
+      <div class="step">
+        <h3>Task Packs</h3>
+        <p>Benchmark tasks 标注 gold skills 和 negative skills。</p>
+      </div>
+      <div class="step">
+        <h3>Routers</h3>
+        <p>keyword、hybrid、embedding、gated、cross-encoder 共用评测接口。</p>
+      </div>
+      <div class="step">
+        <h3>Metrics</h3>
+        <p>Recall@K、MRR、NDCG、Negative Hit Rate 和 JSONL traces。</p>
+      </div>
+      <div class="step">
+        <h3>Blind Gate</h3>
+        <p>Phase 16 在未见任务上比较 baseline 和 candidate。</p>
+      </div>
+      <div class="step">
+        <h3>Release Pack</h3>
+        <p>Phase 17/18 写出默认路由决策和可复现 manifest。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="split">
+    <div>
+      <h2>为什么不只看 Recall@K</h2>
+      <p>Agent 路由不是普通检索列表展示。只要错误技能被接受，后续执行就可能走向错误工具、错误流程或错误上下文。Negative Hit Rate 让评测同时回答两个问题：有没有召回正确技能，以及有没有把诱导性负样本也带进执行候选。</p>
+    </div>
+    <div>
+      <h2>Phase 14 为什么不是最终胜利</h2>
+      <p>Phase 14 证明了 fine-tuned embedding router 有可追溯训练和评测路径，但它还只是候选模型。最终能不能成为默认路由器，要看 held-out 和 blind validation 是否能守住 ranking 与 negative-skill 风险。</p>
+    </div>
+  </section>
+
+  <section class="split">
+    <div>
+      <h2>Phase 16/17 的工程判断</h2>
+      <p>Phase 16 的盲测结果很适合面试展开：Recall@5 持平，但 MRR、NDCG@5、Negative Hit Rate 和 Negative Accepted Rate 变差。Phase 17 没有把这个结果包装成成功，而是明确记录 <code>KEEP_BASELINE</code> 和 <code>approved_for_default: false</code>。</p>
+    </div>
+    <div>
+      <h2>Phase 18 的发布证据</h2>
+      <p>Phase 18 让 release gate 不停留在一次本地判断。<code>release-check</code> 重新运行 selector 和 public artifact guard，输出 manifest 与 SHA-256，让 README、release handoff、Phase 17 decision 和 Phase 18 manifest 可以互相对上。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>证据入口</h2>
+    <ul>
+      <li><a href="demo/phase16-blind-validation/comparison.md">Phase 16 blind validation comparison</a></li>
+      <li><a href="demo/phase17-calibrated-release-selector/release-decision.md">Phase 17 release decision</a></li>
+      <li><a href="demo/phase18-ci-release-reproducibility/release-manifest.md">Phase 18 release manifest</a></li>
+      <li><a href="demo/phase16-blind-validation/dashboard.html">Phase 16 blind-validation dashboard</a></li>
+      <li><a href="../.github/workflows/validate.yml">GitHub Actions validation workflow</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>不要过度声明</h2>
+    <p>这个项目应该表述为 self-built Hermes-style skill-routing benchmark 和 release-gate harness。它不证明标准外部 benchmark、SOTA 或 production readiness。最强的求职叙事是：我不仅会做指标提升，也会在盲测发现回归时拒绝上线，并把这个拒绝做成可复验的发布证据。</p>
+  </section>
+</main>
+</body>
+</html>
