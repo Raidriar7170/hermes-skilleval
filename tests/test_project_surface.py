@@ -7,6 +7,8 @@ CI_WORKFLOW = ROOT / ".github" / "workflows" / "validate.yml"
 DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
 MIGRATION_PROTOCOL = ROOT / "docs" / "skill-library-migration-protocol.md"
 EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
+USAGE = ROOT / "docs" / "usage.md"
+RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
 
 
 def test_ci_workflow_runs_lightweight_pytest_validation():
@@ -73,3 +75,23 @@ def test_experiment_timeline_keeps_phase_history_outside_readme():
     assert "| Phase 18 | CI-backed release reproducibility pack |" not in readme
     assert "| Phase 18 | CI-backed release reproducibility pack |" in timeline
     assert "| Phase 2 | Router comparison baseline |" in timeline
+
+
+def test_readme_keeps_quick_start_short_and_links_full_usage():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+
+    assert "For full CLI usage, see [`docs/usage.md`](docs/usage.md)." in readme
+    assert "skilleval release-check" in readme
+    assert "### 1. Index a Hermes-style Skill Library" not in readme
+    assert "## 1. Index a Hermes-style Skill Library" in usage
+    assert "## 17. Run Tests" in usage
+
+
+def test_release_notes_are_reviewer_ready_and_conservative():
+    notes = RELEASE_NOTES.read_text(encoding="utf-8")
+
+    assert "# v0.1.0 - CI-backed Skill Routing Evaluation Harness" in notes
+    assert "KEEP_BASELINE" in notes
+    assert "baseline-minilm" in notes
+    assert "SOTA" not in notes

@@ -6,6 +6,7 @@ from pathlib import Path
 PHASE15_ROOT = Path("docs/demo/phase15-held-out-generalization")
 README = Path("README.md")
 PHASE15_DOC = Path("docs/phase15.md")
+USAGE = Path("docs/usage.md")
 CHECKPOINT_SUFFIXES = {".bin", ".onnx", ".pt", ".pth", ".safetensors"}
 SENSITIVE_MARKERS = (
     "AKIA",
@@ -66,16 +67,17 @@ def test_phase15_provenance_pack_is_sanitized_and_checkpoint_free():
 def test_phase15_docs_and_readme_reference_the_pack_without_overclaiming():
     readme = README.read_text(encoding="utf-8")
     phase15 = PHASE15_DOC.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
 
-    assert "Phase 15" in readme
-    assert "held-out" in readme
-    assert "provenance" in readme
+    assert "Phase 15" in usage
+    assert "held-out" in usage
+    assert "provenance" in usage
     assert "Phase 15: Held-out generalization and provenance pack" in phase15
     assert "does not establish SOTA" in phase15
     assert "standard external benchmark" in phase15
     assert "production readiness" in phase15
-    assert "| Test cases | 312 |" in readme
-    assert "312 passed" in readme
+    assert "| Test cases | 314 |" in readme
+    assert "314 passed" in readme
 
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:

@@ -8,7 +8,7 @@ metrics, blind-validation evidence, and a conservative default-router decision.
 
 ## Resume Bullets
 
-- Built `Hermes SkillEval`, a 312-test Python CLI harness for benchmarking
+- Built `Hermes SkillEval`, a 314-test Python CLI harness for benchmarking
   Hermes-style agent skill routing over an 80-task / 45-skill self-built corpus,
   with Markdown skill indexing, keyword/hybrid/embedding/gated/cross-encoder
   routers, Recall@K, MRR, NDCG, Negative Hit Rate, JSONL traces, Markdown

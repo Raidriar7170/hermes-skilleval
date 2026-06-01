@@ -5,6 +5,7 @@ from pathlib import Path
 PHASE14_ROOT = Path("docs/demo/phase14-finetuned-embedding-router")
 README = Path("README.md")
 PHASE14_DOC = Path("docs/phase14.md")
+USAGE = Path("docs/usage.md")
 TRAIN_SCRIPT = Path("scripts/train_embedding_router.py")
 
 
@@ -29,9 +30,10 @@ def test_phase14_training_data_artifacts_are_committed():
 def test_phase14_docs_do_not_overclaim_without_eval_artifacts():
     readme = README.read_text(encoding="utf-8")
     phase14 = PHASE14_DOC.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
 
-    assert "export-embedding-training-data" in readme
-    assert "judge-finetuned-embedding" in readme
+    assert "export-embedding-training-data" in usage
+    assert "judge-finetuned-embedding" in usage
     assert "Fine-tuned embedding router" in phase14
     assert "does not establish SOTA" in phase14
     assert "standard external benchmark" in phase14
@@ -64,8 +66,10 @@ def test_phase14_real_eval_artifacts_pass_hard_negative_guard():
 def test_readme_test_counts_match_verified_suite_size():
     readme = README.read_text(encoding="utf-8")
 
-    assert "| Test cases | 312 |" in readme
-    assert "312 passed" in readme
+    assert "| Test cases | 314 |" in readme
+    assert "314 passed" in readme
+    assert "| Test cases | 312 |" not in readme
+    assert "312 passed" not in readme
     assert "| Test cases | 311 |" not in readme
     assert "311 passed" not in readme
     assert "211 passed" not in readme

@@ -6,6 +6,7 @@ PHASE12_ROOT = Path("docs/demo/phase12-skill-patch-ranking")
 README = Path("README.md")
 PHASE12_DOC = Path("docs/phase12.md")
 TIMELINE = Path("docs/experiment-timeline.md")
+USAGE = Path("docs/usage.md")
 
 
 def test_phase12_patch_ranking_artifacts_are_committed():
@@ -35,11 +36,12 @@ def test_phase12_docs_and_readme_are_updated():
     readme = README.read_text(encoding="utf-8")
     phase12 = PHASE12_DOC.read_text(encoding="utf-8")
     timeline = TIMELINE.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
 
     assert "docs/experiment-timeline.md" in readme
     assert "| Phase 12 | Offline skill metadata patch ranking |" in timeline
     assert "- [x] Offline skill metadata patch ranking" in readme
-    assert "rank-skill-patches" in readme
+    assert "rank-skill-patches" in usage
     assert "does not modify source SKILL.md files" in phase12
     assert "negative_skill_selected" in phase12
 

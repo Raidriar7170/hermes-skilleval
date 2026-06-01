@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes SkillEval Final Public Release Polish</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #17202a; background: #f7f8fa; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 20px 56px; }
+    h1 { margin: 0 0 10px; font-size: 30px; letter-spacing: 0; }
+    h2 { margin: 28px 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { line-height: 1.66; }
+    code { padding: 2px 5px; border-radius: 4px; background: #eef2f6; }
+    .status { display: inline-block; padding: 5px 10px; border-radius: 6px; background: #e9f7ef; color: #196f3d; font-weight: 700; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .item { padding: 14px; border: 1px solid #d8dee4; border-radius: 8px; background: #fff; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Hermes SkillEval 最终发布展示优化</h1>
+  <p><span class="status">结论：README 已收紧为招聘者入口，并准备作为 v0.1.0 发布基线</span></p>
+  <p>这一轮不改变 benchmark、router 或 release decision；它只完成最后的 public-facing packaging：压缩首页 Quick Start、把完整 CLI 手册迁到独立文档、准备 release notes，并保留 <code>KEEP_BASELINE</code> 的保守结论。</p>
+
+  <h2>本阶段改变</h2>
+  <div class="grid">
+    <div class="item"><strong>README 收紧</strong><br><code>README.md</code> 只保留安装、测试、<code>release-check</code> 和 <code>docs/usage.md</code> 入口。</div>
+    <div class="item"><strong>完整用法下沉</strong><br><code>docs/usage.md</code> 承接原 17 步 CLI walkthrough，避免首页像操作手册。</div>
+    <div class="item"><strong>发布材料</strong><br><code>docs/release-notes/v0.1.0.md</code> 提供 GitHub Release 正文，强调 blind validation、release gate 和 CI reproducibility。</div>
+  </div>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>README.md</code></li>
+    <li><code>docs/usage.md</code></li>
+    <li><code>docs/release-notes/v0.1.0.md</code></li>
+    <li><code>docs/resume.md</code></li>
+    <li><code>docs/interview-project-overview.html</code></li>
+    <li><code>tests/test_project_surface.py</code> and phase surface tests</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>python -m pytest -q</code>: <code>314 passed</code></li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check --phase17-output-dir docs/demo/phase17-calibrated-release-selector --release-output-dir docs/demo/phase18-ci-release-reproducibility</code>: <code>Release reproducibility PASS</code></li>
+  </ul>
+
+  <h2>发布边界</h2>
+  <p>不要把这个 release 讲成模型领先结果、外部标准 benchmark 或 fine-tuned router 替代 baseline。当前默认路由器仍是 <code>baseline-minilm</code>，发布决策仍是 <code>KEEP_BASELINE</code>。</p>
+
+  <h2>推荐下一步</h2>
+  <p>提交并推送本轮文档基线后，用 <code>docs/release-notes/v0.1.0.md</code> 创建 <code>v0.1.0</code> GitHub Release，并添加 repository topics：<code>agent-evaluation</code>, <code>skill-routing</code>, <code>llm-agents</code>, <code>retrieval</code>, <code>reranking</code>, <code>benchmark</code>, <code>python-cli</code>, <code>release-gate</code>, <code>ci</code>。</p>
+</main>
+</body>
+</html>

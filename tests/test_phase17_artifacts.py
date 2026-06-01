@@ -54,11 +54,12 @@ def test_phase17_docs_and_handoff_reference_release_selector() -> None:
     readme = Path("README.md").read_text(encoding="utf-8")
     phase17 = Path("docs/phase17.md").read_text(encoding="utf-8")
     handoff = Path("docs/release-handoff.md").read_text(encoding="utf-8")
+    usage = Path("docs/usage.md").read_text(encoding="utf-8")
 
     assert "Phase 17" in readme
-    assert "select-release-router" in readme
+    assert "select-release-router" in usage
     assert "docs/phase17.md" in readme
-    assert "docs/demo/phase17-calibrated-release-selector/release-decision.json" in readme
+    assert "docs/demo/phase17-calibrated-release-selector/release-decision.json" in usage
     assert "Phase 17: Calibrated Release Selector" in phase17
     assert "KEEP_BASELINE" in phase17
     assert "selected default router remains `baseline-minilm`" in phase17

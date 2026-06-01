@@ -6,6 +6,7 @@ PHASE10_ROOT = Path("docs/demo/phase10-agent-in-the-loop")
 README = Path("README.md")
 PHASE10_DOC = Path("docs/phase10.md")
 TIMELINE = Path("docs/experiment-timeline.md")
+USAGE = Path("docs/usage.md")
 
 RUNS = {
     "agent-loop-no-skill-hybrid": "no-skill",
@@ -80,11 +81,12 @@ def test_phase10_is_documented_in_readme_and_phase_notes():
     readme = README.read_text(encoding="utf-8")
     phase10 = PHASE10_DOC.read_text(encoding="utf-8")
     timeline = TIMELINE.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
 
     assert "docs/experiment-timeline.md" in readme
     assert "| Phase 10 | Agent-in-the-loop migration evaluation |" in timeline
     assert "- [x] Agent-in-the-loop skill routing evaluation" in readme
-    assert "run-agent-loop" in readme
+    assert "run-agent-loop" in usage
     assert "three execution conditions" in phase10
     assert "agent-traces.jsonl" in phase10
     assert "deterministic" in phase10

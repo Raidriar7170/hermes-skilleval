@@ -14,6 +14,7 @@ MIGRATION_TASKS = Path("benchmarks/migration-tasks")
 README = Path("README.md")
 PHASE9_DOC = Path("docs/phase9.md")
 TIMELINE = Path("docs/experiment-timeline.md")
+USAGE = Path("docs/usage.md")
 
 
 EXPECTED_SKILL_FAMILIES = {
@@ -207,11 +208,12 @@ def test_phase9_is_documented_in_readme_and_phase_notes():
     readme = README.read_text(encoding="utf-8")
     phase9 = PHASE9_DOC.read_text(encoding="utf-8")
     timeline = TIMELINE.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
 
     assert "docs/experiment-timeline.md" in readme
     assert "| Phase 9 | Real skill-library migration evaluation |" in timeline
     assert "- [x] Real skill-library migration test protocol" in readme
-    assert "Phase 9" in readme
+    assert "docs/demo/phase9-real-skill-library-migration" in usage
     assert "12 migration tasks" in phase9
     assert "16 migrated skills" in phase9
     assert "offline deterministic routers" in phase9
