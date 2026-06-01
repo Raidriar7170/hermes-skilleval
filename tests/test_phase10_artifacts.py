@@ -5,6 +5,7 @@ from pathlib import Path
 PHASE10_ROOT = Path("docs/demo/phase10-agent-in-the-loop")
 README = Path("README.md")
 PHASE10_DOC = Path("docs/phase10.md")
+TIMELINE = Path("docs/experiment-timeline.md")
 
 RUNS = {
     "agent-loop-no-skill-hybrid": "no-skill",
@@ -78,8 +79,10 @@ def test_phase10_dashboard_and_comparison_are_committed():
 def test_phase10_is_documented_in_readme_and_phase_notes():
     readme = README.read_text(encoding="utf-8")
     phase10 = PHASE10_DOC.read_text(encoding="utf-8")
+    timeline = TIMELINE.read_text(encoding="utf-8")
 
-    assert "| Phase 10 | Agent-in-the-loop migration evaluation |" in readme
+    assert "docs/experiment-timeline.md" in readme
+    assert "| Phase 10 | Agent-in-the-loop migration evaluation |" in timeline
     assert "- [x] Agent-in-the-loop skill routing evaluation" in readme
     assert "run-agent-loop" in readme
     assert "three execution conditions" in phase10

@@ -13,6 +13,7 @@ MIGRATED_SKILLS = Path("benchmarks/migrated-skills")
 MIGRATION_TASKS = Path("benchmarks/migration-tasks")
 README = Path("README.md")
 PHASE9_DOC = Path("docs/phase9.md")
+TIMELINE = Path("docs/experiment-timeline.md")
 
 
 EXPECTED_SKILL_FAMILIES = {
@@ -205,8 +206,10 @@ def test_phase9_demo_artifacts_are_committed_and_auditable():
 def test_phase9_is_documented_in_readme_and_phase_notes():
     readme = README.read_text(encoding="utf-8")
     phase9 = PHASE9_DOC.read_text(encoding="utf-8")
+    timeline = TIMELINE.read_text(encoding="utf-8")
 
-    assert "| Phase 9 | Real skill-library migration evaluation |" in readme
+    assert "docs/experiment-timeline.md" in readme
+    assert "| Phase 9 | Real skill-library migration evaluation |" in timeline
     assert "- [x] Real skill-library migration test protocol" in readme
     assert "Phase 9" in readme
     assert "12 migration tasks" in phase9

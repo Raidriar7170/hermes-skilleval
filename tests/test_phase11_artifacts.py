@@ -5,6 +5,7 @@ from pathlib import Path
 PHASE11_ROOT = Path("docs/demo/phase11-evidence-judge-calibration")
 README = Path("README.md")
 PHASE11_DOC = Path("docs/phase11.md")
+TIMELINE = Path("docs/experiment-timeline.md")
 
 RUNS = {
     "judge-agent-loop-no-skill-hybrid": "no-skill",
@@ -58,6 +59,7 @@ def test_phase11_dashboard_and_docs_are_committed():
     summary = json.loads((PHASE11_ROOT / "phase11-summary.json").read_text())
     readme = README.read_text(encoding="utf-8")
     phase11 = PHASE11_DOC.read_text(encoding="utf-8")
+    timeline = TIMELINE.read_text(encoding="utf-8")
 
     assert "judge-agent-loop-hybrid" in dashboard
     assert "judge_score" in dashboard
@@ -65,7 +67,8 @@ def test_phase11_dashboard_and_docs_are_committed():
     assert "Hermes SkillEval Router Comparison" in comparison
     assert "judge proxy" in comparison
     assert summary["phase"] == "Phase 11"
-    assert "| Phase 11 | Evidence judge calibration |" in readme
+    assert "docs/experiment-timeline.md" in readme
+    assert "| Phase 11 | Evidence judge calibration |" in timeline
     assert "judge-agent-loop" in readme
     assert "deterministic-rubric" in phase11
     assert "does not require API keys" in phase11

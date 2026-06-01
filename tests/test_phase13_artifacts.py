@@ -7,6 +7,7 @@ from hermes_skilleval.skill_index import load_skill_index
 PHASE13_ROOT = Path("docs/demo/phase13-patch-simulation")
 README = Path("README.md")
 PHASE13_DOC = Path("docs/phase13.md")
+TIMELINE = Path("docs/experiment-timeline.md")
 
 
 def test_phase13_patch_simulation_artifacts_are_committed():
@@ -42,8 +43,10 @@ def test_phase13_patch_simulation_artifacts_are_committed():
 def test_phase13_docs_and_readme_are_updated():
     readme = README.read_text(encoding="utf-8")
     phase13 = PHASE13_DOC.read_text(encoding="utf-8")
+    timeline = TIMELINE.read_text(encoding="utf-8")
 
-    assert "| Phase 13 | Patch simulation regression guard |" in readme
+    assert "docs/experiment-timeline.md" in readme
+    assert "| Phase 13 | Patch simulation regression guard |" in timeline
     assert "simulate-skill-patches" in readme
     assert "does not modify source SKILL.md files" in phase13
     assert "regression-summary.json" in phase13

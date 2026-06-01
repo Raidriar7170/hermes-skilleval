@@ -6,6 +6,7 @@ README = ROOT / "README.md"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "validate.yml"
 DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
 MIGRATION_PROTOCOL = ROOT / "docs" / "skill-library-migration-protocol.md"
+EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
 
 
 def test_ci_workflow_runs_lightweight_pytest_validation():
@@ -21,15 +22,21 @@ def test_readme_surfaces_live_dashboard_and_screenshot_near_key_results():
     readme = README.read_text(encoding="utf-8")
     key_results = readme.index("## Key Results")
     architecture = readme.index("## Architecture")
+    limitations = readme.index("## Limitations / Boundaries")
     live_dashboard = readme.index("### Live Dashboard")
     screenshot = readme.index("docs/assets/dashboard-screenshot.png")
 
     assert key_results < live_dashboard < architecture
     assert key_results < screenshot < architecture
+    assert key_results < limitations < architecture
     assert "actions/workflows/validate.yml/badge.svg" in readme
     assert "run filtering" in readme
     assert "failure inspection" in readme
     assert "raw JSON audit" in readme
+    assert "### Example Failure Caught by the Release Gate" in readme
+    assert "blind-claude-mcp-routing" in readme
+    assert "This is a self-built Hermes-style benchmark" in readme
+    assert "docs/experiment-timeline.md" in readme
 
 
 def test_dashboard_screenshot_asset_exists():
@@ -57,3 +64,12 @@ def test_skill_library_migration_protocol_is_actionable():
     )
     for phrase in required_phrases:
         assert phrase in protocol
+
+
+def test_experiment_timeline_keeps_phase_history_outside_readme():
+    readme = README.read_text(encoding="utf-8")
+    timeline = EXPERIMENT_TIMELINE.read_text(encoding="utf-8")
+
+    assert "| Phase 18 | CI-backed release reproducibility pack |" not in readme
+    assert "| Phase 18 | CI-backed release reproducibility pack |" in timeline
+    assert "| Phase 2 | Router comparison baseline |" in timeline

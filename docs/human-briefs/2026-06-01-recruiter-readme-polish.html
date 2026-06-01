@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recruiter README Polish Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f7f8fa; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 20px 56px; }
+    h1 { font-size: 30px; margin: 0 0 10px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    p, li { line-height: 1.65; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #e9f7ef; color: #196f3d; font-weight: 700; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .item { background: white; border: 1px solid #d8dee4; border-radius: 8px; padding: 14px; }
+    code { background: #eef1f4; padding: 2px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Recruiter README Polish</h1>
+  <p><span class="status">结论: README 更像项目首页，证据链仍然保守可审计</span></p>
+  <p>这一轮把首页从完整实验流水账收紧为招聘者入口：保留 Phase 16-18 发布证据、dashboard 预览、复现命令和架构图，把完整 phase 时间线下沉到单独文档。</p>
+
+  <h2>本阶段改变</h2>
+  <div class="grid">
+    <div class="item"><strong>首页叙事</strong><br><code>README.md</code> 开头改为 evaluation + release-gate harness，并补充真实 regression 案例。</div>
+    <div class="item"><strong>时间线下沉</strong><br><code>docs/experiment-timeline.md</code> 承接 Phase 2-18 全历史，README 只保留入口链接。</div>
+    <div class="item"><strong>边界说明</strong><br>新增 <code>Limitations / Boundaries</code>，避免把自建 benchmark 或 fine-tuned router 过度包装。</div>
+  </div>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>README.md</code></li>
+    <li><code>docs/experiment-timeline.md</code></li>
+    <li><code>docs/resume.md</code></li>
+    <li><code>docs/interview-project-overview.html</code></li>
+    <li><code>tests/test_project_surface.py</code> 与 phase artifact surface tests</li>
+  </ul>
+
+  <h2>验证命令</h2>
+  <ul>
+    <li><code>python -m pytest -q</code>: <code>312 passed</code></li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check --phase17-output-dir docs/demo/phase17-calibrated-release-selector --release-output-dir docs/demo/phase18-ci-release-reproducibility</code>: <code>Release reproducibility PASS</code></li>
+    <li><code>git diff --check</code>: pass</li>
+  </ul>
+
+  <h2>不要过度解读</h2>
+  <p>这次是 public front-door polish，不改变路由器结论。当前默认路由器仍是 <code>baseline-minilm</code>，发布决策仍是 <code>KEEP_BASELINE</code>。</p>
+
+  <h2>推荐下一步</h2>
+  <p>完成本地 diff 审查后，可以提交并推送；如果要继续优化 GitHub 观感，再补 <code>v0.1.0</code> GitHub Release 和 repository topics。</p>
+</main>
+</body>
+</html>

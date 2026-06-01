@@ -6,12 +6,12 @@
 [![Benchmark](https://img.shields.io/badge/benchmark-80%20tasks%20%2F%2045%20skills-purple.svg)](benchmarks)
 [![A100 Validated](https://img.shields.io/badge/A100-validated-orange.svg)](docs/phase7a.md)
 
-**A verification-gated skill routing, dashboarding, and self-improvement harness for Hermes-style agent skills.**
+**A reproducible evaluation and release-gate harness for Hermes-style agent skill routing.**
 
 面向 Hermes / Skill / Agent 工作流的离线评测系统：它能索引 `SKILL.md`
 技能库，构建带负样本的 benchmark，比较 keyword、hybrid、embedding、
 verification-gated、cross-encoder 等路由策略，并输出可复现的指标、
-失败分析、自改进报告和静态 HTML dashboard。
+失败分析、自改进报告、静态 HTML dashboard 和发布门禁证据。
 
 ---
 
@@ -88,9 +88,29 @@ release gate reproducible.
 
 | Evidence | Result | Link |
 |---|---|---|
-| Phase 16 blind validation | `REVIEW_REQUIRED`; two regressions and worse negative-hit behavior | [`comparison.md`](docs/demo/phase16-blind-validation/comparison.md), [`dashboard.html`](docs/demo/phase16-blind-validation/dashboard.html) |
-| Phase 17 release selector | `KEEP_BASELINE`; `finetuned-embedding` not approved as default | [`release-decision.md`](docs/demo/phase17-calibrated-release-selector/release-decision.md) |
-| Phase 18 reproducibility pack | `PASS`; release decision remains `KEEP_BASELINE` | [`release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md) |
+| Phase 16 blind validation | `REVIEW_REQUIRED`; two regressions and worse negative-hit behavior | [`docs`](docs/phase16.md), [`comparison.md`](docs/demo/phase16-blind-validation/comparison.md), [`dashboard.html`](docs/demo/phase16-blind-validation/dashboard.html) |
+| Phase 17 release selector | `KEEP_BASELINE`; `finetuned-embedding` not approved as default | [`docs`](docs/phase17.md), [`release-decision.md`](docs/demo/phase17-calibrated-release-selector/release-decision.md) |
+| Phase 18 reproducibility pack | `PASS`; release decision remains `KEEP_BASELINE` | [`docs`](docs/phase18.md), [`release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md) |
+
+### Example Failure Caught by the Release Gate
+
+Phase 16 includes a concrete blind-validation case that explains why negative
+controls matter:
+
+| Field | Value |
+|---|---|
+| Blind task | `blind-claude-mcp-routing` |
+| Gold skill | `mcp-tool-routing` |
+| Tempting negative skill | `slash-command-workflow` |
+| Baseline top-5 | Kept the gold skill and did not select the negative skill |
+| Fine-tuned candidate top-5 | Kept the gold skill but newly selected the negative skill |
+| Guard flags | `negative_hit_rate_increased`, `negative_accepted_rate_increased`, `new_negative_skill_selected` |
+| Release result | Phase 17 records `KEEP_BASELINE`; Phase 18 reproduces the decision |
+
+This is the core project story: the release gate rejected a plausible learned
+router because it introduced a new negative-skill regression despite unchanged
+Recall@5. The exact diff is committed in
+[`route-diffs.jsonl`](docs/demo/phase16-blind-validation/route-diffs.jsonl).
 
 ### Live Dashboard
 
@@ -115,7 +135,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 311 |
+| Test cases | 312 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -147,6 +167,21 @@ contrastive gated test negative-hit rate.
 cross-encoder 排序能力更强，Phase 7B 通过 dev split 阈值校准把 held-out
 test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从
 “需要校准”推进到“可控接受层”的阶段。
+
+---
+
+## Limitations / Boundaries
+
+- This is a self-built Hermes-style benchmark, not a standard public benchmark
+  or model-leadership claim.
+- The strongest evidence is the evaluation, artifact, and release-gate workflow,
+  not absolute model superiority.
+- The fine-tuned router is not promoted as the default; the current release
+  decision remains `KEEP_BASELINE`.
+- Model checkpoints, embedding caches, and private remote-machine details are
+  intentionally not committed.
+- Future work: add third-party skill libraries, external blind task packs, and
+  more cross-domain reviewer traces.
 
 ---
 
@@ -220,7 +255,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 311 pytest cases
+├── tests/                              # 312 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -511,37 +546,17 @@ pytest -q
 Expected:
 
 ```text
-311 passed
+312 passed
 ```
 
 ---
 
 ## Experiment Timeline / 实验演进
 
-| Phase | Feature | Artifact |
-|---|---|---|
-| Phase 2 | Router comparison baseline | [`docs/phase2.md`](docs/phase2.md) |
-| Phase 3A | Real embedding backend | [`docs/phase3a.md`](docs/phase3a.md) |
-| Phase 3B | MiniLM embedding benchmark | [`docs/demo/phase3b-real-embedding/comparison.md`](docs/demo/phase3b-real-embedding/comparison.md) |
-| Phase 3C | Failure analysis | [`docs/demo/phase3b-real-embedding/failure-analysis.md`](docs/demo/phase3b-real-embedding/failure-analysis.md) |
-| Phase 4A | Verification-gated reranking | [`docs/demo/phase4a-gated-reranker/comparison.md`](docs/demo/phase4a-gated-reranker/comparison.md) |
-| Phase 4B | Selective routing | [`docs/demo/phase4b-selective-routing/comparison.md`](docs/demo/phase4b-selective-routing/comparison.md) |
-| Phase 5 | Failure-driven skill improvement | [`docs/demo/phase5-self-improvement/acceptance.md`](docs/demo/phase5-self-improvement/acceptance.md) |
-| Phase 6A | 80-task robustness benchmark | [`docs/demo/phase6a-robustness/comparison.md`](docs/demo/phase6a-robustness/comparison.md) |
-| Phase 6B | Contrastive selective gating | [`docs/demo/phase6b-contrastive-gating/comparison.md`](docs/demo/phase6b-contrastive-gating/comparison.md) |
-| Phase 7A | A100 cross-encoder reranker | [`docs/phase7a.md`](docs/phase7a.md) |
-| Phase 7B | Cross-encoder acceptance calibration | [`docs/phase7b.md`](docs/phase7b.md) |
-| Phase 8 | Static failure inspection dashboard | [`docs/phase8.md`](docs/phase8.md) |
-| Phase 9 | Real skill-library migration evaluation | [`docs/phase9.md`](docs/phase9.md) |
-| Phase 10 | Agent-in-the-loop migration evaluation | [`docs/phase10.md`](docs/phase10.md) |
-| Phase 11 | Evidence judge calibration | [`docs/phase11.md`](docs/phase11.md) |
-| Phase 12 | Offline skill metadata patch ranking | [`docs/phase12.md`](docs/phase12.md) |
-| Phase 13 | Patch simulation regression guard | [`docs/phase13.md`](docs/phase13.md) |
-| Phase 14 | Fine-tuned embedding router path | [`docs/phase14.md`](docs/phase14.md) |
-| Phase 15 | Held-out generalization and provenance pack | [`docs/phase15.md`](docs/phase15.md) |
-| Phase 16 | Blind validation and release handoff | [`docs/phase16.md`](docs/phase16.md) |
-| Phase 17 | Calibrated release selector | [`docs/phase17.md`](docs/phase17.md) |
-| Phase 18 | CI-backed release reproducibility pack | [`docs/phase18.md`](docs/phase18.md) |
+For the full phase-by-phase experiment history, see
+[`docs/experiment-timeline.md`](docs/experiment-timeline.md). The README keeps
+the current problem, release evidence, dashboard preview, commands, and
+architecture on the front door.
 
 ---
 
@@ -603,7 +618,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 311 unit and smoke tests |
+| Testing | pytest | 312 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -663,7 +678,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 311 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 312 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.
