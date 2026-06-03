@@ -15,6 +15,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-demo-evidence-pack.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-ci-gate.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-diagnostic-artifact-drift-ci-workflow.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-03-pr-facing-ci-summary.html",
 ]
 
 
@@ -70,6 +71,28 @@ def test_ci_workflow_regenerates_diagnostic_demo_and_runs_artifact_drift_check()
     assert '--output "$RUNNER_TEMP/diagnostic-artifact-drift.json"' in workflow
     assert '--markdown-output "$RUNNER_TEMP/diagnostic-artifact-drift.md"' in workflow
     assert "git diff --exit-code docs/demo/diagnostic-onboarding" not in workflow
+
+
+def test_ci_workflow_writes_pr_facing_summary_and_enforces_decision():
+    workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "continue-on-error: true" in workflow
+    assert "if: always()" in workflow
+    assert "skilleval ci-summary" in workflow
+    assert "--check pytest=${{ steps.pytest.outcome }}" in workflow
+    assert "--check openspec-validate=${{ steps.openspec_validate.outcome }}" in workflow
+    assert "--check release-check=${{ steps.release_check.outcome }}" in workflow
+    assert "--check diagnostic-gate=${{ steps.diagnostic_gate.outcome }}" in workflow
+    assert "--check diagnostic-drift=${{ steps.diagnostic_drift.outcome }}" in workflow
+    assert "PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}" in workflow
+    assert "PUSH_BEFORE_SHA: ${{ github.event.before }}" in workflow
+    assert 'git diff --name-only "$BASE_SHA" "$GITHUB_SHA"' in workflow
+    assert "$GITHUB_STEP_SUMMARY" in workflow
+    assert "ALLOW_MERGE" in workflow
+    assert "BLOCK_MERGE" in workflow
+    assert "github-token" not in workflow
+    assert "pulls/comments" not in workflow
+    assert "::error" not in workflow
 
 
 def test_readme_surfaces_live_dashboard_and_screenshot_near_key_results():
@@ -168,12 +191,45 @@ def test_diagnostic_ci_gate_surface_is_artifact_based_and_bounded():
         assert phrase not in combined
 
 
+def test_pr_facing_ci_summary_surface_is_local_and_bounded():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+    brief = (
+        ROOT / "docs" / "human-briefs" / "2026-06-03-pr-facing-ci-summary.html"
+    ).read_text(encoding="utf-8")
+    combined = "\n".join([readme, usage, workflow, brief])
+
+    assert "PR-facing CI Summary" in combined
+    assert "skilleval ci-summary" in combined
+    assert "local/GitHub Actions summary" in combined
+    assert "not a GitHub API comment bot" in combined
+    assert "not a PR annotation system" in combined
+    assert "not a Marketplace Action" in combined
+    assert "not SaaS" in combined
+    assert "not a runtime MCP router" in combined
+    assert "not release approval" in combined
+
+    risky_claims = [
+        "released as a Marketplace Action",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark",
+        "approves the release",
+    ]
+    for phrase in risky_claims:
+        assert phrase not in combined
+
+
 def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "366 passed" in combined
+    assert "372 passed" in combined
     for stale_count in [
+        "366 passed",
         "365 passed",
         "361 passed",
         "314 passed",
@@ -185,6 +241,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "| Test cases | 365 |",
         "| Test cases | 314 |",
         "| Test cases | 346 |",
+        "| Test cases | 366 |",
     ]:
         assert stale_count not in combined
 

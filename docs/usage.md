@@ -516,5 +516,38 @@ pytest -q
 Expected:
 
 ```text
-366 passed
+372 passed
 ```
+
+## 18. Simulate the PR-facing CI Summary Locally
+
+```bash
+TMP_ROOT="${TMPDIR:-/tmp}/diagnostic-onboarding"
+
+# First run the diagnostic regeneration and drift-check flow above so
+# "$TMP_ROOT/diagnostic-artifact-drift.json" exists.
+{
+  git diff --name-only HEAD || true
+  git ls-files --others --exclude-standard
+} | sort -u > /tmp/hermes-changed-files.txt
+
+skilleval ci-summary \
+  --check pytest=success \
+  --check openspec-validate=success \
+  --check release-check=success \
+  --check diagnostic-gate=success \
+  --check diagnostic-drift=success \
+  --changed-files /tmp/hermes-changed-files.txt \
+  --release-check docs/demo/phase18-ci-release-reproducibility/release-check-summary.json \
+  --diagnostic-gate docs/demo/diagnostic-onboarding/ci-gate-report.json \
+  --diagnostic-drift "$TMP_ROOT/diagnostic-artifact-drift.json" \
+  --overclaim-root README.md \
+  --overclaim-root docs/usage.md \
+  --output /tmp/hermes-ci-summary.json \
+  --markdown-output /tmp/hermes-ci-summary.md
+```
+
+`skilleval ci-summary` is a local/GitHub Actions summary surface for already
+run checks. It does not call the GitHub API, does not require tokens, and is
+not a GitHub API comment bot, not a PR annotation system, not a Marketplace
+Action, not SaaS, not a runtime MCP router, and not release approval.

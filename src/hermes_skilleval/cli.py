@@ -17,6 +17,7 @@ from hermes_skilleval.calibration import (
     read_cross_encoder_calibration,
     write_cross_encoder_calibration,
 )
+from hermes_skilleval.ci_summary import write_ci_summary
 from hermes_skilleval.comparison import write_comparison_report
 from hermes_skilleval.dashboard import write_dashboard
 from hermes_skilleval.diagnostic_artifact_drift import compare_diagnostic_artifacts
@@ -239,6 +240,20 @@ def _build_parser() -> argparse.ArgumentParser:
     diagnostic_artifact_drift_parser.add_argument("--output", required=True)
     diagnostic_artifact_drift_parser.add_argument("--markdown-output", required=True)
     diagnostic_artifact_drift_parser.set_defaults(handler=_run_diagnostic_artifact_drift_check)
+
+    ci_summary_parser = subparsers.add_parser(
+        "ci-summary",
+        help="write a local PR-facing CI summary from explicit check outcomes",
+    )
+    ci_summary_parser.add_argument("--check", action="append", default=[])
+    ci_summary_parser.add_argument("--changed-files", default=None)
+    ci_summary_parser.add_argument("--release-check", default=None)
+    ci_summary_parser.add_argument("--diagnostic-gate", default=None)
+    ci_summary_parser.add_argument("--diagnostic-drift", default=None)
+    ci_summary_parser.add_argument("--overclaim-root", action="append", default=[])
+    ci_summary_parser.add_argument("--output", required=True)
+    ci_summary_parser.add_argument("--markdown-output", required=True)
+    ci_summary_parser.set_defaults(handler=_run_ci_summary)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -799,6 +814,34 @@ def _run_diagnostic_artifact_drift_check(args: argparse.Namespace) -> None:
     print(f"Diagnostic artifact drift {report['decision']}: {args.output}")
     if report["decision"] != "PASS":
         raise ValueError("diagnostic artifact drift check failed")
+
+
+def _run_ci_summary(args: argparse.Namespace) -> None:
+    summary = write_ci_summary(
+        checks=_parse_ci_checks(args.check),
+        changed_files_path=Path(args.changed_files) if args.changed_files else None,
+        release_check_path=Path(args.release_check) if args.release_check else None,
+        diagnostic_gate_path=Path(args.diagnostic_gate) if args.diagnostic_gate else None,
+        diagnostic_drift_path=Path(args.diagnostic_drift) if args.diagnostic_drift else None,
+        overclaim_roots=[Path(path) for path in args.overclaim_root],
+        output_path=Path(args.output),
+        markdown_output_path=Path(args.markdown_output),
+    )
+    print(f"CI summary {summary['decision']}: {args.output}")
+    if summary["decision"] != "ALLOW_MERGE":
+        raise ValueError(f"ci summary decision: {summary['decision']}")
+
+
+def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:
+    checks: list[tuple[str, str]] = []
+    for value in values:
+        if "=" not in value:
+            raise ValueError("--check must use name=STATUS")
+        name, status = value.split("=", 1)
+        if not name.strip() or not status.strip():
+            raise ValueError("--check must use name=STATUS")
+        checks.append((name.strip(), status.strip()))
+    return checks
 
 
 def _run_agent_loop(args: argparse.Namespace) -> None:

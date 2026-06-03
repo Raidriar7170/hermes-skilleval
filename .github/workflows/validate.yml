@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,10 +25,22 @@ jobs:
       - name: Install package with dev dependencies
         run: python -m pip install -e ".[dev]"
 
+      - name: Install OpenSpec CLI
+        run: npm install -g @fission-ai/openspec@1.3.1
+
       - name: Run lightweight test suite
+        id: pytest
+        continue-on-error: true
         run: pytest -q
 
+      - name: Run OpenSpec validation
+        id: openspec_validate
+        continue-on-error: true
+        run: OPENSPEC_TELEMETRY=0 openspec validate --all --strict
+
       - name: Run release reproducibility gate
+        id: release_check
+        continue-on-error: true
         run: |
           skilleval release-check \
             --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
@@ -36,6 +50,8 @@ jobs:
             docs/demo/phase18-ci-release-reproducibility
 
       - name: Run diagnostic demo CI gate
+        id: diagnostic_gate
+        continue-on-error: true
         run: |
           skilleval diagnostic-ci-gate \
             --scan docs/demo/diagnostic-onboarding/scan.json \
@@ -51,6 +67,8 @@ jobs:
             --min-route-candidates 3
 
       - name: Run diagnostic artifact drift check
+        id: diagnostic_drift
+        continue-on-error: true
         run: |
           rm -rf "$RUNNER_TEMP/diagnostic-onboarding"
           mkdir -p "$RUNNER_TEMP/diagnostic-onboarding"
@@ -112,3 +130,78 @@ jobs:
             --actual "$RUNNER_TEMP/diagnostic-onboarding" \
             --output "$RUNNER_TEMP/diagnostic-artifact-drift.json" \
             --markdown-output "$RUNNER_TEMP/diagnostic-artifact-drift.md"
+
+      - name: Collect changed files
+        if: always()
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ -n "$PR_BASE_SHA" ]; then
+            BASE_SHA="$PR_BASE_SHA"
+          elif [ -n "$PUSH_BEFORE_SHA" ] && [ "$PUSH_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$PUSH_BEFORE_SHA"
+          elif git rev-parse HEAD^ >/dev/null 2>&1; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          else
+            BASE_SHA=""
+          fi
+
+          if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-files.txt"
+          else
+            git ls-files > "$RUNNER_TEMP/changed-files.txt"
+          fi
+
+      - name: Write PR-facing CI summary
+        if: always()
+        id: ci_summary
+        continue-on-error: true
+        run: |
+          skilleval ci-summary \
+            --check pytest=${{ steps.pytest.outcome }} \
+            --check openspec-validate=${{ steps.openspec_validate.outcome }} \
+            --check release-check=${{ steps.release_check.outcome }} \
+            --check diagnostic-gate=${{ steps.diagnostic_gate.outcome }} \
+            --check diagnostic-drift=${{ steps.diagnostic_drift.outcome }} \
+            --changed-files "$RUNNER_TEMP/changed-files.txt" \
+            --release-check docs/demo/phase18-ci-release-reproducibility/release-check-summary.json \
+            --diagnostic-gate "$RUNNER_TEMP/diagnostic-ci-gate-report.json" \
+            --diagnostic-drift "$RUNNER_TEMP/diagnostic-artifact-drift.json" \
+            --overclaim-root README.md \
+            --overclaim-root docs/usage.md \
+            --output "$RUNNER_TEMP/ci-summary.json" \
+            --markdown-output "$RUNNER_TEMP/ci-summary.md" || true
+          cat "$RUNNER_TEMP/ci-summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-reports
+          path: |
+            ${{ runner.temp }}/ci-summary.json
+            ${{ runner.temp }}/ci-summary.md
+            ${{ runner.temp }}/diagnostic-ci-gate-report.json
+            ${{ runner.temp }}/diagnostic-ci-gate-report.md
+            ${{ runner.temp }}/diagnostic-artifact-drift.json
+            ${{ runner.temp }}/diagnostic-artifact-drift.md
+            ${{ runner.temp }}/diagnostic-onboarding
+
+      - name: Enforce CI summary decision
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          summary_path = Path(os.environ["RUNNER_TEMP"]) / "ci-summary.json"
+          summary = json.loads(summary_path.read_text(encoding="utf-8"))
+          decision = summary["decision"]
+          print(f"CI summary decision: {decision}")
+          if decision == "BLOCK_MERGE":
+              raise SystemExit(1)
+          if decision != "ALLOW_MERGE":
+              raise SystemExit(f"Unexpected CI summary decision: {decision}")
+          PY

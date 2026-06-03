@@ -135,7 +135,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 366 |
+| Test cases | 372 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -284,7 +284,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `366 passed` and
+Expected: `372 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -312,6 +312,18 @@ Boundary: this is not GitHub API integration, not a Marketplace Action, not a
 PR annotation system, not SaaS, not a runtime MCP router, and not a headline
 performance claim. Full regeneration, drift-check, gate, and review packet
 commands live in [`docs/usage.md`](docs/usage.md).
+
+### PR-facing CI Summary
+
+`skilleval ci-summary` writes a local/GitHub Actions summary from explicit
+check outcomes, changed files, committed report paths, and an overclaim scan.
+The validate workflow appends the Markdown to `$GITHUB_STEP_SUMMARY` and then
+enforces the JSON decision as `ALLOW_MERGE` or `BLOCK_MERGE`.
+
+Boundary: this is not a GitHub API comment bot, not a PR annotation system,
+not a Marketplace Action, not SaaS, not a runtime MCP router, not a SOTA claim,
+and not release approval. It summarizes local validation artifacts; it does
+not approve a release or merge by itself.
 
 ---
 

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - PR-facing CI Summary</title>
+  <style>
+    body { margin: 0; font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2937; background: #f6f7fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 22px 52px; }
+    section { background: #fff; border: 1px solid #dfe4ec; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { line-height: 1.65; }
+    code { background: #eef2f7; border-radius: 4px; padding: 2px 5px; }
+    .ok { color: #047857; font-weight: 700; }
+    .status { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #ecfdf5; color: #047857; font-weight: 700; }
+    .warn { color: #92400e; }
+    a { color: #1d4ed8; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous Phase Loop Closeout</h1>
+  <p><span class="status">completed</span></p>
+
+  <section>
+    <h2>一句话结论</h2>
+    <p>本轮完成并归档 <code>pr-facing-ci-summary</code>：validate workflow 现在会通过 <code>$GITHUB_STEP_SUMMARY</code> 输出 PR-facing Markdown summary，并由 <code>ALLOW_MERGE</code> / <code>BLOCK_MERGE</code> JSON decision 统一收口。</p>
+  </section>
+
+  <section>
+    <h2>停止原因</h2>
+    <p>用户指定的 Phase 4 已完成、验证、审查并归档。继续到 GitHub API PR comments、PR annotations、Marketplace Action、SaaS dashboard、MCP runtime router 或 release publication 会改变边界，因此按 opsx-auto hard stop 停下等待确认。</p>
+  </section>
+
+  <section>
+    <h2>项目阶段进度</h2>
+    <p>当前项目阶段目标仍是 interview-ready / release-evidence packaging，来源是 README recruiter review path、Phase 16-18 release evidence chain、diagnostic onboarding / CI gate / artifact drift specs 和近期 Human Brief。本轮把多条 validation evidence 压缩成 reviewer 可读的 GitHub Actions summary，补上 PR review 时不用翻 raw logs 的缺口。剩余 gap 是远端 Actions summary 实际渲染结果、PR comment bot、Marketplace Action、SaaS dashboard 或 runtime router；这些都需要单独 OpenSpec change。</p>
+  </section>
+
+  <section>
+    <h2>完成阶段</h2>
+    <ul>
+      <li><code>pr-facing-ci-summary</code>: completed and archived to <code>openspec/changes/archive/2026-06-03-pr-facing-ci-summary/</code>.</li>
+      <li>Main spec created at <code>openspec/specs/pr-facing-ci-summary/spec.md</code>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><a href="../../src/hermes_skilleval/ci_summary.py">src/hermes_skilleval/ci_summary.py</a></li>
+      <li><a href="../../src/hermes_skilleval/cli.py">src/hermes_skilleval/cli.py</a></li>
+      <li><a href="../../.github/workflows/validate.yml">.github/workflows/validate.yml</a></li>
+      <li><a href="../../tests/test_ci_summary.py">tests/test_ci_summary.py</a>, <a href="../../tests/test_cli_diagnostics.py">tests/test_cli_diagnostics.py</a>, <a href="../../tests/test_project_surface.py">tests/test_project_surface.py</a></li>
+      <li><a href="../../README.md">README.md</a> and <a href="../usage.md">docs/usage.md</a></li>
+      <li><a href="../../openspec/specs/pr-facing-ci-summary/spec.md">openspec/specs/pr-facing-ci-summary/spec.md</a></li>
+      <li><a href="2026-06-03-pr-facing-ci-summary.html">phase Human Brief</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>: <span class="ok">PASS</span>, 372 passed.</li>
+      <li><code>python -m pytest -q tests/test_ci_summary.py tests/test_cli_diagnostics.py tests/test_project_surface.py</code>: <span class="ok">PASS</span>, 23 passed.</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: <span class="ok">PASS</span>, 5 passed before archive.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check ...</code>: <span class="ok">PASS</span>.</li>
+      <li>Diagnostic regeneration + CI gate + PR review packet + artifact drift check: <span class="ok">PASS</span>.</li>
+      <li><code>skilleval ci-summary ...</code>: <span class="ok">PASS</span>, decision <code>ALLOW_MERGE</code>.</li>
+      <li><code>openspec archive pr-facing-ci-summary --yes</code>: <span class="ok">PASS</span>.</li>
+      <li><code>git diff --check</code>: <span class="ok">PASS</span>.</li>
+      <li>Leak/overclaim scan: matches were forbidden-phrase tests or bounded negative wording only.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>审查结果</h2>
+    <p>Local Reviewer verdict: Pass. Must Fix: none. Should Fix: none. External Pro review was not run because no callable ChatGPT Pro/browser review tool was available in this session; local Reviewer plus fresh validation were used instead.</p>
+  </section>
+
+  <section>
+    <h2>自动集成状态</h2>
+    <p>At report generation time, auto integration is pending final post-archive validation, staging, commit, push, and remote GitHub Actions verification. The final user response records commit hash, push result, and remote Validate status.</p>
+  </section>
+
+  <section>
+    <h2>剩余风险</h2>
+    <ul>
+      <li>Workflow 现在使用 <code>continue-on-error</code> 捕获 outcome；最终 enforce step 是 job 失败语义的关键，不能移除。</li>
+      <li>Changed-file grouping 是 v1 review summary，不是安全策略。</li>
+      <li class="warn">本阶段没有 GitHub API comment bot、PR annotations、Marketplace Action、SaaS dashboard、MCP runtime router 或 release approval。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>推荐下一步</h2>
+    <p>push 后检查 GitHub Actions Validate run 的 summary 渲染与 uploaded validation reports。若要进一步做 PR comments 或 Marketplace Action，应新开独立 OpenSpec 阶段。</p>
+  </section>
+</main>
+</body>
+</html>

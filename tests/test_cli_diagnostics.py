@@ -291,6 +291,80 @@ def test_cli_scan_unsupported_source_returns_clear_error_without_traceback(
     assert not output.exists()
 
 
+def test_cli_ci_summary_writes_json_and_markdown(tmp_path: Path):
+    changed_files = tmp_path / "changed-files.txt"
+    changed_files.write_text(
+        "src/hermes_skilleval/ci_summary.py\n"
+        "tests/test_ci_summary.py\n"
+        ".github/workflows/validate.yml\n",
+        encoding="utf-8",
+    )
+    overclaim_root = tmp_path / "public"
+    overclaim_root.mkdir()
+    (overclaim_root / "README.md").write_text(
+        "Local CI summary only; not a SOTA claim.\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "ci-summary.json"
+    markdown = tmp_path / "ci-summary.md"
+
+    result = main(
+        [
+            "ci-summary",
+            "--check",
+            "pytest=success",
+            "--check",
+            "openspec validate=success",
+            "--check",
+            "release-check=success",
+            "--changed-files",
+            str(changed_files),
+            "--release-check",
+            str(tmp_path / "release-check-summary.json"),
+            "--diagnostic-gate",
+            str(tmp_path / "diagnostic-ci-gate.json"),
+            "--diagnostic-drift",
+            str(tmp_path / "diagnostic-artifact-drift.json"),
+            "--overclaim-root",
+            str(overclaim_root),
+            "--output",
+            str(output),
+            "--markdown-output",
+            str(markdown),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["decision"] == "ALLOW_MERGE"
+    assert payload["report_paths"]["release_check"].endswith("release-check-summary.json")
+    assert "Decision: `ALLOW_MERGE`" in markdown.read_text(encoding="utf-8")
+
+
+def test_cli_ci_summary_returns_nonzero_when_blocked(tmp_path: Path):
+    changed_files = tmp_path / "changed-files.txt"
+    changed_files.write_text("README.md\n", encoding="utf-8")
+    output = tmp_path / "ci-summary.json"
+    markdown = tmp_path / "ci-summary.md"
+
+    result = main(
+        [
+            "ci-summary",
+            "--check",
+            "pytest=failure",
+            "--changed-files",
+            str(changed_files),
+            "--output",
+            str(output),
+            "--markdown-output",
+            str(markdown),
+        ]
+    )
+
+    assert result != 0
+    assert json.loads(output.read_text(encoding="utf-8"))["decision"] == "BLOCK_MERGE"
+
+
 def _write_skill(path: Path, *, name: str, description: str, body: str) -> None:
     path.parent.mkdir(parents=True)
     path.write_text(

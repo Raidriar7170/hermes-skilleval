@@ -33,7 +33,7 @@ OVERCLAIM_RE = re.compile(
 )
 NEGATIVE_DISCLAIMER_RE = re.compile(
     r"(does not establish|not a standard|not an external|does not claim|"
-    r"should not be described)",
+    r"not a sota claim|should not be described)",
     re.IGNORECASE,
 )
 
