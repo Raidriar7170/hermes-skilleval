@@ -1,0 +1,116 @@
+{
+  "artifact_type": "diagnostic_route",
+  "candidates": [
+    {
+      "evidence": {
+        "category": "coding",
+        "matched_terms": [
+          "fail",
+          "loop",
+          "red-green",
+          "test"
+        ],
+        "source_fields": [
+          "body",
+          "description",
+          "trigger_terms"
+        ]
+      },
+      "rank": 1,
+      "risk_flags": [
+        {
+          "cluster_id": "risk-cluster-003",
+          "code": "conflict_cluster",
+          "message": "Candidate appears in a review-worthy conflict risk cluster."
+        },
+        {
+          "cluster_id": "risk-cluster-004",
+          "code": "conflict_cluster",
+          "message": "Candidate appears in a review-worthy conflict risk cluster."
+        }
+      ],
+      "score": 8.564348,
+      "skill_id": "red-green-testing",
+      "skill_name": "red-green-testing"
+    },
+    {
+      "evidence": {
+        "category": "coding",
+        "matched_terms": [
+          "debug",
+          "fail",
+          "loop",
+          "test"
+        ],
+        "source_fields": [
+          "description",
+          "trigger_terms"
+        ]
+      },
+      "rank": 2,
+      "risk_flags": [
+        {
+          "cluster_id": "risk-cluster-002",
+          "code": "conflict_cluster",
+          "message": "Candidate appears in a review-worthy conflict risk cluster."
+        },
+        {
+          "cluster_id": "risk-cluster-004",
+          "code": "conflict_cluster",
+          "message": "Candidate appears in a review-worthy conflict risk cluster."
+        }
+      ],
+      "score": 8.394449,
+      "skill_id": "debug-loop",
+      "skill_name": "debug-loop"
+    },
+    {
+      "evidence": {
+        "category": "browser",
+        "matched_terms": [
+          "test"
+        ],
+        "source_fields": [
+          "body",
+          "description",
+          "trigger_terms"
+        ]
+      },
+      "rank": 3,
+      "risk_flags": [
+        {
+          "cluster_id": "risk-cluster-001",
+          "code": "conflict_cluster",
+          "message": "Candidate appears in a review-worthy conflict risk cluster."
+        },
+        {
+          "cluster_id": "risk-cluster-002",
+          "code": "conflict_cluster",
+          "message": "Candidate appears in a review-worthy conflict risk cluster."
+        },
+        {
+          "cluster_id": "risk-cluster-003",
+          "code": "conflict_cluster",
+          "message": "Candidate appears in a review-worthy conflict risk cluster."
+        },
+        {
+          "code": "weak_boundary",
+          "message": "Candidate lacks explicit do-not-use or avoid boundaries."
+        }
+      ],
+      "score": 2.386294,
+      "skill_id": "browser-smoke-testing",
+      "skill_name": "browser-smoke-testing"
+    }
+  ],
+  "generated_at": "2026-06-02T10:51:51+00:00",
+  "index_path": "docs/demo/diagnostic-onboarding/scan.json",
+  "inspect_path": "docs/demo/diagnostic-onboarding/inspect.json",
+  "query": "debug failing tests with a red-green loop",
+  "schema_version": "diagnostic.v1",
+  "summary": {
+    "candidate_count": 3,
+    "risk_flag_count": 8
+  },
+  "top_k": 3
+}

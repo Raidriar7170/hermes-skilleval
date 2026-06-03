@@ -1,0 +1,186 @@
+{
+  "artifact_type": "diagnostic_inspect",
+  "clusters": [
+    {
+      "cluster_id": "risk-cluster-001",
+      "evidence_terms": [
+        "browser"
+      ],
+      "involved_skills": [
+        "browser-smoke-testing",
+        "browser-visual-review"
+      ],
+      "risk_level": "review",
+      "signals": [
+        {
+          "detail": "Skills share routing terms that may attract similar queries.",
+          "evidence_terms": [
+            "browser"
+          ],
+          "type": "token_overlap"
+        },
+        {
+          "detail": "Extracted trigger terms overlap.",
+          "evidence_terms": [
+            "browser"
+          ],
+          "type": "trigger_term_overlap"
+        },
+        {
+          "detail": "Skills sit in the same category.",
+          "evidence_terms": [
+            "browser"
+          ],
+          "type": "category_proximity"
+        },
+        {
+          "detail": "At least one skill lacks explicit negative boundaries.",
+          "evidence_terms": [],
+          "type": "missing_boundaries"
+        },
+        {
+          "detail": "Skills co-appear in local diagnostic route probes.",
+          "evidence_terms": [
+            "browser"
+          ],
+          "type": "route_coappearance"
+        }
+      ],
+      "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."
+    },
+    {
+      "cluster_id": "risk-cluster-002",
+      "evidence_terms": [
+        "error",
+        "test"
+      ],
+      "involved_skills": [
+        "browser-smoke-testing",
+        "debug-loop"
+      ],
+      "risk_level": "review",
+      "signals": [
+        {
+          "detail": "Skills share routing terms that may attract similar queries.",
+          "evidence_terms": [
+            "error",
+            "test"
+          ],
+          "type": "token_overlap"
+        },
+        {
+          "detail": "Extracted trigger terms overlap.",
+          "evidence_terms": [
+            "error",
+            "test"
+          ],
+          "type": "trigger_term_overlap"
+        },
+        {
+          "detail": "At least one skill lacks explicit negative boundaries.",
+          "evidence_terms": [],
+          "type": "missing_boundaries"
+        },
+        {
+          "detail": "Skills co-appear in local diagnostic route probes.",
+          "evidence_terms": [
+            "error",
+            "test"
+          ],
+          "type": "route_coappearance"
+        }
+      ],
+      "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."
+    },
+    {
+      "cluster_id": "risk-cluster-003",
+      "evidence_terms": [
+        "test"
+      ],
+      "involved_skills": [
+        "browser-smoke-testing",
+        "red-green-testing"
+      ],
+      "risk_level": "review",
+      "signals": [
+        {
+          "detail": "Extracted trigger terms overlap.",
+          "evidence_terms": [
+            "test"
+          ],
+          "type": "trigger_term_overlap"
+        },
+        {
+          "detail": "At least one skill lacks explicit negative boundaries.",
+          "evidence_terms": [],
+          "type": "missing_boundaries"
+        },
+        {
+          "detail": "Skills co-appear in local diagnostic route probes.",
+          "evidence_terms": [
+            "test"
+          ],
+          "type": "route_coappearance"
+        }
+      ],
+      "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."
+    },
+    {
+      "cluster_id": "risk-cluster-004",
+      "evidence_terms": [
+        "coding",
+        "fail",
+        "test"
+      ],
+      "involved_skills": [
+        "debug-loop",
+        "red-green-testing"
+      ],
+      "risk_level": "review",
+      "signals": [
+        {
+          "detail": "Skills share routing terms that may attract similar queries.",
+          "evidence_terms": [
+            "coding",
+            "fail",
+            "test"
+          ],
+          "type": "token_overlap"
+        },
+        {
+          "detail": "Extracted trigger terms overlap.",
+          "evidence_terms": [
+            "fail",
+            "test"
+          ],
+          "type": "trigger_term_overlap"
+        },
+        {
+          "detail": "Skills sit in the same category.",
+          "evidence_terms": [
+            "coding"
+          ],
+          "type": "category_proximity"
+        },
+        {
+          "detail": "Skills co-appear in local diagnostic route probes.",
+          "evidence_terms": [
+            "coding",
+            "fail",
+            "test"
+          ],
+          "type": "route_coappearance"
+        }
+      ],
+      "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."
+    }
+  ],
+  "generated_at": "2026-06-02T10:51:51+00:00",
+  "index_path": "docs/demo/diagnostic-onboarding/scan.json",
+  "schema_version": "diagnostic.v1",
+  "summary": {
+    "cluster_count": 4,
+    "skill_count": 5
+  },
+  "tone": "review-worthy risk signals only"
+}

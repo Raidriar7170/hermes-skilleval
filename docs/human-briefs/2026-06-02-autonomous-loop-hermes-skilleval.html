@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes SkillEval Autonomous Loop Brief</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+    section { background: #fff; border: 1px solid #dbe3ef; border-radius: 8px; padding: 22px; margin: 18px 0; }
+    h1 { font-size: 30px; margin: 0 0 10px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 0 0 12px; letter-spacing: 0; }
+    p, li { line-height: 1.65; font-size: 15px; }
+    code { background: #eef2f7; padding: 2px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #fff7ed; color: #9a3412; font-weight: 700; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Hermes SkillEval Autonomous Loop</h1>
+  <p><span class="status">budget exhausted, needs review</span></p>
+  <section>
+    <h2>一句话结论</h2>
+    <p>本轮把 Hermes SkillEval 从 benchmark/release evidence 进一步推进成真实 skill library 的 diagnostic onboarding + demo evidence + artifact-based CI gate。</p>
+  </section>
+  <section>
+    <h2>完成的 phases</h2>
+    <ul>
+      <li><code>diagnostic-skill-library-onboarding</code>: 新增 scan/lint/inspect/route/diagnostic-dashboard CLI，并归档 OpenSpec。</li>
+      <li><code>diagnostic-demo-evidence-pack</code>: 新增 committed demo skill library、diagnostic artifacts、dashboard 和再生成说明，并归档 OpenSpec。</li>
+      <li><code>diagnostic-ci-gate</code>: 新增 <code>skilleval diagnostic-ci-gate</code>、demo gate report、workflow step、测试和 docs，并归档 OpenSpec。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/diagnostics.py</code></li>
+      <li><code>src/hermes_skilleval/diagnostic_dashboard.py</code></li>
+      <li><code>src/hermes_skilleval/diagnostic_ci_gate.py</code></li>
+      <li><code>.github/workflows/validate.yml</code></li>
+      <li><code>docs/demo/diagnostic-onboarding/</code></li>
+      <li><code>openspec/specs/diagnostic-skill-library-onboarding/spec.md</code></li>
+      <li><code>openspec/specs/diagnostic-ci-gate/spec.md</code></li>
+    </ul>
+  </section>
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>: PASS, 347 passed.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: PASS, Phase 18 release reproducibility preserved.</li>
+      <li><code>openspec validate --all --strict</code>: PASS.</li>
+      <li><code>git diff --check</code> and staged diff hygiene: PASS.</li>
+      <li>本地 Explorer/Worker/Reviewer subagents used; external ChatGPT Pro review not run.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>停止原因</h2>
+    <p>默认 autonomous budget 的三个 phase 已用完。继续到真正的 GitHub Marketplace Action、PR annotations、runtime MCP router、发布、push、merge 或 PR 都需要用户明确确认。</p>
+  </section>
+  <section>
+    <h2>不要夸大的点</h2>
+    <ul>
+      <li>当前 CI gate 是 artifact-based repo workflow step，不是已发布的 Marketplace Action。</li>
+      <li>当前输出不写 PR annotations，不自动 merge，不发布 package。</li>
+      <li>当前不是 runtime MCP skill router。</li>
+      <li>项目公开叙事仍是自建 Hermes-style evidence、blind validation、release gate 和 <code>KEEP_BASELINE</code>，不是 headline performance claim。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>推荐下一步</h2>
+    <p>建议先由用户确认是否 commit/merge 当前 staged worktree；之后再单独开 phase 做真正 GitHub Action packaging 或 runtime MCP router。</p>
+  </section>
+</main>
+</body>
+</html>

@@ -22,6 +22,175 @@ Install optional neural routing backends:
 python -m pip install -e ".[dev,embedding]"
 ```
 
+## Diagnostic Onboarding Path
+
+Use these commands when you have a real skill or tool library but have not yet
+written gold/negative benchmark labels. Diagnostic commands require explicit
+`--output` paths so the JSON artifacts can be reviewed and compared later.
+
+### Scan a Markdown skill folder
+
+```bash
+skilleval scan \
+  benchmarks/skills \
+  --output runs/diagnostic/scan.json
+```
+
+The scan artifact contains normalized skills, source paths, routing cues, and
+parser warnings. The same command also accepts an MCP tool schema file such as
+`mcp.json`:
+
+```bash
+skilleval scan \
+  path/to/mcp.json \
+  --output runs/diagnostic/mcp-scan.json
+```
+
+### Lint routing clarity
+
+```bash
+skilleval lint \
+  --index runs/diagnostic/scan.json \
+  --output runs/diagnostic/lint.json
+```
+
+`lint` reports routing clarity findings such as missing descriptions, weak
+activation cues, missing negative boundaries, and overly generic cues. It is not
+a general Markdown or prose-style linter.
+
+### Inspect conflict risk clusters
+
+```bash
+skilleval inspect \
+  --index runs/diagnostic/scan.json \
+  --output runs/diagnostic/inspect.json
+```
+
+`inspect` writes explainable conflict risk clusters from visible signals such as
+token overlap, trigger-term overlap, category proximity, missing boundaries, and
+local route co-appearance. These clusters are review-worthy risk signals, not
+definitive verdicts.
+
+### Route an unlabeled query
+
+```bash
+skilleval route \
+  "debug failing tests with a red-green loop" \
+  --index runs/diagnostic/scan.json \
+  --inspect runs/diagnostic/inspect.json \
+  --top-k 5 \
+  --output runs/diagnostic/route.json
+```
+
+The route artifact includes top-k candidates, scores, matched evidence terms,
+source fields, and risk flags from weak boundaries or conflict clusters.
+
+### Render the diagnostic dashboard
+
+```bash
+skilleval diagnostic-dashboard \
+  --scan runs/diagnostic/scan.json \
+  --lint runs/diagnostic/lint.json \
+  --inspect runs/diagnostic/inspect.json \
+  --route runs/diagnostic/route.json \
+  --output runs/diagnostic/dashboard.html
+```
+
+The generated HTML is self-contained and focuses on source summaries,
+routing-readiness findings, route examples, and conflict risk clusters. These
+diagnostic artifacts can feed labeled regression work and artifact-based CI
+validation, but this path is not a Marketplace Action, not a PR annotation
+system, not SaaS, not a runtime MCP router, and not a SOTA claim.
+
+### Run the diagnostic CI gate
+
+`skilleval diagnostic-ci-gate` validates already generated diagnostic artifacts
+against explicit thresholds. Use non-zero thresholds when a known demo or skill
+library intentionally contains warnings, review-worthy conflict clusters, or
+route risk flags:
+
+```bash
+skilleval diagnostic-ci-gate \
+  --scan runs/diagnostic/scan.json \
+  --lint runs/diagnostic/lint.json \
+  --inspect runs/diagnostic/inspect.json \
+  --route runs/diagnostic/route.json \
+  --output runs/diagnostic/ci-gate-report.json \
+  --markdown-output runs/diagnostic/ci-gate-report.md \
+  --max-lint-findings 0 \
+  --max-conflict-clusters 0 \
+  --max-route-risk-flags 0 \
+  --min-route-candidates 1
+```
+
+In GitHub Actions, the repository workflow reads the committed diagnostic demo
+artifacts and writes the gate report to `$RUNNER_TEMP`. It does not regenerate
+the demo fixture or diff the diagnostic demo directory because the current
+diagnostic artifacts include `generated_at` timestamps.
+
+### Regenerate the committed diagnostic demo evidence pack
+
+The committed demo under `docs/demo/diagnostic-onboarding/` uses a small local
+Markdown skill source to make the diagnostic workflow inspectable without
+preparing a separate library. Run these commands from the repository root:
+
+```bash
+ROOT=docs/demo/diagnostic-onboarding
+
+PYTHONPATH=src python -m hermes_skilleval.cli scan \
+  "$ROOT/source/skills" \
+  --output "$ROOT/scan.json"
+
+PYTHONPATH=src python -m hermes_skilleval.cli lint \
+  --index "$ROOT/scan.json" \
+  --output "$ROOT/lint.json"
+
+PYTHONPATH=src python -m hermes_skilleval.cli inspect \
+  --index "$ROOT/scan.json" \
+  --output "$ROOT/inspect.json"
+
+PYTHONPATH=src python -m hermes_skilleval.cli route \
+  "smoke test a local browser page and check console errors" \
+  --index "$ROOT/scan.json" \
+  --inspect "$ROOT/inspect.json" \
+  --top-k 3 \
+  --output "$ROOT/route-browser-smoke.json"
+
+PYTHONPATH=src python -m hermes_skilleval.cli route \
+  "debug failing tests with a red-green loop" \
+  --index "$ROOT/scan.json" \
+  --inspect "$ROOT/inspect.json" \
+  --top-k 3 \
+  --output "$ROOT/route-debug-red-green.json"
+
+PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-dashboard \
+  --scan "$ROOT/scan.json" \
+  --lint "$ROOT/lint.json" \
+  --inspect "$ROOT/inspect.json" \
+  --route "$ROOT/route-browser-smoke.json" \
+  --route "$ROOT/route-debug-red-green.json" \
+  --output "$ROOT/dashboard.html"
+
+PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-ci-gate \
+  --scan "$ROOT/scan.json" \
+  --lint "$ROOT/lint.json" \
+  --inspect "$ROOT/inspect.json" \
+  --route "$ROOT/route-browser-smoke.json" \
+  --route "$ROOT/route-debug-red-green.json" \
+  --output "$ROOT/ci-gate-report.json" \
+  --markdown-output "$ROOT/ci-gate-report.md" \
+  --max-lint-findings 5 \
+  --max-conflict-clusters 4 \
+  --max-route-risk-flags 15 \
+  --min-route-candidates 3
+```
+
+The demo source intentionally includes nearby browser skills, nearby debugging
+and red-green testing skills, and a thin helper skill. The generated artifacts
+show parser warnings, routing-clarity findings, review-worthy conflict clusters,
+route evidence, route risk flags, and an explicit CI gate policy whose limits
+match the committed demo artifact counts.
+
 ## 1. Index a Hermes-style Skill Library
 
 ```bash
@@ -287,5 +456,5 @@ pytest -q
 Expected:
 
 ```text
-314 passed
+347 passed
 ```

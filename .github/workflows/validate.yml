@@ -34,3 +34,18 @@ jobs:
           git diff --exit-code \
             docs/demo/phase17-calibrated-release-selector \
             docs/demo/phase18-ci-release-reproducibility
+
+      - name: Run diagnostic demo CI gate
+        run: |
+          skilleval diagnostic-ci-gate \
+            --scan docs/demo/diagnostic-onboarding/scan.json \
+            --lint docs/demo/diagnostic-onboarding/lint.json \
+            --inspect docs/demo/diagnostic-onboarding/inspect.json \
+            --route docs/demo/diagnostic-onboarding/route-browser-smoke.json \
+            --route docs/demo/diagnostic-onboarding/route-debug-red-green.json \
+            --output "$RUNNER_TEMP/diagnostic-ci-gate-report.json" \
+            --markdown-output "$RUNNER_TEMP/diagnostic-ci-gate-report.md" \
+            --max-lint-findings 5 \
+            --max-conflict-clusters 4 \
+            --max-route-risk-flags 15 \
+            --min-route-candidates 3

@@ -19,6 +19,14 @@ from hermes_skilleval.calibration import (
 )
 from hermes_skilleval.comparison import write_comparison_report
 from hermes_skilleval.dashboard import write_dashboard
+from hermes_skilleval.diagnostic_dashboard import write_diagnostic_dashboard
+from hermes_skilleval.diagnostic_ci_gate import run_diagnostic_ci_gate
+from hermes_skilleval.diagnostics import (
+    write_inspect_artifact,
+    write_lint_artifact,
+    write_route_artifact,
+    write_scan_artifact,
+)
 from hermes_skilleval.embedding_training import (
     export_embedding_training_pairs,
     write_training_pairs,
@@ -119,7 +127,10 @@ class RouterSpec:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exc:
+        return exc.code if isinstance(exc.code, int) else 2
     if args.command is None:
         parser.print_help()
         return 1
@@ -140,6 +151,73 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="skilleval")
     subparsers = parser.add_subparsers(dest="command")
+
+    scan_parser = subparsers.add_parser(
+        "scan",
+        help="scan a real skill source and write a diagnostic skill index",
+    )
+    scan_parser.add_argument("source")
+    scan_parser.add_argument("--output", required=True)
+    scan_parser.set_defaults(handler=_run_diagnostic_scan)
+
+    lint_parser = subparsers.add_parser(
+        "lint",
+        help="lint routing clarity from a diagnostic skill index",
+    )
+    lint_parser.add_argument("--index", required=True)
+    lint_parser.add_argument("--output", required=True)
+    lint_parser.set_defaults(handler=_run_diagnostic_lint)
+
+    inspect_parser = subparsers.add_parser(
+        "inspect",
+        help="inspect review-worthy conflict risk clusters",
+    )
+    inspect_parser.add_argument("--index", required=True)
+    inspect_parser.add_argument("--output", required=True)
+    inspect_parser.set_defaults(handler=_run_diagnostic_inspect)
+
+    route_parser = subparsers.add_parser(
+        "route",
+        help="route a free-form query against a diagnostic skill index",
+    )
+    route_parser.add_argument("query")
+    route_parser.add_argument("--index", required=True)
+    route_parser.add_argument("--top-k", type=int, default=5)
+    route_parser.add_argument("--inspect", default=None)
+    route_parser.add_argument("--output", required=True)
+    route_parser.set_defaults(handler=_run_diagnostic_route)
+
+    diagnostic_dashboard_parser = subparsers.add_parser(
+        "diagnostic-dashboard",
+        help="write a static dashboard from diagnostic artifacts",
+    )
+    diagnostic_dashboard_parser.add_argument("--scan", required=True)
+    diagnostic_dashboard_parser.add_argument("--lint", default=None)
+    diagnostic_dashboard_parser.add_argument("--inspect", default=None)
+    diagnostic_dashboard_parser.add_argument("--route", action="append", default=[])
+    diagnostic_dashboard_parser.add_argument("--output", required=True)
+    diagnostic_dashboard_parser.set_defaults(handler=_run_diagnostic_dashboard)
+
+    diagnostic_ci_gate_parser = subparsers.add_parser(
+        "diagnostic-ci-gate",
+        help="validate diagnostic artifacts with explicit CI thresholds",
+    )
+    diagnostic_ci_gate_parser.add_argument("--scan", required=True)
+    diagnostic_ci_gate_parser.add_argument("--lint", required=True)
+    diagnostic_ci_gate_parser.add_argument("--inspect", required=True)
+    diagnostic_ci_gate_parser.add_argument("--route", action="append", required=True)
+    diagnostic_ci_gate_parser.add_argument("--output", required=True)
+    diagnostic_ci_gate_parser.add_argument("--markdown-output", default=None)
+    diagnostic_ci_gate_parser.add_argument("--max-lint-findings", type=int, default=0)
+    diagnostic_ci_gate_parser.add_argument("--max-conflict-clusters", type=int, default=0)
+    diagnostic_ci_gate_parser.add_argument("--max-route-risk-flags", type=int, default=0)
+    diagnostic_ci_gate_parser.add_argument("--min-route-candidates", type=int, default=1)
+    diagnostic_ci_gate_parser.add_argument(
+        "--allow-missing-route-evidence",
+        action="store_true",
+        help="do not fail routed candidates that have no matched-term evidence",
+    )
+    diagnostic_ci_gate_parser.set_defaults(handler=_run_diagnostic_ci_gate)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -623,6 +701,62 @@ def _run_report(args: argparse.Namespace) -> None:
 def _run_dashboard(args: argparse.Namespace) -> None:
     write_dashboard(args.runs, args.output)
     print(f"Wrote dashboard to {args.output}")
+
+
+def _run_diagnostic_scan(args: argparse.Namespace) -> None:
+    artifact = write_scan_artifact(args.source, args.output)
+    print(f"Wrote {artifact['summary']['skill_count']} diagnostic skills to {args.output}")
+
+
+def _run_diagnostic_lint(args: argparse.Namespace) -> None:
+    artifact = write_lint_artifact(args.index, args.output)
+    print(f"Wrote {artifact['summary']['finding_count']} lint findings to {args.output}")
+
+
+def _run_diagnostic_inspect(args: argparse.Namespace) -> None:
+    artifact = write_inspect_artifact(args.index, args.output)
+    print(f"Wrote {artifact['summary']['cluster_count']} conflict risk clusters to {args.output}")
+
+
+def _run_diagnostic_route(args: argparse.Namespace) -> None:
+    artifact = write_route_artifact(
+        args.query,
+        args.index,
+        args.output,
+        top_k=args.top_k,
+        inspect_path=args.inspect,
+    )
+    print(f"Wrote {artifact['summary']['candidate_count']} route candidates to {args.output}")
+
+
+def _run_diagnostic_dashboard(args: argparse.Namespace) -> None:
+    write_diagnostic_dashboard(
+        output_path=args.output,
+        scan_path=args.scan,
+        lint_path=args.lint,
+        inspect_path=args.inspect,
+        route_paths=args.route,
+    )
+    print(f"Wrote diagnostic dashboard to {args.output}")
+
+
+def _run_diagnostic_ci_gate(args: argparse.Namespace) -> None:
+    result = run_diagnostic_ci_gate(
+        scan_path=args.scan,
+        lint_path=args.lint,
+        inspect_path=args.inspect,
+        route_paths=args.route,
+        output_path=args.output,
+        markdown_output_path=args.markdown_output,
+        max_lint_findings=args.max_lint_findings,
+        max_conflict_clusters=args.max_conflict_clusters,
+        max_route_risk_flags=args.max_route_risk_flags,
+        min_route_candidates=args.min_route_candidates,
+        require_route_evidence=not args.allow_missing_route_evidence,
+    )
+    print(f"Diagnostic CI gate {result['decision']}: {args.output}")
+    if result["decision"] != "PASS":
+        raise ValueError("diagnostic CI gate failed")
 
 
 def _run_agent_loop(args: argparse.Namespace) -> None:

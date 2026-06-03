@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Human Brief - diagnostic-skill-library-onboarding</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #586174;
+      --line: #d8dee9;
+      --panel: #f7f9fc;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --bg: #ffffff;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 40px 24px 56px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      letter-spacing: 0;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 28px 0 10px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .status {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 4px 10px;
+      color: var(--accent);
+      background: #ecfdf5;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.95em;
+      background: #eef2f7;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+    ul {
+      padding-left: 22px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .note {
+      border-left: 4px solid var(--warn);
+      padding-left: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="status">archived</div>
+      <h1>Diagnostic Skill Library Onboarding</h1>
+      <p>结论：P0 零标签诊断入口已经实现，维护者可以 scan 真实 skill source、lint routing clarity、inspect review-worthy conflict risk clusters、route 示例 query，并生成独立静态诊断 dashboard。</p>
+    </header>
+
+    <h2>当前状态</h2>
+    <p>OpenSpec change <code>diagnostic-skill-library-onboarding</code> 的 tasks 1.1-8.4 已在隔离 worktree 内完成并通过本地验证。Reviewer 返回 Pass with fixes；rank、dashboard artifact contract、CLI unsupported-source 测试已经完成修复并重新验证。该 change 已归档到 <code>openspec/changes/archive/2026-06-02-diagnostic-skill-library-onboarding</code>，主 spec 已同步到 <code>openspec/specs/diagnostic-skill-library-onboarding/spec.md</code>。</p>
+
+    <h2>本阶段改了什么</h2>
+    <div class="grid">
+      <section class="card">
+        <div class="label">Diagnostic artifacts</div>
+        <p>新增 scan、lint、inspect、route、diagnostic dashboard 的稳定 JSON/HTML 输出形状。</p>
+      </section>
+      <section class="card">
+        <div class="label">Source scanning</div>
+        <p>支持 Markdown skill folders containing <code>SKILL.md</code>，以及 <code>mcp.json</code> 这类 MCP tool schema。</p>
+      </section>
+      <section class="card">
+        <div class="label">Review language</div>
+        <p>Conflict 输出保持 review-worthy risk，不给出确定冲突、删除或合并判断。</p>
+      </section>
+      <section class="card">
+        <div class="label">CLI front door</div>
+        <p>新增 <code>scan</code>、<code>lint</code>、<code>inspect</code>、<code>route</code>、<code>diagnostic-dashboard</code>，旧 evaluation 命令保留。</p>
+      </section>
+    </div>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><a href="../../src/hermes_skilleval/diagnostics.py">src/hermes_skilleval/diagnostics.py</a>：诊断扫描、lint、inspect、route artifact 生成。</li>
+      <li><a href="../../src/hermes_skilleval/diagnostic_dashboard.py">src/hermes_skilleval/diagnostic_dashboard.py</a>：独立静态诊断 dashboard。</li>
+      <li><a href="../../src/hermes_skilleval/cli.py">src/hermes_skilleval/cli.py</a>：新增诊断 CLI front door。</li>
+      <li><a href="../../tests/test_diagnostic_scan.py">tests/test_diagnostic_scan.py</a> 等：focused diagnostic coverage。</li>
+      <li><a href="../../docs/usage.md">docs/usage.md</a> 和 <a href="../../README.md">README.md</a>：诊断 onboarding 文档。</li>
+      <li><a href="../../openspec/changes/diagnostic-skill-library-onboarding/tasks.md">OpenSpec tasks.md</a>：本阶段任务完成记录。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <table>
+      <thead>
+        <tr><th>命令</th><th>结果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>python -m pytest tests/test_diagnostic_scan.py tests/test_diagnostic_lint.py tests/test_diagnostic_inspect.py tests/test_diagnostic_route.py tests/test_diagnostic_dashboard.py tests/test_cli_diagnostics.py -q</code></td><td>PASS, 20 passed</td></tr>
+        <tr><td><code>python -m pytest -q</code></td><td>PASS, 347 passed in latest loop validation</td></tr>
+        <tr><td><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code></td><td>PASS, release reproducibility remains <code>PASS</code></td></tr>
+        <tr><td><code>openspec validate diagnostic-skill-library-onboarding --strict</code></td><td>PASS</td></tr>
+        <tr><td><code>openspec validate --all --strict</code></td><td>PASS, 1 passed / 0 failed</td></tr>
+        <tr><td><code>openspec archive diagnostic-skill-library-onboarding --yes</code></td><td>PASS, spec created and change archived</td></tr>
+        <tr><td><code>git diff --check</code></td><td>PASS</td></tr>
+      </tbody>
+    </table>
+
+    <h2>剩余风险和不要夸大的结论</h2>
+    <ul>
+      <li>P0 heuristics 是本地可解释风险信号，不是 learned judge、runtime router、SaaS dashboard 或公开 benchmark。</li>
+      <li>MCP schema 支持保守的 <code>tools</code> / <code>server.tools</code> 形态；更复杂 schema 应进入后续 OpenSpec change。</li>
+      <li>Diagnostic artifacts 可为后续 labeled regression / CI gate 产品化提供稳定输入，但当前不声称 PR annotation 或合并门禁。</li>
+    </ul>
+
+    <h2>推荐下一步</h2>
+    <p>当前阶段已完成并归档；推荐下一阶段先生成可展示的 diagnostic onboarding demo/evidence pack，再进入 CI gate 或 runtime router 产品化。</p>
+  </main>
+</body>
+</html>

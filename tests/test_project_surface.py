@@ -8,7 +8,13 @@ DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
 MIGRATION_PROTOCOL = ROOT / "docs" / "skill-library-migration-protocol.md"
 EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
 USAGE = ROOT / "docs" / "usage.md"
+DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
+CURRENT_HUMAN_BRIEFS = [
+    ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-skill-library-onboarding.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-demo-evidence-pack.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-ci-gate.html",
+]
 
 
 def test_ci_workflow_runs_lightweight_pytest_validation():
@@ -18,6 +24,36 @@ def test_ci_workflow_runs_lightweight_pytest_validation():
     assert "push:" in workflow
     assert 'python -m pip install -e ".[dev]"' in workflow
     assert "pytest -q" in workflow
+
+
+def test_ci_workflow_runs_diagnostic_ci_gate_from_committed_demo_artifacts():
+    workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "skilleval diagnostic-ci-gate" in workflow
+    for artifact in [
+        "docs/demo/diagnostic-onboarding/scan.json",
+        "docs/demo/diagnostic-onboarding/lint.json",
+        "docs/demo/diagnostic-onboarding/inspect.json",
+        "docs/demo/diagnostic-onboarding/route-browser-smoke.json",
+        "docs/demo/diagnostic-onboarding/route-debug-red-green.json",
+    ]:
+        assert artifact in workflow
+
+    assert "$RUNNER_TEMP/diagnostic-ci-gate-report.json" in workflow
+    assert "$RUNNER_TEMP/diagnostic-ci-gate-report.md" in workflow
+    assert "--max-lint-findings 5" in workflow
+    assert "--max-conflict-clusters 4" in workflow
+    assert "--max-route-risk-flags 15" in workflow
+    assert "--min-route-candidates 3" in workflow
+    assert "git diff --exit-code docs/demo/diagnostic-onboarding" not in workflow
+    for command in [
+        "skilleval scan",
+        "skilleval lint",
+        "skilleval inspect",
+        "skilleval route",
+        "skilleval diagnostic-dashboard",
+    ]:
+        assert command not in workflow
 
 
 def test_readme_surfaces_live_dashboard_and_screenshot_near_key_results():
@@ -86,6 +122,51 @@ def test_readme_keeps_quick_start_short_and_links_full_usage():
     assert "### 1. Index a Hermes-style Skill Library" not in readme
     assert "## 1. Index a Hermes-style Skill Library" in usage
     assert "## 17. Run Tests" in usage
+
+
+def test_diagnostic_ci_gate_surface_is_artifact_based_and_bounded():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    report = (DIAGNOSTIC_DEMO / "ci-gate-report.md").read_text(encoding="utf-8")
+    combined = "\n".join([readme, usage, report])
+
+    assert "artifact-based CI validation" in combined
+    assert "skilleval diagnostic-ci-gate" in combined
+    for phrase in [
+        "not a Marketplace Action",
+        "not a PR annotation system",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+    ]:
+        assert phrase in combined
+
+    risky_claims = [
+        "released as a Marketplace Action",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark",
+    ]
+    for phrase in risky_claims:
+        assert phrase not in combined
+
+
+def test_current_public_surfaces_use_latest_full_suite_count():
+    surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
+
+    assert "347 passed" in combined
+    for stale_count in [
+        "314 passed",
+        "334 passed",
+        "338 passed",
+        "344 passed",
+        "346 passed",
+        "| Test cases | 314 |",
+        "| Test cases | 346 |",
+    ]:
+        assert stale_count not in combined
 
 
 def test_release_notes_are_reviewer_ready_and_conservative():

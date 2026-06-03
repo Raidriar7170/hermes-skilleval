@@ -1,0 +1,48 @@
+{
+  "artifact_type": "diagnostic_ci_gate",
+  "decision": "PASS",
+  "failed_policies": [],
+  "generated_at": "2026-06-02T11:25:41+00:00",
+  "inputs": {
+    "inspect": "docs/demo/diagnostic-onboarding/inspect.json",
+    "lint": "docs/demo/diagnostic-onboarding/lint.json",
+    "routes": [
+      "docs/demo/diagnostic-onboarding/route-browser-smoke.json",
+      "docs/demo/diagnostic-onboarding/route-debug-red-green.json"
+    ],
+    "scan": "docs/demo/diagnostic-onboarding/scan.json"
+  },
+  "policy": {
+    "max_conflict_clusters": 4,
+    "max_lint_findings": 5,
+    "max_route_risk_flags": 15,
+    "min_route_candidates": 3,
+    "require_route_evidence": true
+  },
+  "route_reports": [
+    {
+      "candidate_count": 3,
+      "missing_evidence_count": 0,
+      "path": "docs/demo/diagnostic-onboarding/route-browser-smoke.json",
+      "query": "smoke test a local browser page and check console errors",
+      "risk_flag_count": 7
+    },
+    {
+      "candidate_count": 3,
+      "missing_evidence_count": 0,
+      "path": "docs/demo/diagnostic-onboarding/route-debug-red-green.json",
+      "query": "debug failing tests with a red-green loop",
+      "risk_flag_count": 8
+    }
+  ],
+  "schema_version": "diagnostic.v1",
+  "scope": "local artifact validation for diagnostic skill-library CI",
+  "summary": {
+    "conflict_cluster_count": 4,
+    "lint_finding_count": 5,
+    "missing_route_evidence_count": 0,
+    "route_count": 2,
+    "route_risk_flag_count": 15,
+    "skill_count": 5
+  }
+}

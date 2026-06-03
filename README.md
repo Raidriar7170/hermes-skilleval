@@ -135,7 +135,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 314 |
+| Test cases | 347 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -255,7 +255,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 314 pytest cases
+├── tests/                              # 347 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -284,11 +284,26 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `314 passed` and
+Expected: `347 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
 For full CLI usage, see [`docs/usage.md`](docs/usage.md).
+
+---
+
+## Diagnostic Onboarding / 零标签诊断入口
+
+For the committed scan -> lint -> inspect -> route -> dashboard demo evidence
+pack, see
+[`docs/demo/diagnostic-onboarding/`](docs/demo/diagnostic-onboarding/).
+The demo also includes `ci-gate-report.json` and `ci-gate-report.md`, produced
+by `skilleval diagnostic-ci-gate` as artifact-based CI validation over already
+generated diagnostic artifacts.
+
+Boundary: this is not a Marketplace Action, not a PR annotation system, not
+SaaS, not a runtime MCP router, and not a headline performance claim. Full
+regeneration and gate commands live in [`docs/usage.md`](docs/usage.md).
 
 ---
 
@@ -359,7 +374,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 314 unit and smoke tests |
+| Testing | pytest | 347 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -419,7 +434,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 314 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 347 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.
