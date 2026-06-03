@@ -9,6 +9,7 @@ MIGRATION_PROTOCOL = ROOT / "docs" / "skill-library-migration-protocol.md"
 EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
 USAGE = ROOT / "docs" / "usage.md"
 EVIDENCE_MAP = ROOT / "docs" / "evidence-map.md"
+FAILURE_GALLERY = ROOT / "docs" / "failure-gallery.md"
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
@@ -20,6 +21,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-03-pr-facing-ci-summary.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-external-skill-library-validation-pack.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-docs-evidence-map.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-04-failure-gallery.html",
 ]
 
 
@@ -272,6 +274,107 @@ def test_evidence_map_docs_are_bounded_and_do_not_overclaim():
         assert risky_claim not in combined
 
 
+def test_failure_gallery_is_linked_from_public_entry_points():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+    gallery = FAILURE_GALLERY.read_text(encoding="utf-8")
+
+    assert "[`docs/failure-gallery.md`](docs/failure-gallery.md)" in readme
+    assert "[`docs/failure-gallery.md`](failure-gallery.md)" in usage
+    assert "[`docs/failure-gallery.md`](failure-gallery.md)" in evidence_map
+    assert "# Hermes SkillEval Failure Gallery" in gallery
+    assert "navigation layer over committed failure evidence" in gallery
+    assert "canonical evidence remains in the linked artifacts" in gallery
+
+
+def test_failure_gallery_groups_current_failure_evidence_and_local_links_exist():
+    gallery = FAILURE_GALLERY.read_text(encoding="utf-8")
+
+    for heading in [
+        "## Release-Gate Regression Examples",
+        "## Diagnostic Routing-Clarity Examples",
+        "## External-Style Validation Examples",
+        "## CI Boundary Examples",
+        "## How To Use This Gallery",
+    ]:
+        assert heading in gallery
+
+    for required_path in [
+        "demo/phase16-blind-validation/comparison.md",
+        "demo/phase16-blind-validation/route-diffs.jsonl",
+        "demo/phase17-calibrated-release-selector/release-decision.md",
+        "demo/phase18-ci-release-reproducibility/release-manifest.md",
+        "demo/diagnostic-onboarding/lint.json",
+        "demo/diagnostic-onboarding/inspect.json",
+        "demo/diagnostic-onboarding/route-browser-smoke.json",
+        "demo/diagnostic-onboarding/pr-review-packet.md",
+        "demo/external-skill-library-validation/README.md",
+        "../.github/workflows/validate.yml",
+        "../openspec/specs/pr-facing-ci-summary/spec.md",
+    ]:
+        assert f"]({required_path})" in gallery
+
+    for phrase in [
+        "REVIEW_REQUIRED",
+        "KEEP_BASELINE",
+        "new_negative_skill_selected",
+        "missing_negative_boundaries",
+        "review-worthy conflict risk clusters",
+        "ALLOW_MERGE",
+        "BLOCK_MERGE",
+    ]:
+        assert phrase in gallery
+
+    for link in _markdown_links(gallery):
+        if link.startswith(("http://", "https://", "#")):
+            continue
+        target = (FAILURE_GALLERY.parent / link.split("#", 1)[0]).resolve()
+        assert target.exists(), f"broken failure gallery link: {link}"
+
+
+def test_failure_gallery_docs_are_bounded_and_do_not_overclaim():
+    gallery = FAILURE_GALLERY.read_text(encoding="utf-8")
+    combined = "\n".join(
+        [
+            README.read_text(encoding="utf-8"),
+            USAGE.read_text(encoding="utf-8"),
+            EVIDENCE_MAP.read_text(encoding="utf-8"),
+            gallery,
+        ]
+    )
+
+    for phrase in [
+        "not a Marketplace Action",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+        "not benchmark status",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+    ]:
+        assert phrase in gallery
+        assert phrase in combined
+
+    for risky_claim in [
+        "released as a Marketplace Action",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "provides runtime MCP routing",
+        "SOTA benchmark",
+        "production-ready",
+        "proves production readiness",
+        "automatic merge approval enabled",
+        "approves the release",
+    ]:
+        assert risky_claim not in combined
+
+
 def test_diagnostic_ci_gate_surface_is_artifact_based_and_bounded():
     readme = README.read_text(encoding="utf-8")
     usage = USAGE.read_text(encoding="utf-8")
@@ -375,12 +478,14 @@ def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "381 passed" in combined
-    assert "381 pytest cases" in README.read_text(encoding="utf-8")
+    assert "384 passed" in combined
+    assert "384 pytest cases" in README.read_text(encoding="utf-8")
     for stale_count in [
+        "381 pytest cases",
         "378 pytest cases",
         "372 pytest cases",
         "365 pytest cases",
+        "381 passed",
         "378 passed",
         "372 passed",
         "366 passed",
@@ -398,6 +503,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "| Test cases | 366 |",
         "| Test cases | 372 |",
         "| Test cases | 378 |",
+        "| Test cases | 381 |",
     ]:
         assert stale_count not in combined
 

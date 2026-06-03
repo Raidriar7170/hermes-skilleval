@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - Failure Gallery</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #18202a; background: #f7f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d9dee8; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe4ee; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+    code { background: #eef1f6; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Autonomous Loop - Failure Gallery</h1>
+    <span class="status">completed</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本轮正在推进一个 bounded OpenSpec phase：Failure Gallery，用一个公开安全的 reviewer 入口串起已提交失败证据和边界说明。</p>
+    </div>
+
+    <h2>停止条件</h2>
+    <p>本轮停止条件是完成一个 bounded OpenSpec phase；OpenSpec archive、Reviewer pass 和本地验证已完成，随后进入 auto integration 提交、合入、push 和远端 Validate 检查。</p>
+
+    <h2>项目阶段进度</h2>
+    <p>当前目标：<strong>interview-ready / developer-facing routing reliability toolkit</strong>。本阶段补的是 Failure Gallery / BLOCK_MERGE 示例方向里的失败证据入口，帮助 reviewer 从 README 和 evidence map 快速进入具体失败案例。</p>
+
+    <h2>完成内容</h2>
+    <ul>
+      <li>OpenSpec proposal/design/spec/tasks 已创建并验证。</li>
+      <li>RED 测试已确认：缺少 gallery 和 Human Brief 时 public-surface tests 失败。</li>
+      <li>新增 <a href="../failure-gallery.md">docs/failure-gallery.md</a> 以及 README、usage、evidence-map 入口。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li>基线：<code>python -m pytest -q</code> 在实现前为 <code>384 passed</code>。</li>
+      <li>OpenSpec proposal：<code>openspec validate failure-gallery --strict</code> 已通过。</li>
+      <li>最终本地验证和远端 Validate 将在归档后记录。</li>
+    </ul>
+
+    <h2>不要夸大的点</h2>
+    <p>Gallery 不是第二事实源，不改变 release-check、diagnostic、CI 或 routing 行为。Boundary phrases: not a Marketplace Action, not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not release approval, and not automatic merge approval。</p>
+  </main>
+</body>
+</html>

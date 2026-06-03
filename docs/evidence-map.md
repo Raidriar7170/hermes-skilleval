@@ -16,6 +16,7 @@ production readiness, not release approval, and not automatic merge approval.
 | [`README.md`](../README.md) | Front-door project framing, current release evidence, diagnostic onboarding path, and reviewer quick start. | The README summarizes; phase files and demo artifacts remain authoritative. |
 | [`CONTEXT.md`](../CONTEXT.md) | Durable domain language: developer-facing routing reliability toolkit, Skill Library Maintainer, Diagnostic Onboarding Path, and Release Gate. | It defines vocabulary, not a new release result. |
 | [`docs/release-handoff.md`](release-handoff.md) | Reviewer-ready handoff for the conservative Phase 16-18 release story. | It is not release approval and does not promote a runtime integration. |
+| [`docs/failure-gallery.md`](failure-gallery.md) | Reviewer-facing gallery of blocked-regression and diagnostic-risk examples. | It is an example index, not canonical evidence or a new verdict. |
 | [`docs/interview-project-overview.html`](interview-project-overview.html) | Human-readable project explanation for interviews and portfolio review. | It is explanatory packaging, not benchmark leadership evidence. |
 
 ## Release-Gate Evidence

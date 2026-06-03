@@ -6,6 +6,8 @@ For the current release conclusion and reviewer evidence, start from
 For local reviewer navigation across release, diagnostic, CI, OpenSpec, and
 Human Brief evidence, see [`docs/evidence-map.md`](evidence-map.md); it is a
 navigation layer, not a second source of truth, and not release approval.
+For concrete blocked-regression and diagnostic-risk examples, use
+[`docs/failure-gallery.md`](failure-gallery.md) as a review aid.
 
 ## Installation
 
@@ -519,7 +521,7 @@ pytest -q
 Expected:
 
 ```text
-381 passed
+384 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack

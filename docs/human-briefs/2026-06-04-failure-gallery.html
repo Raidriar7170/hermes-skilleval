@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Failure Gallery - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #18202a; background: #f7f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d9dee8; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe4ee; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+    code { background: #eef1f6; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Failure Gallery</h1>
+    <span class="status">archived</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段新增 Failure Gallery，把已提交的 release-gate 回归、diagnostic routing-clarity 风险、external-style validation 示例和 CI 边界集中成可审阅入口，但不替代任何源证据。</p>
+    </div>
+
+    <h2>项目阶段进度</h2>
+    <p>当前目标是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>。来源包括 README recruiter path、<code>CONTEXT.md</code> 的 Routing Reliability / Diagnostic Onboarding Path 术语，以及上一阶段 <code>docs/evidence-map.md</code>。</p>
+    <p>本阶段推进的是失败证据可读性：让 reviewer 能从一个入口看到系统实际拦下了什么、哪些只是 review-worthy diagnostic signals，以及哪些边界不能夸大。</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li>新增 <a href="../failure-gallery.md">docs/failure-gallery.md</a>，按 reviewer question 分组现有失败证据。</li>
+      <li>README、<code>docs/usage.md</code> 和 <code>docs/evidence-map.md</code> 增加 gallery 入口。</li>
+      <li><code>tests/test_project_surface.py</code> 增加入口链接、分组、local link 和 overclaim 边界测试。</li>
+      <li>OpenSpec change <code>failure-gallery</code> 继续作为本阶段权威范围说明。</li>
+    </ul>
+
+    <h2>验证计划</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_project_surface.py -q</code>：RED 已确认，缺失 gallery/brief 时失败；实现后应 GREEN。</li>
+      <li><code>python -m pytest -q</code>：目标保持 <code>384 passed</code> 或更新后的真实计数。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：确认 OpenSpec artifacts 与归档 spec 有效。</li>
+      <li><code>release-check</code>、CI summary simulation、<code>git diff --check</code>：作为合入前门禁。</li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>Failure Gallery 是 navigation layer over committed failure evidence；canonical evidence remains in the linked artifacts。Boundary phrases: not a Marketplace Action, not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not release approval, and not automatic merge approval。</p>
+  </main>
+</body>
+</html>

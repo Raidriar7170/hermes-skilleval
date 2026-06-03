@@ -42,6 +42,8 @@ to promote regressions as defaults.
 
 For the full evidence chain, start from
 [`docs/release-handoff.md`](docs/release-handoff.md).
+For concrete reviewer examples of blocked regressions and diagnostic risks, use
+[`docs/failure-gallery.md`](docs/failure-gallery.md).
 For interview prep, use
 [`docs/interview-project-overview.html`](docs/interview-project-overview.html)
 and [`docs/resume.md`](docs/resume.md).
@@ -135,7 +137,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 381 |
+| Test cases | 384 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -255,7 +257,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 381 pytest cases
+├── tests/                              # 384 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -284,7 +286,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `381 passed` and
+Expected: `384 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
