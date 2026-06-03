@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - Diagnostic Artifact Drift CI Workflow</title>
+  <style>
+    body { margin: 0; font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2937; background: #f6f7fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 22px 52px; }
+    section { background: #fff; border: 1px solid #dfe4ec; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { line-height: 1.65; }
+    code { background: #eef2f7; border-radius: 4px; padding: 2px 5px; }
+    .ok { color: #047857; font-weight: 700; }
+    .status { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #ecfdf5; color: #047857; font-weight: 700; }
+    .warn { color: #92400e; }
+    a { color: #1d4ed8; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous Phase Loop Closeout</h1>
+  <p><span class="status">completed</span></p>
+
+  <section>
+    <h2>一句话结论</h2>
+    <p>本轮收尾确认上一阶段已归档，并完成 <code>diagnostic-artifact-drift-ci-workflow</code>：GitHub Actions validate workflow 现在会重新生成 diagnostic demo artifacts，并用 semantic drift check 比对 committed artifacts。</p>
+  </section>
+
+  <section>
+    <h2>停止原因</h2>
+    <p>用户授权的 bounded loop 已完成：当前 OpenSpec 阶段已归档，下一阶段的 artifact drift check GitHub Actions 接线也已完成并归档。继续到 PR annotations、Marketplace Action、release publication 或部署会改变公开/工作流边界，因此停下等待用户确认。</p>
+  </section>
+
+  <section>
+    <h2>项目阶段进度</h2>
+    <p>当前项目阶段目标是 interview-ready / release-evidence packaging，来源是 README 的 recruiter review path、Phase 16-18 release evidence chain、diagnostic onboarding 文档和先前 Human Brief。本轮把 diagnostic onboarding 的再生成一致性从本地命令推进到 GitHub Actions validate workflow。剩余 gap 主要是远端 Actions run 结果、PR-facing automation、Marketplace Action 或 release-publication；这些不应在当前阶段默认扩大。</p>
+  </section>
+
+  <section>
+    <h2>完成阶段</h2>
+    <ul>
+      <li><code>diagnostic-artifact-drift-check</code>: loop 开始时已确认处于 archived 状态。</li>
+      <li><code>diagnostic-artifact-drift-ci-workflow</code>: completed and archived to <code>openspec/changes/archive/2026-06-03-diagnostic-artifact-drift-ci-workflow/</code>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><a href="../../.github/workflows/validate.yml">.github/workflows/validate.yml</a></li>
+      <li><a href="../../tests/test_project_surface.py">tests/test_project_surface.py</a></li>
+      <li><a href="../../tests/test_phase14_artifacts.py">tests/test_phase14_artifacts.py</a>, <a href="../../tests/test_phase15_artifacts.py">tests/test_phase15_artifacts.py</a>, <a href="../../tests/test_phase16_artifacts.py">tests/test_phase16_artifacts.py</a></li>
+      <li><a href="../../README.md">README.md</a> and <a href="../usage.md">docs/usage.md</a></li>
+      <li><a href="../../openspec/specs/diagnostic-artifact-drift-check/spec.md">openspec/specs/diagnostic-artifact-drift-check/spec.md</a></li>
+      <li><a href="2026-06-03-diagnostic-artifact-drift-ci-workflow.html">phase Human Brief</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>: <span class="ok">PASS</span>, 366 passed.</li>
+      <li><code>python -m pytest -q tests/test_project_surface.py</code>: <span class="ok">PASS</span>, 11 passed.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check ...</code>: <span class="ok">PASS</span>.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-ci-gate ...</code>: <span class="ok">PASS</span>.</li>
+      <li><code>$RUNNER_TEMP</code> style regeneration + CI gate + PR review packet + drift check: <span class="ok">PASS</span>, drift decision PASS.</li>
+      <li><code>openspec validate --all --strict</code>: <span class="ok">PASS</span>, 5 passed, 0 failed.</li>
+      <li><code>openspec archive diagnostic-artifact-drift-ci-workflow --yes</code>: <span class="ok">PASS</span>.</li>
+      <li><code>git diff --check</code>: <span class="ok">PASS</span>.</li>
+      <li>Leak/overclaim scan: matches were boundary text or forbidden-phrase tests, not positive claims or secrets.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>审查结果</h2>
+    <p>Local Reviewer verdict: Pass. Must Fix: none. Should Fix: none. External Pro review was not run because no callable ChatGPT Pro/browser review tool was available in this session; local Reviewer and fresh validation were used instead.</p>
+  </section>
+
+  <section>
+    <h2>自动集成状态</h2>
+    <p>At report generation time, auto integration is pending final post-archive validation, staging, commit, and normal push to <code>origin/main</code>. The final user response records the resulting commit hash and push result because the hash is only known after this report is committed.</p>
+  </section>
+
+  <section>
+    <h2>剩余风险</h2>
+    <ul>
+      <li>本地已模拟 GitHub Actions command chain，但远端 GitHub Actions run 需要 push 后由 GitHub 执行。</li>
+      <li>这是 semantic artifact drift detection，不是 GitHub API integration、PR annotation、Marketplace Action、SaaS、runtime router 或 release approval。</li>
+      <li class="warn">如果 diagnostic demo regeneration 命令未来变化，需要同步 workflow、usage 示例和 surface test。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>推荐下一步</h2>
+    <p>push 后检查 GitHub Actions validate run。若要进入 PR-facing automation 或 annotations，应新开一个明确 OpenSpec change。</p>
+  </section>
+</main>
+</body>
+</html>

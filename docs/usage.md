@@ -124,9 +124,10 @@ skilleval diagnostic-ci-gate \
 ```
 
 In GitHub Actions, the repository workflow reads the committed diagnostic demo
-artifacts and writes the gate report to `$RUNNER_TEMP`. It does not regenerate
-the demo fixture or diff the diagnostic demo directory because the current
-diagnostic artifacts include `generated_at` timestamps.
+artifacts for the gate report and writes that report to `$RUNNER_TEMP`. The
+same validate job also regenerates the diagnostic onboarding demo into
+`$RUNNER_TEMP/diagnostic-onboarding` and runs the artifact drift check below,
+with drift reports written outside the repository checkout.
 
 ### Check diagnostic artifact drift
 
@@ -148,6 +149,10 @@ skilleval diagnostic-artifact-drift-check \
 The drift check is local semantic artifact comparison. It does not call the
 GitHub API, post PR comments, write annotations, publish a Marketplace Action,
 run a SaaS service, act as a runtime MCP router, or approve a release.
+
+In the GitHub Actions validate workflow, the drift JSON report is written to
+`$RUNNER_TEMP/diagnostic-artifact-drift.json` and the Markdown report is
+written to `$RUNNER_TEMP/diagnostic-artifact-drift.md`.
 
 ### Generate a local PR review packet
 
@@ -511,5 +516,5 @@ pytest -q
 Expected:
 
 ```text
-365 passed
+366 passed
 ```

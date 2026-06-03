@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagnostic Artifact Drift CI Workflow - Human Brief</title>
+  <style>
+    body { margin: 0; font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #202124; background: #f7f8fa; }
+    main { max-width: 920px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 28px 0 10px; font-size: 18px; }
+    p { margin: 8px 0; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 6px 0; }
+    code { background: #eceff3; border-radius: 4px; padding: 1px 5px; }
+    .panel { background: #fff; border: 1px solid #dfe3e8; border-radius: 8px; padding: 20px; }
+    .status { display: inline-block; border: 1px solid #b7d8c2; border-radius: 999px; padding: 2px 10px; color: #116329; background: #edf8f0; font-weight: 600; }
+    .warn { color: #8a4b00; }
+    a { color: #0b57d0; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="panel">
+      <h1>Diagnostic Artifact Drift CI Workflow</h1>
+      <p><span class="status">archived</span></p>
+      <p><strong>一句话结论：</strong>validate workflow 现在会在 CI 中重新生成 diagnostic onboarding demo，并用 drift-check 比对 committed artifacts；OpenSpec change 已归档，报告保留在 repo 外。</p>
+
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>先新增项目表面测试，确认 workflow 必须执行 <code>skilleval diagnostic-artifact-drift-check</code>。</li>
+        <li>在 <code>.github/workflows/validate.yml</code> 中把 demo artifacts 重新生成到 <code>$RUNNER_TEMP/diagnostic-onboarding</code>。</li>
+        <li>补齐临时目录中的 <code>ci-gate-report</code> 和 <code>pr-review-packet</code>，让目录模式 drift-check 能比较完整 artifact set。</li>
+        <li>将 drift JSON / Markdown 输出到 <code>$RUNNER_TEMP/diagnostic-artifact-drift.json</code> 和 <code>$RUNNER_TEMP/diagnostic-artifact-drift.md</code>。</li>
+        <li>更新 README 与 usage 文档，仅说明 GitHub Actions validate job 的 drift-check 覆盖。</li>
+      </ul>
+
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../.github/workflows/validate.yml">.github/workflows/validate.yml</a></li>
+        <li><a href="../../tests/test_project_surface.py">tests/test_project_surface.py</a></li>
+        <li><a href="../../README.md">README.md</a></li>
+        <li><a href="../usage.md">docs/usage.md</a></li>
+        <li><a href="../../openspec/specs/diagnostic-artifact-drift-check/spec.md">OpenSpec main spec</a></li>
+        <li><a href="../../openspec/changes/archive/2026-06-03-diagnostic-artifact-drift-ci-workflow/tasks.md">Archived OpenSpec tasks</a></li>
+      </ul>
+
+      <h2>验证结果</h2>
+      <ul>
+        <li><code>pytest -q tests/test_project_surface.py</code>: RED 后 GREEN，当前 11 passed。</li>
+        <li><code>python -m pytest -q</code>: PASS，366 passed。</li>
+        <li><code>openspec validate diagnostic-artifact-drift-ci-workflow --strict</code>: PASS。</li>
+        <li><code>openspec archive diagnostic-artifact-drift-ci-workflow --yes</code>: PASS，主 spec 新增 GitHub Actions drift-check requirement。</li>
+        <li><code>git diff --check</code>: PASS。</li>
+        <li><code>$RUNNER_TEMP</code> workflow simulation: PASS，生成 gate、review packet 与 drift report。</li>
+        <li>Reviewer verdict: Pass，无 Must Fix。</li>
+      </ul>
+
+      <h2>边界与风险</h2>
+      <ul>
+        <li>这不是 GitHub API 集成、PR annotation、Marketplace Action、SaaS、runtime MCP router 或 release approval。</li>
+        <li>CI 运行时间会增加一个小型 deterministic demo regeneration；当前设计不写回 checkout。</li>
+        <li class="warn">如果将来 demo regeneration 命令变化，需要同步 workflow 与 usage 示例。</li>
+      </ul>
+
+      <h2>推荐下一步</h2>
+      <p>本阶段已归档。推荐下一步是 push 后查看 GitHub Actions 的远端 run；PR annotation 或 Marketplace Action 仍应作为单独 OpenSpec 阶段确认。</p>
+    </div>
+  </main>
+</body>
+</html>

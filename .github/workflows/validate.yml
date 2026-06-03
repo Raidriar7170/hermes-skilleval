@@ -49,3 +49,66 @@ jobs:
             --max-conflict-clusters 4 \
             --max-route-risk-flags 15 \
             --min-route-candidates 3
+
+      - name: Run diagnostic artifact drift check
+        run: |
+          rm -rf "$RUNNER_TEMP/diagnostic-onboarding"
+          mkdir -p "$RUNNER_TEMP/diagnostic-onboarding"
+
+          skilleval scan \
+            docs/demo/diagnostic-onboarding/source/skills \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/scan.json"
+
+          skilleval lint \
+            --index "$RUNNER_TEMP/diagnostic-onboarding/scan.json" \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/lint.json"
+
+          skilleval inspect \
+            --index "$RUNNER_TEMP/diagnostic-onboarding/scan.json" \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/inspect.json"
+
+          skilleval route \
+            "smoke test a local browser page and check console errors" \
+            --index "$RUNNER_TEMP/diagnostic-onboarding/scan.json" \
+            --inspect "$RUNNER_TEMP/diagnostic-onboarding/inspect.json" \
+            --top-k 3 \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/route-browser-smoke.json"
+
+          skilleval route \
+            "debug failing tests with a red-green loop" \
+            --index "$RUNNER_TEMP/diagnostic-onboarding/scan.json" \
+            --inspect "$RUNNER_TEMP/diagnostic-onboarding/inspect.json" \
+            --top-k 3 \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/route-debug-red-green.json"
+
+          skilleval diagnostic-dashboard \
+            --scan "$RUNNER_TEMP/diagnostic-onboarding/scan.json" \
+            --lint "$RUNNER_TEMP/diagnostic-onboarding/lint.json" \
+            --inspect "$RUNNER_TEMP/diagnostic-onboarding/inspect.json" \
+            --route "$RUNNER_TEMP/diagnostic-onboarding/route-browser-smoke.json" \
+            --route "$RUNNER_TEMP/diagnostic-onboarding/route-debug-red-green.json" \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/dashboard.html"
+
+          skilleval diagnostic-ci-gate \
+            --scan "$RUNNER_TEMP/diagnostic-onboarding/scan.json" \
+            --lint "$RUNNER_TEMP/diagnostic-onboarding/lint.json" \
+            --inspect "$RUNNER_TEMP/diagnostic-onboarding/inspect.json" \
+            --route "$RUNNER_TEMP/diagnostic-onboarding/route-browser-smoke.json" \
+            --route "$RUNNER_TEMP/diagnostic-onboarding/route-debug-red-green.json" \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/ci-gate-report.json" \
+            --markdown-output "$RUNNER_TEMP/diagnostic-onboarding/ci-gate-report.md" \
+            --max-lint-findings 5 \
+            --max-conflict-clusters 4 \
+            --max-route-risk-flags 15 \
+            --min-route-candidates 3
+
+          skilleval diagnostic-pr-review-surface \
+            --gate-report "$RUNNER_TEMP/diagnostic-onboarding/ci-gate-report.json" \
+            --output "$RUNNER_TEMP/diagnostic-onboarding/pr-review-packet.json" \
+            --markdown-output "$RUNNER_TEMP/diagnostic-onboarding/pr-review-packet.md"
+
+          skilleval diagnostic-artifact-drift-check \
+            --expected docs/demo/diagnostic-onboarding \
+            --actual "$RUNNER_TEMP/diagnostic-onboarding" \
+            --output "$RUNNER_TEMP/diagnostic-artifact-drift.json" \
+            --markdown-output "$RUNNER_TEMP/diagnostic-artifact-drift.md"

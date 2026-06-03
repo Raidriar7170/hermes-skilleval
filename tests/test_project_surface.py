@@ -14,7 +14,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-skill-library-onboarding.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-demo-evidence-pack.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-ci-gate.html",
-    ROOT / "docs" / "human-briefs" / "2026-06-03-diagnostic-artifact-drift-check.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-03-diagnostic-artifact-drift-ci-workflow.html",
 ]
 
 
@@ -47,14 +47,29 @@ def test_ci_workflow_runs_diagnostic_ci_gate_from_committed_demo_artifacts():
     assert "--max-route-risk-flags 15" in workflow
     assert "--min-route-candidates 3" in workflow
     assert "git diff --exit-code docs/demo/diagnostic-onboarding" not in workflow
-    for command in [
-        "skilleval scan",
-        "skilleval lint",
-        "skilleval inspect",
-        "skilleval route",
-        "skilleval diagnostic-dashboard",
-    ]:
-        assert command not in workflow
+
+
+def test_ci_workflow_regenerates_diagnostic_demo_and_runs_artifact_drift_check():
+    workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "RUNNER_TEMP/diagnostic-onboarding" in workflow
+    assert "skilleval scan" in workflow
+    assert "skilleval lint" in workflow
+    assert "skilleval inspect" in workflow
+    assert "skilleval route" in workflow
+    assert "skilleval diagnostic-dashboard" in workflow
+    assert "skilleval diagnostic-ci-gate" in workflow
+    assert "skilleval diagnostic-pr-review-surface" in workflow
+    assert "skilleval diagnostic-artifact-drift-check" in workflow
+    assert '"$RUNNER_TEMP/diagnostic-onboarding/ci-gate-report.json"' in workflow
+    assert '"$RUNNER_TEMP/diagnostic-onboarding/ci-gate-report.md"' in workflow
+    assert '"$RUNNER_TEMP/diagnostic-onboarding/pr-review-packet.json"' in workflow
+    assert '"$RUNNER_TEMP/diagnostic-onboarding/pr-review-packet.md"' in workflow
+    assert "--expected docs/demo/diagnostic-onboarding" in workflow
+    assert '--actual "$RUNNER_TEMP/diagnostic-onboarding"' in workflow
+    assert '--output "$RUNNER_TEMP/diagnostic-artifact-drift.json"' in workflow
+    assert '--markdown-output "$RUNNER_TEMP/diagnostic-artifact-drift.md"' in workflow
+    assert "git diff --exit-code docs/demo/diagnostic-onboarding" not in workflow
 
 
 def test_readme_surfaces_live_dashboard_and_screenshot_near_key_results():
@@ -157,8 +172,9 @@ def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "365 passed" in combined
+    assert "366 passed" in combined
     for stale_count in [
+        "365 passed",
         "361 passed",
         "314 passed",
         "334 passed",
@@ -166,6 +182,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "344 passed",
         "346 passed",
         "| Test cases | 361 |",
+        "| Test cases | 365 |",
         "| Test cases | 314 |",
         "| Test cases | 346 |",
     ]:

@@ -66,8 +66,10 @@ def test_phase14_real_eval_artifacts_pass_hard_negative_guard():
 def test_readme_test_counts_match_verified_suite_size():
     readme = README.read_text(encoding="utf-8")
 
-    assert "| Test cases | 365 |" in readme
-    assert "365 passed" in readme
+    assert "| Test cases | 366 |" in readme
+    assert "366 passed" in readme
+    assert "| Test cases | 365 |" not in readme
+    assert "365 passed" not in readme
     assert "| Test cases | 361 |" not in readme
     assert "361 passed" not in readme
     assert "| Test cases | 354 |" not in readme

@@ -135,7 +135,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 365 |
+| Test cases | 366 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -284,7 +284,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `365 passed` and
+Expected: `366 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -304,7 +304,9 @@ already generated diagnostic artifacts; the PR review packet is a local
 reviewer-facing summary generated from that gate report. Use
 `skilleval diagnostic-artifact-drift-check` to compare committed and
 regenerated diagnostic demo artifacts while ignoring approved volatile fields
-such as `generated_at`.
+such as `generated_at`. The GitHub Actions validate workflow now regenerates
+the diagnostic onboarding demo into `$RUNNER_TEMP` and runs the same drift
+check with JSON and Markdown reports kept outside the repository checkout.
 
 Boundary: this is not GitHub API integration, not a Marketplace Action, not a
 PR annotation system, not SaaS, not a runtime MCP router, and not a headline
