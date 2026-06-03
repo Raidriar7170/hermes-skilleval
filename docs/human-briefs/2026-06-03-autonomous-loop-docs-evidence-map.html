@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - Docs Evidence Map</title>
+  <style>
+    body { margin: 0; font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2933; background: #f6f8fb; }
+    main { max-width: 960px; margin: 0 auto; padding: 34px 22px 54px; }
+    section { background: #fff; border: 1px solid #d9e1ec; border-radius: 8px; padding: 22px; margin: 16px 0; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { margin: 7px 0; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 5px; }
+    .status { display: inline-block; border: 1px solid #b7e4c7; background: #effaf3; color: #166534; border-radius: 999px; padding: 2px 10px; font-weight: 700; }
+    a { color: #0b57d0; }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>Autonomous Loop - Docs Evidence Map</h1>
+      <p><span class="status">completed</span></p>
+      <p><strong>一句话结论：</strong>本轮完成并归档 Docs Evidence Map，把 Hermes SkillEval 的 release、diagnostic、external validation、CI、OpenSpec 和 Human Brief 证据串成一个公开安全的导航层。</p>
+    </section>
+
+    <section>
+      <h2>停止原因</h2>
+      <p>本轮只执行一个 bounded OpenSpec phase；proposal、TDD、implementation、Reviewer fix、archive 和本地验证均已完成，随后按 opsx-auto 集成策略提交、合入 main、推送并检查远程 Validate。</p>
+    </section>
+
+    <section>
+      <h2>项目阶段进度</h2>
+      <ul>
+        <li><strong>当前目标：</strong>interview-ready / developer-facing routing reliability toolkit。</li>
+        <li><strong>来源：</strong><a href="../../README.md">README</a> recruiter path、<a href="../../CONTEXT.md">CONTEXT.md</a> 的 Diagnostic Onboarding Path 术语，以及 <a href="../evidence-map.md">docs/evidence-map.md</a>。</li>
+        <li><strong>本阶段推进：</strong>补上 reviewer navigation gap，让证据链从 README 直达 release gate、diagnostic packs、external validation pack、CI summary 和 OpenSpec specs。</li>
+        <li><strong>剩余缺口：</strong>Failure Gallery / BLOCK_MERGE 示例、真实第三方库采样、更多外部 blind task pack。Marketplace Action、PR comment bot、SaaS、runtime MCP router 仍不是当前范围。</li>
+        <li><strong>推荐下一步：</strong>若继续推进，优先做 Failure Gallery；否则项目已经适合进入面试讲解和简历材料使用。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>完成内容</h2>
+      <ul>
+        <li>新增 <a href="../evidence-map.md"><code>docs/evidence-map.md</code></a>，按 reviewer task 分组链接 committed evidence。</li>
+        <li>README 与 <code>docs/usage.md</code> 增加 evidence map 入口。</li>
+        <li>项目测试计数同步到 <code>381 passed</code> / <code>381 pytest cases</code>。</li>
+        <li>新增并归档 OpenSpec spec <a href="../../openspec/specs/docs-evidence-map/spec.md"><code>docs-evidence-map</code></a>。</li>
+        <li>Reviewer Must Fix 和 Should Fix 已处理：计数漂移修复、Human Brief 纳入 guard、evidence map 边界测试收紧。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证结果</h2>
+      <ul>
+        <li><code>python -m pytest -q tests/test_project_surface.py tests/test_phase14_artifacts.py tests/test_phase15_artifacts.py tests/test_phase16_artifacts.py</code>: PASS, 30 passed。</li>
+        <li><code>python -m pytest -q</code>: PASS, 381 passed。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: PASS, 7 passed / 0 failed；归档后无 active changes。</li>
+        <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: PASS, <code>Release reproducibility PASS</code>。</li>
+        <li><code>skilleval ci-summary</code>: PASS, <code>ALLOW_MERGE</code>，overclaim scan <code>PASS 0</code>。</li>
+        <li><code>git diff --check</code>: PASS。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>不要夸大的点</h2>
+      <ul>
+        <li>Evidence map 是 navigation layer, not a second source of truth。</li>
+        <li>它不改变 release-check、diagnostic、CI 或 routing 行为。</li>
+        <li>不声称 Marketplace Action、GitHub API PR comments、PR annotations、SaaS、runtime MCP router、SOTA、production readiness、release approval 或 automatic merge approval。</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

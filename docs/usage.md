@@ -3,6 +3,9 @@
 This page keeps the longer command walkthrough out of the README front door.
 For the current release conclusion and reviewer evidence, start from
 [`docs/release-handoff.md`](release-handoff.md).
+For local reviewer navigation across release, diagnostic, CI, OpenSpec, and
+Human Brief evidence, see [`docs/evidence-map.md`](evidence-map.md); it is a
+navigation layer, not a second source of truth, and not release approval.
 
 ## Installation
 
@@ -516,7 +519,7 @@ pytest -q
 Expected:
 
 ```text
-378 passed
+381 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack

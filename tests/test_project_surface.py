@@ -8,6 +8,7 @@ DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
 MIGRATION_PROTOCOL = ROOT / "docs" / "skill-library-migration-protocol.md"
 EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
 USAGE = ROOT / "docs" / "usage.md"
+EVIDENCE_MAP = ROOT / "docs" / "evidence-map.md"
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
@@ -18,6 +19,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-03-diagnostic-artifact-drift-ci-workflow.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-pr-facing-ci-summary.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-external-skill-library-validation-pack.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-03-docs-evidence-map.html",
 ]
 
 
@@ -184,6 +186,92 @@ def test_readme_keeps_quick_start_short_and_links_full_usage():
     assert "## 17. Run Tests" in usage
 
 
+def test_evidence_map_is_linked_from_public_entry_points():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+
+    assert "[`docs/evidence-map.md`](docs/evidence-map.md)" in readme
+    assert "[`docs/evidence-map.md`](evidence-map.md)" in usage
+    assert "# Hermes SkillEval Evidence Map" in evidence_map
+    assert "navigation layer, not a second source of truth" in evidence_map
+
+
+def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+
+    for heading in [
+        "## Project Positioning",
+        "## Release-Gate Evidence",
+        "## Diagnostic Onboarding Evidence",
+        "## External-Style Validation Evidence",
+        "## PR-Facing CI Evidence",
+        "## OpenSpec Specs",
+        "## Human Briefs",
+    ]:
+        assert heading in evidence_map
+
+    for required_path in [
+        "../README.md",
+        "release-handoff.md",
+        "demo/phase16-blind-validation/comparison.md",
+        "demo/phase17-calibrated-release-selector/release-decision.md",
+        "demo/phase18-ci-release-reproducibility/release-manifest.md",
+        "demo/diagnostic-onboarding/README.md",
+        "demo/external-skill-library-validation/README.md",
+        "../.github/workflows/validate.yml",
+        "../openspec/specs/pr-facing-ci-summary/spec.md",
+        "human-briefs/2026-06-03-autonomous-loop-external-skill-library-validation-pack.html",
+    ]:
+        assert f"]({required_path})" in evidence_map
+
+    for link in _markdown_links(evidence_map):
+        if link.startswith(("http://", "https://", "#")):
+            continue
+        target = (EVIDENCE_MAP.parent / link.split("#", 1)[0]).resolve()
+        assert target.exists(), f"broken evidence map link: {link}"
+
+
+def test_evidence_map_docs_are_bounded_and_do_not_overclaim():
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+    combined = "\n".join(
+        [
+            README.read_text(encoding="utf-8"),
+            USAGE.read_text(encoding="utf-8"),
+            evidence_map,
+        ]
+    )
+
+    for phrase in [
+        "not a Marketplace Action",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+    ]:
+        assert phrase in evidence_map
+        assert phrase in combined
+
+    for risky_claim in [
+        "released as a Marketplace Action",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "provides runtime MCP routing",
+        "SOTA benchmark",
+        "production-ready",
+        "proves production readiness",
+        "automatic merge approval enabled",
+        "approves the release",
+    ]:
+        assert risky_claim not in combined
+
+
 def test_diagnostic_ci_gate_surface_is_artifact_based_and_bounded():
     readme = README.read_text(encoding="utf-8")
     usage = USAGE.read_text(encoding="utf-8")
@@ -287,11 +375,13 @@ def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "378 passed" in combined
-    assert "378 pytest cases" in README.read_text(encoding="utf-8")
+    assert "381 passed" in combined
+    assert "381 pytest cases" in README.read_text(encoding="utf-8")
     for stale_count in [
+        "378 pytest cases",
         "372 pytest cases",
         "365 pytest cases",
+        "378 passed",
         "372 passed",
         "366 passed",
         "365 passed",
@@ -307,6 +397,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "| Test cases | 346 |",
         "| Test cases | 366 |",
         "| Test cases | 372 |",
+        "| Test cases | 378 |",
     ]:
         assert stale_count not in combined
 
@@ -318,3 +409,9 @@ def test_release_notes_are_reviewer_ready_and_conservative():
     assert "KEEP_BASELINE" in notes
     assert "baseline-minilm" in notes
     assert "SOTA" not in notes
+
+
+def _markdown_links(markdown: str) -> list[str]:
+    import re
+
+    return re.findall(r"\[[^\]]+\]\(([^)]+)\)", markdown)

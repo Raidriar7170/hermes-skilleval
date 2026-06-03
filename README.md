@@ -135,7 +135,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 378 |
+| Test cases | 381 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -255,7 +255,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 378 pytest cases
+├── tests/                              # 381 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -284,11 +284,15 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `378 passed` and
+Expected: `381 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
 For full CLI usage, see [`docs/usage.md`](docs/usage.md).
+For reviewer navigation across release, diagnostic, external validation, CI,
+OpenSpec, and Human Brief evidence, see
+[`docs/evidence-map.md`](docs/evidence-map.md). It is a navigation layer, not a
+second source of truth, and not release approval.
 
 ---
 
