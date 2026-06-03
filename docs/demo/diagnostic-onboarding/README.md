@@ -22,6 +22,8 @@ not a runtime MCP router, and not a SOTA claim.
 - `dashboard.html`: self-contained static diagnostic dashboard.
 - `ci-gate-report.json` and `ci-gate-report.md`: artifact-based CI validation
   report generated with explicit demo thresholds.
+- `pr-review-packet.json` and `pr-review-packet.md`: local reviewer-facing
+  diagnostic packet generated from the CI gate report.
 
 ## Regenerate
 
@@ -76,7 +78,15 @@ PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-ci-gate \
   --max-conflict-clusters 4 \
   --max-route-risk-flags 15 \
   --min-route-candidates 3
+
+PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-pr-review-surface \
+  --gate-report "$ROOT/ci-gate-report.json" \
+  --output "$ROOT/pr-review-packet.json" \
+  --markdown-output "$ROOT/pr-review-packet.md"
 ```
 
 The threshold values above match this intentionally noisy demo pack: five lint
 findings, four review-worthy conflict clusters, and fifteen route risk flags.
+The PR review packet is a local reading artifact only; it does not call the
+GitHub API, post PR comments, write annotations, publish a Marketplace Action,
+run a SaaS service, or act as a runtime MCP router.

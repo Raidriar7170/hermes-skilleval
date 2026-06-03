@@ -21,6 +21,7 @@ from hermes_skilleval.comparison import write_comparison_report
 from hermes_skilleval.dashboard import write_dashboard
 from hermes_skilleval.diagnostic_dashboard import write_diagnostic_dashboard
 from hermes_skilleval.diagnostic_ci_gate import run_diagnostic_ci_gate
+from hermes_skilleval.diagnostic_pr_review import write_diagnostic_pr_review_packet
 from hermes_skilleval.diagnostics import (
     write_inspect_artifact,
     write_lint_artifact,
@@ -218,6 +219,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="do not fail routed candidates that have no matched-term evidence",
     )
     diagnostic_ci_gate_parser.set_defaults(handler=_run_diagnostic_ci_gate)
+
+    diagnostic_pr_review_parser = subparsers.add_parser(
+        "diagnostic-pr-review-surface",
+        help="write a local PR review packet from a diagnostic CI gate report",
+    )
+    diagnostic_pr_review_parser.add_argument("--gate-report", required=True)
+    diagnostic_pr_review_parser.add_argument("--output", required=True)
+    diagnostic_pr_review_parser.add_argument("--markdown-output", required=True)
+    diagnostic_pr_review_parser.set_defaults(handler=_run_diagnostic_pr_review_surface)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -757,6 +767,15 @@ def _run_diagnostic_ci_gate(args: argparse.Namespace) -> None:
     print(f"Diagnostic CI gate {result['decision']}: {args.output}")
     if result["decision"] != "PASS":
         raise ValueError("diagnostic CI gate failed")
+
+
+def _run_diagnostic_pr_review_surface(args: argparse.Namespace) -> None:
+    packet = write_diagnostic_pr_review_packet(
+        gate_report_path=args.gate_report,
+        output_path=args.output,
+        markdown_output_path=args.markdown_output,
+    )
+    print(f"Diagnostic PR review packet {packet['decision']}: {args.output}")
 
 
 def _run_agent_loop(args: argparse.Namespace) -> None:

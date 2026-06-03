@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagnostic CI PR Review Surface Human Brief</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1b2433; background: #f7f8fb; }
+    main { max-width: 960px; margin: 0 auto; padding: 40px 24px 56px; }
+    section { background: #fff; border: 1px solid #dfe4ee; border-radius: 8px; padding: 22px; margin: 18px 0; }
+    h1 { font-size: 30px; margin: 0 0 10px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 0 0 12px; letter-spacing: 0; }
+    p, li { line-height: 1.65; font-size: 15px; }
+    code { background: #eef2f7; padding: 2px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #eef6ff; color: #075985; font-weight: 700; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Diagnostic CI PR Review Surface</h1>
+  <p><span class="status">archived</span></p>
+  <section>
+    <h2>一句话结论</h2>
+    <p>本阶段把 diagnostic CI gate 的 JSON 结果整理成可给 PR reviewer 阅读的本地 packet，但不接 GitHub API、不写 PR annotations、不发布 Marketplace Action。</p>
+  </section>
+  <section>
+    <h2>本阶段改动</h2>
+    <ul>
+      <li>新增 <code>skilleval diagnostic-pr-review-surface</code>，从 <code>diagnostic_ci_gate</code> report 生成 JSON/Markdown review packet。</li>
+      <li>新增 demo artifacts：<code>pr-review-packet.json</code> 与 <code>pr-review-packet.md</code>。</li>
+      <li>补充 README、usage docs、demo README，说明本地 review packet 的使用边界。</li>
+      <li>新增/扩展测试，保护 verdict source、bounded wording 和 committed demo artifact contract。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/diagnostic_pr_review.py</code></li>
+      <li><code>src/hermes_skilleval/cli.py</code></li>
+      <li><code>tests/test_diagnostic_pr_review.py</code></li>
+      <li><code>docs/demo/diagnostic-onboarding/pr-review-packet.md</code></li>
+      <li><code>openspec/changes/archive/2026-06-03-diagnostic-ci-pr-review-surface/</code></li>
+      <li><code>openspec/specs/diagnostic-pr-review-surface/spec.md</code></li>
+    </ul>
+  </section>
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_diagnostic_pr_review.py tests/test_cli_diagnostics.py tests/test_diagnostic_demo_artifacts.py tests/test_project_surface.py tests/test_diagnostic_ci_gate.py</code>: PASS, 27 passed.</li>
+      <li><code>python -m pytest -q</code>: PASS, 354 passed.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: PASS, Phase 18 release reproducibility preserved.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-ci-gate ...</code>: PASS against committed demo artifacts.</li>
+      <li><code>openspec validate --all --strict</code> and <code>git diff --check</code>: PASS.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>不要夸大的点</h2>
+    <ul>
+      <li>这不是 GitHub API integration，也不写 PR comments 或 annotations。</li>
+      <li>这不是 GitHub Marketplace Action release。</li>
+      <li>这不是 SaaS、runtime MCP router 或自动 merge 系统。</li>
+      <li>packet 中的风险项是 review-worthy diagnostic signals，不是 duplicate / unsafe / wrong 的最终裁决。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>下一步</h2>
+    <p>本阶段已归档。后续真正的 GitHub Action packaging 或 PR annotation 需要单独阶段和用户确认。</p>
+  </section>
+</main>
+</body>
+</html>

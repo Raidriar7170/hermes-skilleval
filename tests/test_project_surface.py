@@ -156,7 +156,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "347 passed" in combined
+    assert "354 passed" in combined
     for stale_count in [
         "314 passed",
         "334 passed",

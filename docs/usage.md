@@ -128,6 +128,25 @@ artifacts and writes the gate report to `$RUNNER_TEMP`. It does not regenerate
 the demo fixture or diff the diagnostic demo directory because the current
 diagnostic artifacts include `generated_at` timestamps.
 
+### Generate a local PR review packet
+
+`skilleval diagnostic-pr-review-surface` turns an existing diagnostic CI gate
+report into JSON and Markdown that a maintainer can review or paste into a pull
+request discussion:
+
+```bash
+skilleval diagnostic-pr-review-surface \
+  --gate-report runs/diagnostic/ci-gate-report.json \
+  --output runs/diagnostic/pr-review-packet.json \
+  --markdown-output runs/diagnostic/pr-review-packet.md
+```
+
+The packet uses the CI gate report as its verdict source and summarizes
+review-worthy lint findings, conflict clusters, route risk flags, evidence
+gaps, and source artifacts. It is a local review surface only: it does not call
+the GitHub API, post PR comments, write annotations, publish a Marketplace
+Action, run a SaaS service, or act as a runtime MCP router.
+
 ### Regenerate the committed diagnostic demo evidence pack
 
 The committed demo under `docs/demo/diagnostic-onboarding/` uses a small local
@@ -183,6 +202,11 @@ PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-ci-gate \
   --max-conflict-clusters 4 \
   --max-route-risk-flags 15 \
   --min-route-candidates 3
+
+PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-pr-review-surface \
+  --gate-report "$ROOT/ci-gate-report.json" \
+  --output "$ROOT/pr-review-packet.json" \
+  --markdown-output "$ROOT/pr-review-packet.md"
 ```
 
 The demo source intentionally includes nearby browser skills, nearby debugging
@@ -456,5 +480,5 @@ pytest -q
 Expected:
 
 ```text
-347 passed
+354 passed
 ```

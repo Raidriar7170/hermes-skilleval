@@ -26,6 +26,8 @@ def test_cli_diagnostic_front_door_smoke(tmp_path: Path):
     dashboard_path = tmp_path / "diagnostic-dashboard.html"
     gate_json_path = tmp_path / "diagnostic-ci-gate.json"
     gate_markdown_path = tmp_path / "diagnostic-ci-gate.md"
+    pr_review_json_path = tmp_path / "diagnostic-pr-review-packet.json"
+    pr_review_markdown_path = tmp_path / "diagnostic-pr-review-packet.md"
 
     assert main(["scan", str(skills), "--output", str(scan_path)]) == 0
     assert main(["lint", "--index", str(scan_path), "--output", str(lint_path)]) == 0
@@ -91,14 +93,34 @@ def test_cli_diagnostic_front_door_smoke(tmp_path: Path):
         )
         == 0
     )
+    assert (
+        main(
+            [
+                "diagnostic-pr-review-surface",
+                "--gate-report",
+                str(gate_json_path),
+                "--output",
+                str(pr_review_json_path),
+                "--markdown-output",
+                str(pr_review_markdown_path),
+            ]
+        )
+        == 0
+    )
 
     assert json.loads(scan_path.read_text(encoding="utf-8"))["artifact_type"] == "diagnostic_scan"
     assert json.loads(lint_path.read_text(encoding="utf-8"))["artifact_type"] == "diagnostic_lint"
     assert json.loads(inspect_path.read_text(encoding="utf-8"))["artifact_type"] == "diagnostic_inspect"
     assert json.loads(route_path.read_text(encoding="utf-8"))["artifact_type"] == "diagnostic_route"
     assert json.loads(gate_json_path.read_text(encoding="utf-8"))["artifact_type"] == "diagnostic_ci_gate"
+    assert (
+        json.loads(pr_review_json_path.read_text(encoding="utf-8"))["artifact_type"]
+        == "diagnostic_pr_review_packet"
+    )
     assert "Diagnostic Skill Library Dashboard" in dashboard_path.read_text(encoding="utf-8")
     assert "artifact-based CI validation" in gate_markdown_path.read_text(encoding="utf-8")
+    assert "Diagnostic PR Review Packet" in pr_review_markdown_path.read_text(encoding="utf-8")
+    assert "not GitHub API integration" in pr_review_markdown_path.read_text(encoding="utf-8")
 
 
 def test_cli_diagnostic_commands_require_explicit_outputs(tmp_path: Path):

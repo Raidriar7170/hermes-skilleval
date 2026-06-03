@@ -132,6 +132,52 @@ def test_diagnostic_demo_ci_gate_reports_are_committed_and_bounded():
     assert "not a SOTA claim" in markdown
 
 
+def test_diagnostic_demo_pr_review_packet_is_committed_and_bounded():
+    packet = _read_json(DEMO_DIR / "pr-review-packet.json")
+    markdown = (DEMO_DIR / "pr-review-packet.md").read_text(encoding="utf-8")
+
+    assert packet["artifact_type"] == "diagnostic_pr_review_packet"
+    assert packet["schema_version"] == SCHEMA_VERSION
+    assert packet["decision"] == "PASS"
+    assert packet["verdict_source"]["artifact_type"] == "diagnostic_ci_gate"
+    assert Path(packet["verdict_source"]["path"]).name == "ci-gate-report.json"
+    assert packet["policy_status"] == "passed"
+    assert packet["summary"] == {
+        "conflict_cluster_count": 4,
+        "lint_finding_count": 5,
+        "missing_route_evidence_count": 0,
+        "route_count": 2,
+        "route_risk_flag_count": 15,
+        "skill_count": 5,
+    }
+    assert packet["source_artifacts"]["scan"] == "docs/demo/diagnostic-onboarding/scan.json"
+    assert {Path(route).name for route in packet["source_artifacts"]["routes"]} == {
+        "route-browser-smoke.json",
+        "route-debug-red-green.json",
+    }
+    assert packet["evidence_gaps"] == []
+    assert any(item["code"] == "review_worthy_route_risks" for item in packet["attention_items"])
+
+    assert "# Diagnostic PR Review Packet" in markdown
+    assert "Decision: `PASS`" in markdown
+    assert "review-worthy diagnostic signals" in markdown
+    assert "not GitHub API integration" in markdown
+    assert "not a PR annotation system" in markdown
+    assert "not a Marketplace Action" in markdown
+    assert "not SaaS" in markdown
+    assert "not a runtime MCP router" in markdown
+    assert "not a SOTA claim" in markdown
+    for risky_phrase in [
+        "calls the GitHub API",
+        "writes PR annotations",
+        "released as a Marketplace Action",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark",
+    ]:
+        assert risky_phrase not in markdown
+
+
 def test_diagnostic_demo_dashboard_is_self_contained_and_bounded():
     html = (DEMO_DIR / "dashboard.html").read_text(encoding="utf-8")
     reviewed_paths = sorted(
