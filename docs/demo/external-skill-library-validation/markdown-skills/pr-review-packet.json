@@ -1,0 +1,68 @@
+{
+  "artifact_type": "diagnostic_pr_review_packet",
+  "attention_items": [
+    {
+      "code": "review_worthy_conflict_clusters",
+      "count": 1,
+      "kind": "review_signal",
+      "message": "Conflict clusters are review-worthy diagnostic signals."
+    },
+    {
+      "code": "review_worthy_route_risks",
+      "count": 4,
+      "kind": "review_signal",
+      "message": "Route risk flags are review-worthy diagnostic signals."
+    }
+  ],
+  "boundaries": [
+    "Local reviewer-facing diagnostic evidence only; not GitHub API integration.",
+    "not a PR annotation system.",
+    "not a Marketplace Action.",
+    "not SaaS.",
+    "not a runtime MCP router.",
+    "not a SOTA claim."
+  ],
+  "decision": "PASS",
+  "evidence_gaps": [],
+  "generated_at": "2026-06-03T10:53:06+00:00",
+  "policy_status": "passed",
+  "route_reports": [
+    {
+      "candidate_count": 2,
+      "missing_evidence_count": 0,
+      "path": "docs/demo/external-skill-library-validation/markdown-skills/route-release-note-review.json",
+      "query": "review release notes for evidence boundaries and non-goals",
+      "risk_flag_count": 2
+    },
+    {
+      "candidate_count": 2,
+      "missing_evidence_count": 0,
+      "path": "docs/demo/external-skill-library-validation/markdown-skills/route-workflow-evidence.json",
+      "query": "audit validation workflow evidence before a maintainer review",
+      "risk_flag_count": 2
+    }
+  ],
+  "schema_version": "diagnostic.v1",
+  "source_artifacts": {
+    "inspect": "docs/demo/external-skill-library-validation/markdown-skills/inspect.json",
+    "lint": "docs/demo/external-skill-library-validation/markdown-skills/lint.json",
+    "routes": [
+      "docs/demo/external-skill-library-validation/markdown-skills/route-release-note-review.json",
+      "docs/demo/external-skill-library-validation/markdown-skills/route-workflow-evidence.json"
+    ],
+    "scan": "docs/demo/external-skill-library-validation/markdown-skills/scan.json"
+  },
+  "summary": {
+    "conflict_cluster_count": 1,
+    "lint_finding_count": 0,
+    "missing_route_evidence_count": 0,
+    "route_count": 2,
+    "route_risk_flag_count": 4,
+    "skill_count": 2
+  },
+  "verdict_source": {
+    "artifact_type": "diagnostic_ci_gate",
+    "decision": "PASS",
+    "path": "docs/demo/external-skill-library-validation/markdown-skills/ci-gate-report.json"
+  }
+}

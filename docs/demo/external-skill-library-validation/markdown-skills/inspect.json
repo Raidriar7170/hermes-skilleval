@@ -1,0 +1,63 @@
+{
+  "artifact_type": "diagnostic_inspect",
+  "clusters": [
+    {
+      "cluster_id": "risk-cluster-001",
+      "evidence_terms": [
+        "evidence",
+        "review",
+        "validation"
+      ],
+      "involved_skills": [
+        "release-note-review",
+        "workflow-evidence-audit"
+      ],
+      "risk_level": "review",
+      "signals": [
+        {
+          "detail": "Skills share routing terms that may attract similar queries.",
+          "evidence_terms": [
+            "evidence",
+            "review",
+            "validation"
+          ],
+          "type": "token_overlap"
+        },
+        {
+          "detail": "Extracted trigger terms overlap.",
+          "evidence_terms": [
+            "evidence",
+            "review",
+            "validation"
+          ],
+          "type": "trigger_term_overlap"
+        },
+        {
+          "detail": "Skills sit in the same category.",
+          "evidence_terms": [
+            "review"
+          ],
+          "type": "category_proximity"
+        },
+        {
+          "detail": "Skills co-appear in local diagnostic route probes.",
+          "evidence_terms": [
+            "evidence",
+            "review",
+            "validation"
+          ],
+          "type": "route_coappearance"
+        }
+      ],
+      "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."
+    }
+  ],
+  "generated_at": "2026-06-03T10:53:06+00:00",
+  "index_path": "docs/demo/external-skill-library-validation/markdown-skills/scan.json",
+  "schema_version": "diagnostic.v1",
+  "summary": {
+    "cluster_count": 1,
+    "skill_count": 2
+  },
+  "tone": "review-worthy risk signals only"
+}

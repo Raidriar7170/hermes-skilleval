@@ -516,16 +516,54 @@ pytest -q
 Expected:
 
 ```text
-372 passed
+378 passed
 ```
 
-## 18. Simulate the PR-facing CI Summary Locally
+## 18. Regenerate the External Skill Library Validation Pack
+
+The committed external pack under
+`docs/demo/external-skill-library-validation/` exercises two external-style
+source tracks: Markdown `SKILL.md` folders and an MCP-style tool schema JSON.
+It is local diagnostic evidence only: not a Marketplace Action, not GitHub API PR
+comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim,
+not benchmark status, not production readiness, and not release approval.
+
+Run the full regeneration commands from
+[`docs/demo/external-skill-library-validation/README.md`](demo/external-skill-library-validation/README.md),
+or use the same pattern in CI: write outputs outside the checkout and compare
+them with the committed pack. The snippet below is the drift-check closeout,
+not the complete regeneration script.
+
+```bash
+ROOT=docs/demo/external-skill-library-validation
+TMP_ROOT="${TMPDIR:-/tmp}/external-skill-library-validation"
+rm -rf "$TMP_ROOT"
+mkdir -p "$TMP_ROOT/markdown-skills" "$TMP_ROOT/mcp-tool-schema"
+
+# Regenerate both tracks with the commands in "$ROOT/README.md".
+
+skilleval diagnostic-artifact-drift-check \
+  --expected "$ROOT" \
+  --actual "$TMP_ROOT" \
+  --output "$TMP_ROOT/drift-report.json" \
+  --markdown-output "$TMP_ROOT/drift-report.md"
+```
+
+The validate workflow performs this regeneration under
+`$RUNNER_TEMP/external-skill-library-validation`, runs each track's diagnostic
+CI gate, runs the drift check, uploads the regenerated artifacts, and passes
+the outcome to the PR-facing CI summary as `external-pack`.
+
+## 19. Simulate the PR-facing CI Summary Locally
 
 ```bash
 TMP_ROOT="${TMPDIR:-/tmp}/diagnostic-onboarding"
+EXTERNAL_TMP_ROOT="${TMPDIR:-/tmp}/external-skill-library-validation"
 
 # First run the diagnostic regeneration and drift-check flow above so
 # "$TMP_ROOT/diagnostic-artifact-drift.json" exists.
+# Also run the external validation pack flow so
+# "$EXTERNAL_TMP_ROOT/drift-report.json" exists.
 {
   git diff --name-only HEAD || true
   git ls-files --others --exclude-standard
@@ -537,6 +575,7 @@ skilleval ci-summary \
   --check release-check=success \
   --check diagnostic-gate=success \
   --check diagnostic-drift=success \
+  --check external-pack=success \
   --changed-files /tmp/hermes-changed-files.txt \
   --release-check docs/demo/phase18-ci-release-reproducibility/release-check-summary.json \
   --diagnostic-gate docs/demo/diagnostic-onboarding/ci-gate-report.json \

@@ -1,0 +1,48 @@
+{
+  "artifact_type": "diagnostic_ci_gate",
+  "decision": "PASS",
+  "failed_policies": [],
+  "generated_at": "2026-06-03T10:53:06+00:00",
+  "inputs": {
+    "inspect": "docs/demo/external-skill-library-validation/mcp-tool-schema/inspect.json",
+    "lint": "docs/demo/external-skill-library-validation/mcp-tool-schema/lint.json",
+    "routes": [
+      "docs/demo/external-skill-library-validation/mcp-tool-schema/route-browser-console.json",
+      "docs/demo/external-skill-library-validation/mcp-tool-schema/route-artifact-drift.json"
+    ],
+    "scan": "docs/demo/external-skill-library-validation/mcp-tool-schema/scan.json"
+  },
+  "policy": {
+    "max_conflict_clusters": 4,
+    "max_lint_findings": 4,
+    "max_route_risk_flags": 20,
+    "min_route_candidates": 2,
+    "require_route_evidence": true
+  },
+  "route_reports": [
+    {
+      "candidate_count": 2,
+      "missing_evidence_count": 0,
+      "path": "docs/demo/external-skill-library-validation/mcp-tool-schema/route-browser-console.json",
+      "query": "capture browser console diagnostics for a local maintainer page",
+      "risk_flag_count": 2
+    },
+    {
+      "candidate_count": 2,
+      "missing_evidence_count": 0,
+      "path": "docs/demo/external-skill-library-validation/mcp-tool-schema/route-artifact-drift.json",
+      "query": "inspect semantic artifact drift between expected and regenerated reports",
+      "risk_flag_count": 2
+    }
+  ],
+  "schema_version": "diagnostic.v1",
+  "scope": "local artifact validation for diagnostic skill-library CI",
+  "summary": {
+    "conflict_cluster_count": 1,
+    "lint_finding_count": 0,
+    "missing_route_evidence_count": 0,
+    "route_count": 2,
+    "route_risk_flag_count": 4,
+    "skill_count": 2
+  }
+}

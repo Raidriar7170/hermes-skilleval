@@ -204,7 +204,9 @@ def _group_for_path(path: str) -> str:
         return "source"
     if path.startswith("tests/"):
         return "tests"
-    if path.startswith("docs/demo/diagnostic-onboarding"):
+    if path.startswith("docs/demo/diagnostic-onboarding") or path.startswith(
+        "docs/demo/external-skill-library-validation"
+    ):
         return "diagnostics"
     if path.startswith("openspec/"):
         return "openspec"

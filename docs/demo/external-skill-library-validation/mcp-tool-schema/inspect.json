@@ -1,0 +1,67 @@
+{
+  "artifact_type": "diagnostic_inspect",
+  "clusters": [
+    {
+      "cluster_id": "risk-cluster-001",
+      "evidence_terms": [
+        "diagnostic",
+        "maintainer",
+        "mcp-tool",
+        "report",
+        "string"
+      ],
+      "involved_skills": [
+        "capture_browser_console",
+        "inspect_artifact_drift"
+      ],
+      "risk_level": "review",
+      "signals": [
+        {
+          "detail": "Skills share routing terms that may attract similar queries.",
+          "evidence_terms": [
+            "diagnostic",
+            "maintainer",
+            "mcp-tool",
+            "report",
+            "string"
+          ],
+          "type": "token_overlap"
+        },
+        {
+          "detail": "Extracted trigger terms overlap.",
+          "evidence_terms": [
+            "diagnostic"
+          ],
+          "type": "trigger_term_overlap"
+        },
+        {
+          "detail": "Skills sit in the same category.",
+          "evidence_terms": [
+            "mcp-tool"
+          ],
+          "type": "category_proximity"
+        },
+        {
+          "detail": "Skills co-appear in local diagnostic route probes.",
+          "evidence_terms": [
+            "diagnostic",
+            "maintainer",
+            "mcp-tool",
+            "report",
+            "string"
+          ],
+          "type": "route_coappearance"
+        }
+      ],
+      "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."
+    }
+  ],
+  "generated_at": "2026-06-03T10:53:06+00:00",
+  "index_path": "docs/demo/external-skill-library-validation/mcp-tool-schema/scan.json",
+  "schema_version": "diagnostic.v1",
+  "summary": {
+    "cluster_count": 1,
+    "skill_count": 2
+  },
+  "tone": "review-worthy risk signals only"
+}

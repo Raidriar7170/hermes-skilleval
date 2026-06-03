@@ -1,0 +1,47 @@
+{
+  "server": {
+    "name": "local-maintainer-diagnostics",
+    "tools": [
+      {
+        "name": "capture_browser_console",
+        "description": "Use when capturing browser console diagnostics for a local maintainer page. Do not use for hosted monitoring or PR annotation delivery.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "page_url": {
+              "type": "string",
+              "description": "Local page URL used for console diagnostic capture."
+            },
+            "report_path": {
+              "type": "string",
+              "description": "Repo-local diagnostic report path for maintainer review."
+            }
+          },
+          "required": ["page_url", "report_path"]
+        }
+      },
+      {
+        "name": "inspect_artifact_drift",
+        "description": "Use when inspecting semantic artifact drift between expected and regenerated diagnostic reports. Do not use for release approval.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "expected_report": {
+              "type": "string",
+              "description": "Expected diagnostic artifact or report path."
+            },
+            "regenerated_report": {
+              "type": "string",
+              "description": "Regenerated diagnostic artifact or report path."
+            },
+            "maintainer_note": {
+              "type": "string",
+              "description": "Short maintainer review note about drift evidence."
+            }
+          },
+          "required": ["expected_report", "regenerated_report"]
+        }
+      }
+    ]
+  }
+}

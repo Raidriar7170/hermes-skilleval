@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - External Skill Library Validation Pack</title>
+  <style>
+    body { margin: 0; font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2933; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 22px 56px; }
+    section { background: #fff; border: 1px solid #d9e1ec; border-radius: 8px; padding: 22px; margin: 16px 0; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { margin: 7px 0; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 5px; }
+    .status { display: inline-block; border: 1px solid #b7e4c7; background: #effaf3; color: #166534; border-radius: 999px; padding: 2px 10px; font-weight: 700; }
+    a { color: #0b57d0; }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>Autonomous Loop - External Skill Library Validation Pack</h1>
+      <p><span class="status">completed</span></p>
+      <p><strong>一句话结论：</strong>本轮完成并归档 External Skill Library Validation Pack，把 diagnostic evidence 从单一本地 demo 扩展到 Markdown skills 与 MCP tool schema 两种 external-style source track，并接入 validate workflow 与 PR-facing CI summary。</p>
+    </section>
+
+    <section>
+      <h2>停止原因</h2>
+      <p>本轮只执行一个明确授权的 OpenSpec phase；proposal、apply、Reviewer fix、archive 和本地验证均已完成，随后按 opsx-auto 集成策略进行提交、推送与远程 Validate 检查。</p>
+    </section>
+
+    <section>
+      <h2>项目阶段进度</h2>
+      <ul>
+        <li><strong>当前目标：</strong>interview-ready / developer-facing routing reliability toolkit。</li>
+        <li><strong>来源：</strong><a href="../../README.md">README</a> 的 recruiter review path 与 <a href="../../CONTEXT.md">CONTEXT.md</a> 的 Diagnostic Onboarding Path / Skill Library Maintainer 术语。</li>
+        <li><strong>本阶段推进：</strong>补上 external-style library evidence gap，使 diagnostic scan/lint/inspect/route/gate/drift/summary 不只停留在内置 demo fixture。</li>
+        <li><strong>剩余缺口：</strong>真实第三方库采样、更多外部 blind task pack、docs evidence map polish；Marketplace Action、PR comment bot、SaaS、runtime MCP router 仍是明确非目标。</li>
+        <li><strong>推荐下一步：</strong>做 Docs Evidence Map 或 Failure Gallery；若要进入真实第三方库采样，应再开独立 OpenSpec change。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>完成内容</h2>
+      <ul>
+        <li>新增 <a href="../demo/external-skill-library-validation/README.md"><code>docs/demo/external-skill-library-validation/</code></a>，包含 Markdown 与 MCP 两条 source track 的 committed artifacts。</li>
+        <li>扩展 <code>diagnostic_artifact_drift</code> 支持 external pack 嵌套 artifact list。</li>
+        <li>扩展 <code>ci_summary</code> changed-file grouping，并把 <code>external-pack</code> 纳入 validate workflow summary checks。</li>
+        <li>更新 README、<code>docs/usage.md</code>、tests、workflow 和 OpenSpec specs。</li>
+        <li>归档 OpenSpec change 到 <a href="../../openspec/changes/archive/2026-06-03-external-skill-library-validation-pack/proposal.md"><code>openspec/changes/archive/2026-06-03-external-skill-library-validation-pack/</code></a>。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>验证结果</h2>
+      <ul>
+        <li><code>python -m pytest -q tests/test_external_skill_library_validation_pack.py tests/test_ci_summary.py tests/test_diagnostic_artifact_drift.py tests/test_project_surface.py tests/test_cli_diagnostics.py tests/test_diagnostic_demo_artifacts.py</code>: PASS, 44 passed。</li>
+        <li><code>python -m pytest -q</code>: PASS, 378 passed。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: PASS, 6 passed / 0 failed；归档后无 active changes。</li>
+        <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: PASS, <code>Release reproducibility PASS</code>。</li>
+        <li>Diagnostic onboarding drift check: PASS, <code>drift_count=0</code>。</li>
+        <li>External pack drift check: PASS, <code>compared_count=16</code>, <code>drift_count=0</code>。</li>
+        <li><code>skilleval ci-summary</code>: PASS, <code>ALLOW_MERGE</code>, overclaim scan <code>PASS 0</code>。</li>
+        <li><code>git diff --check</code>: PASS。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Review 和集成状态</h2>
+      <ul>
+        <li>Explorer: read-only code map completed。</li>
+        <li>Worker: implementation, TDD, artifacts, docs, CI wiring completed。</li>
+        <li>Reviewer verdict: Pass with small follow-up fixes；Must Fix 无，Should Fix 已处理。</li>
+        <li>Auto integration: 本报告生成时验证已通过；随后执行 stage、commit、merge to main、push，并在最终回复记录 commit / push / remote Validate 结果。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>不要夸大的点</h2>
+      <ul>
+        <li>这是 committed fixture pack，不是 live external repo ingestion。</li>
+        <li>不声称 Marketplace Action、GitHub API PR comments、PR annotations、SaaS、runtime MCP router、SOTA、production readiness 或 release approval。</li>
+        <li>External pack 证明的是 public-safe external-style source shapes 的本地诊断链，不代表覆盖所有真实平台。</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

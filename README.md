@@ -135,7 +135,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 372 |
+| Test cases | 378 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -255,7 +255,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 365 pytest cases
+├── tests/                              # 378 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -284,7 +284,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `372 passed` and
+Expected: `378 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -313,12 +313,42 @@ PR annotation system, not SaaS, not a runtime MCP router, and not a headline
 performance claim. Full regeneration, drift-check, gate, and review packet
 commands live in [`docs/usage.md`](docs/usage.md).
 
+### External Skill Library Validation Pack
+
+[`docs/demo/external-skill-library-validation/`](docs/demo/external-skill-library-validation/)
+extends the diagnostic evidence path to external-style source shapes. It has
+two committed source tracks: Markdown `SKILL.md` folders under
+`source/markdown-skills/` and an MCP-style tool schema at
+`source/mcp-tool-schema/tools.json`. Each track includes regenerated scan,
+lint, inspect, route, dashboard, CI gate, and local PR review packet artifacts.
+
+Local simulation writes regenerated artifacts outside the checkout and compares
+them back to the committed pack. The snippet below is the drift-check closeout;
+the full regeneration commands live in the pack README:
+
+```bash
+ROOT=docs/demo/external-skill-library-validation
+TMP_ROOT="${TMPDIR:-/tmp}/external-skill-library-validation"
+# Regenerate both tracks with the commands in "$ROOT/README.md", then:
+skilleval diagnostic-artifact-drift-check \
+  --expected "$ROOT" \
+  --actual "$TMP_ROOT" \
+  --output "$TMP_ROOT/drift-report.json" \
+  --markdown-output "$TMP_ROOT/drift-report.md"
+```
+
+Boundary: this is local diagnostic evidence only, not a Marketplace Action, not
+GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router,
+not a SOTA claim, not benchmark status, not production readiness, and not
+release approval.
+
 ### PR-facing CI Summary
 
 `skilleval ci-summary` writes a local/GitHub Actions summary from explicit
 check outcomes, changed files, committed report paths, and an overclaim scan.
 The validate workflow appends the Markdown to `$GITHUB_STEP_SUMMARY` and then
-enforces the JSON decision as `ALLOW_MERGE` or `BLOCK_MERGE`.
+enforces the JSON decision as `ALLOW_MERGE` or `BLOCK_MERGE`. The external
+validation pack is passed as an explicit `external-pack` check outcome.
 
 Boundary: this is not a GitHub API comment bot, not a PR annotation system,
 not a Marketplace Action, not SaaS, not a runtime MCP router, not a SOTA claim,

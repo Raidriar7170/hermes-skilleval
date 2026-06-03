@@ -30,6 +30,24 @@ DEFAULT_DEMO_ARTIFACTS = (
     "ci-gate-report.json",
     "pr-review-packet.json",
 )
+EXTERNAL_VALIDATION_PACK_ARTIFACTS = (
+    "markdown-skills/scan.json",
+    "markdown-skills/lint.json",
+    "markdown-skills/inspect.json",
+    "markdown-skills/route-release-note-review.json",
+    "markdown-skills/route-workflow-evidence.json",
+    "markdown-skills/dashboard.html",
+    "markdown-skills/ci-gate-report.json",
+    "markdown-skills/pr-review-packet.json",
+    "mcp-tool-schema/scan.json",
+    "mcp-tool-schema/lint.json",
+    "mcp-tool-schema/inspect.json",
+    "mcp-tool-schema/route-browser-console.json",
+    "mcp-tool-schema/route-artifact-drift.json",
+    "mcp-tool-schema/dashboard.html",
+    "mcp-tool-schema/ci-gate-report.json",
+    "mcp-tool-schema/pr-review-packet.json",
+)
 
 
 def compare_diagnostic_artifacts(
@@ -79,7 +97,7 @@ def _artifact_pairs(expected: Path, actual: Path) -> list[tuple[str, Path, Path]
         if not expected.is_dir() or not actual.is_dir():
             raise ValueError("expected and actual must both be directories or both be files")
         pairs = []
-        for artifact in DEFAULT_DEMO_ARTIFACTS:
+        for artifact in _directory_artifact_list(expected, actual):
             expected_item = expected / artifact
             actual_item = actual / artifact
             _require_file(expected_item)
@@ -90,6 +108,21 @@ def _artifact_pairs(expected: Path, actual: Path) -> list[tuple[str, Path, Path]
     _require_file(expected)
     _require_file(actual)
     return [(expected.name, expected, actual)]
+
+
+def _directory_artifact_list(expected: Path, actual: Path) -> tuple[str, ...]:
+    if _looks_like_external_validation_pack(expected) or _looks_like_external_validation_pack(actual):
+        return EXTERNAL_VALIDATION_PACK_ARTIFACTS
+    return DEFAULT_DEMO_ARTIFACTS
+
+
+def _looks_like_external_validation_pack(path: Path) -> bool:
+    return (
+        (path / "source" / "markdown-skills").exists()
+        or (path / "source" / "mcp-tool-schema" / "tools.json").exists()
+        or (path / "markdown-skills" / "scan.json").exists()
+        or (path / "mcp-tool-schema" / "scan.json").exists()
+    )
 
 
 def _compare_pair(name: str, expected_path: Path, actual_path: Path) -> dict[str, Any]:

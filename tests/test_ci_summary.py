@@ -13,6 +13,7 @@ def test_ci_summary_allows_merge_when_required_checks_pass(tmp_path: Path):
                 "src/hermes_skilleval/ci_summary.py",
                 "tests/test_ci_summary.py",
                 "docs/demo/diagnostic-onboarding/scan.json",
+                "docs/demo/external-skill-library-validation/markdown-skills/scan.json",
                 "openspec/changes/pr-facing-ci-summary/specs/pr-facing-ci-summary/spec.md",
                 "README.md",
                 "benchmarks/tasks/example/task.yaml",
@@ -37,6 +38,7 @@ def test_ci_summary_allows_merge_when_required_checks_pass(tmp_path: Path):
             ("release-check", "SUCCESS"),
             ("diagnostic-gate", "pass"),
             ("diagnostic-drift", "skipped_optional"),
+            ("external-pack", "success"),
         ],
         changed_files_path=changed_files,
         release_check_path=tmp_path / "release-check-summary.json",
@@ -59,7 +61,8 @@ def test_ci_summary_allows_merge_when_required_checks_pass(tmp_path: Path):
     ]
     assert summary["changed_files"]["groups"]["tests"] == ["tests/test_ci_summary.py"]
     assert summary["changed_files"]["groups"]["diagnostics"] == [
-        "docs/demo/diagnostic-onboarding/scan.json"
+        "docs/demo/diagnostic-onboarding/scan.json",
+        "docs/demo/external-skill-library-validation/markdown-skills/scan.json",
     ]
     assert summary["changed_files"]["groups"]["openspec"] == [
         "openspec/changes/pr-facing-ci-summary/specs/pr-facing-ci-summary/spec.md"
@@ -77,6 +80,7 @@ def test_ci_summary_allows_merge_when_required_checks_pass(tmp_path: Path):
     assert "not a GitHub API comment bot" in rendered
     assert "not release approval" in rendered
     assert "| pytest | PASS | success |" in rendered
+    assert "| external-pack | PASS | success |" in rendered
     assert "## Changed Files" in rendered
 
 

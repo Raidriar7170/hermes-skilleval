@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>External Skill Library Validation Pack - Human Brief</title>
+  <style>
+    body { margin: 0; font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2933; background: #f6f8fb; }
+    main { max-width: 960px; margin: 0 auto; padding: 36px 22px 52px; }
+    .panel { background: #fff; border: 1px solid #d9e1ec; border-radius: 8px; padding: 22px; margin: 16px 0; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+    p, li { margin: 7px 0; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 5px; }
+    .status { display: inline-block; border: 1px solid #b8d4f8; background: #eef6ff; color: #075985; border-radius: 999px; padding: 2px 10px; font-weight: 700; }
+    a { color: #0b57d0; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="panel">
+      <h1>External Skill Library Validation Pack</h1>
+      <p><span class="status">archived</span></p>
+      <p><strong>一句话结论：</strong>本阶段把 diagnostic onboarding 从单一本地 Markdown demo 扩展为一个 external-style evidence pack，覆盖 Markdown skills 与 MCP tool schema 两条 source track，并接入 drift check、validate workflow 与 PR-facing CI summary。</p>
+    </div>
+
+    <section class="panel">
+      <h2>本阶段改动</h2>
+      <ul>
+        <li>新增 <a href="../demo/external-skill-library-validation/README.md"><code>docs/demo/external-skill-library-validation/</code></a>，包含 source fixtures 与两条 track 的 scan、lint、inspect、route、dashboard、CI gate、PR review packet artifacts。</li>
+        <li>扩展 <code>diagnostic_artifact_drift</code> 的目录 artifact list，使它能比较 external pack 的嵌套 artifacts。</li>
+        <li>更新 <code>ci_summary</code> changed-file grouping，把 external pack 路径归入 diagnostics，并覆盖 <code>external-pack</code> check outcome。</li>
+        <li>更新 validate workflow：在 <code>$RUNNER_TEMP</code> 再生成 external pack、运行 gate 与 drift check、上传 artifacts，并将 outcome 传给 <code>skilleval ci-summary</code>。</li>
+        <li>更新 README 与 <code>docs/usage.md</code>，说明本地模拟命令和明确非目标。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>关键文件</h2>
+      <ul>
+        <li><a href="../../openspec/changes/external-skill-library-validation-pack/proposal.md">OpenSpec proposal</a></li>
+        <li><a href="../../openspec/changes/external-skill-library-validation-pack/design.md">OpenSpec design</a></li>
+        <li><a href="../../openspec/changes/external-skill-library-validation-pack/tasks.md">OpenSpec tasks</a></li>
+        <li><a href="../../tests/test_external_skill_library_validation_pack.py">external pack tests</a></li>
+        <li><a href="../../tests/test_ci_summary.py">CI summary tests</a></li>
+        <li><a href="../../tests/test_project_surface.py">workflow/docs surface tests</a></li>
+        <li><a href="../../.github/workflows/validate.yml">validate workflow</a></li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>验证状态</h2>
+      <ul>
+        <li><code>pytest -q tests/test_external_skill_library_validation_pack.py tests/test_ci_summary.py tests/test_diagnostic_artifact_drift.py tests/test_project_surface.py tests/test_cli_diagnostics.py tests/test_diagnostic_demo_artifacts.py</code>: PASS, 44 passed。</li>
+        <li><code>python -m pytest -q</code>: PASS, 378 passed。</li>
+        <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: PASS, 6 passed / 0 failed。</li>
+        <li><code>skilleval release-check</code>: PASS, release reproducibility preserved。</li>
+        <li><code>skilleval diagnostic-artifact-drift-check</code>: diagnostic onboarding PASS, <code>compared_count=8</code>, <code>drift_count=0</code>；external pack PASS, <code>compared_count=16</code>, <code>drift_count=0</code>。</li>
+        <li><code>skilleval ci-summary</code>: PASS, <code>ALLOW_MERGE</code> with 6 checks including <code>external-pack</code>。</li>
+        <li><code>git diff --check</code>: PASS。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>不要夸大的点</h2>
+      <ul>
+        <li>这是本地 diagnostic evidence pack，不是 Marketplace Action。</li>
+        <li>不产生 GitHub API PR comments，不写 PR annotations，不是 SaaS。</li>
+        <li>不是 runtime MCP router，不是 SOTA claim，不是 benchmark status，不代表 production readiness，也不是 release approval。</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>推荐下一步</h2>
+      <p>OpenSpec change 已完成实现、Reviewer 审查、归档和本地验证；下一步是按 opsx-auto 集成策略提交并推送，然后检查远程 Validate workflow。</p>
+    </section>
+  </main>
+</body>
+</html>

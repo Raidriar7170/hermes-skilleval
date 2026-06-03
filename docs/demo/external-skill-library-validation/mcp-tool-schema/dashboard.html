@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagnostic Skill Library Dashboard</title>
+  <style>
+    :root { color-scheme: light; --ink: #18212f; --muted: #5a6575; --line: #d9e0ea; --panel: #f7f9fb; --accent: #0f766e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #fff; line-height: 1.55; }
+    main { max-width: 1080px; margin: 0 auto; padding: 40px 24px 64px; }
+    header { border-bottom: 1px solid var(--line); margin-bottom: 28px; padding-bottom: 18px; }
+    .eyebrow { color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+    h1 { font-size: 32px; margin: 0; letter-spacing: 0; }
+    h2 { font-size: 20px; margin: 28px 0 12px; letter-spacing: 0; }
+    h3 { margin: 0 0 8px; font-size: 16px; letter-spacing: 0; }
+    .subhead { color: var(--muted); margin: 8px 0 0; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .metrics div, .card { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 14px; }
+    .metrics span { display: block; font-size: 24px; font-weight: 800; }
+    .metrics small { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: var(--panel); }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 4px; }
+    .card { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Hermes SkillEval</p>
+      <h1>Diagnostic Skill Library Dashboard</h1>
+      <p class="subhead">Static review surface for scan, lint, route, and inspect artifacts.</p>
+    </header>
+    <section>
+      <h2>Source summary</h2>
+      <div class="metrics">
+        <div><span>2</span><small>Skills</small></div>
+        <div><span>0</span><small>Findings</small></div>
+        <div><span>1</span><small>Risk clusters</small></div>
+        <div><span>2</span><small>Route examples</small></div>
+      </div>
+      <ul><li><code>mcp_tool_schema</code>: 2</li></ul>
+    </section>
+    <section>
+      <h2>Routing-readiness findings</h2>
+      <p>No routing-readiness findings in the provided lint artifact.</p>
+    </section>
+    <section>
+      <h2>Route examples</h2>
+      <article class="card"><h3>capture browser console diagnostics for a local maintainer page</h3><ol><li><code>capture_browser_console</code> score 15.392662</li><li><code>inspect_artifact_drift</code> score 4.484907</li></ol></article><article class="card"><h3>inspect semantic artifact drift between expected and regenerated reports</h3><ol><li><code>inspect_artifact_drift</code> score 20.218495</li><li><code>capture_browser_console</code> score 2.098612</li></ol></article>
+    </section>
+    <section>
+      <h2>Conflict risk clusters</h2>
+      <article class="card"><h3>risk-cluster-001</h3><p>Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries.</p><p><strong>Skills:</strong> capture_browser_console, inspect_artifact_drift</p><p><strong>Evidence terms:</strong> diagnostic, maintainer, mcp-tool, report, string</p></article>
+    </section>
+  </main>
+  <script>window.__SKILLEVAL_DIAGNOSTIC_DASHBOARD__ = {"artifact_type": "diagnostic_dashboard", "generated_at": "2026-06-03T10:53:06+00:00", "inspect": {"artifact_type": "diagnostic_inspect", "clusters": [{"cluster_id": "risk-cluster-001", "evidence_terms": ["diagnostic", "maintainer", "mcp-tool", "report", "string"], "involved_skills": ["capture_browser_console", "inspect_artifact_drift"], "risk_level": "review", "signals": [{"detail": "Skills share routing terms that may attract similar queries.", "evidence_terms": ["diagnostic", "maintainer", "mcp-tool", "report", "string"], "type": "token_overlap"}, {"detail": "Extracted trigger terms overlap.", "evidence_terms": ["diagnostic"], "type": "trigger_term_overlap"}, {"detail": "Skills sit in the same category.", "evidence_terms": ["mcp-tool"], "type": "category_proximity"}, {"detail": "Skills co-appear in local diagnostic route probes.", "evidence_terms": ["diagnostic", "maintainer", "mcp-tool", "report", "string"], "type": "route_coappearance"}], "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."}], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/mcp-tool-schema/scan.json", "schema_version": "diagnostic.v1", "summary": {"cluster_count": 1, "skill_count": 2}, "tone": "review-worthy risk signals only"}, "lint": {"artifact_type": "diagnostic_lint", "findings": [], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/mcp-tool-schema/scan.json", "schema_version": "diagnostic.v1", "summary": {"finding_count": 0, "findings_by_code": {}, "findings_by_severity": {}, "skill_count": 2}}, "routes": [{"artifact_type": "diagnostic_route", "candidates": [{"evidence": {"category": "mcp-tool", "matched_terms": ["browser", "capture", "console", "diagnostic", "maintainer", "page"], "source_fields": ["body", "description", "id", "input_schema", "name", "trigger_terms"]}, "rank": 1, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 15.392662, "skill_id": "capture_browser_console", "skill_name": "capture_browser_console"}, {"evidence": {"category": "mcp-tool", "matched_terms": ["diagnostic", "maintainer"], "source_fields": ["body", "description", "input_schema", "trigger_terms"]}, "rank": 2, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 4.484907, "skill_id": "inspect_artifact_drift", "skill_name": "inspect_artifact_drift"}], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/mcp-tool-schema/scan.json", "inspect_path": "docs/demo/external-skill-library-validation/mcp-tool-schema/inspect.json", "query": "capture browser console diagnostics for a local maintainer page", "schema_version": "diagnostic.v1", "summary": {"candidate_count": 2, "risk_flag_count": 2}, "top_k": 2}, {"artifact_type": "diagnostic_route", "candidates": [{"evidence": {"category": "mcp-tool", "matched_terms": ["artifact", "between", "drift", "expected", "inspect", "regenerated", "report", "semantic"], "source_fields": ["body", "description", "id", "input_schema", "name", "trigger_terms"]}, "rank": 1, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 20.218495, "skill_id": "inspect_artifact_drift", "skill_name": "inspect_artifact_drift"}, {"evidence": {"category": "mcp-tool", "matched_terms": ["report"], "source_fields": ["body", "input_schema"]}, "rank": 2, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 2.098612, "skill_id": "capture_browser_console", "skill_name": "capture_browser_console"}], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/mcp-tool-schema/scan.json", "inspect_path": "docs/demo/external-skill-library-validation/mcp-tool-schema/inspect.json", "query": "inspect semantic artifact drift between expected and regenerated reports", "schema_version": "diagnostic.v1", "summary": {"candidate_count": 2, "risk_flag_count": 2}, "top_k": 2}], "scan": {"artifact_type": "diagnostic_scan", "generated_at": "2026-06-03T10:53:06+00:00", "schema_version": "diagnostic.v1", "skills": [{"body": "page_url:string Local page URL used for console diagnostic capture.; report_path:string Repo-local diagnostic report path for maintainer review.", "category": "mcp-tool", "description": "Use when capturing browser console diagnostics for a local maintainer page. Do not use for hosted monitoring or PR annotation delivery.", "id": "capture_browser_console", "name": "capture_browser_console", "parser_warnings": [], "routing_cues": {"boundary_terms": ["do not use", "use-when"], "category_terms": ["mcp-tool"], "description_terms": ["use", "when", "captur", "browser", "console", "diagnostic", "for", "local", "maintainer", "page", "not", "hosted", "monitor", "annotation", "delivery"], "input_schema_terms": ["page_url:string", "report_path:string"], "name_terms": ["capture", "browser", "console"], "negative_boundary_terms": ["do not use"], "trigger_terms": ["capture", "browser", "console", "use", "when", "captur", "diagnostic", "for", "local", "maintainer", "page", "not", "hosted", "monitor", "annotation", "delivery"]}, "source": {"file_path": "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json", "relative_path": "tools.json", "source_path": "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json", "type": "mcp_tool_schema"}, "token_count_estimate": 41, "trigger_terms": ["capture", "browser", "console", "use", "when", "captur", "diagnostic", "for", "local", "maintainer", "page", "not", "hosted", "monitor", "annotation", "delivery"]}, {"body": "expected_report:string Expected diagnostic artifact or report path.; maintainer_note:string Short maintainer review note about drift evidence.; regenerated_report:string Regenerated diagnostic artifact or report path.", "category": "mcp-tool", "description": "Use when inspecting semantic artifact drift between expected and regenerated diagnostic reports. Do not use for release approval.", "id": "inspect_artifact_drift", "name": "inspect_artifact_drift", "parser_warnings": [], "routing_cues": {"boundary_terms": ["do not use", "use-when"], "category_terms": ["mcp-tool"], "description_terms": ["use", "when", "inspect", "semantic", "artifact", "drift", "between", "expected", "and", "regenerated", "diagnostic", "report", "not", "for", "release", "approval"], "input_schema_terms": ["expected_report:string", "maintainer_note:string", "regenerated_report:string"], "name_terms": ["inspect", "artifact", "drift"], "negative_boundary_terms": ["do not use"], "trigger_terms": ["inspect", "artifact", "drift", "use", "when", "semantic", "between", "expected", "and", "regenerated", "diagnostic", "report", "not", "for", "release", "approval"]}, "source": {"file_path": "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json", "relative_path": "tools.json", "source_path": "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json", "type": "mcp_tool_schema"}, "token_count_estimate": 44, "trigger_terms": ["inspect", "artifact", "drift", "use", "when", "semantic", "between", "expected", "and", "regenerated", "diagnostic", "report", "not", "for", "release", "approval"]}], "source": {"kind": "file", "path": "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json"}, "summary": {"skill_count": 2, "source_types": {"mcp_tool_schema": 2}, "warning_count": 0}}, "schema_version": "diagnostic.v1", "sources": {"inspect": "docs/demo/external-skill-library-validation/mcp-tool-schema/inspect.json", "lint": "docs/demo/external-skill-library-validation/mcp-tool-schema/lint.json", "routes": ["docs/demo/external-skill-library-validation/mcp-tool-schema/route-browser-console.json", "docs/demo/external-skill-library-validation/mcp-tool-schema/route-artifact-drift.json"], "scan": "docs/demo/external-skill-library-validation/mcp-tool-schema/scan.json"}, "summary": {"conflict_cluster_count": 1, "lint_finding_count": 0, "route_count": 2, "skill_count": 2, "source_types": {"mcp_tool_schema": 2}}};</script>
+</body>
+</html>

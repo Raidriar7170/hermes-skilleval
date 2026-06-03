@@ -9,6 +9,7 @@ MIGRATION_PROTOCOL = ROOT / "docs" / "skill-library-migration-protocol.md"
 EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
 USAGE = ROOT / "docs" / "usage.md"
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
+EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
 CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-skill-library-onboarding.html",
@@ -16,6 +17,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-ci-gate.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-diagnostic-artifact-drift-ci-workflow.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-pr-facing-ci-summary.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-03-external-skill-library-validation-pack.html",
 ]
 
 
@@ -71,6 +73,25 @@ def test_ci_workflow_regenerates_diagnostic_demo_and_runs_artifact_drift_check()
     assert '--output "$RUNNER_TEMP/diagnostic-artifact-drift.json"' in workflow
     assert '--markdown-output "$RUNNER_TEMP/diagnostic-artifact-drift.md"' in workflow
     assert "git diff --exit-code docs/demo/diagnostic-onboarding" not in workflow
+
+
+def test_ci_workflow_regenerates_external_validation_pack_in_runner_temp():
+    workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "id: external_pack" in workflow
+    assert "RUNNER_TEMP/external-skill-library-validation" in workflow
+    assert "docs/demo/external-skill-library-validation/source/markdown-skills" in workflow
+    assert "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json" in workflow
+    assert "route-release-note-review.json" in workflow
+    assert "route-workflow-evidence.json" in workflow
+    assert "route-browser-console.json" in workflow
+    assert "route-artifact-drift.json" in workflow
+    assert "--expected docs/demo/external-skill-library-validation" in workflow
+    assert '--actual "$RUNNER_TEMP/external-skill-library-validation"' in workflow
+    assert '--output "$RUNNER_TEMP/external-skill-library-validation-drift.json"' in workflow
+    assert "--check external-pack=${{ steps.external_pack.outcome }}" in workflow
+    assert "${{ runner.temp }}/external-skill-library-validation" in workflow
+    assert "${{ runner.temp }}/external-skill-library-validation-drift.json" in workflow
 
 
 def test_ci_workflow_writes_pr_facing_summary_and_enforces_decision():
@@ -223,12 +244,55 @@ def test_pr_facing_ci_summary_surface_is_local_and_bounded():
         assert phrase not in combined
 
 
+def test_external_validation_pack_docs_are_local_and_bounded():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    pack_readme = (EXTERNAL_VALIDATION_PACK / "README.md").read_text(encoding="utf-8")
+    combined = "\n".join([readme, usage, pack_readme])
+
+    assert "External Skill Library Validation Pack" in combined
+    assert "docs/demo/external-skill-library-validation" in combined
+    assert "source/markdown-skills" in combined
+    assert "source/mcp-tool-schema/tools.json" in combined
+    assert "skilleval diagnostic-artifact-drift-check" in combined
+    assert "--check external-pack=success" in combined
+    for phrase in [
+        "not a Marketplace Action",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+        "not benchmark status",
+        "not production readiness",
+        "not release approval",
+    ]:
+        assert phrase in combined
+
+    risky_claims = [
+        "released as a Marketplace Action",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark status",
+        "production-ready",
+        "approves the release",
+    ]
+    for phrase in risky_claims:
+        assert phrase not in combined
+
+
 def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "372 passed" in combined
+    assert "378 passed" in combined
+    assert "378 pytest cases" in README.read_text(encoding="utf-8")
     for stale_count in [
+        "372 pytest cases",
+        "365 pytest cases",
+        "372 passed",
         "366 passed",
         "365 passed",
         "361 passed",
@@ -242,6 +306,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "| Test cases | 314 |",
         "| Test cases | 346 |",
         "| Test cases | 366 |",
+        "| Test cases | 372 |",
     ]:
         assert stale_count not in combined
 

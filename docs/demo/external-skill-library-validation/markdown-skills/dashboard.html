@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagnostic Skill Library Dashboard</title>
+  <style>
+    :root { color-scheme: light; --ink: #18212f; --muted: #5a6575; --line: #d9e0ea; --panel: #f7f9fb; --accent: #0f766e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #fff; line-height: 1.55; }
+    main { max-width: 1080px; margin: 0 auto; padding: 40px 24px 64px; }
+    header { border-bottom: 1px solid var(--line); margin-bottom: 28px; padding-bottom: 18px; }
+    .eyebrow { color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+    h1 { font-size: 32px; margin: 0; letter-spacing: 0; }
+    h2 { font-size: 20px; margin: 28px 0 12px; letter-spacing: 0; }
+    h3 { margin: 0 0 8px; font-size: 16px; letter-spacing: 0; }
+    .subhead { color: var(--muted); margin: 8px 0 0; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .metrics div, .card { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 14px; }
+    .metrics span { display: block; font-size: 24px; font-weight: 800; }
+    .metrics small { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: var(--panel); }
+    code { background: #edf2f7; border-radius: 4px; padding: 1px 4px; }
+    .card { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Hermes SkillEval</p>
+      <h1>Diagnostic Skill Library Dashboard</h1>
+      <p class="subhead">Static review surface for scan, lint, route, and inspect artifacts.</p>
+    </header>
+    <section>
+      <h2>Source summary</h2>
+      <div class="metrics">
+        <div><span>2</span><small>Skills</small></div>
+        <div><span>0</span><small>Findings</small></div>
+        <div><span>1</span><small>Risk clusters</small></div>
+        <div><span>2</span><small>Route examples</small></div>
+      </div>
+      <ul><li><code>markdown_skill</code>: 2</li></ul>
+    </section>
+    <section>
+      <h2>Routing-readiness findings</h2>
+      <p>No routing-readiness findings in the provided lint artifact.</p>
+    </section>
+    <section>
+      <h2>Route examples</h2>
+      <article class="card"><h3>review release notes for evidence boundaries and non-goals</h3><ol><li><code>release-note-review</code> score 15.04091</li><li><code>workflow-evidence-audit</code> score 7.188879</li></ol></article><article class="card"><h3>audit validation workflow evidence before a maintainer review</h3><ol><li><code>workflow-evidence-audit</code> score 17.427204</li><li><code>release-note-review</code> score 9.575174</li></ol></article>
+    </section>
+    <section>
+      <h2>Conflict risk clusters</h2>
+      <article class="card"><h3>risk-cluster-001</h3><p>Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries.</p><p><strong>Skills:</strong> release-note-review, workflow-evidence-audit</p><p><strong>Evidence terms:</strong> evidence, review, validation</p></article>
+    </section>
+  </main>
+  <script>window.__SKILLEVAL_DIAGNOSTIC_DASHBOARD__ = {"artifact_type": "diagnostic_dashboard", "generated_at": "2026-06-03T10:53:06+00:00", "inspect": {"artifact_type": "diagnostic_inspect", "clusters": [{"cluster_id": "risk-cluster-001", "evidence_terms": ["evidence", "review", "validation"], "involved_skills": ["release-note-review", "workflow-evidence-audit"], "risk_level": "review", "signals": [{"detail": "Skills share routing terms that may attract similar queries.", "evidence_terms": ["evidence", "review", "validation"], "type": "token_overlap"}, {"detail": "Extracted trigger terms overlap.", "evidence_terms": ["evidence", "review", "validation"], "type": "trigger_term_overlap"}, {"detail": "Skills sit in the same category.", "evidence_terms": ["review"], "type": "category_proximity"}, {"detail": "Skills co-appear in local diagnostic route probes.", "evidence_terms": ["evidence", "review", "validation"], "type": "route_coappearance"}], "summary": "Review-worthy routing risk: shared cues may make these skills hard to route apart without clearer boundaries."}], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/markdown-skills/scan.json", "schema_version": "diagnostic.v1", "summary": {"cluster_count": 1, "skill_count": 2}, "tone": "review-worthy risk signals only"}, "lint": {"artifact_type": "diagnostic_lint", "findings": [], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/markdown-skills/scan.json", "schema_version": "diagnostic.v1", "summary": {"finding_count": 0, "findings_by_code": {}, "findings_by_severity": {}, "skill_count": 2}}, "routes": [{"artifact_type": "diagnostic_route", "candidates": [{"evidence": {"category": "review", "matched_terms": ["boundary", "evidence", "non-goal", "note", "release", "review"], "source_fields": ["body", "category", "description", "trigger_terms"]}, "rank": 1, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 15.04091, "skill_id": "release-note-review", "skill_name": "release-note-review"}, {"evidence": {"category": "review", "matched_terms": ["evidence", "release", "review"], "source_fields": ["body", "category", "description", "trigger_terms"]}, "rank": 2, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 7.188879, "skill_id": "workflow-evidence-audit", "skill_name": "workflow-evidence-audit"}], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/markdown-skills/scan.json", "inspect_path": "docs/demo/external-skill-library-validation/markdown-skills/inspect.json", "query": "review release notes for evidence boundaries and non-goals", "schema_version": "diagnostic.v1", "summary": {"candidate_count": 2, "risk_flag_count": 2}, "top_k": 2}, {"artifact_type": "diagnostic_route", "candidates": [{"evidence": {"category": "review", "matched_terms": ["audit", "before", "evidence", "maintainer", "review", "validation", "workflow"], "source_fields": ["body", "category", "description", "trigger_terms"]}, "rank": 1, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 17.427204, "skill_id": "workflow-evidence-audit", "skill_name": "workflow-evidence-audit"}, {"evidence": {"category": "review", "matched_terms": ["before", "evidence", "review", "validation"], "source_fields": ["body", "category", "description", "trigger_terms"]}, "rank": 2, "risk_flags": [{"cluster_id": "risk-cluster-001", "code": "conflict_cluster", "message": "Candidate appears in a review-worthy conflict risk cluster."}], "score": 9.575174, "skill_id": "release-note-review", "skill_name": "release-note-review"}], "generated_at": "2026-06-03T10:53:06+00:00", "index_path": "docs/demo/external-skill-library-validation/markdown-skills/scan.json", "inspect_path": "docs/demo/external-skill-library-validation/markdown-skills/inspect.json", "query": "audit validation workflow evidence before a maintainer review", "schema_version": "diagnostic.v1", "summary": {"candidate_count": 2, "risk_flag_count": 2}, "top_k": 2}], "scan": {"artifact_type": "diagnostic_scan", "generated_at": "2026-06-03T10:53:05+00:00", "schema_version": "diagnostic.v1", "skills": [{"body": "# Release Note Review\n\nUse this skill to review release notes, changelog drafts, and maintainer-facing\nsummaries before they are shared. Check that evidence links are present,\nboundaries are visible, and non-goals are stated plainly.\n\nDo not use for writing product launch copy or approving a release.\n\n## Evidence Cues\n\n- release notes\n- evidence boundaries\n- non-goals\n- local validation summary", "category": "review", "description": "Use when reviewing release notes for evidence boundaries, local validation summaries, and explicit non-goals.", "id": "release-note-review", "name": "release-note-review", "parser_warnings": [], "routing_cues": {"boundary_terms": ["do not use", "use-when"], "category_terms": ["review"], "description_terms": ["use", "when", "review", "release", "note", "for", "evidence", "boundary", "local", "validation", "summary", "and", "explicit", "non-goal"], "input_schema_terms": [], "name_terms": ["release-note-review"], "negative_boundary_terms": ["do not use"], "trigger_terms": ["release-note-review", "use", "when", "review", "release", "note", "for", "evidence", "boundary", "local", "validation", "summary", "and", "explicit", "non-goal"]}, "source": {"file_path": "docs/demo/external-skill-library-validation/source/markdown-skills/review/release-note-review/SKILL.md", "relative_path": "review/release-note-review/SKILL.md", "source_path": "docs/demo/external-skill-library-validation/source/markdown-skills", "type": "markdown_skill"}, "token_count_estimate": 72, "trigger_terms": ["release-note-review", "use", "when", "review", "release", "note", "for", "evidence", "boundary", "local", "validation", "summary", "and", "explicit", "non-goal"]}, {"body": "# Workflow Evidence Audit\n\nUse this skill to inspect workflow evidence, regenerated artifacts, gate\nreports, and review packets before a maintainer review. Confirm that artifacts\nare deterministic and that paths point to repo-local evidence.\n\nDo not use for running a hosted service or deciding final release approval.\n\n## Evidence Cues\n\n- validation workflow evidence\n- regenerated artifacts\n- diagnostic gate report\n- maintainer review", "category": "review", "description": "Use when auditing validation workflow evidence before a maintainer review or diagnostic handoff.", "id": "workflow-evidence-audit", "name": "workflow-evidence-audit", "parser_warnings": [], "routing_cues": {"boundary_terms": ["do not use", "use-when"], "category_terms": ["review"], "description_terms": ["use", "when", "audit", "validation", "workflow", "evidence", "before", "maintainer", "review", "diagnostic", "handoff"], "input_schema_terms": [], "name_terms": ["workflow-evidence-audit"], "negative_boundary_terms": ["do not use"], "trigger_terms": ["workflow-evidence-audit", "use", "when", "audit", "validation", "workflow", "evidence", "before", "maintainer", "review", "diagnostic", "handoff"]}, "source": {"file_path": "docs/demo/external-skill-library-validation/source/markdown-skills/review/workflow-evidence-audit/SKILL.md", "relative_path": "review/workflow-evidence-audit/SKILL.md", "source_path": "docs/demo/external-skill-library-validation/source/markdown-skills", "type": "markdown_skill"}, "token_count_estimate": 74, "trigger_terms": ["workflow-evidence-audit", "use", "when", "audit", "validation", "workflow", "evidence", "before", "maintainer", "review", "diagnostic", "handoff"]}], "source": {"kind": "directory", "path": "docs/demo/external-skill-library-validation/source/markdown-skills"}, "summary": {"skill_count": 2, "source_types": {"markdown_skill": 2}, "warning_count": 0}}, "schema_version": "diagnostic.v1", "sources": {"inspect": "docs/demo/external-skill-library-validation/markdown-skills/inspect.json", "lint": "docs/demo/external-skill-library-validation/markdown-skills/lint.json", "routes": ["docs/demo/external-skill-library-validation/markdown-skills/route-release-note-review.json", "docs/demo/external-skill-library-validation/markdown-skills/route-workflow-evidence.json"], "scan": "docs/demo/external-skill-library-validation/markdown-skills/scan.json"}, "summary": {"conflict_cluster_count": 1, "lint_finding_count": 0, "route_count": 2, "skill_count": 2, "source_types": {"markdown_skill": 2}}};</script>
+</body>
+</html>
