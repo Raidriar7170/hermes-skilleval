@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagnostic Artifact Drift Check Human Brief</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1b2433; background: #f7f8fb; }
+    main { max-width: 960px; margin: 0 auto; padding: 40px 24px 56px; }
+    section { background: #fff; border: 1px solid #dfe4ee; border-radius: 8px; padding: 22px; margin: 18px 0; }
+    h1 { font-size: 30px; margin: 0 0 10px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 0 0 12px; letter-spacing: 0; }
+    p, li { line-height: 1.65; font-size: 15px; }
+    code { background: #eef2f7; padding: 2px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #eef6ff; color: #075985; font-weight: 700; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Diagnostic Artifact Drift Check</h1>
+  <p><span class="status">archived</span></p>
+  <section>
+    <h2>一句话结论</h2>
+    <p>本阶段补上 semantic drift check，让 committed diagnostic demo artifacts 可以和临时重新生成的 artifacts 比较，同时忽略 <code>generated_at</code> 和本地 artifact path display 这类允许的 volatile 字段。</p>
+  </section>
+  <section>
+    <h2>项目阶段进度</h2>
+    <p>当前阶段目标是 interview-ready / release-evidence packaging：README 的 <code>For Recruiters / 3-minute review path</code> 和 Phase 16-18 release evidence chain 是来源。本阶段把 diagnostic onboarding demo 的再生成一致性补成可验证证据，减少面试或 review 时“demo artifact 是否可复现”的缺口。剩余 gap 主要是是否把 drift check 接入 GitHub workflow 或 PR automation；这会改变 CI/workflow 边界，需要用户确认后作为单独 OpenSpec 阶段处理。</p>
+  </section>
+  <section>
+    <h2>本阶段改动</h2>
+    <ul>
+      <li>新增 <code>skilleval diagnostic-artifact-drift-check</code>，比较 expected/actual artifacts 或目录。</li>
+      <li>对 JSON artifacts 递归忽略 allowlisted volatile fields 和本地路径显示差异，对 dashboard HTML 比较嵌入的 diagnostic payload。</li>
+      <li>文档改为先 regenerate 到临时目录，再通过 drift check 对比 committed demo。</li>
+      <li>保持边界：这是本地 semantic artifact drift detection，不是 release approval、PR automation 或 runtime router。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/diagnostic_artifact_drift.py</code></li>
+      <li><code>src/hermes_skilleval/cli.py</code></li>
+      <li><code>tests/test_diagnostic_artifact_drift.py</code></li>
+      <li><code>docs/demo/diagnostic-onboarding/README.md</code></li>
+      <li><code>openspec/specs/diagnostic-artifact-drift-check/spec.md</code></li>
+      <li><code>openspec/changes/archive/2026-06-03-diagnostic-artifact-drift-check/</code></li>
+    </ul>
+  </section>
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_diagnostic_artifact_drift.py tests/test_cli_diagnostics.py tests/test_diagnostic_demo_artifacts.py tests/test_project_surface.py tests/test_phase14_artifacts.py tests/test_phase15_artifacts.py tests/test_phase16_artifacts.py</code>: PASS, 43 passed.</li>
+      <li><code>python -m pytest -q</code>: PASS, 365 passed.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: PASS, Phase 18 release reproducibility preserved.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-artifact-drift-check ...</code>: PASS against a temporary full regeneration of the documented demo flow; result: <code>compared_count=8</code>, <code>drift_count=0</code>.</li>
+      <li><code>openspec validate --all --strict</code> and <code>git diff --check</code>: PASS.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>不要夸大的点</h2>
+    <ul>
+      <li>这不是 release approval 或 Phase 16-18 release decision 的替代。</li>
+      <li>这不调用 GitHub API，不写 PR annotations，不发布 Marketplace Action。</li>
+      <li>这不是 SaaS、runtime MCP router 或 benchmark/SOTA 结论。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>下一步</h2>
+    <p>本阶段已归档。推荐下一步是由用户确认是否开启独立 OpenSpec 阶段，把 drift check 接入 GitHub workflow 或 PR-facing automation；这会改变 CI/workflow 语义，因此不在本自动循环内继续推进。</p>
+  </section>
+</main>
+</body>
+</html>

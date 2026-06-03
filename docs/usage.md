@@ -128,6 +128,27 @@ artifacts and writes the gate report to `$RUNNER_TEMP`. It does not regenerate
 the demo fixture or diff the diagnostic demo directory because the current
 diagnostic artifacts include `generated_at` timestamps.
 
+### Check diagnostic artifact drift
+
+`skilleval diagnostic-artifact-drift-check` compares expected and actual
+diagnostic artifacts after normalizing approved volatile fields such as
+`generated_at` and local artifact path displays. Use it after regenerating
+artifacts into a temporary directory:
+
+```bash
+TMP_ROOT="${TMPDIR:-/tmp}/diagnostic-onboarding"
+
+skilleval diagnostic-artifact-drift-check \
+  --expected docs/demo/diagnostic-onboarding \
+  --actual "$TMP_ROOT" \
+  --output "$TMP_ROOT/diagnostic-artifact-drift.json" \
+  --markdown-output "$TMP_ROOT/diagnostic-artifact-drift.md"
+```
+
+The drift check is local semantic artifact comparison. It does not call the
+GitHub API, post PR comments, write annotations, publish a Marketplace Action,
+run a SaaS service, act as a runtime MCP router, or approve a release.
+
 ### Generate a local PR review packet
 
 `skilleval diagnostic-pr-review-surface` turns an existing diagnostic CI gate
@@ -156,57 +177,67 @@ preparing a separate library. Run these commands from the repository root:
 ```bash
 ROOT=docs/demo/diagnostic-onboarding
 
+TMP_ROOT="${TMPDIR:-/tmp}/diagnostic-onboarding"
+rm -rf "$TMP_ROOT"
+mkdir -p "$TMP_ROOT"
+
 PYTHONPATH=src python -m hermes_skilleval.cli scan \
   "$ROOT/source/skills" \
-  --output "$ROOT/scan.json"
+  --output "$TMP_ROOT/scan.json"
 
 PYTHONPATH=src python -m hermes_skilleval.cli lint \
-  --index "$ROOT/scan.json" \
-  --output "$ROOT/lint.json"
+  --index "$TMP_ROOT/scan.json" \
+  --output "$TMP_ROOT/lint.json"
 
 PYTHONPATH=src python -m hermes_skilleval.cli inspect \
-  --index "$ROOT/scan.json" \
-  --output "$ROOT/inspect.json"
+  --index "$TMP_ROOT/scan.json" \
+  --output "$TMP_ROOT/inspect.json"
 
 PYTHONPATH=src python -m hermes_skilleval.cli route \
   "smoke test a local browser page and check console errors" \
-  --index "$ROOT/scan.json" \
-  --inspect "$ROOT/inspect.json" \
+  --index "$TMP_ROOT/scan.json" \
+  --inspect "$TMP_ROOT/inspect.json" \
   --top-k 3 \
-  --output "$ROOT/route-browser-smoke.json"
+  --output "$TMP_ROOT/route-browser-smoke.json"
 
 PYTHONPATH=src python -m hermes_skilleval.cli route \
   "debug failing tests with a red-green loop" \
-  --index "$ROOT/scan.json" \
-  --inspect "$ROOT/inspect.json" \
+  --index "$TMP_ROOT/scan.json" \
+  --inspect "$TMP_ROOT/inspect.json" \
   --top-k 3 \
-  --output "$ROOT/route-debug-red-green.json"
+  --output "$TMP_ROOT/route-debug-red-green.json"
 
 PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-dashboard \
-  --scan "$ROOT/scan.json" \
-  --lint "$ROOT/lint.json" \
-  --inspect "$ROOT/inspect.json" \
-  --route "$ROOT/route-browser-smoke.json" \
-  --route "$ROOT/route-debug-red-green.json" \
-  --output "$ROOT/dashboard.html"
+  --scan "$TMP_ROOT/scan.json" \
+  --lint "$TMP_ROOT/lint.json" \
+  --inspect "$TMP_ROOT/inspect.json" \
+  --route "$TMP_ROOT/route-browser-smoke.json" \
+  --route "$TMP_ROOT/route-debug-red-green.json" \
+  --output "$TMP_ROOT/dashboard.html"
 
 PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-ci-gate \
-  --scan "$ROOT/scan.json" \
-  --lint "$ROOT/lint.json" \
-  --inspect "$ROOT/inspect.json" \
-  --route "$ROOT/route-browser-smoke.json" \
-  --route "$ROOT/route-debug-red-green.json" \
-  --output "$ROOT/ci-gate-report.json" \
-  --markdown-output "$ROOT/ci-gate-report.md" \
+  --scan "$TMP_ROOT/scan.json" \
+  --lint "$TMP_ROOT/lint.json" \
+  --inspect "$TMP_ROOT/inspect.json" \
+  --route "$TMP_ROOT/route-browser-smoke.json" \
+  --route "$TMP_ROOT/route-debug-red-green.json" \
+  --output "$TMP_ROOT/ci-gate-report.json" \
+  --markdown-output "$TMP_ROOT/ci-gate-report.md" \
   --max-lint-findings 5 \
   --max-conflict-clusters 4 \
   --max-route-risk-flags 15 \
   --min-route-candidates 3
 
 PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-pr-review-surface \
-  --gate-report "$ROOT/ci-gate-report.json" \
-  --output "$ROOT/pr-review-packet.json" \
-  --markdown-output "$ROOT/pr-review-packet.md"
+  --gate-report "$TMP_ROOT/ci-gate-report.json" \
+  --output "$TMP_ROOT/pr-review-packet.json" \
+  --markdown-output "$TMP_ROOT/pr-review-packet.md"
+
+PYTHONPATH=src python -m hermes_skilleval.cli diagnostic-artifact-drift-check \
+  --expected "$ROOT" \
+  --actual "$TMP_ROOT" \
+  --output "$TMP_ROOT/drift-report.json" \
+  --markdown-output "$TMP_ROOT/drift-report.md"
 ```
 
 The demo source intentionally includes nearby browser skills, nearby debugging
@@ -480,5 +511,5 @@ pytest -q
 Expected:
 
 ```text
-354 passed
+365 passed
 ```

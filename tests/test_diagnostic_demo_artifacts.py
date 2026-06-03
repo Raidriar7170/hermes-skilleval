@@ -2,6 +2,9 @@ import json
 import re
 from pathlib import Path
 
+from hermes_skilleval.cli import main
+from hermes_skilleval.diagnostic_artifact_drift import compare_diagnostic_artifacts
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEMO_DIR = REPO_ROOT / "docs" / "demo" / "diagnostic-onboarding"
@@ -217,9 +220,188 @@ def test_diagnostic_demo_dashboard_is_self_contained_and_bounded():
         assert phrase not in combined_text
 
 
+def test_diagnostic_demo_drift_check_passes_documented_regeneration_flow(
+    tmp_path: Path,
+):
+    actual_dir = tmp_path / "diagnostic-onboarding-regenerated"
+    actual_dir.mkdir()
+    _regenerate_diagnostic_demo(actual_dir)
+
+    report = compare_diagnostic_artifacts(
+        expected_path=DEMO_DIR,
+        actual_path=actual_dir,
+        output_path=tmp_path / "drift-report.json",
+        markdown_output_path=tmp_path / "drift-report.md",
+    )
+
+    assert report["decision"] == "PASS"
+    assert report["summary"]["drift_count"] == 0
+    assert {
+        artifact["artifact"]
+        for artifact in report["compared_artifacts"]
+    } == {
+        "scan.json",
+        "lint.json",
+        "inspect.json",
+        "route-browser-smoke.json",
+        "route-debug-red-green.json",
+        "dashboard.html",
+        "ci-gate-report.json",
+        "pr-review-packet.json",
+    }
+
+
+def test_diagnostic_demo_drift_check_cli_passes_documented_regeneration_flow(
+    tmp_path: Path,
+):
+    actual_dir = tmp_path / "diagnostic-onboarding-regenerated"
+    actual_dir.mkdir()
+    _regenerate_diagnostic_demo(actual_dir)
+    output = tmp_path / "drift-report.json"
+    markdown = tmp_path / "drift-report.md"
+
+    assert (
+        main(
+            [
+                "diagnostic-artifact-drift-check",
+                "--expected",
+                str(DEMO_DIR),
+                "--actual",
+                str(actual_dir),
+                "--output",
+                str(output),
+                "--markdown-output",
+                str(markdown),
+            ]
+        )
+        == 0
+    )
+
+    report = _read_json(output)
+    assert report["decision"] == "PASS"
+    assert report["summary"] == {"compared_count": 8, "drift_count": 0}
+    assert "Ignored volatile fields" in markdown.read_text(encoding="utf-8")
+
+
 def _read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _skill(artifact: dict, skill_id: str) -> dict:
     return next(skill for skill in artifact["skills"] if skill["id"] == skill_id)
+
+
+def _regenerate_diagnostic_demo(output_dir: Path) -> None:
+    source = DEMO_DIR / "source" / "skills"
+    scan = output_dir / "scan.json"
+    lint = output_dir / "lint.json"
+    inspect = output_dir / "inspect.json"
+    route_browser = output_dir / "route-browser-smoke.json"
+    route_debug = output_dir / "route-debug-red-green.json"
+    dashboard = output_dir / "dashboard.html"
+    gate_json = output_dir / "ci-gate-report.json"
+    gate_markdown = output_dir / "ci-gate-report.md"
+    pr_json = output_dir / "pr-review-packet.json"
+    pr_markdown = output_dir / "pr-review-packet.md"
+
+    assert main(["scan", str(source), "--output", str(scan)]) == 0
+    assert main(["lint", "--index", str(scan), "--output", str(lint)]) == 0
+    assert main(["inspect", "--index", str(scan), "--output", str(inspect)]) == 0
+    assert (
+        main(
+            [
+                "route",
+                "smoke test a local browser page and check console errors",
+                "--index",
+                str(scan),
+                "--inspect",
+                str(inspect),
+                "--top-k",
+                "3",
+                "--output",
+                str(route_browser),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "route",
+                "debug failing tests with a red-green loop",
+                "--index",
+                str(scan),
+                "--inspect",
+                str(inspect),
+                "--top-k",
+                "3",
+                "--output",
+                str(route_debug),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "diagnostic-dashboard",
+                "--scan",
+                str(scan),
+                "--lint",
+                str(lint),
+                "--inspect",
+                str(inspect),
+                "--route",
+                str(route_browser),
+                "--route",
+                str(route_debug),
+                "--output",
+                str(dashboard),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "diagnostic-ci-gate",
+                "--scan",
+                str(scan),
+                "--lint",
+                str(lint),
+                "--inspect",
+                str(inspect),
+                "--route",
+                str(route_browser),
+                "--route",
+                str(route_debug),
+                "--output",
+                str(gate_json),
+                "--markdown-output",
+                str(gate_markdown),
+                "--max-lint-findings",
+                "5",
+                "--max-conflict-clusters",
+                "4",
+                "--max-route-risk-flags",
+                "15",
+                "--min-route-candidates",
+                "3",
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "diagnostic-pr-review-surface",
+                "--gate-report",
+                str(gate_json),
+                "--output",
+                str(pr_json),
+                "--markdown-output",
+                str(pr_markdown),
+            ]
+        )
+        == 0
+    )

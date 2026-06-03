@@ -14,6 +14,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-skill-library-onboarding.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-demo-evidence-pack.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-ci-gate.html",
+    ROOT / "docs" / "human-briefs" / "2026-06-03-diagnostic-artifact-drift-check.html",
 ]
 
 
@@ -156,13 +157,15 @@ def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "354 passed" in combined
+    assert "365 passed" in combined
     for stale_count in [
+        "361 passed",
         "314 passed",
         "334 passed",
         "338 passed",
         "344 passed",
         "346 passed",
+        "| Test cases | 361 |",
         "| Test cases | 314 |",
         "| Test cases | 346 |",
     ]:

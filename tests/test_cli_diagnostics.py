@@ -198,6 +198,83 @@ def test_cli_diagnostic_ci_gate_policy_failure_writes_report_and_returns_nonzero
     assert json.loads(gate_path.read_text(encoding="utf-8"))["decision"] == "FAIL"
 
 
+def test_cli_diagnostic_artifact_drift_returns_nonzero_on_drift(tmp_path: Path):
+    expected = tmp_path / "expected-scan.json"
+    actual = tmp_path / "actual-scan.json"
+    output = tmp_path / "drift-report.json"
+    markdown = tmp_path / "drift-report.md"
+    _write_json(
+        expected,
+        {
+            "artifact_type": "diagnostic_scan",
+            "schema_version": "diagnostic.v1",
+            "generated_at": "2026-06-03T00:00:00+00:00",
+            "summary": {"skill_count": 1},
+            "skills": [{"id": "debug-loop"}],
+        },
+    )
+    _write_json(
+        actual,
+        {
+            "artifact_type": "diagnostic_scan",
+            "schema_version": "diagnostic.v1",
+            "generated_at": "2026-06-03T01:00:00+00:00",
+            "summary": {"skill_count": 2},
+            "skills": [{"id": "debug-loop"}],
+        },
+    )
+
+    result = main(
+        [
+            "diagnostic-artifact-drift-check",
+            "--expected",
+            str(expected),
+            "--actual",
+            str(actual),
+            "--output",
+            str(output),
+            "--markdown-output",
+            str(markdown),
+        ]
+    )
+
+    assert result != 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["decision"] == "FAIL"
+    assert report["compared_artifacts"][0]["artifact"] == "expected-scan.json"
+    assert "Decision: `FAIL`" in markdown.read_text(encoding="utf-8")
+
+
+def test_cli_diagnostic_artifact_drift_requires_markdown_output(tmp_path: Path):
+    expected = tmp_path / "expected-scan.json"
+    actual = tmp_path / "actual-scan.json"
+    output = tmp_path / "drift-report.json"
+    payload = {
+        "artifact_type": "diagnostic_scan",
+        "schema_version": "diagnostic.v1",
+        "generated_at": "2026-06-03T00:00:00+00:00",
+        "summary": {"skill_count": 1},
+        "skills": [{"id": "debug-loop"}],
+    }
+    _write_json(expected, payload)
+    _write_json(actual, payload)
+
+    result = main(
+        [
+            "diagnostic-artifact-drift-check",
+            "--expected",
+            str(expected),
+            "--actual",
+            str(actual),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert result == 2
+    assert not output.exists()
+
+
 def test_cli_scan_unsupported_source_returns_clear_error_without_traceback(
     tmp_path: Path,
     capsys,
@@ -218,5 +295,12 @@ def _write_skill(path: Path, *, name: str, description: str, body: str) -> None:
     path.parent.mkdir(parents=True)
     path.write_text(
         f"---\nname: {name}\ndescription: {description}\n---\n{body}\n",
+        encoding="utf-8",
+    )
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )

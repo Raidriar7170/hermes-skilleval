@@ -135,7 +135,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 354 |
+| Test cases | 365 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -255,7 +255,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 354 pytest cases
+├── tests/                              # 365 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -284,7 +284,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `354 passed` and
+Expected: `365 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -301,12 +301,15 @@ The demo also includes `ci-gate-report.json`, `ci-gate-report.md`,
 `pr-review-packet.json`, and `pr-review-packet.md`. The CI gate report is
 produced by `skilleval diagnostic-ci-gate` as artifact-based CI validation over
 already generated diagnostic artifacts; the PR review packet is a local
-reviewer-facing summary generated from that gate report.
+reviewer-facing summary generated from that gate report. Use
+`skilleval diagnostic-artifact-drift-check` to compare committed and
+regenerated diagnostic demo artifacts while ignoring approved volatile fields
+such as `generated_at`.
 
 Boundary: this is not GitHub API integration, not a Marketplace Action, not a
 PR annotation system, not SaaS, not a runtime MCP router, and not a headline
-performance claim. Full regeneration, gate, and review packet commands live in
-[`docs/usage.md`](docs/usage.md).
+performance claim. Full regeneration, drift-check, gate, and review packet
+commands live in [`docs/usage.md`](docs/usage.md).
 
 ---
 
@@ -377,7 +380,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 354 unit and smoke tests |
+| Testing | pytest | 365 unit and smoke tests |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -437,7 +440,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 354 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 365 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.

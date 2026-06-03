@@ -95,8 +95,12 @@ def test_phase16_docs_and_release_handoff_exist() -> None:
     assert "REVIEW_REQUIRED" in handoff_text
     assert "docs/phase16.md" in readme_text
     assert "docs/release-handoff.md" in readme_text
-    assert "| Test cases | 354 |" in readme_text
-    assert "354 passed" in readme_text
+    assert "| Test cases | 365 |" in readme_text
+    assert "365 passed" in readme_text
+    assert "| Test cases | 361 |" not in readme_text
+    assert "361 passed" not in readme_text
+    assert "| Test cases | 354 |" not in readme_text
+    assert "354 passed" not in readme_text
     assert "| Test cases | 351 |" not in readme_text
     assert "351 passed" not in readme_text
     assert "| Test cases | 347 |" not in readme_text

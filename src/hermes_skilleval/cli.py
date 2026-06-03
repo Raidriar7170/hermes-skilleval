@@ -19,6 +19,7 @@ from hermes_skilleval.calibration import (
 )
 from hermes_skilleval.comparison import write_comparison_report
 from hermes_skilleval.dashboard import write_dashboard
+from hermes_skilleval.diagnostic_artifact_drift import compare_diagnostic_artifacts
 from hermes_skilleval.diagnostic_dashboard import write_diagnostic_dashboard
 from hermes_skilleval.diagnostic_ci_gate import run_diagnostic_ci_gate
 from hermes_skilleval.diagnostic_pr_review import write_diagnostic_pr_review_packet
@@ -228,6 +229,16 @@ def _build_parser() -> argparse.ArgumentParser:
     diagnostic_pr_review_parser.add_argument("--output", required=True)
     diagnostic_pr_review_parser.add_argument("--markdown-output", required=True)
     diagnostic_pr_review_parser.set_defaults(handler=_run_diagnostic_pr_review_surface)
+
+    diagnostic_artifact_drift_parser = subparsers.add_parser(
+        "diagnostic-artifact-drift-check",
+        help="compare diagnostic artifacts after normalizing volatile metadata",
+    )
+    diagnostic_artifact_drift_parser.add_argument("--expected", required=True)
+    diagnostic_artifact_drift_parser.add_argument("--actual", required=True)
+    diagnostic_artifact_drift_parser.add_argument("--output", required=True)
+    diagnostic_artifact_drift_parser.add_argument("--markdown-output", required=True)
+    diagnostic_artifact_drift_parser.set_defaults(handler=_run_diagnostic_artifact_drift_check)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -776,6 +787,18 @@ def _run_diagnostic_pr_review_surface(args: argparse.Namespace) -> None:
         markdown_output_path=args.markdown_output,
     )
     print(f"Diagnostic PR review packet {packet['decision']}: {args.output}")
+
+
+def _run_diagnostic_artifact_drift_check(args: argparse.Namespace) -> None:
+    report = compare_diagnostic_artifacts(
+        expected_path=args.expected,
+        actual_path=args.actual,
+        output_path=args.output,
+        markdown_output_path=args.markdown_output,
+    )
+    print(f"Diagnostic artifact drift {report['decision']}: {args.output}")
+    if report["decision"] != "PASS":
+        raise ValueError("diagnostic artifact drift check failed")
 
 
 def _run_agent_loop(args: argparse.Namespace) -> None:

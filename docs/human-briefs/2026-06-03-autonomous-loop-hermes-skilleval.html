@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes SkillEval Autonomous Loop Closeout</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1b2433; background: #f7f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+    section { background: #fff; border: 1px solid #dfe4ee; border-radius: 8px; padding: 22px; margin: 18px 0; }
+    h1 { font-size: 30px; margin: 0 0 10px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin: 0 0 12px; letter-spacing: 0; }
+    p, li { line-height: 1.65; font-size: 15px; }
+    code { background: #eef2f7; padding: 2px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #fff7ed; color: #9a3412; font-weight: 700; }
+    .ok { color: #047857; font-weight: 700; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous Phase Loop Closeout</h1>
+  <p><span class="status">stopped for confirmation</span></p>
+
+  <section>
+    <h2>一句话结论</h2>
+    <p>本轮自动阶段循环完成并归档了两个 diagnostic CI/productization 阶段，把本地 PR review packet 和 artifact drift check 补齐；下一步会改变 CI/PR workflow 边界，所以停下等用户确认。</p>
+  </section>
+
+  <section>
+    <h2>停止原因</h2>
+    <p>默认预算是 3 个 phase，本轮用了 2 个。没有继续第 3 个 phase，是因为自然下一步是把 <code>diagnostic-artifact-drift-check</code> 接入 GitHub Actions 或 PR-facing automation；这会改变 workflow/CI 语义和公开边界，触发 opsx-auto hard stop，需要用户确认。</p>
+  </section>
+
+  <section>
+    <h2>项目阶段进度</h2>
+    <p>当前阶段目标是 interview-ready / release-evidence packaging，来源是 README 的 <code>For Recruiters / 3-minute review path</code>、Phase 16-18 release evidence chain 和 <code>docs/release-handoff.md</code>。本轮推进了 diagnostic onboarding 的 CI/readability 证据：先把 CI gate 输出转成 reviewer packet，再把 committed demo 与完整再生成 artifacts 的 semantic drift check 补上。剩余 gap 是是否进入真正 CI workflow、PR annotation、Marketplace Action 或 release-publication 方向；这些都需要单独确认，不应在当前自动循环里默认推进。</p>
+  </section>
+
+  <section>
+    <h2>完成阶段</h2>
+    <ul>
+      <li><code>diagnostic-ci-pr-review-surface</code>: archived, committed and pushed as <code>8f09d77</code>. Human Brief: <code>docs/human-briefs/2026-06-03-diagnostic-ci-pr-review-surface.html</code>.</li>
+      <li><code>diagnostic-artifact-drift-check</code>: archived to <code>openspec/changes/archive/2026-06-03-diagnostic-artifact-drift-check/</code>; main spec created at <code>openspec/specs/diagnostic-artifact-drift-check/spec.md</code>. Auto-integration commit is created after this report is generated, so the final response records the exact hash.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/diagnostic_pr_review.py</code></li>
+      <li><code>src/hermes_skilleval/diagnostic_artifact_drift.py</code></li>
+      <li><code>src/hermes_skilleval/cli.py</code></li>
+      <li><code>tests/test_diagnostic_artifact_drift.py</code>, <code>tests/test_diagnostic_demo_artifacts.py</code>, <code>tests/test_cli_diagnostics.py</code></li>
+      <li><code>docs/demo/diagnostic-onboarding/</code></li>
+      <li><code>docs/external-reviews/2026-06-03-diagnostic-ci-pr-review-surface-pro-review.md</code></li>
+      <li><code>docs/external-reviews/2026-06-03-diagnostic-artifact-drift-check-pro-review.md</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>: <span class="ok">PASS</span>, 365 passed.</li>
+      <li><code>python -m pytest -q tests/test_diagnostic_artifact_drift.py tests/test_cli_diagnostics.py tests/test_diagnostic_demo_artifacts.py tests/test_project_surface.py tests/test_phase14_artifacts.py tests/test_phase15_artifacts.py tests/test_phase16_artifacts.py</code>: <span class="ok">PASS</span>, 43 passed.</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: <span class="ok">PASS</span>.</li>
+      <li><code>diagnostic-ci-gate</code> over committed demo artifacts: <span class="ok">PASS</span>.</li>
+      <li>Documented full regeneration plus <code>diagnostic-artifact-drift-check</code>: <span class="ok">PASS</span>, <code>compared_count=8</code>, <code>drift_count=0</code>.</li>
+      <li><code>openspec validate --all --strict</code>: <span class="ok">PASS</span>, 4 specs passed after archive.</li>
+      <li><code>git diff --check</code>: <span class="ok">PASS</span>.</li>
+      <li>Leak/overclaim scans: no new positive overclaim or credential exposure; matches were boundary text or negative tests.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>集成状态</h2>
+    <ul>
+      <li>Phase 1: staged, committed, and pushed to <code>main</code> as <code>8f09d77</code>.</li>
+      <li>Phase 2: ready for Auto Integration Policy; final commit hash and push result are recorded in the final user response because this report is part of that commit.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>剩余风险</h2>
+    <ul>
+      <li>Drift check 是本地 semantic comparison，不是 release approval。</li>
+      <li>本轮没有实现 GitHub API、PR annotations、Marketplace Action、SaaS 或 runtime MCP router。</li>
+      <li>External Pro review 没有实际运行；phase 2 使用本地 Reviewer subagent 和 fresh validation 替代。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>推荐下一步</h2>
+    <p>请确认是否开启新的 OpenSpec 阶段，把 artifact drift check 接入 GitHub Actions，或进一步设计 PR-facing automation。前者改变 CI workflow，后者改变 public/product boundary，都应该单独 propose/review。</p>
+  </section>
+</main>
+</body>
+</html>
