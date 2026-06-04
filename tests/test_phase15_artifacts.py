@@ -76,8 +76,8 @@ def test_phase15_docs_and_readme_reference_the_pack_without_overclaiming():
     assert "does not establish SOTA" in phase15
     assert "standard external benchmark" in phase15
     assert "production readiness" in phase15
-    assert "| Test cases | 397 |" in readme
-    assert "397 passed" in readme
+    assert "| Test cases | 399 |" in readme
+    assert "399 passed" in readme
     assert "| Test cases | 386 |" not in readme
     assert "386 passed" not in readme
     assert "| Test cases | 384 |" not in readme

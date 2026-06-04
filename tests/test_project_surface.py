@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_FULL_SUITE_COUNT = "397"
+CURRENT_FULL_SUITE_COUNT = "399"
 README = ROOT / "README.md"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "validate.yml"
 DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"

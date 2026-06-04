@@ -137,7 +137,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 397 |
+| Test cases | 399 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -257,7 +257,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 397 pytest cases
+├── tests/                              # 399 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -286,7 +286,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `397 passed` and
+Expected: `399 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -499,7 +499,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 397 pytest cases |
+| Testing | pytest | 399 pytest cases |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---

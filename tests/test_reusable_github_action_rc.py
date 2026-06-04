@@ -494,14 +494,29 @@ def test_hosted_consumer_action_smoke_pack_contains_committed_run_evidence():
     assert metadata["consumer_repository"] == (
         "Raidriar7170/hermes-skilleval-action-consumer-smoke"
     )
+    assert metadata["consumer_repository_url"] == (
+        "https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke"
+    )
     assert metadata["producer_action_ref"] == "Raidriar7170/hermes-skilleval@main"
     assert metadata["workflow_name"] == "SkillEval hosted consumer smoke"
-    assert metadata["conclusion"] == "success"
-    assert metadata["run_url"].startswith(
-        "https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke/actions/runs/"
+    assert metadata["workflow_file"] == ".github/workflows/skilleval.yml"
+    assert metadata["run_id"] == 26946490131
+    assert metadata["run_url"] == (
+        "https://github.com/Raidriar7170/"
+        "hermes-skilleval-action-consumer-smoke/actions/runs/26946490131"
     )
-    assert metadata["head_sha"]
+    assert metadata["head_branch"] == "main"
+    assert metadata["head_sha"] == "f7d931f920eee6fa639876c7c038892183e72938"
+    assert metadata["status"] == "completed"
+    assert metadata["conclusion"] == "success"
     assert "skilleval-action-artifacts" in metadata["artifact_names"]
+    assert metadata["artifacts"] == [
+        {
+            "expired": False,
+            "name": "skilleval-action-artifacts",
+            "size_in_bytes": 2542,
+        }
+    ]
     assert "skilleval hosted consumer smoke" in metadata["evidence_kind"]
 
     assert "workflow_dispatch:" in workflow

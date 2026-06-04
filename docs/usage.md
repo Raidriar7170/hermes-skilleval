@@ -521,7 +521,7 @@ pytest -q
 Expected:
 
 ```text
-397 passed
+399 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
