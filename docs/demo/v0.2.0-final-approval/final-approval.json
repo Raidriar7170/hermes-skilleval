@@ -1,0 +1,118 @@
+{
+  "artifact_type": "v0.2.0-final-approval-checklist",
+  "schema_version": "v0.2.0-final-approval.v1",
+  "release_version": "v0.2.0",
+  "generated_date": "2026-06-04",
+  "overall_decision": "NEEDS_REVIEW",
+  "published": false,
+  "tag_created": false,
+  "github_release_created": false,
+  "marketplace_published": false,
+  "release_actions_require_human_confirmation": true,
+  "release_notes_status": "PREPARED_FOR_REVIEW",
+  "release_decision": "NEEDS_REVIEW",
+  "router_decision": "KEEP_BASELINE",
+  "default_router": "baseline-minilm",
+  "candidate_router": "finetuned-embedding",
+  "finetuned_embedding_approved_for_default": false,
+  "release_check_status": "PASS",
+  "local_action_smoke_decision": "ALLOW_MERGE",
+  "hosted_action_smoke_decision": "ALLOW_MERGE",
+  "hosted_action_run_url": "https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke/actions/runs/26946490131",
+  "review_checks": [
+    {
+      "name": "release-notes-draft",
+      "status": "READY_FOR_REVIEW",
+      "evidence": "docs/release-notes/v0.2.0.md"
+    },
+    {
+      "name": "release-decision-package",
+      "status": "PASS",
+      "evidence": "docs/demo/v0.2.0-release-decision/release-decision.json"
+    },
+    {
+      "name": "router-release-gate",
+      "status": "PASS",
+      "evidence": "docs/demo/phase17-calibrated-release-selector/release-decision.json"
+    },
+    {
+      "name": "local-action-smoke",
+      "status": "PASS",
+      "evidence": "docs/demo/external-repo-action-smoke-pack/output/gate-report.json"
+    },
+    {
+      "name": "hosted-action-smoke",
+      "status": "PASS",
+      "evidence": "docs/demo/hosted-consumer-action-smoke/run-metadata.json"
+    },
+    {
+      "name": "focused-tests",
+      "status": "PASS",
+      "evidence": "tests/test_v0_2_0_final_approval.py"
+    },
+    {
+      "name": "full-pytest",
+      "status": "PASS",
+      "evidence": "python -m pytest -q"
+    },
+    {
+      "name": "openspec-strict",
+      "status": "PASS",
+      "evidence": "openspec validate --all --strict"
+    },
+    {
+      "name": "release-check",
+      "status": "PASS",
+      "evidence": "PYTHONPATH=src python -m hermes_skilleval.cli release-check"
+    },
+    {
+      "name": "v0.2.0-tag-absent",
+      "status": "PASS",
+      "evidence": "git ls-remote --tags origin refs/tags/v0.2.0"
+    },
+    {
+      "name": "v0.2.0-github-release-absent",
+      "status": "PASS",
+      "evidence": "gh release view v0.2.0"
+    },
+    {
+      "name": "overclaim-and-secret-scan",
+      "status": "PASS",
+      "evidence": "focused public-surface scan"
+    }
+  ],
+  "go_conditions": [
+    "Release notes draft exists and only describes implemented capabilities.",
+    "Release decision package remains NEEDS_REVIEW and Published false.",
+    "Router decision remains KEEP_BASELINE with baseline-minilm as default.",
+    "Local and hosted action smoke remain RC support evidence only.",
+    "Focused tests, full pytest, OpenSpec validation, release-check, and scans pass.",
+    "The user explicitly confirms publication in a separate publish phase."
+  ],
+  "no_go_until": [
+    "A human explicitly confirms whether to create tag v0.2.0.",
+    "A human explicitly confirms whether to create a GitHub Release.",
+    "A human explicitly confirms whether Marketplace publication is in scope.",
+    "Final validation results are refreshed after this checklist is reviewed."
+  ],
+  "required_human_confirmation": [
+    "create tag v0.2.0",
+    "create a GitHub Release",
+    "Marketplace publication",
+    "any public release action"
+  ],
+  "boundary": [
+    "not automatic publication",
+    "not release approval",
+    "not a v0.2.0 release",
+    "not a Marketplace Action release",
+    "not GitHub API PR comments",
+    "not PR annotations",
+    "not SaaS",
+    "not a runtime MCP router",
+    "not a SOTA claim",
+    "not benchmark status",
+    "not production readiness",
+    "not automatic merge approval"
+  ]
+}

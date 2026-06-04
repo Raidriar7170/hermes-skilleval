@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_FULL_SUITE_COUNT = "406"
+CURRENT_FULL_SUITE_COUNT = "413"
 README = ROOT / "README.md"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "validate.yml"
 DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
@@ -32,6 +32,8 @@ PUBLIC_EVIDENCE_HUMAN_BRIEF = (
 )
 RELEASE_HANDOFF = ROOT / "docs" / "release-handoff.md"
 V0_2_0_RELEASE_DECISION_PACK = ROOT / "docs" / "demo" / "v0.2.0-release-decision"
+V0_2_0_FINAL_APPROVAL_PACK = ROOT / "docs" / "demo" / "v0.2.0-final-approval"
+V0_2_0_RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.2.0.md"
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 EXTERNAL_REPO_ACTION_SMOKE_PACK = (
@@ -41,6 +43,9 @@ HOSTED_CONSUMER_ACTION_SMOKE_PACK = (
     ROOT / "docs" / "demo" / "hosted-consumer-action-smoke"
 )
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
+V0_2_0_FINAL_APPROVAL_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-v0-2-0-release-notes-and-final-approval.html"
+)
 PUBLIC_EVIDENCE_CHANGE = "public-evidence-surface-refresh"
 EXTERNAL_REPO_ACTION_SMOKE_CHANGE = "external-repo-action-smoke-pack"
 HOSTED_CONSUMER_ACTION_SMOKE_CHANGE = "hosted-consumer-action-smoke"
@@ -75,6 +80,7 @@ CURRENT_HUMAN_BRIEFS = [
     NODE24_HUMAN_BRIEF,
     REUSABLE_ACTION_HUMAN_BRIEF,
     V0_2_0_RELEASE_DECISION_HUMAN_BRIEF,
+    V0_2_0_FINAL_APPROVAL_HUMAN_BRIEF,
     PUBLIC_EVIDENCE_HUMAN_BRIEF,
 ]
 PUBLIC_EVIDENCE_CHANGE_ARTIFACTS = [
@@ -318,13 +324,19 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "demo/v0.2.0-release-decision/release-decision.md",
         "demo/v0.2.0-release-decision/release-decision.json",
         "demo/v0.2.0-release-decision/input-manifest.json",
+        "release-notes/v0.2.0.md",
+        "demo/v0.2.0-final-approval/final-approval.md",
+        "demo/v0.2.0-final-approval/final-approval.json",
+        "demo/v0.2.0-final-approval/input-manifest.json",
         "../openspec/specs/pr-facing-ci-summary/spec.md",
         "../openspec/specs/reusable-github-action-rc/spec.md",
         "../openspec/specs/v0-2-0-release-decision/spec.md",
+        "../openspec/specs/v0-2-0-release-notes-and-final-approval/spec.md",
         "human-briefs/2026-06-04-reusable-github-action-rc.html",
         "human-briefs/2026-06-04-external-repo-action-smoke-pack.html",
         "human-briefs/2026-06-04-hosted-consumer-action-smoke.html",
         "human-briefs/2026-06-04-v0-2-0-release-decision.html",
+        "human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html",
         "human-briefs/2026-06-04-autonomous-loop-v0-2-0-release-decision.html",
         "human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html",
         "human-briefs/2026-06-03-autonomous-loop-external-skill-library-validation-pack.html",
@@ -599,6 +611,71 @@ def test_v0_2_0_release_decision_surfaces_are_linked_and_bounded():
         assert risky_claim not in combined
 
 
+def test_v0_2_0_final_approval_surfaces_are_linked_and_bounded():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+    handoff = RELEASE_HANDOFF.read_text(encoding="utf-8")
+    release_notes = V0_2_0_RELEASE_NOTES.read_text(encoding="utf-8")
+    final_md = (V0_2_0_FINAL_APPROVAL_PACK / "final-approval.md").read_text(
+        encoding="utf-8"
+    )
+    brief = V0_2_0_FINAL_APPROVAL_HUMAN_BRIEF.read_text(encoding="utf-8")
+    combined = "\n".join([readme, usage, evidence_map, handoff, release_notes, final_md, brief])
+
+    for path in [
+        "docs/release-notes/v0.2.0.md",
+        "docs/demo/v0.2.0-final-approval/final-approval.md",
+        "docs/demo/v0.2.0-final-approval/final-approval.json",
+        "docs/demo/v0.2.0-final-approval/input-manifest.json",
+        "docs/human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html",
+    ]:
+        assert path in combined
+
+    for phrase in [
+        "v0.2.0 release notes",
+        "v0.2.0 final approval",
+        "Overall decision: `NEEDS_REVIEW`",
+        "Published: `false`",
+        "GO Conditions",
+        "NO-GO Until",
+        "Requires Human Confirmation",
+        "prepared for human approval",
+        "not automatic publication",
+        "explicit human confirmation",
+        "not a Marketplace Action release",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+        "not benchmark status",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+        "not a v0.2.0 release",
+    ]:
+        assert phrase in combined
+
+    for risky_claim in [
+        "v0.2.0 has been released",
+        "v0.2.0 is released",
+        "released v0.2.0",
+        "published to the GitHub Marketplace",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark status",
+        "production-ready",
+        "approves the release",
+        "automatic merge approval enabled",
+        "uses: Raidriar7170/hermes-skilleval@v0.2.0",
+        "gh release create",
+    ]:
+        assert risky_claim not in combined
+
+
 def test_pr_facing_ci_summary_surface_is_local_and_bounded():
     readme = README.read_text(encoding="utf-8")
     usage = USAGE.read_text(encoding="utf-8")
@@ -822,6 +899,10 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "399 passed",
         "399 passing tests",
         "| Test cases | 399 |",
+        "406 pytest cases",
+        "406 passed",
+        "406 passing tests",
+        "| Test cases | 406 |",
         "393 pytest cases",
         "393 passed",
         "393 passing tests",

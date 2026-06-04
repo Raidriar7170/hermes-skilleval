@@ -12,6 +12,10 @@ For the v0.2.0 release decision package, use
 [`docs/demo/v0.2.0-release-decision/release-decision.md`](demo/v0.2.0-release-decision/release-decision.md);
 it records `NEEDS_REVIEW`, `KEEP_BASELINE`, and `Published: false` for human
 release review, not automatic publication.
+For the v0.2.0 release notes and v0.2.0 final approval checklist, use
+[`docs/release-notes/v0.2.0.md`](release-notes/v0.2.0.md) and
+[`docs/demo/v0.2.0-final-approval/final-approval.md`](demo/v0.2.0-final-approval/final-approval.md);
+they are prepared for human approval, not a public release action.
 
 ## Installation
 
@@ -525,7 +529,7 @@ pytest -q
 Expected:
 
 ```text
-406 passed
+413 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
@@ -685,3 +689,24 @@ benchmark status, not production readiness, not release approval, not automatic
 merge approval, not a v0.2.0 release, and not automatic publication. Any tag,
 GitHub Release, Marketplace publication, or public release action requires
 explicit human confirmation.
+
+## 23. Review the v0.2.0 Release Notes And Final Approval Checklist
+
+The v0.2.0 release notes and final approval checklist are review artifacts:
+
+- [`release-notes/v0.2.0.md`](release-notes/v0.2.0.md)
+- [`final-approval.md`](demo/v0.2.0-final-approval/final-approval.md)
+- [`final-approval.json`](demo/v0.2.0-final-approval/final-approval.json)
+- [`input-manifest.json`](demo/v0.2.0-final-approval/input-manifest.json)
+
+The v0.2.0 final approval package records Overall decision: `NEEDS_REVIEW` and
+Published: `false`. It lists GO Conditions, NO-GO Until, and Requires Human
+Confirmation so a reviewer can decide whether to start a separate publish
+phase.
+
+Boundary: this is prepared for human approval, not automatic publication, not a
+Marketplace Action release, not GitHub API PR comments, not PR annotations, not
+SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not
+production readiness, not release approval, not automatic merge approval, and
+not a v0.2.0 release. Explicit human confirmation is required before any tag,
+GitHub Release, Marketplace publication, or public release action.

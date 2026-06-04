@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v0.2.0 Release Notes And Final Approval</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 30px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>v0.2.0 Release Notes And Final Approval</h1>
+    <span class="status">archived / validation passed</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段补齐 <code>v0.2.0 release notes</code> 和 <code>v0.2.0 final approval</code> checklist，但仍保持 <code>NEEDS_REVIEW</code>、<code>Published: false</code>，不发布。</p>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>当前公开测试计数已验证为 <code>413 passed</code>。发布状态仍是 review-only，不是 tag、GitHub Release 或 Marketplace publication。</p>
+
+    <h2>本阶段改了什么</h2>
+    <ul>
+      <li>新增 <a href="../release-notes/v0.2.0.md"><code>docs/release-notes/v0.2.0.md</code></a>：准备给人工审批的 release notes draft。</li>
+      <li>新增 <a href="../demo/v0.2.0-final-approval/final-approval.md"><code>final-approval.md</code></a> 和 <a href="../demo/v0.2.0-final-approval/final-approval.json"><code>final-approval.json</code></a>：列出 GO Conditions、NO-GO Until、Requires Human Confirmation。</li>
+      <li>新增测试，防止 release notes/checklist 声称已发布、Marketplace、PR comments、SaaS、runtime MCP router、SOTA 或 production readiness。</li>
+    </ul>
+
+    <h2>关键证据</h2>
+    <ul>
+      <li><a href="../demo/v0.2.0-release-decision/release-decision.md">v0.2.0 release decision</a>：<code>NEEDS_REVIEW</code>、<code>Published: false</code>、<code>KEEP_BASELINE</code>。</li>
+      <li><a href="../demo/phase18-ci-release-reproducibility/release-manifest.md">Phase 18 release manifest</a>：release-check 可复现。</li>
+      <li><a href="../demo/hosted-consumer-action-smoke/run-metadata.json">Hosted consumer smoke</a>：一次 hosted consumer run，作为 RC support evidence，不是发布证明。</li>
+    </ul>
+
+    <h2>验证计划</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_v0_2_0_final_approval.py tests/test_project_surface.py -q</code></li>
+      <li><code>python -m pytest -q</code>：PASS，413 passed。</li>
+      <li><code>openspec validate --all --strict</code>：PASS，14 passed。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS。</li>
+      <li>tag/release absence checks、overclaim/secret scan、<code>git diff --check</code>：PASS。</li>
+    </ul>
+
+    <h2>不要夸大的结论</h2>
+    <p>本阶段不是 automatic publication，不是 release approval，不是 Marketplace Action release，不是 GitHub API PR comments，不是 PR annotations，不是 SaaS，不是 runtime MCP router，不是 SOTA claim，不是 benchmark status，不是 production readiness，不是 automatic merge approval，也不是 v0.2.0 release。</p>
+
+    <h2>推荐下一步</h2>
+    <p>本阶段已归档并通过本地验证。真正发布仍需要用户明确确认新的 publish 阶段。</p>
+  </main>
+</body>
+</html>

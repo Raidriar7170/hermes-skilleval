@@ -43,6 +43,14 @@ to promote regressions as defaults.
   records the v0.2.0 release decision as `NEEDS_REVIEW`: human release review
   is supported, but it is not a v0.2.0 release, not release approval, and not
   automatic publication.
+- [`docs/release-notes/v0.2.0.md`](docs/release-notes/v0.2.0.md) and
+  [`docs/demo/v0.2.0-final-approval/final-approval.md`](docs/demo/v0.2.0-final-approval/final-approval.md)
+  prepare v0.2.0 release notes and final approval review; they still require
+  explicit human confirmation before any public release action.
+  The final approval source manifest is
+  [`docs/demo/v0.2.0-final-approval/input-manifest.json`](docs/demo/v0.2.0-final-approval/input-manifest.json).
+  The companion Human Brief is
+  [`docs/human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html`](docs/human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html).
 
 For the full evidence chain, start from
 [`docs/release-handoff.md`](docs/release-handoff.md).
@@ -98,6 +106,7 @@ release gate reproducible.
 | Phase 17 release selector | `KEEP_BASELINE`; `finetuned-embedding` not approved as default | [`docs`](docs/phase17.md), [`release-decision.md`](docs/demo/phase17-calibrated-release-selector/release-decision.md) |
 | Phase 18 reproducibility pack | `PASS`; release decision remains `KEEP_BASELINE` | [`docs`](docs/phase18.md), [`release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md) |
 | v0.2.0 release decision | `NEEDS_REVIEW`; requires explicit human confirmation before public release actions | [`release-decision.md`](docs/demo/v0.2.0-release-decision/release-decision.md), [`input-manifest.json`](docs/demo/v0.2.0-release-decision/input-manifest.json) |
+| v0.2.0 final approval | Release notes prepared; Overall decision: `NEEDS_REVIEW`; Published: `false` | [`release notes`](docs/release-notes/v0.2.0.md), [`final checklist`](docs/demo/v0.2.0-final-approval/final-approval.md) |
 
 ### Example Failure Caught by the Release Gate
 
@@ -142,7 +151,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 406 |
+| Test cases | 413 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -190,6 +199,10 @@ test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从
   not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status,
   not production readiness, not release approval, not automatic merge
   approval, and not a v0.2.0 release.
+- The v0.2.0 release notes and v0.2.0 final approval checklist are prepared for
+  human approval; they are not automatic publication and require explicit human
+  confirmation before any tag, GitHub Release, Marketplace publication, or
+  public release action.
 - Model checkpoints, embedding caches, and private remote-machine details are
   intentionally not committed.
 - Future work: add third-party skill libraries, external blind task packs, and
@@ -267,7 +280,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 406 pytest cases
+├── tests/                              # 413 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -296,7 +309,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `406 passed` and
+Expected: `413 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -509,7 +522,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 406 pytest cases |
+| Testing | pytest | 413 pytest cases |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -569,7 +582,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 406 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 413 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.

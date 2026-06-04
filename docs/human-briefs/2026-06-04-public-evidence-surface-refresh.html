@@ -31,7 +31,7 @@
     <h2>本阶段改动</h2>
     <ul>
       <li><a href="../../docs/evidence-map.md"><code>docs/evidence-map.md</code></a>：新增 Reusable Action RC Evidence 分组，链接 <code>action.yml</code>、example fixture、workflow、OpenSpec spec 和 RC briefs。</li>
-      <li><a href="../../README.md"><code>README.md</code></a>、<a href="../../docs/usage.md"><code>docs/usage.md</code></a> 和当前 Human Briefs：公开测试计数同步到 <code>406 passed</code> / <code>406 pytest cases</code>。</li>
+      <li><a href="../../README.md"><code>README.md</code></a>、<a href="../../docs/usage.md"><code>docs/usage.md</code></a> 和当前 Human Briefs：公开测试计数同步到 <code>413 pytest cases</code>。</li>
       <li><a href="../../openspec/specs/docs-evidence-map/spec.md"><code>openspec/specs/docs-evidence-map/spec.md</code></a>：要求 evidence map 包含 Reusable Action RC Evidence。</li>
       <li><code>openspec/specs/*/spec.md</code>：移除 archive 生成的 <code>Purpose TBD</code> placeholder，补上能力级 Purpose。</li>
       <li><a href="../../tests/test_project_surface.py"><code>tests/test_project_surface.py</code></a>：新增 surface regression tests，防止 RC evidence links、Purpose 和公开计数再次漂移。</li>
@@ -40,7 +40,7 @@
     <h2>验证结果</h2>
     <ul>
       <li><code>python -m pytest -q tests/test_project_surface.py -q</code>：PASS，24 passed。</li>
-      <li><code>python -m pytest -q</code>：PASS，406 passed。</li>
+      <li>该阶段原始 pytest 结果是历史记录；最新公开计数同步到 <code>413 pytest cases</code>，等待当前阶段最终验证。</li>
       <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，11 passed / 0 failed（archive 前）。</li>
       <li><code>openspec archive public-evidence-surface-refresh -y</code>：完成，归档到 <code>openspec/changes/archive/2026-06-04-public-evidence-surface-refresh/</code>。</li>
       <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check ...</code>：PASS。</li>

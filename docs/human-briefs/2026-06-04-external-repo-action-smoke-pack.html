@@ -34,13 +34,13 @@
       <li><a href="../demo/external-repo-action-smoke-pack/.github/workflows/skilleval.yml"><code>docs/demo/external-repo-action-smoke-pack/.github/workflows/skilleval.yml</code></a>：consumer repo 视角的 workflow 示例。</li>
       <li><a href="../demo/external-repo-action-smoke-pack/output/gate-report.md"><code>gate-report.md</code></a> 和 <a href="../demo/external-repo-action-smoke-pack/output/ci-summary.md"><code>ci-summary.md</code></a>：本地 smoke 生成的 reviewer-readable artifacts，决策为 <code>ALLOW_MERGE</code>。</li>
       <li><a href="../../README.md"><code>README.md</code></a>、<a href="../usage.md"><code>docs/usage.md</code></a>、<a href="../evidence-map.md"><code>docs/evidence-map.md</code></a>：新增 smoke pack 入口。</li>
-      <li>公开测试计数同步到 <code>406 passed</code> / <code>406 pytest cases</code>。</li>
+      <li>公开测试计数同步到 <code>413 pytest cases</code>。</li>
     </ul>
 
     <h2>验证结果</h2>
     <ul>
       <li><code>python -m pytest -q tests/test_reusable_github_action_rc.py tests/test_project_surface.py -q</code>：PASS，34 passed。</li>
-      <li><code>python -m pytest -q</code>：PASS，406 passed。</li>
+      <li>该阶段原始 pytest 结果是历史记录；最新公开计数同步到 <code>413 pytest cases</code>，等待当前阶段最终验证。</li>
       <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，11 passed / 0 failed。</li>
       <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS。</li>
       <li><code>git diff --check</code>：PASS。</li>

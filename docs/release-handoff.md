@@ -21,6 +21,7 @@ HTML artifacts.
 | Phase 17 | Calibrated release selector keeps baseline | `docs/phase17.md` |
 | Phase 18 | CI-backed release reproducibility pack | `docs/phase18.md` |
 | v0.2.0 decision | Human release review package | `docs/demo/v0.2.0-release-decision/release-decision.md` |
+| v0.2.0 final approval | Release notes and human approval checklist | `docs/demo/v0.2.0-final-approval/final-approval.md` |
 
 ## Reviewer Entry Points
 
@@ -34,6 +35,9 @@ HTML artifacts.
 - v0.2.0 release decision: `docs/demo/v0.2.0-release-decision/release-decision.md`
 - v0.2.0 release decision JSON: `docs/demo/v0.2.0-release-decision/release-decision.json`
 - v0.2.0 input manifest: `docs/demo/v0.2.0-release-decision/input-manifest.json`
+- v0.2.0 release notes: `docs/release-notes/v0.2.0.md`
+- v0.2.0 final approval checklist: `docs/demo/v0.2.0-final-approval/final-approval.md`
+- v0.2.0 final approval JSON: `docs/demo/v0.2.0-final-approval/final-approval.json`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
 - Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
@@ -60,6 +64,12 @@ review. It does not create a release action: `finetuned-embedding` is not
 approved as default, and any tag, GitHub Release, Marketplace publication, or
 public release action requires explicit human confirmation.
 
+The v0.2.0 release notes and v0.2.0 final approval checklist are prepared for
+human approval. The checklist records Overall decision: `NEEDS_REVIEW`,
+Published: `false`, GO Conditions, NO-GO Until, and Requires Human
+Confirmation. It is not automatic publication and does not replace the
+release-decision package.
+
 ## Boundaries
 
 The repository does not commit model checkpoints, private machine details, or
@@ -69,3 +79,7 @@ The v0.2.0 decision package is not a Marketplace Action release, not GitHub API
 PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim,
 not benchmark status, not production readiness, not release approval, not
 automatic merge approval, and not a v0.2.0 release.
+
+The v0.2.0 final approval checklist follows the same boundary: not automatic
+publication, not release approval, not a Marketplace Action release, not GitHub
+API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not automatic merge approval, and not a v0.2.0 release.
