@@ -1,0 +1,58 @@
+name: Hermes SkillEval Reusable Action RC
+description: Run a bounded SkillEval benchmark gate against an external skill library.
+inputs:
+  skill-path:
+    description: Path to the skill library containing SKILL.md files.
+    required: true
+  benchmark-path:
+    description: Path to labeled benchmark task directories.
+    required: true
+  min-recall-at-k:
+    description: Minimum aggregate recall_at_5 required for the gate.
+    required: false
+    default: "1.0"
+  max-negative-hit-rate:
+    description: Maximum aggregate negative_hit_rate allowed for the gate.
+    required: false
+    default: "0.0"
+  upload-artifacts:
+    description: Upload generated SkillEval gate artifacts.
+    required: false
+    default: "false"
+  output-dir:
+    description: Directory for generated SkillEval gate artifacts.
+    required: false
+    default: skilleval-action-artifacts
+runs:
+  using: composite
+  steps:
+    - name: Install Hermes SkillEval action package
+      shell: bash
+      run: python -m pip install -e "${{ github.action_path }}"
+    - name: Run SkillEval gate
+      shell: bash
+      env:
+        SKILLEVAL_SKILL_PATH: ${{ inputs.skill-path }}
+        SKILLEVAL_BENCHMARK_PATH: ${{ inputs.benchmark-path }}
+        SKILLEVAL_MIN_RECALL_AT_K: ${{ inputs.min-recall-at-k }}
+        SKILLEVAL_MAX_NEGATIVE_HIT_RATE: ${{ inputs.max-negative-hit-rate }}
+        SKILLEVAL_OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: |
+        set +e
+        skilleval github-action-gate \
+          --skill-path "$SKILLEVAL_SKILL_PATH" \
+          --benchmark-path "$SKILLEVAL_BENCHMARK_PATH" \
+          --min-recall-at-k "$SKILLEVAL_MIN_RECALL_AT_K" \
+          --max-negative-hit-rate "$SKILLEVAL_MAX_NEGATIVE_HIT_RATE" \
+          --output-dir "$SKILLEVAL_OUTPUT_DIR"
+        status=$?
+        if [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -f "$SKILLEVAL_OUTPUT_DIR/ci-summary.md" ]; then
+          cat "$SKILLEVAL_OUTPUT_DIR/ci-summary.md" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        exit "$status"
+    - name: Upload SkillEval gate artifacts
+      if: ${{ inputs.upload-artifacts == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: skilleval-action-artifacts
+        path: ${{ inputs.output-dir }}

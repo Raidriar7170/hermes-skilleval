@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reusable GitHub Action RC - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Reusable GitHub Action RC</h1>
+    <span class="status">archived / ready for auto integration</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段新增 Reusable GitHub Action RC scaffold：root <code>action.yml</code>、<code>skilleval github-action-gate</code>、公开 example fixture、fresh-clone smoke 和保守边界文档。</p>
+    </div>
+
+    <h2>项目阶段进度</h2>
+    <p>当前项目阶段仍是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>。本阶段推进的是外部仓库试用入口，不发布 tag/release，不宣称 Marketplace。</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li><a href="../../action.yml"><code>action.yml</code></a>：Composite action RC，调用本地 <code>skilleval github-action-gate</code>。</li>
+      <li><a href="../../src/hermes_skilleval/github_action_gate.py"><code>github_action_gate.py</code></a>：写入 <code>gate-report.json</code>、<code>gate-report.md</code>、<code>ci-summary.json</code>、<code>ci-summary.md</code>。</li>
+      <li><a href="../../examples/github-action/"><code>examples/github-action/</code></a>：public-safe skills、labeled benchmark tasks 和 example workflow。</li>
+      <li>公开测试计数同步为 <code>391 passed</code> / <code>391 pytest cases</code>。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_reusable_github_action_rc.py tests/test_project_surface.py -q</code>：PASS，28 passed。</li>
+      <li><code>python -m pytest -q</code>：PASS，391 passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，10 passed / 0 failed。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check ...</code>：PASS。</li>
+      <li><code>skilleval github-action-gate</code> example fixture：<code>ALLOW_MERGE</code>。</li>
+      <li>Diagnostic onboarding drift：PASS；external skill library validation pack drift：PASS。</li>
+      <li><code>skilleval ci-summary</code> simulation：<code>ALLOW_MERGE</code>。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+    </ul>
+
+    <h2>Reviewer Fixes</h2>
+    <ul>
+      <li>Composite action 改为通过环境变量读取 inputs，避免在 shell script 中直接展开用户输入。</li>
+      <li>Gate 失败时仍会 append <code>ci-summary.md</code> 到 <code>$GITHUB_STEP_SUMMARY</code>，然后保留原始 exit status。</li>
+      <li>Rate thresholds 限制在 <code>0.0</code> 到 <code>1.0</code>，action 安装路径改为 runtime install 而不是 dev extras。</li>
+    </ul>
+
+    <h2>Source / Evidence Links</h2>
+    <ul>
+      <li><a href="../../openspec/changes/archive/2026-06-04-reusable-github-action-rc/proposal.md">proposal</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-04-reusable-github-action-rc/design.md">design</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-04-reusable-github-action-rc/specs/reusable-github-action-rc/spec.md">delta spec</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-04-reusable-github-action-rc/tasks.md">tasks</a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-04-reusable-github-action-rc/">archived change</a></li>
+      <li><a href="../../openspec/specs/reusable-github-action-rc/spec.md">synced spec</a></li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>这是 Reusable GitHub Action RC，not a Marketplace Action release, not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not release approval, not automatic merge approval, and not a v0.2.0 release。</p>
+  </main>
+</body>
+</html>

@@ -39,6 +39,7 @@ from hermes_skilleval.failure_analysis import (
     write_failure_analysis_report,
 )
 from hermes_skilleval.finetuned_eval import write_finetuned_eval_summary
+from hermes_skilleval.github_action_gate import run_github_action_gate
 from hermes_skilleval.metrics import (
     abstention_rate,
     accepted_count,
@@ -254,6 +255,18 @@ def _build_parser() -> argparse.ArgumentParser:
     ci_summary_parser.add_argument("--output", required=True)
     ci_summary_parser.add_argument("--markdown-output", required=True)
     ci_summary_parser.set_defaults(handler=_run_ci_summary)
+
+    github_action_gate_parser = subparsers.add_parser(
+        "github-action-gate",
+        help="run a reusable GitHub Action RC benchmark gate",
+    )
+    github_action_gate_parser.add_argument("--skill-path", required=True)
+    github_action_gate_parser.add_argument("--benchmark-path", required=True)
+    github_action_gate_parser.add_argument("--min-recall-at-k", type=float, required=True)
+    github_action_gate_parser.add_argument("--max-negative-hit-rate", type=float, required=True)
+    github_action_gate_parser.add_argument("--output-dir", required=True)
+    github_action_gate_parser.add_argument("--top-k", type=int, default=5)
+    github_action_gate_parser.set_defaults(handler=_run_github_action_gate)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -830,6 +843,20 @@ def _run_ci_summary(args: argparse.Namespace) -> None:
     print(f"CI summary {summary['decision']}: {args.output}")
     if summary["decision"] != "ALLOW_MERGE":
         raise ValueError(f"ci summary decision: {summary['decision']}")
+
+
+def _run_github_action_gate(args: argparse.Namespace) -> None:
+    gate = run_github_action_gate(
+        skill_path=Path(args.skill_path),
+        benchmark_path=Path(args.benchmark_path),
+        min_recall_at_k=args.min_recall_at_k,
+        max_negative_hit_rate=args.max_negative_hit_rate,
+        output_dir=Path(args.output_dir),
+        top_k=args.top_k,
+    )
+    print(f"GitHub action gate {gate['decision']}: {args.output_dir}")
+    if gate["decision"] != "ALLOW_MERGE":
+        raise ValueError(f"github action gate decision: {gate['decision']}")
 
 
 def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:

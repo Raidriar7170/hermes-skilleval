@@ -1,0 +1,21 @@
+name: SkillEval Gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  skilleval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: Raidriar7170/hermes-skilleval@main
+        with:
+          skill-path: examples/github-action/skills
+          benchmark-path: examples/github-action/benchmark
+          min-recall-at-k: "1.0"
+          max-negative-hit-rate: "0.0"
+          upload-artifacts: 'true'

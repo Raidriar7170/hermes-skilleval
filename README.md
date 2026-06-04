@@ -137,7 +137,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 386 |
+| Test cases | 391 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -257,7 +257,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 386 pytest cases
+├── tests/                              # 391 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -286,7 +286,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `386 passed` and
+Expected: `391 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -387,6 +387,36 @@ Boundary: this is not a Marketplace Action, not GitHub API PR comments, not PR
 annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
 benchmark status, not production readiness, not release approval, not automatic
 merge approval, and not a permanent compatibility guarantee.
+
+### Reusable GitHub Action RC
+
+The repository now includes a root `action.yml` composite action scaffold for
+external maintainers who want to run a small SkillEval gate in their own
+repository. The action delegates to `skilleval github-action-gate`, accepts
+`skill-path`, `benchmark-path`, `min-recall-at-k`, `max-negative-hit-rate`, and
+`upload-artifacts`, writes deterministic gate JSON/Markdown plus CI summary
+artifacts, and can optionally upload those artifacts with
+`actions/upload-artifact@v4`.
+
+Example usage stays on `@main` or a commit SHA while this remains a release
+candidate:
+
+```yaml
+- uses: Raidriar7170/hermes-skilleval@main
+  with:
+    skill-path: examples/github-action/skills
+    benchmark-path: examples/github-action/benchmark
+    min-recall-at-k: "1.0"
+    max-negative-hit-rate: "0.0"
+    upload-artifacts: 'true'
+```
+
+The public-safe fixture lives in
+[`examples/github-action/`](examples/github-action/). It is a Reusable GitHub
+Action RC, not a Marketplace Action release, not GitHub API PR comments, not PR
+annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
+benchmark status, not production readiness, not release approval, not automatic
+merge approval, and not a v0.2.0 release.
 
 ---
 

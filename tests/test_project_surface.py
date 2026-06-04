@@ -13,6 +13,9 @@ FAILURE_GALLERY = ROOT / "docs" / "failure-gallery.md"
 NODE24_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-github-actions-node24-validation.html"
 )
+REUSABLE_ACTION_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-reusable-github-action-rc.html"
+)
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
@@ -26,6 +29,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-03-docs-evidence-map.html",
     ROOT / "docs" / "human-briefs" / "2026-06-04-failure-gallery.html",
     NODE24_HUMAN_BRIEF,
+    REUSABLE_ACTION_HUMAN_BRIEF,
 ]
 
 
@@ -545,14 +549,16 @@ def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "386 passed" in combined
-    assert "386 pytest cases" in README.read_text(encoding="utf-8")
+    assert "391 passed" in combined
+    assert "391 pytest cases" in README.read_text(encoding="utf-8")
     for stale_count in [
+        "386 pytest cases",
         "384 pytest cases",
         "381 pytest cases",
         "378 pytest cases",
         "372 pytest cases",
         "365 pytest cases",
+        "386 passed",
         "384 passed",
         "381 passed",
         "378 passed",
@@ -573,6 +579,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "| Test cases | 372 |",
         "| Test cases | 378 |",
         "| Test cases | 381 |",
+        "| Test cases | 386 |",
         "| Test cases | 384 |",
     ]:
         assert stale_count not in combined

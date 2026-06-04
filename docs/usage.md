@@ -18,7 +18,7 @@ cd hermes-skilleval
 python -m venv .venv
 source .venv/bin/activate
 
-python -m pip install -e ".[dev]"
+python -m pip install -e "."
 ```
 
 Install optional neural routing backends:
@@ -521,7 +521,7 @@ pytest -q
 Expected:
 
 ```text
-386 passed
+391 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
@@ -619,3 +619,29 @@ Boundary: this is not a Marketplace Action, not GitHub API PR comments, not PR
 annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
 benchmark status, not production readiness, not release approval, not automatic
 merge approval, and not a permanent compatibility guarantee.
+
+## 21. Run the Reusable GitHub Action RC Gate Locally
+
+The root `action.yml` is a Reusable GitHub Action RC scaffold for external
+skill-library maintainers. It runs `skilleval github-action-gate` against a
+labeled benchmark and writes deterministic gate artifacts:
+
+```bash
+python -m pip install -e ".[dev]"
+skilleval github-action-gate \
+  --skill-path examples/github-action/skills \
+  --benchmark-path examples/github-action/benchmark \
+  --min-recall-at-k 1.0 \
+  --max-negative-hit-rate 0.0 \
+  --output-dir runtime/github-action-gate
+```
+
+The example workflow under
+[`examples/github-action/.github/workflows/skilleval.yml`](examples/github-action/.github/workflows/skilleval.yml)
+uses `Raidriar7170/hermes-skilleval@main`; use a pinned commit SHA for a stricter
+trial. Do not use an unpublished version tag.
+
+Boundary: this is a Reusable GitHub Action RC, not a Marketplace Action release,
+not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
+router, not a SOTA claim, not benchmark status, not production readiness, not
+release approval, not automatic merge approval, and not a v0.2.0 release.
