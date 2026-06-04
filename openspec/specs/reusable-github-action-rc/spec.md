@@ -5,33 +5,23 @@ Provide a bounded reusable GitHub composite action release-candidate scaffold
 that lets external repositories run an offline SkillEval gate against their own
 skills and labeled benchmark without tokens, release publication, Marketplace
 claims, PR comments, SaaS, or runtime router services.
-
 ## Requirements
 ### Requirement: Provide reusable composite action scaffold
-The system SHALL provide a root-level GitHub composite action scaffold that runs
-SkillEval against an external skill library and labeled benchmark without
-requiring GitHub API tokens.
+The system SHALL provide a repository-root GitHub composite action release
+candidate that can run the SkillEval gate from a consumer repository without
+requiring GitHub API comments, PR annotations, SaaS, runtime MCP routing, or
+Marketplace publication.
 
-#### Scenario: Inspect action metadata
-- **WHEN** a maintainer opens `action.yml`
-- **THEN** it MUST declare `skill-path`, `benchmark-path`,
-  `min-recall-at-k`, `max-negative-hit-rate`, and `upload-artifacts` inputs
-- **AND** it MUST use `runs.using: composite`
-- **AND** it MUST NOT declare GitHub API token, PR comment, PR annotation, SaaS,
-  runtime MCP router, Marketplace publication, release publication, or tag
-  creation steps
-
-#### Scenario: Run external benchmark gate
-- **WHEN** the action runs with a skill path, benchmark path, and thresholds
-- **THEN** it MUST run SkillEval offline, write gate JSON/Markdown artifacts,
-  append a Markdown summary to `$GITHUB_STEP_SUMMARY`, and exit non-zero when
-  recall or negative-hit thresholds fail
-
-#### Scenario: Optionally upload artifacts
-- **WHEN** `upload-artifacts` is set to `true`
-- **THEN** the action MAY upload generated SkillEval artifacts with the standard
-  artifact action
-- **AND** it MUST remain optional and token-free for callers
+#### Scenario: Hosted consumer workflow runs the RC action
+- **WHEN** a hosted consumer GitHub Actions workflow calls
+  `Raidriar7170/hermes-skilleval@main`
+- **THEN** the action MUST run `skilleval github-action-gate` against
+  consumer-owned `skills` and `benchmark` paths
+- **AND** the hosted workflow MUST upload gate report, CI summary, and results
+  artifacts
+- **AND** the evidence MUST remain RC smoke evidence rather than a release tag,
+  Marketplace publication, PR automation, SaaS, runtime MCP router, production
+  readiness, release approval, or automatic merge approval
 
 ### Requirement: Provide external onboarding example
 The system SHALL include a public-safe `examples/github-action/` directory that

@@ -1,6 +1,6 @@
 ## MODIFIED Requirements
 
-### Requirement: Provide reusable GitHub composite action RC
+### Requirement: Provide reusable composite action scaffold
 The system SHALL provide a repository-root GitHub composite action release
 candidate that can run the SkillEval gate from a consumer repository without
 requiring GitHub API comments, PR annotations, SaaS, runtime MCP routing, or

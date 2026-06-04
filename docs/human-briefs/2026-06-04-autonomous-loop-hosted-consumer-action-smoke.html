@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - Hosted Consumer Action Smoke</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 72px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 19px; margin: 30px 0 10px; border-bottom: 1px solid #d7deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Autonomous Loop: Hosted Consumer Action Smoke</h1>
+    <span class="status">archived / complete</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本轮完成并归档 <code>hosted-consumer-action-smoke</code>，把 Reusable GitHub Action RC 的 GitHub-hosted consumer 证据做成可审阅证据包，当前 full pytest 为 <code>399 passed</code>。</p>
+    </div>
+
+    <h2>停止原因</h2>
+    <p>本轮停止在已确认的 hosted consumer smoke 边界：下一步自然方向会进入更强的发布决策边界，尤其是 tag/release/Marketplace；这些都需要用户明确确认后再推进。</p>
+
+    <h2>项目阶段进度</h2>
+    <p>当前项目阶段仍是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>。本阶段补上的不是 release 宣称，而是一个远端 GitHub-hosted consumer smoke run，让 reviewer 能从 consumer repository、run metadata、gate report 和 CI summary 四条线同时看到 RC 证据。</p>
+
+    <h2>完成事项</h2>
+    <ul>
+      <li><a href="../demo/hosted-consumer-action-smoke/README.md"><code>docs/demo/hosted-consumer-action-smoke/README.md</code></a>：hosted smoke evidence pack，记录 consumer repo、workflow、run URL 和 artifact 限制。</li>
+      <li><a href="../demo/hosted-consumer-action-smoke/run-metadata.json"><code>run-metadata.json</code></a>：run id、workflow name、consumer repo、action ref、artifact names 和边界。</li>
+      <li><a href="../demo/hosted-consumer-action-smoke/output/gate-report.md"><code>gate-report.md</code></a> / <a href="../demo/hosted-consumer-action-smoke/output/ci-summary.md"><code>ci-summary.md</code></a>：<code>ALLOW_MERGE</code>、<code>recall_at_5=1.0</code>、<code>negative_hit_rate=0.0</code>。</li>
+      <li><a href="../../openspec/specs/hosted-consumer-action-smoke/spec.md"><code>openspec/specs/hosted-consumer-action-smoke/spec.md</code></a>：新增 hosted smoke capability spec。</li>
+      <li><a href="../../openspec/specs/docs-evidence-map/spec.md"><code>openspec/specs/docs-evidence-map/spec.md</code></a> 与 <a href="../../openspec/specs/reusable-github-action-rc/spec.md"><code>openspec/specs/reusable-github-action-rc/spec.md</code></a>：同步 hosted smoke 证据和边界说明。</li>
+      <li><a href="./2026-06-04-hosted-consumer-action-smoke.html">phase Human Brief</a>：本阶段中文摘要，状态已标为 archived。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_phase14_artifacts.py tests/test_phase15_artifacts.py tests/test_phase16_artifacts.py tests/test_reusable_github_action_rc.py tests/test_project_surface.py -q</code>：PASS。</li>
+      <li><code>python -m pytest -q</code>：<code>399 passed</code>。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：<code>12 passed, 0 failed</code>。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate hosted-consumer-action-smoke --strict</code>：PASS。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+      <li>Reviewer 反馈：先修复了 stale count surface 和 hosted-run pinning；最终 Must Fix 是 README recruiter-facing copy 的 397，已同步到 399。</li>
+    </ul>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li>Hosted run URL：<a href="https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke/actions/runs/26946490131">https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke/actions/runs/26946490131</a></li>
+      <li>Consumer repo：<a href="https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke">Raidriar7170/hermes-skilleval-action-consumer-smoke</a></li>
+      <li>Archive location：<code>openspec/changes/archive/2026-06-04-hosted-consumer-action-smoke/</code></li>
+      <li>Phase Human Brief：<a href="./2026-06-04-hosted-consumer-action-smoke.html">docs/human-briefs/2026-06-04-hosted-consumer-action-smoke.html</a></li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>这是一次 GitHub-hosted consumer smoke 和 Reusable GitHub Action RC evidence，not a Marketplace Action release, not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not release approval, not automatic merge approval, and not a v0.2.0 release。</p>
+
+    <h2>推荐下一步</h2>
+    <p>如果要继续，建议进入 <code>v0.2.0-release-decision</code> 并显式确认 tag/release/Marketplace 边界；如果不继续，这里已经是一个可以交给人看的完整收口点。</p>
+  </main>
+</body>
+</html>
