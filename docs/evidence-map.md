@@ -34,6 +34,7 @@ automatic merge approval, and not a v0.2.0 release.
 | [`v0.2.0 final approval checklist`](demo/v0.2.0-final-approval/final-approval.md) | Reviewer-readable GO Conditions, NO-GO Until, and Requires Human Confirmation checklist. | It is release-review packaging, not release approval or automatic publication. |
 | [`v0.2.0 final approval JSON`](demo/v0.2.0-final-approval/final-approval.json) | Machine-readable final approval fields: Overall decision: `NEEDS_REVIEW`, Published: `false`, and source checks. | It does not create a tag, GitHub Release, Marketplace publication, or deployment. |
 | [`v0.2.0 final approval input manifest`](demo/v0.2.0-final-approval/input-manifest.json) | Source artifact paths, sizes, and hashes used by the final approval package. | It is a package manifest, not a second source of truth. |
+| [`v0.2.0 post-release evidence`](demo/v0.2.0-post-release/post-release.md) | Records the actual GitHub tag and GitHub Release facts after explicit human GO. | It is not Marketplace publication, PR comment automation, SaaS, or a runtime MCP router. |
 | [`docs/phase18.md`](phase18.md) | Narrative summary for the CI-backed reproducibility pack. | It should be read with the manifest and release-check summary. |
 
 ## Diagnostic Onboarding Evidence

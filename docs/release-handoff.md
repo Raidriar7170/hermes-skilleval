@@ -38,6 +38,7 @@ HTML artifacts.
 - v0.2.0 release notes: `docs/release-notes/v0.2.0.md`
 - v0.2.0 final approval checklist: `docs/demo/v0.2.0-final-approval/final-approval.md`
 - v0.2.0 final approval JSON: `docs/demo/v0.2.0-final-approval/final-approval.json`
+- v0.2.0 post-release evidence: `docs/demo/v0.2.0-post-release/post-release.md`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
 - Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
@@ -69,6 +70,12 @@ review evidence. The v0.2.0 final approval checklist remains the pre-publish
 approval artifact: it records Overall decision: `NEEDS_REVIEW`, Published:
 `false`, GO Conditions, NO-GO Until, and Requires Human Confirmation. It is not
 automatic publication and does not replace the release-decision package.
+
+The v0.2.0 post-release evidence records the actual GitHub tag and GitHub
+Release facts: Published: `true`, Tag created: `true`, GitHub Release created:
+`true`, Marketplace published: `false`, release URL
+`https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.2.0`, and
+target commit `13af31ee4fd2e9eed4a40f643284120bc5afab9e`.
 
 ## Boundaries
 
