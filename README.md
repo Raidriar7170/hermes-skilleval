@@ -137,7 +137,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 394 |
+| Test cases | 397 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -257,7 +257,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 394 pytest cases
+├── tests/                              # 397 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -286,7 +286,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `394 passed` and
+Expected: `397 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -413,10 +413,16 @@ candidate:
 
 The public-safe fixture lives in
 [`examples/github-action/`](examples/github-action/). It is a Reusable GitHub
-Action RC, not a Marketplace Action release, not GitHub API PR comments, not PR
-annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
-benchmark status, not production readiness, not release approval, not automatic
-merge approval, and not a v0.2.0 release.
+Action RC. The local external-consumer smoke evidence lives in
+[`docs/demo/external-repo-action-smoke-pack/`](docs/demo/external-repo-action-smoke-pack/):
+it records `ALLOW_MERGE` over consumer-shaped `skills/`, `benchmark/`, and
+`skilleval-output` paths without creating a remote repository.
+
+Boundary: this is local external-consumer smoke and Reusable GitHub Action RC
+evidence, not a Marketplace Action release, not hosted GitHub Actions proof,
+not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
+router, not a SOTA claim, not benchmark status, not production readiness, not
+release approval, not automatic merge approval, and not a v0.2.0 release.
 
 ---
 
@@ -487,7 +493,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 394 pytest cases |
+| Testing | pytest | 397 pytest cases |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -547,7 +553,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 394 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 397 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.

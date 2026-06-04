@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_FULL_SUITE_COUNT = "394"
+CURRENT_FULL_SUITE_COUNT = "397"
 README = ROOT / "README.md"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "validate.yml"
 DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
@@ -18,22 +18,33 @@ NODE24_HUMAN_BRIEF = (
 REUSABLE_ACTION_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-reusable-github-action-rc.html"
 )
+EXTERNAL_REPO_ACTION_SMOKE_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-external-repo-action-smoke-pack.html"
+)
 PUBLIC_EVIDENCE_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-public-evidence-surface-refresh.html"
 )
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
+EXTERNAL_REPO_ACTION_SMOKE_PACK = (
+    ROOT / "docs" / "demo" / "external-repo-action-smoke-pack"
+)
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
 PUBLIC_EVIDENCE_CHANGE = "public-evidence-surface-refresh"
+EXTERNAL_REPO_ACTION_SMOKE_CHANGE = "external-repo-action-smoke-pack"
 
 
 def _openspec_change_artifact(relative_path: str) -> Path:
-    active = ROOT / "openspec" / "changes" / PUBLIC_EVIDENCE_CHANGE / relative_path
+    return _openspec_named_change_artifact(PUBLIC_EVIDENCE_CHANGE, relative_path)
+
+
+def _openspec_named_change_artifact(change: str, relative_path: str) -> Path:
+    active = ROOT / "openspec" / "changes" / change / relative_path
     if active.exists():
         return active
 
     archive_root = ROOT / "openspec" / "changes" / "archive"
-    archived = sorted(archive_root.glob(f"*-{PUBLIC_EVIDENCE_CHANGE}/{relative_path}"))
+    archived = sorted(archive_root.glob(f"*-{change}/{relative_path}"))
     if archived:
         return archived[-1]
 
@@ -284,9 +295,13 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "../action.yml",
         "../examples/github-action/README.md",
         "../examples/github-action/.github/workflows/skilleval.yml",
+        "demo/external-repo-action-smoke-pack/README.md",
+        "demo/external-repo-action-smoke-pack/output/gate-report.md",
+        "demo/external-repo-action-smoke-pack/output/ci-summary.md",
         "../openspec/specs/pr-facing-ci-summary/spec.md",
         "../openspec/specs/reusable-github-action-rc/spec.md",
         "human-briefs/2026-06-04-reusable-github-action-rc.html",
+        "human-briefs/2026-06-04-external-repo-action-smoke-pack.html",
         "human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html",
         "human-briefs/2026-06-03-autonomous-loop-external-skill-library-validation-pack.html",
     ]:
@@ -355,6 +370,12 @@ def test_synced_openspec_specs_have_explicit_purpose_text():
     )
     assert "Reusable Action RC Evidence" in docs_evidence_spec
     assert "reusable GitHub Action RC" in docs_evidence_spec
+
+    external_smoke_docs_delta = _openspec_named_change_artifact(
+        EXTERNAL_REPO_ACTION_SMOKE_CHANGE,
+        "specs/docs-evidence-map/spec.md",
+    ).read_text(encoding="utf-8")
+    assert "external consumer smoke pack" in external_smoke_docs_delta
 
 
 def test_failure_gallery_is_linked_from_public_entry_points():
@@ -545,6 +566,52 @@ def test_external_validation_pack_docs_are_local_and_bounded():
 
     risky_claims = [
         "released as a Marketplace Action",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark status",
+        "production-ready",
+        "approves the release",
+    ]
+    for phrase in risky_claims:
+        assert phrase not in combined
+
+
+def test_external_repo_action_smoke_pack_docs_are_local_and_bounded():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+    pack_readme = (EXTERNAL_REPO_ACTION_SMOKE_PACK / "README.md").read_text(
+        encoding="utf-8"
+    )
+    brief = EXTERNAL_REPO_ACTION_SMOKE_HUMAN_BRIEF.read_text(encoding="utf-8")
+    combined = "\n".join([readme, usage, evidence_map, pack_readme, brief])
+
+    assert "External Repo Action Smoke Pack" in combined
+    assert "docs/demo/external-repo-action-smoke-pack" in combined
+    assert "local external-consumer smoke" in combined
+    assert "skilleval-output" in combined
+    assert "ALLOW_MERGE" in combined
+    for phrase in [
+        "not a Marketplace Action release",
+        "not hosted GitHub Actions proof",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+        "not benchmark status",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+        "not a v0.2.0 release",
+    ]:
+        assert phrase in combined
+
+    risky_claims = [
+        "published to the GitHub Marketplace",
+        "proves hosted GitHub Actions",
         "posts PR comments",
         "writes PR annotations",
         "hosted SaaS product",

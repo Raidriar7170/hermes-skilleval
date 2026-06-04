@@ -521,7 +521,7 @@ pytest -q
 Expected:
 
 ```text
-394 passed
+397 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
@@ -641,7 +641,14 @@ The example workflow under
 uses `Raidriar7170/hermes-skilleval@main`; use a pinned commit SHA for a stricter
 trial. Do not use an unpublished version tag.
 
-Boundary: this is a Reusable GitHub Action RC, not a Marketplace Action release,
-not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
-router, not a SOTA claim, not benchmark status, not production readiness, not
-release approval, not automatic merge approval, and not a v0.2.0 release.
+The local external-consumer smoke pack under
+[`docs/demo/external-repo-action-smoke-pack`](demo/external-repo-action-smoke-pack)
+records the same gate shape from consumer-relative `skills/`, `benchmark/`, and
+`skilleval-output` paths. Its committed output shows `ALLOW_MERGE` with
+`recall_at_5=1.0` and `negative_hit_rate=0.0`.
+
+Boundary: this is local external-consumer smoke and a Reusable GitHub Action
+RC, not a Marketplace Action release, not hosted GitHub Actions proof, not
+GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router,
+not a SOTA claim, not benchmark status, not production readiness, not release
+approval, not automatic merge approval, and not a v0.2.0 release.

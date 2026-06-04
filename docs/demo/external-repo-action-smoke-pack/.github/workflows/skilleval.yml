@@ -1,0 +1,21 @@
+name: SkillEval external consumer smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  skilleval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: Raidriar7170/hermes-skilleval@main
+        with:
+          skill-path: skills
+          benchmark-path: benchmark
+          min-recall-at-k: "1.0"
+          max-negative-hit-rate: "0.0"
+          output-dir: skilleval-output
+          upload-artifacts: "true"

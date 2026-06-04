@@ -13,10 +13,14 @@ ROOT = Path(__file__).resolve().parents[1]
 ACTION = ROOT / "action.yml"
 EXAMPLE = ROOT / "examples" / "github-action"
 EXAMPLE_WORKFLOW = EXAMPLE / ".github" / "workflows" / "skilleval.yml"
+EXTERNAL_SMOKE_PACK = ROOT / "docs" / "demo" / "external-repo-action-smoke-pack"
 README = ROOT / "README.md"
 USAGE = ROOT / "docs" / "usage.md"
 HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-reusable-github-action-rc.html"
+)
+EXTERNAL_SMOKE_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-external-repo-action-smoke-pack.html"
 )
 LOOP_REPORT = (
     ROOT
@@ -24,6 +28,19 @@ LOOP_REPORT = (
     / "human-briefs"
     / "2026-06-04-autonomous-loop-reusable-github-action-rc.html"
 )
+
+
+def _copy_example_consumer_fixture(consumer: Path) -> None:
+    shutil.copytree(EXAMPLE / "skills", consumer / "skills")
+    shutil.copytree(EXAMPLE / "benchmark", consumer / "benchmark")
+
+
+def _action_gate_run_script() -> str:
+    action = yaml.safe_load(ACTION.read_text(encoding="utf-8"))
+    for step in action["runs"]["steps"]:
+        if step.get("name") == "Run SkillEval gate":
+            return step["run"]
+    raise AssertionError("Run SkillEval gate step not found")
 
 
 def test_action_metadata_declares_composite_rc_inputs_and_safe_steps():
@@ -230,13 +247,24 @@ def test_github_action_gate_writes_summary_artifacts_and_blocks_regressions(tmp_
 def test_reusable_action_docs_and_briefs_are_bounded():
     combined = "\n".join(
         path.read_text(encoding="utf-8")
-        for path in [README, USAGE, EXAMPLE / "README.md", HUMAN_BRIEF, LOOP_REPORT]
+        for path in [
+            README,
+            USAGE,
+            EXAMPLE / "README.md",
+            EXTERNAL_SMOKE_PACK / "README.md",
+            HUMAN_BRIEF,
+            EXTERNAL_SMOKE_HUMAN_BRIEF,
+            LOOP_REPORT,
+        ]
     )
 
     for phrase in [
         "Reusable GitHub Action RC",
+        "External Repo Action Smoke Pack",
+        "local external-consumer smoke",
         "skilleval github-action-gate",
         "not a Marketplace Action release",
+        "not hosted GitHub Actions proof",
         "not GitHub API PR comments",
         "not PR annotations",
         "not SaaS",
@@ -312,3 +340,114 @@ def test_github_action_example_fresh_clone_smoke(tmp_path):
     assert smoke.returncode == 0, smoke.stdout
     assert (output_dir / "gate-report.json").is_file()
     assert (output_dir / "ci-summary.md").is_file()
+
+
+def test_github_action_external_consumer_shell_smoke(tmp_path):
+    consumer = tmp_path / "consumer-repo"
+    consumer.mkdir()
+    _copy_example_consumer_fixture(consumer)
+
+    output_dir = consumer / "skilleval-output"
+    step_summary = consumer / "step-summary.md"
+    smoke = subprocess.run(
+        ["bash", "-euo", "pipefail", "-c", _action_gate_run_script()],
+        cwd=consumer,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+        env={
+            "PATH": f"{Path(sys.executable).parent}:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin",
+            "PYTHONPATH": str(ROOT / "src"),
+            "SKILLEVAL_SKILL_PATH": "skills",
+            "SKILLEVAL_BENCHMARK_PATH": "benchmark",
+            "SKILLEVAL_MIN_RECALL_AT_K": "1.0",
+            "SKILLEVAL_MAX_NEGATIVE_HIT_RATE": "0.0",
+            "SKILLEVAL_OUTPUT_DIR": "skilleval-output",
+            "GITHUB_STEP_SUMMARY": str(step_summary),
+        },
+    )
+
+    assert smoke.returncode == 0, smoke.stdout
+    gate = json.loads((output_dir / "gate-report.json").read_text(encoding="utf-8"))
+    summary = json.loads((output_dir / "ci-summary.json").read_text(encoding="utf-8"))
+    markdown = (output_dir / "gate-report.md").read_text(encoding="utf-8")
+    ci_markdown = (output_dir / "ci-summary.md").read_text(encoding="utf-8")
+
+    assert gate["decision"] == "ALLOW_MERGE"
+    assert gate["metrics"]["recall_at_5"] == 1.0
+    assert gate["metrics"]["negative_hit_rate"] == 0.0
+    assert summary["decision"] == "ALLOW_MERGE"
+    assert gate["report_paths"]["gate_report"] == "skilleval-output/gate-report.json"
+    assert summary["gate_report"]["ci_markdown"] == "skilleval-output/ci-summary.md"
+    assert "Decision: `ALLOW_MERGE`" in ci_markdown
+    assert "Decision: `ALLOW_MERGE`" in step_summary.read_text(encoding="utf-8")
+    assert "not a Marketplace Action release" in markdown
+    assert "not hosted GitHub Actions proof" in markdown
+    assert "not GitHub API PR comments" in markdown
+    assert "not hosted GitHub Actions proof" in ci_markdown
+
+
+def test_external_repo_action_smoke_pack_contains_committed_outputs():
+    readme = (EXTERNAL_SMOKE_PACK / "README.md").read_text(encoding="utf-8")
+    workflow = (
+        EXTERNAL_SMOKE_PACK / ".github" / "workflows" / "skilleval.yml"
+    ).read_text(encoding="utf-8")
+    gate = json.loads(
+        (EXTERNAL_SMOKE_PACK / "output" / "gate-report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    summary = json.loads(
+        (EXTERNAL_SMOKE_PACK / "output" / "ci-summary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    markdown = (EXTERNAL_SMOKE_PACK / "output" / "gate-report.md").read_text(
+        encoding="utf-8"
+    )
+    ci_markdown = (EXTERNAL_SMOKE_PACK / "output" / "ci-summary.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "External Repo Action Smoke Pack" in readme
+    assert "local external-consumer smoke" in readme
+    assert "uses: Raidriar7170/hermes-skilleval@main" in workflow
+    assert "skill-path: skills" in workflow
+    assert "benchmark-path: benchmark" in workflow
+    assert gate["decision"] == "ALLOW_MERGE"
+    assert gate["metrics"]["recall_at_5"] == 1.0
+    assert gate["metrics"]["negative_hit_rate"] == 0.0
+    assert summary["decision"] == "ALLOW_MERGE"
+    assert gate["report_paths"]["gate_report"] == "skilleval-output/gate-report.json"
+    assert summary["gate_report"]["ci_markdown"] == "skilleval-output/ci-summary.md"
+    assert "Decision: `ALLOW_MERGE`" in markdown
+    assert "Decision: `ALLOW_MERGE`" in ci_markdown
+    assert "not hosted GitHub Actions proof" in markdown
+    assert "not hosted GitHub Actions proof" in ci_markdown
+
+    combined = "\n".join([readme, workflow, markdown, ci_markdown])
+    for phrase in [
+        "not a Marketplace Action release",
+        "not hosted GitHub Actions proof",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+        "not a v0.2.0 release",
+    ]:
+        assert phrase in combined
+
+    for risky_claim in [
+        "published to the GitHub Marketplace",
+        "proves hosted GitHub Actions",
+        "posts PR comments",
+        "writes PR annotations",
+        "production-ready",
+        "approves the release",
+        "@v0.2.0",
+    ]:
+        assert risky_claim not in combined
