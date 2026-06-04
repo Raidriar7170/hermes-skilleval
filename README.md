@@ -218,34 +218,34 @@ test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从
 
 ## Architecture / 系统架构
 
-```text
-skills/**/SKILL.md                  benchmarks/tasks
-        |                                  |
-        v                                  v
-  Skill parser                      Task loader
-        |                                  |
-        +---------------+------------------+
-                        v
-                   CLI evaluator
-                        |
-     +------------------+-------------------+------------------+
-     v                  v                   v                  v
- Keyword router    Hybrid router      Embedding router    Gated router
-                                           |                  |
-                                           +--------+---------+
-                                                    v
-                                           Cross-encoder reranker
-                                                    |
-                                                    v
-                                      metrics + JSONL traces
-                                                    |
-                       +----------------------------+-------------------+
-                       v                                                v
-             Markdown reports + static dashboard              Failure analysis
-                       |                                                |
-                       +----------------------------+-------------------+
-                                                    v
-                                      Skill metadata improvement loop
+```mermaid
+flowchart LR
+    skills["skills/**/SKILL.md"] --> parser["Skill parser"]
+    tasks["benchmarks/tasks"] --> loader["Task loader"]
+    parser --> evaluator["CLI evaluator"]
+    loader --> evaluator
+
+    evaluator --> keyword["Keyword router"]
+    evaluator --> hybrid["Hybrid router"]
+    evaluator --> embedding["Embedding router"]
+    evaluator --> gated["Gated router"]
+
+    embedding --> cross["Cross-encoder reranker"]
+    gated --> cross
+
+    keyword --> traces["Metrics + JSONL traces"]
+    hybrid --> traces
+    embedding --> traces
+    gated --> traces
+    cross --> traces
+
+    traces --> reports["Markdown reports"]
+    traces --> dashboard["Static dashboard"]
+    traces --> failure["Failure analysis"]
+    reports --> improvement["Skill metadata improvement loop"]
+    dashboard --> improvement
+    failure --> improvement
+    improvement -. patch proposals .-> skills
 ```
 
 Core design principles:
@@ -261,34 +261,40 @@ Core design principles:
 
 ## Project Structure / 项目结构
 
-```text
-hermes-skilleval/
-├── benchmarks/
-│   ├── skills/                         # 45 generated Hermes-style skills
-│   └── tasks/                          # 80 labeled routing tasks
-├── docs/
-│   ├── demo/                           # committed benchmark outputs
-│   ├── phase2.md ... phase18.md        # implementation and experiment notes
-│   └── resume.md                       # resume-ready project framing
-├── scripts/
-│   ├── generate_benchmark_skills.py    # reproducible skill corpus generator
-│   └── generate_benchmark_tasks.py     # reproducible task corpus generator
-├── src/hermes_skilleval/
-│   ├── cli.py                          # index, eval, compare, analyze, improve, simulate
-│   ├── calibration.py                  # cross-encoder acceptance thresholds
-│   ├── metrics.py                      # Recall, Precision, MRR, NDCG, negatives
-│   ├── failure_analysis.py             # failure-mode summaries
-│   ├── self_improvement.py             # metadata patch proposals
-│   └── routers/
-│       ├── keyword.py                  # lexical baseline
-│       ├── hybrid.py                   # category + lexical + explicit id boosts
-│       ├── embedding.py                # hashing and sentence-transformers retrievers
-│       ├── gated.py                    # verification-gated reranker
-│       ├── verification.py             # shared selective evidence logic
-│       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 413 pytest cases
-├── pyproject.toml
-└── README.md
+```mermaid
+flowchart TB
+    repo["hermes-skilleval/"]
+    repo --> benchmarks["benchmarks/"]
+    benchmarks --> skills_dir["skills/<br/>45 generated Hermes-style skills"]
+    benchmarks --> tasks_dir["tasks/<br/>80 labeled routing tasks"]
+
+    repo --> docs_dir["docs/"]
+    docs_dir --> demo_dir["demo/<br/>committed benchmark outputs"]
+    docs_dir --> phase_docs["phase2.md ... phase18.md<br/>experiment notes"]
+    docs_dir --> resume_doc["resume.md<br/>resume-ready framing"]
+
+    repo --> scripts_dir["scripts/"]
+    scripts_dir --> skill_gen["generate_benchmark_skills.py"]
+    scripts_dir --> task_gen["generate_benchmark_tasks.py"]
+
+    repo --> src_dir["src/hermes_skilleval/"]
+    src_dir --> cli_py["cli.py<br/>index, eval, compare, analyze"]
+    src_dir --> calibration_py["calibration.py<br/>cross-encoder thresholds"]
+    src_dir --> metrics_py["metrics.py<br/>Recall, MRR, NDCG, negatives"]
+    src_dir --> failure_py["failure_analysis.py"]
+    src_dir --> improve_py["self_improvement.py"]
+    src_dir --> routers_dir["routers/"]
+
+    routers_dir --> keyword_py["keyword.py"]
+    routers_dir --> hybrid_py["hybrid.py"]
+    routers_dir --> embedding_py["embedding.py"]
+    routers_dir --> gated_py["gated.py"]
+    routers_dir --> verification_py["verification.py"]
+    routers_dir --> cross_py["cross_encoder.py"]
+
+    repo --> tests_dir["tests/<br/>pytest suite"]
+    repo --> pyproject["pyproject.toml"]
+    repo --> readme["README.md"]
 ```
 
 ---

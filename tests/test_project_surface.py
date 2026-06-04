@@ -234,6 +234,30 @@ def test_dashboard_screenshot_asset_exists():
     assert DASHBOARD_SCREENSHOT.stat().st_size > 20_000
 
 
+def test_readme_architecture_and_structure_diagrams_render_as_mermaid():
+    readme = README.read_text(encoding="utf-8")
+    architecture = readme[
+        readme.index("## Architecture / 系统架构") : readme.index(
+            "## Project Structure / 项目结构"
+        )
+    ]
+    project_structure = readme[
+        readme.index("## Project Structure / 项目结构") : readme.index(
+            "## Quick Start / 快速开始"
+        )
+    ]
+
+    assert "```mermaid\nflowchart LR" in architecture
+    assert "```mermaid\nflowchart TB" in project_structure
+    assert "Skill parser" in architecture
+    assert "Cross-encoder reranker" in architecture
+    assert "Skill metadata improvement loop" in architecture
+    assert "src/hermes_skilleval/" in project_structure
+    assert "routers/" in project_structure
+    assert "```text" not in architecture
+    assert "```text" not in project_structure
+
+
 def test_skill_library_migration_protocol_is_actionable():
     protocol = MIGRATION_PROTOCOL.read_text(encoding="utf-8")
 
