@@ -47,6 +47,9 @@ to promote regressions as defaults.
   [`docs/demo/v0.2.0-final-approval/final-approval.md`](docs/demo/v0.2.0-final-approval/final-approval.md)
   provide the v0.2.0 release notes and the pre-publish final approval review
   used for the explicit human GO/NO-GO gate.
+- [`docs/demo/v0.2.0-post-release/post-release.md`](docs/demo/v0.2.0-post-release/post-release.md)
+  records the post-release facts after human GO: Published `true`, tag created
+  `true`, GitHub Release created `true`, and Marketplace published `false`.
   The final approval source manifest is
   [`docs/demo/v0.2.0-final-approval/input-manifest.json`](docs/demo/v0.2.0-final-approval/input-manifest.json).
   The companion Human Brief is
@@ -107,6 +110,7 @@ release gate reproducible.
 | Phase 18 reproducibility pack | `PASS`; release decision remains `KEEP_BASELINE` | [`docs`](docs/phase18.md), [`release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md) |
 | v0.2.0 release decision | `NEEDS_REVIEW`; requires explicit human confirmation before public release actions | [`release-decision.md`](docs/demo/v0.2.0-release-decision/release-decision.md), [`input-manifest.json`](docs/demo/v0.2.0-release-decision/input-manifest.json) |
 | v0.2.0 final approval | Release notes prepared; Overall decision: `NEEDS_REVIEW`; Published: `false` | [`release notes`](docs/release-notes/v0.2.0.md), [`final checklist`](docs/demo/v0.2.0-final-approval/final-approval.md) |
+| v0.2.0 post-release evidence | Published: `true`; tag and GitHub Release created; Marketplace published: `false` | [`post-release.md`](docs/demo/v0.2.0-post-release/post-release.md), [`post-release.json`](docs/demo/v0.2.0-post-release/post-release.json) |
 
 ### Example Failure Caught by the Release Gate
 
@@ -202,6 +206,9 @@ test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从
 - The v0.2.0 release notes summarize implemented capabilities and committed
   evidence. The v0.2.0 final approval checklist remains pre-publish review
   evidence; it is not Marketplace publication or automatic approval.
+- The v0.2.0 post-release evidence records the GitHub tag and GitHub Release
+  facts only; it is not Marketplace publication, not SaaS, not a runtime MCP
+  router, not a SOTA claim, and not production readiness.
 - Model checkpoints, embedding caches, and private remote-machine details are
   intentionally not committed.
 - Future work: add third-party skill libraries, external blind task packs, and

@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+README = ROOT / "README.md"
 POST_RELEASE = ROOT / "docs" / "demo" / "v0.2.0-post-release"
 POST_RELEASE_JSON = POST_RELEASE / "post-release.json"
 POST_RELEASE_MD = POST_RELEASE / "post-release.md"
@@ -22,6 +23,20 @@ def _markdown_links(markdown: str) -> list[str]:
 def test_v0_2_0_post_release_files_exist() -> None:
     assert POST_RELEASE_JSON.is_file()
     assert POST_RELEASE_MD.is_file()
+
+
+def test_readme_surfaces_v0_2_0_post_release_evidence() -> None:
+    readme = README.read_text(encoding="utf-8")
+
+    for phrase in [
+        "docs/demo/v0.2.0-post-release/post-release.md",
+        "post-release facts after human GO",
+        "Published `true`",
+        "GitHub Release created `true`",
+        "Marketplace published `false`",
+        "Published: `true`; tag and GitHub Release created",
+    ]:
+        assert phrase in readme
 
 
 def test_v0_2_0_post_release_json_records_github_release_facts() -> None:
