@@ -640,7 +640,7 @@ def test_v0_2_0_final_approval_surfaces_are_linked_and_bounded():
         "GO Conditions",
         "NO-GO Until",
         "Requires Human Confirmation",
-        "prepared for human approval",
+        "pre-publish human GO/NO-GO gate",
         "not automatic publication",
         "explicit human confirmation",
         "not a Marketplace Action release",

@@ -45,8 +45,8 @@ to promote regressions as defaults.
   automatic publication.
 - [`docs/release-notes/v0.2.0.md`](docs/release-notes/v0.2.0.md) and
   [`docs/demo/v0.2.0-final-approval/final-approval.md`](docs/demo/v0.2.0-final-approval/final-approval.md)
-  prepare v0.2.0 release notes and final approval review; they still require
-  explicit human confirmation before any public release action.
+  provide the v0.2.0 release notes and the pre-publish final approval review
+  used for the explicit human GO/NO-GO gate.
   The final approval source manifest is
   [`docs/demo/v0.2.0-final-approval/input-manifest.json`](docs/demo/v0.2.0-final-approval/input-manifest.json).
   The companion Human Brief is
@@ -199,10 +199,9 @@ test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从
   not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status,
   not production readiness, not release approval, not automatic merge
   approval, and not a v0.2.0 release.
-- The v0.2.0 release notes and v0.2.0 final approval checklist are prepared for
-  human approval; they are not automatic publication and require explicit human
-  confirmation before any tag, GitHub Release, Marketplace publication, or
-  public release action.
+- The v0.2.0 release notes summarize implemented capabilities and committed
+  evidence. The v0.2.0 final approval checklist remains pre-publish review
+  evidence; it is not Marketplace publication or automatic approval.
 - Model checkpoints, embedding caches, and private remote-machine details are
   intentionally not committed.
 - Future work: add third-party skill libraries, external blind task packs, and

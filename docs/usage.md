@@ -15,7 +15,8 @@ release review, not automatic publication.
 For the v0.2.0 release notes and v0.2.0 final approval checklist, use
 [`docs/release-notes/v0.2.0.md`](release-notes/v0.2.0.md) and
 [`docs/demo/v0.2.0-final-approval/final-approval.md`](demo/v0.2.0-final-approval/final-approval.md);
-they are prepared for human approval, not a public release action.
+the release notes summarize implemented capabilities and the checklist records
+the pre-publish human GO/NO-GO gate.
 
 ## Installation
 
@@ -692,21 +693,21 @@ explicit human confirmation.
 
 ## 23. Review the v0.2.0 Release Notes And Final Approval Checklist
 
-The v0.2.0 release notes and final approval checklist are review artifacts:
+The v0.2.0 release notes and final approval checklist are release artifacts:
 
 - [`release-notes/v0.2.0.md`](release-notes/v0.2.0.md)
 - [`final-approval.md`](demo/v0.2.0-final-approval/final-approval.md)
 - [`final-approval.json`](demo/v0.2.0-final-approval/final-approval.json)
 - [`input-manifest.json`](demo/v0.2.0-final-approval/input-manifest.json)
 
-The v0.2.0 final approval package records Overall decision: `NEEDS_REVIEW` and
-Published: `false`. It lists GO Conditions, NO-GO Until, and Requires Human
-Confirmation so a reviewer can decide whether to start a separate publish
-phase.
+The v0.2.0 release notes summarize implemented capabilities and committed
+evidence. The final approval package records the pre-publish Overall decision:
+`NEEDS_REVIEW` and Published: `false`; it lists GO Conditions, NO-GO Until, and
+Requires Human Confirmation so a reviewer can decide whether to start a
+separate publish phase.
 
-Boundary: this is prepared for human approval, not automatic publication, not a
-Marketplace Action release, not GitHub API PR comments, not PR annotations, not
-SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not
-production readiness, not release approval, not automatic merge approval, and
-not a v0.2.0 release. Explicit human confirmation is required before any tag,
-GitHub Release, Marketplace publication, or public release action.
+Boundary: the checklist is pre-publish review evidence, not automatic
+publication, not a Marketplace Action release, not GitHub API PR comments, not
+PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
+benchmark status, not production readiness, not release approval, not automatic
+merge approval, and not Marketplace publication.

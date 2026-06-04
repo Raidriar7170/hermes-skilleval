@@ -64,11 +64,11 @@ review. It does not create a release action: `finetuned-embedding` is not
 approved as default, and any tag, GitHub Release, Marketplace publication, or
 public release action requires explicit human confirmation.
 
-The v0.2.0 release notes and v0.2.0 final approval checklist are prepared for
-human approval. The checklist records Overall decision: `NEEDS_REVIEW`,
-Published: `false`, GO Conditions, NO-GO Until, and Requires Human
-Confirmation. It is not automatic publication and does not replace the
-release-decision package.
+The v0.2.0 release notes summarize implemented capabilities and committed
+review evidence. The v0.2.0 final approval checklist remains the pre-publish
+approval artifact: it records Overall decision: `NEEDS_REVIEW`, Published:
+`false`, GO Conditions, NO-GO Until, and Requires Human Confirmation. It is not
+automatic publication and does not replace the release-decision package.
 
 ## Boundaries
 
@@ -82,4 +82,6 @@ automatic merge approval, and not a v0.2.0 release.
 
 The v0.2.0 final approval checklist follows the same boundary: not automatic
 publication, not release approval, not a Marketplace Action release, not GitHub
-API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not automatic merge approval, and not a v0.2.0 release.
+API PR comments, not PR annotations, not SaaS, not a runtime MCP router,
+not a SOTA claim, not benchmark status, not production readiness, not automatic
+merge approval, and not Marketplace publication.

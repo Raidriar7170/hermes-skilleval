@@ -91,24 +91,22 @@ def test_v0_2_0_final_approval_files_exist() -> None:
         assert path.is_file(), path
 
 
-def test_release_notes_are_draft_bounded_and_evidence_linked() -> None:
+def test_release_notes_are_final_bounded_and_evidence_linked() -> None:
     notes = RELEASE_NOTES.read_text(encoding="utf-8")
 
     for phrase in [
-        "# v0.2.0 - Release Notes Draft",
-        "prepared for human approval",
-        "not published",
-        "not a tag",
-        "not a GitHub Release",
+        "# v0.2.0",
+        "GitHub Release package",
         "not a Marketplace Action release",
-        "NEEDS_REVIEW",
+        "implemented capabilities",
+        "pre-publish `NEEDS_REVIEW`",
         "KEEP_BASELINE",
         "baseline-minilm",
         "`finetuned-embedding` is not approved as default",
         "Reusable GitHub Action RC",
         "local external-consumer action smoke",
         "hosted consumer action smoke",
-        "final approval checklist",
+        "pre-publish reviewer-facing checklist",
     ]:
         assert phrase in notes
 
