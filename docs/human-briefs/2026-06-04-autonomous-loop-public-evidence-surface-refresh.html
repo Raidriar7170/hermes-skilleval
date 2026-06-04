@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - Public Evidence Surface Refresh</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 72px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 19px; margin: 30px 0 10px; border-bottom: 1px solid #d7deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Autonomous Loop: Public Evidence Surface Refresh</h1>
+    <span class="status">completed / stopped for confirmation</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本轮完成并归档 <code>public-evidence-surface-refresh</code>，把 Reusable GitHub Action RC 纳入公共证据导航，并将当前公开验证计数同步到 <code>392 passed</code> / <code>392 pytest cases</code>。</p>
+    </div>
+
+    <h2>Stop Reason</h2>
+    <p>自动循环在本阶段后停止，因为下一个有意义方向会改变人工决策边界：要么整理历史 loop brief 的旧运行计数，要么进入 tag/release/Marketplace/发布确认路径。这些都不应在无人确认下继续。</p>
+
+    <h2>项目阶段进度</h2>
+    <p>当前目标仍是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>。本阶段推进的是 reviewer 入口一致性：README、Evidence Map、OpenSpec specs、Human Briefs 和 GitHub Actions 远端验证现在对齐到同一条公共证据链。</p>
+
+    <h2>完成事项</h2>
+    <ul>
+      <li>OpenSpec change <a href="../../openspec/changes/archive/2026-06-04-public-evidence-surface-refresh/"><code>public-evidence-surface-refresh</code></a> 已归档。</li>
+      <li><a href="../../docs/evidence-map.md"><code>docs/evidence-map.md</code></a> 新增 Reusable Action RC Evidence 分组。</li>
+      <li>README、usage 和 evidence-map-linked Human Briefs 同步到 <code>392 passed</code>。</li>
+      <li><code>openspec/specs/*/spec.md</code> 清掉 archive 生成的 <code>Purpose TBD</code> placeholder。</li>
+      <li>Reviewer 两轮 Must Fix 已处理：stale count 漏网、active-change path 归档后失效。</li>
+      <li>Auto integration: commit <code>f49ef76</code> fast-forward merged to <code>main</code> and pushed to <code>origin/main</code>。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>：PASS，392 passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，10 passed / 0 failed。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check ...</code>：PASS。</li>
+      <li><code>skilleval github-action-gate</code> example fixture：<code>ALLOW_MERGE</code>。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+      <li>Remote Validate：<a href="https://github.com/Raidriar7170/hermes-skilleval/actions/runs/26935931658">success</a>。</li>
+      <li>Remote Pages：<a href="https://github.com/Raidriar7170/hermes-skilleval/actions/runs/26935931173">success</a>。</li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>本轮不是 tag/release，不是 Marketplace Action release，不是 GitHub API PR comments，不是 PR annotations，不是 SaaS，不是 runtime MCP router，不是 SOTA claim，不是 benchmark status，不是 production readiness，不是 release approval，不是 automatic merge approval，也不是 v0.2.0 release。</p>
+
+    <h2>Recommended Next</h2>
+    <p>需要用户确认下一步方向：保守收尾可做一次历史 Human Brief 口径审计；发布路径则需要明确授权 tag/release/Marketplace 边界。</p>
+  </main>
+</body>
+</html>
