@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Human Brief History Boundary Audit</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Human Brief History Boundary Audit</h1>
+    <span class="status">archived / post-archive validation pending</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段保留旧 Human Brief 的原始测试计数，同时新增历史计数边界说明，避免把旧运行结果误读成当前 <code>394 passed</code> 公开验证计数。</p>
+    </div>
+
+    <h2>项目阶段进度</h2>
+    <p>当前项目阶段仍是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>，来源是 <a href="../../README.md">README recruiter review path</a>、<a href="../../docs/evidence-map.md">Evidence Map</a> 和 <a href="../../docs/release-handoff.md">release handoff</a>。本阶段推进的是证据口径稳定性，不新增产品能力或发布动作。</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li><a href="../../tests/test_project_surface.py"><code>tests/test_project_surface.py</code></a>：新增历史 Human Brief count guard，扫描所有 brief 中非当前 pytest count，并要求有 historical/original/baseline 口径。</li>
+      <li><code>docs/human-briefs/*.html</code>：为 12 份旧阶段 brief 的 <code>311</code>、<code>312</code>、<code>314</code>、<code>347</code>、<code>354</code>、<code>365</code>、<code>372</code>、<code>384</code>、<code>391</code> 计数补上 provenance note。</li>
+      <li><a href="../../openspec/changes/human-brief-history-boundary-audit/specs/docs-evidence-map/spec.md"><code>docs-evidence-map</code> delta spec</a>：明确 current public surfaces 和 historical loop briefs 的计数边界。</li>
+      <li>旧数字没有被替换为 <code>394</code>，因为它们是当时阶段的原始运行证据。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li>RED：<code>python -m pytest -q tests/test_project_surface.py -q</code> 按预期失败，列出 12 份缺少 provenance wording 的历史 brief。</li>
+      <li>GREEN：补充 provenance note 并同步当前 count 后，<code>python -m pytest -q tests/test_project_surface.py -q</code>：PASS，26 passed。</li>
+      <li><code>python -m pytest -q tests/test_project_surface.py tests/test_phase14_artifacts.py tests/test_phase15_artifacts.py tests/test_phase16_artifacts.py -q</code>：PASS，38 passed。</li>
+      <li><code>python -m pytest -q</code>：PASS，394 passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，11 passed / 0 failed。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS，release manifest reproduced。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+      <li>Reviewer 复审：Must Fix none；一个范围内 Should Fix 已处理。</li>
+      <li><code>openspec archive human-brief-history-boundary-audit -y</code>：完成，归档到 <code>openspec/changes/archive/2026-06-04-human-brief-history-boundary-audit/</code>，并同步 <code>docs-evidence-map</code> 主 spec。</li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>本阶段不是 tag/release，不是 Marketplace Action release，不是 GitHub API PR comments，不是 PR annotations，不是 SaaS，不是 runtime MCP router，不是 SOTA claim，不是 benchmark status，不是 production readiness，不是 release approval，不是 automatic merge approval，也不是 v0.2.0 release。</p>
+
+    <h2>推荐下一步</h2>
+    <p>继续归档 OpenSpec change；归档后重新验证，若仍通过，按 Auto Integration Policy 合并回 <code>main</code>。</p>
+  </main>
+</body>
+</html>

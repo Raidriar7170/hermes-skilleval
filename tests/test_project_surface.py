@@ -1,7 +1,9 @@
+import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CURRENT_FULL_SUITE_COUNT = "394"
 README = ROOT / "README.md"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "validate.yml"
 DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
@@ -51,7 +53,7 @@ CURRENT_HUMAN_BRIEFS = [
     REUSABLE_ACTION_HUMAN_BRIEF,
     PUBLIC_EVIDENCE_HUMAN_BRIEF,
 ]
-CURRENT_OPENSPEC_CHANGE_ARTIFACTS = [
+PUBLIC_EVIDENCE_CHANGE_ARTIFACTS = [
     _openspec_change_artifact("proposal.md"),
     _openspec_change_artifact("design.md"),
     _openspec_change_artifact("tasks.md"),
@@ -597,24 +599,22 @@ def test_node24_ci_preflight_docs_are_local_and_bounded():
 
 
 def test_current_public_surfaces_use_latest_full_suite_count():
-    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
-    evidence_map_briefs = [
-        EVIDENCE_MAP.parent / link
-        for link in _markdown_links(evidence_map)
-        if link.startswith("human-briefs/")
-    ]
-    surfaces = [
-        README,
-        USAGE,
-        *CURRENT_HUMAN_BRIEFS,
-        *evidence_map_briefs,
-        *CURRENT_OPENSPEC_CHANGE_ARTIFACTS,
-    ]
+    surfaces = _current_count_surface_paths()
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "392 passed" in combined
-    assert "392 pytest cases" in README.read_text(encoding="utf-8")
+    assert f"{CURRENT_FULL_SUITE_COUNT} passed" in combined
+    assert f"{CURRENT_FULL_SUITE_COUNT} pytest cases" in README.read_text(
+        encoding="utf-8"
+    )
     for stale_count in [
+        "392 pytest cases",
+        "392 passed",
+        "392 passing tests",
+        "| Test cases | 392 |",
+        "393 pytest cases",
+        "393 passed",
+        "393 passing tests",
+        "| Test cases | 393 |",
         "391 pytest cases",
         "386 pytest cases",
         "384 pytest cases",
@@ -654,6 +654,73 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         assert stale_count not in combined
 
 
+def test_current_count_contexts_do_not_carry_unlabelled_stale_numbers():
+    count_context_keywords = [
+        "current public",
+        "current reviewer surfaces",
+        "latest public",
+        "latest revalidation",
+        "当前公开",
+        "公开测试计数",
+        "公开验证计数",
+        "最新公开",
+        "测试计数",
+    ]
+    boundary_phrases = _historical_count_boundary_phrases()
+    offenders = []
+
+    for path in _current_count_surface_paths():
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            lowered = line.lower()
+            if not any(keyword in lowered for keyword in count_context_keywords):
+                continue
+
+            stale_numbers = sorted(
+                {
+                    match.group(0)
+                    for match in re.finditer(r"\b\d{3}\b", line)
+                    if match.group(0) != CURRENT_FULL_SUITE_COUNT
+                }
+            )
+            if not stale_numbers:
+                continue
+            if any(phrase in lowered for phrase in boundary_phrases):
+                continue
+
+            rel_path = path.relative_to(ROOT)
+            offenders.append(
+                f"{rel_path}:{line_number}: {', '.join(stale_numbers)} :: {line.strip()}"
+            )
+
+    assert not offenders, (
+        "Current count contexts must use the latest count or label stale numbers "
+        "as historical/original/baseline evidence:\n" + "\n".join(offenders)
+    )
+
+
+def test_historical_human_briefs_label_non_current_pytest_counts():
+    boundary_phrases = _historical_count_boundary_phrases()
+    offenders = []
+
+    for path in sorted((ROOT / "docs" / "human-briefs").glob("*.html")):
+        text = path.read_text(encoding="utf-8")
+        non_current_counts = sorted(set(_non_current_pytest_counts(text)))
+        if not non_current_counts:
+            continue
+
+        lowered = text.lower()
+        if any(phrase in lowered for phrase in boundary_phrases):
+            continue
+
+        rel_path = path.relative_to(ROOT)
+        offenders.append(f"{rel_path}: {', '.join(non_current_counts)}")
+
+    assert not offenders, (
+        "Historical Human Briefs with non-current pytest counts must label those "
+        "counts as historical/original/baseline evidence:\n" + "\n".join(offenders)
+    )
+
+
 def test_release_notes_are_reviewer_ready_and_conservative():
     notes = RELEASE_NOTES.read_text(encoding="utf-8")
 
@@ -664,6 +731,55 @@ def test_release_notes_are_reviewer_ready_and_conservative():
 
 
 def _markdown_links(markdown: str) -> list[str]:
-    import re
-
     return re.findall(r"\[[^\]]+\]\(([^)]+)\)", markdown)
+
+
+def _current_count_surface_paths() -> list[Path]:
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+    evidence_map_briefs = [
+        EVIDENCE_MAP.parent / link
+        for link in _markdown_links(evidence_map)
+        if link.startswith("human-briefs/")
+    ]
+    return [
+        README,
+        USAGE,
+        *CURRENT_HUMAN_BRIEFS,
+        *evidence_map_briefs,
+        *PUBLIC_EVIDENCE_CHANGE_ARTIFACTS,
+        *_active_openspec_change_artifacts(),
+    ]
+
+
+def _active_openspec_change_artifacts() -> list[Path]:
+    change_root = ROOT / "openspec" / "changes"
+    artifacts = [
+        *change_root.glob("*/*.md"),
+        *change_root.glob("*/specs/**/*.md"),
+    ]
+    return sorted(
+        path
+        for path in artifacts
+        if path.is_file() and "archive" not in path.relative_to(change_root).parts
+    )
+
+
+def _historical_count_boundary_phrases() -> list[str]:
+    return [
+        "historical count",
+        "historical phase",
+        "original run count",
+        "original validation result",
+        "implementation baseline",
+        "baseline before implementation",
+        "phase-time",
+        "at the time",
+    ]
+
+
+def _non_current_pytest_counts(html: str) -> list[str]:
+    pattern = re.compile(
+        rf"\b(?!{CURRENT_FULL_SUITE_COUNT}\b)\d{{3}}\s+"
+        r"(?:passed|passing tests|pytest cases|unit and smoke tests)\b"
+    )
+    return [match.group(0) for match in pattern.finditer(html)]

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Loop - Human Brief History Boundary Audit</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Autonomous Loop: Human Brief History Boundary Audit</h1>
+    <span class="status">completed / archived / awaiting auto integration</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本轮完成并归档 <code>human-brief-history-boundary-audit</code>，把当前公开验证计数同步到 <code>394 passed</code>，同时保留旧 Human Brief 的原始阶段计数并补上历史口径。</p>
+    </div>
+
+    <h2>Stop Reason</h2>
+    <p>自动循环在本阶段后停止，因为已完成用户确认的选项 1；下一个有意义方向会重新进入外部 consumer smoke、release/tag/Marketplace 决策或 interview packaging 选择，都会改变人工决策边界。</p>
+
+    <h2>项目阶段进度</h2>
+    <p>当前项目阶段仍是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>，来源是 <a href="../../README.md">README recruiter review path</a>、<a href="../../docs/evidence-map.md">Evidence Map</a> 和 <a href="../../docs/release-handoff.md">release handoff</a>。本阶段推进的是证据口径稳定性：当前 public surfaces 统一到 <code>394 passed</code>，历史 loop reports 保留当时运行结果但不再被误读成最新验证。</p>
+    <p>剩余 gap：如需增强 RC 发布信心，推荐另开 <code>external-repo-action-smoke-pack</code>；如需发布，则另开明确的 <code>v0.2.0-release-decision</code>，并由用户确认 tag/release/Marketplace 边界。</p>
+
+    <h2>完成内容</h2>
+    <ul>
+      <li>归档 OpenSpec change：<a href="../../openspec/changes/archive/2026-06-04-human-brief-history-boundary-audit/proposal.md"><code>human-brief-history-boundary-audit</code></a>。</li>
+      <li><a href="../../openspec/specs/docs-evidence-map/spec.md"><code>openspec/specs/docs-evidence-map/spec.md</code></a>：新增 historical Human Brief count provenance requirement。</li>
+      <li><a href="../../tests/test_project_surface.py"><code>tests/test_project_surface.py</code></a>：新增两个 regression guards，分别检查历史 count provenance 和 current-count context 中的未标注旧数字。</li>
+      <li><a href="../../README.md"><code>README.md</code></a>、<a href="../../docs/usage.md"><code>docs/usage.md</code></a> 和当前 Human Briefs：同步当前 full-suite count 到 <code>394 passed</code> / <code>394 pytest cases</code>。</li>
+      <li>12 份旧 Human Brief 保留原始 <code>311</code> 到 <code>391</code> 的阶段计数，并补上 historical/original/baseline 口径说明。</li>
+      <li>Phase Human Brief：<a href="2026-06-04-human-brief-history-boundary-audit.html"><code>2026-06-04-human-brief-history-boundary-audit.html</code></a>。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li>RED：新增 project-surface test 后，focused pytest 按预期失败并列出缺少 provenance wording 的 historical Human Briefs。</li>
+      <li><code>python -m pytest -q tests/test_project_surface.py tests/test_phase14_artifacts.py tests/test_phase15_artifacts.py tests/test_phase16_artifacts.py -q</code>：PASS，38 passed。</li>
+      <li><code>python -m pytest -q</code>：PASS，394 passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，10 passed / 0 failed after archive。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS，release manifest reproduced。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+    </ul>
+
+    <h2>Review</h2>
+    <p>Explorer identified historical counts across older briefs. Reviewer returned Pass with fixes; Must Fix items were addressed, validation reran, and re-review returned no Must Fix. One focused Should Fix was also handled by removing <code>latest revalidation</code> from the historical-boundary exemption list.</p>
+    <p>External ChatGPT Pro review was not used; this phase was docs/tests/OpenSpec-only and did not need sanitized external review.</p>
+
+    <h2>Auto Integration</h2>
+    <p>Status at report generation: pending. The diff is in the isolated worktree <code>codex/human-brief-history-boundary-audit</code>; after final validation, Auto Integration Policy allows staging, committing, fast-forwarding/merging to <code>main</code>, and normal push if the target branch remains unambiguous.</p>
+
+    <h2>不要夸大</h2>
+    <p>本轮不是 tag/release，不是 Marketplace Action release，不是 GitHub API PR comments，不是 PR annotations，不是 SaaS，不是 runtime MCP router，不是 SOTA claim，不是 benchmark status，不是 production readiness，不是 release approval，不是 automatic merge approval，也不是 v0.2.0 release。</p>
+
+    <h2>推荐下一步</h2>
+    <p>保守推荐：若继续推进，先做 <code>external-repo-action-smoke-pack</code> 的本地 fresh-clone consumer smoke；如果目标变成发布，则先由用户确认 release/tag/Marketplace 边界。</p>
+  </main>
+</body>
+</html>
