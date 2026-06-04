@@ -21,6 +21,9 @@ REUSABLE_ACTION_HUMAN_BRIEF = (
 EXTERNAL_REPO_ACTION_SMOKE_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-external-repo-action-smoke-pack.html"
 )
+HOSTED_CONSUMER_ACTION_SMOKE_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-hosted-consumer-action-smoke.html"
+)
 PUBLIC_EVIDENCE_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-public-evidence-surface-refresh.html"
 )
@@ -29,9 +32,13 @@ EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-vali
 EXTERNAL_REPO_ACTION_SMOKE_PACK = (
     ROOT / "docs" / "demo" / "external-repo-action-smoke-pack"
 )
+HOSTED_CONSUMER_ACTION_SMOKE_PACK = (
+    ROOT / "docs" / "demo" / "hosted-consumer-action-smoke"
+)
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
 PUBLIC_EVIDENCE_CHANGE = "public-evidence-surface-refresh"
 EXTERNAL_REPO_ACTION_SMOKE_CHANGE = "external-repo-action-smoke-pack"
+HOSTED_CONSUMER_ACTION_SMOKE_CHANGE = "hosted-consumer-action-smoke"
 
 
 def _openspec_change_artifact(relative_path: str) -> Path:
@@ -298,10 +305,15 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "demo/external-repo-action-smoke-pack/README.md",
         "demo/external-repo-action-smoke-pack/output/gate-report.md",
         "demo/external-repo-action-smoke-pack/output/ci-summary.md",
+        "demo/hosted-consumer-action-smoke/README.md",
+        "demo/hosted-consumer-action-smoke/run-metadata.json",
+        "demo/hosted-consumer-action-smoke/output/gate-report.md",
+        "demo/hosted-consumer-action-smoke/output/ci-summary.md",
         "../openspec/specs/pr-facing-ci-summary/spec.md",
         "../openspec/specs/reusable-github-action-rc/spec.md",
         "human-briefs/2026-06-04-reusable-github-action-rc.html",
         "human-briefs/2026-06-04-external-repo-action-smoke-pack.html",
+        "human-briefs/2026-06-04-hosted-consumer-action-smoke.html",
         "human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html",
         "human-briefs/2026-06-03-autonomous-loop-external-skill-library-validation-pack.html",
     ]:
@@ -376,6 +388,12 @@ def test_synced_openspec_specs_have_explicit_purpose_text():
         "specs/docs-evidence-map/spec.md",
     ).read_text(encoding="utf-8")
     assert "external consumer smoke pack" in external_smoke_docs_delta
+
+    hosted_smoke_docs_delta = _openspec_named_change_artifact(
+        HOSTED_CONSUMER_ACTION_SMOKE_CHANGE,
+        "specs/docs-evidence-map/spec.md",
+    ).read_text(encoding="utf-8")
+    assert "hosted consumer action smoke evidence" in hosted_smoke_docs_delta
 
 
 def test_failure_gallery_is_linked_from_public_entry_points():
@@ -619,6 +637,54 @@ def test_external_repo_action_smoke_pack_docs_are_local_and_bounded():
         "SOTA benchmark status",
         "production-ready",
         "approves the release",
+    ]
+    for phrase in risky_claims:
+        assert phrase not in combined
+
+
+def test_hosted_consumer_action_smoke_docs_are_hosted_and_bounded():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+    pack_readme = (HOSTED_CONSUMER_ACTION_SMOKE_PACK / "README.md").read_text(
+        encoding="utf-8"
+    )
+    brief = HOSTED_CONSUMER_ACTION_SMOKE_HUMAN_BRIEF.read_text(encoding="utf-8")
+    metadata = (HOSTED_CONSUMER_ACTION_SMOKE_PACK / "run-metadata.json").read_text(
+        encoding="utf-8"
+    )
+    combined = "\n".join([readme, usage, evidence_map, pack_readme, brief, metadata])
+
+    assert "Hosted Consumer Action Smoke" in combined
+    assert "docs/demo/hosted-consumer-action-smoke" in combined
+    assert "GitHub-hosted consumer smoke run" in combined
+    assert "Raidriar7170/hermes-skilleval-action-consumer-smoke" in combined
+    assert "ALLOW_MERGE" in combined
+    for phrase in [
+        "not a Marketplace Action release",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+        "not benchmark status",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+        "not a v0.2.0 release",
+    ]:
+        assert phrase in combined
+
+    risky_claims = [
+        "published to the GitHub Marketplace",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark status",
+        "production-ready",
+        "approves the release",
+        "released as a Marketplace Action",
     ]
     for phrase in risky_claims:
         assert phrase not in combined

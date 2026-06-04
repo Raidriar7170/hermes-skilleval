@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hosted Consumer Action Smoke - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Hosted Consumer Action Smoke</h1>
+    <span class="status">needs review / local validation complete</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段用专用 consumer repo 跑通了一次 GitHub-hosted consumer smoke run，验证 <code>Raidriar7170/hermes-skilleval@main</code> 可以在 hosted runner 上产出 <code>ALLOW_MERGE</code> gate artifacts。</p>
+    </div>
+
+    <h2>项目阶段进度</h2>
+    <p>当前项目阶段仍是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>。本阶段推进的是 Reusable GitHub Action RC 的 hosted consumer 证据，不发布 tag/release，不宣称 Marketplace。</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li><a href="../demo/hosted-consumer-action-smoke/README.md"><code>docs/demo/hosted-consumer-action-smoke/README.md</code></a>：hosted smoke evidence pack。</li>
+      <li><a href="../demo/hosted-consumer-action-smoke/run-metadata.json"><code>run-metadata.json</code></a>：run URL、run id、workflow、conclusion、action ref 和 artifact names。</li>
+      <li><a href="../demo/hosted-consumer-action-smoke/input-manifest.json"><code>input-manifest.json</code></a>：consumer fixture 来源、skill/task ids 和文件哈希。</li>
+      <li><a href="../demo/hosted-consumer-action-smoke/output/gate-report.md"><code>gate-report.md</code></a>：hosted artifact，<code>ALLOW_MERGE</code>。</li>
+      <li><a href="../../README.md"><code>README.md</code></a>、<a href="../usage.md"><code>docs/usage.md</code></a>、<a href="../evidence-map.md"><code>docs/evidence-map.md</code></a>：新增 hosted smoke 入口。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_reusable_github_action_rc.py tests/test_project_surface.py -q</code>：通过。</li>
+      <li><code>python -m pytest -q</code>：<code>399 passed</code>。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：<code>12 passed, 0 failed</code>。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：<code>PASS</code>。</li>
+      <li><code>git diff --check</code>：通过，未发现 whitespace / patch noise。</li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>这是 one GitHub-hosted consumer smoke run 和 Reusable GitHub Action RC evidence，not a Marketplace Action release, not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not release approval, not automatic merge approval, and not a v0.2.0 release。</p>
+  </main>
+</body>
+</html>

@@ -14,6 +14,7 @@ ACTION = ROOT / "action.yml"
 EXAMPLE = ROOT / "examples" / "github-action"
 EXAMPLE_WORKFLOW = EXAMPLE / ".github" / "workflows" / "skilleval.yml"
 EXTERNAL_SMOKE_PACK = ROOT / "docs" / "demo" / "external-repo-action-smoke-pack"
+HOSTED_SMOKE_PACK = ROOT / "docs" / "demo" / "hosted-consumer-action-smoke"
 README = ROOT / "README.md"
 USAGE = ROOT / "docs" / "usage.md"
 HUMAN_BRIEF = (
@@ -21,6 +22,9 @@ HUMAN_BRIEF = (
 )
 EXTERNAL_SMOKE_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-external-repo-action-smoke-pack.html"
+)
+HOSTED_SMOKE_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-hosted-consumer-action-smoke.html"
 )
 LOOP_REPORT = (
     ROOT
@@ -252,8 +256,10 @@ def test_reusable_action_docs_and_briefs_are_bounded():
             USAGE,
             EXAMPLE / "README.md",
             EXTERNAL_SMOKE_PACK / "README.md",
+            HOSTED_SMOKE_PACK / "README.md",
             HUMAN_BRIEF,
             EXTERNAL_SMOKE_HUMAN_BRIEF,
+            HOSTED_SMOKE_HUMAN_BRIEF,
             LOOP_REPORT,
         ]
     )
@@ -262,9 +268,10 @@ def test_reusable_action_docs_and_briefs_are_bounded():
         "Reusable GitHub Action RC",
         "External Repo Action Smoke Pack",
         "local external-consumer smoke",
+        "Hosted Consumer Action Smoke",
+        "GitHub-hosted consumer smoke run",
         "skilleval github-action-gate",
         "not a Marketplace Action release",
-        "not hosted GitHub Actions proof",
         "not GitHub API PR comments",
         "not PR annotations",
         "not SaaS",
@@ -451,3 +458,108 @@ def test_external_repo_action_smoke_pack_contains_committed_outputs():
         "@v0.2.0",
     ]:
         assert risky_claim not in combined
+
+
+def test_hosted_consumer_action_smoke_pack_contains_committed_run_evidence():
+    readme = (HOSTED_SMOKE_PACK / "README.md").read_text(encoding="utf-8")
+    workflow = (HOSTED_SMOKE_PACK / "workflow.yml").read_text(encoding="utf-8")
+    metadata = json.loads(
+        (HOSTED_SMOKE_PACK / "run-metadata.json").read_text(encoding="utf-8")
+    )
+    manifest = json.loads(
+        (HOSTED_SMOKE_PACK / "input-manifest.json").read_text(encoding="utf-8")
+    )
+    gate = json.loads(
+        (HOSTED_SMOKE_PACK / "output" / "gate-report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    summary = json.loads(
+        (HOSTED_SMOKE_PACK / "output" / "ci-summary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    markdown = (HOSTED_SMOKE_PACK / "output" / "gate-report.md").read_text(
+        encoding="utf-8"
+    )
+    ci_markdown = (HOSTED_SMOKE_PACK / "output" / "ci-summary.md").read_text(
+        encoding="utf-8"
+    )
+    results = (HOSTED_SMOKE_PACK / "output" / "results.jsonl").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Hosted Consumer Action Smoke" in readme
+    assert "GitHub-hosted consumer smoke run" in readme
+    assert metadata["consumer_repository"] == (
+        "Raidriar7170/hermes-skilleval-action-consumer-smoke"
+    )
+    assert metadata["producer_action_ref"] == "Raidriar7170/hermes-skilleval@main"
+    assert metadata["workflow_name"] == "SkillEval hosted consumer smoke"
+    assert metadata["conclusion"] == "success"
+    assert metadata["run_url"].startswith(
+        "https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke/actions/runs/"
+    )
+    assert metadata["head_sha"]
+    assert "skilleval-action-artifacts" in metadata["artifact_names"]
+    assert "skilleval hosted consumer smoke" in metadata["evidence_kind"]
+
+    assert "workflow_dispatch:" in workflow
+    assert "permissions:" in workflow
+    assert "contents: read" in workflow
+    assert "actions/setup-python@v5" in workflow
+    assert "python-version: \"3.11\"" in workflow
+    assert "Raidriar7170/hermes-skilleval@main" in workflow
+    assert "skill-path: skills" in workflow
+    assert "benchmark-path: benchmark" in workflow
+    assert "output-dir: skilleval-output" in workflow
+    assert "@v0.2.0" not in workflow
+    assert "github-token" not in workflow.lower()
+
+    assert manifest["fixture_source"] == "examples/github-action"
+    assert sorted(manifest["skill_ids"]) == [
+        "release-note-review",
+        "workflow-evidence-audit",
+    ]
+    assert sorted(manifest["task_ids"]) == [
+        "release-note-boundary",
+        "workflow-evidence",
+    ]
+    assert manifest["file_hashes"]
+
+    assert gate["decision"] == "ALLOW_MERGE"
+    assert gate["metrics"]["recall_at_5"] == 1.0
+    assert gate["metrics"]["negative_hit_rate"] == 0.0
+    assert summary["decision"] == "ALLOW_MERGE"
+    assert "Decision: `ALLOW_MERGE`" in markdown
+    assert "Decision: `ALLOW_MERGE`" in ci_markdown
+    assert "release-note-boundary" in results
+    assert "workflow-evidence" in results
+
+    combined = "\n".join([readme, workflow, markdown, ci_markdown])
+    for phrase in [
+        "not a Marketplace Action release",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+        "not a v0.2.0 release",
+    ]:
+        assert phrase in combined
+
+    for forbidden in [
+        "gho_",
+        "github_pat_",
+        "BEGIN OPENSSH",
+        "x-access-token",
+        "published to the GitHub Marketplace",
+        "posts PR comments",
+        "writes PR annotations",
+        "production-ready",
+        "approves the release",
+        "@v0.2.0",
+    ]:
+        assert forbidden not in combined

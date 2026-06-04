@@ -417,12 +417,18 @@ Action RC. The local external-consumer smoke evidence lives in
 [`docs/demo/external-repo-action-smoke-pack/`](docs/demo/external-repo-action-smoke-pack/):
 it records `ALLOW_MERGE` over consumer-shaped `skills/`, `benchmark/`, and
 `skilleval-output` paths without creating a remote repository.
+The hosted consumer smoke evidence lives in
+[`docs/demo/hosted-consumer-action-smoke/`](docs/demo/hosted-consumer-action-smoke/):
+it records one GitHub-hosted consumer smoke run from
+`Raidriar7170/hermes-skilleval-action-consumer-smoke`, with downloaded gate and
+CI summary artifacts committed for review.
 
-Boundary: this is local external-consumer smoke and Reusable GitHub Action RC
-evidence, not a Marketplace Action release, not hosted GitHub Actions proof,
-not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
-router, not a SOTA claim, not benchmark status, not production readiness, not
-release approval, not automatic merge approval, and not a v0.2.0 release.
+Boundary: this is local external-consumer smoke, one GitHub-hosted consumer
+smoke run, and Reusable GitHub Action RC evidence, not a Marketplace Action
+release, not GitHub API PR comments, not PR annotations, not SaaS, not a
+runtime MCP router, not a SOTA claim, not benchmark status, not production
+readiness, not release approval, not automatic merge approval, and not a
+v0.2.0 release.
 
 ---
 

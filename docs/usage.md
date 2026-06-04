@@ -647,8 +647,15 @@ records the same gate shape from consumer-relative `skills/`, `benchmark/`, and
 `skilleval-output` paths. Its committed output shows `ALLOW_MERGE` with
 `recall_at_5=1.0` and `negative_hit_rate=0.0`.
 
-Boundary: this is local external-consumer smoke and a Reusable GitHub Action
-RC, not a Marketplace Action release, not hosted GitHub Actions proof, not
-GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router,
-not a SOTA claim, not benchmark status, not production readiness, not release
-approval, not automatic merge approval, and not a v0.2.0 release.
+The hosted consumer smoke pack under
+[`docs/demo/hosted-consumer-action-smoke`](demo/hosted-consumer-action-smoke)
+records one GitHub-hosted consumer smoke run from
+`Raidriar7170/hermes-skilleval-action-consumer-smoke`. The committed run
+metadata links the hosted workflow run and the downloaded artifacts show
+`ALLOW_MERGE`, `recall_at_5=1.0`, and `negative_hit_rate=0.0`.
+
+Boundary: this is local external-consumer smoke, one GitHub-hosted consumer
+smoke run, and a Reusable GitHub Action RC, not a Marketplace Action release,
+not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
+router, not a SOTA claim, not benchmark status, not production readiness, not
+release approval, not automatic merge approval, and not a v0.2.0 release.
