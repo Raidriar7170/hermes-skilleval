@@ -521,7 +521,7 @@ pytest -q
 Expected:
 
 ```text
-384 passed
+386 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
@@ -595,3 +595,27 @@ skilleval ci-summary \
 run checks. It does not call the GitHub API, does not require tokens, and is
 not a GitHub API comment bot, not a PR annotation system, not a Marketplace
 Action, not SaaS, not a runtime MCP router, and not release approval.
+
+## 20. Simulate the GitHub Actions Node 24 Preflight Locally
+
+The Validate workflow uses a GitHub Actions Node 24 preflight by setting
+`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` at workflow level. Local machines cannot
+execute hosted JavaScript actions with GitHub's runner runtime, so the local
+checklist is to preserve the same repository gates before pushing and then
+inspect the remote Validate run. The setting follows GitHub's
+[Node 20 deprecation changelog](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
+
+```bash
+python -m pytest -q
+OPENSPEC_TELEMETRY=0 openspec validate --all --strict
+skilleval release-check \
+  --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
+  --release-output-dir docs/demo/phase18-ci-release-reproducibility
+# Regenerate diagnostic and external validation packs as shown above.
+# Then run skilleval ci-summary with explicit success/failure check outcomes.
+```
+
+Boundary: this is not a Marketplace Action, not GitHub API PR comments, not PR
+annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
+benchmark status, not production readiness, not release approval, not automatic
+merge approval, and not a permanent compatibility guarantee.

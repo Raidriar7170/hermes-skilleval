@@ -137,7 +137,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 384 |
+| Test cases | 386 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -257,7 +257,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 384 pytest cases
+├── tests/                              # 386 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -286,7 +286,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `384 passed` and
+Expected: `386 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -360,6 +360,33 @@ Boundary: this is not a GitHub API comment bot, not a PR annotation system,
 not a Marketplace Action, not SaaS, not a runtime MCP router, not a SOTA claim,
 and not release approval. It summarizes local validation artifacts; it does
 not approve a release or merge by itself.
+
+### GitHub Actions Node 24 Preflight
+
+The Validate workflow includes a GitHub Actions Node 24 preflight by setting
+`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` at workflow level. This exercises existing
+JavaScript actions such as checkout, setup-python, and artifact upload under
+the upcoming runtime while preserving the same pytest, OpenSpec, release-check,
+diagnostic gate, diagnostic drift, external pack, CI summary, artifact upload,
+and final decision enforcement checks. The migration knob follows GitHub's
+[Node 20 deprecation changelog](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
+
+Local simulation checklist:
+
+```bash
+python -m pytest -q
+OPENSPEC_TELEMETRY=0 openspec validate --all --strict
+skilleval release-check \
+  --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
+  --release-output-dir docs/demo/phase18-ci-release-reproducibility
+# Then run the diagnostic/external pack regeneration flows from docs/usage.md
+# and simulate skilleval ci-summary with explicit check outcomes.
+```
+
+Boundary: this is not a Marketplace Action, not GitHub API PR comments, not PR
+annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
+benchmark status, not production readiness, not release approval, not automatic
+merge approval, and not a permanent compatibility guarantee.
 
 ---
 

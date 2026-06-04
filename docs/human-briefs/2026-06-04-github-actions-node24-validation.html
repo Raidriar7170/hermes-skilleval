@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub Actions Node 24 Validation - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #18202a; background: #f7f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d9dee8; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe4ee; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+    code { background: #eef1f6; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GitHub Actions Node 24 Validation</h1>
+    <span class="status">archived</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段把 Validate workflow 接入 GitHub Actions Node 24 preflight，并把 README、usage 和当前 Human Brief 的公开验证计数同步到 <code>386 passed</code> / <code>386 pytest cases</code>。</p>
+    </div>
+
+    <h2>项目阶段进度</h2>
+    <p>当前阶段仍是 <strong>interview-ready / developer-facing routing reliability toolkit</strong>。这次只处理 CI runtime migration 预检：保持既有 pytest、OpenSpec、release-check、diagnostic gate、diagnostic drift、external pack、CI summary、artifact upload 和 final decision enforcement，不扩展产品边界。</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li><a href="../../.github/workflows/validate.yml"><code>.github/workflows/validate.yml</code></a> 增加 workflow-level <code>FORCE_JAVASCRIPT_ACTIONS_TO_NODE24</code>。</li>
+      <li><a href="../../README.md"><code>README.md</code></a> 和 <a href="../usage.md"><code>docs/usage.md</code></a> 增加本地模拟 checklist 与 Node 24 preflight 边界说明。</li>
+      <li>当前公开 surface 的测试计数从 <code>384</code> 更新到 <code>386</code>，对应新增的 Node 24 surface tests。</li>
+      <li>Node 24 preflight 开关来源：<a href="https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/">GitHub Node 20 deprecation changelog</a>。</li>
+    </ul>
+
+    <h2>验证与本地模拟</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_project_surface.py -q</code>：PASS，23 passed。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate github-actions-node24-validation --strict</code>：PASS。</li>
+      <li><code>python -m pytest -q</code>：PASS，386 passed。</li>
+      <li>远端 GitHub Actions runtime 只能在 push 后由 hosted runner 真实执行；本地 checklist 只模拟仓库内 validation gates。</li>
+    </ul>
+
+    <h2>Source / Evidence Links</h2>
+    <ul>
+      <li><a href="../../openspec/changes/archive/2026-06-04-github-actions-node24-validation/proposal.md"><code>proposal.md</code></a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-04-github-actions-node24-validation/design.md"><code>design.md</code></a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-04-github-actions-node24-validation/specs/github-actions-node24-validation/spec.md"><code>delta spec.md</code></a></li>
+      <li><a href="../../openspec/changes/archive/2026-06-04-github-actions-node24-validation/tasks.md"><code>tasks.md</code></a></li>
+      <li><a href="../../openspec/specs/github-actions-node24-validation/spec.md"><code>archived spec</code></a></li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>这是 Validate workflow 的 compatibility preflight，not a Marketplace Action, not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not release approval, not automatic merge approval, and not a permanent compatibility guarantee。</p>
+  </main>
+</body>
+</html>

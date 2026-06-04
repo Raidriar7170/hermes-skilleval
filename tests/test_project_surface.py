@@ -10,6 +10,9 @@ EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
 USAGE = ROOT / "docs" / "usage.md"
 EVIDENCE_MAP = ROOT / "docs" / "evidence-map.md"
 FAILURE_GALLERY = ROOT / "docs" / "failure-gallery.md"
+NODE24_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-github-actions-node24-validation.html"
+)
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
@@ -22,6 +25,7 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-03-external-skill-library-validation-pack.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-docs-evidence-map.html",
     ROOT / "docs" / "human-briefs" / "2026-06-04-failure-gallery.html",
+    NODE24_HUMAN_BRIEF,
 ]
 
 
@@ -118,6 +122,28 @@ def test_ci_workflow_writes_pr_facing_summary_and_enforces_decision():
     assert "github-token" not in workflow
     assert "pulls/comments" not in workflow
     assert "::error" not in workflow
+
+
+def test_ci_workflow_preflights_github_actions_node24_runtime():
+    workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"' in workflow
+    assert workflow.index("env:") < workflow.index("jobs:")
+    assert "ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION" not in workflow
+    for existing_check in [
+        "actions/checkout@v4",
+        "actions/setup-python@v5",
+        "actions/upload-artifact@v4",
+        "pytest -q",
+        "openspec validate --all --strict",
+        "skilleval release-check",
+        "skilleval diagnostic-ci-gate",
+        "skilleval diagnostic-artifact-drift-check",
+        "id: external_pack",
+        "skilleval ci-summary",
+        "CI summary decision",
+    ]:
+        assert existing_check in workflow
 
 
 def test_readme_surfaces_live_dashboard_and_screenshot_near_key_results():
@@ -474,17 +500,60 @@ def test_external_validation_pack_docs_are_local_and_bounded():
         assert phrase not in combined
 
 
+def test_node24_ci_preflight_docs_are_local_and_bounded():
+    readme = README.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+    brief = NODE24_HUMAN_BRIEF.read_text(encoding="utf-8")
+    combined = "\n".join([readme, usage, workflow, brief])
+
+    assert "GitHub Actions Node 24 preflight" in combined
+    assert "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24" in combined
+    assert "github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners" in combined
+    assert "ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION" not in combined
+    for phrase in [
+        "not a Marketplace Action",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not SaaS",
+        "not a runtime MCP router",
+        "not a SOTA claim",
+        "not benchmark status",
+        "not production readiness",
+        "not release approval",
+        "not automatic merge approval",
+        "not a permanent compatibility guarantee",
+    ]:
+        assert phrase in combined
+
+    risky_claims = [
+        "released as a Marketplace Action",
+        "posts PR comments",
+        "writes PR annotations",
+        "hosted SaaS product",
+        "runtime MCP router for agents",
+        "SOTA benchmark status",
+        "production-ready",
+        "approves the release",
+        "guarantees future GitHub Actions compatibility",
+    ]
+    for phrase in risky_claims:
+        assert phrase not in combined
+
+
 def test_current_public_surfaces_use_latest_full_suite_count():
     surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "384 passed" in combined
-    assert "384 pytest cases" in README.read_text(encoding="utf-8")
+    assert "386 passed" in combined
+    assert "386 pytest cases" in README.read_text(encoding="utf-8")
     for stale_count in [
+        "384 pytest cases",
         "381 pytest cases",
         "378 pytest cases",
         "372 pytest cases",
         "365 pytest cases",
+        "384 passed",
         "381 passed",
         "378 passed",
         "372 passed",
@@ -504,6 +573,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "| Test cases | 372 |",
         "| Test cases | 378 |",
         "| Test cases | 381 |",
+        "| Test cases | 384 |",
     ]:
         assert stale_count not in combined
 
