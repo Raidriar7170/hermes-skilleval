@@ -219,33 +219,17 @@ test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从
 ## Architecture / 系统架构
 
 ```mermaid
-flowchart LR
-    skills["skills/**/SKILL.md"] --> parser["Skill parser"]
-    tasks["benchmarks/tasks"] --> loader["Task loader"]
-    parser --> evaluator["CLI evaluator"]
-    loader --> evaluator
+flowchart TD
+    source["Input corpus<br/>SKILL.md library + labeled tasks"]
+    eval["CLI evaluator<br/>parse, load, compare routers"]
+    routers["Router families<br/>keyword, hybrid, embedding, gated"]
+    rerank["Verification layer<br/>negative controls + cross-encoder reranking"]
+    evidence["Evidence outputs<br/>metrics, JSONL traces, Markdown, dashboard"]
+    gate["Release gate<br/>failure analysis + KEEP_BASELINE decision"]
+    improve["Skill metadata improvement loop"]
 
-    evaluator --> keyword["Keyword router"]
-    evaluator --> hybrid["Hybrid router"]
-    evaluator --> embedding["Embedding router"]
-    evaluator --> gated["Gated router"]
-
-    embedding --> cross["Cross-encoder reranker"]
-    gated --> cross
-
-    keyword --> traces["Metrics + JSONL traces"]
-    hybrid --> traces
-    embedding --> traces
-    gated --> traces
-    cross --> traces
-
-    traces --> reports["Markdown reports"]
-    traces --> dashboard["Static dashboard"]
-    traces --> failure["Failure analysis"]
-    reports --> improvement["Skill metadata improvement loop"]
-    dashboard --> improvement
-    failure --> improvement
-    improvement -. patch proposals .-> skills
+    source --> eval --> routers --> rerank --> evidence --> gate --> improve
+    improve -. patch proposals .-> source
 ```
 
 Core design principles:
@@ -262,39 +246,17 @@ Core design principles:
 ## Project Structure / 项目结构
 
 ```mermaid
-flowchart TB
+flowchart TD
     repo["hermes-skilleval/"]
-    repo --> benchmarks["benchmarks/"]
-    benchmarks --> skills_dir["skills/<br/>45 generated Hermes-style skills"]
-    benchmarks --> tasks_dir["tasks/<br/>80 labeled routing tasks"]
+    repo --> corpus["Benchmark corpus<br/>benchmarks/skills + benchmarks/tasks"]
+    repo --> runtime["Core runtime<br/>src/hermes_skilleval"]
+    repo --> evidence["Reviewer evidence<br/>docs/demo + release handoff"]
+    repo --> automation["Automation<br/>scripts + GitHub Actions"]
+    repo --> validation["Validation<br/>tests + pyproject.toml"]
 
-    repo --> docs_dir["docs/"]
-    docs_dir --> demo_dir["demo/<br/>committed benchmark outputs"]
-    docs_dir --> phase_docs["phase2.md ... phase18.md<br/>experiment notes"]
-    docs_dir --> resume_doc["resume.md<br/>resume-ready framing"]
-
-    repo --> scripts_dir["scripts/"]
-    scripts_dir --> skill_gen["generate_benchmark_skills.py"]
-    scripts_dir --> task_gen["generate_benchmark_tasks.py"]
-
-    repo --> src_dir["src/hermes_skilleval/"]
-    src_dir --> cli_py["cli.py<br/>index, eval, compare, analyze"]
-    src_dir --> calibration_py["calibration.py<br/>cross-encoder thresholds"]
-    src_dir --> metrics_py["metrics.py<br/>Recall, MRR, NDCG, negatives"]
-    src_dir --> failure_py["failure_analysis.py"]
-    src_dir --> improve_py["self_improvement.py"]
-    src_dir --> routers_dir["routers/"]
-
-    routers_dir --> keyword_py["keyword.py"]
-    routers_dir --> hybrid_py["hybrid.py"]
-    routers_dir --> embedding_py["embedding.py"]
-    routers_dir --> gated_py["gated.py"]
-    routers_dir --> verification_py["verification.py"]
-    routers_dir --> cross_py["cross_encoder.py"]
-
-    repo --> tests_dir["tests/<br/>pytest suite"]
-    repo --> pyproject["pyproject.toml"]
-    repo --> readme["README.md"]
+    runtime --> routers["Router modules<br/>keyword, hybrid, embedding, gated, cross_encoder"]
+    evidence --> release["Release evidence<br/>Phase 16-18 + v0.2.0"]
+    automation --> regeneration["Reproducible generation<br/>benchmark and evidence scripts"]
 ```
 
 ---

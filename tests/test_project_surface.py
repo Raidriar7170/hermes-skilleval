@@ -247,15 +247,20 @@ def test_readme_architecture_and_structure_diagrams_render_as_mermaid():
         )
     ]
 
-    assert "```mermaid\nflowchart LR" in architecture
-    assert "```mermaid\nflowchart TB" in project_structure
-    assert "Skill parser" in architecture
-    assert "Cross-encoder reranker" in architecture
+    assert "```mermaid\nflowchart TD" in architecture
+    assert "```mermaid\nflowchart TD" in project_structure
+    assert "Input corpus" in architecture
+    assert "Router families" in architecture
+    assert "Verification layer" in architecture
     assert "Skill metadata improvement loop" in architecture
-    assert "src/hermes_skilleval/" in project_structure
-    assert "routers/" in project_structure
+    assert "Core runtime" in project_structure
+    assert "src/hermes_skilleval" in project_structure
+    assert "Reviewer evidence" in project_structure
+    assert "Release evidence" in project_structure
     assert "```text" not in architecture
     assert "```text" not in project_structure
+    assert "generate_benchmark_skills.py" not in project_structure
+    assert "cross_encoder.py" not in project_structure
 
 
 def test_skill_library_migration_protocol_is_actionable():
