@@ -1,7 +1,10 @@
 # pr-facing-ci-summary Specification
 
 ## Purpose
-TBD - created by archiving change pr-facing-ci-summary. Update Purpose after archive.
+Define local and GitHub Actions CI summary outputs for explicit validation
+check outcomes, changed-file grouping, and bounded ALLOW_MERGE/BLOCK_MERGE
+decisions.
+
 ## Requirements
 ### Requirement: Generate PR-facing CI summaries
 The system SHALL provide a deterministic CI summary command that writes JSON and

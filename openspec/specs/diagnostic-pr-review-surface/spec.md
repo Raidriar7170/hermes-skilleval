@@ -1,7 +1,9 @@
 # diagnostic-pr-review-surface Specification
 
 ## Purpose
-TBD - created by archiving change diagnostic-ci-pr-review-surface. Update Purpose after archive.
+Define the local reviewer-facing packet generator that summarizes diagnostic CI
+gate evidence without GitHub API comments or PR annotations.
+
 ## Requirements
 ### Requirement: Generate PR review packets from diagnostic evidence
 The system SHALL provide a deterministic diagnostic PR review surface that reads

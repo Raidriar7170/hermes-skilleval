@@ -1,7 +1,10 @@
 # diagnostic-ci-gate Specification
 
 ## Purpose
-TBD - created by archiving change diagnostic-ci-gate. Update Purpose after archive.
+Define the artifact-based diagnostic CI gate that validates scan, lint,
+inspect, and route outputs against explicit thresholds for local and CI use
+without hosted automation claims.
+
 ## Requirements
 ### Requirement: Run diagnostic artifacts through a CI gate
 The system SHALL provide a deterministic diagnostic CI gate that validates scan,

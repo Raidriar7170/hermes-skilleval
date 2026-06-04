@@ -1,7 +1,10 @@
 # diagnostic-skill-library-onboarding Specification
 
 ## Purpose
-TBD - created by archiving change diagnostic-skill-library-onboarding. Update Purpose after archive.
+Define the zero-label Diagnostic Onboarding Path for Skill Library Maintainers:
+scan real skill sources, lint routing clarity, inspect conflict risks, route
+queries, and render static dashboards.
+
 ## Requirements
 ### Requirement: Scan real skill sources
 

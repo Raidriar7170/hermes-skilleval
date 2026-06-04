@@ -1,7 +1,10 @@
 # external-skill-library-validation-pack Specification
 
 ## Purpose
-TBD - created by archiving change external-skill-library-validation-pack. Update Purpose after archive.
+Define the committed external-style validation pack for public-safe Markdown
+skill folders and MCP-style tool schema fixtures, with deterministic
+regeneration and bounded claims.
+
 ## Requirements
 ### Requirement: Provide external-style validation evidence pack
 The system SHALL provide a committed External Skill Library Validation Pack that

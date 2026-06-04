@@ -1,7 +1,9 @@
 # diagnostic-artifact-drift-check Specification
 
 ## Purpose
-TBD - created by archiving change diagnostic-artifact-drift-check. Update Purpose after archive.
+Define deterministic semantic comparison for regenerated diagnostic artifacts,
+including approved volatile-field normalization and bounded drift-report claims.
+
 ## Requirements
 ### Requirement: Compare diagnostic artifacts semantically
 The system SHALL provide a deterministic diagnostic artifact drift check that

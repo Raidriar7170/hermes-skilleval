@@ -137,7 +137,7 @@ Preview generated from the committed Phase 8 dashboard payload:
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 391 |
+| Test cases | 392 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ### Best Verified Routing Results
@@ -257,7 +257,7 @@ hermes-skilleval/
 │       ├── gated.py                    # verification-gated reranker
 │       ├── verification.py             # shared selective evidence logic
 │       └── cross_encoder.py            # pretrained pairwise reranker
-├── tests/                              # 391 pytest cases
+├── tests/                              # 392 pytest cases
 ├── pyproject.toml
 └── README.md
 ```
@@ -286,7 +286,7 @@ skilleval release-check \
   --release-output-dir docs/demo/phase18-ci-release-reproducibility
 ```
 
-Expected: `391 passed` and
+Expected: `392 passed` and
 `Release reproducibility PASS:
 docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
 
@@ -487,7 +487,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 365 unit and smoke tests |
+| Testing | pytest | 392 pytest cases |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -547,7 +547,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 365 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 392 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.

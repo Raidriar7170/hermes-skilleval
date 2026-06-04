@@ -5,9 +5,10 @@ evidence remains in the linked repository artifacts; this map only groups the
 current proof chain by reviewer task and records what each artifact can and
 cannot support.
 
-Boundary: this is not a Marketplace Action, not GitHub API PR comments, not PR
-annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
-production readiness, not release approval, and not automatic merge approval.
+Boundary: this is not a Marketplace Action, not a Marketplace Action release,
+not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
+router, not a SOTA claim, not production readiness, not release approval, not
+automatic merge approval, and not a v0.2.0 release.
 
 ## Project Positioning
 
@@ -54,6 +55,17 @@ production readiness, not release approval, and not automatic merge approval.
 | [`OpenSpec: PR-facing CI summary`](../openspec/specs/pr-facing-ci-summary/spec.md) | The archived spec for the local/GitHub Actions summary surface. | It is not a Marketplace Action and not PR annotations. |
 | [`PR-facing CI Summary Human Brief`](human-briefs/2026-06-03-pr-facing-ci-summary.html) | Human-readable summary of the CI summary phase, validation commands, and boundaries. | It does not replace workflow logs or JSON artifacts. |
 
+## Reusable Action RC Evidence
+
+| Artifact | Helps verify | Limit |
+|---|---|---|
+| [`action.yml`](../action.yml) | Root composite action metadata for running the offline SkillEval gate from an external repository. | It is release-candidate evidence, not a Marketplace Action release or v0.2.0 release. |
+| [`examples/github-action/README.md`](../examples/github-action/README.md) | Public-safe fresh-clone fixture with two skills, two labeled tasks, and local gate commands. | It is an example fixture, not benchmark status or production readiness. |
+| [`examples/github-action/.github/workflows/skilleval.yml`](../examples/github-action/.github/workflows/skilleval.yml) | Example workflow that calls the RC action by `@main` with bounded thresholds. | It does not post PR comments or annotations and does not approve merges automatically. |
+| [`OpenSpec: reusable-github-action-rc`](../openspec/specs/reusable-github-action-rc/spec.md) | Synced capability contract for the reusable composite action RC. | It explicitly excludes release publication, GitHub API automation, SaaS, runtime MCP routing, and product-readiness claims. |
+| [`Reusable Action RC Human Brief`](human-briefs/2026-06-04-reusable-github-action-rc.html) | Chinese phase summary with validation results, Reviewer fixes, and claim boundaries. | Human Briefs are review aids, not source artifacts or release approval. |
+| [`Reusable Action RC Loop Brief`](human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html) | Autonomous-loop companion report for the RC phase. | It is a companion narrative, not a workflow log or second source of truth. |
+
 ## OpenSpec Specs
 
 | Artifact | Helps verify | Limit |
@@ -64,6 +76,7 @@ production readiness, not release approval, and not automatic merge approval.
 | [`diagnostic-pr-review-surface`](../openspec/specs/diagnostic-pr-review-surface/spec.md) | Local PR review packet surface for diagnostics. | It is not GitHub API PR comments. |
 | [`external-skill-library-validation-pack`](../openspec/specs/external-skill-library-validation-pack/spec.md) | External-style validation pack requirements. | It is not a SOTA claim. |
 | [`pr-facing-ci-summary`](../openspec/specs/pr-facing-ci-summary/spec.md) | CI summary inputs, outputs, and bounded decision language. | It is not automatic merge approval. |
+| [`reusable-github-action-rc`](../openspec/specs/reusable-github-action-rc/spec.md) | Reusable composite action RC requirements and public claim boundaries. | It is not a Marketplace Action release or v0.2.0 release. |
 
 ## Human Briefs
 
@@ -73,3 +86,6 @@ production readiness, not release approval, and not automatic merge approval.
 | [`2026-06-03 PR-facing CI summary`](human-briefs/2026-06-03-pr-facing-ci-summary.html) | Summary of local/GitHub Actions CI summary implementation and validation. | It is not a workflow log. |
 | [`2026-06-03 external validation pack`](human-briefs/2026-06-03-external-skill-library-validation-pack.html) | Summary of external-style validation pack outputs and validation. | It is not benchmark status. |
 | [`2026-06-03 autonomous-loop external validation pack`](human-briefs/2026-06-03-autonomous-loop-external-skill-library-validation-pack.html) | Autonomous-loop brief for the same external validation phase. | It is a companion narrative, not a second source of truth. |
+| [`2026-06-04 reusable action RC`](human-briefs/2026-06-04-reusable-github-action-rc.html) | Summary of the reusable action RC implementation, validation, and Reviewer fixes. | It is not a release note or Marketplace publication record. |
+| [`2026-06-04 autonomous-loop reusable action RC`](human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html) | Loop-level report for the same reusable action RC phase. | It is a companion narrative, not a second source of truth. |
+| [`2026-06-04 public evidence surface refresh`](human-briefs/2026-06-04-public-evidence-surface-refresh.html) | Summary of the evidence-map, public count, and synced spec purpose refresh. | It is a companion narrative, not a second source of truth. |

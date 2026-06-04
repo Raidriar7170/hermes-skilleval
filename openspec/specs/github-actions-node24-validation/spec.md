@@ -1,7 +1,9 @@
 # github-actions-node24-validation Specification
 
 ## Purpose
-TBD - created by archiving change github-actions-node24-validation. Update Purpose after archive.
+Define Validate workflow Node 24 preflight behavior and conservative
+documentation for GitHub Actions JavaScript runtime compatibility checks.
+
 ## Requirements
 ### Requirement: Preflight Validate workflow with Node 24 JavaScript actions
 The system SHALL configure the repository Validate workflow to run GitHub

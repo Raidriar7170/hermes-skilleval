@@ -16,9 +16,28 @@ NODE24_HUMAN_BRIEF = (
 REUSABLE_ACTION_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-reusable-github-action-rc.html"
 )
+PUBLIC_EVIDENCE_HUMAN_BRIEF = (
+    ROOT / "docs" / "human-briefs" / "2026-06-04-public-evidence-surface-refresh.html"
+)
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
+PUBLIC_EVIDENCE_CHANGE = "public-evidence-surface-refresh"
+
+
+def _openspec_change_artifact(relative_path: str) -> Path:
+    active = ROOT / "openspec" / "changes" / PUBLIC_EVIDENCE_CHANGE / relative_path
+    if active.exists():
+        return active
+
+    archive_root = ROOT / "openspec" / "changes" / "archive"
+    archived = sorted(archive_root.glob(f"*-{PUBLIC_EVIDENCE_CHANGE}/{relative_path}"))
+    if archived:
+        return archived[-1]
+
+    return active
+
+
 CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-skill-library-onboarding.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-demo-evidence-pack.html",
@@ -30,6 +49,13 @@ CURRENT_HUMAN_BRIEFS = [
     ROOT / "docs" / "human-briefs" / "2026-06-04-failure-gallery.html",
     NODE24_HUMAN_BRIEF,
     REUSABLE_ACTION_HUMAN_BRIEF,
+    PUBLIC_EVIDENCE_HUMAN_BRIEF,
+]
+CURRENT_OPENSPEC_CHANGE_ARTIFACTS = [
+    _openspec_change_artifact("proposal.md"),
+    _openspec_change_artifact("design.md"),
+    _openspec_change_artifact("tasks.md"),
+    _openspec_change_artifact("specs/docs-evidence-map/spec.md"),
 ]
 
 
@@ -238,6 +264,7 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "## Diagnostic Onboarding Evidence",
         "## External-Style Validation Evidence",
         "## PR-Facing CI Evidence",
+        "## Reusable Action RC Evidence",
         "## OpenSpec Specs",
         "## Human Briefs",
     ]:
@@ -252,7 +279,13 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "demo/diagnostic-onboarding/README.md",
         "demo/external-skill-library-validation/README.md",
         "../.github/workflows/validate.yml",
+        "../action.yml",
+        "../examples/github-action/README.md",
+        "../examples/github-action/.github/workflows/skilleval.yml",
         "../openspec/specs/pr-facing-ci-summary/spec.md",
+        "../openspec/specs/reusable-github-action-rc/spec.md",
+        "human-briefs/2026-06-04-reusable-github-action-rc.html",
+        "human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html",
         "human-briefs/2026-06-03-autonomous-loop-external-skill-library-validation-pack.html",
     ]:
         assert f"]({required_path})" in evidence_map
@@ -276,6 +309,7 @@ def test_evidence_map_docs_are_bounded_and_do_not_overclaim():
 
     for phrase in [
         "not a Marketplace Action",
+        "not a Marketplace Action release",
         "not GitHub API PR comments",
         "not PR annotations",
         "not SaaS",
@@ -284,6 +318,7 @@ def test_evidence_map_docs_are_bounded_and_do_not_overclaim():
         "not production readiness",
         "not release approval",
         "not automatic merge approval",
+        "not a v0.2.0 release",
     ]:
         assert phrase in evidence_map
         assert phrase in combined
@@ -302,6 +337,22 @@ def test_evidence_map_docs_are_bounded_and_do_not_overclaim():
         "approves the release",
     ]:
         assert risky_claim not in combined
+
+
+def test_synced_openspec_specs_have_explicit_purpose_text():
+    spec_root = ROOT / "openspec" / "specs"
+
+    for spec in sorted(spec_root.glob("*/spec.md")):
+        text = spec.read_text(encoding="utf-8")
+        assert "\n## Purpose\n" in text
+        assert "TBD - created by archiving" not in text, spec
+        assert "Update Purpose after archive" not in text, spec
+
+    docs_evidence_spec = (spec_root / "docs-evidence-map" / "spec.md").read_text(
+        encoding="utf-8"
+    )
+    assert "Reusable Action RC Evidence" in docs_evidence_spec
+    assert "reusable GitHub Action RC" in docs_evidence_spec
 
 
 def test_failure_gallery_is_linked_from_public_entry_points():
@@ -546,18 +597,35 @@ def test_node24_ci_preflight_docs_are_local_and_bounded():
 
 
 def test_current_public_surfaces_use_latest_full_suite_count():
-    surfaces = [README, USAGE, *CURRENT_HUMAN_BRIEFS]
+    evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
+    evidence_map_briefs = [
+        EVIDENCE_MAP.parent / link
+        for link in _markdown_links(evidence_map)
+        if link.startswith("human-briefs/")
+    ]
+    surfaces = [
+        README,
+        USAGE,
+        *CURRENT_HUMAN_BRIEFS,
+        *evidence_map_briefs,
+        *CURRENT_OPENSPEC_CHANGE_ARTIFACTS,
+    ]
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
 
-    assert "391 passed" in combined
-    assert "391 pytest cases" in README.read_text(encoding="utf-8")
+    assert "392 passed" in combined
+    assert "392 pytest cases" in README.read_text(encoding="utf-8")
     for stale_count in [
+        "391 pytest cases",
         "386 pytest cases",
         "384 pytest cases",
         "381 pytest cases",
         "378 pytest cases",
         "372 pytest cases",
         "365 pytest cases",
+        "365 unit and smoke tests",
+        "365 passing tests",
+        "391 passed",
+        "391 passing tests",
         "386 passed",
         "384 passed",
         "381 passed",
@@ -571,6 +639,7 @@ def test_current_public_surfaces_use_latest_full_suite_count():
         "338 passed",
         "344 passed",
         "346 passed",
+        "| Test cases | 391 |",
         "| Test cases | 361 |",
         "| Test cases | 365 |",
         "| Test cases | 314 |",
