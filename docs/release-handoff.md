@@ -20,6 +20,7 @@ HTML artifacts.
 | Phase 16 | Blind validation and release gate | `docs/phase16.md` |
 | Phase 17 | Calibrated release selector keeps baseline | `docs/phase17.md` |
 | Phase 18 | CI-backed release reproducibility pack | `docs/phase18.md` |
+| v0.2.0 decision | Human release review package | `docs/demo/v0.2.0-release-decision/release-decision.md` |
 
 ## Reviewer Entry Points
 
@@ -30,6 +31,9 @@ HTML artifacts.
 - Phase 17 task decisions: `docs/demo/phase17-calibrated-release-selector/task-decisions.jsonl`
 - Phase 18 release manifest: `docs/demo/phase18-ci-release-reproducibility/release-manifest.json`
 - Phase 18 reproducibility check: `docs/demo/phase18-ci-release-reproducibility/release-check-summary.json`
+- v0.2.0 release decision: `docs/demo/v0.2.0-release-decision/release-decision.md`
+- v0.2.0 release decision JSON: `docs/demo/v0.2.0-release-decision/release-decision.json`
+- v0.2.0 input manifest: `docs/demo/v0.2.0-release-decision/input-manifest.json`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
 - Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
@@ -49,7 +53,19 @@ Phase 18 makes the release reading CI-reproducible. The release-check command
 reruns the selector and public artifact guard, writes a manifest with artifact
 hashes, and keeps the default-router decision at `KEEP_BASELINE`.
 
+The v0.2.0 release decision package records `NEEDS_REVIEW` and
+`Published: false`. It links Phase 16/17/18 evidence plus local and hosted
+Reusable GitHub Action RC smoke as RC support evidence for human release
+review. It does not create a release action: `finetuned-embedding` is not
+approved as default, and any tag, GitHub Release, Marketplace publication, or
+public release action requires explicit human confirmation.
+
 ## Boundaries
 
 The repository does not commit model checkpoints, private machine details, or
 claims beyond self-built Hermes-style evidence.
+
+The v0.2.0 decision package is not a Marketplace Action release, not GitHub API
+PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim,
+not benchmark status, not production readiness, not release approval, not
+automatic merge approval, and not a v0.2.0 release.

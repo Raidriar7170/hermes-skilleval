@@ -8,6 +8,10 @@ Human Brief evidence, see [`docs/evidence-map.md`](evidence-map.md); it is a
 navigation layer, not a second source of truth, and not release approval.
 For concrete blocked-regression and diagnostic-risk examples, use
 [`docs/failure-gallery.md`](failure-gallery.md) as a review aid.
+For the v0.2.0 release decision package, use
+[`docs/demo/v0.2.0-release-decision/release-decision.md`](demo/v0.2.0-release-decision/release-decision.md);
+it records `NEEDS_REVIEW`, `KEEP_BASELINE`, and `Published: false` for human
+release review, not automatic publication.
 
 ## Installation
 
@@ -521,7 +525,7 @@ pytest -q
 Expected:
 
 ```text
-399 passed
+406 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
@@ -637,7 +641,7 @@ skilleval github-action-gate \
 ```
 
 The example workflow under
-[`examples/github-action/.github/workflows/skilleval.yml`](examples/github-action/.github/workflows/skilleval.yml)
+[`examples/github-action/.github/workflows/skilleval.yml`](../examples/github-action/.github/workflows/skilleval.yml)
 uses `Raidriar7170/hermes-skilleval@main`; use a pinned commit SHA for a stricter
 trial. Do not use an unpublished version tag.
 
@@ -659,3 +663,25 @@ smoke run, and a Reusable GitHub Action RC, not a Marketplace Action release,
 not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
 router, not a SOTA claim, not benchmark status, not production readiness, not
 release approval, not automatic merge approval, and not a v0.2.0 release.
+
+## 22. Review the v0.2.0 Release Decision Package
+
+The v0.2.0 release decision package summarizes Phase 16 blind validation,
+Phase 17 default-router selection, Phase 18 reproducibility, the local
+external-consumer action smoke, and the hosted consumer action smoke:
+
+- [`release-decision.md`](demo/v0.2.0-release-decision/release-decision.md)
+- [`release-decision.json`](demo/v0.2.0-release-decision/release-decision.json)
+- [`input-manifest.json`](demo/v0.2.0-release-decision/input-manifest.json)
+
+The package decision is `NEEDS_REVIEW`; `Published: false`; the router decision
+is `KEEP_BASELINE`; the default router remains `baseline-minilm`; and
+`finetuned-embedding` is not approved as default. The local and hosted action
+smoke artifacts are RC support evidence for human release review only.
+
+Boundary: this is not a Marketplace Action release, not GitHub API PR comments,
+not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
+benchmark status, not production readiness, not release approval, not automatic
+merge approval, not a v0.2.0 release, and not automatic publication. Any tag,
+GitHub Release, Marketplace publication, or public release action requires
+explicit human confirmation.

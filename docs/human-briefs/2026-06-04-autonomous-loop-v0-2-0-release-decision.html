@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Autonomous Loop - v0.2.0 Release Decision</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; margin: 32px auto; max-width: 960px; color: #1f2933; }
+    h1, h2 { color: #102a43; }
+    code { background: #eef2f7; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #2f80ed; padding: 10px 14px; background: #eef6ff; }
+    .warn { border-left: 4px solid #f0b429; padding: 10px 14px; background: #fffbea; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0 24px; }
+    th, td { border: 1px solid #d9e2ec; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f0f4f8; }
+  </style>
+</head>
+<body>
+  <h1>Autonomous Loop: v0.2.0 Release Decision</h1>
+  <p class="status">一句话结论：本轮完成并归档 <code>v0-2-0-release-decision</code>，把 v0.2.0 发布判断收敛为 <code>NEEDS_REVIEW</code>，不发布、不打 tag、不创建 GitHub Release、不上 Marketplace。</p>
+
+  <h2>Loop 状态与停止原因</h2>
+  <table>
+    <tr><th>项目</th><th>状态</th></tr>
+    <tr><td>Loop status</td><td>completed; waiting for user release-posture confirmation</td></tr>
+    <tr><td>OpenSpec change</td><td><code>v0-2-0-release-decision</code> archived to <code>openspec/changes/archive/2026-06-04-v0-2-0-release-decision/</code></td></tr>
+    <tr><td>Stop condition</td><td>下一步若创建 tag、GitHub Release、Marketplace publication 或 public release action，会改变 release posture；按用户边界和 opsx-auto hard stop，需要显式确认。</td></tr>
+  </table>
+
+  <h2>项目阶段进度</h2>
+  <table>
+    <tr><th>维度</th><th>结论</th></tr>
+    <tr><td>Current target</td><td>Release review readiness for a developer-facing routing reliability toolkit; not a public release.</td></tr>
+    <tr><td>Source</td><td><a href="../../CONTEXT.md"><code>CONTEXT.md</code></a> frames the project as an Agent Skill Routing Reliability Toolkit and defines Release Gate as protecting routing reliability, not launch approval. <a href="../../README.md"><code>README.md</code></a> and <a href="../../docs/release-handoff.md"><code>docs/release-handoff.md</code></a> carry the Phase 16-18 release evidence chain.</td></tr>
+    <tr><td>Phase contribution</td><td>新增 v0.2.0 release decision package，把 Phase 16/17/18、local external-consumer smoke、hosted consumer smoke 汇总为人工评审证据。</td></tr>
+    <tr><td>Remaining gaps</td><td>Capabilities: no default-router promotion. Evidence: only one hosted consumer smoke. Validation: local gates pass, remote Validate status未在本轮重新声明。Packaging/release: no tag, no GitHub Release, no Marketplace publication. User decisions: release posture needs explicit confirmation.</td></tr>
+    <tr><td>Next-stage plan</td><td>建议下一步由用户确认是否开一个新的 bounded OpenSpec change：<code>v0.2.0-release-action</code>（tag/release/Marketplace 前置检查）或继续保守地做第二个 hosted consumer smoke。</td></tr>
+  </table>
+
+  <h2>本轮完成</h2>
+  <ul>
+    <li>新增 <a href="../demo/v0.2.0-release-decision/release-decision.md"><code>docs/demo/v0.2.0-release-decision/release-decision.md</code></a>、JSON 和 input manifest。</li>
+    <li>更新 README、usage、evidence map、release handoff 和 synced OpenSpec specs。</li>
+    <li>新增 <a href="2026-06-04-v0-2-0-release-decision.html">phase Human Brief</a>。</li>
+    <li>把公开测试计数同步到 <code>406 passed</code> / <code>406 pytest cases</code>。</li>
+    <li>Reviewer 返回 <code>Must Fix: No issues found</code>；已采纳一个 test-hardening Should Fix。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>python -m pytest -q tests/test_v0_2_0_release_decision.py tests/test_project_surface.py tests/test_reusable_github_action_rc.py -q</code>：PASS，43 passed。</li>
+    <li><code>python -m pytest -q</code>：PASS，406 passed。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，13 passed / 0 failed。</li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS，Phase 18 release reproducibility remains PASS。</li>
+    <li><code>git diff --exit-code docs/demo/phase17-calibrated-release-selector docs/demo/phase18-ci-release-reproducibility</code>：PASS，无 artifact drift。</li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli github-action-gate ...</code>：PASS，<code>ALLOW_MERGE</code>。</li>
+    <li><code>git diff --check</code>：PASS。</li>
+  </ul>
+
+  <h2>Auto Integration</h2>
+  <p class="warn">本报告生成时 guarded integration 尚未执行；集成前提已满足：本地验证、OpenSpec validation、Reviewer、archive 和 Human Brief 均完成，当前 diff 限于本阶段文件。最终 commit、merge 和 push hash 由本轮最终回复记录。</p>
+
+  <h2>不要夸大的结论</h2>
+  <p>本阶段不是 v0.2.0 release，不是 release approval，不是 Marketplace Action release，不是 GitHub API PR comments，不是 PR annotations，不是 SaaS，不是 runtime MCP router，不是 SOTA claim，不是 benchmark status，不是 production readiness，也不是 automatic merge approval。</p>
+</body>
+</html>

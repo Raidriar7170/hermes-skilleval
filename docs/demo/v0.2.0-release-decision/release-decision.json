@@ -1,0 +1,96 @@
+{
+  "artifact_type": "v0.2.0-release-decision",
+  "schema_version": "v0.2.0-release-decision.v1",
+  "release_version": "v0.2.0",
+  "generated_date": "2026-06-04",
+  "release_decision": "NEEDS_REVIEW",
+  "published": false,
+  "github_release_created": false,
+  "tag_created": false,
+  "marketplace_published": false,
+  "release_actions_require_human_confirmation": true,
+  "router_decision": "KEEP_BASELINE",
+  "default_router": "baseline-minilm",
+  "candidate_router": "finetuned-embedding",
+  "finetuned_embedding_approved_for_default": false,
+  "action_rc_decision": "RC_SUPPORT_EVIDENCE_ONLY",
+  "decision_summary": "Current evidence supports human release review for v0.2.0, not automatic publication.",
+  "next_step": "Require explicit human confirmation before any tag creation, GitHub Release creation, Marketplace publication, or public release action.",
+  "boundary": [
+    "not a Marketplace Action release",
+    "not GitHub API PR comments",
+    "not PR annotations",
+    "not SaaS",
+    "not a runtime MCP router",
+    "not a SOTA claim",
+    "not benchmark status",
+    "not production readiness",
+    "not release approval",
+    "not automatic merge approval",
+    "not a v0.2.0 release"
+  ],
+  "evidence_summary": {
+    "phase16": {
+      "artifact_type": "phase16-blind-validation",
+      "guard_status": "REVIEW_REQUIRED",
+      "regression_count": 2,
+      "task_count": 16,
+      "baseline_router": "baseline-minilm",
+      "candidate_router": "finetuned-embedding",
+      "paths": [
+        "docs/demo/phase16-blind-validation/comparison.md",
+        "docs/demo/phase16-blind-validation/regression-summary.json",
+        "docs/demo/phase16-blind-validation/route-diffs.jsonl"
+      ]
+    },
+    "phase17": {
+      "artifact_type": "phase17-calibrated-release-selector",
+      "decision": "KEEP_BASELINE",
+      "selected_router": "baseline-minilm",
+      "approved_for_default": false,
+      "paths": [
+        "docs/demo/phase17-calibrated-release-selector/release-decision.json",
+        "docs/demo/phase17-calibrated-release-selector/release-decision.md"
+      ]
+    },
+    "phase18": {
+      "artifact_type": "phase18-ci-release-reproducibility-pack",
+      "status": "PASS",
+      "release_check_status": "PASS",
+      "manifest_release_decision": "KEEP_BASELINE",
+      "paths": [
+        "docs/demo/phase18-ci-release-reproducibility/release-manifest.json",
+        "docs/demo/phase18-ci-release-reproducibility/release-manifest.md",
+        "docs/demo/phase18-ci-release-reproducibility/release-check-summary.json"
+      ]
+    },
+    "action_rc": {
+      "local_external_consumer": {
+        "evidence_role": "RC support evidence for human release review",
+        "decision": "ALLOW_MERGE",
+        "ci_decision": "ALLOW_MERGE",
+        "hosted": false,
+        "paths": [
+          "docs/demo/external-repo-action-smoke-pack/output/gate-report.json",
+          "docs/demo/external-repo-action-smoke-pack/output/gate-report.md",
+          "docs/demo/external-repo-action-smoke-pack/output/ci-summary.json",
+          "docs/demo/external-repo-action-smoke-pack/output/ci-summary.md"
+        ]
+      },
+      "hosted_consumer": {
+        "evidence_role": "RC support evidence for human release review",
+        "decision": "ALLOW_MERGE",
+        "ci_decision": "ALLOW_MERGE",
+        "hosted": true,
+        "run_url": "https://github.com/Raidriar7170/hermes-skilleval-action-consumer-smoke/actions/runs/26946490131",
+        "paths": [
+          "docs/demo/hosted-consumer-action-smoke/run-metadata.json",
+          "docs/demo/hosted-consumer-action-smoke/output/gate-report.json",
+          "docs/demo/hosted-consumer-action-smoke/output/gate-report.md",
+          "docs/demo/hosted-consumer-action-smoke/output/ci-summary.json",
+          "docs/demo/hosted-consumer-action-smoke/output/ci-summary.md"
+        ]
+      }
+    }
+  }
+}
