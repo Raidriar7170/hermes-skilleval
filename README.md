@@ -2,13 +2,34 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Validate](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml/badge.svg)](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml)
+[![Release: v0.2.1](https://img.shields.io/badge/release-v0.2.1-blue.svg)](https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.2.1)
+[![Tests: 419](https://img.shields.io/badge/tests-419%20passed-brightgreen.svg)](tests)
+[![Reusable Action](https://img.shields.io/badge/action-reusable%20repo%20Action-0b6e69.svg)](action.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Benchmark](https://img.shields.io/badge/benchmark-80%20tasks%20%2F%2045%20skills-purple.svg)](benchmarks)
-[![A100 Validated](https://img.shields.io/badge/A100-validated-orange.svg)](docs/phase7a.md)
 
 **Evaluate, route, and regression-test agent skills before they break your coding agent.**
 
 Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style skill libraries, and MCP tool schemas detect wrong-skill activations, near-miss conflicts, and routing regressions in CI. It indexes `SKILL.md` libraries, runs labeled benchmark tasks with gold and negative skills, and writes reproducible JSON, Markdown, CI summary, and dashboard artifacts.
+
+## For Interviewers / 项目速览
+
+If you only have three minutes, read this project as a skill-routing evaluation
+and CI release-gate system for AI coding agents: it checks whether an agent
+selects the right skill, whether it is tempted by similar but wrong skills, and
+whether a router or model change regresses before maintainers ship it.
+
+| 面试官关心 | 项目回答 |
+|---|---|
+| 解决的问题 | Claude Code / Codex / Cursor-style skill libraries grow over time, and high Recall@K can still hide near-miss negative skill activations. |
+| 我做了什么 | Built an 80-task / 45-skill self-built evaluation corpus, multiple router comparisons, negative controls, blind validation, a conservative release gate, and a reusable repository Action for PR checks. |
+| 达到的效果 | Found a `finetuned-embedding` candidate that kept the gold skill but newly selected a wrong negative skill; the release gate kept `baseline-minilm` as default instead of promoting it. |
+| 完成度 | Published `v0.2.1`, `419` pytest cases pass, CI validation is wired, the Action is copy/paste usable, and dashboard plus JSON/Markdown release evidence are committed. |
+
+For a self-contained Chinese interview walkthrough, use
+[`docs/interview-project-overview.html`](docs/interview-project-overview.html)
+and [`docs/resume.md`](docs/resume.md). The strongest contribution is the
+evaluation, negative-control, release-gate, and CI reliability workflow, not a SOTA claim.
 
 ## What it does
 

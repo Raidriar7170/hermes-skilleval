@@ -6,6 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CURRENT_FULL_SUITE_COUNT = "419"
 README = ROOT / "README.md"
+RESUME = ROOT / "docs" / "resume.md"
+INTERVIEW_OVERVIEW = ROOT / "docs" / "interview-project-overview.html"
 PYPROJECT = ROOT / "pyproject.toml"
 PACKAGE_INIT = ROOT / "src" / "hermes_skilleval" / "__init__.py"
 ACTION = ROOT / "action.yml"
@@ -286,7 +288,19 @@ def test_readme_presents_post_release_developer_tool_front_door():
         "skill libraries, and MCP tool schemas detect wrong-skill activations, "
         "near-miss conflicts, and routing regressions in CI"
     ) in first_screen
+    assert "If you only have three minutes" in first_screen
+    assert "skill-routing evaluation" in first_screen
+    assert "80-task / 45-skill" in first_screen
+    assert "Found a `finetuned-embedding` candidate" in first_screen
+    assert "Published `v0.2.1`, `419` pytest cases pass" in first_screen
+    assert (
+        "[`docs/interview-project-overview.html`](docs/interview-project-overview.html)"
+        in first_screen
+    )
+    assert "[`docs/resume.md`](docs/resume.md)" in first_screen
+    assert "not a SOTA claim" in first_screen
     for heading in [
+        "## For Interviewers / 项目速览",
         "## What it does",
         "## Why skill routing is hard",
         "## Quick Start",
@@ -301,6 +315,10 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert dashboard_preview < screenshot < architecture
     assert limitations < architecture
     assert "actions/workflows/validate.yml/badge.svg" in readme
+    assert "badge/release-v0.2.1" in readme
+    assert "badge/tests-419%20passed" in readme
+    assert "badge/action-reusable%20repo%20Action" in readme
+    assert "badge/A100-validated" not in first_screen
     assert "run filtering" in readme
     assert "failure inspection" in readme
     assert "raw JSON audit" in readme
@@ -314,6 +332,21 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert "`baseline-minilm` remains the default router" in readme
     assert "`finetuned-embedding` is not approved as default" in readme
     assert "docs/experiment-timeline.md" in readme
+
+    combined = "\n".join(
+        [
+            readme,
+            RESUME.read_text(encoding="utf-8"),
+            INTERVIEW_OVERVIEW.read_text(encoding="utf-8"),
+        ]
+    )
+
+    assert f"{CURRENT_FULL_SUITE_COUNT} pytest cases" in combined
+    assert f"{CURRENT_FULL_SUITE_COUNT} tests" in combined
+    assert "314 tests" not in combined
+    assert "314-test" not in combined
+    assert "413 passed" not in combined
+    assert "418 passed" not in combined
 
 
 def test_dashboard_screenshot_asset_exists():

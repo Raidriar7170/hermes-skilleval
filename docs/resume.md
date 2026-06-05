@@ -8,7 +8,7 @@ metrics, blind-validation evidence, and a conservative default-router decision.
 
 ## Resume Bullets
 
-- Built `Hermes SkillEval`, a 314-test Python CLI harness for benchmarking
+- Built `Hermes SkillEval`, a 419-test Python CLI harness for benchmarking
   Hermes-style agent skill routing over an 80-task / 45-skill self-built corpus,
   with Markdown skill indexing, keyword/hybrid/embedding/gated/cross-encoder
   routers, Recall@K, MRR, NDCG, Negative Hit Rate, JSONL traces, Markdown
@@ -76,8 +76,8 @@ blind-validation default-router decisions.
 
 ## Claims To Avoid
 
-- Do not call this a standard external benchmark.
-- Do not claim SOTA or production readiness.
+- Present this as a self-built Hermes-style benchmark, not a standard public benchmark.
+- Keep the boundary as not a SOTA claim and not production readiness.
 - Do not say the fine-tuned router replaced the baseline.
 - Do not describe Phase 18 as model-quality proof; it proves the release
   evidence chain is reproducible.
