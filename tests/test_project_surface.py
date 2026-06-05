@@ -288,7 +288,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
         "skill libraries, and MCP tool schemas detect wrong-skill activations, "
         "near-miss conflicts, and routing regressions in CI"
     ) in first_screen
-    assert "## 一眼看懂" in first_screen
+    assert "## 总览" in first_screen
     assert "面向 AI 编程 Agent 技能库的离线评测和 CI 回归门禁项目" in first_screen
     assert "系统能不能稳定选中正确技能" in first_screen
     assert "避免误触看起来相关但实际错误的技能" in first_screen
@@ -301,12 +301,12 @@ def test_readme_presents_post_release_developer_tool_front_door():
         "[`docs/interview-project-overview.html`](docs/interview-project-overview.html)"
         in first_screen
     )
-    assert "[`docs/resume.md`](docs/resume.md)" in first_screen
+    assert "[`docs/resume.md`](docs/resume.md)" not in first_screen
     assert "For Interviewers" not in first_screen
     assert "面试官关心" not in first_screen
     assert "If you only have three minutes" not in first_screen
     for heading in [
-        "## 一眼看懂",
+        "## 总览",
         "## What it does",
         "## Why skill routing is hard",
         "## Quick Start",
