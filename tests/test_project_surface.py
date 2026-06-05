@@ -51,6 +51,7 @@ RELEASE_HANDOFF = ROOT / "docs" / "release-handoff.md"
 V0_2_0_RELEASE_DECISION_PACK = ROOT / "docs" / "demo" / "v0.2.0-release-decision"
 V0_2_0_FINAL_APPROVAL_PACK = ROOT / "docs" / "demo" / "v0.2.0-final-approval"
 V0_2_0_RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.2.0.md"
+V0_2_1_POST_RELEASE = ROOT / "docs" / "demo" / "v0.2.1-post-release"
 DIAGNOSTIC_DEMO = ROOT / "docs" / "demo" / "diagnostic-onboarding"
 EXTERNAL_VALIDATION_PACK = ROOT / "docs" / "demo" / "external-skill-library-validation"
 EXTERNAL_REPO_ACTION_SMOKE_PACK = (
@@ -452,6 +453,8 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "demo/v0.2.0-post-release/post-release.md",
         "demo/v0.2.0-post-release/post-release.json",
         "release-notes/v0.2.1.md",
+        "demo/v0.2.1-post-release/post-release.md",
+        "demo/v0.2.1-post-release/post-release.json",
         "demo-repo-plan.md",
         "../openspec/specs/pr-facing-ci-summary/spec.md",
         "../openspec/specs/reusable-github-action-rc/spec.md",

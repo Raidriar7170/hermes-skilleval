@@ -42,8 +42,10 @@ HTML artifacts.
 - v0.2.0 final approval input manifest: `docs/demo/v0.2.0-final-approval/input-manifest.json`
 - v0.2.0 final approval Human Brief: `docs/human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html`
 - post-release onboarding cleanup Human Brief: `docs/human-briefs/2026-06-05-post-release-onboarding-cleanup.html`
+- v0.2.1 patch release Human Brief: `docs/human-briefs/2026-06-05-v0-2-1-patch-release.html`
 - v0.2.0 post-release evidence: `docs/demo/v0.2.0-post-release/post-release.md`
 - v0.2.1 patch release notes: `docs/release-notes/v0.2.1.md`
+- v0.2.1 post-release evidence: `docs/demo/v0.2.1-post-release/post-release.md`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
 - Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
@@ -86,6 +88,12 @@ The v0.2.1 patch release notes package this post-release onboarding cleanup
 only. They do not add runtime features, do not change the default router, and do
 not imply Marketplace publication, SaaS, GitHub API PR comments, or runtime MCP
 routing.
+
+The v0.2.1 post-release evidence records the actual patch tag and GitHub
+Release facts: Published: `true`, Tag created: `true`, GitHub Release created:
+`true`, Marketplace published: `false`, release URL
+`https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.2.1`, and
+target commit `c667c4d00bddff05c2b5feb357a76182cef2134e`.
 
 ## Boundaries
 

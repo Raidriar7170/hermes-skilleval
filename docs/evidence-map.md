@@ -96,6 +96,8 @@ Boundary: This is a reusable repository Action, not a Marketplace-published Acti
 | [`v0.2.0 post-release evidence`](demo/v0.2.0-post-release/post-release.md) | Current publication record after human GO: tag and GitHub Release exist, Marketplace remains false. | It is not PR automation, SaaS, or runtime routing. |
 | [`v0.2.0 post-release JSON`](demo/v0.2.0-post-release/post-release.json) | Machine-readable publication facts and verification commands. | It is evidence only, not a release command. |
 | [`v0.2.1 patch release notes`](release-notes/v0.2.1.md) | Patch release notes for packaging the post-release onboarding cleanup. | It is not a feature expansion, Marketplace publication, SaaS, or runtime routing. |
+| [`v0.2.1 post-release evidence`](demo/v0.2.1-post-release/post-release.md) | Current patch publication record: tag and GitHub Release exist, Marketplace remains false. | It is not PR automation, SaaS, or runtime routing. |
+| [`v0.2.1 post-release JSON`](demo/v0.2.1-post-release/post-release.json) | Machine-readable patch publication facts and verification commands. | It is evidence only, not a release command. |
 
 ## OpenSpec Specs
 
@@ -129,6 +131,7 @@ including `post-release-onboarding-cleanup`.
 | [`2026-06-04 v0.2.0 release decision`](human-briefs/2026-06-04-v0-2-0-release-decision.html) | Summary of the `NEEDS_REVIEW` release decision package, validation, and boundaries. | It is review packaging, not release approval. |
 | [`2026-06-04 v0.2.0 release notes and final approval`](human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html) | Summary of the release-notes preparation phase, final approval checklist, validation plan, and human-confirmation boundaries. | It is historical review packaging, not Marketplace publication. |
 | [`2026-06-05 post-release onboarding cleanup`](human-briefs/2026-06-05-post-release-onboarding-cleanup.html) | Chinese companion brief for the v0.2.0 post-release README, version, Action, and onboarding cleanup. | It is not a new feature phase or release publication. |
+| [`2026-06-05 v0.2.1 patch release`](human-briefs/2026-06-05-v0-2-1-patch-release.html) | Summary of the patch release publication facts, validation commands, evidence links, and boundaries. | It is a companion narrative, not a GitHub Release record or release command. |
 | [`2026-06-04 autonomous-loop v0.2.0 release decision`](human-briefs/2026-06-04-autonomous-loop-v0-2-0-release-decision.html) | Loop-level closeout report for the release decision phase, stop reason, and validation results. | It records guarded integration status, not release approval. |
 | [`2026-06-04 autonomous-loop reusable action`](human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html) | Autonomous-loop companion report for the reusable action phase. | It is a companion narrative, not a workflow log or second source of truth. |
 | [`2026-06-04 public evidence surface refresh`](human-briefs/2026-06-04-public-evidence-surface-refresh.html) | Summary of the evidence-map, public count, and synced spec purpose refresh. | It is a companion narrative, not a second source of truth. |

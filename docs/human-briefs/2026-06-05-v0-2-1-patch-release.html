@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v0.2.1 Patch Release - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 30px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>v0.2.1 Patch Release</h1>
+    <span class="status">published / validation passed</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong><code>v0.2.1</code> 已作为 patch release 发布，用来固定 post-release onboarding cleanup；它不引入新功能，也不改变默认 router。</p>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>GitHub Release: <a href="https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.2.1"><code>v0.2.1</code></a>。tag 指向 release-prep commit <code>c667c4d00bddff05c2b5feb357a76182cef2134e</code>，发布时间为 <code>2026-06-05T06:28:08Z</code>。post-release evidence 会在 release 之后的 main commit 中记录。</p>
+
+    <h2>本阶段改了什么</h2>
+    <ul>
+      <li><a href="../../pyproject.toml"><code>pyproject.toml</code></a> 与 <a href="../../src/hermes_skilleval/__init__.py"><code>src/hermes_skilleval/__init__.py</code></a>：当前版本为 <code>0.2.1</code>。</li>
+      <li><a href="../../README.md"><code>README.md</code></a>、<a href="../../docs/usage.md"><code>docs/usage.md</code></a>、<a href="../../examples/github-action/README.md"><code>examples/github-action/README.md</code></a>：copy/paste Action 示例统一到 <code>Raidriar7170/hermes-skilleval@v0.2.1</code>。</li>
+      <li><a href="../../docs/release-notes/v0.2.1.md"><code>docs/release-notes/v0.2.1.md</code></a>：记录 patch release 范围、证据链接和非目标。</li>
+      <li><a href="../../docs/demo/v0.2.1-post-release/post-release.md"><code>docs/demo/v0.2.1-post-release/post-release.md</code></a> 与 <a href="../../docs/demo/v0.2.1-post-release/post-release.json"><code>post-release.json</code></a>：记录 tag、GitHub Release、release URL、target commit 和验证命令。</li>
+    </ul>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>：PASS，<code>419 passed</code>。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，<code>16 passed, 0 failed</code>。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS，release reproducibility passed。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+      <li>fresh-clone local demo：PASS，GitHub action gate 与 CI summary 均为 <code>ALLOW_MERGE</code>。</li>
+      <li>diagnostic onboarding drift-check：PASS。</li>
+      <li>external skill library validation pack drift-check：PASS。</li>
+      <li>PR-facing CI summary local simulation：PASS，<code>ALLOW_MERGE</code>，overclaim matches 为 <code>0</code>。</li>
+    </ul>
+
+    <h2>证据链接</h2>
+    <ul>
+      <li><a href="../../docs/release-notes/v0.2.1.md"><code>docs/release-notes/v0.2.1.md</code></a>：v0.2.1 release notes。</li>
+      <li><a href="../../docs/demo/v0.2.1-post-release/post-release.md"><code>docs/demo/v0.2.1-post-release/post-release.md</code></a>：v0.2.1 publication facts。</li>
+      <li><a href="../../docs/demo/v0.2.0-post-release/post-release.md"><code>docs/demo/v0.2.0-post-release/post-release.md</code></a>：v0.2.0 historical publication facts。</li>
+      <li><a href="../../docs/demo/phase18-ci-release-reproducibility/release-manifest.json"><code>docs/demo/phase18-ci-release-reproducibility/release-manifest.json</code></a>：release-check reproducibility manifest。</li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>This is a reusable repository Action, not a Marketplace-published Action, not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router. It is not PR annotations, not a public ranking table, not a SOTA claim, not production readiness, not automatic merge approval, and not fine-tuned default-router promotion. <code>baseline-minilm</code> remains the default router; <code>finetuned-embedding</code> is not approved as default.</p>
+
+    <h2>推荐下一步</h2>
+    <p>提交并推送 post-release evidence commit；不要再扩大本阶段功能范围。OpenSpec change 可在 evidence commit 后进入 archive review。</p>
+  </main>
+</body>
+</html>
