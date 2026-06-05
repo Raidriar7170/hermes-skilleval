@@ -12,24 +12,15 @@
 
 Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style skill libraries, and MCP tool schemas detect wrong-skill activations, near-miss conflicts, and routing regressions in CI. It indexes `SKILL.md` libraries, runs labeled benchmark tasks with gold and negative skills, and writes reproducible JSON, Markdown, CI summary, and dashboard artifacts.
 
-## For Interviewers / 项目速览
+## 一眼看懂
 
-If you only have three minutes, read this project as a skill-routing evaluation
-and CI release-gate system for AI coding agents: it checks whether an agent
-selects the right skill, whether it is tempted by similar but wrong skills, and
-whether a router or model change regresses before maintainers ship it.
+Hermes SkillEval 是一个面向 AI 编程 Agent 技能库的离线评测和 CI 回归门禁项目。它关注的问题不是“哪个模型分数最高”，而是当 Claude Code、Codex、Cursor 这类 Agent 拥有越来越多相似技能时，系统能不能稳定选中正确技能，并且避免误触看起来相关但实际错误的技能。
 
-| 面试官关心 | 项目回答 |
-|---|---|
-| 解决的问题 | Claude Code / Codex / Cursor-style skill libraries grow over time, and high Recall@K can still hide near-miss negative skill activations. |
-| 我做了什么 | Built an 80-task / 45-skill self-built evaluation corpus, multiple router comparisons, negative controls, blind validation, a conservative release gate, and a reusable repository Action for PR checks. |
-| 达到的效果 | Found a `finetuned-embedding` candidate that kept the gold skill but newly selected a wrong negative skill; the release gate kept `baseline-minilm` as default instead of promoting it. |
-| 完成度 | Published `v0.2.1`, `419` pytest cases pass, CI validation is wired, the Action is copy/paste usable, and dashboard plus JSON/Markdown release evidence are committed. |
+这个项目做了三件事：先把 `SKILL.md` 技能库和带 gold / negative 标签的任务集变成可复现的评测数据；再对比 keyword、hybrid、embedding、gated、cross-encoder 等多类路由策略；最后把盲测结果、负样本风险、JSON/Markdown 证据、dashboard 和 GitHub Action 串成一个发布前检查流程。
 
-For a self-contained Chinese interview walkthrough, use
-[`docs/interview-project-overview.html`](docs/interview-project-overview.html)
-and [`docs/resume.md`](docs/resume.md). The strongest contribution is the
-evaluation, negative-control, release-gate, and CI reliability workflow, not a SOTA claim.
+最关键的一次结果是：`finetuned-embedding` 候选路由器虽然保留了 gold skill，但在盲测中新增选择了错误的 negative skill，所以 release gate 没有把它升级为默认路由器，而是继续保留 `baseline-minilm`。这也是项目想展示的核心能力：不仅能做评测，还能在候选方案看起来更“智能”但风险变高时拒绝上线。
+
+当前完成度：`v0.2.1` 已发布，`419` 个 pytest 用例通过，CI、可复用 repository Action、示例技能库、dashboard、release notes 和 post-release evidence 都已落库。更完整的中文项目说明见 [`docs/interview-project-overview.html`](docs/interview-project-overview.html)，简历版本见 [`docs/resume.md`](docs/resume.md)。
 
 ## What it does
 
