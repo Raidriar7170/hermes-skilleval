@@ -10,6 +10,8 @@
 
 **Evaluate, route, and regression-test agent skills before they break your coding agent.**
 
+**Language / 语言:** [中文总览](#总览) · [English README](#what-it-does) · [中文完整说明](docs/interview-project-overview.html)
+
 Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style skill libraries, and MCP tool schemas detect wrong-skill activations, near-miss conflicts, and routing regressions in CI. It indexes `SKILL.md` libraries, runs labeled benchmark tasks with gold and negative skills, and writes reproducible JSON, Markdown, CI summary, and dashboard artifacts.
 
 ## 总览

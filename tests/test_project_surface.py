@@ -284,6 +284,11 @@ def test_readme_presents_post_release_developer_tool_front_door():
 
     assert tagline in first_screen
     assert (
+        "**Language / 语言:** [中文总览](#总览) · "
+        "[English README](#what-it-does) · "
+        "[中文完整说明](docs/interview-project-overview.html)"
+    ) in first_screen
+    assert (
         "Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style "
         "skill libraries, and MCP tool schemas detect wrong-skill activations, "
         "near-miss conflicts, and routing regressions in CI"
