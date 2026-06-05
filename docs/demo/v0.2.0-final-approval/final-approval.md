@@ -3,8 +3,8 @@
 Overall decision: `NEEDS_REVIEW`  
 Published: `false`
 
-This checklist supports a human GO/NO-GO decision. It is not automatic
-publication, not release approval, and not a v0.2.0 release.
+This checklist is historical pre-publish human GO/NO-GO gate evidence. It is
+not automatic publication, not release approval, and not a v0.2.0 release.
 
 ## GO Conditions
 
@@ -35,6 +35,8 @@ publication, not release approval, and not a v0.2.0 release.
 The following actions are outside this phase and require a later explicit
 publish instruction:
 
+Any public release action requires explicit human confirmation.
+
 - create tag `v0.2.0`
 - create a GitHub Release
 - Marketplace publication
@@ -49,7 +51,4 @@ publish instruction:
 
 ## Boundary
 
-This checklist is not a Marketplace Action release, not GitHub API PR comments,
-not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
-benchmark status, not production readiness, not release approval, not automatic
-merge approval, not a v0.2.0 release, and not automatic publication.
+This checklist is not a Marketplace Action release, not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status, not production readiness, not release approval, not automatic merge approval, not a v0.2.0 release, and not automatic publication.

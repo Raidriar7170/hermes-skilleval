@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post-release Onboarding Cleanup - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Post-release Onboarding Cleanup</h1>
+    <span class="status">needs review / local validation passed</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段把 v0.2.0 发布后的 README、版本元数据、Action 示例和外部用户 onboarding 统一到已发布口径；额外发布动作只记录为 v0.2.1 patch-candidate note。</p>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>OpenSpec change：<code>post-release-onboarding-cleanup</code>。当前工作是 post-release cleanup 和 onboarding polish: not a runtime MCP router, not a Marketplace Action, not a GitHub API PR comment bot, not SaaS, not a public ranking table, not a SOTA claim, and not fine-tuned default-router promotion.</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li><a href="../../README.md"><code>README.md</code></a>：第一屏改成 developer-tool front door，保留 Quick Start、Action 用法、failure example、dashboard preview、evidence links 和 boundaries。</li>
+      <li><a href="../../pyproject.toml"><code>pyproject.toml</code></a> 与 <a href="../../src/hermes_skilleval/__init__.py"><code>src/hermes_skilleval/__init__.py</code></a>：版本元数据统一为 <code>0.2.0</code>。</li>
+      <li><a href="../../action.yml"><code>action.yml</code></a>、<a href="../../examples/github-action/README.md"><code>examples/github-action/README.md</code></a>、<a href="../../examples/github-action/.github/workflows/skilleval.yml"><code>examples/github-action/.github/workflows/skilleval.yml</code></a>：Action 示例统一使用 <code>Raidriar7170/hermes-skilleval@v0.2.0</code>。</li>
+      <li><a href="../../docs/usage.md"><code>docs/usage.md</code></a>：补 fresh clone local path、GitHub Action trial path、summary/artifacts/no-token 说明。</li>
+      <li><a href="../../docs/demo-repo-plan.md"><code>docs/demo-repo-plan.md</code></a>：只规划未来 <code>Raidriar7170/hermes-skilleval-demo</code>，不声称 repo 已存在。</li>
+      <li><a href="../../docs/release-notes/v0.2.1-candidate.md"><code>docs/release-notes/v0.2.1-candidate.md</code></a>：只记录 patch-candidate scope；不创建 tag 或 GitHub Release。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <p>主入口是 <a href="../../README.md"><code>README.md</code></a>、<a href="../../docs/usage.md"><code>docs/usage.md</code></a>、<a href="../../docs/evidence-map.md"><code>docs/evidence-map.md</code></a>、<a href="../../docs/release-handoff.md"><code>docs/release-handoff.md</code></a> 和 <a href="../../docs/release-notes/v0.2.1-candidate.md"><code>docs/release-notes/v0.2.1-candidate.md</code></a>。</p>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>：PASS，<code>419 passed</code>。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，15 passed / 0 failed。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS，release reproducibility pass。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+      <li>fresh-clone quick demo / consumer smoke：PASS，<code>ALLOW_MERGE</code>。</li>
+      <li>diagnostic onboarding drift-check：PASS。</li>
+      <li>external skill-library validation pack drift-check：PASS。</li>
+      <li>CI summary simulation：PASS，<code>ALLOW_MERGE</code>，包含 README、usage、evidence map、v0.2.1 candidate note 和本 Human Brief 的 overclaim scan。</li>
+    </ul>
+
+    <h2>证据链接</h2>
+    <ul>
+      <li><a href="../../docs/demo/v0.2.0-post-release/post-release.md"><code>docs/demo/v0.2.0-post-release/post-release.md</code></a>：v0.2.0 已发布事实。</li>
+      <li><a href="../../docs/demo/phase18-ci-release-reproducibility/release-manifest.json"><code>docs/demo/phase18-ci-release-reproducibility/release-manifest.json</code></a>：release-check 复现默认 router 决策。</li>
+      <li><a href="../../docs/demo/phase17-calibrated-release-selector/release-decision.json"><code>docs/demo/phase17-calibrated-release-selector/release-decision.json</code></a>：<code>KEEP_BASELINE</code>。</li>
+      <li><a href="../../docs/demo-repo-plan.md"><code>docs/demo-repo-plan.md</code></a>：未来 demo repo 计划。</li>
+    </ul>
+
+    <h2>边界与不要夸大</h2>
+    <p>This is a reusable repository Action, not a Marketplace-published Action, not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router. <code>baseline-minilm</code> remains the default router; <code>finetuned-embedding</code> is not approved as default.</p>
+
+    <h2>推荐下一步</h2>
+    <p>给用户审阅 diff 和验证结果；是否 archive、commit、merge 或发布 patch release 需等待明确确认。</p>
+  </main>
+</body>
+</html>

@@ -96,19 +96,23 @@ def test_release_notes_are_final_bounded_and_evidence_linked() -> None:
 
     for phrase in [
         "# v0.2.0",
-        "GitHub Release package",
+        "published GitHub Release package",
         "not a Marketplace Action release",
         "implemented capabilities",
         "pre-publish `NEEDS_REVIEW`",
         "KEEP_BASELINE",
         "baseline-minilm",
         "`finetuned-embedding` is not approved as default",
-        "Reusable GitHub Action RC",
+        "reusable GitHub Action support",
         "local external-consumer action smoke",
         "hosted consumer action smoke",
         "pre-publish reviewer-facing checklist",
+        "post-release evidence",
     ]:
         assert phrase in notes
+
+    assert "Reusable GitHub Action RC" not in notes
+    assert "not a v0.2.0 release" not in notes
 
     for required_link in [
         "../demo/v0.2.0-release-decision/release-decision.md",
@@ -228,6 +232,12 @@ def test_final_approval_manifest_lists_current_sources_with_hashes() -> None:
         source = ROOT / relative_path
         assert source.is_file(), relative_path
         assert sources[relative_path]["exists"] is True
+        if relative_path == "docs/release-notes/v0.2.0.md":
+            # The final-approval manifest is historical pre-publish evidence;
+            # post-release note edits must not force rewriting that package.
+            assert sources[relative_path]["sha256"]
+            assert sources[relative_path]["size_bytes"] > 0
+            continue
         assert sources[relative_path]["sha256"] == _sha256(source)
         assert sources[relative_path]["size_bytes"] == source.stat().st_size
 

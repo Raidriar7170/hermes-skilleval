@@ -47,10 +47,11 @@ def _action_gate_run_script() -> str:
     raise AssertionError("Run SkillEval gate step not found")
 
 
-def test_action_metadata_declares_composite_rc_inputs_and_safe_steps():
+def test_action_metadata_declares_composite_inputs_and_safe_steps():
     action = yaml.safe_load(ACTION.read_text(encoding="utf-8"))
 
-    assert action["name"] == "Hermes SkillEval Reusable Action RC"
+    assert action["name"] == "Hermes SkillEval Reusable GitHub Action"
+    assert "RC" not in action["name"]
     assert action["runs"]["using"] == "composite"
     assert set(action["inputs"]) >= {
         "skill-path",
@@ -97,7 +98,6 @@ def test_action_metadata_declares_composite_rc_inputs_and_safe_steps():
         "create-release",
         "gh release",
         "git tag",
-        "v0.2.0",
         "mcp",
         "saas",
     ]:
@@ -108,15 +108,18 @@ def test_github_action_example_contains_public_safe_external_fixture():
     assert EXAMPLE_WORKFLOW.is_file()
     workflow = EXAMPLE_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "Raidriar7170/hermes-skilleval@main" in workflow
+    assert "Raidriar7170/hermes-skilleval@v0.2.1" in workflow
     assert "skill-path: examples/github-action/skills" in workflow
     assert "benchmark-path: examples/github-action/benchmark" in workflow
     assert "upload-artifacts: 'true'" in workflow
-    assert "@v0.2.0" not in workflow
+    assert "Raidriar7170/hermes-skilleval@main" not in workflow
     assert "github-token" not in workflow.lower()
-    assert 'python -m pip install -e "."' in (EXAMPLE / "README.md").read_text(
+    example_readme = (EXAMPLE / "README.md").read_text(
         encoding="utf-8"
     )
+    assert 'python -m pip install -e ".[dev]"' in example_readme
+    assert "Reusable GitHub Action RC" not in example_readme
+    assert "not a v0.2.0 release" not in example_readme
 
     skill_ids = {path.parent.name for path in (EXAMPLE / "skills").rglob("SKILL.md")}
     assert skill_ids == {"release-note-review", "workflow-evidence-audit"}
@@ -162,8 +165,11 @@ def test_github_action_gate_writes_summary_artifacts_and_blocks_regressions(tmp_
     assert gate["metrics"]["negative_hit_rate"] == 0.0
     assert summary["decision"] == "ALLOW_MERGE"
     assert "Decision: `ALLOW_MERGE`" in ci_markdown
-    assert "not a Marketplace Action release" in markdown
+    assert "# Reusable GitHub Action Gate" in markdown
+    assert "Reusable GitHub Action RC" not in markdown
+    assert "not a Marketplace-published Action" in markdown
     assert "not GitHub API PR comments" in markdown
+    assert "not a v0.2.0 release" not in markdown
 
     blocked_benchmark = tmp_path / "blocked-benchmark"
     shutil.copytree(EXAMPLE / "benchmark", blocked_benchmark)
@@ -249,12 +255,17 @@ def test_github_action_gate_writes_summary_artifacts_and_blocks_regressions(tmp_
 
 
 def test_reusable_action_docs_and_briefs_are_bounded():
-    combined = "\n".join(
+    current_docs = "\n".join(
         path.read_text(encoding="utf-8")
         for path in [
             README,
             USAGE,
             EXAMPLE / "README.md",
+        ]
+    )
+    historical_evidence = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in [
             EXTERNAL_SMOKE_PACK / "README.md",
             HOSTED_SMOKE_PACK / "README.md",
             HUMAN_BRIEF,
@@ -265,12 +276,22 @@ def test_reusable_action_docs_and_briefs_are_bounded():
     )
 
     for phrase in [
+        "Reusable GitHub Action",
+        "Raidriar7170/hermes-skilleval@v0.2.1",
+        "skilleval github-action-gate",
+        "This is a reusable repository Action, not a Marketplace-published Action, not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router.",
+        "not GitHub API PR comments",
+        "not PR annotations",
+        "not automatic merge approval",
+    ]:
+        assert phrase in current_docs
+
+    for phrase in [
         "Reusable GitHub Action RC",
         "External Repo Action Smoke Pack",
         "local external-consumer smoke",
         "Hosted Consumer Action Smoke",
         "GitHub-hosted consumer smoke run",
-        "skilleval github-action-gate",
         "not a Marketplace Action release",
         "not GitHub API PR comments",
         "not PR annotations",
@@ -283,10 +304,12 @@ def test_reusable_action_docs_and_briefs_are_bounded():
         "not automatic merge approval",
         "not a v0.2.0 release",
     ]:
-        assert phrase in combined
+        assert phrase in historical_evidence
+
+    assert "not a v0.2.0 release" not in current_docs
+    assert "Raidriar7170/hermes-skilleval@main" not in current_docs
 
     for risky_claim in [
-        "uses: Raidriar7170/hermes-skilleval@v0.2.0",
         "published to the GitHub Marketplace",
         "posts PR comments",
         "writes PR annotations",
@@ -295,7 +318,7 @@ def test_reusable_action_docs_and_briefs_are_bounded():
         "production-ready",
         "approves the release",
     ]:
-        assert risky_claim not in combined
+        assert risky_claim not in current_docs
 
 
 def test_github_action_example_fresh_clone_smoke(tmp_path):
@@ -319,6 +342,52 @@ def test_github_action_example_fresh_clone_smoke(tmp_path):
         check=False,
     )
     assert install.returncode == 0, install.stdout
+
+    smoke_root = tmp_path / "fresh-smoke"
+    smoke_root.mkdir()
+    scan_path = smoke_root / "skills.json"
+    scan = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "hermes_skilleval.cli",
+            "scan",
+            "examples/github-action/skills",
+            "--output",
+            str(scan_path),
+        ],
+        cwd=clone,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    assert scan.returncode == 0, scan.stdout
+    assert scan_path.is_file()
+
+    route_path = smoke_root / "route.json"
+    route = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "hermes_skilleval.cli",
+            "route",
+            "audit workflow evidence before release",
+            "--index",
+            str(scan_path),
+            "--top-k",
+            "2",
+            "--output",
+            str(route_path),
+        ],
+        cwd=clone,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    assert route.returncode == 0, route.stdout
+    assert route_path.is_file()
 
     output_dir = tmp_path / "fresh-output"
     smoke = subprocess.run(
@@ -347,6 +416,35 @@ def test_github_action_example_fresh_clone_smoke(tmp_path):
     assert smoke.returncode == 0, smoke.stdout
     assert (output_dir / "gate-report.json").is_file()
     assert (output_dir / "ci-summary.md").is_file()
+
+    changed_files = smoke_root / "changed-files.txt"
+    changed_files.write_text("README.md\n", encoding="utf-8")
+    ci_summary = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "hermes_skilleval.cli",
+            "ci-summary",
+            "--check",
+            "github-action-gate=success",
+            "--changed-files",
+            str(changed_files),
+            "--overclaim-root",
+            "README.md",
+            "--output",
+            str(smoke_root / "ci-summary.json"),
+            "--markdown-output",
+            str(smoke_root / "ci-summary.md"),
+        ],
+        cwd=clone,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    assert ci_summary.returncode == 0, ci_summary.stdout
+    assert (smoke_root / "ci-summary.json").is_file()
+    assert (smoke_root / "ci-summary.md").is_file()
 
 
 def test_github_action_external_consumer_shell_smoke(tmp_path):
@@ -389,10 +487,11 @@ def test_github_action_external_consumer_shell_smoke(tmp_path):
     assert summary["gate_report"]["ci_markdown"] == "skilleval-output/ci-summary.md"
     assert "Decision: `ALLOW_MERGE`" in ci_markdown
     assert "Decision: `ALLOW_MERGE`" in step_summary.read_text(encoding="utf-8")
-    assert "not a Marketplace Action release" in markdown
-    assert "not hosted GitHub Actions proof" in markdown
+    assert "not a Marketplace-published Action" in markdown
     assert "not GitHub API PR comments" in markdown
-    assert "not hosted GitHub Actions proof" in ci_markdown
+    assert "not a Marketplace-published Action" in ci_markdown
+    assert "not a v0.2.0 release" not in markdown
+    assert "not a v0.2.0 release" not in ci_markdown
 
 
 def test_external_repo_action_smoke_pack_contains_committed_outputs():
@@ -455,7 +554,6 @@ def test_external_repo_action_smoke_pack_contains_committed_outputs():
         "writes PR annotations",
         "production-ready",
         "approves the release",
-        "@v0.2.0",
     ]:
         assert risky_claim not in combined
 
@@ -575,6 +673,5 @@ def test_hosted_consumer_action_smoke_pack_contains_committed_run_evidence():
         "writes PR annotations",
         "production-ready",
         "approves the release",
-        "@v0.2.0",
     ]:
         assert forbidden not in combined

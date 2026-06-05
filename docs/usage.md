@@ -8,15 +8,18 @@ Human Brief evidence, see [`docs/evidence-map.md`](evidence-map.md); it is a
 navigation layer, not a second source of truth, and not release approval.
 For concrete blocked-regression and diagnostic-risk examples, use
 [`docs/failure-gallery.md`](failure-gallery.md) as a review aid.
-For the v0.2.0 release decision package, use
+For current patch release notes, use
+[`docs/release-notes/v0.2.1.md`](release-notes/v0.2.1.md). For the historical
+pre-publish v0.2.0 release decision package, use
 [`docs/demo/v0.2.0-release-decision/release-decision.md`](demo/v0.2.0-release-decision/release-decision.md);
 it records `NEEDS_REVIEW`, `KEEP_BASELINE`, and `Published: false` for human
-release review, not automatic publication.
+release review, not the current publication record.
 For the v0.2.0 release notes and v0.2.0 final approval checklist, use
 [`docs/release-notes/v0.2.0.md`](release-notes/v0.2.0.md) and
 [`docs/demo/v0.2.0-final-approval/final-approval.md`](demo/v0.2.0-final-approval/final-approval.md);
 the release notes summarize implemented capabilities and the checklist records
-the pre-publish human GO/NO-GO gate.
+the historical pre-publish human GO/NO-GO gate. Current post-release facts live
+in [`docs/demo/v0.2.0-post-release/post-release.md`](demo/v0.2.0-post-release/post-release.md).
 
 ## Installation
 
@@ -35,6 +38,86 @@ Install optional neural routing backends:
 ```bash
 python -m pip install -e ".[dev,embedding]"
 ```
+
+## Fresh-clone local demo
+
+Run this path from a fresh clone to exercise committed fixtures only. It uses
+repo-relative paths and temporary outputs, with no credentials, SaaS, runtime
+MCP service, browser cache, private directory, or network-only model download.
+
+```bash
+python -m pip install -e ".[dev]"
+
+TMP_ROOT="${TMPDIR:-/tmp}/hermes-skilleval-fresh-clone"
+rm -rf "$TMP_ROOT"
+mkdir -p "$TMP_ROOT"
+
+skilleval scan \
+  examples/github-action/skills \
+  --output "$TMP_ROOT/skills.json"
+
+skilleval route \
+  "audit workflow evidence before release" \
+  --index "$TMP_ROOT/skills.json" \
+  --top-k 2 \
+  --output "$TMP_ROOT/route.json"
+
+skilleval github-action-gate \
+  --skill-path examples/github-action/skills \
+  --benchmark-path examples/github-action/benchmark \
+  --min-recall-at-k 1.0 \
+  --max-negative-hit-rate 0.0 \
+  --output-dir "$TMP_ROOT/gate"
+
+printf 'README.md\n' > "$TMP_ROOT/changed-files.txt"
+
+skilleval ci-summary \
+  --check github-action-gate=success \
+  --changed-files "$TMP_ROOT/changed-files.txt" \
+  --overclaim-root README.md \
+  --output "$TMP_ROOT/ci-summary.json" \
+  --markdown-output "$TMP_ROOT/ci-summary.md"
+```
+
+Expected local result: the gate writes `ALLOW_MERGE` to
+`$TMP_ROOT/gate/ci-summary.md`, and the CI summary writes local JSON/Markdown
+without calling the GitHub API.
+
+## GitHub Action trial
+
+To try the released repository Action in another repository, copy
+`examples/github-action/skills/`, `examples/github-action/benchmark/`, and the
+workflow shape below. The Action writes GitHub Actions step summary content and
+uploadable gate artifacts, and it does not require a GitHub API token.
+
+```yaml
+name: SkillEval Gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  skilleval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: Raidriar7170/hermes-skilleval@v0.2.1
+        with:
+          skill-path: skills
+          benchmark-path: benchmark
+          min-recall-at-k: "1.0"
+          max-negative-hit-rate: "0.0"
+          upload-artifacts: "true"
+```
+
+Expected summary behavior: a matching fixture produces `ALLOW_MERGE`; a
+regression that misses a gold skill or selects a negative skill produces
+`BLOCK_MERGE`. See [`docs/demo-repo-plan.md`](demo-repo-plan.md) for the future
+external demo repository plan.
 
 ## Diagnostic Onboarding Path
 
@@ -530,7 +613,7 @@ pytest -q
 Expected:
 
 ```text
-413 passed
+419 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
@@ -629,9 +712,9 @@ annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
 benchmark status, not production readiness, not release approval, not automatic
 merge approval, and not a permanent compatibility guarantee.
 
-## 21. Run the Reusable GitHub Action RC Gate Locally
+## 21. Run the Reusable GitHub Action Gate Locally
 
-The root `action.yml` is a Reusable GitHub Action RC scaffold for external
+The root `action.yml` is a published reusable repository Action for external
 skill-library maintainers. It runs `skilleval github-action-gate` against a
 labeled benchmark and writes deterministic gate artifacts:
 
@@ -647,27 +730,25 @@ skilleval github-action-gate \
 
 The example workflow under
 [`examples/github-action/.github/workflows/skilleval.yml`](../examples/github-action/.github/workflows/skilleval.yml)
-uses `Raidriar7170/hermes-skilleval@main`; use a pinned commit SHA for a stricter
-trial. Do not use an unpublished version tag.
+uses `Raidriar7170/hermes-skilleval@v0.2.1`. Use a pinned commit SHA only when
+you intentionally want to test an exact commit instead of the published tag.
 
-The local external-consumer smoke pack under
+The historical local external-consumer smoke pack under
 [`docs/demo/external-repo-action-smoke-pack`](demo/external-repo-action-smoke-pack)
 records the same gate shape from consumer-relative `skills/`, `benchmark/`, and
 `skilleval-output` paths. Its committed output shows `ALLOW_MERGE` with
-`recall_at_5=1.0` and `negative_hit_rate=0.0`.
+`recall_at_5=1.0` and `negative_hit_rate=0.0`; captured refs in that pack are
+historical smoke evidence, not the current recommended released Action ref.
 
-The hosted consumer smoke pack under
+The historical hosted consumer smoke pack under
 [`docs/demo/hosted-consumer-action-smoke`](demo/hosted-consumer-action-smoke)
 records one GitHub-hosted consumer smoke run from
 `Raidriar7170/hermes-skilleval-action-consumer-smoke`. The committed run
 metadata links the hosted workflow run and the downloaded artifacts show
-`ALLOW_MERGE`, `recall_at_5=1.0`, and `negative_hit_rate=0.0`.
+`ALLOW_MERGE`, `recall_at_5=1.0`, and `negative_hit_rate=0.0`; captured
+historical action refs in that pack are not current onboarding recommendations.
 
-Boundary: this is local external-consumer smoke, one GitHub-hosted consumer
-smoke run, and a Reusable GitHub Action RC, not a Marketplace Action release,
-not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
-router, not a SOTA claim, not benchmark status, not production readiness, not
-release approval, not automatic merge approval, and not a v0.2.0 release.
+Boundary: This is a reusable repository Action, not a Marketplace-published Action, not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router. It is not GitHub API PR comments, not PR annotations, not a public ranking table, not a SOTA claim, not benchmark status, not production readiness, not release approval, and not automatic merge approval.
 
 ## 22. Review the v0.2.0 Release Decision Package
 
@@ -679,32 +760,36 @@ external-consumer action smoke, and the hosted consumer action smoke:
 - [`release-decision.json`](demo/v0.2.0-release-decision/release-decision.json)
 - [`input-manifest.json`](demo/v0.2.0-release-decision/input-manifest.json)
 
-The package decision is `NEEDS_REVIEW`; `Published: false`; the router decision
-is `KEEP_BASELINE`; the default router remains `baseline-minilm`; and
-`finetuned-embedding` is not approved as default. The local and hosted action
-smoke artifacts are RC support evidence for human release review only.
+This is historical pre-publish review evidence. The package decision is
+`NEEDS_REVIEW`; `Published: false`; the router decision is `KEEP_BASELINE`; the
+default router remains `baseline-minilm`; and `finetuned-embedding` is not
+approved as default. The current publication record is the post-release
+evidence linked above.
 
-Boundary: this is not a Marketplace Action release, not GitHub API PR comments,
-not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
-benchmark status, not production readiness, not release approval, not automatic
-merge approval, not a v0.2.0 release, and not automatic publication. Any tag,
-GitHub Release, Marketplace publication, or public release action requires
-explicit human confirmation.
+Boundary: this historical decision package is not a Marketplace Action release,
+not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
+router, not a SOTA claim, not benchmark status, not production readiness, not
+release approval, not automatic merge approval, and not automatic publication.
+Any further patch tag, GitHub Release, Marketplace publication, or public
+release action after v0.2.1 still requires explicit human confirmation.
 
 ## 23. Review the v0.2.0 Release Notes And Final Approval Checklist
 
-The v0.2.0 release notes and final approval checklist are release artifacts:
+The v0.2.0 release notes remain the release notes for that published version.
+The current patch release notes are in
+[`release-notes/v0.2.1.md`](release-notes/v0.2.1.md). The final approval
+checklist is historical pre-publish review evidence:
 
 - [`release-notes/v0.2.0.md`](release-notes/v0.2.0.md)
 - [`final-approval.md`](demo/v0.2.0-final-approval/final-approval.md)
 - [`final-approval.json`](demo/v0.2.0-final-approval/final-approval.json)
 - [`input-manifest.json`](demo/v0.2.0-final-approval/input-manifest.json)
 
-The v0.2.0 release notes summarize implemented capabilities and committed
-evidence. The final approval package records the pre-publish Overall decision:
-`NEEDS_REVIEW` and Published: `false`; it lists GO Conditions, NO-GO Until, and
-Requires Human Confirmation so a reviewer can decide whether to start a
-separate publish phase.
+The release notes summarize the published GitHub Release package, implemented
+capabilities, and committed evidence. The final approval package records the
+pre-publish Overall decision: `NEEDS_REVIEW` and Published: `false`; it lists
+GO Conditions, NO-GO Until, and Requires Human Confirmation so a reviewer can
+audit the original publish gate.
 
 Boundary: the checklist is pre-publish review evidence, not automatic
 publication, not a Marketplace Action release, not GitHub API PR comments, not

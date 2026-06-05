@@ -23,11 +23,12 @@ from hermes_skilleval.task_loader import load_tasks
 
 SCHEMA_VERSION = "github-action-gate.v1"
 BOUNDARY = (
-    "Reusable GitHub Action RC; not a Marketplace Action release, not hosted "
-    "GitHub Actions proof, not GitHub API PR comments, not PR "
-    "annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not "
-    "benchmark status, not production readiness, not release approval, not "
-    "automatic merge approval, and not a v0.2.0 release."
+    "This is a reusable repository Action, not a Marketplace-published Action, "
+    "not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime "
+    "MCP router. It is not GitHub API PR comments, not PR annotations, not a "
+    "SaaS service, not a public leaderboard, not a SOTA claim, not benchmark "
+    "status, not production readiness, not release approval, and not automatic "
+    "merge approval."
 )
 
 
@@ -202,7 +203,7 @@ def _render_gate_markdown(gate: dict[str, object]) -> str:
     failed = gate["failed_policies"]
     assert isinstance(failed, list)
     lines = [
-        "# Reusable GitHub Action RC Gate",
+        "# Reusable GitHub Action Gate",
         "",
         f"Decision: `{gate['decision']}`",
         "",
@@ -226,7 +227,7 @@ def _render_gate_markdown(gate: dict[str, object]) -> str:
 
 def _render_ci_summary_markdown(summary: dict[str, object]) -> str:
     lines = [
-        "# Reusable GitHub Action RC CI Summary",
+        "# Reusable GitHub Action CI Summary",
         "",
         f"Decision: `{summary['decision']}`",
         "",

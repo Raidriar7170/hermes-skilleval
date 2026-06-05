@@ -20,8 +20,9 @@ HTML artifacts.
 | Phase 16 | Blind validation and release gate | `docs/phase16.md` |
 | Phase 17 | Calibrated release selector keeps baseline | `docs/phase17.md` |
 | Phase 18 | CI-backed release reproducibility pack | `docs/phase18.md` |
-| v0.2.0 decision | Human release review package | `docs/demo/v0.2.0-release-decision/release-decision.md` |
-| v0.2.0 final approval | Release notes and human approval checklist | `docs/demo/v0.2.0-final-approval/final-approval.md` |
+| v0.2.0 historical decision | Pre-publish human release review package | `docs/demo/v0.2.0-release-decision/release-decision.md` |
+| v0.2.0 historical final approval | Pre-publish human approval checklist | `docs/demo/v0.2.0-final-approval/final-approval.md` |
+| v0.2.0 post-release | Current GitHub tag and GitHub Release record | `docs/demo/v0.2.0-post-release/post-release.md` |
 
 ## Reviewer Entry Points
 
@@ -38,7 +39,11 @@ HTML artifacts.
 - v0.2.0 release notes: `docs/release-notes/v0.2.0.md`
 - v0.2.0 final approval checklist: `docs/demo/v0.2.0-final-approval/final-approval.md`
 - v0.2.0 final approval JSON: `docs/demo/v0.2.0-final-approval/final-approval.json`
+- v0.2.0 final approval input manifest: `docs/demo/v0.2.0-final-approval/input-manifest.json`
+- v0.2.0 final approval Human Brief: `docs/human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html`
+- post-release onboarding cleanup Human Brief: `docs/human-briefs/2026-06-05-post-release-onboarding-cleanup.html`
 - v0.2.0 post-release evidence: `docs/demo/v0.2.0-post-release/post-release.md`
+- v0.2.1 patch release notes: `docs/release-notes/v0.2.1.md`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
 - Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
@@ -58,18 +63,18 @@ Phase 18 makes the release reading CI-reproducible. The release-check command
 reruns the selector and public artifact guard, writes a manifest with artifact
 hashes, and keeps the default-router decision at `KEEP_BASELINE`.
 
-The v0.2.0 release decision package records `NEEDS_REVIEW` and
-`Published: false`. It links Phase 16/17/18 evidence plus local and hosted
-Reusable GitHub Action RC smoke as RC support evidence for human release
-review. It does not create a release action: `finetuned-embedding` is not
-approved as default, and any tag, GitHub Release, Marketplace publication, or
-public release action requires explicit human confirmation.
+The v0.2.0 release decision package is historical pre-publish review evidence.
+It records `NEEDS_REVIEW` and `Published: false`, links Phase 16/17/18 evidence
+plus local and hosted reusable GitHub Action smoke, keeps
+`finetuned-embedding` unapproved as default, and does not override the current
+post-release publication record.
 
-The v0.2.0 release notes summarize implemented capabilities and committed
-review evidence. The v0.2.0 final approval checklist remains the pre-publish
-approval artifact: it records Overall decision: `NEEDS_REVIEW`, Published:
-`false`, GO Conditions, NO-GO Until, and Requires Human Confirmation. It is not
-automatic publication and does not replace the release-decision package.
+The v0.2.0 release notes summarize the published GitHub Release package,
+implemented capabilities, and committed review evidence. The v0.2.0 final
+approval checklist remains the historical pre-publish approval artifact: it
+records Overall decision: `NEEDS_REVIEW`, Published: `false`, GO Conditions,
+NO-GO Until, and Requires Human Confirmation. It is not automatic publication
+and does not replace the post-release evidence.
 
 The v0.2.0 post-release evidence records the actual GitHub tag and GitHub
 Release facts: Published: `true`, Tag created: `true`, GitHub Release created:
@@ -77,18 +82,24 @@ Release facts: Published: `true`, Tag created: `true`, GitHub Release created:
 `https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.2.0`, and
 target commit `13af31ee4fd2e9eed4a40f643284120bc5afab9e`.
 
+The v0.2.1 patch release notes package this post-release onboarding cleanup
+only. They do not add runtime features, do not change the default router, and do
+not imply Marketplace publication, SaaS, GitHub API PR comments, or runtime MCP
+routing.
+
 ## Boundaries
 
 The repository does not commit model checkpoints, private machine details, or
 claims beyond self-built Hermes-style evidence.
 
-The v0.2.0 decision package is not a Marketplace Action release, not GitHub API
-PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim,
-not benchmark status, not production readiness, not release approval, not
-automatic merge approval, and not a v0.2.0 release.
+This is a reusable repository Action, not a Marketplace-published Action, not a
+GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router.
+The historical v0.2.0 decision package is not GitHub API PR comments, not PR
+annotations, not a public leaderboard, not a SOTA claim, not benchmark status,
+not production readiness, not release approval, not automatic merge approval,
+and not automatic publication.
 
 The v0.2.0 final approval checklist follows the same boundary: not automatic
-publication, not release approval, not a Marketplace Action release, not GitHub
-API PR comments, not PR annotations, not SaaS, not a runtime MCP router,
-not a SOTA claim, not benchmark status, not production readiness, not automatic
-merge approval, and not Marketplace publication.
+publication, not release approval, not Marketplace publication, not GitHub API
+PR comments, not PR annotations, not SaaS, not a runtime MCP router, not a SOTA claim,
+not benchmark status, not production readiness, and not automatic merge approval.

@@ -1,16 +1,27 @@
 import re
+import tomllib
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_FULL_SUITE_COUNT = "413"
+CURRENT_FULL_SUITE_COUNT = "419"
 README = ROOT / "README.md"
+PYPROJECT = ROOT / "pyproject.toml"
+PACKAGE_INIT = ROOT / "src" / "hermes_skilleval" / "__init__.py"
+ACTION = ROOT / "action.yml"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "validate.yml"
+GITHUB_ACTION_GATE = ROOT / "src" / "hermes_skilleval" / "github_action_gate.py"
 DASHBOARD_SCREENSHOT = ROOT / "docs" / "assets" / "dashboard-screenshot.png"
 MIGRATION_PROTOCOL = ROOT / "docs" / "skill-library-migration-protocol.md"
 EXPERIMENT_TIMELINE = ROOT / "docs" / "experiment-timeline.md"
 USAGE = ROOT / "docs" / "usage.md"
 EVIDENCE_MAP = ROOT / "docs" / "evidence-map.md"
+DEMO_REPO_PLAN = ROOT / "docs" / "demo-repo-plan.md"
+V0_2_1_RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.2.1.md"
+GITHUB_ACTION_EXAMPLE = ROOT / "examples" / "github-action"
+GITHUB_ACTION_EXAMPLE_WORKFLOW = (
+    GITHUB_ACTION_EXAMPLE / ".github" / "workflows" / "skilleval.yml"
+)
 FAILURE_GALLERY = ROOT / "docs" / "failure-gallery.md"
 NODE24_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-github-actions-node24-validation.html"
@@ -29,6 +40,12 @@ V0_2_0_RELEASE_DECISION_HUMAN_BRIEF = (
 )
 PUBLIC_EVIDENCE_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-public-evidence-surface-refresh.html"
+)
+POST_RELEASE_ONBOARDING_HUMAN_BRIEF = (
+    ROOT
+    / "docs"
+    / "human-briefs"
+    / "2026-06-05-post-release-onboarding-cleanup.html"
 )
 RELEASE_HANDOFF = ROOT / "docs" / "release-handoff.md"
 V0_2_0_RELEASE_DECISION_PACK = ROOT / "docs" / "demo" / "v0.2.0-release-decision"
@@ -82,6 +99,7 @@ CURRENT_HUMAN_BRIEFS = [
     V0_2_0_RELEASE_DECISION_HUMAN_BRIEF,
     V0_2_0_FINAL_APPROVAL_HUMAN_BRIEF,
     PUBLIC_EVIDENCE_HUMAN_BRIEF,
+    POST_RELEASE_ONBOARDING_HUMAN_BRIEF,
 ]
 PUBLIC_EVIDENCE_CHANGE_ARTIFACTS = [
     _openspec_change_artifact("proposal.md"),
@@ -98,6 +116,47 @@ def test_ci_workflow_runs_lightweight_pytest_validation():
     assert "push:" in workflow
     assert 'python -m pip install -e ".[dev]"' in workflow
     assert "pytest -q" in workflow
+
+
+def test_post_release_metadata_and_action_onboarding_are_current():
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    package_init = PACKAGE_INIT.read_text(encoding="utf-8")
+    action = ACTION.read_text(encoding="utf-8")
+    current_docs = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in [
+            README,
+            USAGE,
+            EVIDENCE_MAP,
+            RELEASE_HANDOFF,
+            V0_2_0_RELEASE_NOTES,
+            V0_2_1_RELEASE_NOTES,
+            GITHUB_ACTION_EXAMPLE / "README.md",
+            GITHUB_ACTION_EXAMPLE_WORKFLOW,
+            GITHUB_ACTION_GATE,
+        ]
+    )
+
+    assert pyproject["project"]["version"] == "0.2.1"
+    assert '__version__ = "0.2.1"' in package_init
+    assert "Hermes SkillEval Reusable GitHub Action" in action
+    assert "Hermes SkillEval Reusable Action RC" not in action
+    assert "Raidriar7170/hermes-skilleval@v0.2.1" in current_docs
+    assert "Raidriar7170/hermes-skilleval@main" not in "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in [
+            README,
+            USAGE,
+            GITHUB_ACTION_EXAMPLE / "README.md",
+            GITHUB_ACTION_EXAMPLE_WORKFLOW,
+        ]
+    )
+    assert "Reusable GitHub Action RC" not in current_docs
+    assert "not a v0.2.0 release" not in current_docs
+    assert "0.1.0" not in "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in [README, USAGE, V0_2_0_RELEASE_NOTES]
+    )
 
 
 def test_ci_workflow_runs_diagnostic_ci_gate_from_committed_demo_artifacts():
@@ -208,24 +267,51 @@ def test_ci_workflow_preflights_github_actions_node24_runtime():
         assert existing_check in workflow
 
 
-def test_readme_surfaces_live_dashboard_and_screenshot_near_key_results():
+def test_readme_presents_post_release_developer_tool_front_door():
     readme = README.read_text(encoding="utf-8")
-    key_results = readme.index("## Key Results")
+    tagline = (
+        "Evaluate, route, and regression-test agent skills before they break "
+        "your coding agent."
+    )
+    first_screen = readme[: readme.index("## Architecture")]
     architecture = readme.index("## Architecture")
     limitations = readme.index("## Limitations / Boundaries")
-    live_dashboard = readme.index("### Live Dashboard")
+    dashboard_preview = readme.index("## Dashboard preview")
     screenshot = readme.index("docs/assets/dashboard-screenshot.png")
 
-    assert key_results < live_dashboard < architecture
-    assert key_results < screenshot < architecture
-    assert key_results < limitations < architecture
+    assert tagline in first_screen
+    assert (
+        "Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style "
+        "skill libraries, and MCP tool schemas detect wrong-skill activations, "
+        "near-miss conflicts, and routing regressions in CI"
+    ) in first_screen
+    for heading in [
+        "## What it does",
+        "## Why skill routing is hard",
+        "## Quick Start",
+        "## Use as GitHub Action",
+        "## Example failure caught",
+        "## Dashboard preview",
+        "## Evidence links",
+        "## Limitations / Boundaries",
+    ]:
+        assert heading in first_screen
+    assert dashboard_preview < architecture
+    assert dashboard_preview < screenshot < architecture
+    assert limitations < architecture
     assert "actions/workflows/validate.yml/badge.svg" in readme
     assert "run filtering" in readme
     assert "failure inspection" in readme
     assert "raw JSON audit" in readme
-    assert "### Example Failure Caught by the Release Gate" in readme
+    assert "## Example failure caught" in readme
     assert "blind-claude-mcp-routing" in readme
-    assert "This is a self-built Hermes-style benchmark" in readme
+    assert (
+        "This is a reusable repository Action, not a Marketplace-published "
+        "Action, not a GitHub API PR comment bot, not a SaaS dashboard, and "
+        "not a runtime MCP router."
+    ) in readme
+    assert "`baseline-minilm` remains the default router" in readme
+    assert "`finetuned-embedding` is not approved as default" in readme
     assert "docs/experiment-timeline.md" in readme
 
 
@@ -243,7 +329,7 @@ def test_readme_architecture_and_structure_diagrams_render_as_mermaid():
     ]
     project_structure = readme[
         readme.index("## Project Structure / 项目结构") : readme.index(
-            "## Quick Start / 快速开始"
+            "## Experiment Timeline / 实验演进"
         )
     ]
 
@@ -299,8 +385,11 @@ def test_readme_keeps_quick_start_short_and_links_full_usage():
     usage = USAGE.read_text(encoding="utf-8")
 
     assert "For full CLI usage, see [`docs/usage.md`](docs/usage.md)." in readme
-    assert "skilleval release-check" in readme
+    assert "skilleval github-action-gate" in readme
+    assert "Raidriar7170/hermes-skilleval@v0.2.1" in readme
     assert "### 1. Index a Hermes-style Skill Library" not in readme
+    assert "## Fresh-clone local demo" in usage
+    assert "## GitHub Action trial" in usage
     assert "## 1. Index a Hermes-style Skill Library" in usage
     assert "## 17. Run Tests" in usage
 
@@ -325,7 +414,10 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "## Diagnostic Onboarding Evidence",
         "## External-Style Validation Evidence",
         "## PR-Facing CI Evidence",
-        "## Reusable Action RC Evidence",
+        "## Reusable GitHub Action Evidence",
+        "## Local External Consumer Smoke Pack",
+        "## Hosted Consumer Action Smoke Evidence",
+        "## Release Evidence",
         "## OpenSpec Specs",
         "## Human Briefs",
     ]:
@@ -357,6 +449,10 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "demo/v0.2.0-final-approval/final-approval.md",
         "demo/v0.2.0-final-approval/final-approval.json",
         "demo/v0.2.0-final-approval/input-manifest.json",
+        "demo/v0.2.0-post-release/post-release.md",
+        "demo/v0.2.0-post-release/post-release.json",
+        "release-notes/v0.2.1.md",
+        "demo-repo-plan.md",
         "../openspec/specs/pr-facing-ci-summary/spec.md",
         "../openspec/specs/reusable-github-action-rc/spec.md",
         "../openspec/specs/v0-2-0-release-decision/spec.md",
@@ -366,6 +462,7 @@ def test_evidence_map_groups_current_proof_chain_and_local_links_exist():
         "human-briefs/2026-06-04-hosted-consumer-action-smoke.html",
         "human-briefs/2026-06-04-v0-2-0-release-decision.html",
         "human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html",
+        "human-briefs/2026-06-05-post-release-onboarding-cleanup.html",
         "human-briefs/2026-06-04-autonomous-loop-v0-2-0-release-decision.html",
         "human-briefs/2026-06-04-autonomous-loop-reusable-github-action-rc.html",
         "human-briefs/2026-06-03-autonomous-loop-external-skill-library-validation-pack.html",
@@ -390,8 +487,7 @@ def test_evidence_map_docs_are_bounded_and_do_not_overclaim():
     )
 
     for phrase in [
-        "not a Marketplace Action",
-        "not a Marketplace Action release",
+        "This is a reusable repository Action, not a Marketplace-published Action, not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router.",
         "not GitHub API PR comments",
         "not PR annotations",
         "not SaaS",
@@ -400,10 +496,18 @@ def test_evidence_map_docs_are_bounded_and_do_not_overclaim():
         "not production readiness",
         "not release approval",
         "not automatic merge approval",
-        "not a v0.2.0 release",
     ]:
-        assert phrase in evidence_map
         assert phrase in combined
+
+    for phrase in [
+        "not a v0.2.0 release",
+        "Reusable GitHub Action RC Evidence",
+        "release-candidate evidence",
+    ]:
+        assert phrase not in combined
+
+    assert "historical pre-publish review artifacts" in evidence_map
+    assert "post-release artifacts as the current publication record" in evidence_map
 
     for risky_claim in [
         "released as a Marketplace Action",
@@ -433,8 +537,8 @@ def test_synced_openspec_specs_have_explicit_purpose_text():
     docs_evidence_spec = (spec_root / "docs-evidence-map" / "spec.md").read_text(
         encoding="utf-8"
     )
-    assert "Reusable Action RC Evidence" in docs_evidence_spec
-    assert "reusable GitHub Action RC" in docs_evidence_spec
+    assert "reusable GitHub Action evidence" in docs_evidence_spec
+    assert "published `v0.2.0` state" in docs_evidence_spec
 
     external_smoke_docs_delta = _openspec_named_change_artifact(
         EXTERNAL_REPO_ACTION_SMOKE_CHANGE,
@@ -587,7 +691,9 @@ def test_v0_2_0_release_decision_surfaces_are_linked_and_bounded():
     decision_md = (V0_2_0_RELEASE_DECISION_PACK / "release-decision.md").read_text(
         encoding="utf-8"
     )
-    combined = "\n".join([readme, usage, evidence_map, handoff, brief, decision_md])
+    current = "\n".join([readme, usage, evidence_map, handoff])
+    historical = "\n".join([brief, decision_md])
+    combined = "\n".join([current, historical])
 
     for path in [
         "docs/demo/v0.2.0-release-decision/release-decision.md",
@@ -605,7 +711,6 @@ def test_v0_2_0_release_decision_surfaces_are_linked_and_bounded():
         "baseline-minilm",
         "`finetuned-embedding` is not approved as default",
         "human release review",
-        "RC support evidence",
         "not automatic publication",
         "explicit human confirmation",
         "not a Marketplace Action release",
@@ -620,12 +725,20 @@ def test_v0_2_0_release_decision_surfaces_are_linked_and_bounded():
         "not automatic merge approval",
         "not a v0.2.0 release",
     ]:
-        assert phrase in combined
+        assert phrase in historical
+
+    for phrase in [
+        "historical pre-publish review evidence",
+        "Published: `false`",
+        "post-release evidence",
+        "current publication record",
+        "Raidriar7170/hermes-skilleval@v0.2.1",
+    ]:
+        assert phrase in current
+
+    assert "not a v0.2.0 release" not in current
 
     for risky_claim in [
-        "v0.2.0 has been released",
-        "v0.2.0 is released",
-        "released v0.2.0",
         "published to the GitHub Marketplace",
         "posts PR comments",
         "writes PR annotations",
@@ -635,7 +748,6 @@ def test_v0_2_0_release_decision_surfaces_are_linked_and_bounded():
         "production-ready",
         "approves the release",
         "automatic merge approval enabled",
-        "uses: Raidriar7170/hermes-skilleval@v0.2.0",
     ]:
         assert risky_claim not in combined
 
@@ -650,7 +762,9 @@ def test_v0_2_0_final_approval_surfaces_are_linked_and_bounded():
         encoding="utf-8"
     )
     brief = V0_2_0_FINAL_APPROVAL_HUMAN_BRIEF.read_text(encoding="utf-8")
-    combined = "\n".join([readme, usage, evidence_map, handoff, release_notes, final_md, brief])
+    current = "\n".join([readme, usage, evidence_map, handoff, release_notes])
+    historical = "\n".join([final_md, brief])
+    combined = "\n".join([current, historical])
 
     for path in [
         "docs/release-notes/v0.2.0.md",
@@ -684,12 +798,21 @@ def test_v0_2_0_final_approval_surfaces_are_linked_and_bounded():
         "not automatic merge approval",
         "not a v0.2.0 release",
     ]:
-        assert phrase in combined
+        assert phrase in historical
+
+    for phrase in [
+        "v0.2.0 release notes",
+        "published GitHub Release package",
+        "reusable GitHub Action support",
+        "post-release evidence",
+        "current publication record",
+        "Raidriar7170/hermes-skilleval@v0.2.1",
+    ]:
+        assert phrase in current
+
+    assert "not a v0.2.0 release" not in current
 
     for risky_claim in [
-        "v0.2.0 has been released",
-        "v0.2.0 is released",
-        "released v0.2.0",
         "published to the GitHub Marketplace",
         "posts PR comments",
         "writes PR annotations",
@@ -699,7 +822,6 @@ def test_v0_2_0_final_approval_surfaces_are_linked_and_bounded():
         "production-ready",
         "approves the release",
         "automatic merge approval enabled",
-        "uses: Raidriar7170/hermes-skilleval@v0.2.0",
         "gh release create",
     ]:
         assert risky_claim not in combined

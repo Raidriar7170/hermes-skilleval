@@ -6,113 +6,101 @@
 [![Benchmark](https://img.shields.io/badge/benchmark-80%20tasks%20%2F%2045%20skills-purple.svg)](benchmarks)
 [![A100 Validated](https://img.shields.io/badge/A100-validated-orange.svg)](docs/phase7a.md)
 
-**A reproducible evaluation and release-gate harness for Hermes-style agent skill routing.**
+**Evaluate, route, and regression-test agent skills before they break your coding agent.**
 
-面向 Hermes / Skill / Agent 工作流的离线评测系统：它能索引 `SKILL.md`
-技能库，构建带负样本的 benchmark，比较 keyword、hybrid、embedding、
-verification-gated、cross-encoder 等路由策略，并输出可复现的指标、
-失败分析、自改进报告、静态 HTML dashboard 和发布门禁证据。
+Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style skill libraries, and MCP tool schemas detect wrong-skill activations, near-miss conflicts, and routing regressions in CI. It indexes `SKILL.md` libraries, runs labeled benchmark tasks with gold and negative skills, and writes reproducible JSON, Markdown, CI summary, and dashboard artifacts.
 
----
+## What it does
 
-## For Recruiters / 3-minute review path
+- Scans skill libraries into a portable index with descriptions, trigger cues,
+  source paths, and parser warnings.
+- Evaluates keyword, hybrid, embedding, gated, and cross-encoder routing
+  strategies against gold and negative labels.
+- Runs a release gate that keeps `baseline-minilm` when blind validation finds
+  a worse candidate, and records the decision as reviewable artifacts.
+- Ships a published reusable repository Action for pull-request regression
+  checks without a GitHub API token.
 
-**One-line positioning:** Hermes SkillEval turns agent skill routing into a
-reproducible offline evaluation and release-gate workflow: it measures whether
-a router selects the right skill, avoids tempting negative skills, and refuses
-to promote regressions as defaults.
+## Why skill routing is hard
 
-**Core capabilities:**
+Modern agent frameworks increasingly rely on external skill libraries. The
+hard part is routing the right skill at the right time while avoiding tempting
+negative skills that look semantically close.
 
-- Builds an 80-task / 45-skill Hermes-style benchmark with gold and negative
-  skill labels.
-- Compares keyword, hybrid, embedding, verification-gated, contrastive, and
-  cross-encoder routers with Recall@K, MRR, NDCG, and Negative Hit Rate.
-- Converts blind-validation regressions into an explicit `KEEP_BASELINE`
-  release decision and a CI-reproducible release manifest.
+| Scenario | Naive router | Hermes SkillEval |
+|---|---|---|
+| Similar skills in one category | Selects near-miss negatives | Measures negative hits and same-category confusion |
+| Skill library grows over time | Regressions are hard to compare | Produces comparable JSONL and Markdown reports |
+| Skill descriptions are weak | Manual patching is ad hoc | Proposes metadata patches and verifies before/after gains |
+| Learned rerankers look promising | Trade-offs are easy to miss | Gates default promotion on blind validation evidence |
 
-**High-signal evidence:**
-
-- [`docs/demo/phase16-blind-validation/comparison.md`](docs/demo/phase16-blind-validation/comparison.md)
-  shows the blind validation regression that blocked the fine-tuned router.
-- [`docs/demo/phase17-calibrated-release-selector/release-decision.md`](docs/demo/phase17-calibrated-release-selector/release-decision.md)
-  records `KEEP_BASELINE` and `approved_for_default: False`.
-- [`docs/demo/phase18-ci-release-reproducibility/release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md)
-  records the reproducible release check and artifact hashes.
-- [`docs/demo/v0.2.0-release-decision/release-decision.md`](docs/demo/v0.2.0-release-decision/release-decision.md)
-  records the v0.2.0 release decision as `NEEDS_REVIEW`: human release review
-  is supported, but it is not a v0.2.0 release, not release approval, and not
-  automatic publication.
-- [`docs/release-notes/v0.2.0.md`](docs/release-notes/v0.2.0.md) and
-  [`docs/demo/v0.2.0-final-approval/final-approval.md`](docs/demo/v0.2.0-final-approval/final-approval.md)
-  provide the v0.2.0 release notes and the pre-publish final approval review
-  used for the explicit human GO/NO-GO gate.
-- [`docs/demo/v0.2.0-post-release/post-release.md`](docs/demo/v0.2.0-post-release/post-release.md)
-  records the post-release facts after human GO: Published `true`, tag created
-  `true`, GitHub Release created `true`, and Marketplace published `false`.
-  The final approval source manifest is
-  [`docs/demo/v0.2.0-final-approval/input-manifest.json`](docs/demo/v0.2.0-final-approval/input-manifest.json).
-  The companion Human Brief is
-  [`docs/human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html`](docs/human-briefs/2026-06-04-v0-2-0-release-notes-and-final-approval.html).
-
-For the full evidence chain, start from
-[`docs/release-handoff.md`](docs/release-handoff.md).
-For concrete reviewer examples of blocked regressions and diagnostic risks, use
-[`docs/failure-gallery.md`](docs/failure-gallery.md).
-For interview prep, use
-[`docs/interview-project-overview.html`](docs/interview-project-overview.html)
-and [`docs/resume.md`](docs/resume.md).
-
-**Minimal reproduction command:**
+## Quick Start
 
 ```bash
-PYTHONPATH=src python -m hermes_skilleval.cli release-check \
-  --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
-  --release-output-dir docs/demo/phase18-ci-release-reproducibility
+git clone https://github.com/Raidriar7170/hermes-skilleval.git
+cd hermes-skilleval
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+
+skilleval github-action-gate \
+  --skill-path examples/github-action/skills \
+  --benchmark-path examples/github-action/benchmark \
+  --min-recall-at-k 1.0 \
+  --max-negative-hit-rate 0.0 \
+  --output-dir "${TMPDIR:-/tmp}/skilleval-gate"
+
+pytest -q
 ```
 
----
+Expected: the example gate returns `ALLOW_MERGE`, and the current public suite
+has `419 passed` / `419 pytest cases`.
 
-## Motivation / 为什么需要这个项目
+For full CLI usage, see [`docs/usage.md`](docs/usage.md). For reviewer
+navigation across release, diagnostic, external validation, CI, OpenSpec, and
+Human Brief evidence, see [`docs/evidence-map.md`](docs/evidence-map.md).
 
-Modern agent frameworks increasingly rely on external skill libraries. The hard
-part is not only writing skills, but **routing the right skill at the right time
-while avoiding tempting negative skills**.
+## Use as GitHub Action
 
-现代 Agent 框架越来越依赖外部 Skill 库。真正困难的不只是写 Skill，
-而是在相似技能很多、请求含糊、负样本诱导明显时，稳定地选中正确技能
-并拒绝错误技能。
+Copy this into a consumer repository that owns its own `skills/` and
+`benchmark/` folders:
 
-| Scenario | Naive Router | Hermes SkillEval |
-|---|:-:|:-:|
-| Similar skills in one category | Often selects semantically close negatives | Measures negative hits and same-category confusion |
-| Skill library grows over time | Hard to compare regressions | Produces comparable JSONL and Markdown reports |
-| Embedding router misses edge cases | Failure reasons are opaque | Generates failure-mode analysis and candidate-vs-baseline diffs |
-| Skill descriptions are weak | Manual patching is ad hoc | Proposes metadata patches and verifies before/after gains |
-| Learned rerankers look promising | Hard to quantify trade-offs | Benchmarks cross-encoder ranking quality vs selective acceptance |
+```yaml
+name: SkillEval Gate
 
----
+on:
+  pull_request:
+  workflow_dispatch:
 
-## Key Results / 核心效果
+jobs:
+  skilleval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: Raidriar7170/hermes-skilleval@v0.2.1
+        with:
+          skill-path: skills
+          benchmark-path: benchmark
+          min-recall-at-k: "1.0"
+          max-negative-hit-rate: "0.0"
+          upload-artifacts: "true"
+```
 
-### Current Release Evidence
+The Action runs `skilleval github-action-gate`, writes GitHub Actions step
+summary content plus gate report, CI summary, and results artifacts, and does
+not require a GitHub API token. It reports `ALLOW_MERGE` or `BLOCK_MERGE`; it
+does not approve merges automatically.
 
-The latest release reading comes from Phase 16-18, not from the earlier Phase 8
-dashboard. Phase 16 blind validation found that the fine-tuned embedding router
-preserved Recall@5 but worsened ranking and negative-skill behavior. Phase 17
-therefore keeps `baseline-minilm` as the default, and Phase 18 makes that
-release gate reproducible.
+The copy/paste fixture lives in
+[`examples/github-action/`](examples/github-action/). A future external demo
+repository plan is tracked in
+[`docs/demo-repo-plan.md`](docs/demo-repo-plan.md) without claiming that
+`Raidriar7170/hermes-skilleval-demo` already exists.
 
-| Evidence | Result | Link |
-|---|---|---|
-| Phase 16 blind validation | `REVIEW_REQUIRED`; two regressions and worse negative-hit behavior | [`docs`](docs/phase16.md), [`comparison.md`](docs/demo/phase16-blind-validation/comparison.md), [`dashboard.html`](docs/demo/phase16-blind-validation/dashboard.html) |
-| Phase 17 release selector | `KEEP_BASELINE`; `finetuned-embedding` not approved as default | [`docs`](docs/phase17.md), [`release-decision.md`](docs/demo/phase17-calibrated-release-selector/release-decision.md) |
-| Phase 18 reproducibility pack | `PASS`; release decision remains `KEEP_BASELINE` | [`docs`](docs/phase18.md), [`release-manifest.md`](docs/demo/phase18-ci-release-reproducibility/release-manifest.md) |
-| v0.2.0 release decision | `NEEDS_REVIEW`; requires explicit human confirmation before public release actions | [`release-decision.md`](docs/demo/v0.2.0-release-decision/release-decision.md), [`input-manifest.json`](docs/demo/v0.2.0-release-decision/input-manifest.json) |
-| v0.2.0 final approval | Release notes prepared; Overall decision: `NEEDS_REVIEW`; Published: `false` | [`release notes`](docs/release-notes/v0.2.0.md), [`final checklist`](docs/demo/v0.2.0-final-approval/final-approval.md) |
-| v0.2.0 post-release evidence | Published: `true`; tag and GitHub Release created; Marketplace published: `false` | [`post-release.md`](docs/demo/v0.2.0-post-release/post-release.md), [`post-release.json`](docs/demo/v0.2.0-post-release/post-release.json) |
-
-### Example Failure Caught by the Release Gate
+## Example failure caught
 
 Phase 16 includes a concrete blind-validation case that explains why negative
 controls matter:
@@ -127,10 +115,10 @@ controls matter:
 | Guard flags | `negative_hit_rate_increased`, `negative_accepted_rate_increased`, `new_negative_skill_selected` |
 | Release result | Phase 17 records `KEEP_BASELINE`; Phase 18 reproduces the decision |
 
-This is the core project story: the release gate rejected a plausible learned
-router because it introduced a new negative-skill regression despite unchanged
-Recall@5. The exact diff is committed in
+The exact diff is committed in
 [`route-diffs.jsonl`](docs/demo/phase16-blind-validation/route-diffs.jsonl).
+
+## Dashboard preview
 
 ### Live Dashboard
 
@@ -138,83 +126,58 @@ Explore the committed Phase 8 dashboard:
 [`Open Hermes SkillEval Dashboard`](https://raidriar7170.github.io/hermes-skilleval/docs/demo/phase8-static-dashboard/dashboard.html).
 
 The dashboard supports run filtering, failure inspection, score ranking, and
-raw JSON audit over the Phase 7B comparison artifacts. It remains useful for
-inspection, while the current release evidence is the Phase 16-18 blind
-validation and release-gate chain above. The committed HTML artifact is also
-available at
-[`docs/demo/phase8-static-dashboard/dashboard.html`](docs/demo/phase8-static-dashboard/dashboard.html).
-
-Preview generated from the committed Phase 8 dashboard payload:
+raw JSON audit over the Phase 7B comparison artifacts. The current release
+evidence is the Phase 16-18 blind validation and release-gate chain, with the
+dashboard remaining useful for inspection.
 
 ![Dashboard screenshot](docs/assets/dashboard-screenshot.png)
 
-### Benchmark Scale
+## Evidence links
+
+| Evidence | What it shows | Link |
+|---|---|---|
+| Phase 16 blind validation | `REVIEW_REQUIRED`; two regressions and worse negative-hit behavior | [`docs`](docs/phase16.md), [`comparison.md`](docs/demo/phase16-blind-validation/comparison.md) |
+| Phase 17 release selector | `KEEP_BASELINE`; `baseline-minilm` remains default | [`docs`](docs/phase17.md), [`release-decision.json`](docs/demo/phase17-calibrated-release-selector/release-decision.json) |
+| Phase 18 reproducibility pack | `PASS`; release-check reproduces the default-router decision | [`docs`](docs/phase18.md), [`release-manifest.json`](docs/demo/phase18-ci-release-reproducibility/release-manifest.json) |
+| v0.2.0 historical pre-publish review | `NEEDS_REVIEW`, `Published: false`, and required human confirmation | [`release-decision.md`](docs/demo/v0.2.0-release-decision/release-decision.md), [`final checklist`](docs/demo/v0.2.0-final-approval/final-approval.md) |
+| v0.2.0 post-release evidence | post-release facts after human GO: Published `true`; tag and GitHub Release created; Marketplace published `false` | [`post-release.md`](docs/demo/v0.2.0-post-release/post-release.md), [`post-release.json`](docs/demo/v0.2.0-post-release/post-release.json) |
+| v0.2.1 patch release notes | post-release onboarding cleanup packaged as a conservative patch release | [`release notes`](docs/release-notes/v0.2.1.md), [`Human Brief`](docs/human-briefs/2026-06-05-post-release-onboarding-cleanup.html) |
+
+v0.2.0 post-release status: Published: `true`; tag and GitHub Release created `true`;
+Marketplace published `false`.
+
+For the long evidence chain, start from
+[`docs/release-handoff.md`](docs/release-handoff.md) and
+[`docs/evidence-map.md`](docs/evidence-map.md). For concrete blocked-regression
+and diagnostic-risk examples, use
+[`docs/failure-gallery.md`](docs/failure-gallery.md). For interview prep, use
+[`docs/interview-project-overview.html`](docs/interview-project-overview.html)
+and [`docs/resume.md`](docs/resume.md).
+
+## Limitations / Boundaries
+
+- This is a self-built Hermes-style benchmark, not a standard public benchmark,
+  not a public ranking table, not a SOTA claim, and not a model-leadership claim.
+- The strongest evidence is the evaluation, artifact, and release-gate
+  workflow, not absolute model superiority or production readiness.
+- `baseline-minilm` remains the default router; `finetuned-embedding` is not approved as default.
+
+- This is a reusable repository Action, not a Marketplace-published Action, not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router.
+- It is not GitHub API PR comments, not PR annotations, not release approval,
+  not automatic merge approval, not automatic release publication, and not
+  Marketplace publication.
+- Model checkpoints, embedding caches, and private remote-machine details are
+  intentionally not committed.
+
+## Benchmark scale
 
 | Item | Value |
 |---|---:|
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 413 |
+| Test cases | 419 |
 | Remote hardware validation | Single idle A100 GPU |
-
-### Best Verified Routing Results
-
-| Router / Setting | Recall@1 | Recall@5 | MRR | NDCG@5 | Negative Hit Rate | Selection Rate@5 |
-|---|---:|---:|---:|---:|---:|---:|
-| MiniLM embedding | 0.812 | 0.956 | 0.934 | 0.930 | 0.100 | 1.000 |
-| Contrastive gated MiniLM | **0.881** | 0.969 | **0.985** | 0.964 | **0.037** | 0.320 |
-| Cross-encoder selective | 0.775 | 0.781 | 0.838 | 0.794 | **0.000** | 0.175 |
-| Cross-encoder rank-only | **0.881** | **0.994** | **0.985** | **0.978** | 0.125 | 1.000 |
-
-### Phase 7B Held-Out Calibration Check
-
-| Router / Setting | Split | Recall@1 | Recall@5 | MRR | NDCG@5 | Negative Hit Rate | Selection Rate@5 |
-|---|---|---:|---:|---:|---:|---:|---:|
-| Contrastive gated MiniLM | test | 0.850 | 0.950 | 1.000 | 0.959 | 0.100 | 0.360 |
-| Cross-encoder rank-only | test | 0.850 | **1.000** | 1.000 | **0.987** | 0.333 | 1.000 |
-| Cross-encoder calibrated strict | test | 0.850 | 0.950 | 1.000 | 0.957 | **0.033** | 0.320 |
-| Cross-encoder calibrated balanced | test | 0.850 | 0.967 | 1.000 | 0.970 | 0.100 | 0.393 |
-
-**Takeaway:** contrastive gated routing remains the strongest full-benchmark
-selective baseline, while Phase 7B shows that dev-split cross-encoder threshold
-calibration can turn the rank-only reranker into a safer acceptance policy.
-The strict calibrated policy cuts held-out test Negative Hit Rate from `0.333`
-to `0.033`; the balanced policy preserves more Recall@5 while matching the
-contrastive gated test negative-hit rate.
-
-**结论:** Contrastive gated routing 仍然是最稳的全量 selective baseline；
-cross-encoder 排序能力更强，Phase 7B 通过 dev split 阈值校准把 held-out
-test 的 Negative Hit Rate 从 `0.333` 降到 `0.033`，说明它已经从
-“需要校准”推进到“可控接受层”的阶段。
-
----
-
-## Limitations / Boundaries
-
-- This is a self-built Hermes-style benchmark, not a standard public benchmark
-  or model-leadership claim.
-- The strongest evidence is the evaluation, artifact, and release-gate workflow,
-  not absolute model superiority.
-- The fine-tuned router is not promoted as the default; the current release
-  decision remains `KEEP_BASELINE`.
-- The v0.2.0 release decision package is review evidence only: not a
-  Marketplace Action release, not GitHub API PR comments, not PR annotations,
-  not SaaS, not a runtime MCP router, not a SOTA claim, not benchmark status,
-  not production readiness, not release approval, not automatic merge
-  approval, and not a v0.2.0 release.
-- The v0.2.0 release notes summarize implemented capabilities and committed
-  evidence. The v0.2.0 final approval checklist remains pre-publish review
-  evidence; it is not Marketplace publication or automatic approval.
-- The v0.2.0 post-release evidence records the GitHub tag and GitHub Release
-  facts only; it is not Marketplace publication, not SaaS, not a runtime MCP
-  router, not a SOTA claim, and not production readiness.
-- Model checkpoints, embedding caches, and private remote-machine details are
-  intentionally not committed.
-- Future work: add third-party skill libraries, external blind task packs, and
-  more cross-domain reviewer traces.
-
----
 
 ## Architecture / 系统架构
 
@@ -255,179 +218,9 @@ flowchart TD
     repo --> validation["Validation<br/>tests + pyproject.toml"]
 
     runtime --> routers["Router modules<br/>keyword, hybrid, embedding, gated, cross_encoder"]
-    evidence --> release["Release evidence<br/>Phase 16-18 + v0.2.0"]
+    evidence --> release["Release evidence<br/>Phase 16-18 + v0.2.x"]
     automation --> regeneration["Reproducible generation<br/>benchmark and evidence scripts"]
 ```
-
----
-
-## Quick Start / 快速开始
-
-Clone and install the development extras:
-
-```bash
-git clone https://github.com/Raidriar7170/hermes-skilleval.git
-cd hermes-skilleval
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[dev]"
-```
-
-Run the main local checks:
-
-```bash
-pytest -q
-
-skilleval release-check \
-  --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
-  --release-output-dir docs/demo/phase18-ci-release-reproducibility
-```
-
-Expected: `413 passed` and
-`Release reproducibility PASS:
-docs/demo/phase18-ci-release-reproducibility/release-manifest.json`.
-
-For full CLI usage, see [`docs/usage.md`](docs/usage.md).
-For reviewer navigation across release, diagnostic, external validation, CI,
-OpenSpec, and Human Brief evidence, see
-[`docs/evidence-map.md`](docs/evidence-map.md). It is a navigation layer, not a
-second source of truth, and not release approval.
-
----
-
-## Diagnostic Onboarding / 零标签诊断入口
-
-For the committed scan -> lint -> inspect -> route -> dashboard demo evidence
-pack, see
-[`docs/demo/diagnostic-onboarding/`](docs/demo/diagnostic-onboarding/).
-The demo also includes `ci-gate-report.json`, `ci-gate-report.md`,
-`pr-review-packet.json`, and `pr-review-packet.md`. The CI gate report is
-produced by `skilleval diagnostic-ci-gate` as artifact-based CI validation over
-already generated diagnostic artifacts; the PR review packet is a local
-reviewer-facing summary generated from that gate report. Use
-`skilleval diagnostic-artifact-drift-check` to compare committed and
-regenerated diagnostic demo artifacts while ignoring approved volatile fields
-such as `generated_at`. The GitHub Actions validate workflow now regenerates
-the diagnostic onboarding demo into `$RUNNER_TEMP` and runs the same drift
-check with JSON and Markdown reports kept outside the repository checkout.
-
-Boundary: this is not GitHub API integration, not a Marketplace Action, not a
-PR annotation system, not SaaS, not a runtime MCP router, and not a headline
-performance claim. Full regeneration, drift-check, gate, and review packet
-commands live in [`docs/usage.md`](docs/usage.md).
-
-### External Skill Library Validation Pack
-
-[`docs/demo/external-skill-library-validation/`](docs/demo/external-skill-library-validation/)
-extends the diagnostic evidence path to external-style source shapes. It has
-two committed source tracks: Markdown `SKILL.md` folders under
-`source/markdown-skills/` and an MCP-style tool schema at
-`source/mcp-tool-schema/tools.json`. Each track includes regenerated scan,
-lint, inspect, route, dashboard, CI gate, and local PR review packet artifacts.
-
-Local simulation writes regenerated artifacts outside the checkout and compares
-them back to the committed pack. The snippet below is the drift-check closeout;
-the full regeneration commands live in the pack README:
-
-```bash
-ROOT=docs/demo/external-skill-library-validation
-TMP_ROOT="${TMPDIR:-/tmp}/external-skill-library-validation"
-# Regenerate both tracks with the commands in "$ROOT/README.md", then:
-skilleval diagnostic-artifact-drift-check \
-  --expected "$ROOT" \
-  --actual "$TMP_ROOT" \
-  --output "$TMP_ROOT/drift-report.json" \
-  --markdown-output "$TMP_ROOT/drift-report.md"
-```
-
-Boundary: this is local diagnostic evidence only, not a Marketplace Action, not
-GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP router,
-not a SOTA claim, not benchmark status, not production readiness, and not
-release approval.
-
-### PR-facing CI Summary
-
-`skilleval ci-summary` writes a local/GitHub Actions summary from explicit
-check outcomes, changed files, committed report paths, and an overclaim scan.
-The validate workflow appends the Markdown to `$GITHUB_STEP_SUMMARY` and then
-enforces the JSON decision as `ALLOW_MERGE` or `BLOCK_MERGE`. The external
-validation pack is passed as an explicit `external-pack` check outcome.
-
-Boundary: this is not a GitHub API comment bot, not a PR annotation system,
-not a Marketplace Action, not SaaS, not a runtime MCP router, not a SOTA claim,
-and not release approval. It summarizes local validation artifacts; it does
-not approve a release or merge by itself.
-
-### GitHub Actions Node 24 Preflight
-
-The Validate workflow includes a GitHub Actions Node 24 preflight by setting
-`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` at workflow level. This exercises existing
-JavaScript actions such as checkout, setup-python, and artifact upload under
-the upcoming runtime while preserving the same pytest, OpenSpec, release-check,
-diagnostic gate, diagnostic drift, external pack, CI summary, artifact upload,
-and final decision enforcement checks. The migration knob follows GitHub's
-[Node 20 deprecation changelog](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
-
-Local simulation checklist:
-
-```bash
-python -m pytest -q
-OPENSPEC_TELEMETRY=0 openspec validate --all --strict
-skilleval release-check \
-  --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
-  --release-output-dir docs/demo/phase18-ci-release-reproducibility
-# Then run the diagnostic/external pack regeneration flows from docs/usage.md
-# and simulate skilleval ci-summary with explicit check outcomes.
-```
-
-Boundary: this is not a Marketplace Action, not GitHub API PR comments, not PR
-annotations, not SaaS, not a runtime MCP router, not a SOTA claim, not
-benchmark status, not production readiness, not release approval, not automatic
-merge approval, and not a permanent compatibility guarantee.
-
-### Reusable GitHub Action RC
-
-The repository now includes a root `action.yml` composite action scaffold for
-external maintainers who want to run a small SkillEval gate in their own
-repository. The action delegates to `skilleval github-action-gate`, accepts
-`skill-path`, `benchmark-path`, `min-recall-at-k`, `max-negative-hit-rate`, and
-`upload-artifacts`, writes deterministic gate JSON/Markdown plus CI summary
-artifacts, and can optionally upload those artifacts with
-`actions/upload-artifact@v4`.
-
-Example usage stays on `@main` or a commit SHA while this remains a release
-candidate:
-
-```yaml
-- uses: Raidriar7170/hermes-skilleval@main
-  with:
-    skill-path: examples/github-action/skills
-    benchmark-path: examples/github-action/benchmark
-    min-recall-at-k: "1.0"
-    max-negative-hit-rate: "0.0"
-    upload-artifacts: 'true'
-```
-
-The public-safe fixture lives in
-[`examples/github-action/`](examples/github-action/). It is a Reusable GitHub
-Action RC. The local external-consumer smoke evidence lives in
-[`docs/demo/external-repo-action-smoke-pack/`](docs/demo/external-repo-action-smoke-pack/):
-it records `ALLOW_MERGE` over consumer-shaped `skills/`, `benchmark/`, and
-`skilleval-output` paths without creating a remote repository.
-The hosted consumer smoke evidence lives in
-[`docs/demo/hosted-consumer-action-smoke/`](docs/demo/hosted-consumer-action-smoke/):
-it records one GitHub-hosted consumer smoke run from
-`Raidriar7170/hermes-skilleval-action-consumer-smoke`, with downloaded gate and
-CI summary artifacts committed for review.
-
-Boundary: this is local external-consumer smoke, one GitHub-hosted consumer
-smoke run, and Reusable GitHub Action RC evidence, not a Marketplace Action
-release, not GitHub API PR comments, not PR annotations, not SaaS, not a
-runtime MCP router, not a SOTA claim, not benchmark status, not production
-readiness, not release approval, not automatic merge approval, and not a
-v0.2.0 release.
-
----
 
 ## Experiment Timeline / 实验演进
 
@@ -496,7 +289,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 413 pytest cases |
+| Testing | pytest | 419 pytest cases |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -556,7 +349,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 413 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 419 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.
