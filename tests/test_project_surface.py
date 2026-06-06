@@ -286,7 +286,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert (
         "**Language / 语言:** [中文总览](#总览) · "
         "[English README](#what-it-does) · "
-        "[中文完整说明](docs/interview-project-overview.html)"
+        "[中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)"
     ) in first_screen
     assert (
         "Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style "
@@ -303,9 +303,10 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert "继续保留 `baseline-minilm`" in first_screen
     assert "`v0.2.1` 已发布，`419` 个 pytest 用例通过" in first_screen
     assert (
-        "[`docs/interview-project-overview.html`](docs/interview-project-overview.html)"
+        "[中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)"
         in first_screen
     )
+    assert "(docs/interview-project-overview.html)" not in first_screen
     assert "[`docs/resume.md`](docs/resume.md)" not in first_screen
     assert "For Interviewers" not in first_screen
     assert "面试官关心" not in first_screen

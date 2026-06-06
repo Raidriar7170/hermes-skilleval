@@ -10,7 +10,7 @@
 
 **Evaluate, route, and regression-test agent skills before they break your coding agent.**
 
-**Language / 语言:** [中文总览](#总览) · [English README](#what-it-does) · [中文完整说明](docs/interview-project-overview.html)
+**Language / 语言:** [中文总览](#总览) · [English README](#what-it-does) · [中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)
 
 Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style skill libraries, and MCP tool schemas detect wrong-skill activations, near-miss conflicts, and routing regressions in CI. It indexes `SKILL.md` libraries, runs labeled benchmark tasks with gold and negative skills, and writes reproducible JSON, Markdown, CI summary, and dashboard artifacts.
 
@@ -22,7 +22,7 @@ Hermes SkillEval 是一个面向 AI 编程 Agent 技能库的离线评测和 CI 
 
 最关键的一次结果是：`finetuned-embedding` 候选路由器虽然保留了 gold skill，但在盲测中新增选择了错误的 negative skill，所以 release gate 没有把它升级为默认路由器，而是继续保留 `baseline-minilm`。这也是项目想展示的核心能力：不仅能做评测，还能在候选方案看起来更“智能”但风险变高时拒绝上线。
 
-当前完成度：`v0.2.1` 已发布，`419` 个 pytest 用例通过，CI、可复用 repository Action、示例技能库、dashboard、release notes 和 post-release evidence 都已落库。更完整的中文项目说明见 [`docs/interview-project-overview.html`](docs/interview-project-overview.html)。
+当前完成度：`v0.2.1` 已发布，`419` 个 pytest 用例通过，CI、可复用 repository Action、示例技能库、dashboard、release notes 和 post-release evidence 都已落库。更完整的中文项目说明见 [中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)。
 
 ## What it does
 
@@ -166,7 +166,7 @@ For the long evidence chain, start from
 and diagnostic-risk examples, use
 [`docs/failure-gallery.md`](docs/failure-gallery.md). For a longer Chinese
 project walkthrough, use
-[`docs/interview-project-overview.html`](docs/interview-project-overview.html).
+[中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html).
 
 ## Limitations / Boundaries
 
