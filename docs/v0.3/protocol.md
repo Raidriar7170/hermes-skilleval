@@ -85,8 +85,7 @@ metrics, and manifests, but PR-0 freezes these rules:
 - Hermes diagnostics are reported in a separate `hermes_diagnostics` namespace.
 - Unknown or invalid prediction IDs are diagnostics and must not be silently
   ignored.
-- Missing task predictions count as empty predictions unless an upstream
-  official scorer requires a different preregistered behavior.
+- Missing task predictions are skipped for SkillRouter official scorer parity.
 - External data without explicit negative labels MUST NOT be reported with
   Hermes Negative Hit Rate or Negative Accepted Rate.
 - The Easy and Hard tiers are both required when available; if a tier cannot be

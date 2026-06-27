@@ -74,9 +74,9 @@ def test_skillrouter_adapter_loads_official_eval_core_fixture():
 
     task_by_id = {task.task_id: task for task in tasks}
     assert validation["status"] == "PASS"
-    assert validation["task_count"] == 3
-    assert validation["skill_count_by_tier"] == {"easy": 2, "hard": 3}
-    assert validation["relevance_count"] == 5
+    assert validation["task_count"] == 4
+    assert validation["skill_count_by_tier"] == {"easy": 3, "hard": 3}
+    assert validation["relevance_count"] == 6
     assert task_by_id["task-single-easy"].query == (
         "Use browser automation to submit a login form."
     )
@@ -93,9 +93,14 @@ def test_skillrouter_adapter_loads_official_eval_core_fixture():
     }
     assert task_by_id["task-generic-easy"].task_type == "generic_only"
     assert task_by_id["task-generic-easy"].graded_relevance == {}
+    assert task_by_id["task-medium-easy-pool"].tier == "medium"
+    assert task_by_id["task-medium-easy-pool"].graded_relevance == {
+        "gt/medium-easy": 3
+    }
     assert [skill.skill_id for skill in easy_skills] == [
         "gt/browser-login",
         "degraded/browser-login",
+        "gt/medium-easy",
     ]
     assert {skill.skill_id for skill in hard_skills} == {
         "degraded/workflow-debugging",

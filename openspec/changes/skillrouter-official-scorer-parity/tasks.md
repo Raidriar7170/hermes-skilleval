@@ -12,10 +12,13 @@
   `skillrouter_eval_core_tiny`.
 - [x] 2.2 Add RED tests for per-task nDCG@1/3/10, Hit@1, Precision@3,
   MRR@10, Recall@10/20/50, and FullCoverage@3/5/10.
-- [x] 2.3 Add RED tests for all/single/multi and easy/hard aggregation.
+- [x] 2.3 Add RED tests for per-tier all/single/multi aggregation and
+  combined `by_tier.easy`/`by_tier.hard` output.
 - [x] 2.4 Add RED tests for core mode generic-only filtering, core GT fallback,
   single mode filtering, and tier relevance filtering.
 - [x] 2.5 Add CLI smoke test if scorer CLI is added.
+- [x] 2.6 Add medium-difficulty task regression proving Easy/Hard evaluation
+  tiers are candidate skill pools, not task difficulty groups.
 
 ## 3. Implementation
 

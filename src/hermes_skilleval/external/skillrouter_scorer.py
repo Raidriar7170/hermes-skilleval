@@ -29,9 +29,13 @@ def score_skillrouter_predictions(
     data_root: Path | str,
     predictions_path: Path | str,
     mode: str = "core",
+    tier: str | None = None,
+    tiers: tuple[str, ...] | list[str] | None = None,
 ) -> dict[str, Any]:
     if mode not in {"core", "single"}:
         raise ValueError(f"unsupported SkillRouter scoring mode: {mode}")
+    if tier and tiers:
+        raise ValueError("use either tier or tiers, not both")
 
     adapter = SkillRouterAdapter(
         data_root=data_root,
@@ -42,13 +46,48 @@ def score_skillrouter_predictions(
     if validation["status"] != "PASS":
         raise ValueError("external validation failed")
 
-    tier_pools = {
-        tier: {skill.skill_id for skill in adapter.iter_skills(tier)}
-        for tier in adapter.tiers
-    }
     relevance_entries = adapter._load_relevance_entries()
     predictions = _load_predictions(Path(predictions_path))
+    if tier:
+        return _score_tier(
+            adapter=adapter,
+            relevance_entries=relevance_entries,
+            predictions=predictions,
+            mode=mode,
+            tier=tier,
+        )
+    selected_tiers = tuple(tiers) if tiers else adapter.tiers
+    by_tier = {
+        selected_tier: _score_tier(
+            adapter=adapter,
+            relevance_entries=relevance_entries,
+            predictions=predictions,
+            mode=mode,
+            tier=selected_tier,
+        )
+        for selected_tier in selected_tiers
+    }
+    return {
+        "schema_version": "v0.3.skillrouter-official-scorer.v1",
+        "benchmark_id": "skillrouter",
+        "mode": mode,
+        "metrics": list(METRIC_NAMES),
+        "task_count": sum(report["task_count"] for report in by_tier.values()),
+        "by_tier": by_tier,
+    }
 
+
+def _score_tier(
+    *,
+    adapter: SkillRouterAdapter,
+    relevance_entries: dict[str, dict[str, Any]],
+    predictions: dict[str, list[str]],
+    mode: str,
+    tier: str,
+) -> dict[str, Any]:
+    if tier not in adapter.tiers:
+        raise ValueError(f"unsupported SkillRouter tier: {tier}")
+    tier_pool = {skill.skill_id for skill in adapter.iter_skills(tier)}
     rows = []
     for task in adapter.load_tasks():
         entry = relevance_entries.get(task.task_id, {})
@@ -60,7 +99,6 @@ def score_skillrouter_predictions(
             continue
         if task.task_id not in predictions:
             continue
-        tier_pool = tier_pools.get(task.tier, set())
         tier_relevance = {
             skill_id: grade
             for skill_id, grade in task.graded_relevance.items()
@@ -74,7 +112,8 @@ def score_skillrouter_predictions(
             {
                 "task_id": task.task_id,
                 "task_type": task_type,
-                "tier": task.tier,
+                "task_difficulty": task.tier,
+                "evaluation_tier": tier,
                 "gt_ids": gt_ids,
                 "gt_count": len(gt_ids),
                 "predictions": ranking,
@@ -87,6 +126,7 @@ def score_skillrouter_predictions(
         "schema_version": "v0.3.skillrouter-official-scorer.v1",
         "benchmark_id": "skillrouter",
         "mode": mode,
+        "tier": tier,
         "task_count": len(rows),
         "metrics": list(METRIC_NAMES),
         "aggregates": _aggregates(rows),
@@ -100,11 +140,15 @@ def write_skillrouter_score_report(
     predictions_path: Path | str,
     output_path: Path | str,
     mode: str = "core",
+    tier: str | None = None,
+    tiers: tuple[str, ...] | list[str] | None = None,
 ) -> dict[str, Any]:
     report = score_skillrouter_predictions(
         data_root=data_root,
         predictions_path=predictions_path,
         mode=mode,
+        tier=tier,
+        tiers=tiers,
     )
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -156,8 +200,9 @@ def _prediction_list(value: Any) -> list[str]:
 def _selected_gt_ids(entry: dict[str, Any], mode: str) -> list[str]:
     if mode == "single":
         return _string_list(entry.get("gt_skill_ids", []))
-    core = _string_list(entry.get("core_gt_ids", []))
-    return core or _string_list(entry.get("gt_skill_ids", []))
+    if "core_gt_ids" in entry:
+        return _string_list(entry.get("core_gt_ids", []))
+    return _string_list(entry.get("gt_skill_ids", []))
 
 
 def _string_list(value: Any) -> list[str]:
@@ -252,8 +297,6 @@ def _aggregates(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         "all": _aggregate(rows),
         "single": _aggregate([row for row in rows if row["gt_count"] == 1]),
         "multi": _aggregate([row for row in rows if row["gt_count"] > 1]),
-        "easy": _aggregate([row for row in rows if row["tier"] == "easy"]),
-        "hard": _aggregate([row for row in rows if row["tier"] == "hard"]),
     }
 
 

@@ -298,6 +298,13 @@ def _build_parser() -> argparse.ArgumentParser:
     external_score_parser.add_argument("--data-root", required=True)
     external_score_parser.add_argument("--predictions", required=True)
     external_score_parser.add_argument("--output", required=True)
+    external_score_parser.add_argument("--tier", choices=("easy", "hard"), default=None)
+    external_score_parser.add_argument(
+        "--tiers",
+        choices=("easy", "hard"),
+        nargs="+",
+        default=None,
+    )
     external_score_parser.add_argument(
         "--mode",
         choices=("core", "single"),
@@ -920,6 +927,8 @@ def _run_external_score(args: argparse.Namespace) -> None:
         predictions_path=args.predictions,
         output_path=args.output,
         mode=args.mode,
+        tier=args.tier,
+        tiers=tuple(args.tiers) if args.tiers else None,
     )
     print(
         "External score "

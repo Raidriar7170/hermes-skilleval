@@ -11,12 +11,16 @@ Predictions are already-ranked IDs. The scorer does not call a router or model.
 
 ## Metric Semantics
 
-For each eligible task, the scorer builds a tier-filtered relevance map:
+For each selected evaluation tier, the scorer loads that tier's candidate skill
+pool and scores all eligible tasks against that pool. Easy/Hard are candidate
+pool tiers, not task difficulty groups. For each eligible task, the scorer
+builds a tier-filtered relevance map:
 
 - Start from the PR-1 task graded relevance map.
-- Keep only skills present in that task tier's skill pool.
+- Keep only skills present in the selected candidate skill pool tier.
 - Select ground-truth IDs by mode:
-  - `core`: `core_gt_ids` if non-empty, otherwise `gt_skill_ids`;
+  - `core`: `core_gt_ids` as-is when the key is present, otherwise
+    `gt_skill_ids`;
   - `single`: `gt_skill_ids`, only tasks where `len(gt_skill_ids) == 1`.
 - Drop `generic_only` tasks in core mode.
 - Do not infer negative labels and do not compute Hermes Negative Hit Rate.
@@ -36,9 +40,10 @@ GT cardinality, not task label strings.
 
 ## Output
 
-The scorer returns JSON with schema, benchmark, mode, task counts, per-slice
-aggregates, and optional per-task rows for auditability. Slices are keyed by
-`all`, `single`, `multi`, `easy`, and `hard`.
+For a single tier, the scorer returns JSON with schema, benchmark, mode, tier,
+task counts, `all`/`single`/`multi` aggregates, and optional per-task rows for
+auditability. For combined tier reports, the output uses `by_tier.easy` and
+`by_tier.hard`.
 
 ## Boundaries
 

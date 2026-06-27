@@ -68,7 +68,7 @@ def test_cli_external_validate_accepts_official_eval_core_fixture(tmp_path):
         (output_dir / "validation.json").read_text(encoding="utf-8")
     )
     assert validation["status"] == "PASS"
-    assert validation["task_count"] == 3
+    assert validation["task_count"] == 4
     assert {record["path"] for record in manifest["files"]} == {
         "tasks.jsonl",
         "relevance.json",

@@ -17,12 +17,14 @@ agents, or release promotion.
 
 - Compute nDCG@1/3/10, Hit@1, Precision@3, MRR@10, Recall@10/20/50, and
   FullCoverage@3/5/10.
-- Aggregate metrics over all/single/multi and easy/hard slices.
+- Score explicit Easy/Hard candidate skill pool tiers and aggregate each tier
+  over all/single/multi slices.
 - Implement official task filtering:
   - core mode drops `task_type == generic_only`;
-  - core mode uses `core_gt_ids` with fallback to `gt_skill_ids`;
+  - core mode uses `core_gt_ids` as-is when present, with fallback to
+    `gt_skill_ids` only when the key is missing;
   - single mode uses `gt_skill_ids` and keeps only `len(gt_ids) == 1`;
-  - tier relevance is filtered to the tier pool.
+  - tier relevance is filtered to the selected candidate skill pool tier.
 - Add hand-computable tiny fixture tests and an optional scorer CLI.
 
 ## Out Of Scope
