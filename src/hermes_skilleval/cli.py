@@ -34,6 +34,7 @@ from hermes_skilleval.embedding_training import (
     export_embedding_training_pairs,
     write_training_pairs,
 )
+from hermes_skilleval.external.skillrouter import write_external_validation
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
     write_failure_analysis_report,
@@ -267,6 +268,22 @@ def _build_parser() -> argparse.ArgumentParser:
     github_action_gate_parser.add_argument("--output-dir", required=True)
     github_action_gate_parser.add_argument("--top-k", type=int, default=5)
     github_action_gate_parser.set_defaults(handler=_run_github_action_gate)
+
+    external_validate_parser = subparsers.add_parser(
+        "external-validate",
+        help="validate external benchmark adapter inputs without scoring",
+    )
+    external_validate_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_validate_parser.add_argument("--data-root", required=True)
+    external_validate_parser.add_argument("--output-dir", required=True)
+    external_validate_parser.add_argument("--upstream-ref", default="FILL_BEFORE_RUN")
+    external_validate_parser.add_argument("--license-note", default="FILL_BEFORE_RUN")
+    external_validate_parser.add_argument("--acquired-at", default=None)
+    external_validate_parser.set_defaults(handler=_run_external_validate)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -857,6 +874,22 @@ def _run_github_action_gate(args: argparse.Namespace) -> None:
     print(f"GitHub action gate {gate['decision']}: {args.output_dir}")
     if gate["decision"] != "ALLOW_MERGE":
         raise ValueError(f"github action gate decision: {gate['decision']}")
+
+
+def _run_external_validate(args: argparse.Namespace) -> None:
+    _, validation = write_external_validation(
+        benchmark=args.benchmark,
+        data_root=args.data_root,
+        output_dir=args.output_dir,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+        acquired_at=args.acquired_at,
+    )
+    print(
+        "External validation "
+        f"{validation['status']}: {args.output_dir} "
+        f"({validation['task_count']} tasks)"
+    )
 
 
 def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:
