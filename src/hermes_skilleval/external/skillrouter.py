@@ -96,6 +96,7 @@ class SkillRouterAdapter:
                 record,
                 (*TASK_ID_FIELDS, *QUERY_FIELDS, *TASK_TYPE_FIELDS),
             )
+            metadata.update(_task_relevance_metadata(relevance_entry))
             tasks.append(
                 ExternalTask(
                     benchmark_id=self.benchmark_id,
@@ -597,6 +598,14 @@ def _first_present(record: dict[str, Any], fields: tuple[str, ...]) -> Any:
 def _metadata_without(record: dict[str, Any], fields: tuple[str, ...]) -> dict[str, Any]:
     excluded = set(fields)
     return {key: value for key, value in record.items() if key not in excluded}
+
+
+def _task_relevance_metadata(entry: dict[str, Any]) -> dict[str, Any]:
+    metadata = {}
+    for field in ("gt_skill_ids", "core_gt_ids", "auxiliary_gt_ids", "task_type"):
+        if field in entry:
+            metadata[field] = entry[field]
+    return metadata
 
 
 def _missing_file_record(role: str, exc: Exception) -> dict[str, Any]:

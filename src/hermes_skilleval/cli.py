@@ -35,6 +35,10 @@ from hermes_skilleval.embedding_training import (
     write_training_pairs,
 )
 from hermes_skilleval.external.skillrouter import write_external_validation
+from hermes_skilleval.external.skillrouter_matrix import (
+    run_skillrouter_matrix,
+    write_skillrouter_matrix_plan,
+)
 from hermes_skilleval.external.skillrouter_scorer import write_skillrouter_score_report
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
@@ -311,6 +315,65 @@ def _build_parser() -> argparse.ArgumentParser:
         default="core",
     )
     external_score_parser.set_defaults(handler=_run_external_score)
+
+    external_plan_parser = subparsers.add_parser(
+        "external-plan",
+        help="write a frozen external SkillRouter matrix plan without scoring",
+    )
+    external_plan_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_plan_parser.add_argument("--data-root", required=True)
+    external_plan_parser.add_argument("--output", required=True)
+    external_plan_parser.add_argument("--upstream-ref", required=True)
+    external_plan_parser.add_argument("--license-note", required=True)
+    external_plan_parser.add_argument("--run-id", required=True)
+    external_plan_parser.add_argument(
+        "--router-config",
+        action="append",
+        required=True,
+        help=(
+            "frozen router config as router_id:field_view:predictions_path "
+            "or config_id:router_id:field_view:predictions_path"
+        ),
+    )
+    external_plan_parser.add_argument(
+        "--field-view",
+        choices=("name_only", "metadata", "full_body"),
+        action="append",
+        default=[],
+    )
+    external_plan_parser.add_argument(
+        "--tier",
+        choices=("easy", "hard"),
+        action="append",
+        default=[],
+    )
+    external_plan_parser.add_argument(
+        "--stress-candidate-size",
+        type=int,
+        action="append",
+        default=[],
+    )
+    external_plan_parser.add_argument("--matrix-output", default=None)
+    external_plan_parser.add_argument("--bootstrap-iterations", type=int, default=10000)
+    external_plan_parser.add_argument("--bootstrap-confidence", type=float, default=0.95)
+    external_plan_parser.set_defaults(handler=_run_external_plan)
+
+    external_matrix_parser = subparsers.add_parser(
+        "external-matrix",
+        help="run a frozen external SkillRouter matrix from an existing plan",
+    )
+    external_matrix_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_matrix_parser.add_argument("--plan", required=True)
+    external_matrix_parser.add_argument("--output", required=True)
+    external_matrix_parser.set_defaults(handler=_run_external_matrix)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -935,6 +998,73 @@ def _run_external_score(args: argparse.Namespace) -> None:
         f"{report['mode']}: {args.output} "
         f"({report['task_count']} tasks)"
     )
+
+
+def _run_external_plan(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    plan = write_skillrouter_matrix_plan(
+        data_root=args.data_root,
+        output_path=args.output,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+        run_id=args.run_id,
+        routers=[_parse_external_router_config(value) for value in args.router_config],
+        field_views=tuple(args.field_view) if args.field_view else (
+            "name_only",
+            "metadata",
+            "full_body",
+        ),
+        tiers=tuple(args.tier) if args.tier else ("easy", "hard"),
+        stress_candidate_sizes=tuple(args.stress_candidate_size)
+        if args.stress_candidate_size
+        else (1000, 10000),
+        matrix_output_path=args.matrix_output,
+        bootstrap_iterations=args.bootstrap_iterations,
+        bootstrap_confidence=args.bootstrap_confidence,
+    )
+    print(
+        "External matrix plan "
+        f"{plan['run_id']}: {args.output} "
+        f"({len(plan['frozen_routers'])} frozen routers)"
+    )
+
+
+def _run_external_matrix(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    report = run_skillrouter_matrix(plan_path=args.plan, output_path=args.output)
+    print(
+        "External matrix "
+        f"{report['run_id']}: {args.output} "
+        f"({len(report['official'])} frozen routers)"
+    )
+
+
+def _parse_external_router_config(value: str) -> dict[str, str]:
+    parts = value.split(":", 3)
+    if len(parts) == 3 and all(part.strip() for part in parts):
+        router_id, field_view, predictions_path = parts
+        return {
+            "router_id": router_id,
+            "field_view": field_view,
+            "predictions_path": predictions_path,
+            "version": "frozen-cli",
+        }
+    if len(parts) == 4 and all(part.strip() for part in parts):
+        config_id, router_id, field_view, predictions_path = parts
+        return {
+            "config_id": config_id,
+            "router_id": router_id,
+            "field_view": field_view,
+            "predictions_path": predictions_path,
+            "version": "frozen-cli",
+        }
+    else:
+        raise ValueError(
+            "--router-config must use router_id:field_view:predictions_path "
+            "or config_id:router_id:field_view:predictions_path"
+        )
 
 
 def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:

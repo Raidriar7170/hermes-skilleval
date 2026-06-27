@@ -87,6 +87,15 @@ def test_skillrouter_adapter_loads_official_eval_core_fixture():
     assert task_by_id["task-single-easy"].metadata["skill_names"] == ["Browser Login"]
     assert task_by_id["task-single-easy"].metadata["domain"] == "web"
     assert task_by_id["task-single-easy"].metadata["excluded"] is False
+    assert task_by_id["task-single-easy"].metadata["gt_skill_ids"] == [
+        "gt/browser-login"
+    ]
+    assert task_by_id["task-single-easy"].metadata["core_gt_ids"] == [
+        "gt/browser-login"
+    ]
+    assert task_by_id["task-single-easy"].metadata["auxiliary_gt_ids"] == [
+        "degraded/browser-login"
+    ]
     assert task_by_id["task-single-easy"].graded_relevance == {
         "gt/browser-login": 3,
         "degraded/browser-login": 1,
