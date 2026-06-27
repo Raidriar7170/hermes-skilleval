@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>External Matrix Generalization - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #16202a; background: #f7f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d9e0ea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #bcc6d4; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>External Matrix Generalization</h1>
+    <span class="status">applying / PR-3 matrix only</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段新增 frozen zero-shot external evaluation matrix：先写冻结计划，再消费冻结 predictions 做 SkillRouter official Easy/Hard scoring，并把 Hermes stress diagnostics、split、bootstrap、overlap scaffold 分开输出。</p>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>OpenSpec change：<code>external-matrix-generalization</code>。PR-1 adapter/provenance 和 PR-2 official scorer 是稳定依赖；本阶段不改 scorer 公式，也不运行 router/model/live-agent。</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li><a href="../../src/hermes_skilleval/external/skillrouter_matrix.py"><code>src/hermes_skilleval/external/skillrouter_matrix.py</code></a>：新增 frozen plan writer、matrix runner、field views、candidate subset sampling、paired bootstrap CI、held-out splits、SkillRouter/SkillsBench overlap scaffold。</li>
+      <li><a href="../../src/hermes_skilleval/cli.py"><code>src/hermes_skilleval/cli.py</code></a>：新增 <code>external-plan</code> 和 <code>external-matrix</code> 命令。</li>
+      <li><a href="../../tests/test_external_skillrouter_matrix.py"><code>tests/test_external_skillrouter_matrix.py</code></a>：新增 tiny-fixture TDD tests，覆盖冻结计划、CLI smoke、official/diagnostic 分离、stress subset、bootstrap、split 和 overlap scaffold。</li>
+      <li><a href="../../openspec/changes/external-matrix-generalization/specs/external-evaluation-matrix/spec.md"><code>openspec/changes/external-matrix-generalization/specs/external-evaluation-matrix/spec.md</code></a>：定义 PR-3 外部矩阵 contract。</li>
+    </ul>
+
+    <h2>关键边界</h2>
+    <ul>
+      <li>矩阵 runner 只消费 frozen prediction files，不训练、不调阈值、不挖 hard negatives、不跑 embeddings/rerankers/model inference。</li>
+      <li>official SkillRouter Easy/Hard results 通过 PR-2 scorer 生成；candidate-pool stress tests 只在 <code>hermes_diagnostics</code> 中出现。</li>
+      <li>held-out-source metadata 不足时输出 field-level <code>UNAVAILABLE</code>，不伪造 split。</li>
+      <li>SkillRouter 没有显式 negative labels 时不输出 Hermes Negative Hit Rate。</li>
+    </ul>
+
+    <h2>验证计划</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_external_skillrouter_matrix.py</code></li>
+      <li><code>python -m pytest -q</code></li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></li>
+      <li><code>release-check</code>、<code>git diff --check</code>、v0.3 YAML parse、CRLF/new-file line-ending check</li>
+    </ul>
+
+    <h2>剩余风险</h2>
+    <p>本阶段证明的是 deterministic local machinery 和 tiny fixture path；真实 external matrix 仍需要后续提供冻结预测文件和固定 upstream data root。不要把 stress subsets 描述为 official SkillRouter results，也不要把本 PR 说成 live-agent evidence。</p>
+
+    <h2>推荐下一步</h2>
+    <p>完成 PR-3 review 后，再决定是否进入 PR-4 live-agent runtime abstraction；不要在 PR-3 分支追加 live-agent 或 model execution。</p>
+  </main>
+</body>
+</html>

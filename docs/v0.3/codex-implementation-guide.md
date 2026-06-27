@@ -115,6 +115,8 @@ Acceptance:
 Goal: run frozen routers without scored-label tuning and produce external
 routing evidence with deterministic diagnostics.
 
+Human brief: `docs/human-briefs/2026-06-27-external-matrix-generalization.html`
+
 Expected work:
 
 - Generate a frozen evaluation plan before running scored evaluation.
