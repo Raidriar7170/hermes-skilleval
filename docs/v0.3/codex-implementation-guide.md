@@ -150,6 +150,8 @@ Acceptance:
 Goal: build a testable `live-agent.v1` contract without invoking a real Codex
 or SkillsBench process.
 
+Human brief: `docs/human-briefs/2026-06-28-live-agent-runtime-fake.html`
+
 Expected work:
 
 - Add request/result structures and an `AgentRunner` protocol.

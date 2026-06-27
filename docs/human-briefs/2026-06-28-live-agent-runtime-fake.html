@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PR-4 Live-Agent Runtime Fake - Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #64748b;
+      --line: #d6dde6;
+      --band: #f5f7fa;
+      --accent: #0f766e;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 36px 24px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    ul {
+      margin: 8px 0 0;
+      padding-left: 22px;
+    }
+    li {
+      margin: 5px 0;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94em;
+      background: var(--band);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+    .status {
+      display: inline-block;
+      margin: 8px 0 18px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      background: var(--band);
+      font-weight: 600;
+    }
+    .summary {
+      font-size: 18px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 16px 0;
+    }
+    .muted {
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>PR-4: Live-Agent Runtime Fake</h1>
+    <div class="status">状态：needs review</div>
+    <p class="summary">本阶段只新增可测试的 <code>live-agent.v1</code> fake runtime contract，没有接入真实 Codex CLI、SkillsBench 或 live agent 执行。</p>
+
+    <h2>本阶段变化</h2>
+    <ul>
+      <li>新增 <code>AgentRunner</code> protocol、请求/结果 dataclass、trace schema 和 fake runner/verifier。</li>
+      <li>新增 <code>no-skill</code>、<code>routed-skill</code>、<code>oracle-skill</code> condition builder，并保持 prompt hash 一致。</li>
+      <li>新增隔离 workspace 准备与 skill mount 记录，包含 workspace reuse fail-closed、碰撞安全的 mount 文件名和 mounted skill SHA-256。</li>
+      <li>将 agent process exit code、timeout 与 verifier pass/fail 分离，task success 只来自 verifier。</li>
+      <li>记录 <code>MOUNTED_ONLY</code>、<code>READ</code>、<code>DECLARED</code>、<code>UNKNOWN</code> skill-use evidence。</li>
+      <li>新增 malformed event、unknown event、trace key/value secret redaction、log truncation、no-skill leakage 的测试覆盖。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/live_agent_runtime.py</code></li>
+      <li><code>tests/test_live_agent_runtime.py</code></li>
+      <li><code>openspec/changes/live-agent-runtime-fake/</code></li>
+      <li><code>docs/v0.3/codex-implementation-guide.md</code></li>
+    </ul>
+
+    <h2>验证</h2>
+    <p class="muted">最终验证结果以命令输出和 PR 描述为准。本 brief 只做人工审阅索引。</p>
+    <ul>
+      <li><code>python -m pytest -q tests/test_live_agent_runtime.py</code></li>
+      <li><code>python -m pytest -q</code></li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check ...</code></li>
+      <li><code>git diff --check</code>、v0.3 YAML parse、CRLF/new-file line-ending check</li>
+    </ul>
+
+    <h2>边界与限制</h2>
+    <ul>
+      <li>没有修改 Phase 10 deterministic offline replay。</li>
+      <li>没有修改 external matrix、SkillRouter scorer、router promotion 或 release gate。</li>
+      <li>没有运行 live agent，也没有集成真实 Codex CLI 或 SkillsBench。</li>
+      <li>usage/cost 在不可得时保持 <code>null</code>，不做估算。</li>
+    </ul>
+
+    <h2>建议下一步</h2>
+    <p>先完成 PR-4 review；真实 Codex CLI runner、SkillsBench 任务和 release-level live evidence 留到后续 PR。</p>
+  </main>
+</body>
+</html>
