@@ -14,8 +14,9 @@
   matrix output, including run ID, seed, git commit, dirty summary, adapter
   provenance, frozen router configs, field views, tiers, subset sizes, and
   output paths.
-- [x] 2.2 Implement frozen plan data structures, writer, and validation
-  helpers using the PR-1 adapter/provenance surface.
+- [x] 2.2 Implement frozen plan data structures, writer, prediction file
+  fingerprints, adapter provenance drift checks, and validation helpers using
+  the PR-1 adapter/provenance surface.
 - [x] 2.3 Add RED tests for `name_only`, `metadata`, and `full_body` field
   view builders.
 - [x] 2.4 Implement versioned deterministic field view builders for SkillRouter
@@ -23,8 +24,9 @@
 
 ## 3. Official Matrix Scoring
 
-- [x] 3.1 Add RED tests that a matrix run consumes an existing frozen plan and
-  invokes PR-2 official scoring for full Easy/Hard tiers.
+- [x] 3.1 Add RED tests that a matrix run consumes an existing frozen plan,
+  rejects input drift, preserves config IDs, and invokes PR-2 official scoring
+  for full Easy/Hard tiers.
 - [x] 3.2 Implement matrix runner orchestration for frozen prediction files
   without running routers, embeddings, rerankers, models, training, live agents,
   or release promotion.
@@ -45,7 +47,8 @@
 ## 5. Confidence Intervals And Splits
 
 - [x] 5.1 Add RED tests for paired bootstrap confidence intervals using
-  task-level paired metric deltas, seed `20260625`, and deterministic output.
+  task-level paired metric deltas, frozen plan bootstrap settings, seed
+  `20260625`, and deterministic output.
 - [x] 5.2 Implement paired bootstrap confidence interval helpers.
 - [x] 5.3 Add RED tests for held-out-skill split generation using task-skill
   connected components.

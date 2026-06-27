@@ -42,25 +42,31 @@ explicit negative labels exist.
 
 1. **Frozen plan as the matrix entry point.** The matrix runner consumes a
    plan JSON produced by a separate plan command. The plan records run ID,
-   git commit, dirty summary, seed, data provenance, frozen router configs,
-   field views, tiers, stress subset sizes, and output paths. This makes any
-   scored report auditable against preregistered inputs.
+   git commit, dirty summary, seed, data provenance with data file hashes,
+   frozen router configs with prediction file hashes, field views, tiers,
+   stress subset sizes, bootstrap settings, and output paths. The runner
+   recomputes those hashes before scoring and fails closed on drift.
 
 2. **Prediction-input matrix, not live router execution.** PR-3 compares frozen
    routers/configs by consuming ranked prediction files declared in the plan.
    It does not import model libraries or compute embeddings. This keeps the
    change bounded and prevents accidental tuning or inference on final labels.
 
-3. **Official results delegate to PR-2.** Full Easy/Hard official scoring calls
+3. **Config identity is separate from router identity.** Official matrix
+   reports are keyed by `config_id`, defaulting to `{router_id}__{field_view}`
+   when not provided. This preserves field-view ablations for the same router
+   without overwriting reports.
+
+4. **Official results delegate to PR-2.** Full Easy/Hard official scoring calls
    the PR-2 scorer for each frozen router/config and field view. Hermes
    diagnostics wrap those official outputs but do not modify metric formulas.
 
-4. **Stress subsets are diagnostics only.** Candidate subsets use the protocol
+5. **Stress subsets are diagnostics only.** Candidate subsets use the protocol
    rule: include all selected GT skills first, then add distractors sorted by
    `sha256("20260625:" + skill_id)`. If a target size cannot contain the GT
    union, the subset result is field-level `UNAVAILABLE` with a reason.
 
-5. **Split and overlap reports are deterministic scaffolds.** Held-out-skill
+6. **Split and overlap reports are deterministic scaffolds.** Held-out-skill
    split generation builds connected components over task and selected GT skill
    nodes. Held-out-source runs only when enough source metadata exists.
    SkillRouter/SkillsBench overlap reporting starts with exact IDs and

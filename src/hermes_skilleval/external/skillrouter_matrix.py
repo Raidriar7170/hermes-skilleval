@@ -16,6 +16,7 @@ from hermes_skilleval.external.skillrouter import (
 )
 from hermes_skilleval.external.skillrouter_scorer import score_skillrouter_predictions
 from hermes_skilleval.provenance import _reject_sensitive_values
+from hermes_skilleval.release_manifest import sha256_file
 
 
 SEED = 20260625
@@ -37,15 +38,22 @@ def write_skillrouter_matrix_plan(
     tiers: Iterable[str] = ("easy", "hard"),
     stress_candidate_sizes: Iterable[int] = (1000, 10000),
     matrix_output_path: Path | str | None = None,
+    bootstrap_iterations: int = 10000,
+    bootstrap_confidence: float = 0.95,
 ) -> dict[str, Any]:
     router_configs = [_frozen_router_config(router) for router in routers]
     if not router_configs:
         raise ValueError("at least one frozen router config is required")
+    _assert_unique_config_ids(router_configs)
     selected_field_views = [_field_view_name(view) for view in field_views]
     selected_tiers = [str(tier) for tier in tiers]
     selected_sizes = [int(size) for size in stress_candidate_sizes]
     if any(size <= 0 for size in selected_sizes):
         raise ValueError("stress candidate sizes must be positive")
+    if bootstrap_iterations <= 0:
+        raise ValueError("bootstrap iterations must be positive")
+    if not 0.0 < bootstrap_confidence < 1.0:
+        raise ValueError("bootstrap confidence must be between 0 and 1")
 
     adapter = SkillRouterAdapter(
         data_root=data_root,
@@ -70,6 +78,10 @@ def write_skillrouter_matrix_plan(
         "field_view_builder_version": FIELD_VIEW_VERSION,
         "tiers": selected_tiers,
         "stress_candidate_sizes": selected_sizes,
+        "bootstrap": {
+            "iterations": bootstrap_iterations,
+            "confidence": bootstrap_confidence,
+        },
         "matrix_output_path": str(matrix_output_path) if matrix_output_path else None,
         "scope_guards": {
             "prediction_inputs_only": True,
@@ -98,6 +110,8 @@ def run_skillrouter_matrix(*, plan_path: Path | str, output_path: Path | str) ->
     plan = json.loads(plan_file.read_text(encoding="utf-8"))
     if plan.get("schema_version") != PLAN_SCHEMA:
         raise ValueError("unsupported frozen plan schema")
+    _validate_frozen_plan(plan)
+    _verify_matrix_output_path(plan, output_path)
     data_root = Path(_non_empty(plan.get("data_root"), "data_root"))
     tiers = tuple(plan.get("tiers") or ("easy", "hard"))
     adapter = SkillRouterAdapter(
@@ -106,12 +120,15 @@ def run_skillrouter_matrix(*, plan_path: Path | str, output_path: Path | str) ->
         license_note=plan["adapter_provenance"]["license_note"],
         tiers=tiers,
     )
+    _verify_adapter_provenance(adapter, plan)
+    _verify_frozen_predictions(plan)
 
     official: dict[str, Any] = {}
     for router in plan["frozen_routers"]:
-        router_id = router["router_id"]
-        official[router_id] = {
-            "router_id": router_id,
+        config_id = router["config_id"]
+        official[config_id] = {
+            "config_id": config_id,
+            "router_id": router["router_id"],
             "field_view": router["field_view"],
             "version": router.get("version"),
             "score": score_skillrouter_predictions(
@@ -130,12 +147,13 @@ def run_skillrouter_matrix(*, plan_path: Path | str, output_path: Path | str) ->
         "plan_path": str(plan_file),
         "seed": plan["seed"],
         "official": {
-            router_id: router_report["score"] | {
+            config_id: router_report["score"] | {
+                "config_id": router_report["config_id"],
                 "router_id": router_report["router_id"],
                 "field_view": router_report["field_view"],
                 "version": router_report["version"],
             }
-            for router_id, router_report in official.items()
+            for config_id, router_report in official.items()
         },
         "hermes_diagnostics": diagnostics,
     }
@@ -431,12 +449,14 @@ def _hermes_diagnostics(
                 for tier in plan["tiers"]:
                     rows_a = official[first]["score"]["by_tier"][tier]["tasks"]
                     rows_b = official[second]["score"]["by_tier"][tier]["tasks"]
+                    bootstrap = plan.get("bootstrap", {})
                     ci[f"{first}__minus__{second}__{tier}__MRR@10"] = paired_bootstrap_ci(
                         rows_a,
                         rows_b,
                         metric="MRR@10",
-                        iterations=200,
+                        iterations=int(bootstrap.get("iterations", 10000)),
                         seed=int(plan["seed"]),
+                        confidence=float(bootstrap.get("confidence", 0.95)),
                     )
 
     tasks = adapter.load_tasks()
@@ -492,12 +512,16 @@ def _frozen_router_config(router: dict[str, Any]) -> dict[str, Any]:
     router_id = _non_empty(router.get("router_id"), "router_id")
     field_view = _field_view_name(router.get("field_view", "full_body"))
     predictions_path = _non_empty(router.get("predictions_path"), "predictions_path")
-    if not Path(predictions_path).exists():
+    prediction_file = Path(predictions_path)
+    if not prediction_file.exists():
         raise ValueError(f"predictions file does not exist: {predictions_path}")
+    config_id = router.get("config_id") or f"{router_id}__{field_view}"
     config = {
+        "config_id": _non_empty(config_id, "config_id"),
         "router_id": router_id,
         "field_view": field_view,
         "predictions_path": predictions_path,
+        "prediction_file": _file_fingerprint(prediction_file),
         "version": router.get("version", "UNSPECIFIED"),
         "top_k": router.get("top_k"),
         "threshold": router.get("threshold"),
@@ -505,6 +529,85 @@ def _frozen_router_config(router: dict[str, Any]) -> dict[str, Any]:
     }
     _reject_sensitive_values(config)
     return config
+
+
+def _assert_unique_config_ids(router_configs: list[dict[str, Any]]) -> None:
+    seen = set()
+    for config in router_configs:
+        config_id = config["config_id"]
+        if config_id in seen:
+            raise ValueError(f"duplicate config_id: {config_id}")
+        seen.add(config_id)
+
+
+def _validate_frozen_plan(plan: dict[str, Any]) -> None:
+    _assert_unique_config_ids(plan.get("frozen_routers", []))
+    bootstrap = plan.get("bootstrap")
+    if not isinstance(bootstrap, dict):
+        raise ValueError("bootstrap settings must be frozen in the plan")
+    iterations = bootstrap.get("iterations")
+    confidence = bootstrap.get("confidence")
+    if not isinstance(iterations, int) or iterations <= 0:
+        raise ValueError("bootstrap settings must include positive iterations")
+    if not isinstance(confidence, (int, float)) or not 0.0 < float(confidence) < 1.0:
+        raise ValueError("bootstrap settings must include confidence between 0 and 1")
+
+
+def _verify_matrix_output_path(plan: dict[str, Any], output_path: Path | str) -> None:
+    expected = plan.get("matrix_output_path")
+    if expected and str(output_path) != expected:
+        raise ValueError(
+            "matrix output path does not match frozen plan: "
+            f"expected {expected}, got {output_path}"
+        )
+
+
+def _verify_adapter_provenance(
+    adapter: SkillRouterAdapter,
+    plan: dict[str, Any],
+) -> None:
+    validation = adapter.validate()
+    if validation["status"] != "PASS":
+        raise ValueError("external validation failed")
+    current = _adapter_file_fingerprints(adapter.provenance(validation))
+    frozen = _adapter_file_fingerprints(plan["adapter_provenance"])
+    if current != frozen:
+        raise ValueError("adapter provenance changed since frozen plan")
+
+
+def _verify_frozen_predictions(plan: dict[str, Any]) -> None:
+    for router in plan["frozen_routers"]:
+        current = _file_fingerprint(Path(router["predictions_path"]))
+        frozen = router.get("prediction_file")
+        if current != frozen:
+            raise ValueError(
+                "prediction file changed since frozen plan: "
+                f"{router['config_id']}"
+            )
+
+
+def _adapter_file_fingerprints(provenance: dict[str, Any]) -> list[dict[str, Any]]:
+    return sorted(
+        (
+            {
+                "path": record.get("path"),
+                "role": record.get("role"),
+                "size_bytes": record.get("size_bytes"),
+                "sha256": record.get("sha256"),
+                "record_count": record.get("record_count"),
+            }
+            for record in provenance.get("files", [])
+        ),
+        key=lambda record: (str(record["role"]), str(record["path"])),
+    )
+
+
+def _file_fingerprint(path: Path) -> dict[str, Any]:
+    return {
+        "path": str(path),
+        "size_bytes": path.stat().st_size,
+        "sha256": sha256_file(path),
+    }
 
 
 def _field_view_name(view: Any) -> str:

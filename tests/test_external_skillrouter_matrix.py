@@ -45,6 +45,7 @@ def test_skillrouter_matrix_plan_freezes_inputs_before_scoring(tmp_path):
         tiers=("easy", "hard"),
         stress_candidate_sizes=(1, 3, 10),
         matrix_output_path=matrix_output,
+        bootstrap_iterations=200,
     )
 
     assert plan_path.exists()
@@ -57,11 +58,16 @@ def test_skillrouter_matrix_plan_freezes_inputs_before_scoring(tmp_path):
     assert written["benchmark_id"] == "skillrouter"
     assert written["adapter_provenance"]["upstream_ref"] == "fixture-ref"
     assert written["adapter_provenance"]["license_note"] == "fixture-only"
+    assert written["frozen_routers"][0]["config_id"] == "baseline-minilm__name_only"
     assert written["frozen_routers"][0]["router_id"] == "baseline-minilm"
     assert written["frozen_routers"][0]["field_view"] == "name_only"
+    assert written["frozen_routers"][0]["prediction_file"]["size_bytes"] > 0
+    assert written["frozen_routers"][0]["prediction_file"]["sha256"]
     assert written["field_views"] == ["name_only", "metadata", "full_body"]
     assert written["tiers"] == ["easy", "hard"]
     assert written["stress_candidate_sizes"] == [1, 3, 10]
+    assert written["bootstrap"]["iterations"] == 200
+    assert written["bootstrap"]["confidence"] == 0.95
     assert written["matrix_output_path"] == str(matrix_output)
     assert written["git"]["commit"]
     assert "dirty" in written["git"]
@@ -111,6 +117,7 @@ def test_skillrouter_matrix_uses_plan_and_separates_official_from_diagnostics(tm
         ],
         stress_candidate_sizes=(1, 3),
         matrix_output_path=output_path,
+        bootstrap_iterations=200,
     )
 
     report = run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
@@ -118,9 +125,12 @@ def test_skillrouter_matrix_uses_plan_and_separates_official_from_diagnostics(tm
     assert output_path.exists()
     assert report["schema_version"] == "v0.3.skillrouter-matrix-report.v1"
     assert report["plan_path"] == str(plan_path)
-    assert set(report["official"]) == {"baseline-minilm", "finetuned-embedding"}
-    easy = report["official"]["baseline-minilm"]["by_tier"]["easy"]
-    hard = report["official"]["baseline-minilm"]["by_tier"]["hard"]
+    assert set(report["official"]) == {
+        "baseline-minilm__name_only",
+        "finetuned-embedding__full_body",
+    }
+    easy = report["official"]["baseline-minilm__name_only"]["by_tier"]["easy"]
+    hard = report["official"]["baseline-minilm__name_only"]["by_tier"]["hard"]
     assert easy["aggregates"]["all"]["task_count"] == 2
     assert hard["aggregates"]["all"]["task_count"] == 1
     assert "hermes_diagnostics" in report
@@ -163,19 +173,23 @@ def test_skillrouter_matrix_emits_pairwise_ci_for_all_router_pairs(tmp_path):
             },
         ],
         matrix_output_path=output_path,
+        bootstrap_iterations=200,
     )
 
     report = run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
 
     ci_keys = report["hermes_diagnostics"]["paired_bootstrap_confidence_intervals"]
     assert {
-        "baseline-minilm__minus__finetuned-embedding__easy__MRR@10",
-        "baseline-minilm__minus__lexical-control__easy__MRR@10",
-        "finetuned-embedding__minus__lexical-control__easy__MRR@10",
-        "baseline-minilm__minus__finetuned-embedding__hard__MRR@10",
-        "baseline-minilm__minus__lexical-control__hard__MRR@10",
-        "finetuned-embedding__minus__lexical-control__hard__MRR@10",
+        "baseline-minilm__name_only__minus__finetuned-embedding__metadata__easy__MRR@10",
+        "baseline-minilm__name_only__minus__lexical-control__full_body__easy__MRR@10",
+        "finetuned-embedding__metadata__minus__lexical-control__full_body__easy__MRR@10",
+        "baseline-minilm__name_only__minus__finetuned-embedding__metadata__hard__MRR@10",
+        "baseline-minilm__name_only__minus__lexical-control__full_body__hard__MRR@10",
+        "finetuned-embedding__metadata__minus__lexical-control__full_body__hard__MRR@10",
     } <= set(ci_keys)
+    assert ci_keys[
+        "baseline-minilm__name_only__minus__finetuned-embedding__metadata__easy__MRR@10"
+    ]["iterations"] == 200
 
 
 def test_skillrouter_matrix_refuses_missing_plan(tmp_path):
@@ -188,6 +202,210 @@ def test_skillrouter_matrix_refuses_missing_plan(tmp_path):
         assert "frozen plan" in str(exc)
     else:
         raise AssertionError("missing frozen plan should fail closed")
+
+
+def test_skillrouter_matrix_fails_when_predictions_change_after_plan(tmp_path):
+    root, plan_path, output_path = _frozen_fixture_plan(tmp_path)
+    predictions = root / "predictions.json"
+    payload = json.loads(predictions.read_text(encoding="utf-8"))
+    payload["task-single-easy"] = ["gt/browser-login"]
+    predictions.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+    try:
+        run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
+    except ValueError as exc:
+        assert "prediction file changed" in str(exc)
+    else:
+        raise AssertionError("mutated predictions must fail closed")
+
+
+def test_skillrouter_matrix_fails_when_relevance_changes_after_plan(tmp_path):
+    root, plan_path, output_path = _frozen_fixture_plan(tmp_path)
+    relevance = root / "relevance.json"
+    payload = json.loads(relevance.read_text(encoding="utf-8"))
+    payload["task-single-easy"]["relevance"]["gt/browser-login"] = 2
+    relevance.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+    try:
+        run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
+    except ValueError as exc:
+        assert "adapter provenance changed" in str(exc)
+    else:
+        raise AssertionError("mutated relevance must fail closed")
+
+
+def test_skillrouter_matrix_fails_when_skill_shard_changes_after_plan(tmp_path):
+    root, plan_path, output_path = _frozen_fixture_plan(tmp_path)
+    with gzip.open(root / "easy" / "shard-000.jsonl.gz", "at", encoding="utf-8") as file:
+        file.write(
+            json.dumps(
+                {
+                    "id": "gt/new-distractor",
+                    "name": "New Distractor",
+                    "description": "Changes frozen easy pool",
+                    "body": "This should invalidate the frozen plan.",
+                    "tier": "easy",
+                },
+                sort_keys=True,
+            )
+            + "\n"
+        )
+
+    try:
+        run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
+    except ValueError as exc:
+        assert "adapter provenance changed" in str(exc)
+    else:
+        raise AssertionError("mutated shard must fail closed")
+
+
+def test_skillrouter_matrix_passes_when_frozen_inputs_are_unchanged(tmp_path):
+    _, plan_path, output_path = _frozen_fixture_plan(tmp_path)
+
+    report = run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
+
+    assert output_path.exists()
+    assert report["official"]["baseline-minilm__name_only"]["router_id"] == (
+        "baseline-minilm"
+    )
+
+
+def test_skillrouter_matrix_output_must_match_frozen_plan(tmp_path):
+    _, plan_path, _ = _frozen_fixture_plan(tmp_path)
+
+    try:
+        run_skillrouter_matrix(
+            plan_path=plan_path,
+            output_path=tmp_path / "different.json",
+        )
+    except ValueError as exc:
+        assert "matrix output path" in str(exc)
+    else:
+        raise AssertionError("output path mismatch must fail closed")
+
+
+def test_skillrouter_matrix_same_router_field_views_get_distinct_config_ids(tmp_path):
+    plan_path = tmp_path / "plan.json"
+    output_path = tmp_path / "matrix.json"
+    write_skillrouter_matrix_plan(
+        data_root=FIXTURE,
+        output_path=plan_path,
+        upstream_ref="fixture-ref",
+        license_note="fixture-only",
+        run_id="matrix-run",
+        routers=[
+            {
+                "router_id": "baseline-minilm",
+                "field_view": "name_only",
+                "predictions_path": str(PREDICTIONS),
+            },
+            {
+                "router_id": "baseline-minilm",
+                "field_view": "metadata",
+                "predictions_path": str(PREDICTIONS),
+            },
+            {
+                "router_id": "baseline-minilm",
+                "field_view": "full_body",
+                "predictions_path": str(PREDICTIONS),
+            },
+        ],
+        matrix_output_path=output_path,
+        bootstrap_iterations=200,
+    )
+
+    report = run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
+
+    assert set(report["official"]) == {
+        "baseline-minilm__name_only",
+        "baseline-minilm__metadata",
+        "baseline-minilm__full_body",
+    }
+    for config_id, config_report in report["official"].items():
+        assert config_report["router_id"] == "baseline-minilm"
+        assert config_report["field_view"] in config_id
+
+
+def test_skillrouter_matrix_rejects_duplicate_config_id(tmp_path):
+    try:
+        write_skillrouter_matrix_plan(
+            data_root=FIXTURE,
+            output_path=tmp_path / "plan.json",
+            upstream_ref="fixture-ref",
+            license_note="fixture-only",
+            run_id="matrix-run",
+            routers=[
+                {
+                    "config_id": "duplicate",
+                    "router_id": "baseline-minilm",
+                    "field_view": "name_only",
+                    "predictions_path": str(PREDICTIONS),
+                },
+                {
+                    "config_id": "duplicate",
+                    "router_id": "baseline-minilm",
+                    "field_view": "metadata",
+                    "predictions_path": str(PREDICTIONS),
+                },
+            ],
+        )
+    except ValueError as exc:
+        assert "duplicate config_id" in str(exc)
+    else:
+        raise AssertionError("duplicate config_id must fail closed")
+
+
+def test_skillrouter_matrix_rejects_duplicate_config_id_in_existing_plan(tmp_path):
+    _, plan_path, output_path = _frozen_fixture_plan(tmp_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    duplicate = dict(plan["frozen_routers"][0])
+    duplicate["field_view"] = "metadata"
+    plan["frozen_routers"].append(duplicate)
+    plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n")
+
+    try:
+        run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
+    except ValueError as exc:
+        assert "duplicate config_id" in str(exc)
+    else:
+        raise AssertionError("duplicate config_id in plan must fail closed")
+
+
+def test_skillrouter_matrix_requires_bootstrap_settings_in_existing_plan(tmp_path):
+    _, plan_path, output_path = _frozen_fixture_plan(tmp_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    del plan["bootstrap"]
+    plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n")
+
+    try:
+        run_skillrouter_matrix(plan_path=plan_path, output_path=output_path)
+    except ValueError as exc:
+        assert "bootstrap settings" in str(exc)
+    else:
+        raise AssertionError("missing bootstrap settings must fail closed")
+
+
+def test_skillrouter_matrix_default_bootstrap_iterations_are_formal(tmp_path):
+    plan_path = tmp_path / "plan.json"
+    write_skillrouter_matrix_plan(
+        data_root=FIXTURE,
+        output_path=plan_path,
+        upstream_ref="fixture-ref",
+        license_note="fixture-only",
+        run_id="matrix-run",
+        routers=[
+            {
+                "router_id": "baseline-minilm",
+                "field_view": "name_only",
+                "predictions_path": str(PREDICTIONS),
+            }
+        ],
+    )
+
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+
+    assert plan["bootstrap"]["iterations"] == 10000
+    assert plan["bootstrap"]["confidence"] == 0.95
 
 
 def test_candidate_subset_includes_gt_before_deterministic_distractors():
@@ -448,6 +666,8 @@ def test_cli_external_plan_and_matrix_write_outputs(tmp_path):
             "1",
             "--stress-candidate-size",
             "3",
+            "--bootstrap-iterations",
+            "200",
         ]
     )
     assert plan_exit == 0
@@ -465,4 +685,32 @@ def test_cli_external_plan_and_matrix_write_outputs(tmp_path):
     assert matrix_exit == 0
 
     report = json.loads(matrix_path.read_text(encoding="utf-8"))
-    assert set(report["official"]) == {"baseline-minilm", "finetuned-embedding"}
+    assert set(report["official"]) == {
+        "baseline-minilm__name_only",
+        "finetuned-embedding__full_body",
+    }
+
+
+def _frozen_fixture_plan(tmp_path: Path) -> tuple[Path, Path, Path]:
+    root = tmp_path / "skillrouter_eval_core"
+    shutil.copytree(FIXTURE, root)
+    plan_path = tmp_path / "plan.json"
+    output_path = tmp_path / "matrix.json"
+    write_skillrouter_matrix_plan(
+        data_root=root,
+        output_path=plan_path,
+        upstream_ref="fixture-ref",
+        license_note="fixture-only",
+        run_id="matrix-run",
+        routers=[
+            {
+                "router_id": "baseline-minilm",
+                "field_view": "name_only",
+                "predictions_path": str(root / "predictions.json"),
+            }
+        ],
+        stress_candidate_sizes=(3,),
+        matrix_output_path=output_path,
+        bootstrap_iterations=200,
+    )
+    return root, plan_path, output_path

@@ -30,7 +30,7 @@
 
     <h2>本阶段改动</h2>
     <ul>
-      <li><a href="../../src/hermes_skilleval/external/skillrouter_matrix.py"><code>src/hermes_skilleval/external/skillrouter_matrix.py</code></a>：新增 frozen plan writer、matrix runner、field views、candidate subset sampling、paired bootstrap CI、held-out splits、SkillRouter/SkillsBench overlap scaffold。</li>
+      <li><a href="../../src/hermes_skilleval/external/skillrouter_matrix.py"><code>src/hermes_skilleval/external/skillrouter_matrix.py</code></a>：新增 frozen plan writer、matrix runner、field views、candidate subset sampling、paired bootstrap CI、held-out splits、SkillRouter/SkillsBench overlap scaffold，并在 matrix run 时校验 frozen prediction/data hashes。</li>
       <li><a href="../../src/hermes_skilleval/cli.py"><code>src/hermes_skilleval/cli.py</code></a>：新增 <code>external-plan</code> 和 <code>external-matrix</code> 命令。</li>
       <li><a href="../../tests/test_external_skillrouter_matrix.py"><code>tests/test_external_skillrouter_matrix.py</code></a>：新增 tiny-fixture TDD tests，覆盖冻结计划、CLI smoke、official/diagnostic 分离、stress subset、bootstrap、split 和 overlap scaffold。</li>
       <li><a href="../../openspec/changes/external-matrix-generalization/specs/external-evaluation-matrix/spec.md"><code>openspec/changes/external-matrix-generalization/specs/external-evaluation-matrix/spec.md</code></a>：定义 PR-3 外部矩阵 contract。</li>
@@ -39,7 +39,7 @@
     <h2>关键边界</h2>
     <ul>
       <li>矩阵 runner 只消费 frozen prediction files，不训练、不调阈值、不挖 hard negatives、不跑 embeddings/rerankers/model inference。</li>
-      <li>official SkillRouter Easy/Hard results 通过 PR-2 scorer 生成；candidate-pool stress tests 只在 <code>hermes_diagnostics</code> 中出现。</li>
+      <li>official SkillRouter Easy/Hard results 通过 PR-2 scorer 生成，并按 frozen <code>config_id</code> keyed；candidate-pool stress tests 只在 <code>hermes_diagnostics</code> 中出现。</li>
       <li>held-out-source metadata 不足时输出 field-level <code>UNAVAILABLE</code>，不伪造 split。</li>
       <li>SkillRouter 没有显式 negative labels 时不输出 Hermes Negative Hit Rate。</li>
     </ul>

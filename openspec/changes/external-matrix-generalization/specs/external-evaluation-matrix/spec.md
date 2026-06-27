@@ -12,12 +12,20 @@ any scored external matrix report.
   summary, benchmark ID, data root provenance, upstream reference, license
   note, frozen router configs, field views, tiers, candidate subset sizes, and
   output paths
+- **AND** each frozen router config MUST include a unique `config_id` plus
+  prediction file size and SHA-256 metadata
+- **AND** bootstrap confidence interval iteration count and confidence level
+  MUST be frozen in the plan
 - **AND** the plan MUST be written before any scored matrix output is written
 
 #### Scenario: Matrix requires existing plan
 
 - **WHEN** a caller runs a scored external matrix
 - **THEN** the runner MUST consume an existing frozen plan
+- **AND** it MUST fail closed if prediction file hashes differ from the plan
+- **AND** it MUST fail closed if adapter data file hashes differ from the plan
+- **AND** it MUST fail closed if a requested output path differs from the
+  frozen matrix output path recorded in the plan
 - **AND** it MUST NOT rewrite router IDs, thresholds, prediction paths, field
   views, tiers, or scoring dimensions from scored-label results
 
@@ -30,7 +38,8 @@ preregistered ranked prediction inputs.
 
 - **WHEN** the matrix runner evaluates frozen router configs
 - **THEN** each config MUST identify a router ID, field view, prediction file,
-  top-k or threshold metadata when present, and version metadata
+  unique config ID, top-k or threshold metadata when present, and version
+  metadata
 - **AND** the runner MUST NOT train, tune thresholds, mine hard negatives, run
   embeddings, run rerankers, run model inference, run live agents, promote
   routers, or promote release artifacts
@@ -61,6 +70,8 @@ diagnostics.
   router/config and tier
 - **AND** official reports MUST include Easy and Hard scoring over full tier
   candidate pools
+- **AND** official reports MUST be keyed by frozen `config_id`, while
+  preserving `router_id` and `field_view` inside each report
 - **AND** missing task predictions MUST follow PR-2 scorer parity semantics
 
 #### Scenario: Emit stress diagnostics separately

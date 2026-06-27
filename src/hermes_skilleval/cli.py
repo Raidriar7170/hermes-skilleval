@@ -334,7 +334,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--router-config",
         action="append",
         required=True,
-        help="frozen router config as router_id:field_view:predictions_path",
+        help=(
+            "frozen router config as router_id:field_view:predictions_path "
+            "or config_id:router_id:field_view:predictions_path"
+        ),
     )
     external_plan_parser.add_argument(
         "--field-view",
@@ -355,6 +358,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=[],
     )
     external_plan_parser.add_argument("--matrix-output", default=None)
+    external_plan_parser.add_argument("--bootstrap-iterations", type=int, default=10000)
+    external_plan_parser.add_argument("--bootstrap-confidence", type=float, default=0.95)
     external_plan_parser.set_defaults(handler=_run_external_plan)
 
     external_matrix_parser = subparsers.add_parser(
@@ -1015,6 +1020,8 @@ def _run_external_plan(args: argparse.Namespace) -> None:
         if args.stress_candidate_size
         else (1000, 10000),
         matrix_output_path=args.matrix_output,
+        bootstrap_iterations=args.bootstrap_iterations,
+        bootstrap_confidence=args.bootstrap_confidence,
     )
     print(
         "External matrix plan "
@@ -1035,18 +1042,29 @@ def _run_external_matrix(args: argparse.Namespace) -> None:
 
 
 def _parse_external_router_config(value: str) -> dict[str, str]:
-    parts = value.split(":", 2)
-    if len(parts) != 3 or not all(part.strip() for part in parts):
+    parts = value.split(":", 3)
+    if len(parts) == 3 and all(part.strip() for part in parts):
+        router_id, field_view, predictions_path = parts
+        return {
+            "router_id": router_id,
+            "field_view": field_view,
+            "predictions_path": predictions_path,
+            "version": "frozen-cli",
+        }
+    if len(parts) == 4 and all(part.strip() for part in parts):
+        config_id, router_id, field_view, predictions_path = parts
+        return {
+            "config_id": config_id,
+            "router_id": router_id,
+            "field_view": field_view,
+            "predictions_path": predictions_path,
+            "version": "frozen-cli",
+        }
+    else:
         raise ValueError(
-            "--router-config must use router_id:field_view:predictions_path"
+            "--router-config must use router_id:field_view:predictions_path "
+            "or config_id:router_id:field_view:predictions_path"
         )
-    router_id, field_view, predictions_path = parts
-    return {
-        "router_id": router_id,
-        "field_view": field_view,
-        "predictions_path": predictions_path,
-        "version": "frozen-cli",
-    }
 
 
 def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:
