@@ -80,6 +80,7 @@ class AgentRequest:
         timeout_seconds: int,
         metadata: dict[str, Any] | None = None,
     ) -> "AgentRequest":
+        _validate_workspace_matches_condition(condition, workspace)
         return cls(
             run_id=run_id,
             task_id=condition.task_id,
@@ -282,6 +283,23 @@ def prepare_live_agent_workspace(
     )
 
 
+def _validate_workspace_matches_condition(
+    condition: AgentCondition,
+    workspace: WorkspaceState,
+) -> None:
+    condition_skill_ids = [skill.skill_id for skill in condition.mounted_skills]
+    workspace_skill_ids = [
+        str(record.get("skill_id", ""))
+        for record in workspace.mounted_skills
+    ]
+    if condition_skill_ids != workspace_skill_ids:
+        raise ValueError(
+            "workspace mounted skill IDs must match condition mounted skill IDs "
+            f"in order: condition={condition_skill_ids!r}, "
+            f"workspace={workspace_skill_ids!r}"
+        )
+
+
 def _mounted_skill_records(
     mounted_skills: list[LiveAgentSkill],
 ) -> list[dict[str, Any]]:
@@ -409,7 +427,10 @@ def _redact_value(value: Any) -> Any:
     if isinstance(value, str):
         return _redact(value)
     if isinstance(value, dict):
-        return {key: _redact_value(item) for key, item in value.items()}
+        return {
+            _redact(str(key)): _redact_value(item)
+            for key, item in value.items()
+        }
     if isinstance(value, list):
         return [_redact_value(item) for item in value]
     return value

@@ -82,6 +82,7 @@
     <ul>
       <li>新增 <code>AgentRunner</code> protocol、请求/结果 dataclass、trace schema 和 fake runner/verifier。</li>
       <li>新增 <code>no-skill</code>、<code>routed-skill</code>、<code>oracle-skill</code> condition builder，并保持 prompt hash 一致。</li>
+      <li>请求构造会校验 condition 与 workspace 的 mounted skill ID 有序一致，避免 routed/oracle 或 no-skill workspace 注入错配。</li>
       <li>新增隔离 workspace 准备与 skill mount 记录，包含 workspace reuse fail-closed、碰撞安全的 mount 文件名和 mounted skill SHA-256。</li>
       <li>将 agent process exit code、timeout 与 verifier pass/fail 分离，task success 只来自 verifier。</li>
       <li>记录 <code>MOUNTED_ONLY</code>、<code>READ</code>、<code>DECLARED</code>、<code>UNKNOWN</code> skill-use evidence。</li>
@@ -112,6 +113,7 @@
       <li>没有修改 external matrix、SkillRouter scorer、router promotion 或 release gate。</li>
       <li>没有运行 live agent，也没有集成真实 Codex CLI 或 SkillsBench。</li>
       <li>usage/cost 在不可得时保持 <code>null</code>，不做估算。</li>
+      <li>正式 JSON Schema 校验延后到 PR-5，在真实 Codex trace 进入证据面之前补齐。</li>
     </ul>
 
     <h2>建议下一步</h2>

@@ -14,6 +14,13 @@ real Codex CLI or SkillsBench process.
   outcome, trace schema version, usage, and cost
 - **AND** usage and cost MUST be `null` when unavailable
 
+#### Scenario: Reject condition and workspace mismatch
+
+- **WHEN** a request is built from a condition and prepared workspace
+- **THEN** the ordered condition mounted skill IDs MUST match the ordered
+  workspace mounted skill IDs
+- **AND** request construction MUST fail closed when they differ
+
 ### Requirement: Build skill-injection conditions
 
 The system SHALL build `no-skill`, `routed-skill`, and `oracle-skill`

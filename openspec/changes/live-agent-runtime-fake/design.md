@@ -15,6 +15,8 @@ running Codex CLI, SkillsBench, networked services, or live agents.
   `live-agent.v1`.
 - Build `no-skill`, `routed-skill`, and `oracle-skill` conditions from the same
   task prompt, changing only skill injection metadata.
+- Fail closed when a request is built from a condition and workspace whose
+  mounted skill IDs differ in content or order.
 - Prepare fresh isolated workspaces and fail closed on workspace reuse.
 - Mount benchmark skills into workspace-local files with stable hashes.
 - Provide fake runner and fake verifier implementations for CI-only tests.
@@ -43,7 +45,9 @@ running Codex CLI, SkillsBench, networked services, or live agents.
 
 3. **Condition builder freezes prompt equality.** All conditions carry the
    same prompt text and prompt hash. Skill injection differs only through
-   mounted skill IDs and condition metadata.
+   mounted skill IDs and condition metadata. Request construction also checks
+   ordered condition/workspace mounted skill IDs so routed top-k order remains
+   auditable.
 
 4. **Workspace preparation is fail-closed.** A run workspace must be absent
    before preparation. Reusing an existing workspace raises an error so final
@@ -65,10 +69,13 @@ running Codex CLI, SkillsBench, networked services, or live agents.
   10 modules and add tests only under the new live-agent runtime surface.
 - **Risk: secrets enter traces.** → Mitigation: central redaction helper covers
   request text, verifier details, event text, stdout/stderr, and final messages
-  in fake traces, including trace-visible object keys.
+  in fake traces, including nested trace-visible object keys.
 - **Risk: local paths enter portable evidence.** → Mitigation: trace
   serialization records the workspace name by default rather than the absolute
   temporary directory path.
+- **Risk: fake schema hardens too early.** → Mitigation: formal JSON Schema
+  validation is deferred to PR-5 before real Codex traces are produced; PR-4
+  keeps the trace shape deterministic and unit-tested.
 
 ## Migration Plan
 
@@ -80,3 +87,5 @@ OpenSpec change, and Human Brief.
 
 - Real Codex CLI event parsing, sandbox flags, SkillsBench task selection, and
   evidence-pack validation are explicitly deferred to later PRs.
+- Formal JSON Schema validation for real Codex trace artifacts is deferred to
+  PR-5 before any real live-agent traces are accepted.

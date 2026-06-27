@@ -98,6 +98,116 @@ def test_no_skill_condition_rejects_skill_leakage():
         )
 
 
+def test_routed_condition_rejects_oracle_workspace(tmp_path):
+    routed = build_condition(
+        task_id="task-1",
+        prompt="Do the task",
+        condition="routed-skill",
+        routed_skills=[_skill("skill/routed")],
+    )
+    oracle = build_condition(
+        task_id="task-1",
+        prompt="Do the task",
+        condition="oracle-skill",
+        oracle_skills=[_skill("skill/oracle")],
+    )
+    workspace = prepare_live_agent_workspace(
+        base_dir=tmp_path,
+        run_id="run-routed-oracle-mismatch",
+        mounted_skills=oracle.mounted_skills,
+    )
+
+    with pytest.raises(ValueError, match="mounted skill IDs"):
+        AgentRequest.from_condition(
+            run_id="run-routed-oracle-mismatch",
+            condition=routed,
+            workspace=workspace,
+            timeout_seconds=10,
+        )
+
+
+def test_oracle_condition_rejects_routed_workspace(tmp_path):
+    routed = build_condition(
+        task_id="task-1",
+        prompt="Do the task",
+        condition="routed-skill",
+        routed_skills=[_skill("skill/routed")],
+    )
+    oracle = build_condition(
+        task_id="task-1",
+        prompt="Do the task",
+        condition="oracle-skill",
+        oracle_skills=[_skill("skill/oracle")],
+    )
+    workspace = prepare_live_agent_workspace(
+        base_dir=tmp_path,
+        run_id="run-oracle-routed-mismatch",
+        mounted_skills=routed.mounted_skills,
+    )
+
+    with pytest.raises(ValueError, match="mounted skill IDs"):
+        AgentRequest.from_condition(
+            run_id="run-oracle-routed-mismatch",
+            condition=oracle,
+            workspace=workspace,
+            timeout_seconds=10,
+        )
+
+
+def test_no_skill_condition_rejects_non_empty_workspace_before_execution(tmp_path):
+    condition = build_condition(
+        task_id="task-1",
+        prompt="Do the task",
+        condition="no-skill",
+    )
+    workspace = prepare_live_agent_workspace(
+        base_dir=tmp_path,
+        run_id="run-no-skill-workspace-leak",
+        mounted_skills=[_skill("skill/leaked")],
+    )
+
+    with pytest.raises(ValueError, match="mounted skill IDs"):
+        AgentRequest.from_condition(
+            run_id="run-no-skill-workspace-leak",
+            condition=condition,
+            workspace=workspace,
+            timeout_seconds=10,
+        )
+
+
+def test_matching_condition_workspace_builds_and_executes(tmp_path):
+    condition = build_condition(
+        task_id="task-1",
+        prompt="Do the task",
+        condition="routed-skill",
+        routed_skills=[_skill("skill/a"), _skill("skill/b")],
+    )
+    workspace = prepare_live_agent_workspace(
+        base_dir=tmp_path,
+        run_id="run-match",
+        mounted_skills=condition.mounted_skills,
+    )
+
+    request = AgentRequest.from_condition(
+        run_id="run-match",
+        condition=condition,
+        workspace=workspace,
+        timeout_seconds=10,
+    )
+    result = execute_live_agent(
+        request=request,
+        runner=FakeAgentRunner(events=[{"type": "final", "message": "ok"}]),
+        verifier=FakeVerifier(pass_=True),
+    )
+
+    assert [record["skill_id"] for record in request.mounted_skills] == [
+        "skill/a",
+        "skill/b",
+    ]
+    assert result.task_success is True
+    assert condition.prompt_hash == request.prompt_hash
+
+
 def test_workspace_preparation_mounts_skills_and_rejects_reuse(tmp_path):
     skill = _skill()
     workspace = prepare_live_agent_workspace(
@@ -389,6 +499,48 @@ def test_sensitive_skill_ids_are_redacted_from_trace_events_and_skill_use(tmp_pa
     serialized = json.dumps(result.to_trace())
     assert skill_id not in serialized
     assert "leaked-token" not in serialized
+    assert "[REDACTED]" in serialized
+
+
+def test_secret_like_dict_keys_are_recursively_redacted_from_trace(tmp_path):
+    request = _request(
+        tmp_path,
+        run_id="run-secret-keys",
+        metadata={
+            "sk-1234567890abcdef": "metadata-key",
+            "nested": {"password=SECRET": "nested-key"},
+        },
+    )
+
+    result = execute_live_agent(
+        request=request,
+        runner=FakeAgentRunner(
+            events=[
+                {
+                    "type": "future_event",
+                    "Bearer leaked-token": {
+                        "password=SECRET": "event-key",
+                    },
+                }
+            ]
+        ),
+        verifier=FakeVerifier(
+            pass_=True,
+            details={
+                "api_key=VERIFYSECRET": "verifier-key",
+                "nested": {"password=SECRET": "verifier-nested-key"},
+            },
+        ),
+    )
+
+    serialized = json.dumps(result.to_trace())
+    for leaked in [
+        "sk-1234567890abcdef",
+        "api_key=VERIFYSECRET",
+        "Bearer leaked-token",
+        "password=SECRET",
+    ]:
+        assert leaked not in serialized
     assert "[REDACTED]" in serialized
 
 
