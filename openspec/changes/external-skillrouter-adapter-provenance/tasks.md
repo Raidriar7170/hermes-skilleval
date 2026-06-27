@@ -16,6 +16,9 @@
   malformed gzip/JSONL, and relevant skill missing from tier.
 - [x] 2.5 Add failing CLI smoke tests for `external-validate` success and
   validation failure.
+- [x] 2.6 Add official-shaped tiny Eval Core fixture covering
+  `instruction_text`, object-shaped `relevance.json`, top-level `easy/` and
+  `hard/` gzipped shards, `generic_only`, single-skill, and multi-skill tasks.
 
 ## 3. Implementation
 
@@ -27,6 +30,8 @@
   `validation.json`.
 - [x] 3.5 Ensure validation does not compute metrics, run routers, download
   data, or load models.
+- [x] 3.6 Support real SkillRouter Eval Core task/relevance/tier layout while
+  preserving PR-1 as adapter/provenance/validation only.
 
 ## 4. Documentation And Human Brief
 

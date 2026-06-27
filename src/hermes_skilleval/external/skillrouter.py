@@ -14,7 +14,7 @@ from hermes_skilleval.release_manifest import sha256_file
 ADAPTER_VERSION = "v0.3.pr1"
 TASK_ID_FIELDS = ("id", "task_id")
 SKILL_ID_FIELDS = ("id", "skill_id")
-QUERY_FIELDS = ("query", "prompt", "instruction")
+QUERY_FIELDS = ("instruction_text", "query", "prompt", "instruction")
 TASK_TYPE_FIELDS = ("task_type", "type")
 DESCRIPTION_FIELDS = ("description", "desc")
 BODY_FIELDS = ("body", "content", "skill_body")
@@ -28,7 +28,7 @@ class ExternalTask:
     task_id: str
     query: str
     task_type: str
-    graded_relevance: dict[str, float]
+    graded_relevance: dict[str, int | float]
     tier: str
     metadata: dict[str, Any]
 
@@ -75,7 +75,8 @@ class SkillRouterAdapter:
         self.tiers = tiers
 
     def load_tasks(self) -> list[ExternalTask]:
-        relevance_by_task: dict[str, dict[str, float]] = {}
+        relevance_entries = self._load_relevance_entries()
+        relevance_by_task: dict[str, dict[str, int | float]] = {}
         for relevance in self._iter_relevance():
             relevance_by_task.setdefault(relevance.task_id, {})[
                 relevance.skill_id
@@ -84,8 +85,13 @@ class SkillRouterAdapter:
         for record in self._iter_records(self._tasks_path(), role="tasks"):
             task_id = _required_string(record, TASK_ID_FIELDS, "task id")
             query = _required_string(record, QUERY_FIELDS, "query")
-            task_type = _optional_string(record, TASK_TYPE_FIELDS) or "unknown"
-            tier = str(record.get("tier", "unknown"))
+            relevance_entry = relevance_entries.get(task_id, {})
+            task_type = (
+                _optional_string(record, TASK_TYPE_FIELDS)
+                or _optional_string(relevance_entry, TASK_TYPE_FIELDS)
+                or "unknown"
+            )
+            tier = str(record.get("tier") or record.get("difficulty") or "unknown")
             metadata = _metadata_without(
                 record,
                 (*TASK_ID_FIELDS, *QUERY_FIELDS, *TASK_TYPE_FIELDS),
@@ -137,9 +143,14 @@ class SkillRouterAdapter:
         errors: list[str] = []
         tasks: list[ExternalTask] = []
         relevance: list[ExternalRelevance] = []
+        relevance_entries: dict[str, dict[str, Any]] = {}
         skill_ids_by_tier: dict[str, set[str]] = {}
         skill_counts: dict[str, int] = {}
 
+        try:
+            relevance_entries = self._load_relevance_entries()
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            errors.append(str(exc))
         try:
             relevance = list(self._iter_relevance())
         except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -156,7 +167,9 @@ class SkillRouterAdapter:
             seen_tasks.add(task.task_id)
             if not task.query.strip():
                 errors.append(f"empty query for task: {task.task_id}")
-            if not task.graded_relevance:
+            if task.task_id not in relevance_entries:
+                errors.append(f"missing relevance entry for task: {task.task_id}")
+            if not task.graded_relevance and task.task_type != "generic_only":
                 errors.append(f"missing relevance for task: {task.task_id}")
 
         task_ids = {task.task_id for task in tasks}
@@ -182,11 +195,24 @@ class SkillRouterAdapter:
         for item in relevance:
             if item.task_id not in task_ids:
                 errors.append(f"relevance references missing task: {item.task_id}")
-            if item.skill_id not in skill_ids_by_tier.get(item.tier, set()):
+            if item.tier in self.tiers and item.skill_id not in skill_ids_by_tier.get(
+                item.tier,
+                set(),
+            ):
                 errors.append(
                     "relevant skill missing from tier "
                     f"{item.tier}: {item.task_id} -> {item.skill_id}"
                 )
+        for task in tasks:
+            if task.tier not in self.tiers:
+                continue
+            relevance_entry = relevance_entries.get(task.task_id, {})
+            for skill_id in _scored_ground_truth_ids(relevance_entry):
+                if skill_id not in skill_ids_by_tier.get(task.tier, set()):
+                    errors.append(
+                        "relevant skill missing from tier "
+                        f"{task.tier}: {task.task_id} -> {skill_id}"
+                    )
         if self.upstream_ref == "FILL_BEFORE_RUN":
             errors.append("upstream_ref must be set before external validation")
         if self.license_note == "FILL_BEFORE_RUN":
@@ -244,6 +270,11 @@ class SkillRouterAdapter:
         )
 
     def _skill_files(self, tier: str) -> list[Path]:
+        official_root = self.data_root / tier
+        if official_root.is_dir():
+            files = _json_record_files(official_root)
+            if files:
+                return files
         root = self.data_root / "skills"
         candidates = [
             root / f"{tier}.jsonl",
@@ -255,23 +286,34 @@ class SkillRouterAdapter:
             if candidate.is_file():
                 return [candidate]
             if candidate.is_dir():
-                files = sorted(
-                    path
-                    for path in candidate.rglob("*")
-                    if path.is_file()
-                    and path.suffix in {".json", ".jsonl", ".gz"}
-                    and (
-                        path.name.endswith(".json")
-                        or path.name.endswith(".jsonl")
-                        or path.name.endswith(".jsonl.gz")
-                    )
-                )
+                files = _json_record_files(candidate)
                 if files:
                     return files
-        raise ValueError(f"missing skill shard for tier {tier} under skills")
+        raise ValueError(f"missing skill shard for tier {tier}")
 
     def _iter_relevance(self) -> Iterable[ExternalRelevance]:
-        for record in self._iter_records(self._relevance_path(), role="relevance"):
+        path = self._relevance_path()
+        if path.suffix == ".json":
+            for task_id, entry in self._load_relevance_entries().items():
+                relevance_map = _relevance_mapping(entry)
+                for skill_id, relevance in relevance_map.items():
+                    yield ExternalRelevance(
+                        task_id=task_id,
+                        skill_id=skill_id,
+                        relevance=relevance,
+                        tier=str(entry.get("tier", "unknown")),
+                        metadata=_metadata_without(
+                            entry,
+                            (
+                                "task_id",
+                                "skill_id",
+                                *RELEVANCE_FIELDS,
+                                "tier",
+                            ),
+                        ),
+                    )
+            return
+        for record in self._iter_records(path, role="relevance"):
             task_id = _required_string(record, ("task_id",), "relevance task_id")
             skill_id = _required_string(record, ("skill_id",), "relevance skill_id")
             relevance = _required_number(record, RELEVANCE_FIELDS, "relevance")
@@ -279,13 +321,57 @@ class SkillRouterAdapter:
             yield ExternalRelevance(
                 task_id=task_id,
                 skill_id=skill_id,
-                relevance=float(relevance),
+                relevance=relevance,
                 tier=tier,
                 metadata=_metadata_without(
                     record,
                     ("task_id", "skill_id", *RELEVANCE_FIELDS, "tier"),
                 ),
             )
+
+    def _load_relevance_entries(self) -> dict[str, dict[str, Any]]:
+        path = self._relevance_path()
+        if path.suffix != ".json":
+            entries: dict[str, dict[str, Any]] = {}
+            for record in self._iter_records(path, role="relevance"):
+                task_id = _required_string(record, ("task_id",), "relevance task_id")
+                entries.setdefault(task_id, {"relevance": {}})
+                skill_id = _required_string(record, ("skill_id",), "relevance skill_id")
+                entries[task_id]["relevance"][skill_id] = _required_number(
+                    record,
+                    RELEVANCE_FIELDS,
+                    "relevance",
+                )
+                if "tier" in record:
+                    entries[task_id]["tier"] = record["tier"]
+            return entries
+
+        path_label = self._path_label(path)
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            raise ValueError(f"failed to read relevance file {path_label}: {exc}") from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"malformed JSON in {path_label}: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise ValueError(f"{path_label} must contain a task relevance object")
+        if "records" in payload or "relevance" in payload:
+            return {
+                _required_string(record, ("task_id",), "relevance task_id"): record
+                for record in self._iter_records(path, role="relevance")
+            }
+        entries = {}
+        for task_id, entry in payload.items():
+            if not isinstance(task_id, str) or not task_id.strip():
+                raise ValueError("relevance task_id must be a non-empty string")
+            if not isinstance(entry, dict):
+                raise ValueError(f"relevance entry for {task_id} must be an object")
+            for field in ("gt_skill_ids", "core_gt_ids", "auxiliary_gt_ids"):
+                if field in entry and not _string_list(entry[field]):
+                    raise ValueError(f"{field} for {task_id} must be a list of strings")
+            _relevance_mapping(entry)
+            entries[task_id] = entry
+        return entries
 
     def _iter_records(self, path: Path, *, role: str) -> Iterable[dict[str, Any]]:
         path_label = self._path_label(path)
@@ -334,6 +420,9 @@ class SkillRouterAdapter:
                 records.append(self._file_record(resolve_path(), role))
             except (OSError, ValueError) as exc:
                 records.append(_missing_file_record(role, exc))
+        manifest_path = self.data_root / "manifest.json"
+        if manifest_path.exists():
+            records.append(self._file_record(manifest_path, "manifest"))
         for tier in self.tiers:
             role = f"skills:{tier}"
             try:
@@ -354,7 +443,14 @@ class SkillRouterAdapter:
             "record_count": None,
         }
         try:
-            record["record_count"] = sum(1 for _ in self._iter_records(path, role=role))
+            if role == "manifest":
+                record["record_count"] = None
+            elif role == "relevance" and path.suffix == ".json":
+                record["record_count"] = len(self._load_relevance_entries())
+            else:
+                record["record_count"] = sum(
+                    1 for _ in self._iter_records(path, role=role)
+                )
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             record["read_error"] = str(exc)
         return record
@@ -424,6 +520,52 @@ def _first_existing(root: Path, names: tuple[str, ...], role: str) -> Path:
         if path.exists():
             return path
     raise ValueError(f"missing {role} file under <data-root>")
+
+
+def _json_record_files(root: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_file()
+        and (
+            path.name.endswith(".json")
+            or path.name.endswith(".jsonl")
+            or path.name.endswith(".jsonl.gz")
+        )
+    )
+
+
+def _relevance_mapping(entry: dict[str, Any]) -> dict[str, int | float]:
+    value = entry.get("relevance", {})
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError("relevance must be an object mapping skill_id to grade")
+    relevance: dict[str, int | float] = {}
+    for skill_id, grade in value.items():
+        if not isinstance(skill_id, str) or not skill_id.strip():
+            raise ValueError("relevance skill_id must be a non-empty string")
+        if not isinstance(grade, (int, float)):
+            raise ValueError(f"relevance grade for {skill_id} must be numeric")
+        relevance[skill_id] = grade
+    return relevance
+
+
+def _scored_ground_truth_ids(entry: dict[str, Any]) -> list[str]:
+    relevance = _relevance_mapping(entry)
+    ids: list[str] = []
+    for field in ("gt_skill_ids", "core_gt_ids"):
+        value = entry.get(field, [])
+        if not isinstance(value, list):
+            continue
+        for skill_id in value:
+            if isinstance(skill_id, str) and skill_id in relevance and skill_id not in ids:
+                ids.append(skill_id)
+    return ids
+
+
+def _string_list(value: Any) -> bool:
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
 
 
 def _required_string(record: dict[str, Any], fields: tuple[str, ...], label: str) -> str:

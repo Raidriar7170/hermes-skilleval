@@ -10,6 +10,9 @@ from hermes_skilleval.external.skillrouter import write_external_validation
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "external" / "skillrouter_tiny"
+EVAL_CORE_FIXTURE = (
+    Path(__file__).parent / "fixtures" / "external" / "skillrouter_eval_core_tiny"
+)
 FIXTURE_PROVENANCE = {
     "upstream_ref": "fixture-ref",
     "license_note": "fixture-only",
@@ -58,6 +61,80 @@ def test_skillrouter_adapter_loads_canonical_records_and_preserves_metadata():
     assert validation["task_count"] == 2
     assert validation["skill_count_by_tier"] == {"easy": 1, "hard": 2}
     assert validation["relevance_count"] == 3
+
+
+def test_skillrouter_adapter_loads_official_eval_core_fixture():
+    adapter = SkillRouterAdapter(data_root=EVAL_CORE_FIXTURE, **FIXTURE_PROVENANCE)
+
+    tasks = adapter.load_tasks()
+    easy_skills = list(adapter.iter_skills("easy"))
+    hard_skills = list(adapter.iter_skills("hard"))
+    validation = adapter.validate()
+    manifest = adapter.provenance(validation)
+
+    task_by_id = {task.task_id: task for task in tasks}
+    assert validation["status"] == "PASS"
+    assert validation["task_count"] == 3
+    assert validation["skill_count_by_tier"] == {"easy": 2, "hard": 3}
+    assert validation["relevance_count"] == 5
+    assert task_by_id["task-single-easy"].query == (
+        "Use browser automation to submit a login form."
+    )
+    assert task_by_id["task-single-easy"].task_type == "single_skill"
+    assert task_by_id["task-single-easy"].tier == "easy"
+    assert task_by_id["task-single-easy"].metadata["difficulty"] == "easy"
+    assert task_by_id["task-single-easy"].metadata["num_skills"] == 1
+    assert task_by_id["task-single-easy"].metadata["skill_names"] == ["Browser Login"]
+    assert task_by_id["task-single-easy"].metadata["domain"] == "web"
+    assert task_by_id["task-single-easy"].metadata["excluded"] is False
+    assert task_by_id["task-single-easy"].graded_relevance == {
+        "gt/browser-login": 3,
+        "degraded/browser-login": 1,
+    }
+    assert task_by_id["task-generic-easy"].task_type == "generic_only"
+    assert task_by_id["task-generic-easy"].graded_relevance == {}
+    assert [skill.skill_id for skill in easy_skills] == [
+        "gt/browser-login",
+        "degraded/browser-login",
+    ]
+    assert {skill.skill_id for skill in hard_skills} == {
+        "degraded/workflow-debugging",
+        "gt/tdd-helper",
+        "gt/workflow-debugging",
+    }
+    assert {record["path"] for record in manifest["files"]} == {
+        "tasks.jsonl",
+        "relevance.json",
+        "manifest.json",
+        "easy/shard-000.jsonl.gz",
+        "hard/shard-000.jsonl.gz",
+    }
+    for record in manifest["files"]:
+        assert record["sha256"]
+    assert str(EVAL_CORE_FIXTURE.parent) not in json.dumps(manifest)
+
+
+def test_skillrouter_validation_allows_auxiliary_relevance_absent_from_tier(tmp_path):
+    root = tmp_path / "skillrouter_eval_core"
+    shutil.copytree(EVAL_CORE_FIXTURE, root)
+    easy_shard = root / "easy" / "shard-000.jsonl.gz"
+    records = [
+        {
+            "id": "gt/browser-login",
+            "name": "Browser Login",
+            "description": "Submit login forms",
+            "body": "Use browser automation to fill credentials and submit forms.",
+            "tier": "easy",
+        }
+    ]
+    with gzip.open(easy_shard, "wt", encoding="utf-8") as file:
+        for record in records:
+            file.write(json.dumps(record, sort_keys=True) + "\n")
+    adapter = SkillRouterAdapter(data_root=root, **FIXTURE_PROVENANCE)
+
+    validation = adapter.validate()
+
+    assert validation["status"] == "PASS"
 
 
 def test_skillrouter_adapter_manifest_records_hashes_and_mapping():
@@ -313,3 +390,92 @@ def test_skillrouter_adapter_requires_real_provenance_metadata():
     assert validation["status"] == "INVALID"
     assert any("upstream_ref must be set" in error for error in validation["errors"])
     assert any("license_note must be set" in error for error in validation["errors"])
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (
+            lambda root: _write_jsonl(
+                root / "tasks.jsonl",
+                [
+                    {
+                        "id": "task-single-easy",
+                        "instruction_text": "first",
+                        "difficulty": "easy",
+                    },
+                    {
+                        "id": "task-single-easy",
+                        "instruction_text": "duplicate",
+                        "difficulty": "easy",
+                    },
+                ],
+            ),
+            "duplicate task id",
+        ),
+        (
+            lambda root: _write_jsonl(
+                root / "tasks.jsonl",
+                [
+                    {
+                        "id": "task-empty-instruction",
+                        "instruction_text": " ",
+                        "difficulty": "easy",
+                    }
+                ],
+            ),
+            "query must be a non-empty string",
+        ),
+        (
+            lambda root: (root / "relevance.json").write_text("{}", encoding="utf-8"),
+            "missing relevance entry",
+        ),
+        (
+            lambda root: shutil.rmtree(root / "hard"),
+            "missing skill shard for tier hard",
+        ),
+        (
+            lambda root: (root / "relevance.json").write_text(
+                json.dumps(
+                    {
+                        "task-single-easy": {
+                            "task_type": "single_skill",
+                            "gt_skill_ids": ["gt/missing"],
+                            "core_gt_ids": ["gt/missing"],
+                            "auxiliary_gt_ids": [],
+                            "relevance": {"gt/missing": 3},
+                        },
+                        "task-multi-hard": {
+                            "task_type": "multi_skill",
+                            "gt_skill_ids": ["gt/workflow-debugging"],
+                            "core_gt_ids": ["gt/workflow-debugging"],
+                            "auxiliary_gt_ids": [],
+                            "relevance": {"gt/workflow-debugging": 3},
+                        },
+                        "task-generic-easy": {
+                            "task_type": "generic_only",
+                            "gt_skill_ids": [],
+                            "core_gt_ids": [],
+                            "auxiliary_gt_ids": [],
+                            "relevance": {},
+                        },
+                    },
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            ),
+            "relevant skill missing from tier easy",
+        ),
+    ],
+)
+def test_skillrouter_eval_core_fixture_validation_failures(tmp_path, mutate, expected):
+    root = tmp_path / "skillrouter_eval_core"
+    shutil.copytree(EVAL_CORE_FIXTURE, root)
+    mutate(root)
+    adapter = SkillRouterAdapter(data_root=root, **FIXTURE_PROVENANCE)
+
+    validation = adapter.validate()
+
+    assert validation["status"] == "INVALID"
+    assert any(expected in error for error in validation["errors"])

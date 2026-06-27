@@ -32,7 +32,7 @@
     <ul>
       <li><a href="../../src/hermes_skilleval/external/skillrouter.py"><code>src/hermes_skilleval/external/skillrouter.py</code></a>：新增 canonical task/skill/relevance records、SkillRouter adapter、validation 和 manifest 写入。</li>
       <li><a href="../../src/hermes_skilleval/cli.py"><code>src/hermes_skilleval/cli.py</code></a>：新增 <code>external-validate</code>，只写 <code>manifest.json</code> 和 <code>validation.json</code>。</li>
-      <li><a href="../../tests/fixtures/external/skillrouter_tiny/tasks.jsonl"><code>tests/fixtures/external/skillrouter_tiny/</code></a>：新增 tiny fixture，覆盖 Easy/Hard、JSONL、gzipped shard 和 shard directory。</li>
+      <li><a href="../../tests/fixtures/external/skillrouter_eval_core_tiny/tasks.jsonl"><code>tests/fixtures/external/skillrouter_eval_core_tiny/</code></a>：新增 official-shaped tiny fixture，覆盖 <code>instruction_text</code>、object-shaped <code>relevance.json</code>、top-level <code>easy/</code>/<code>hard/</code> gzipped shards、<code>generic_only</code>、single-skill 和 multi-skill task。</li>
       <li><a href="../../tests/test_external_skillrouter_adapter.py"><code>tests/test_external_skillrouter_adapter.py</code></a> 与 <a href="../../tests/test_cli_external_skillrouter.py"><code>tests/test_cli_external_skillrouter.py</code></a>：覆盖 canonical loading、metadata preservation、hash manifest、validation failures 和 CLI 行为。</li>
     </ul>
 
@@ -48,8 +48,8 @@
     <h2>验证命令</h2>
     <p>以下为本 PR-1 的 phase-time validation result，不替代公开 release surface 的固定基线计数。</p>
     <ul>
-      <li><code>python -m pytest -q tests/test_external_skillrouter_adapter.py tests/test_cli_external_skillrouter.py</code>：PASS，<code>17 passed</code>。</li>
-      <li><code>python -m pytest -q</code>：PASS，<code>436 passed</code>。</li>
+      <li><code>python -m pytest -q tests/test_external_skillrouter_adapter.py tests/test_cli_external_skillrouter.py</code>：PASS，<code>25 passed</code>。</li>
+      <li><code>python -m pytest -q</code>：PASS，<code>444 passed</code>。</li>
       <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，<code>17 passed / 0 failed</code>。</li>
       <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check --phase17-output-dir docs/demo/phase17-calibrated-release-selector --release-output-dir docs/demo/phase18-ci-release-reproducibility</code>：PASS，release reproducibility pass。</li>
       <li><code>git diff --check</code>：PASS。</li>
