@@ -35,6 +35,7 @@ from hermes_skilleval.embedding_training import (
     write_training_pairs,
 )
 from hermes_skilleval.external.skillrouter import write_external_validation
+from hermes_skilleval.external.skillrouter_scorer import write_skillrouter_score_report
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
     write_failure_analysis_report,
@@ -284,6 +285,32 @@ def _build_parser() -> argparse.ArgumentParser:
     external_validate_parser.add_argument("--license-note", default="FILL_BEFORE_RUN")
     external_validate_parser.add_argument("--acquired-at", default=None)
     external_validate_parser.set_defaults(handler=_run_external_validate)
+
+    external_score_parser = subparsers.add_parser(
+        "external-score",
+        help="score external benchmark ranked predictions without running routers",
+    )
+    external_score_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_score_parser.add_argument("--data-root", required=True)
+    external_score_parser.add_argument("--predictions", required=True)
+    external_score_parser.add_argument("--output", required=True)
+    external_score_parser.add_argument("--tier", choices=("easy", "hard"), default=None)
+    external_score_parser.add_argument(
+        "--tiers",
+        choices=("easy", "hard"),
+        nargs="+",
+        default=None,
+    )
+    external_score_parser.add_argument(
+        "--mode",
+        choices=("core", "single"),
+        default="core",
+    )
+    external_score_parser.set_defaults(handler=_run_external_score)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -889,6 +916,24 @@ def _run_external_validate(args: argparse.Namespace) -> None:
         "External validation "
         f"{validation['status']}: {args.output_dir} "
         f"({validation['task_count']} tasks)"
+    )
+
+
+def _run_external_score(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    report = write_skillrouter_score_report(
+        data_root=args.data_root,
+        predictions_path=args.predictions,
+        output_path=args.output,
+        mode=args.mode,
+        tier=args.tier,
+        tiers=tuple(args.tiers) if args.tiers else None,
+    )
+    print(
+        "External score "
+        f"{report['mode']}: {args.output} "
+        f"({report['task_count']} tasks)"
     )
 
 

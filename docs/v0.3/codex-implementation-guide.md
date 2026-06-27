@@ -90,13 +90,12 @@ Required dimensions:
 - `all`
 - `single`
 - `multi`
-- `easy`
-- `hard`
+- per selected candidate skill pool tier: `easy` and `hard`
 
 Expected work:
 
 - Use graded relevance for NDCG.
-- Count missing task predictions as empty predictions.
+- Skip missing task predictions for SkillRouter official scorer parity.
 - Fix and test the duplicate prediction strategy before any full run.
 - Put invalid skill IDs, duplicate IDs, missing predictions, candidate counts,
   field views, latency, and router IDs in Hermes diagnostics.
