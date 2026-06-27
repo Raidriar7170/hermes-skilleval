@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>prepare-v0-3-evidence-protocol - Human Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f8fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8deea; padding-bottom: 6px; }
+    p, li { line-height: 1.62; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; }
+    a { color: #175a9c; }
+    .status { display: inline-block; padding: 4px 10px; border: 1px solid #b9c2d1; border-radius: 999px; background: #fff; font-size: 13px; }
+    .panel { background: #fff; border: 1px solid #dfe5ef; border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>prepare-v0-3-evidence-protocol</h1>
+    <span class="status">proposed / PR-0 protocol only</span>
+
+    <div class="panel">
+      <p><strong>一句话结论：</strong>本阶段只冻结 v0.3 外部评测与真实执行证据协议，新增占位配置和 OpenSpec change；没有实现 benchmark/runtime，也没有声称 v0.3 结果已经存在。</p>
+    </div>
+
+    <h2>当前状态</h2>
+    <p>OpenSpec change：<code>prepare-v0-3-evidence-protocol</code>。状态是 proposed，需要人工审阅后再进入后续 PR-1..PR-7。</p>
+
+    <h2>本阶段改动</h2>
+    <ul>
+      <li><a href="../../AGENTS.md"><code>AGENTS.md</code></a>：新增贡献约束，强调 PR-0 不改 runtime/tests/历史阶段文档/发布逻辑。</li>
+      <li><a href="../v0.3/action-guide.md"><code>docs/v0.3/action-guide.md</code></a>：记录 v0.3 PR 序列、证据边界和 PR-0 验收方式。</li>
+      <li><a href="../v0.3/protocol.md"><code>docs/v0.3/protocol.md</code></a>：冻结研究问题、预注册、Benchmark Validity Gate、Router Promotion Gate、stop conditions 和 artifact retention。</li>
+      <li><a href="../../configs/v0.3/external-skillrouter.yaml"><code>configs/v0.3/external-skillrouter.yaml</code></a>、<a href="../../configs/v0.3/live-agent.yaml"><code>live-agent.yaml</code></a>、<a href="../../configs/v0.3/release-gate.yaml"><code>release-gate.yaml</code></a>：只作为 <code>FILL_BEFORE_RUN</code> 占位模板。</li>
+      <li><a href="../../openspec/changes/prepare-v0-3-evidence-protocol/proposal.md"><code>proposal.md</code></a>、<a href="../../openspec/changes/prepare-v0-3-evidence-protocol/design.md"><code>design.md</code></a>、<a href="../../openspec/changes/prepare-v0-3-evidence-protocol/tasks.md"><code>tasks.md</code></a>、<a href="../../openspec/changes/prepare-v0-3-evidence-protocol/specs/v0-3-evidence-protocol/spec.md"><code>spec.md</code></a>：新增 OpenSpec lifecycle artifacts。</li>
+    </ul>
+
+    <h2>关键边界</h2>
+    <ul>
+      <li>SkillRouter scored set 只用于 evaluation；不能用于训练、调阈值、选模型或 hard-negative mining。</li>
+      <li>Phase 10 继续作为 deterministic offline replay 的历史证据，不能包装成 live-agent evidence。</li>
+      <li>live-agent 成功率以 deterministic verifier 为主裁判；LLM/human review 只能辅助诊断。</li>
+      <li><code>VALID_EVIDENCE</code> / <code>INVALID_EVIDENCE</code> / <code>REVIEW_REQUIRED</code> 与 <code>KEEP_BASELINE</code> / <code>PROMOTE_CANDIDATE</code> 分开。</li>
+      <li>固定 seed：<code>20260625</code>。</li>
+    </ul>
+
+    <h2>验证命令</h2>
+    <ul>
+      <li><code>python -m pytest -q</code>：PASS，<code>419 passed</code>。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，<code>16 passed / 0 failed</code>。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check --phase17-output-dir docs/demo/phase17-calibrated-release-selector --release-output-dir docs/demo/phase18-ci-release-reproducibility</code>：PASS，release reproducibility pass。</li>
+      <li><code>git diff --check</code>：PASS。</li>
+    </ul>
+
+    <h2>剩余风险</h2>
+    <p>这是协议冻结阶段，不产生外部 benchmark 或 live-agent 结果。后续 PR 如果发现上游 SkillRouter 字段、SkillsBench verifier、或 Agent seed 控制与协议假设不一致，应先更新 OpenSpec/协议并标记 review，而不是静默改变标准。</p>
+
+    <h2>推荐下一步</h2>
+    <p>审阅 PR-0 文档和 OpenSpec change；确认后再进入 PR-1 external adapter/provenance。</p>
+  </main>
+</body>
+</html>
