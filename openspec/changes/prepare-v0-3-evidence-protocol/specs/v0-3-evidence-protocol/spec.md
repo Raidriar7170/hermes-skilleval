@@ -92,7 +92,10 @@ promotion.
 - **WHEN** a v0.3 evidence packet is reviewed
 - **THEN** the Benchmark Validity Gate MUST emit one of `VALID_EVIDENCE`,
   `INVALID_EVIDENCE`, or `REVIEW_REQUIRED`
-- **AND** missing optional fields MUST use `UNAVAILABLE` with a reason
+- **AND** missing optional fields MUST use field-level `UNAVAILABLE` with a
+  reason
+- **AND** `UNAVAILABLE` MUST NOT be emitted as a top-level Benchmark Validity
+  Gate status
 - **AND** the Router Promotion Gate MUST emit one of `KEEP_BASELINE`,
   `PROMOTE_CANDIDATE`, or `REVIEW_REQUIRED`
 - **AND** router promotion MUST NOT occur before valid or explicitly reviewed
@@ -127,5 +130,20 @@ without claiming execution.
   `configs/v0.3/live-agent.yaml`, or `configs/v0.3/release-gate.yaml`
 - **THEN** each file MUST identify itself as placeholder or `FILL_BEFORE_RUN`
 - **AND** each file MUST include seed `20260625`
+- **AND** artifact roots MUST use a literal `{run_id}` placeholder rather than
+  a path that can render with an empty run ID
 - **AND** the release-gate config MUST keep evidence statuses separate from
   promotion decisions
+
+### Requirement: Provide detailed Codex implementation guide
+
+The system SHALL provide a repo-local guide for later Codex implementation
+PRs without beginning PR-1.
+
+#### Scenario: Inspect implementation guide
+
+- **WHEN** a maintainer opens `docs/v0.3/codex-implementation-guide.md`
+- **THEN** it MUST describe PR-1 through PR-7 tasks, constraints, acceptance
+  checks, and validation expectations
+- **AND** it MUST state that PR-0 does not implement adapters, scorers,
+  live-agent runtime, Codex runner, SkillsBench integration, or release gates

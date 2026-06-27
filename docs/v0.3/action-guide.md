@@ -43,6 +43,7 @@ after seeing results.
 - `configs/v0.3/live-agent.yaml`
 - `configs/v0.3/release-gate.yaml`
 - OpenSpec change `prepare-v0-3-evidence-protocol`
+- `docs/v0.3/codex-implementation-guide.md`
 - Chinese Human Brief at
   `docs/human-briefs/2026-06-26-prepare-v0-3-evidence-protocol.html`
 
@@ -86,7 +87,9 @@ after seeing results.
 - Planned live-agent repetitions: 3 per condition per selected task.
 - Planned live-agent timeout placeholder: 1200 seconds until final
   preregistration overrides it.
-- Artifact root pattern: `artifacts/v0.3/<run-id>/`.
+- Artifact root pattern: `artifacts/v0.3/{run_id}/`.
+- Codex implementation details for PR-1 through PR-7 are in
+  `docs/v0.3/codex-implementation-guide.md`.
 
 ## Data and Artifact Rules
 

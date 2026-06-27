@@ -17,6 +17,8 @@ This change freezes the evidence protocol before any v0.3 result is produced.
   guide.
 - Add `docs/v0.3/protocol.md` as the authoritative v0.3 evidence protocol for
   later PR-1 through PR-7 work.
+- Add `docs/v0.3/codex-implementation-guide.md` as the detailed Codex guide
+  for PR-1 through PR-7 without starting PR-1 implementation.
 - Add placeholder configuration templates under `configs/v0.3/` for
   SkillRouter external evaluation, live-agent execution, and release gates.
 - Define separate Benchmark Validity Gate statuses:
@@ -47,7 +49,8 @@ This change freezes the evidence protocol before any v0.3 result is produced.
 ## Impact
 
 - Affected docs: `AGENTS.md`, `docs/v0.3/action-guide.md`,
-  `docs/v0.3/protocol.md`, and the new Human Brief.
+  `docs/v0.3/protocol.md`, `docs/v0.3/codex-implementation-guide.md`, and the
+  new Human Brief.
 - Affected configs: placeholder-only files under `configs/v0.3/`.
 - Affected OpenSpec artifacts:
   `openspec/changes/prepare-v0-3-evidence-protocol/`.

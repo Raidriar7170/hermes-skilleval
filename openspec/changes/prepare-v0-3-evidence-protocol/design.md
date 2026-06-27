@@ -41,11 +41,16 @@ change.
    is evaluation-only, how candidate pools are sampled, how live-agent success
    is judged, and which gate owns a decision.
 
+   `docs/v0.3/codex-implementation-guide.md` provides the detailed Codex
+   execution guide for those later PRs. It is subordinate to the protocol and
+   must not be treated as evidence that PR-1 implementation has started.
+
 2. **Use placeholder configs instead of executable configs in PR-0.**
 
    The v0.3 config files include `FILL_BEFORE_RUN`, environment placeholders,
-   and explicit placeholder schema names. This keeps useful structure in Git
-   without implying a benchmark or live-agent run exists.
+   literal `{run_id}` artifact roots, and explicit placeholder schema names.
+   This keeps useful structure in Git without implying a benchmark or
+   live-agent run exists.
 
 3. **Split evidence status from router promotion.**
 

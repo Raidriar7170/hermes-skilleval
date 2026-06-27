@@ -8,6 +8,8 @@
 - [x] 1.3 Add `docs/v0.3/protocol.md` with frozen research questions,
   preregistration, evidence boundaries, stop conditions, retention policy, and
   PR sequence.
+- [x] 1.4 Add `docs/v0.3/codex-implementation-guide.md` with detailed Codex
+  implementation guidance for PR-1 through PR-7, without starting PR-1.
 
 ## 2. Placeholder Configs
 
@@ -18,6 +20,8 @@
   verifier-first judging and no-credential task constraints.
 - [x] 2.3 Add `configs/v0.3/release-gate.yaml` with separate Benchmark
   Validity Gate and Router Promotion Gate placeholders.
+- [x] 2.4 Use `artifacts/v0.3/{run_id}/`-style literal roots instead of paths
+  that can render with an empty run ID.
 
 ## 3. OpenSpec
 
@@ -40,3 +44,5 @@
 - [x] 5.4 Run `git diff --check`.
 - [x] 5.5 Confirm no `src/hermes_skilleval/**`, `tests/**`, historical phase
   docs, or existing release logic were modified.
+- [x] 5.6 Check line endings for new Markdown, YAML, OpenSpec, and Human Brief
+  files and normalize to LF when needed.

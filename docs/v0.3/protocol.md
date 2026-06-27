@@ -170,14 +170,19 @@ review, screenshots, or human review may be diagnostic fields only.
 The Benchmark Validity Gate decides whether the evidence packet is usable. It
 does not decide whether a candidate router becomes default.
 
-Allowed evidence statuses:
+Allowed top-level evidence statuses:
 
 | Status | Meaning |
 |---|---|
 | `VALID_EVIDENCE` | Required artifacts, provenance, metrics, leakage checks, and verifier records are complete enough for the preregistered question. |
 | `INVALID_EVIDENCE` | Required evidence is missing, corrupted, contaminated, or inconsistent enough that the run cannot support the question. |
 | `REVIEW_REQUIRED` | Evidence is mostly present but contains caveats that require human review before any downstream decision. |
-| `UNAVAILABLE` | A specific evidence field or optional check could not be produced and includes a reason. |
+
+Allowed field-level marker:
+
+| Marker | Meaning |
+|---|---|
+| `UNAVAILABLE` | A specific evidence field or optional check could not be produced and includes a reason. It is not a top-level Benchmark Validity Gate status. |
 
 The gate MUST check at least:
 
@@ -254,7 +259,7 @@ Git must not contain:
 - unredacted stdout/stderr logs.
 
 Large or sensitive artifacts should live under ignored artifact roots such as
-`artifacts/v0.3/<run-id>/` and be represented in Git by redacted summaries and
+`artifacts/v0.3/{run_id}/` and be represented in Git by redacted summaries and
 hash manifests only.
 
 ## PR Sequence
@@ -277,3 +282,6 @@ hash manifests only.
 
 Each PR must preserve previous behavior and run the validation commands required
 by its scope.
+
+See `docs/v0.3/codex-implementation-guide.md` for the detailed Codex execution
+guide for PR-1 through PR-7.

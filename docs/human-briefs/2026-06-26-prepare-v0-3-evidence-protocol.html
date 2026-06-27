@@ -33,6 +33,7 @@
       <li><a href="../../AGENTS.md"><code>AGENTS.md</code></a>：新增贡献约束，强调 PR-0 不改 runtime/tests/历史阶段文档/发布逻辑。</li>
       <li><a href="../v0.3/action-guide.md"><code>docs/v0.3/action-guide.md</code></a>：记录 v0.3 PR 序列、证据边界和 PR-0 验收方式。</li>
       <li><a href="../v0.3/protocol.md"><code>docs/v0.3/protocol.md</code></a>：冻结研究问题、预注册、Benchmark Validity Gate、Router Promotion Gate、stop conditions 和 artifact retention。</li>
+      <li><a href="../v0.3/codex-implementation-guide.md"><code>docs/v0.3/codex-implementation-guide.md</code></a>：补充 PR-1..PR-7 的 Codex 执行指南；不启动 PR-1。</li>
       <li><a href="../../configs/v0.3/external-skillrouter.yaml"><code>configs/v0.3/external-skillrouter.yaml</code></a>、<a href="../../configs/v0.3/live-agent.yaml"><code>live-agent.yaml</code></a>、<a href="../../configs/v0.3/release-gate.yaml"><code>release-gate.yaml</code></a>：只作为 <code>FILL_BEFORE_RUN</code> 占位模板。</li>
       <li><a href="../../openspec/changes/prepare-v0-3-evidence-protocol/proposal.md"><code>proposal.md</code></a>、<a href="../../openspec/changes/prepare-v0-3-evidence-protocol/design.md"><code>design.md</code></a>、<a href="../../openspec/changes/prepare-v0-3-evidence-protocol/tasks.md"><code>tasks.md</code></a>、<a href="../../openspec/changes/prepare-v0-3-evidence-protocol/specs/v0-3-evidence-protocol/spec.md"><code>spec.md</code></a>：新增 OpenSpec lifecycle artifacts。</li>
     </ul>
@@ -52,6 +53,8 @@
       <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：PASS，<code>16 passed / 0 failed</code>。</li>
       <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check --phase17-output-dir docs/demo/phase17-calibrated-release-selector --release-output-dir docs/demo/phase18-ci-release-reproducibility</code>：PASS，release reproducibility pass。</li>
       <li><code>git diff --check</code>：PASS。</li>
+      <li>v0.3 YAML parse check：PASS。</li>
+      <li>new Markdown/YAML/OpenSpec/Human Brief line-ending check：PASS，LF only。</li>
     </ul>
 
     <h2>剩余风险</h2>
