@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/hermes-skilleval/live-agent-trace.schema.json",
+  "title": "Hermes SkillEval live-agent.v1 trace",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request",
+    "result",
+    "mounted_skills",
+    "skill_use",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "live-agent.v1"
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "task_id",
+        "prompt",
+        "condition",
+        "prompt_hash",
+        "workspace_path",
+        "mounted_skills",
+        "timeout_seconds",
+        "metadata"
+      ],
+      "properties": {
+        "run_id": {"type": "string"},
+        "task_id": {"type": "string"},
+        "prompt": {"type": "string"},
+        "condition": {"enum": ["no-skill", "routed-skill", "oracle-skill"]},
+        "prompt_hash": {"type": "string"},
+        "workspace_path": {"type": "string"},
+        "mounted_skills": {"type": "array"},
+        "timeout_seconds": {"type": "integer"},
+        "metadata": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "process_exit_code",
+        "timed_out",
+        "verifier",
+        "task_success",
+        "usage",
+        "cost",
+        "stdout",
+        "stderr",
+        "stdout_truncated",
+        "stderr_truncated",
+        "final_message"
+      ],
+      "properties": {
+        "process_exit_code": {"type": ["integer", "null"]},
+        "timed_out": {"type": "boolean"},
+        "verifier": {
+          "type": "object",
+          "required": ["passed", "details"],
+          "properties": {
+            "passed": {"type": "boolean"},
+            "details": {"type": "object"}
+          },
+          "additionalProperties": true
+        },
+        "task_success": {"type": "boolean"},
+        "usage": {"type": ["object", "null"]},
+        "cost": {"type": ["object", "null"]},
+        "stdout": {"type": "string"},
+        "stderr": {"type": "string"},
+        "stdout_truncated": {"type": "boolean"},
+        "stderr_truncated": {"type": "boolean"},
+        "final_message": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "mounted_skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["skill_id", "name", "relative_path", "sha256"],
+        "properties": {
+          "skill_id": {"type": "string"},
+          "name": {"type": "string"},
+          "relative_path": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "skill_use": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["state"],
+        "properties": {
+          "state": {
+            "enum": ["MOUNTED_ONLY", "READ", "DECLARED", "UNKNOWN"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

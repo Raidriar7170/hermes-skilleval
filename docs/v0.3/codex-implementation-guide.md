@@ -180,6 +180,8 @@ Acceptance:
 Goal: implement a real Codex CLI runner with strict isolation, redaction, and
 trace parsing.
 
+Human brief: `docs/human-briefs/2026-06-28-codex-cli-runner-isolation.html`
+
 Expected work:
 
 - Read the local `codex exec --help` and record the actual supported flags.
