@@ -244,6 +244,46 @@ def test_skillrouter_official_scorer_type_slices_use_gt_cardinality(tmp_path):
     assert report["aggregates"]["multi"]["task_count"] == 0
 
 
+def test_skillrouter_official_scorer_multi_slice_uses_unfiltered_gt_count(tmp_path):
+    root = tmp_path / "skillrouter_eval_core"
+    _copy_fixture(root)
+    _add_cross_tier_multi_task(root)
+    output = tmp_path / "easy.json"
+
+    exit_code = main(
+        [
+            "external-score",
+            "--benchmark",
+            "skillrouter",
+            "--data-root",
+            str(root),
+            "--predictions",
+            str(root / "predictions.json"),
+            "--output",
+            str(output),
+            "--tier",
+            "easy",
+            "--mode",
+            "core",
+        ]
+    )
+
+    assert exit_code == 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    task = _task(report, "task-cross-tier-multi")
+    assert task["gt_ids"] == ["gt/browser-login"]
+    assert task["gt_count"] == 1
+    assert task["slice_gt_count"] == 2
+    assert task["tier_relevance"] == {"gt/browser-login": 3}
+    assert task["metrics"]["Hit@1"] == 1.0
+    assert math.isclose(task["metrics"]["Precision@3"], 1 / 3)
+    assert task["metrics"]["Recall@10"] == 1.0
+    assert task["metrics"]["FullCoverage@3"] == 1.0
+    assert report["aggregates"]["all"]["task_count"] == 3
+    assert report["aggregates"]["single"]["task_count"] == 2
+    assert report["aggregates"]["multi"]["task_count"] == 1
+
+
 def test_skillrouter_official_scorer_filters_relevance_to_tier_pool(tmp_path):
     root = tmp_path / "skillrouter_eval_core"
     _copy_fixture(root)
@@ -387,3 +427,43 @@ def _copy_fixture(target: Path) -> None:
     import shutil
 
     shutil.copytree(FIXTURE, target)
+
+
+def _add_cross_tier_multi_task(root: Path) -> None:
+    with (root / "tasks.jsonl").open("a", encoding="utf-8") as file:
+        file.write(
+            json.dumps(
+                {
+                    "id": "task-cross-tier-multi",
+                    "instruction_text": "Route a multi-skill task with one easy candidate.",
+                    "difficulty": "medium",
+                    "num_skills": 2,
+                    "skill_names": ["Browser Login", "TDD Helper"],
+                    "domain": "engineering",
+                    "excluded": False,
+                },
+                sort_keys=True,
+            )
+            + "\n"
+        )
+    relevance = json.loads((root / "relevance.json").read_text(encoding="utf-8"))
+    relevance["task-cross-tier-multi"] = {
+        "task_type": "multi_skill",
+        "gt_skill_ids": ["gt/browser-login", "gt/tdd-helper"],
+        "core_gt_ids": ["gt/browser-login", "gt/tdd-helper"],
+        "auxiliary_gt_ids": [],
+        "relevance": {
+            "gt/browser-login": 3,
+            "gt/tdd-helper": 3,
+        },
+    }
+    (root / "relevance.json").write_text(
+        json.dumps(relevance, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    predictions = json.loads((root / "predictions.json").read_text(encoding="utf-8"))
+    predictions["task-cross-tier-multi"] = ["gt/browser-login", "gt/tdd-helper"]
+    (root / "predictions.json").write_text(
+        json.dumps(predictions, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )

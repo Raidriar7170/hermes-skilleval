@@ -91,11 +91,11 @@ def _score_tier(
     rows = []
     for task in adapter.load_tasks():
         entry = relevance_entries.get(task.task_id, {})
-        gt_ids = _selected_gt_ids(entry, mode)
+        selected_gt_ids = _selected_gt_ids(entry, mode)
         task_type = task.task_type
         if mode == "core" and task_type == "generic_only":
             continue
-        if mode == "single" and len(gt_ids) != 1:
+        if mode == "single" and len(selected_gt_ids) != 1:
             continue
         if task.task_id not in predictions:
             continue
@@ -104,8 +104,10 @@ def _score_tier(
             for skill_id, grade in task.graded_relevance.items()
             if skill_id in tier_pool
         }
-        gt_ids = [skill_id for skill_id in gt_ids if skill_id in tier_pool]
-        if not gt_ids:
+        gt_ids_in_pool = [
+            skill_id for skill_id in selected_gt_ids if skill_id in tier_pool
+        ]
+        if not gt_ids_in_pool:
             continue
         ranking = predictions.get(task.task_id, [])
         rows.append(
@@ -114,11 +116,12 @@ def _score_tier(
                 "task_type": task_type,
                 "task_difficulty": task.tier,
                 "evaluation_tier": tier,
-                "gt_ids": gt_ids,
-                "gt_count": len(gt_ids),
+                "gt_ids": gt_ids_in_pool,
+                "gt_count": len(gt_ids_in_pool),
+                "slice_gt_count": len(selected_gt_ids),
                 "predictions": ranking,
                 "tier_relevance": tier_relevance,
-                "metrics": _task_metrics(ranking, gt_ids, tier_relevance),
+                "metrics": _task_metrics(ranking, gt_ids_in_pool, tier_relevance),
             }
         )
 
@@ -295,8 +298,8 @@ def _full_coverage_at_k(predictions: list[str], gt_ids: list[str], k: int) -> fl
 def _aggregates(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return {
         "all": _aggregate(rows),
-        "single": _aggregate([row for row in rows if row["gt_count"] == 1]),
-        "multi": _aggregate([row for row in rows if row["gt_count"] > 1]),
+        "single": _aggregate([row for row in rows if row["slice_gt_count"] == 1]),
+        "multi": _aggregate([row for row in rows if row["slice_gt_count"] > 1]),
     }
 
 
