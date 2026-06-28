@@ -12,9 +12,11 @@ from hermes_skilleval.external.skillrouter_matrix import (
 )
 from hermes_skilleval.live_agent_runtime import FakeAgentRunner, FakeVerifier
 from hermes_skilleval.live_agent_skillsbench import (
+    _derived_hashes,
     run_skillsbench_matrix,
     write_skillsbench_plan,
 )
+from hermes_skilleval.release_manifest import sha256_file
 
 
 SKILLROUTER_FIXTURE = Path("tests/fixtures/external/skillrouter_eval_core_tiny")
@@ -93,6 +95,84 @@ def test_evidence_gate_promotion_uses_evaluated_configs_not_hardcoded_names(tmp_
     assert "finetuned-embedding" not in json.dumps(report["router_promotion_gate"])
 
 
+def test_evidence_gate_fails_when_external_report_missing_frozen_configs(tmp_path):
+    routers = [
+        {
+            "router_id": "fixture-router-a",
+            "field_view": "name_only",
+            "predictions_path": str(SKILLROUTER_PREDICTIONS),
+            "version": "fixture",
+        },
+        {
+            "router_id": "fixture-router-b",
+            "field_view": "metadata",
+            "predictions_path": str(SKILLROUTER_PREDICTIONS),
+            "version": "fixture",
+        },
+        {
+            "router_id": "fixture-router-c",
+            "field_view": "full_body",
+            "predictions_path": str(SKILLROUTER_PREDICTIONS),
+            "version": "fixture",
+        },
+    ]
+    external_plan, external_report = _write_external_artifacts(tmp_path, routers=routers)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    payload = json.loads(external_report.read_text(encoding="utf-8"))
+    first_config = sorted(payload["official"])[0]
+    payload["official"] = {first_config: payload["official"][first_config]}
+    external_report.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "INVALID_EVIDENCE"
+    check = _check_by_id(report, "external.report_completeness")
+    assert check["status"] == "FAIL"
+    assert check["details"]["missing_config_ids"]
+
+
+def test_evidence_gate_fails_when_external_report_has_unknown_config(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    payload = json.loads(external_report.read_text(encoding="utf-8"))
+    payload["official"]["unknown-config"] = next(iter(payload["official"].values()))
+    external_report.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "INVALID_EVIDENCE"
+    check = _check_by_id(report, "external.report_completeness")
+    assert check["status"] == "FAIL"
+    assert check["details"]["unexpected_config_ids"] == ["unknown-config"]
+
+
+def test_evidence_gate_passes_when_external_report_covers_all_configs(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert _check_by_id(report, "external.report_completeness")["status"] == "PASS"
+
+
 def test_evidence_gate_missing_live_agent_is_review_required_field_unavailable(tmp_path):
     external_plan, external_report = _write_external_artifacts(tmp_path)
 
@@ -152,6 +232,70 @@ def test_evidence_gate_invalid_live_plan_digest_blocks_promotion(tmp_path):
     )
 
 
+def test_evidence_gate_fails_when_oracle_record_present_but_failed(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    plan = json.loads(live_plan.read_text(encoding="utf-8"))
+    plan["oracle_qualification_records"]["sb-task-login"]["verifier_passed"] = False
+    _write_json(live_plan, plan)
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "INVALID_EVIDENCE"
+    check = _check_by_id(report, "live_agent.oracle_qualification")
+    assert check["status"] == "FAIL"
+    assert any("did not pass" in failure["reason"] for failure in check["details"]["failures"])
+
+
+def test_evidence_gate_fails_when_oracle_pass_rate_below_one(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    plan = json.loads(live_plan.read_text(encoding="utf-8"))
+    plan["oracle_qualification_records"]["sb-task-login"]["pass_rate"] = 0.5
+    _write_json(live_plan, plan)
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "INVALID_EVIDENCE"
+    check = _check_by_id(report, "live_agent.oracle_qualification")
+    assert check["status"] == "FAIL"
+    assert any("pass_rate" in failure["reason"] for failure in check["details"]["failures"])
+
+
+def test_evidence_gate_passes_when_oracle_records_are_qualified(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    plan = json.loads(live_plan.read_text(encoding="utf-8"))
+    record = plan["oracle_qualification_records"]["sb-task-login"]
+    record["pass_rate"] = 1.0
+    record["passes"] = 3
+    record["trials"] = 3
+    record["verifier_stable"] = True
+    _write_json(live_plan, plan, update_digest=True)
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert _check_by_id(report, "live_agent.oracle_qualification")["status"] == "PASS"
+
+
 def test_evidence_gate_detects_no_skill_leakage_and_trace_loss(tmp_path):
     external_plan, external_report = _write_external_artifacts(tmp_path)
     live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
@@ -202,6 +346,63 @@ def test_evidence_gate_detects_mounted_only_no_skill_leakage(tmp_path):
     )
 
 
+def test_evidence_gate_fails_on_user_global_skill_inventory_leakage(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    _append_preflight_to_first_trace(
+        live_report,
+        _preflight_inventory(user_entries=1),
+    )
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "INVALID_EVIDENCE"
+    assert _check_by_id(report, "live_agent.global_capability_inventory")["status"] == "FAIL"
+
+
+def test_evidence_gate_passes_with_clean_isolated_capability_inventory(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    _append_preflight_to_first_trace(live_report, _preflight_inventory())
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert _check_by_id(report, "live_agent.global_capability_inventory")["status"] == "PASS"
+    assert report["benchmark_validity_gate"]["status"] == "VALID_EVIDENCE"
+
+
+def test_evidence_gate_inherit_mode_is_not_valid_final_evidence(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    _append_preflight_to_first_trace(
+        live_report,
+        _preflight_inventory(codex_home_mode="inherit", evidence_mode="smoke-only"),
+    )
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "REVIEW_REQUIRED"
+    assert _check_by_id(report, "live_agent.global_capability_inventory")["status"] == "REVIEW"
+
+
 def test_evidence_gate_missing_frozen_live_run_is_invalid(tmp_path):
     external_plan, external_report = _write_external_artifacts(tmp_path)
     live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
@@ -246,6 +447,48 @@ def test_evidence_gate_linked_transfer_requires_review_not_independent_claim(tmp
         check["id"] == "live_agent.overlap_status" and check["status"] == "REVIEW"
         for check in report["benchmark_validity_gate"]["checks"]
     )
+
+
+def test_evidence_gate_fails_linked_transfer_with_independent_claim(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=False)
+    payload = json.loads(live_report.read_text(encoding="utf-8"))
+    payload["overlap_report"]["independent_generalization_claim"] = True
+    _write_json(live_report, payload)
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "INVALID_EVIDENCE"
+    assert _check_by_id(report, "live_agent.overlap_status")["status"] == "FAIL"
+
+
+def test_evidence_gate_fails_unavailable_overlap_with_independent_claim(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    payload = json.loads(live_report.read_text(encoding="utf-8"))
+    payload["overlap_report"] = {
+        "decision": "UNAVAILABLE",
+        "independent_generalization_claim": True,
+        "reason": "missing SkillRouter input",
+    }
+    _write_json(live_report, payload)
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "INVALID_EVIDENCE"
+    assert _check_by_id(report, "live_agent.overlap_status")["status"] == "FAIL"
 
 
 def test_evidence_gate_verifier_conflict_is_invalid_and_regression_is_reported(tmp_path):
@@ -453,3 +696,63 @@ def _write_live_artifacts(
         verifier=FakeVerifier(pass_=True, details={"reason": "fixture pass"}),
     )
     return plan_path, report_path
+
+
+def _check_by_id(report: dict[str, object], check_id: str) -> dict[str, object]:
+    return next(
+        check
+        for check in report["benchmark_validity_gate"]["checks"]
+        if check["id"] == check_id
+    )
+
+
+def _write_json(path: Path, payload: dict[str, object], *, update_digest: bool = False) -> None:
+    if update_digest and "derived_hashes" in payload:
+        payload["derived_hashes"] = _derived_hashes(payload)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if update_digest:
+        path.with_name(f"{path.name}.sha256").write_text(
+            f"{sha256_file(path)}  {path.name}\n",
+            encoding="utf-8",
+        )
+
+
+def _append_preflight_to_first_trace(live_report: Path, preflight: dict[str, object]) -> None:
+    payload = json.loads(live_report.read_text(encoding="utf-8"))
+    trace_path = Path(payload["runs"][0]["trace_path"])
+    trace = json.loads(trace_path.read_text(encoding="utf-8"))
+    trace.setdefault("events", []).insert(0, preflight)
+    _write_json(trace_path, trace)
+
+
+def _preflight_inventory(
+    *,
+    user_entries: int = 0,
+    codex_home_mode: str = "isolated",
+    evidence_mode: str = "final-evidence",
+) -> dict[str, object]:
+    return {
+        "type": "preflight",
+        "codex_home_mode": codex_home_mode,
+        "evidence_mode": evidence_mode,
+        "global_capability_inventory": {
+            "home_isolated": codex_home_mode == "isolated",
+            "user_skill_dir": {
+                "status": "ISOLATED_HOME" if codex_home_mode == "isolated" else "SMOKE_ONLY",
+                "entry_count": user_entries,
+            },
+            "admin_skill_dirs": [
+                {
+                    "status": "ABSENT",
+                    "entry_count": 0,
+                }
+            ],
+            "workspace_skill_dirs": {
+                "workspace_status": "CLEAR",
+                "mounted_entry_count": 0,
+                "parent_skill_dirs_checked": 3,
+                "empty_parent_skill_dirs": 0,
+            },
+            "bundled_skills": {"status": "SYSTEM_MANAGED_UNKNOWN"},
+        },
+    }

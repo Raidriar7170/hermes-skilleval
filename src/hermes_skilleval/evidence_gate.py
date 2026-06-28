@@ -225,6 +225,7 @@ def _evaluate_external(
         if isinstance(official, dict) and bool(official)
         else "official SkillRouter metrics are missing",
     )
+    _check_external_report_completeness(checks, plan, report)
     _check(
         checks,
         "external.hermes_diagnostics_separate",
@@ -327,9 +328,10 @@ def _evaluate_live_agent(
     _check_oracle_qualification(checks, plan)
     _check_verifier_evidence(checks, report)
     _check_no_skill_leakage(checks, report)
-    _check_trace_completeness(checks, report)
+    _check_global_capability_inventory(checks, report, report_path.parent)
+    _check_trace_completeness(checks, report, report_path.parent)
     _check_overlap_status(checks, report)
-    _check_secret_redaction(checks, report)
+    _check_secret_redaction(checks, report, report_path.parent)
 
     runs = report.get("runs") if isinstance(report, dict) else []
     run_records = runs if isinstance(runs, list) else []
@@ -403,6 +405,93 @@ def _external_router_configs(plan: dict[str, Any]) -> list[dict[str, Any]]:
         for config in configs
         if isinstance(config, dict)
     ]
+
+
+def _check_external_report_completeness(
+    checks: list[dict[str, Any]],
+    plan: dict[str, Any],
+    report: dict[str, Any],
+) -> None:
+    expected = [
+        str(config.get("config_id"))
+        for config in plan.get("frozen_routers", [])
+        if isinstance(config, dict) and config.get("config_id")
+    ]
+    official = report.get("official") if isinstance(report, dict) else None
+    actual = sorted(official) if isinstance(official, dict) else []
+    missing = sorted(set(expected) - set(actual))
+    extra = sorted(set(actual) - set(expected))
+    structure_errors = []
+    tiers = [str(tier) for tier in plan.get("tiers", ("easy", "hard"))]
+    if isinstance(official, dict):
+        for config_id in sorted(set(expected) & set(actual)):
+            structure_errors.extend(
+                _official_config_structure_errors(config_id, official[config_id], tiers)
+            )
+    _check(
+        checks,
+        "external.report_completeness",
+        PASS if not missing and not extra and not structure_errors else FAIL,
+        BLOCKING,
+        "external official report covers exactly the frozen configs and tiers"
+        if not missing and not extra and not structure_errors
+        else "external official report does not match frozen config/tier structure",
+        {
+            "expected_config_ids": expected,
+            "actual_config_ids": actual,
+            "missing_config_ids": missing,
+            "unexpected_config_ids": extra,
+            "structure_errors": structure_errors,
+        },
+    )
+
+
+def _official_config_structure_errors(
+    config_id: str,
+    payload: Any,
+    tiers: list[str],
+) -> list[dict[str, Any]]:
+    errors = []
+    if not isinstance(payload, dict):
+        return [{"config_id": config_id, "reason": "config report is not an object"}]
+    score = payload
+    if score.get("schema_version") != "v0.3.skillrouter-official-scorer.v1":
+        errors.append({"config_id": config_id, "reason": "missing official scorer schema"})
+    by_tier = score.get("by_tier")
+    if not isinstance(by_tier, dict):
+        return errors + [{"config_id": config_id, "reason": "missing by_tier object"}]
+    missing_tiers = sorted(set(tiers) - set(by_tier))
+    extra_tiers = sorted(set(by_tier) - set(tiers))
+    for tier in missing_tiers:
+        errors.append({"config_id": config_id, "tier": tier, "reason": "missing tier"})
+    for tier in extra_tiers:
+        errors.append({"config_id": config_id, "tier": tier, "reason": "unexpected tier"})
+    for tier in sorted(set(tiers) & set(by_tier)):
+        tier_report = by_tier[tier]
+        if not isinstance(tier_report, dict):
+            errors.append({"config_id": config_id, "tier": tier, "reason": "tier is not object"})
+            continue
+        aggregates = tier_report.get("aggregates")
+        if not isinstance(aggregates, dict):
+            errors.append({"config_id": config_id, "tier": tier, "reason": "missing aggregates"})
+        else:
+            for slice_name in ("all", "single", "multi"):
+                if not isinstance(aggregates.get(slice_name), dict):
+                    errors.append(
+                        {
+                            "config_id": config_id,
+                            "tier": tier,
+                            "slice": slice_name,
+                            "reason": "missing aggregate slice",
+                        }
+                    )
+        if not isinstance(tier_report.get("tasks"), list):
+            errors.append({"config_id": config_id, "tier": tier, "reason": "missing tasks"})
+        if not isinstance(tier_report.get("task_count"), int):
+            errors.append(
+                {"config_id": config_id, "tier": tier, "reason": "missing task_count"}
+            )
+    return errors
 
 
 def _schema_check(
@@ -560,19 +649,74 @@ def _prompt_hash_mismatches(records: Any) -> list[str]:
 
 
 def _check_oracle_qualification(checks: list[dict[str, Any]], plan: dict[str, Any]) -> None:
-    selected = {task.get("task_id") for task in plan.get("selected_tasks", []) if isinstance(task, dict)}
-    qualified = set(plan.get("oracle_qualification_records", {}))
+    selected_tasks = [
+        task for task in plan.get("selected_tasks", []) if isinstance(task, dict)
+    ]
+    selected = {task.get("task_id") for task in selected_tasks}
+    records = plan.get("oracle_qualification_records", {})
+    qualified = set(records) if isinstance(records, dict) else set()
     missing = sorted(str(task_id) for task_id in selected - qualified)
+    failures = [{"task_id": task_id, "reason": "missing oracle qualification"} for task_id in missing]
+    if isinstance(records, dict):
+        for task in selected_tasks:
+            task_id = str(task.get("task_id"))
+            if task_id not in records:
+                continue
+            failures.extend(_oracle_record_failures(task, records[task_id]))
+    else:
+        failures.append({"reason": "oracle_qualification_records is not an object"})
     _check(
         checks,
         "live_agent.oracle_qualification",
-        PASS if not missing else FAIL,
+        PASS if not failures else FAIL,
         BLOCKING,
-        "oracle qualification exists for every selected live task"
-        if not missing
-        else "selected live tasks are missing oracle qualification",
-        {"missing_task_ids": missing},
+        "oracle qualification passed for every selected live task"
+        if not failures
+        else "selected live tasks failed oracle qualification requirements",
+        {"failures": failures},
     )
+
+
+def _oracle_record_failures(
+    task: dict[str, Any],
+    record: Any,
+) -> list[dict[str, Any]]:
+    task_id = str(task.get("task_id"))
+    failures = []
+    if not isinstance(record, dict):
+        return [{"task_id": task_id, "reason": "oracle record is not an object"}]
+    if record.get("condition") not in {None, "oracle-skill"}:
+        failures.append({"task_id": task_id, "reason": "oracle record condition is not oracle-skill"})
+    passed = record.get("verifier_passed", record.get("passed"))
+    if passed is not True:
+        failures.append({"task_id": task_id, "reason": "oracle verifier did not pass"})
+    pass_rate = record.get("pass_rate", record.get("oracle_pass_rate"))
+    if pass_rate is not None:
+        parsed_rate = _float_value(pass_rate)
+        if parsed_rate is None or parsed_rate < 1.0:
+            failures.append({"task_id": task_id, "reason": "oracle pass_rate is below 1.0"})
+    passes = record.get("passes", record.get("pass_count"))
+    trials = record.get("trials", record.get("trial_count"))
+    if passes is not None and trials is not None:
+        parsed_passes = _int_or_none(passes)
+        parsed_trials = _int_or_none(trials)
+        if (
+            parsed_passes is None
+            or parsed_trials is None
+            or parsed_passes != parsed_trials
+        ):
+            failures.append({"task_id": task_id, "reason": "oracle passes do not equal trials"})
+    for field in ("verifier_stable", "stable", "deterministic", "verifier_deterministic"):
+        if field in record and record[field] is not True:
+            failures.append({"task_id": task_id, "reason": f"oracle {field} is not true"})
+    verifier = task.get("verifier")
+    if not isinstance(verifier, dict) or verifier.get("type") != "deterministic":
+        failures.append({"task_id": task_id, "reason": "task verifier is not deterministic"})
+    if task.get("requires_private_credentials") is True:
+        failures.append({"task_id": task_id, "reason": "task requires private credentials"})
+    if task.get("network", "none") not in {"none", "controlled"}:
+        failures.append({"task_id": task_id, "reason": "task network requirement is uncontrolled"})
+    return failures
 
 
 def _check_verifier_evidence(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
@@ -637,12 +781,190 @@ def _check_no_skill_leakage(checks: list[dict[str, Any]], report: dict[str, Any]
     )
 
 
-def _check_trace_completeness(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
+def _check_global_capability_inventory(
+    checks: list[dict[str, Any]],
+    report: dict[str, Any],
+    report_dir: Path,
+) -> None:
+    failures = []
+    reviews = []
+    inventories = _capability_inventories(report, report_dir)
+    for source, inventory in inventories:
+        failures.extend(_capability_inventory_failures(source, inventory))
+        reviews.extend(_capability_inventory_reviews(source, inventory))
+    if failures:
+        status = FAIL
+        severity = BLOCKING
+        summary = "global capability inventory shows skill leakage"
+    elif reviews:
+        status = REVIEW
+        severity = REVIEW_SEVERITY
+        summary = "global capability inventory requires review"
+    else:
+        status = PASS
+        severity = INFO
+        summary = "global capability inventory has no detected user/admin/repo leakage"
+    _check(
+        checks,
+        "live_agent.global_capability_inventory",
+        status,
+        severity,
+        summary,
+        {
+            "inventory_count": len(inventories),
+            "failures": failures,
+            "reviews": reviews,
+        },
+    )
+
+
+def _capability_inventories(
+    report: dict[str, Any],
+    report_dir: Path,
+) -> list[tuple[str, dict[str, Any]]]:
+    inventories = []
+    for key in ("global_capability_inventory", "preflight"):
+        value = report.get(key)
+        if isinstance(value, dict):
+            inventory = value.get("global_capability_inventory", value)
+            if isinstance(inventory, dict):
+                inventories.append((f"report.{key}", _inventory_with_preflight_mode(inventory, value)))
+    for run in _runs(report):
+        trace_path = _trace_path_for_run(run, report_dir)
+        if trace_path is None or not trace_path.exists():
+            continue
+        try:
+            trace = _read_json(trace_path)
+        except (OSError, json.JSONDecodeError, ValueError):
+            continue
+        for event in trace.get("events", []):
+            if not isinstance(event, dict) or event.get("type") != "preflight":
+                continue
+            inventory = event.get("global_capability_inventory") or event.get("skill_inventory")
+            if isinstance(inventory, dict):
+                inventories.append(
+                    (
+                        f"trace.{run.get('run_id')}.preflight",
+                        _inventory_with_preflight_mode(inventory, event),
+                    )
+                )
+    return inventories
+
+
+def _inventory_with_preflight_mode(
+    inventory: dict[str, Any],
+    preflight: dict[str, Any],
+) -> dict[str, Any]:
+    merged = dict(inventory)
+    for key in ("codex_home_mode", "evidence_mode"):
+        if key in preflight and key not in merged:
+            merged[key] = preflight[key]
+    return merged
+
+
+def _capability_inventory_failures(
+    source: str,
+    inventory: dict[str, Any],
+) -> list[dict[str, Any]]:
+    failures = []
+    user = inventory.get("user_skill_dir")
+    if isinstance(user, dict) and _entry_count(user) > 0:
+        failures.append({"source": source, "surface": "user_skill_dir", "reason": "non-empty"})
+    admin_dirs = inventory.get("admin_skill_dirs", [])
+    if isinstance(admin_dirs, list):
+        for index, item in enumerate(admin_dirs):
+            if isinstance(item, dict) and _entry_count(item) > 0:
+                failures.append(
+                    {
+                        "source": source,
+                        "surface": f"admin_skill_dirs[{index}]",
+                        "reason": "non-empty",
+                    }
+                )
+    workspace = inventory.get("workspace_skill_dirs")
+    if isinstance(workspace, dict):
+        for key, value in workspace.items():
+            if "parent" in str(key) and str(key).endswith("count") and _int_value(value) > 0:
+                failures.append(
+                    {
+                        "source": source,
+                        "surface": f"workspace_skill_dirs.{key}",
+                        "reason": "workspace-parent skills are non-empty",
+                    }
+                )
+        for key in ("unexpected_entry_count", "leaked_entry_count", "parent_leak_count"):
+            if _int_value(workspace.get(key)) > 0:
+                failures.append(
+                    {
+                        "source": source,
+                        "surface": f"workspace_skill_dirs.{key}",
+                        "reason": "workspace skills are not run-created",
+                    }
+                )
+    return failures
+
+
+def _capability_inventory_reviews(
+    source: str,
+    inventory: dict[str, Any],
+) -> list[dict[str, Any]]:
+    reviews = []
+    user = inventory.get("user_skill_dir")
+    if isinstance(user, dict) and user.get("status") == "SMOKE_ONLY":
+        reviews.append({"source": source, "surface": "user_skill_dir", "reason": "smoke-only"})
+    for key in ("codex_home_mode", "evidence_mode"):
+        value = inventory.get(key)
+        if value in {"inherit", "smoke-only"}:
+            reviews.append({"source": source, "surface": key, "reason": str(value)})
+    return reviews
+
+
+def _entry_count(value: dict[str, Any]) -> int:
+    for key in ("entry_count", "entries", "skill_count", "count"):
+        count = _int_value(value.get(key))
+        if count:
+            return count
+    return 0
+
+
+def _int_value(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _int_or_none(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _float_value(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _check_trace_completeness(
+    checks: list[dict[str, Any]],
+    report: dict[str, Any],
+    report_dir: Path,
+) -> None:
     failures = []
     for run in _runs(report):
-        trace_path = Path(str(run.get("trace_path")))
+        trace_path = _trace_path_for_run(run, report_dir)
+        if trace_path is None:
+            failures.append({"run_id": run.get("run_id"), "reason": "trace path escapes artifact directory"})
+            continue
         if not trace_path.exists():
             failures.append({"run_id": run.get("run_id"), "reason": "trace file is missing"})
+            continue
+        expected_hash = _trace_hash_from_run(run)
+        if expected_hash and sha256_file(trace_path) != expected_hash:
+            failures.append({"run_id": run.get("run_id"), "reason": "trace hash mismatch"})
             continue
         try:
             trace = _read_json(trace_path)
@@ -671,6 +993,34 @@ def _check_trace_completeness(checks: list[dict[str, Any]], report: dict[str, An
         else "live-agent trace files are missing, incomplete, or inconsistent with report rows",
         {"failures": failures},
     )
+
+
+def _trace_path_for_run(run: dict[str, Any], report_dir: Path) -> Path | None:
+    raw = run.get("trace_path")
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    path = Path(raw)
+    if not path.is_absolute():
+        path = report_dir / path
+    try:
+        resolved = path.resolve()
+        resolved.relative_to(report_dir.resolve())
+    except (OSError, ValueError):
+        return None
+    return resolved
+
+
+def _trace_hash_from_run(run: dict[str, Any]) -> str | None:
+    for key in ("trace_sha256", "trace_hash", "trace_file_sha256"):
+        value = run.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    trace_file = run.get("trace_file")
+    if isinstance(trace_file, dict):
+        value = trace_file.get("sha256")
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
 
 
 def _trace_report_mismatches(run: dict[str, Any], trace: dict[str, Any]) -> list[dict[str, Any]]:
@@ -720,7 +1070,16 @@ def _trace_report_mismatches(run: dict[str, Any], trace: dict[str, Any]) -> list
 def _check_overlap_status(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
     overlap = report.get("overlap_report")
     decision = overlap.get("decision") if isinstance(overlap, dict) else None
-    if decision == "INVALID":
+    independent_claim = (
+        overlap.get("independent_generalization_claim")
+        if isinstance(overlap, dict)
+        else None
+    )
+    if decision != "DISJOINT" and independent_claim is True:
+        status = FAIL
+        severity = BLOCKING
+        summary = "overlap independent_generalization_claim conflicts with overlap decision"
+    elif decision == "INVALID":
         status = FAIL
         severity = BLOCKING
         summary = "overlap report is invalid"
@@ -742,16 +1101,25 @@ def _check_overlap_status(checks: list[dict[str, Any]], report: dict[str, Any]) 
         status,
         severity,
         summary,
-        {"decision": decision},
+        {
+            "decision": decision,
+            "independent_generalization_claim": independent_claim,
+        },
     )
 
 
-def _check_secret_redaction(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
+def _check_secret_redaction(
+    checks: list[dict[str, Any]],
+    report: dict[str, Any],
+    report_dir: Path,
+) -> None:
     leaks = []
     if SECRET_RE.search(json.dumps(report, sort_keys=True, default=str)):
         leaks.append({"artifact": "live_report"})
     for run in _runs(report):
-        trace_path = Path(str(run.get("trace_path")))
+        trace_path = _trace_path_for_run(run, report_dir)
+        if trace_path is None:
+            continue
         if not trace_path.exists():
             continue
         text = trace_path.read_text(encoding="utf-8")
