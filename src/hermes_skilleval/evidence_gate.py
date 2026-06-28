@@ -792,7 +792,11 @@ def _check_global_capability_inventory(
     for source, inventory in inventories:
         failures.extend(_capability_inventory_failures(source, inventory))
         reviews.extend(_capability_inventory_reviews(source, inventory))
-    if failures:
+    if not inventories:
+        status = REVIEW
+        severity = REVIEW_SEVERITY
+        summary = "global capability inventory is missing"
+    elif failures:
         status = FAIL
         severity = BLOCKING
         summary = "global capability inventory shows skill leakage"

@@ -403,6 +403,37 @@ def test_evidence_gate_inherit_mode_is_not_valid_final_evidence(tmp_path):
     assert _check_by_id(report, "live_agent.global_capability_inventory")["status"] == "REVIEW"
 
 
+def test_evidence_gate_missing_global_capability_inventory_requires_review(tmp_path):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    _strip_capability_inventory_surfaces(live_report)
+    output = tmp_path / "evidence.json"
+
+    exit_code = main(
+        [
+            "v0.3-evidence-gate",
+            "--output",
+            str(output),
+            "--external-plan",
+            str(external_plan),
+            "--external-report",
+            str(external_report),
+            "--live-plan",
+            str(live_plan),
+            "--live-report",
+            str(live_report),
+        ]
+    )
+
+    assert exit_code == 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["benchmark_validity_gate"]["status"] == "REVIEW_REQUIRED"
+    check = _check_by_id(report, "live_agent.global_capability_inventory")
+    assert check["status"] == "REVIEW"
+    assert check["details"]["inventory_count"] == 0
+    assert "missing" in check["summary"]
+
+
 def test_evidence_gate_missing_frozen_live_run_is_invalid(tmp_path):
     external_plan, external_report = _write_external_artifacts(tmp_path)
     live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
@@ -695,6 +726,7 @@ def _write_live_artifacts(
         runner=FakeAgentRunner(exit_code=0, events=[{"type": "final", "message": "ok"}]),
         verifier=FakeVerifier(pass_=True, details={"reason": "fixture pass"}),
     )
+    _append_preflight_to_first_trace(report_path, _preflight_inventory())
     return plan_path, report_path
 
 
@@ -723,6 +755,33 @@ def _append_preflight_to_first_trace(live_report: Path, preflight: dict[str, obj
     trace = json.loads(trace_path.read_text(encoding="utf-8"))
     trace.setdefault("events", []).insert(0, preflight)
     _write_json(trace_path, trace)
+
+
+def _strip_capability_inventory_surfaces(live_report: Path) -> None:
+    payload = json.loads(live_report.read_text(encoding="utf-8"))
+    payload.pop("global_capability_inventory", None)
+    payload.pop("skill_inventory", None)
+    payload.pop("preflight", None)
+    for run in payload["runs"]:
+        trace_path = Path(run["trace_path"])
+        trace = json.loads(trace_path.read_text(encoding="utf-8"))
+        trace["events"] = [
+            _event_without_capability_inventory(event)
+            for event in trace.get("events", [])
+            if not (isinstance(event, dict) and event.get("type") == "preflight")
+        ]
+        _write_json(trace_path, trace)
+    _write_json(live_report, payload)
+
+
+def _event_without_capability_inventory(event: object) -> object:
+    if not isinstance(event, dict):
+        return event
+    event = dict(event)
+    event.pop("global_capability_inventory", None)
+    event.pop("skill_inventory", None)
+    event.pop("preflight", None)
+    return event
 
 
 def _preflight_inventory(
