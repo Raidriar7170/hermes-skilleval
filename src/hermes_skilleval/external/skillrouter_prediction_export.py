@@ -26,6 +26,9 @@ SUPPORTED_TIERS = {"easy", "hard"}
 SUPPORTED_FIELD_VIEWS = {"name_only", "metadata", "full_body"}
 SUPPORTED_ROUTERS = {"baseline-minilm", "finetuned-embedding"}
 SAFE_FILENAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+IMMUTABLE_REVISION_RE = re.compile(r"^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$")
+DIRTY_PATH_PREFIXES = ("src/", "tests/", "scripts/", "docs/", "openspec/")
+DIRTY_PATH_NAMES = {"README.md", "pyproject.toml"}
 
 
 class BatchEmbeddingModel(Protocol):
@@ -85,6 +88,8 @@ def write_skillrouter_prediction_artifacts(
     top_k: int = MIN_TOP_K,
     command: list[str] | None = None,
     embedding_model: BatchEmbeddingModel | None = None,
+    embedding_backend: str | None = None,
+    final_evidence: bool = False,
 ) -> dict[str, Any]:
     if top_k < MIN_TOP_K:
         raise ValueError(f"top_k must be at least {MIN_TOP_K}")
@@ -94,17 +99,30 @@ def write_skillrouter_prediction_artifacts(
     root = Path(data_root)
     output_root = Path(output_dir)
     output_root.mkdir(parents=True, exist_ok=True)
-    tasks = _load_task_records(root)
+    tasks_path = _tasks_path(root)
+    tasks = _load_task_records(tasks_path)
     task_ids = {task.task_id for task in tasks}
+    code_state = _git_state()
+    if final_evidence and code_state.get("dirty_paths"):
+        raise ValueError(
+            "production prediction export requires clean source/config/test paths: "
+            + ", ".join(code_state["dirty_paths"])
+        )
+    backend = _embedding_backend_label(
+        embedding_backend=embedding_backend,
+        embedding_model=embedding_model,
+    )
 
     manifest = {
         "schema_version": EXPORT_SCHEMA,
         "run_id": _non_empty(run_id, "run_id"),
         "generated_at": _now(),
-        "code": _git_state(),
+        "code": code_state,
         "data_root": str(root),
+        "task_input": _task_input_record(tasks_path, root, len(tasks)),
         "top_k": top_k,
         "command": list(command or []),
+        "final_evidence": final_evidence,
         "relevance_labels_read": False,
         "scope_guards": {
             "no_training": True,
@@ -119,8 +137,17 @@ def write_skillrouter_prediction_artifacts(
 
     for config in frozen_configs:
         normalized = _normalize_config(config)
-        availability = _router_availability(normalized)
-        artifact_base = _artifact_record(normalized, output_root, top_k)
+        availability = _router_availability(
+            normalized,
+            embedding_backend=backend,
+            injected_model=embedding_model is not None,
+        )
+        artifact_base = _artifact_record(
+            normalized,
+            output_root,
+            top_k,
+            embedding_backend=backend,
+        )
         if availability["status"] != "PASS":
             manifest["artifacts"].append(artifact_base | availability)
             continue
@@ -221,8 +248,11 @@ def _rank_tasks(
     return predictions
 
 
-def _load_task_records(data_root: Path) -> list[_TaskRecord]:
-    path = _first_existing(data_root / "tasks.jsonl", data_root / "tasks" / "tasks.jsonl")
+def _tasks_path(data_root: Path) -> Path:
+    return _first_existing(data_root / "tasks.jsonl", data_root / "tasks" / "tasks.jsonl")
+
+
+def _load_task_records(path: Path) -> list[_TaskRecord]:
     tasks = []
     seen: set[str] = set()
     with path.open(encoding="utf-8") as handle:
@@ -267,17 +297,38 @@ def _normalize_config(config: FrozenRouterConfig) -> FrozenRouterConfig:
     )
 
 
-def _router_availability(config: FrozenRouterConfig) -> dict[str, Any]:
+def _router_availability(
+    config: FrozenRouterConfig,
+    *,
+    embedding_backend: str,
+    injected_model: bool,
+) -> dict[str, Any]:
     if config.router_id not in SUPPORTED_ROUTERS:
         return {
             "status": "UNAVAILABLE",
             "reason": f"unsupported frozen router_id: {config.router_id}",
+        }
+    if embedding_backend == "hashing" and config.router_id in {
+        "baseline-minilm",
+        "finetuned-embedding",
+    }:
+        return {
+            "status": "UNAVAILABLE",
+            "reason": (
+                "hashing backend cannot produce final baseline-minilm or "
+                "finetuned-embedding prediction artifacts"
+            ),
         }
     if config.router_id == "baseline-minilm":
         if not config.model_revision:
             return {
                 "status": "UNAVAILABLE",
                 "reason": "baseline-minilm requires a provenance-pinned model revision",
+            }
+        if not injected_model and not _is_immutable_revision(config.model_revision):
+            return {
+                "status": "UNAVAILABLE",
+                "reason": "baseline-minilm model revision must be an immutable commit SHA",
             }
         return {"status": "PASS"}
     if config.router_id == "finetuned-embedding":
@@ -292,13 +343,12 @@ def _router_availability(config: FrozenRouterConfig) -> dict[str, Any]:
                 "status": "UNAVAILABLE",
                 "reason": f"finetuned-embedding checkpoint_path does not exist: {checkpoint}",
             }
-        if not (config.checkpoint_sha256 or config.model_revision):
+        actual = _path_sha256(checkpoint)
+        if config.checkpoint_sha256 and config.checkpoint_sha256 != actual:
             return {
                 "status": "UNAVAILABLE",
-                "reason": (
-                    "finetuned-embedding requires checkpoint_sha256 or model_revision "
-                    "for provenance"
-                ),
+                "reason": "finetuned-embedding checkpoint sha256 mismatch",
+                "model": _checkpoint_hash_record(config, actual),
             }
         return {"status": "PASS"}
     raise AssertionError("unreachable")
@@ -321,7 +371,7 @@ def _model_record(config: FrozenRouterConfig, model: BatchEmbeddingModel) -> dic
     if config.checkpoint_path:
         checkpoint = Path(config.checkpoint_path)
         record["checkpoint_path"] = str(checkpoint)
-        record["checkpoint_sha256"] = config.checkpoint_sha256 or _path_sha256(checkpoint)
+        record.update(_checkpoint_hash_record(config, _path_sha256(checkpoint)))
     return record
 
 
@@ -329,14 +379,43 @@ def _artifact_record(
     config: FrozenRouterConfig,
     output_root: Path,
     top_k: int,
+    *,
+    embedding_backend: str,
 ) -> dict[str, Any]:
     return {
         "router_id": config.router_id,
         "config_id": config.config_id,
+        "router_family": "embedding",
+        "embedding_backend": embedding_backend,
         "field_view": config.field_view,
+        "text_builder": {
+            "name": "skillrouter-field-view",
+            "field_view": config.field_view,
+            "builder_version": "v0.3.pr3.field-view.v1",
+        },
         "candidate_tier": config.tier,
         "top_k": top_k,
         "intended_output_path": str(_prediction_output_path(output_root, config.config_id)),
+    }
+
+def _embedding_backend_label(
+    *,
+    embedding_backend: str | None,
+    embedding_model: BatchEmbeddingModel | None,
+) -> str:
+    if embedding_backend:
+        return embedding_backend
+    if embedding_model is not None:
+        return "test-injected"
+    return "sentence-transformers"
+
+
+def _task_input_record(path: Path, root: Path, task_count: int) -> dict[str, Any]:
+    return {
+        "path": path.relative_to(root).as_posix(),
+        "sha256": sha256_file(path),
+        "size_bytes": path.stat().st_size,
+        "task_count": task_count,
     }
 
 
@@ -397,6 +476,20 @@ def _path_sha256(path: Path) -> str:
     ).hexdigest()
 
 
+def _checkpoint_hash_record(
+    config: FrozenRouterConfig,
+    actual_sha256: str,
+) -> dict[str, Any]:
+    return {
+        "provided_checkpoint_sha256": config.checkpoint_sha256,
+        "actual_checkpoint_sha256": actual_sha256,
+        "checkpoint_hash_verified": (
+            config.checkpoint_sha256 is not None
+            and config.checkpoint_sha256 == actual_sha256
+        ),
+    }
+
+
 def _prediction_output_path(output_root: Path, config_id: str | None) -> Path:
     safe_id = _safe_config_id(_non_empty(config_id, "config_id"))
     return output_root / f"{safe_id}.predictions.json"
@@ -452,19 +545,57 @@ def _git_state() -> dict[str, Any]:
             stderr=subprocess.DEVNULL,
             check=False,
         )
-        dirty = subprocess.run(
-            ["git", "diff", "--quiet"],
-            stdout=subprocess.DEVNULL,
+        status = subprocess.run(
+            [
+                "git",
+                "status",
+                "--porcelain",
+                "--",
+                "src",
+                "tests",
+                "scripts",
+                "docs",
+                "openspec",
+                "pyproject.toml",
+                "README.md",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             check=False,
-        ).returncode != 0
+        )
+        dirty_paths = _dirty_code_paths(status.stdout.splitlines())
         return {
             "commit": commit,
             "tag": tag.stdout.strip() or None,
-            "dirty": dirty,
+            "dirty": bool(dirty_paths),
+            "dirty_paths": dirty_paths,
         }
     except (OSError, subprocess.CalledProcessError):
-        return {"commit": "UNAVAILABLE", "tag": None, "dirty": "UNAVAILABLE"}
+        return {
+            "commit": "UNAVAILABLE",
+            "tag": None,
+            "dirty": "UNAVAILABLE",
+            "dirty_paths": [],
+        }
+
+
+def _dirty_code_paths(status_lines: Iterable[str]) -> list[str]:
+    paths: list[str] = []
+    for line in status_lines:
+        if len(line) < 4:
+            continue
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.rsplit(" -> ", 1)[1]
+        path = path.strip('"')
+        if path.startswith(DIRTY_PATH_PREFIXES) or path in DIRTY_PATH_NAMES:
+            paths.append(path)
+    return paths
+
+
+def _is_immutable_revision(revision: str | None) -> bool:
+    return isinstance(revision, str) and IMMUTABLE_REVISION_RE.fullmatch(revision) is not None
 
 
 def _now() -> str:

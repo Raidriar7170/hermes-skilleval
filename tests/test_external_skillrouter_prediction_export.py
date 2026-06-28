@@ -9,6 +9,8 @@ from hermes_skilleval.cli import main
 from hermes_skilleval.external.skillrouter_scorer import score_skillrouter_predictions
 from hermes_skilleval.external.skillrouter_prediction_export import (
     FrozenRouterConfig,
+    _dirty_code_paths,
+    _path_sha256,
     write_skillrouter_prediction_artifacts,
     write_skillrouter_prediction_file,
 )
@@ -54,6 +56,14 @@ def test_exported_predictions_are_accepted_by_existing_scorer_and_manifested(tmp
     assert manifest["top_k"] == 50
     assert manifest["code"]["commit"]
     assert manifest["command"] == ["skilleval", "external-export-predictions", "--fixture"]
+    assert manifest["task_input"]["path"] == "tasks.jsonl"
+    assert manifest["task_input"]["sha256"] == sha256_file(FIXTURE / "tasks.jsonl")
+    assert manifest["task_input"]["size_bytes"] == (FIXTURE / "tasks.jsonl").stat().st_size
+    assert manifest["task_input"]["task_count"] == 4
+    assert artifact["router_family"] == "embedding"
+    assert artifact["embedding_backend"] == "test-injected"
+    assert artifact["text_builder"]["field_view"] == "metadata"
+    assert artifact["text_builder"]["builder_version"]
 
     report = score_skillrouter_predictions(
         data_root=FIXTURE,
@@ -292,7 +302,7 @@ def test_exporter_does_not_require_relevance_json_for_prediction_generation(tmp_
     assert Path(manifest["artifacts"][0]["output_path"]).exists()
 
 
-def test_cli_external_export_predictions_writes_manifest_and_unavailable_entries(tmp_path):
+def test_cli_hashing_backend_cannot_label_baseline_minilm_artifacts(tmp_path):
     output_dir = tmp_path / "cli-predictions"
 
     exit_code = main(
@@ -312,6 +322,50 @@ def test_cli_external_export_predictions_writes_manifest_and_unavailable_entries
             "fixture-revision",
             "--router-config",
             "baseline-minilm:metadata:easy",
+        ]
+    )
+
+    assert exit_code == 2
+    assert not (output_dir / "manifest.json").exists()
+
+
+def test_cli_rejects_mutable_baseline_minilm_revision(tmp_path):
+    exit_code = main(
+        [
+            "external-export-predictions",
+            "--benchmark",
+            "skillrouter",
+            "--data-root",
+            str(FIXTURE),
+            "--output-dir",
+            str(tmp_path / "cli-predictions"),
+            "--run-id",
+            "cli-export",
+            "--baseline-minilm-revision",
+            "main",
+            "--router-config",
+            "baseline-minilm:metadata:easy",
+        ]
+    )
+
+    assert exit_code == 2
+
+
+def test_cli_external_export_predictions_records_unavailable_finetuned(tmp_path):
+    output_dir = tmp_path / "cli-predictions"
+
+    exit_code = main(
+        [
+            "external-export-predictions",
+            "--benchmark",
+            "skillrouter",
+            "--data-root",
+            str(FIXTURE),
+            "--output-dir",
+            str(output_dir),
+            "--run-id",
+            "cli-export",
+            "--non-final",
             "--router-config",
             "finetuned-embedding:metadata:easy",
         ]
@@ -320,12 +374,118 @@ def test_cli_external_export_predictions_writes_manifest_and_unavailable_entries
     assert exit_code == 0
     manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
     by_config = {artifact["config_id"]: artifact for artifact in manifest["artifacts"]}
-    assert by_config["baseline-minilm__metadata__easy"]["status"] == "PASS"
-    assert Path(by_config["baseline-minilm__metadata__easy"]["output_path"]).exists()
     assert by_config["finetuned-embedding__metadata__easy"]["status"] == "UNAVAILABLE"
     assert "checkpoint_path is not configured" in by_config[
         "finetuned-embedding__metadata__easy"
     ]["reason"]
+
+
+def test_finetuned_checkpoint_matching_sha_is_verified(tmp_path):
+    checkpoint = tmp_path / "checkpoint"
+    checkpoint.mkdir()
+    (checkpoint / "weights.bin").write_text("fixture checkpoint\n", encoding="utf-8")
+    expected = _path_sha256(checkpoint)
+
+    manifest = write_skillrouter_prediction_artifacts(
+        data_root=FIXTURE,
+        output_dir=tmp_path / "predictions",
+        run_id="finetuned-export",
+        configs=[
+            FrozenRouterConfig(
+                router_id="finetuned-embedding",
+                config_id="finetuned-embedding__metadata__easy",
+                field_view="metadata",
+                tier="easy",
+                model_name="finetuned-embedding",
+                checkpoint_path=str(checkpoint),
+                checkpoint_sha256=expected,
+            )
+        ],
+        top_k=50,
+        command=["fixture"],
+        embedding_model=HashingEmbeddingModel(dimensions=64),
+    )
+
+    model = manifest["artifacts"][0]["model"]
+    assert manifest["artifacts"][0]["status"] == "PASS"
+    assert model["provided_checkpoint_sha256"] == expected
+    assert model["actual_checkpoint_sha256"] == expected
+    assert model["checkpoint_hash_verified"] is True
+
+
+def test_finetuned_checkpoint_mismatching_sha_fails_closed(tmp_path):
+    checkpoint = tmp_path / "checkpoint.bin"
+    checkpoint.write_text("fixture checkpoint\n", encoding="utf-8")
+
+    manifest = write_skillrouter_prediction_artifacts(
+        data_root=FIXTURE,
+        output_dir=tmp_path / "predictions",
+        run_id="finetuned-export",
+        configs=[
+            FrozenRouterConfig(
+                router_id="finetuned-embedding",
+                config_id="finetuned-embedding__metadata__easy",
+                field_view="metadata",
+                tier="easy",
+                model_name="finetuned-embedding",
+                checkpoint_path=str(checkpoint),
+                checkpoint_sha256="0" * 64,
+            )
+        ],
+        top_k=50,
+        command=["fixture"],
+        embedding_model=HashingEmbeddingModel(dimensions=64),
+    )
+
+    artifact = manifest["artifacts"][0]
+    assert artifact["status"] == "UNAVAILABLE"
+    assert "checkpoint sha256 mismatch" in artifact["reason"]
+
+
+def test_finetuned_checkpoint_missing_sha_records_computed_digest(tmp_path):
+    checkpoint = tmp_path / "checkpoint.bin"
+    checkpoint.write_text("fixture checkpoint\n", encoding="utf-8")
+    actual = _path_sha256(checkpoint)
+
+    manifest = write_skillrouter_prediction_artifacts(
+        data_root=FIXTURE,
+        output_dir=tmp_path / "predictions",
+        run_id="finetuned-export",
+        configs=[
+            FrozenRouterConfig(
+                router_id="finetuned-embedding",
+                config_id="finetuned-embedding__metadata__easy",
+                field_view="metadata",
+                tier="easy",
+                model_name="finetuned-embedding",
+                checkpoint_path=str(checkpoint),
+            )
+        ],
+        top_k=50,
+        command=["fixture"],
+        embedding_model=HashingEmbeddingModel(dimensions=64),
+    )
+
+    model = manifest["artifacts"][0]["model"]
+    assert manifest["artifacts"][0]["status"] == "PASS"
+    assert model["provided_checkpoint_sha256"] is None
+    assert model["actual_checkpoint_sha256"] == actual
+    assert model["checkpoint_hash_verified"] is False
+
+
+def test_dirty_code_path_detection_covers_staged_unstaged_and_untracked_sources():
+    status_lines = [
+        "M  src/hermes_skilleval/cli.py",
+        " M tests/test_external_skillrouter_prediction_export.py",
+        "?? src/hermes_skilleval/new_file.py",
+        "?? artifacts/v0.3/run/output.json",
+    ]
+
+    assert _dirty_code_paths(status_lines) == [
+        "src/hermes_skilleval/cli.py",
+        "tests/test_external_skillrouter_prediction_export.py",
+        "src/hermes_skilleval/new_file.py",
+    ]
 
 
 def _fixture_with_duplicate_easy_skill(tmp_path: Path) -> Path:

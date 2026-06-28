@@ -41,6 +41,7 @@ from hermes_skilleval.external.skillrouter_matrix import (
 )
 from hermes_skilleval.external.skillrouter_prediction_export import (
     FrozenRouterConfig,
+    _is_immutable_revision,
     write_skillrouter_prediction_artifacts,
 )
 from hermes_skilleval.external.skillrouter_scorer import write_skillrouter_score_report
@@ -407,6 +408,11 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     prediction_export_parser.add_argument("--top-k", type=int, default=50)
+    prediction_export_parser.add_argument(
+        "--non-final",
+        action="store_true",
+        help="mark export as non-final evidence; required for dirty local fixture smoke runs",
+    )
     prediction_export_parser.add_argument(
         "--embedding-backend",
         choices=EMBEDDING_BACKENDS,
@@ -1141,6 +1147,11 @@ def _run_external_matrix(args: argparse.Namespace) -> None:
 def _run_external_export_predictions(args: argparse.Namespace) -> None:
     if args.benchmark != "skillrouter":
         raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    configs = [
+        _parse_prediction_export_router_config(value, args)
+        for value in args.router_config
+    ]
+    _validate_prediction_export_cli_configs(configs, args)
     model = (
         HashingEmbeddingModel()
         if args.embedding_backend == "hashing"
@@ -1150,13 +1161,12 @@ def _run_external_export_predictions(args: argparse.Namespace) -> None:
         data_root=args.data_root,
         output_dir=args.output_dir,
         run_id=args.run_id,
-        configs=[
-            _parse_prediction_export_router_config(value, args)
-            for value in args.router_config
-        ],
+        configs=configs,
         top_k=args.top_k,
         command=["skilleval", *sys.argv[1:]],
         embedding_model=model,
+        embedding_backend=args.embedding_backend,
+        final_evidence=not args.non_final,
     )
     pass_count = sum(1 for item in manifest["artifacts"] if item["status"] == "PASS")
     unavailable_count = sum(
@@ -1313,6 +1323,24 @@ def _parse_prediction_export_router_config(
         tier=tier,
         model_name=router_id,
     )
+
+
+def _validate_prediction_export_cli_configs(
+    configs: list[FrozenRouterConfig],
+    args: argparse.Namespace,
+) -> None:
+    for config in configs:
+        if args.embedding_backend == "hashing" and config.router_id == "baseline-minilm":
+            raise ValueError(
+                "CLI hashing backend cannot export baseline-minilm prediction artifacts"
+            )
+        if config.router_id == "baseline-minilm" and not _is_immutable_revision(
+            config.model_revision
+        ):
+            raise ValueError(
+                "baseline-minilm requires --baseline-minilm-revision as an immutable "
+                "model commit SHA"
+            )
 
 
 def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:
