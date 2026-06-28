@@ -180,6 +180,8 @@ Acceptance:
 Goal: implement a real Codex CLI runner with strict isolation, redaction, and
 trace parsing.
 
+Human brief: `docs/human-briefs/2026-06-28-codex-cli-runner-isolation.html`
+
 Expected work:
 
 - Read the local `codex exec --help` and record the actual supported flags.
@@ -188,10 +190,17 @@ Expected work:
   when supported by the installed CLI.
 - Never use `--yolo` or danger-full-access for benchmark evidence.
 - Support isolated and inherited `CODEX_HOME` modes; final evidence defaults
-  to isolated mode.
-- Preflight global skills, plugins, MCP, and config leakage.
-- Mount benchmark skills under a workspace-local skill directory.
+  to isolated mode with run-local empty `HOME`.
+- Preflight user HOME, admin, workspace-parent, bundled skill inventory,
+  global skills, plugins, MCP, and config leakage.
+- Mount benchmark skills under
+  `.agents/skills/<safe-skill-id>/SKILL.md` with Codex skill metadata.
 - Keep `no-skill` free of benchmark/global skills.
+- Reject runner-control `extra_args` in both split and `--flag=value` forms;
+  only the runner may add `--skip-git-repo-check` after help confirms support.
+- Reject `extra_env` overrides for runner-controlled home/config keys,
+  including `CODEX_HOME`, `HOME`, Windows home/config keys, and XDG
+  config/data/cache keys.
 - Parse JSONL events for tool calls, file reads, `SKILL.md` reads, final
   messages, token usage when reliable, and unknown event types.
 - Kill the full process group on timeout.

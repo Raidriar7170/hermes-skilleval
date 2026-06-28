@@ -19,7 +19,7 @@ from hermes_skilleval.live_agent_runtime import (
 def _skill(skill_id: str = "skill/browser-login") -> LiveAgentSkill:
     return LiveAgentSkill(
         skill_id=skill_id,
-        name="Browser Login",
+        name=f"Browser Login {skill_id}",
         body="Use browser automation. token=SECRET123",
     )
 
@@ -217,13 +217,20 @@ def test_workspace_preparation_mounts_skills_and_rejects_reuse(tmp_path):
     )
 
     assert workspace.workspace_path.exists()
+    assert workspace.skill_dir == workspace.workspace_path / ".agents" / "skills"
     assert workspace.skill_dir.exists()
     mounted = workspace.mounted_skills[0]
     assert mounted["skill_id"] == "skill/browser-login"
     assert mounted["sha256"]
-    assert (workspace.workspace_path / mounted["relative_path"]).read_text(
+    skill_text = (workspace.workspace_path / mounted["relative_path"]).read_text(
         encoding="utf-8"
-    ) == skill.body
+    )
+    assert mounted["relative_path"].startswith(".agents/skills/")
+    assert mounted["relative_path"].endswith("/SKILL.md")
+    assert "name:" in skill_text
+    assert "Browser Login" in skill_text
+    assert "description:" in skill_text
+    assert skill.body in skill_text
 
     with pytest.raises(ValueError, match="already exists"):
         prepare_live_agent_workspace(
@@ -254,6 +261,29 @@ def test_workspace_mount_filenames_are_collision_resistant(tmp_path):
             mounted_skills=[_skill("skill/a"), _skill("skill/a")],
         )
     assert not (tmp_path / "run-duplicate").exists()
+
+
+def test_workspace_mount_rejects_duplicate_skill_names(tmp_path):
+    with pytest.raises(ValueError, match="duplicate skill name"):
+        prepare_live_agent_workspace(
+            base_dir=tmp_path,
+            run_id="run-duplicate-name",
+            mounted_skills=[
+                LiveAgentSkill(skill_id="skill/a", name="Duplicate", body="A"),
+                LiveAgentSkill(skill_id="skill/b", name="Duplicate", body="B"),
+            ],
+        )
+
+
+def test_no_skill_workspace_has_no_codex_benchmark_skills(tmp_path):
+    workspace = prepare_live_agent_workspace(
+        base_dir=tmp_path,
+        run_id="run-no-skill",
+        mounted_skills=[],
+    )
+
+    assert workspace.mounted_skills == []
+    assert not workspace.skill_dir.exists()
 
 
 def test_fake_runner_separates_process_exit_from_verifier_result(tmp_path):
