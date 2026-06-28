@@ -219,6 +219,8 @@ Acceptance:
 
 Goal: select, freeze, and run deterministic no-credential live-agent tasks.
 
+Human brief: `docs/human-briefs/2026-06-28-skillsbench-live-agent-matrix.html`
+
 Expected work:
 
 - Pin a SkillsBench upstream commit and record repo, commit, task directory

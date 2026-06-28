@@ -46,6 +46,11 @@ from hermes_skilleval.failure_analysis import (
 )
 from hermes_skilleval.finetuned_eval import write_finetuned_eval_summary
 from hermes_skilleval.github_action_gate import run_github_action_gate
+from hermes_skilleval.live_agent_skillsbench import (
+    SkillsBenchAdapter,
+    run_skillsbench_matrix,
+    write_skillsbench_plan,
+)
 from hermes_skilleval.metrics import (
     abstention_rate,
     accepted_count,
@@ -374,6 +379,41 @@ def _build_parser() -> argparse.ArgumentParser:
     external_matrix_parser.add_argument("--plan", required=True)
     external_matrix_parser.add_argument("--output", required=True)
     external_matrix_parser.set_defaults(handler=_run_external_matrix)
+
+    skillsbench_validate_parser = subparsers.add_parser(
+        "skillsbench-validate",
+        help="validate local SkillsBench live-agent inputs without running live agents",
+    )
+    skillsbench_validate_parser.add_argument("--data-root", required=True)
+    skillsbench_validate_parser.add_argument("--output-dir", required=True)
+    skillsbench_validate_parser.add_argument("--upstream-ref", required=True)
+    skillsbench_validate_parser.add_argument("--license-note", required=True)
+    skillsbench_validate_parser.set_defaults(handler=_run_skillsbench_validate)
+
+    skillsbench_plan_parser = subparsers.add_parser(
+        "skillsbench-plan",
+        help="write a frozen SkillsBench live-agent matrix plan without live benchmark claims",
+    )
+    skillsbench_plan_parser.add_argument("--data-root", required=True)
+    skillsbench_plan_parser.add_argument("--output", required=True)
+    skillsbench_plan_parser.add_argument("--upstream-ref", required=True)
+    skillsbench_plan_parser.add_argument("--license-note", required=True)
+    skillsbench_plan_parser.add_argument("--run-id", required=True)
+    skillsbench_plan_parser.add_argument("--mode", choices=("pilot", "frozen"), required=True)
+    skillsbench_plan_parser.add_argument("--selected-task-id", action="append", default=[])
+    skillsbench_plan_parser.add_argument("--routed-predictions", required=True)
+    skillsbench_plan_parser.add_argument("--oracle-qualification", default=None)
+    skillsbench_plan_parser.add_argument("--matrix-output", default=None)
+    skillsbench_plan_parser.add_argument("--workspace-root", default=None)
+    skillsbench_plan_parser.set_defaults(handler=_run_skillsbench_plan)
+
+    skillsbench_matrix_parser = subparsers.add_parser(
+        "skillsbench-matrix",
+        help="run a SkillsBench live-agent matrix from an existing plan",
+    )
+    skillsbench_matrix_parser.add_argument("--plan", required=True)
+    skillsbench_matrix_parser.add_argument("--output", required=True)
+    skillsbench_matrix_parser.set_defaults(handler=_run_skillsbench_matrix)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -1038,6 +1078,63 @@ def _run_external_matrix(args: argparse.Namespace) -> None:
         "External matrix "
         f"{report['run_id']}: {args.output} "
         f"({len(report['official'])} frozen routers)"
+    )
+
+
+def _run_skillsbench_validate(args: argparse.Namespace) -> None:
+    adapter = SkillsBenchAdapter(
+        data_root=args.data_root,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+    )
+    validation = adapter.validate()
+    provenance = adapter.provenance(validation)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "validation.json").write_text(
+        json.dumps(validation, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "manifest.json").write_text(
+        json.dumps(provenance, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        "SkillsBench validation "
+        f"{validation['status']}: {args.output_dir} "
+        f"({validation['task_count']} tasks)"
+    )
+    if validation["status"] != "PASS":
+        raise ValueError("SkillsBench validation failed")
+
+
+def _run_skillsbench_plan(args: argparse.Namespace) -> None:
+    plan = write_skillsbench_plan(
+        data_root=args.data_root,
+        output_path=args.output,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+        run_id=args.run_id,
+        mode=args.mode,
+        selected_task_ids=args.selected_task_id,
+        routed_predictions_path=args.routed_predictions,
+        oracle_qualification_path=args.oracle_qualification,
+        matrix_output_path=args.matrix_output,
+        workspace_root=args.workspace_root,
+    )
+    print(
+        "SkillsBench live-agent plan "
+        f"{plan['run_id']}: {args.output} "
+        f"({len(plan['selected_tasks'])} tasks, {plan['mode']})"
+    )
+
+
+def _run_skillsbench_matrix(args: argparse.Namespace) -> None:
+    report = run_skillsbench_matrix(plan_path=args.plan, output_path=args.output)
+    print(
+        "SkillsBench live-agent matrix "
+        f"{report['run_id']}: {args.output} "
+        f"({len(report['runs'])} runs)"
     )
 
 
