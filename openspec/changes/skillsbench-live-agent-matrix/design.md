@@ -18,8 +18,12 @@ registry construction, three-condition run planning, and trace/report envelopes.
   credentials, and controlled network requirements.
 - Require oracle qualification before frozen evaluation selection.
 - Build one global skill registry across all selected tasks.
+- Enforce routed top-k mounting from stable de-duplicated prediction rankings.
+- Freeze plan self-integrity and derived selected-task/registry/matrix fields.
 - Generate comparable no-skill, routed-skill, and oracle-skill matrix entries
   with identical prompt hashes and fresh run workspaces.
+- Report SkillRouter/SkillsBench overlap decisions separately from independent
+  generalization claims.
 - Preserve verifier pass/fail as the only task-success source.
 - Record trace/report metadata including skill inventory, mounted/read/unknown
   evidence, timeout, process exit, verifier result, and redacted events.
@@ -38,21 +42,29 @@ registry construction, three-condition run planning, and trace/report envelopes.
    verifier metadata, private credential requirements, and uncontrolled network
    requirements.
 
-2. **Freeze plans are explicit.** Plans record mode (`pilot` or `frozen`), input
-   file SHA-256/size provenance, upstream reference, license note, selected task
-   IDs, global skill registry, oracle qualification references, and matrix run
-   entries. Frozen plans require qualifying oracle records for every selected
-   task.
+2. **Freeze plans are explicit and self-checked.** Plans record mode (`pilot` or
+   `frozen`), input file SHA-256/size provenance, upstream reference, license
+   note, selected task IDs, global skill registry, oracle qualification
+   references, and matrix run entries. Plan writing also emits a digest sidecar
+   and derived hashes for selected tasks, prompt/verifier fields, registry,
+   oracle qualification records, and matrix entries. Frozen plans require
+   qualifying oracle records for every selected task.
 
 3. **Conditions reuse PR-4 builders.** Matrix generation uses
    `build_condition`, `prepare_live_agent_workspace`, `AgentRequest`, and
    `execute_live_agent` instead of defining a parallel trace/runtime format.
 
 4. **Routed skills are supplied, not trained.** PR-6 accepts frozen routed
-   skill predictions as deterministic input. It does not train routers, tune
+   skill predictions as deterministic input, de-duplicates rankings, and mounts
+   only configured routed top-k skills. It does not train routers, tune
    thresholds, infer embeddings, mine negatives, or run model inference.
 
-5. **Trace reports summarize, not score.** Matrix reports collect process and
+5. **Overlap evidence is a gate on claims.** Optional SkillRouter task inputs
+   are used only to report exact ID overlap, normalized text-hash overlap, and
+   declared metadata links. Missing inputs produce `UNAVAILABLE` and set
+   `independent_generalization_claim=false`.
+
+6. **Trace reports summarize, not score.** Matrix reports collect process and
    verifier evidence from `live-agent.v1` traces. They do not calculate Hermes
    Negative Hit Rate unless explicit negative labels exist.
 
@@ -66,6 +78,9 @@ registry construction, three-condition run planning, and trace/report envelopes.
   private credentials and uncontrolled network requirements before selection.
 - **Risk: per-task registries overstate routing realism.** Mitigation: build a
   single global registry across all selected tasks.
+- **Risk: frozen plan JSON is edited after selection.** Mitigation: verify plan
+  digest sidecars, frozen source hashes, and recomputed derived-field hashes
+  before matrix execution.
 
 ## Migration Plan
 

@@ -405,6 +405,9 @@ def _build_parser() -> argparse.ArgumentParser:
     skillsbench_plan_parser.add_argument("--oracle-qualification", default=None)
     skillsbench_plan_parser.add_argument("--matrix-output", default=None)
     skillsbench_plan_parser.add_argument("--workspace-root", default=None)
+    skillsbench_plan_parser.add_argument("--router-top-k", type=int, default=3)
+    skillsbench_plan_parser.add_argument("--skillrouter-data-root", default=None)
+    skillsbench_plan_parser.add_argument("--skillrouter-tasks", default=None)
     skillsbench_plan_parser.set_defaults(handler=_run_skillsbench_plan)
 
     skillsbench_matrix_parser = subparsers.add_parser(
@@ -1121,6 +1124,9 @@ def _run_skillsbench_plan(args: argparse.Namespace) -> None:
         oracle_qualification_path=args.oracle_qualification,
         matrix_output_path=args.matrix_output,
         workspace_root=args.workspace_root,
+        router_top_k=args.router_top_k,
+        skillrouter_data_root=args.skillrouter_data_root,
+        skillrouter_tasks_path=args.skillrouter_tasks,
     )
     print(
         "SkillsBench live-agent plan "

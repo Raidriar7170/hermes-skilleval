@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable
 
+from hermes_skilleval.external.skillrouter import ExternalTask, SkillRouterAdapter
 from hermes_skilleval.live_agent_runtime import (
     AgentRunner,
     AgentRequest,
@@ -13,6 +16,7 @@ from hermes_skilleval.live_agent_runtime import (
     FakeAgentRunner,
     FakeVerifier,
     LiveAgentSkill,
+    _redact_value,
     build_condition,
     execute_live_agent,
     prepare_live_agent_workspace,
@@ -26,6 +30,9 @@ REPORT_SCHEMA = "v0.3.skillsbench-live-matrix-report.v1"
 SEED = 20260625
 CONDITIONS = ("no-skill", "routed-skill", "oracle-skill")
 CONTROLLED_NETWORKS = {"none", "controlled"}
+DEFAULT_ROUTER_TOP_K = 3
+COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+LABEL_LEAKAGE_TOKENS = ("oracle", "gold", "source-task", "source_task")
 
 
 @dataclass(frozen=True)
@@ -46,10 +53,17 @@ class SkillsBenchAdapter:
         data_root: Path | str,
         upstream_ref: str = "FILL_BEFORE_RUN",
         license_note: str = "FILL_BEFORE_RUN",
+        allow_non_sha_upstream: bool = False,
+        allow_fixture_ref: bool = False,
     ) -> None:
         self.data_root = Path(data_root)
         self.upstream_ref = upstream_ref
         self.license_note = license_note
+        self.allow_non_sha_upstream = allow_non_sha_upstream
+        self.allow_fixture_ref = allow_fixture_ref or _is_fixture_evidence(
+            self.data_root,
+            license_note,
+        )
 
     def load_tasks(self) -> list[SkillsBenchTask]:
         tasks = []
@@ -133,11 +147,25 @@ class SkillsBenchAdapter:
             for skill_id in task.oracle_skill_ids:
                 if skill_id not in skills:
                     errors.append(f"missing skill definition: {task.task_id} -> {skill_id}")
+            errors.extend(_task_leakage_errors(task))
+        errors.extend(_skill_leakage_errors(tasks, skills.values()))
 
         if self.upstream_ref == "FILL_BEFORE_RUN":
             errors.append("upstream_ref must be set before SkillsBench validation")
+        elif not _is_allowed_upstream_ref(
+            self.upstream_ref,
+            self.license_note,
+            allow_non_sha=self.allow_non_sha_upstream,
+            allow_fixture_ref=self.allow_fixture_ref,
+        ):
+            errors.append("upstream_ref must be an immutable commit SHA for frozen SkillsBench evidence")
         if self.license_note == "FILL_BEFORE_RUN":
             errors.append("license_note must be set before SkillsBench validation")
+        leakage_scan = {
+            "schema_version": "v0.3.skillsbench-leakage-scan.v1",
+            "status": "INVALID" if any("leakage" in error for error in errors) else "PASS",
+            "errors": [error for error in errors if "leakage" in error],
+        }
         return {
             "schema_version": "v0.3.skillsbench-validation.v1",
             "benchmark_id": "skillsbench",
@@ -145,6 +173,7 @@ class SkillsBenchAdapter:
             "errors": errors,
             "task_count": len(tasks),
             "skill_count": len(skills),
+            "leakage_scan": leakage_scan,
         }
 
     def provenance(self, validation: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -193,12 +222,20 @@ def write_skillsbench_plan(
     oracle_qualification_path: Path | str | None = None,
     matrix_output_path: Path | str | None = None,
     workspace_root: Path | str | None = None,
+    router_top_k: int = DEFAULT_ROUTER_TOP_K,
+    skillrouter_data_root: Path | str | None = None,
+    skillrouter_tasks_path: Path | str | None = None,
 ) -> dict[str, Any]:
     mode = _mode(mode)
+    router_top_k = _positive_int(router_top_k, "router_top_k")
+    _validate_overlap_input_choice(skillrouter_data_root, skillrouter_tasks_path)
+    allow_fixture_ref = _is_fixture_evidence(data_root, license_note)
     adapter = SkillsBenchAdapter(
         data_root=data_root,
         upstream_ref=upstream_ref,
         license_note=license_note,
+        allow_non_sha_upstream=mode == "pilot",
+        allow_fixture_ref=allow_fixture_ref,
     )
     validation = adapter.validate()
     if validation["status"] != "PASS":
@@ -221,68 +258,30 @@ def write_skillsbench_plan(
                 + ", ".join(sorted(missing))
             )
 
-    registry_ids: set[str] = set()
-    for task in selected_tasks:
-        registry_ids.update(task.oracle_skill_ids)
-        routed_ids = routed_predictions.get(task.task_id, [])
-        if not routed_ids:
-            raise ValueError(f"missing routed predictions for task: {task.task_id}")
-        registry_ids.update(routed_ids)
-    missing_skills = sorted(skill_id for skill_id in registry_ids if skill_id not in skills)
-    if missing_skills:
-        raise ValueError("missing skill definition: " + ", ".join(missing_skills))
-
-    registry = {
-        skill_id: _skill_to_plan(skills[skill_id])
-        for skill_id in sorted(registry_ids)
-    }
-    matrix = []
-    for task in selected_tasks:
-        condition_hashes = []
-        for condition_name in CONDITIONS:
-            routed_for_condition = (
-                [skills[skill_id] for skill_id in routed_predictions[task.task_id]]
-                if condition_name == "routed-skill"
-                else []
-            )
-            oracle_for_condition = (
-                [skills[skill_id] for skill_id in task.oracle_skill_ids]
-                if condition_name == "oracle-skill"
-                else []
-            )
-            condition = build_condition(
-                task_id=task.task_id,
-                prompt=task.prompt,
-                condition=condition_name,
-                routed_skills=routed_for_condition,
-                oracle_skills=oracle_for_condition,
-            )
-            condition_hashes.append(condition.prompt_hash)
-            matrix.append(
-                {
-                    "run_id": f"{run_id}__{task.task_id}__{condition_name}",
-                    "task_id": task.task_id,
-                    "condition": condition_name,
-                    "prompt_hash": condition.prompt_hash,
-                    "workspace_run_id": _safe_run_id(
-                        f"{run_id}__{task.task_id}__{condition_name}"
-                    ),
-                    "mounted_skill_ids": [
-                        skill.skill_id for skill in condition.mounted_skills
-                    ],
-                }
-            )
-        if len(set(condition_hashes)) != 1:
-            raise ValueError(f"prompt hash mismatch for task: {task.task_id}")
+    derived = _derive_plan_fields(
+        run_id=run_id,
+        selected_tasks=selected_tasks,
+        skills=skills,
+        routed_predictions=routed_predictions,
+        qualifications=qualifications,
+        router_top_k=router_top_k,
+        skillrouter_tasks=_load_skillrouter_tasks(
+            data_root=Path(skillrouter_data_root) if skillrouter_data_root else None,
+            tasks_path=Path(skillrouter_tasks_path) if skillrouter_tasks_path else None,
+        ),
+    )
 
     plan = {
         "schema_version": PLAN_SCHEMA,
         "benchmark_id": "skillsbench",
         "run_id": _non_empty(run_id, "run_id"),
         "mode": mode,
+        "evidence_label": _evidence_label(mode, allow_fixture_ref),
         "seed": SEED,
         "created_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "data_root": str(data_root),
+        "selected_task_ids": selected_ids,
+        "router_top_k": router_top_k,
         "adapter_provenance": adapter.provenance(validation),
         "routed_predictions": _file_record(Path(routed_predictions_path)),
         "oracle_qualification": (
@@ -290,14 +289,20 @@ def write_skillsbench_plan(
             if oracle_qualification_path
             else None
         ),
+        "skillrouter_overlap_input": _overlap_input_record(
+            data_root=Path(skillrouter_data_root) if skillrouter_data_root else None,
+            tasks_path=Path(skillrouter_tasks_path) if skillrouter_tasks_path else None,
+        ),
         "validation": validation,
-        "selected_tasks": [_task_to_plan(task) for task in selected_tasks],
-        "global_skill_registry": registry,
-        "matrix": matrix,
+        "selected_tasks": derived["selected_tasks"],
+        "global_skill_registry": derived["global_skill_registry"],
+        "matrix": derived["matrix"],
         "matrix_output_path": str(matrix_output_path) if matrix_output_path else None,
         "workspace_root": str(workspace_root) if workspace_root else None,
-        "oracle_qualification_records": qualifications,
-        "overlap_report": _overlap_report(selected_tasks),
+        "oracle_qualification_records": derived["oracle_qualification_records"],
+        "routing_diagnostics": derived["routing_diagnostics"],
+        "overlap_report": derived["overlap_report"],
+        "leakage_scan": validation["leakage_scan"],
         "scope_guards": {
             "no_router_training": True,
             "no_threshold_tuning": True,
@@ -308,10 +313,12 @@ def write_skillsbench_plan(
             "no_negative_hit_rate_without_negative_labels": True,
         },
     }
+    plan["derived_hashes"] = _derived_hashes(plan)
     _reject_sensitive_values(plan)
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    _write_plan_digest(output)
     return plan
 
 
@@ -323,10 +330,12 @@ def run_skillsbench_matrix(
     verifier: AgentVerifier | None = None,
 ) -> dict[str, Any]:
     plan_file = Path(plan_path)
+    _verify_plan_digest(plan_file)
     plan = json.loads(plan_file.read_text(encoding="utf-8"))
     if plan.get("schema_version") != PLAN_SCHEMA:
         raise ValueError("unsupported SkillsBench plan schema")
     _verify_plan_inputs(plan)
+    _verify_derived_fields(plan)
     output = Path(output_path)
     if plan.get("matrix_output_path") and str(output) != str(plan["matrix_output_path"]):
         raise ValueError("matrix output path does not match frozen plan")
@@ -407,6 +416,12 @@ def run_skillsbench_matrix(
                 "process_exit_code": result.process_exit_code,
                 "timed_out": result.timed_out,
                 "skill_use": result.skill_use,
+                "verifier": {
+                    "passed": result.verifier_passed,
+                    "details": _redact_value(result.verifier_details),
+                    "source": "deterministic",
+                    "config": _redact_value(task["verifier"]),
+                },
                 "mounted_skill_ids": [
                     record["skill_id"] for record in request.mounted_skills
                 ],
@@ -420,6 +435,7 @@ def run_skillsbench_matrix(
         "mode": plan["mode"],
         "plan_path": str(plan_file),
         "skill_inventory": plan["global_skill_registry"],
+        "leakage_scan": plan.get("leakage_scan"),
         "runs": runs,
         "summary": {
             "run_count": len(runs),
@@ -434,6 +450,143 @@ def run_skillsbench_matrix(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return report
+
+
+def _derive_plan_fields(
+    *,
+    run_id: str,
+    selected_tasks: list[SkillsBenchTask],
+    skills: dict[str, LiveAgentSkill],
+    routed_predictions: dict[str, list[str]],
+    qualifications: dict[str, dict[str, Any]],
+    router_top_k: int,
+    skillrouter_tasks: list[ExternalTask] | None,
+) -> dict[str, Any]:
+    registry_ids: set[str] = set()
+    routing_diagnostics: dict[str, Any] = {}
+    routed_top_k_by_task: dict[str, list[str]] = {}
+    for task in selected_tasks:
+        registry_ids.update(task.oracle_skill_ids)
+        routed_ids = routed_predictions.get(task.task_id, [])
+        if not routed_ids:
+            raise ValueError(f"missing routed predictions for task: {task.task_id}")
+        deduped = _dedupe(routed_ids)
+        routed_top_k = deduped[:router_top_k]
+        if not routed_top_k:
+            raise ValueError(f"empty routed top-k for task: {task.task_id}")
+        registry_ids.update(deduped)
+        routed_top_k_by_task[task.task_id] = routed_top_k
+        routing_diagnostics[task.task_id] = {
+            "full_prediction_count": len(routed_ids),
+            "deduped_prediction_count": len(deduped),
+            "router_top_k": router_top_k,
+            "mounted_top_k": routed_top_k,
+        }
+    missing_skills = sorted(skill_id for skill_id in registry_ids if skill_id not in skills)
+    if missing_skills:
+        raise ValueError("missing skill definition: " + ", ".join(missing_skills))
+
+    registry = {
+        skill_id: _skill_to_plan(skills[skill_id])
+        for skill_id in sorted(registry_ids)
+    }
+    matrix = []
+    for task in selected_tasks:
+        condition_hashes = []
+        for condition_name in CONDITIONS:
+            routed_for_condition = (
+                [skills[skill_id] for skill_id in routed_top_k_by_task[task.task_id]]
+                if condition_name == "routed-skill"
+                else []
+            )
+            oracle_for_condition = (
+                [skills[skill_id] for skill_id in task.oracle_skill_ids]
+                if condition_name == "oracle-skill"
+                else []
+            )
+            condition = build_condition(
+                task_id=task.task_id,
+                prompt=task.prompt,
+                condition=condition_name,
+                routed_skills=routed_for_condition,
+                oracle_skills=oracle_for_condition,
+            )
+            condition_hashes.append(condition.prompt_hash)
+            matrix.append(
+                {
+                    "run_id": f"{run_id}__{task.task_id}__{condition_name}",
+                    "task_id": task.task_id,
+                    "condition": condition_name,
+                    "prompt_hash": condition.prompt_hash,
+                    "workspace_run_id": _safe_run_id(
+                        f"{run_id}__{task.task_id}__{condition_name}"
+                    ),
+                    "mounted_skill_ids": [
+                        skill.skill_id for skill in condition.mounted_skills
+                    ],
+                }
+            )
+        if len(set(condition_hashes)) != 1:
+            raise ValueError(f"prompt hash mismatch for task: {task.task_id}")
+
+    return {
+        "selected_tasks": [_task_to_plan(task) for task in selected_tasks],
+        "global_skill_registry": registry,
+        "matrix": matrix,
+        "oracle_qualification_records": qualifications,
+        "routing_diagnostics": routing_diagnostics,
+        "overlap_report": _overlap_report(selected_tasks, skillrouter_tasks),
+    }
+
+
+def _verify_derived_fields(plan: dict[str, Any]) -> None:
+    stored_hashes = plan.get("derived_hashes")
+    if not isinstance(stored_hashes, dict):
+        raise ValueError("missing derived field hashes")
+    current_hashes = _derived_hashes(plan)
+    if stored_hashes != current_hashes:
+        changed = sorted(
+            key for key, value in current_hashes.items() if stored_hashes.get(key) != value
+        )
+        raise ValueError("derived field changed: " + ", ".join(changed))
+
+    adapter = SkillsBenchAdapter(
+        data_root=plan["data_root"],
+        upstream_ref=plan.get("adapter_provenance", {}).get("upstream_ref", ""),
+        license_note=plan.get("adapter_provenance", {}).get("license_note", ""),
+        allow_non_sha_upstream=plan.get("mode") == "pilot",
+        allow_fixture_ref=plan.get("evidence_label") == "fixture-only",
+    )
+    tasks_by_id = {task.task_id: task for task in adapter.load_tasks()}
+    selected_ids = plan.get("selected_task_ids") or [
+        task["task_id"] for task in plan["selected_tasks"]
+    ]
+    selected_tasks = [_selected_task(tasks_by_id, task_id) for task_id in selected_ids]
+    expected = _derive_plan_fields(
+        run_id=plan["run_id"],
+        selected_tasks=selected_tasks,
+        skills=adapter.load_skills(),
+        routed_predictions=_read_predictions(Path(plan["routed_predictions"]["path"])),
+        qualifications=(
+            _read_oracle_qualification(Path(plan["oracle_qualification"]["path"]))
+            if plan.get("oracle_qualification")
+            else {}
+        ),
+        router_top_k=int(plan.get("router_top_k", DEFAULT_ROUTER_TOP_K)),
+        skillrouter_tasks=_load_skillrouter_tasks_from_record(
+            plan.get("skillrouter_overlap_input")
+        ),
+    )
+    for key in (
+        "selected_tasks",
+        "global_skill_registry",
+        "matrix",
+        "oracle_qualification_records",
+        "routing_diagnostics",
+        "overlap_report",
+    ):
+        if _canonical_hash(plan.get(key)) != _canonical_hash(expected[key]):
+            raise ValueError(f"derived field changed: {key}")
 
 
 def _read_jsonl(path: Path, *, role: str) -> list[dict[str, Any]]:
@@ -471,6 +624,9 @@ def _verify_plan_inputs(plan: dict[str, Any]) -> None:
     records = [*plan["adapter_provenance"]["files"], plan["routed_predictions"]]
     if plan.get("oracle_qualification"):
         records.append(plan["oracle_qualification"])
+    overlap_input = plan.get("skillrouter_overlap_input")
+    if isinstance(overlap_input, dict):
+        records.extend(overlap_input.get("files", []))
     for record in records:
         path = Path(record["path"])
         if not path.exists():
@@ -479,12 +635,60 @@ def _verify_plan_inputs(plan: dict[str, Any]) -> None:
             raise ValueError(f"frozen input changed: {path}")
 
 
+def _write_plan_digest(path: Path) -> None:
+    digest = sha256_file(path)
+    path.with_name(f"{path.name}.sha256").write_text(
+        f"{digest}  {path.name}\n",
+        encoding="utf-8",
+    )
+
+
+def _verify_plan_digest(path: Path) -> None:
+    digest_path = path.with_name(f"{path.name}.sha256")
+    if not digest_path.exists():
+        raise ValueError(f"missing plan digest sidecar: {digest_path.name}")
+    first = digest_path.read_text(encoding="utf-8").strip().split()
+    if not first:
+        raise ValueError(f"malformed plan digest sidecar: {digest_path.name}")
+    if sha256_file(path) != first[0]:
+        raise ValueError("plan digest changed")
+
+
 def _file_record(path: Path) -> dict[str, Any]:
     return {
         "path": str(path),
         "name": path.name,
         "size_bytes": path.stat().st_size,
         "sha256": sha256_file(path),
+    }
+
+
+def _overlap_input_record(
+    *,
+    data_root: Path | None,
+    tasks_path: Path | None,
+) -> dict[str, Any]:
+    if data_root is None and tasks_path is None:
+        return {
+            "status": "UNAVAILABLE",
+            "reason": "SkillRouter external task input was not provided",
+            "files": [],
+        }
+    if tasks_path is not None:
+        return {
+            "status": "PASS",
+            "kind": "tasks_path",
+            "path": str(tasks_path),
+            "files": [_file_record(tasks_path)],
+        }
+    assert data_root is not None
+    adapter = SkillRouterAdapter(data_root=data_root)
+    task_path = adapter._tasks_path()
+    return {
+        "status": "PASS",
+        "kind": "data_root",
+        "path": str(data_root),
+        "files": [_file_record(task_path)],
     }
 
 
@@ -516,27 +720,264 @@ def _skill_to_plan(skill: LiveAgentSkill) -> dict[str, Any]:
 
 def _routed_ids(plan: dict[str, Any], task_id: str) -> list[str]:
     predictions = json.loads(Path(plan["routed_predictions"]["path"]).read_text(encoding="utf-8"))
-    return [str(skill_id) for skill_id in predictions[task_id]]
+    return _dedupe([str(skill_id) for skill_id in predictions[task_id]])[
+        : int(plan.get("router_top_k", DEFAULT_ROUTER_TOP_K))
+    ]
 
 
-def _overlap_report(tasks: list[SkillsBenchTask]) -> dict[str, Any]:
-    ids = sorted(
+def _overlap_report(
+    tasks: list[SkillsBenchTask],
+    skillrouter_tasks: list[ExternalTask] | None,
+) -> dict[str, Any]:
+    declared_links = sorted(
         {
             str(task.metadata["skillrouter_task_id"])
             for task in tasks
             if task.metadata.get("skillrouter_task_id")
         }
     )
+    if skillrouter_tasks is None:
+        return {
+            "schema_version": "v0.3.skillrouter-skillsbench-overlap.v1",
+            "decision": "UNAVAILABLE",
+            "independent_generalization_claim": False,
+            "reason": "SkillRouter external task input was not provided",
+            "skillrouter_task_count": {
+                "status": "UNAVAILABLE",
+                "reason": "SkillRouter external task input was not provided",
+            },
+            "skillsbench_task_count": len(tasks),
+            "declared_metadata_links": declared_links,
+            "exact_id_overlap": [],
+            "normalized_text_hash_overlap": [],
+            "high_similarity_diagnostics": {
+                "status": "UNAVAILABLE",
+                "reason": "high-similarity diagnostics not selected in PR-6",
+            },
+        }
+    skillrouter_by_id = {task.task_id: task for task in skillrouter_tasks}
+    skillsbench_by_id = {task.task_id: task for task in tasks}
+    sr_hashes: dict[str, list[str]] = {}
+    for task in skillrouter_tasks:
+        sr_hashes.setdefault(_normalized_hash(task.query), []).append(task.task_id)
+    sb_hashes: dict[str, list[str]] = {}
+    for task in tasks:
+        sb_hashes.setdefault(_normalized_hash(task.prompt), []).append(task.task_id)
+    exact_overlap = sorted(set(skillrouter_by_id) & set(skillsbench_by_id))
+    text_overlap_records = [
+        {
+            "hash": value,
+            "skillrouter_task_ids": sorted(sr_hashes[value]),
+            "skillsbench_task_ids": sorted(sb_hashes[value]),
+        }
+        for value in sorted(set(sr_hashes) & set(sb_hashes))
+    ]
+    invalid_links = sorted(link for link in declared_links if link not in skillrouter_by_id)
+    if invalid_links:
+        decision = "INVALID"
+        independent = False
+        reason = "declared SkillRouter metadata links do not exist in SkillRouter input"
+    elif declared_links or exact_overlap or text_overlap_records:
+        decision = "LINKED_TRANSFER"
+        independent = False
+        reason = "SkillRouter links or overlaps were found"
+    else:
+        decision = "DISJOINT"
+        independent = True
+        reason = "no exact ID, normalized text hash, or declared metadata overlap found"
     return {
         "schema_version": "v0.3.skillrouter-skillsbench-overlap.v1",
+        "decision": decision,
+        "independent_generalization_claim": independent,
+        "reason": reason,
+        "skillrouter_task_count": len(skillrouter_tasks),
         "skillsbench_task_count": len(tasks),
-        "skillrouter_task_refs": ids,
-        "exact_id_overlap": ids,
+        "declared_metadata_links": declared_links,
+        "invalid_declared_metadata_links": invalid_links,
+        "exact_id_overlap": exact_overlap,
+        "normalized_text_hash_overlap": [record["hash"] for record in text_overlap_records],
+        "normalized_text_hash_overlap_records": text_overlap_records,
         "high_similarity_diagnostics": {
             "status": "UNAVAILABLE",
             "reason": "high-similarity diagnostics not selected in PR-6",
         },
     }
+
+
+def _load_skillrouter_tasks(
+    *,
+    data_root: Path | None,
+    tasks_path: Path | None,
+) -> list[ExternalTask] | None:
+    if data_root is None and tasks_path is None:
+        return None
+    if data_root is not None:
+        return SkillRouterAdapter(data_root=data_root).load_tasks()
+    assert tasks_path is not None
+    return [
+        ExternalTask(
+            benchmark_id="skillrouter",
+            task_id=_required_string(record, "task_id"),
+            query=_skillrouter_query_text(record),
+            task_type=str(record.get("task_type", "unknown")),
+            graded_relevance={},
+            tier=str(record.get("tier", "unknown")),
+            metadata={},
+        )
+        for record in _read_task_records(tasks_path)
+    ]
+
+
+def _load_skillrouter_tasks_from_record(record: Any) -> list[ExternalTask] | None:
+    if not isinstance(record, dict) or record.get("status") == "UNAVAILABLE":
+        return None
+    if record.get("kind") == "data_root":
+        return _load_skillrouter_tasks(data_root=Path(record["path"]), tasks_path=None)
+    if record.get("kind") == "tasks_path":
+        return _load_skillrouter_tasks(data_root=None, tasks_path=Path(record["path"]))
+    raise ValueError("unsupported SkillRouter overlap input")
+
+
+def _read_task_records(path: Path) -> list[dict[str, Any]]:
+    if path.suffix == ".jsonl":
+        return _read_jsonl(path, role="SkillRouter tasks")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(payload, list):
+        records = payload
+    elif isinstance(payload, dict):
+        records = payload.get("records") or payload.get("tasks")
+    else:
+        records = None
+    if not isinstance(records, list):
+        raise ValueError("SkillRouter tasks file must contain task records")
+    if not all(isinstance(record, dict) for record in records):
+        raise ValueError("SkillRouter task records must be objects")
+    return records
+
+
+def _skillrouter_query_text(record: dict[str, Any]) -> str:
+    for field in ("instruction_text", "query", "prompt", "instruction"):
+        value = record.get(field)
+        if isinstance(value, str) and value.strip():
+            return value
+    raise ValueError("SkillRouter task query must be a non-empty string")
+
+
+def _validate_overlap_input_choice(
+    skillrouter_data_root: Path | str | None,
+    skillrouter_tasks_path: Path | str | None,
+) -> None:
+    if skillrouter_data_root and skillrouter_tasks_path:
+        raise ValueError("--skillrouter-data-root and --skillrouter-tasks are mutually exclusive")
+
+
+def _is_fixture_evidence(data_root: Path | str, license_note: str) -> bool:
+    path = Path(data_root)
+    return license_note == "fixture-only" and "tests" in path.parts and "fixtures" in path.parts
+
+
+def _evidence_label(mode: str, allow_fixture_ref: bool) -> str:
+    if allow_fixture_ref:
+        return "fixture-only"
+    if mode == "pilot":
+        return "pilot-non-final"
+    return "frozen-final"
+
+
+def _derived_hashes(plan: dict[str, Any]) -> dict[str, str]:
+    selected_tasks = plan.get("selected_tasks", [])
+    prompt_verifier = [
+        {
+            "task_id": task.get("task_id"),
+            "prompt": task.get("prompt"),
+            "verifier": task.get("verifier"),
+        }
+        for task in selected_tasks
+        if isinstance(task, dict)
+    ]
+    return {
+        "selected_tasks": _canonical_hash(plan.get("selected_tasks")),
+        "global_skill_registry": _canonical_hash(plan.get("global_skill_registry")),
+        "matrix": _canonical_hash(plan.get("matrix")),
+        "oracle_qualification_records": _canonical_hash(
+            plan.get("oracle_qualification_records")
+        ),
+        "task_prompt_verifier": _canonical_hash(prompt_verifier),
+        "routing_diagnostics": _canonical_hash(plan.get("routing_diagnostics")),
+        "overlap_report": _canonical_hash(plan.get("overlap_report")),
+    }
+
+
+def _canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _dedupe(values: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    output = []
+    for value in values:
+        item = str(value)
+        if item not in seen:
+            seen.add(item)
+            output.append(item)
+    return output
+
+
+def _normalized_hash(value: str) -> str:
+    text = " ".join(str(value).lower().split())
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _task_leakage_errors(task: SkillsBenchTask) -> list[str]:
+    prompt = task.prompt.lower()
+    errors = []
+    if task.task_id.lower() in prompt:
+        errors.append(f"leakage in prompt for task {task.task_id}: task_id")
+    for skill_id in task.oracle_skill_ids:
+        if skill_id.lower() in prompt:
+            errors.append(f"leakage in prompt for task {task.task_id}: oracle skill id")
+    for token in LABEL_LEAKAGE_TOKENS:
+        if token in prompt:
+            errors.append(f"leakage in prompt for task {task.task_id}: {token}")
+    return errors
+
+
+def _skill_leakage_errors(
+    tasks: list[SkillsBenchTask],
+    skills: Iterable[LiveAgentSkill],
+) -> list[str]:
+    task_ids = {task.task_id.lower() for task in tasks}
+    oracle_skill_ids = {
+        skill_id.lower() for task in tasks for skill_id in task.oracle_skill_ids
+    }
+    errors = []
+    for skill in skills:
+        public = f"{skill.name} {skill.description or ''}".lower()
+        if any(task_id in public for task_id in task_ids):
+            errors.append(f"leakage in public skill metadata for {skill.skill_id}: task_id")
+        if any(skill_id in public for skill_id in oracle_skill_ids):
+            errors.append(
+                f"leakage in public skill metadata for {skill.skill_id}: oracle skill id"
+            )
+        for token in LABEL_LEAKAGE_TOKENS:
+            if token in public:
+                errors.append(
+                    f"leakage in public skill metadata for {skill.skill_id}: {token}"
+                )
+    return errors
+
+
+def _is_allowed_upstream_ref(
+    upstream_ref: str,
+    license_note: str,
+    *,
+    allow_non_sha: bool,
+    allow_fixture_ref: bool,
+) -> bool:
+    if allow_non_sha or COMMIT_SHA_RE.fullmatch(upstream_ref):
+        return True
+    return allow_fixture_ref and upstream_ref == "fixture-ref" and license_note == "fixture-only"
 
 
 def _required_string(record: dict[str, Any], field: str) -> str:
@@ -561,6 +1002,12 @@ def _mode(value: str) -> str:
     if value not in {"pilot", "frozen"}:
         raise ValueError("mode must be pilot or frozen")
     return value
+
+
+def _positive_int(value: int, field: str) -> int:
+    if int(value) <= 0:
+        raise ValueError(f"{field} must be positive")
+    return int(value)
 
 
 def _non_empty(value: str, field: str) -> str:

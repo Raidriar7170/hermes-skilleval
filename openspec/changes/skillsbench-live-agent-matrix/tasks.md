@@ -15,6 +15,8 @@
   network requirement, and missing oracle qualification for frozen plans.
 - [x] 2.3 Implement adapter records, provenance hashes, deterministic verifier
   parsing, and fail-closed validation.
+- [x] 2.4 Add fail-closed leakage scans for task prompts and public skill
+  metadata that expose task IDs, oracle skill IDs, or oracle/gold labels.
 
 ## 3. Freeze Plan And Registry
 
@@ -24,6 +26,9 @@
   includes all oracle/routed skills, and fails on missing skill definitions.
 - [x] 3.3 Implement plan writing with input SHA-256/size provenance, run IDs,
   selected tasks, global skill registry, and matrix output path.
+- [x] 3.4 Add plan digest sidecar, derived-field hashes, and matrix-time
+  recomputation for selected tasks, prompt/verifier fields, registry, oracle
+  qualification records, routing diagnostics, and matrix entries.
 
 ## 4. Three-Condition Matrix
 
@@ -35,12 +40,16 @@
   interfaces, with fake runner/verifier tests only.
 - [x] 4.4 Record `live-agent.v1` trace paths, skill inventory, skill-use
   evidence, timeout, process exit, verifier result, and redacted events.
+- [x] 4.5 Enforce routed top-k mounting from stable de-duplicated routed
+  prediction rankings.
 
 ## 5. CLI, Reports, And Docs
 
 - [x] 5.1 Add scoped CLI commands for SkillsBench validation, plan freeze, and
   matrix execution.
-- [x] 5.2 Add SkillRouter overlap report scaffold for selected task metadata.
+- [x] 5.2 Add SkillRouter overlap report with optional SkillRouter task input,
+  exact ID overlap, normalized text-hash overlap, declared metadata links, and
+  DISJOINT/LINKED_TRANSFER/INVALID/UNAVAILABLE decisions.
 - [x] 5.3 Add concise Chinese Human Brief for PR-6 and link it from the v0.3
   implementation guide.
 
