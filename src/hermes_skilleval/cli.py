@@ -40,6 +40,7 @@ from hermes_skilleval.external.skillrouter_matrix import (
     write_skillrouter_matrix_plan,
 )
 from hermes_skilleval.external.skillrouter_scorer import write_skillrouter_score_report
+from hermes_skilleval.evidence_gate import write_evidence_decision_report
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
     write_failure_analysis_report,
@@ -417,6 +418,18 @@ def _build_parser() -> argparse.ArgumentParser:
     skillsbench_matrix_parser.add_argument("--plan", required=True)
     skillsbench_matrix_parser.add_argument("--output", required=True)
     skillsbench_matrix_parser.set_defaults(handler=_run_skillsbench_matrix)
+
+    evidence_gate_parser = subparsers.add_parser(
+        "v0.3-evidence-gate",
+        help="validate frozen v0.3 external and live-agent evidence before promotion",
+    )
+    evidence_gate_parser.add_argument("--output", required=True)
+    evidence_gate_parser.add_argument("--markdown-output", default=None)
+    evidence_gate_parser.add_argument("--external-plan", default=None)
+    evidence_gate_parser.add_argument("--external-report", default=None)
+    evidence_gate_parser.add_argument("--live-plan", default=None)
+    evidence_gate_parser.add_argument("--live-report", default=None)
+    evidence_gate_parser.set_defaults(handler=_run_v0_3_evidence_gate)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -1141,6 +1154,22 @@ def _run_skillsbench_matrix(args: argparse.Namespace) -> None:
         "SkillsBench live-agent matrix "
         f"{report['run_id']}: {args.output} "
         f"({len(report['runs'])} runs)"
+    )
+
+
+def _run_v0_3_evidence_gate(args: argparse.Namespace) -> None:
+    report = write_evidence_decision_report(
+        output_path=args.output,
+        markdown_output_path=args.markdown_output,
+        external_plan_path=args.external_plan,
+        external_report_path=args.external_report,
+        live_plan_path=args.live_plan,
+        live_report_path=args.live_report,
+    )
+    print(
+        "v0.3 evidence gate "
+        f"{report['benchmark_validity_gate']['status']}: {args.output} "
+        f"({report['router_promotion_gate']['decision']})"
     )
 
 

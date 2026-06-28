@@ -1,0 +1,978 @@
+from __future__ import annotations
+
+import json
+import re
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from hermes_skilleval.external.skillrouter import SkillRouterAdapter
+from hermes_skilleval.external.skillrouter_matrix import (
+    PLAN_SCHEMA as EXTERNAL_PLAN_SCHEMA,
+    REPORT_SCHEMA as EXTERNAL_REPORT_SCHEMA,
+    _validate_frozen_plan as _validate_external_plan,
+    _verify_adapter_provenance as _verify_external_adapter_provenance,
+    _verify_frozen_predictions,
+)
+from hermes_skilleval.live_agent_skillsbench import (
+    PLAN_SCHEMA as LIVE_PLAN_SCHEMA,
+    REPORT_SCHEMA as LIVE_REPORT_SCHEMA,
+    _verify_derived_fields as _verify_live_derived_fields,
+    _verify_plan_digest as _verify_live_plan_digest,
+    _verify_plan_inputs as _verify_live_plan_inputs,
+)
+from hermes_skilleval.release_manifest import sha256_file
+
+
+REPORT_SCHEMA = "v0.3.evidence-decision-report.v1"
+ARTIFACT_TYPE = "v0.3-evidence-validity-release-gate"
+VALID_EVIDENCE = "VALID_EVIDENCE"
+INVALID_EVIDENCE = "INVALID_EVIDENCE"
+REVIEW_REQUIRED = "REVIEW_REQUIRED"
+KEEP_BASELINE = "KEEP_BASELINE"
+UNAVAILABLE = "UNAVAILABLE"
+PASS = "PASS"
+FAIL = "FAIL"
+REVIEW = "REVIEW"
+PRESENT = "PRESENT"
+BLOCKING = "blocking"
+REVIEW_SEVERITY = "review"
+INFO = "info"
+SECRET_RE = re.compile(
+    r"(sk-[A-Za-z0-9]{10,}|Bearer\s+[A-Za-z0-9._-]+|api[_-]?key\s*=|password\s*=)",
+    re.IGNORECASE,
+)
+
+
+def write_evidence_decision_report(
+    *,
+    output_path: Path | str,
+    markdown_output_path: Path | str | None = None,
+    external_plan_path: Path | str | None = None,
+    external_report_path: Path | str | None = None,
+    live_plan_path: Path | str | None = None,
+    live_report_path: Path | str | None = None,
+) -> dict[str, Any]:
+    report = build_evidence_decision_report(
+        external_plan_path=external_plan_path,
+        external_report_path=external_report_path,
+        live_plan_path=live_plan_path,
+        live_report_path=live_report_path,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if markdown_output_path is not None:
+        markdown = Path(markdown_output_path)
+        markdown.parent.mkdir(parents=True, exist_ok=True)
+        markdown.write_text(render_evidence_markdown(report), encoding="utf-8")
+    return report
+
+
+def build_evidence_decision_report(
+    *,
+    external_plan_path: Path | str | None = None,
+    external_report_path: Path | str | None = None,
+    live_plan_path: Path | str | None = None,
+    live_report_path: Path | str | None = None,
+) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    field_markers: dict[str, dict[str, Any]] = {}
+    inputs: dict[str, Any] = {}
+
+    external = _evaluate_external(
+        external_plan_path=external_plan_path,
+        external_report_path=external_report_path,
+        checks=checks,
+        field_markers=field_markers,
+        inputs=inputs,
+    )
+    live = _evaluate_live_agent(
+        live_plan_path=live_plan_path,
+        live_report_path=live_report_path,
+        checks=checks,
+        field_markers=field_markers,
+        inputs=inputs,
+    )
+
+    validity_status = _validity_status(checks)
+    promotion = _promotion_gate(validity_status, external)
+    return {
+        "schema_version": REPORT_SCHEMA,
+        "artifact_type": ARTIFACT_TYPE,
+        "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "inputs": inputs,
+        "field_markers": field_markers,
+        "benchmark_validity_gate": {
+            "status": validity_status,
+            "checks": checks,
+        },
+        "router_promotion_gate": promotion,
+        "external_routing": external,
+        "live_agent": live,
+        "claim_boundaries": {
+            "benchmark_validity_gate_statuses": [
+                VALID_EVIDENCE,
+                INVALID_EVIDENCE,
+                REVIEW_REQUIRED,
+            ],
+            "unavailable_is_field_level_only": True,
+            "promotion_requires_valid_evidence": True,
+            "default_router_promotion_decision": KEEP_BASELINE,
+            "no_new_model_runs": True,
+            "no_training_or_threshold_tuning": True,
+            "deterministic_verifier_is_live_agent_success_source": True,
+        },
+    }
+
+
+def render_evidence_markdown(report: dict[str, Any]) -> str:
+    checks = report["benchmark_validity_gate"]["checks"]
+    failing = [check for check in checks if check["status"] == FAIL]
+    review = [check for check in checks if check["status"] in {REVIEW, UNAVAILABLE}]
+    lines = [
+        "# Hermes SkillEval v0.3 Evidence Gate",
+        "",
+        f"- Benchmark Validity Gate: {report['benchmark_validity_gate']['status']}",
+        f"- Router Promotion Gate: {report['router_promotion_gate']['decision']}",
+        f"- Invalid evidence blocks promotion: {report['router_promotion_gate']['blocked_by_validity']}",
+        f"- Blocking failures: {len(failing)}",
+        f"- Review or unavailable fields: {len(review)}",
+        "",
+        "## Field Markers",
+    ]
+    for field, marker in sorted(report["field_markers"].items()):
+        reason = f" - {marker['reason']}" if marker.get("reason") else ""
+        lines.append(f"- {field}: {marker['status']}{reason}")
+    lines.extend(["", "## Checks"])
+    for check in checks:
+        lines.append(f"- {check['status']} {check['id']}: {check['summary']}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _evaluate_external(
+    *,
+    external_plan_path: Path | str | None,
+    external_report_path: Path | str | None,
+    checks: list[dict[str, Any]],
+    field_markers: dict[str, dict[str, Any]],
+    inputs: dict[str, Any],
+) -> dict[str, Any]:
+    if external_plan_path is None and external_report_path is None:
+        field_markers["external_routing"] = {
+            "status": UNAVAILABLE,
+            "reason": "external routing plan/report paths were not provided",
+        }
+        _check(
+            checks,
+            "external.available",
+            UNAVAILABLE,
+            REVIEW_SEVERITY,
+            "external routing evidence was not provided",
+        )
+        return {"status": UNAVAILABLE, "reason": field_markers["external_routing"]["reason"]}
+    if external_plan_path is None or external_report_path is None:
+        field_markers["external_routing"] = {
+            "status": UNAVAILABLE,
+            "reason": "both external plan and report paths are required",
+        }
+        _check(
+            checks,
+            "external.available",
+            FAIL,
+            BLOCKING,
+            "external routing evidence is incomplete",
+        )
+        return {"status": UNAVAILABLE, "reason": field_markers["external_routing"]["reason"]}
+
+    plan_path = Path(external_plan_path)
+    report_path = Path(external_report_path)
+    inputs["external_plan"] = _input_record(plan_path)
+    inputs["external_report"] = _input_record(report_path)
+    field_markers["external_routing"] = {"status": PRESENT}
+    plan = _read_json_for_gate(checks, "external.plan_load", plan_path)
+    report = _read_json_for_gate(checks, "external.report_load", report_path)
+
+    _schema_check(checks, "external.plan_schema", plan, EXTERNAL_PLAN_SCHEMA)
+    _schema_check(checks, "external.report_schema", report, EXTERNAL_REPORT_SCHEMA)
+    _call_check(
+        checks,
+        "external.frozen_plan",
+        "external frozen plan is internally valid",
+        lambda: _validate_external_plan(plan),
+    )
+    _call_check(
+        checks,
+        "external.input_hashes",
+        "external frozen data and prediction hashes match the plan",
+        lambda: _verify_external_inputs(plan),
+    )
+    _check_report_plan_path(
+        checks,
+        "external.report_plan_path",
+        report.get("plan_path"),
+        plan_path,
+    )
+    official = report.get("official") if isinstance(report, dict) else None
+    diagnostics = report.get("hermes_diagnostics") if isinstance(report, dict) else None
+    _check(
+        checks,
+        "external.official_metrics_present",
+        PASS if isinstance(official, dict) and bool(official) else FAIL,
+        BLOCKING,
+        "official SkillRouter metrics are present"
+        if isinstance(official, dict) and bool(official)
+        else "official SkillRouter metrics are missing",
+    )
+    _check(
+        checks,
+        "external.hermes_diagnostics_separate",
+        PASS if isinstance(diagnostics, dict) else FAIL,
+        BLOCKING,
+        "Hermes diagnostics are present separately from official metrics"
+        if isinstance(diagnostics, dict)
+        else "Hermes diagnostics are missing",
+    )
+    paired = diagnostics.get("paired_bootstrap_ci", {}) if isinstance(diagnostics, dict) else {}
+    return {
+        "status": PRESENT,
+        "run_id": report.get("run_id"),
+        "official_metric_configs": sorted(official) if isinstance(official, dict) else [],
+        "official_metrics": official if isinstance(official, dict) else {},
+        "hermes_diagnostics_present": isinstance(diagnostics, dict),
+        "paired_bootstrap_keys": sorted(paired) if isinstance(paired, dict) else [],
+        "negative_hit_rate": {
+            "status": UNAVAILABLE,
+            "reason": "explicit negative labels are not present for SkillRouter",
+        },
+        "evaluated_router_configs": _external_router_configs(plan),
+    }
+
+
+def _evaluate_live_agent(
+    *,
+    live_plan_path: Path | str | None,
+    live_report_path: Path | str | None,
+    checks: list[dict[str, Any]],
+    field_markers: dict[str, dict[str, Any]],
+    inputs: dict[str, Any],
+) -> dict[str, Any]:
+    if live_plan_path is None and live_report_path is None:
+        field_markers["live_agent"] = {
+            "status": UNAVAILABLE,
+            "reason": "live-agent plan/report paths were not provided",
+        }
+        _check(
+            checks,
+            "live_agent.available",
+            UNAVAILABLE,
+            REVIEW_SEVERITY,
+            "live-agent evidence was not provided",
+        )
+        return {"status": UNAVAILABLE, "reason": field_markers["live_agent"]["reason"]}
+    if live_plan_path is None or live_report_path is None:
+        field_markers["live_agent"] = {
+            "status": UNAVAILABLE,
+            "reason": "both live-agent plan and report paths are required",
+        }
+        _check(
+            checks,
+            "live_agent.available",
+            FAIL,
+            BLOCKING,
+            "live-agent evidence is incomplete",
+        )
+        return {"status": UNAVAILABLE, "reason": field_markers["live_agent"]["reason"]}
+
+    plan_path = Path(live_plan_path)
+    report_path = Path(live_report_path)
+    inputs["live_plan"] = _input_record(plan_path)
+    digest_path = plan_path.with_name(f"{plan_path.name}.sha256")
+    if digest_path.exists():
+        inputs["live_plan_digest"] = _input_record(digest_path)
+    inputs["live_report"] = _input_record(report_path)
+    field_markers["live_agent"] = {"status": PRESENT}
+
+    _call_check(
+        checks,
+        "live_agent.plan_digest",
+        "SkillsBench plan digest matches its sidecar",
+        lambda: _verify_live_plan_digest(plan_path),
+    )
+    plan = _read_json_for_gate(checks, "live_agent.plan_load", plan_path)
+    report = _read_json_for_gate(checks, "live_agent.report_load", report_path)
+    _schema_check(checks, "live_agent.plan_schema", plan, LIVE_PLAN_SCHEMA)
+    _schema_check(checks, "live_agent.report_schema", report, LIVE_REPORT_SCHEMA)
+    _call_check(
+        checks,
+        "live_agent.input_hashes",
+        "SkillsBench source, router, oracle, and overlap input hashes match the plan",
+        lambda: _verify_live_plan_inputs(plan),
+    )
+    _call_check(
+        checks,
+        "live_agent.derived_hashes",
+        "SkillsBench derived plan fields match frozen source inputs",
+        lambda: _verify_live_derived_fields(plan),
+    )
+    _check_report_plan_path(
+        checks,
+        "live_agent.report_plan_path",
+        report.get("plan_path"),
+        plan_path,
+    )
+    _check_live_matrix_completeness(checks, plan, report)
+    _check_prompt_hash_equality(checks, plan, report)
+    _check_oracle_qualification(checks, plan)
+    _check_verifier_evidence(checks, report)
+    _check_no_skill_leakage(checks, report)
+    _check_trace_completeness(checks, report)
+    _check_overlap_status(checks, report)
+    _check_secret_redaction(checks, report)
+
+    runs = report.get("runs") if isinstance(report, dict) else []
+    run_records = runs if isinstance(runs, list) else []
+    condition_summary = _condition_summary(run_records)
+    no_skill_rate = _success_rate(condition_summary.get("no-skill"))
+    routed_rate = _success_rate(condition_summary.get("routed-skill"))
+    oracle_rate = _success_rate(condition_summary.get("oracle-skill"))
+    timeout_process_errors = _timeout_process_errors(run_records)
+    per_task_regressions = _per_task_regressions(run_records)
+    _check_live_runtime_anomalies(checks, timeout_process_errors)
+    _check_live_task_regressions(checks, per_task_regressions)
+    return {
+        "status": PRESENT,
+        "run_id": report.get("run_id"),
+        "mode": report.get("mode"),
+        "condition_summary": condition_summary,
+        "routed_vs_no_skill_delta": {
+            "task_success_delta": _nullable_delta(routed_rate, no_skill_rate),
+        },
+        "oracle_gap": {
+            "routed_minus_oracle_success_delta": _nullable_delta(routed_rate, oracle_rate),
+        },
+        "timeout_process_errors": timeout_process_errors,
+        "skill_use_evidence": _skill_use_summary(run_records),
+        "per_task_regressions": per_task_regressions,
+        "overlap_report": report.get("overlap_report"),
+        "negative_hit_rate": {
+            "status": UNAVAILABLE,
+            "reason": "explicit negative labels are not present for SkillsBench",
+        },
+    }
+
+
+def _verify_external_inputs(plan: dict[str, Any]) -> None:
+    adapter = SkillRouterAdapter(
+        data_root=plan["data_root"],
+        upstream_ref=plan["adapter_provenance"]["upstream_ref"],
+        license_note=plan["adapter_provenance"]["license_note"],
+        tiers=tuple(plan.get("tiers") or ("easy", "hard")),
+    )
+    _verify_external_adapter_provenance(adapter, plan)
+    _verify_frozen_predictions(plan)
+
+
+def _promotion_gate(validity_status: str, external: dict[str, Any]) -> dict[str, Any]:
+    unavailable = {
+        "status": UNAVAILABLE,
+        "reason": "no preregistered promotion artifact was provided",
+    }
+    return {
+        "decision": KEEP_BASELINE,
+        "blocked_by_validity": validity_status == INVALID_EVIDENCE,
+        "reasons": _promotion_reasons(validity_status),
+        "evaluated_router_configs": external.get("evaluated_router_configs", []),
+        "baseline_router": unavailable,
+        "candidate_router": unavailable,
+    }
+
+
+def _external_router_configs(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    configs = plan.get("frozen_routers") if isinstance(plan, dict) else []
+    if not isinstance(configs, list):
+        return []
+    return [
+        {
+            "config_id": config.get("config_id"),
+            "router_id": config.get("router_id"),
+            "field_view": config.get("field_view"),
+            "version": config.get("version"),
+        }
+        for config in configs
+        if isinstance(config, dict)
+    ]
+
+
+def _schema_check(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    payload: dict[str, Any],
+    expected: str,
+) -> None:
+    actual = payload.get("schema_version") if isinstance(payload, dict) else None
+    _check(
+        checks,
+        check_id,
+        PASS if actual == expected else FAIL,
+        BLOCKING,
+        f"{check_id} matches {expected}"
+        if actual == expected
+        else f"{check_id} expected {expected}, got {actual}",
+        {"expected": expected, "actual": actual},
+    )
+
+
+def _check_report_plan_path(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    actual_path: Any,
+    expected_path: Path,
+) -> None:
+    try:
+        matches = Path(str(actual_path)).resolve() == expected_path.resolve()
+    except OSError:
+        matches = False
+    _check(
+        checks,
+        check_id,
+        PASS if matches else FAIL,
+        BLOCKING,
+        "report points at the validated frozen plan"
+        if matches
+        else "report plan_path does not match the validated plan",
+        {"expected": str(expected_path), "actual": actual_path},
+    )
+
+
+def _check_prompt_hash_equality(
+    checks: list[dict[str, Any]],
+    plan: dict[str, Any],
+    report: dict[str, Any],
+) -> None:
+    plan_mismatches = _prompt_hash_mismatches(plan.get("matrix", []))
+    report_mismatches = _prompt_hash_mismatches(report.get("runs", []))
+    mismatches = sorted(set(plan_mismatches + report_mismatches))
+    _check(
+        checks,
+        "live_agent.prompt_hash_equality",
+        PASS if not mismatches else FAIL,
+        BLOCKING,
+        "all conditions use the same prompt hash per task"
+        if not mismatches
+        else "prompt hash mismatch across live-agent conditions",
+        {"task_ids": mismatches},
+    )
+
+
+def _check_live_matrix_completeness(
+    checks: list[dict[str, Any]],
+    plan: dict[str, Any],
+    report: dict[str, Any],
+) -> None:
+    matrix = plan.get("matrix") if isinstance(plan, dict) else []
+    runs = report.get("runs") if isinstance(report, dict) else []
+    if not isinstance(matrix, list) or not isinstance(runs, list):
+        _check(
+            checks,
+            "live_agent.matrix_completeness",
+            FAIL,
+            BLOCKING,
+            "live-agent matrix or runs are malformed",
+        )
+        return
+
+    expected: dict[str, dict[str, Any]] = {}
+    duplicate_expected = []
+    for entry in matrix:
+        if not isinstance(entry, dict):
+            continue
+        run_id = str(entry.get("run_id"))
+        if run_id in expected:
+            duplicate_expected.append(run_id)
+        expected[run_id] = entry
+
+    actual: dict[str, dict[str, Any]] = {}
+    duplicate_actual = []
+    for run in runs:
+        if not isinstance(run, dict):
+            continue
+        run_id = str(run.get("run_id"))
+        if run_id in actual:
+            duplicate_actual.append(run_id)
+        actual[run_id] = run
+
+    mismatches = []
+    for run_id in sorted(set(expected) & set(actual)):
+        entry = expected[run_id]
+        run = actual[run_id]
+        for field in ("task_id", "condition", "prompt_hash"):
+            if run.get(field) != entry.get(field):
+                mismatches.append(
+                    {
+                        "run_id": run_id,
+                        "field": field,
+                        "expected": entry.get(field),
+                        "actual": run.get(field),
+                    }
+                )
+        if list(run.get("mounted_skill_ids") or []) != list(entry.get("mounted_skill_ids") or []):
+            mismatches.append(
+                {
+                    "run_id": run_id,
+                    "field": "mounted_skill_ids",
+                    "expected": entry.get("mounted_skill_ids"),
+                    "actual": run.get("mounted_skill_ids"),
+                }
+            )
+
+    failures = {
+        "missing_run_ids": sorted(set(expected) - set(actual)),
+        "extra_run_ids": sorted(set(actual) - set(expected)),
+        "duplicate_expected_run_ids": sorted(duplicate_expected),
+        "duplicate_actual_run_ids": sorted(duplicate_actual),
+        "mismatches": mismatches,
+    }
+    is_complete = not any(failures.values())
+    _check(
+        checks,
+        "live_agent.matrix_completeness",
+        PASS if is_complete else FAIL,
+        BLOCKING,
+        "live-agent report contains exactly the frozen matrix runs"
+        if is_complete
+        else "live-agent report does not match the frozen matrix",
+        failures,
+    )
+
+
+def _prompt_hash_mismatches(records: Any) -> list[str]:
+    by_task: dict[str, set[str]] = {}
+    if not isinstance(records, list):
+        return ["<malformed>"]
+    for record in records:
+        if not isinstance(record, dict):
+            return ["<malformed>"]
+        task_id = str(record.get("task_id"))
+        by_task.setdefault(task_id, set()).add(str(record.get("prompt_hash")))
+    return [task_id for task_id, hashes in by_task.items() if len(hashes) > 1]
+
+
+def _check_oracle_qualification(checks: list[dict[str, Any]], plan: dict[str, Any]) -> None:
+    selected = {task.get("task_id") for task in plan.get("selected_tasks", []) if isinstance(task, dict)}
+    qualified = set(plan.get("oracle_qualification_records", {}))
+    missing = sorted(str(task_id) for task_id in selected - qualified)
+    _check(
+        checks,
+        "live_agent.oracle_qualification",
+        PASS if not missing else FAIL,
+        BLOCKING,
+        "oracle qualification exists for every selected live task"
+        if not missing
+        else "selected live tasks are missing oracle qualification",
+        {"missing_task_ids": missing},
+    )
+
+
+def _check_verifier_evidence(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
+    failures = []
+    for run in _runs(report):
+        verifier = run.get("verifier")
+        if not isinstance(verifier, dict) or not isinstance(verifier.get("passed"), bool):
+            failures.append({"run_id": run.get("run_id"), "reason": "missing verifier.passed"})
+            continue
+        if run.get("task_success") is not verifier.get("passed"):
+            failures.append(
+                {"run_id": run.get("run_id"), "reason": "task_success differs from verifier.passed"}
+            )
+        if run.get("verifier_passed") is not verifier.get("passed"):
+            failures.append(
+                {
+                    "run_id": run.get("run_id"),
+                    "reason": "verifier_passed differs from verifier.passed",
+                }
+            )
+    source_ok = report.get("summary", {}).get("task_success_source") == "verifier_pass_fail"
+    if not source_ok:
+        failures.append({"run_id": "<summary>", "reason": "task success source is not verifier"})
+    _check(
+        checks,
+        "live_agent.verifier_evidence",
+        PASS if not failures else FAIL,
+        BLOCKING,
+        "deterministic verifier records are complete and source task success"
+        if not failures
+        else "verifier evidence is incomplete or not the success source",
+        {"failures": failures},
+    )
+
+
+def _check_no_skill_leakage(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
+    failures = []
+    for run in _runs(report):
+        if run.get("condition") != "no-skill":
+            continue
+        if run.get("mounted_skill_count") != 0 or run.get("mounted_skill_ids"):
+            failures.append({"run_id": run.get("run_id"), "reason": "benchmark skills mounted"})
+        for skill_id, evidence in (run.get("skill_use") or {}).items():
+            state = evidence.get("state") if isinstance(evidence, dict) else None
+            if state in {"MOUNTED_ONLY", "READ"}:
+                failures.append(
+                    {
+                        "run_id": run.get("run_id"),
+                        "skill_id": skill_id,
+                        "reason": f"no-skill evidence state {state}",
+                    }
+                )
+    _check(
+        checks,
+        "live_agent.no_skill_leakage",
+        PASS if not failures else FAIL,
+        BLOCKING,
+        "no-skill condition mounted no benchmark skills"
+        if not failures
+        else "no-skill condition shows benchmark skill leakage",
+        {"failures": failures},
+    )
+
+
+def _check_trace_completeness(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
+    failures = []
+    for run in _runs(report):
+        trace_path = Path(str(run.get("trace_path")))
+        if not trace_path.exists():
+            failures.append({"run_id": run.get("run_id"), "reason": "trace file is missing"})
+            continue
+        try:
+            trace = _read_json(trace_path)
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            failures.append({"run_id": run.get("run_id"), "reason": str(exc)})
+            continue
+        required = {"schema_version", "request", "result", "mounted_skills", "skill_use", "events"}
+        missing = sorted(required - set(trace))
+        if trace.get("schema_version") != "live-agent.v1" or missing:
+            failures.append(
+                {
+                    "run_id": run.get("run_id"),
+                    "reason": "trace schema or required fields are incomplete",
+                    "missing": missing,
+                }
+            )
+            continue
+        failures.extend(_trace_report_mismatches(run, trace))
+    _check(
+        checks,
+        "live_agent.trace_completeness",
+        PASS if not failures else FAIL,
+        BLOCKING,
+        "all live-agent runs have complete trace files"
+        if not failures
+        else "live-agent trace files are missing, incomplete, or inconsistent with report rows",
+        {"failures": failures},
+    )
+
+
+def _trace_report_mismatches(run: dict[str, Any], trace: dict[str, Any]) -> list[dict[str, Any]]:
+    result = trace.get("result") if isinstance(trace.get("result"), dict) else {}
+    verifier = result.get("verifier") if isinstance(result.get("verifier"), dict) else {}
+    comparisons = {
+        "process_exit_code": (run.get("process_exit_code"), result.get("process_exit_code")),
+        "timed_out": (run.get("timed_out"), result.get("timed_out")),
+        "task_success": (run.get("task_success"), result.get("task_success")),
+        "verifier.passed": (run.get("verifier_passed"), verifier.get("passed")),
+    }
+    failures = [
+        {
+            "run_id": run.get("run_id"),
+            "reason": "trace/report field mismatch",
+            "field": field,
+            "report": report_value,
+            "trace": trace_value,
+        }
+        for field, (report_value, trace_value) in comparisons.items()
+        if report_value != trace_value
+    ]
+    trace_skill_ids = [
+        record.get("skill_id")
+        for record in trace.get("mounted_skills", [])
+        if isinstance(record, dict)
+    ]
+    if list(run.get("mounted_skill_ids") or []) != trace_skill_ids:
+        failures.append(
+            {
+                "run_id": run.get("run_id"),
+                "reason": "trace/report mounted_skill_ids mismatch",
+                "report": run.get("mounted_skill_ids"),
+                "trace": trace_skill_ids,
+            }
+        )
+    if _canonical_json(run.get("skill_use") or {}) != _canonical_json(trace.get("skill_use") or {}):
+        failures.append(
+            {
+                "run_id": run.get("run_id"),
+                "reason": "trace/report skill_use mismatch",
+            }
+        )
+    return failures
+
+
+def _check_overlap_status(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
+    overlap = report.get("overlap_report")
+    decision = overlap.get("decision") if isinstance(overlap, dict) else None
+    if decision == "INVALID":
+        status = FAIL
+        severity = BLOCKING
+        summary = "overlap report is invalid"
+    elif decision in {"LINKED_TRANSFER", "UNAVAILABLE"}:
+        status = REVIEW
+        severity = REVIEW_SEVERITY
+        summary = "overlap report requires caveated generalization claims"
+    elif decision == "DISJOINT":
+        status = PASS
+        severity = INFO
+        summary = "overlap report supports independent generalization framing"
+    else:
+        status = FAIL
+        severity = BLOCKING
+        summary = "overlap report decision is missing or unsupported"
+    _check(
+        checks,
+        "live_agent.overlap_status",
+        status,
+        severity,
+        summary,
+        {"decision": decision},
+    )
+
+
+def _check_secret_redaction(checks: list[dict[str, Any]], report: dict[str, Any]) -> None:
+    leaks = []
+    if SECRET_RE.search(json.dumps(report, sort_keys=True, default=str)):
+        leaks.append({"artifact": "live_report"})
+    for run in _runs(report):
+        trace_path = Path(str(run.get("trace_path")))
+        if not trace_path.exists():
+            continue
+        text = trace_path.read_text(encoding="utf-8")
+        if SECRET_RE.search(text):
+            leaks.append({"artifact": "trace", "run_id": run.get("run_id")})
+    _check(
+        checks,
+        "live_agent.secret_redaction",
+        PASS if not leaks else FAIL,
+        BLOCKING,
+        "live-agent report and traces do not contain obvious secret tokens"
+        if not leaks
+        else "live-agent report or traces contain secret-like strings",
+        {"leaks": leaks},
+    )
+
+
+def _check_live_runtime_anomalies(
+    checks: list[dict[str, Any]],
+    anomalies: list[dict[str, Any]],
+) -> None:
+    _check(
+        checks,
+        "live_agent.timeout_process_errors",
+        REVIEW if anomalies else PASS,
+        REVIEW_SEVERITY if anomalies else INFO,
+        "live-agent timeout or process errors require review"
+        if anomalies
+        else "no live-agent timeout or process errors were reported",
+        {"errors": anomalies},
+    )
+
+
+def _check_live_task_regressions(
+    checks: list[dict[str, Any]],
+    regressions: list[dict[str, Any]],
+) -> None:
+    _check(
+        checks,
+        "live_agent.per_task_regressions",
+        REVIEW if regressions else PASS,
+        REVIEW_SEVERITY if regressions else INFO,
+        "routed-skill regressions versus no-skill require review"
+        if regressions
+        else "no routed-skill per-task regressions versus no-skill were reported",
+        {"regressions": regressions},
+    )
+
+
+def _condition_summary(runs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    summary: dict[str, dict[str, Any]] = {}
+    for condition in ("no-skill", "routed-skill", "oracle-skill"):
+        selected = [run for run in runs if run.get("condition") == condition]
+        summary[condition] = {
+            "run_count": len(selected),
+            "verifier_pass_count": sum(1 for run in selected if run.get("verifier_passed") is True),
+            "task_success_count": sum(1 for run in selected if run.get("task_success") is True),
+            "timeout_count": sum(1 for run in selected if run.get("timed_out") is True),
+            "process_error_count": sum(
+                1
+                for run in selected
+                if run.get("process_exit_code") not in (0, None)
+            ),
+        }
+    return summary
+
+
+def _success_rate(summary: dict[str, Any] | None) -> float | None:
+    if not summary or not summary.get("run_count"):
+        return None
+    return float(summary["task_success_count"]) / float(summary["run_count"])
+
+
+def _nullable_delta(left: float | None, right: float | None) -> float | None:
+    if left is None or right is None:
+        return None
+    return left - right
+
+
+def _timeout_process_errors(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "run_id": run.get("run_id"),
+            "task_id": run.get("task_id"),
+            "condition": run.get("condition"),
+            "timed_out": run.get("timed_out"),
+            "process_exit_code": run.get("process_exit_code"),
+        }
+        for run in runs
+        if run.get("timed_out") or run.get("process_exit_code") not in (0, None)
+    ]
+
+
+def _skill_use_summary(runs: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {"MOUNTED": 0, "READ": 0, "UNKNOWN": 0, "DECLARED": 0}
+    for run in runs:
+        for evidence in (run.get("skill_use") or {}).values():
+            if isinstance(evidence, dict):
+                state = str(evidence.get("state"))
+                counts[state] = counts.get(state, 0) + 1
+    return counts
+
+
+def _per_task_regressions(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_task: dict[str, dict[str, bool]] = {}
+    for run in runs:
+        by_task.setdefault(str(run.get("task_id")), {})[str(run.get("condition"))] = bool(
+            run.get("task_success")
+        )
+    regressions = []
+    for task_id, outcomes in sorted(by_task.items()):
+        if outcomes.get("no-skill") is True and outcomes.get("routed-skill") is False:
+            regressions.append(
+                {
+                    "task_id": task_id,
+                    "no_skill_success": True,
+                    "routed_skill_success": False,
+                }
+            )
+    return regressions
+
+
+def _validity_status(checks: list[dict[str, Any]]) -> str:
+    if any(check["status"] == FAIL and check["severity"] == BLOCKING for check in checks):
+        return INVALID_EVIDENCE
+    if any(check["status"] in {REVIEW, UNAVAILABLE} for check in checks):
+        return REVIEW_REQUIRED
+    return VALID_EVIDENCE
+
+
+def _promotion_reasons(validity_status: str) -> list[str]:
+    if validity_status == INVALID_EVIDENCE:
+        return ["invalid benchmark evidence blocks promotion"]
+    if validity_status == REVIEW_REQUIRED:
+        return ["benchmark evidence requires review; promotion defaults to baseline"]
+    return ["no preregistered promotion artifact was provided; defaulting to baseline"]
+
+
+def _runs(report: dict[str, Any]) -> list[dict[str, Any]]:
+    runs = report.get("runs") if isinstance(report, dict) else []
+    return [run for run in runs if isinstance(run, dict)] if isinstance(runs, list) else []
+
+
+def _call_check(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    pass_summary: str,
+    callback: Any,
+) -> None:
+    try:
+        callback()
+    except Exception as exc:  # noqa: BLE001 - gate must preserve failure details.
+        _check(
+            checks,
+            check_id,
+            FAIL,
+            BLOCKING,
+            str(exc),
+            {"exception_type": exc.__class__.__name__},
+        )
+    else:
+        _check(checks, check_id, PASS, INFO, pass_summary)
+
+
+def _check(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    status: str,
+    severity: str,
+    summary: str,
+    details: dict[str, Any] | None = None,
+) -> None:
+    checks.append(
+        {
+            "id": check_id,
+            "status": status,
+            "severity": severity,
+            "summary": summary,
+            "details": details or {},
+        }
+    )
+
+
+def _input_record(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {"path": str(path), "exists": False}
+    return {
+        "path": str(path),
+        "exists": True,
+        "size_bytes": path.stat().st_size,
+        "sha256": sha256_file(path),
+    }
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path} must contain a JSON object")
+    return payload
+
+
+def _read_json_for_gate(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    path: Path,
+) -> dict[str, Any]:
+    try:
+        payload = _read_json(path)
+    except Exception as exc:  # noqa: BLE001 - missing/malformed inputs become gate checks.
+        _check(
+            checks,
+            check_id,
+            FAIL,
+            BLOCKING,
+            f"could not load JSON artifact: {exc}",
+            {"path": str(path), "exception_type": exc.__class__.__name__},
+        )
+        return {}
+    _check(checks, check_id, PASS, INFO, "JSON artifact loaded", {"path": str(path)})
+    return payload
+
+
+def _canonical_json(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
