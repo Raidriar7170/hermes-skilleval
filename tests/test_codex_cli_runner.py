@@ -133,6 +133,24 @@ def test_codex_cli_runner_rejects_codex_home_extra_env_override(tmp_path):
         )
 
 
+@pytest.mark.parametrize("env_key", ["HOME", "USERPROFILE", "XDG_CONFIG_HOME"])
+def test_codex_cli_runner_rejects_runner_controlled_extra_env_override(
+    tmp_path,
+    env_key,
+):
+    codex = _fake_codex(tmp_path, "print('should not run')\n")
+    host_home = tmp_path / "host-home"
+    (host_home / ".agents" / "skills" / "global" / "SKILL.md").parent.mkdir(
+        parents=True
+    )
+
+    with pytest.raises(ValueError, match=env_key):
+        _runner(tmp_path, codex).run(
+            _request(tmp_path),
+            extra_env={env_key: str(host_home)},
+        )
+
+
 @pytest.mark.parametrize(
     ("kwargs", "match"),
     [
@@ -320,6 +338,21 @@ def test_codex_cli_runner_rejects_preexisting_parent_repo_skills(tmp_path):
     codex = _fake_codex(tmp_path, "print('should not run')\n")
     repo = tmp_path / "repo"
     (repo / ".agents" / "skills" / "global").mkdir(parents=True)
+    request = _request(repo / "workspaces")
+
+    with pytest.raises(ValueError, match="workspace parent skill leakage"):
+        _runner(tmp_path, codex).run(request)
+
+
+def test_codex_cli_runner_rejects_dot_prefixed_skill_leakage(tmp_path):
+    codex = _fake_codex(tmp_path, "print('should not run')\n")
+    repo = tmp_path / "repo"
+    hidden_skill = repo / ".agents" / "skills" / ".hidden-skill"
+    hidden_skill.mkdir(parents=True)
+    (hidden_skill / "SKILL.md").write_text(
+        "---\nname: hidden\ndescription: hidden\n---\nbody\n",
+        encoding="utf-8",
+    )
     request = _request(repo / "workspaces")
 
     with pytest.raises(ValueError, match="workspace parent skill leakage"):

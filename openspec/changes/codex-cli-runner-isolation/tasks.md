@@ -33,6 +33,9 @@
   admin, and workspace-parent skill surfaces.
 - [x] 3.9 Reject runner control flags in both split and `--flag=value` forms,
   and add runner-controlled `--skip-git-repo-check` only when supported.
+- [x] 3.10 Reject `extra_env` overrides for runner-controlled home/config
+  environment keys and count dot-prefixed `SKILL.md` directories as possible
+  skill leakage.
 
 ## 4. Subprocess Execution
 

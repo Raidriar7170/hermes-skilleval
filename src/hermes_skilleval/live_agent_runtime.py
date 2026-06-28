@@ -254,6 +254,16 @@ class CodexCliRunner:
         "--oss",
         "--skip-git-repo-check",
     }
+    RUNNER_CONTROLLED_ENV_KEYS = {
+        "CODEX_HOME",
+        "HOME",
+        "USERPROFILE",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_CACHE_HOME",
+    }
 
     def __init__(self, config: CodexCliRunnerConfig | None = None) -> None:
         self.config = config or CodexCliRunnerConfig()
@@ -383,8 +393,14 @@ class CodexCliRunner:
                 raise ValueError(f"unsupported Codex CLI extra argument: {flag}")
 
     def _validate_extra_env(self, extra_env: dict[str, str] | None) -> None:
-        if extra_env and "CODEX_HOME" in extra_env:
-            raise ValueError("extra_env must not override CODEX_HOME")
+        if not extra_env:
+            return
+        overridden = sorted(set(extra_env) & self.RUNNER_CONTROLLED_ENV_KEYS)
+        if overridden:
+            raise ValueError(
+                "extra_env must not override runner-controlled environment keys: "
+                + ", ".join(overridden)
+            )
 
     def _check_global_leakage(self) -> None:
         if self.config.codex_home_mode != "inherit":
@@ -508,6 +524,8 @@ class CodexCliRunner:
         extra_env: dict[str, str] | None = None,
     ) -> dict[str, str]:
         env = os.environ.copy()
+        if extra_env:
+            env.update(extra_env)
         if self.config.codex_home_mode == "isolated":
             base = (
                 Path(self.config.codex_home_base)
@@ -523,8 +541,6 @@ class CodexCliRunner:
                 env["HOME"] = str(isolated_home)
         else:
             env["CODEX_HOME"] = str(self._inherited_home())
-        if extra_env:
-            env.update(extra_env)
         return env
 
     def _inherited_home(self) -> Path:
@@ -928,11 +944,20 @@ def _allowed_workspace_skill_dirs(
 def _visible_child_names(path: Path) -> list[str]:
     if not path.exists():
         return []
-    return sorted(child.name for child in path.iterdir() if not child.name.startswith("."))
+    names = []
+    for child in path.iterdir():
+        if child.name.startswith(".") and not _looks_like_skill_dir(child):
+            continue
+        names.append(child.name)
+    return sorted(names)
 
 
 def _visible_child_count(path: Path) -> int:
     return len(_visible_child_names(path))
+
+
+def _looks_like_skill_dir(path: Path) -> bool:
+    return path.is_dir() and (path / "SKILL.md").is_file()
 
 
 def _non_empty(value: str, field: str) -> str:

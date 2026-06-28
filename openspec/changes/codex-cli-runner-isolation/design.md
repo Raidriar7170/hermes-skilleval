@@ -21,7 +21,8 @@ replace verifier success.
 - Use workspace-write sandbox and approval policy never.
 - Fail closed on unsupported or unsafe CLI flags, `danger-full-access`, bypass
   flags, `--flag=value` control-flag forms, global skill/plugin/MCP/config
-  leakage, and no-skill skill injection.
+  leakage, runner-controlled environment overrides, and no-skill skill
+  injection.
 - Mount benchmark skills in Codex-discoverable repo skill format under
   `.agents/skills/<safe-skill-id>/SKILL.md`.
 - Preserve PR-4 condition/workspace mounted-skill ordering and verifier source
@@ -51,16 +52,18 @@ replace verifier success.
    `codex exec --json --ephemeral --ignore-user-config --ignore-rules
    --sandbox workspace-write --cd <workspace> --output-last-message <file>`.
    Dangerous bypass flags, `danger-full-access`, control-flag overrides, and
-   `CODEX_HOME` environment overrides are rejected before running. Rejection
-   normalizes `--flag=value` to `--flag`, and runner-controlled
-   `--skip-git-repo-check` is added only when supported by help output. Prompt
-   text is passed after `--` so prompt text beginning with flags is not parsed
-   as runner configuration.
+   runner-controlled environment overrides are rejected before running.
+   Rejection normalizes `--flag=value` to `--flag`, rejects `extra_env`
+   overrides for `CODEX_HOME`, `HOME`, Windows home/config keys, and XDG
+   config/data/cache keys, and adds runner-controlled `--skip-git-repo-check`
+   only when supported by help output. Prompt text is passed after `--` so
+   prompt text beginning with flags is not parsed as runner configuration.
 
 4. **Preflight happens before subprocess execution.** Preflight records Codex
    version/help, checks supported flags, scans inherited `CODEX_HOME` surfaces
    when inheritance is requested, inventories user/admin/workspace-parent skill
-   surfaces, and rejects no-skill mounted skills.
+   surfaces including dot-prefixed directories that contain `SKILL.md`, and
+   rejects no-skill mounted skills.
 
 5. **Benchmark skill mounts use Codex skill layout.** Mounted records point to
    `.agents/skills/<safe-skill-id>/SKILL.md`; each file includes `name` and

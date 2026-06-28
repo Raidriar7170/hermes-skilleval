@@ -45,7 +45,11 @@ non-interactively without using live benchmark tasks.
 - **AND** it MUST NOT use `--yolo`, `danger-full-access`, or dangerous bypass
   flags
 - **AND** it MUST reject runner-control flag overrides, including
-  `--flag=value` forms, and `CODEX_HOME` overrides
+  `--flag=value` forms
+- **AND** it MUST reject `extra_env` overrides for runner-controlled home and
+  config environment variables such as `CODEX_HOME`, `HOME`, `USERPROFILE`,
+  `APPDATA`, `LOCALAPPDATA`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, and
+  `XDG_CACHE_HOME`
 - **AND** it MAY add runner-controlled `--skip-git-repo-check` only when
   `codex exec --help` advertises support
 - **AND** prompt text MUST NOT be parsed as runner flags
@@ -74,6 +78,8 @@ unsafe or unsupported Codex CLI conditions.
 - **THEN** preflight MUST fail closed
 - **AND** isolated final-evidence preflight MUST inventory user, admin,
   workspace-parent, and bundled skill surfaces
+- **AND** dot-prefixed skill directories containing `SKILL.md` MUST count as
+  possible skill leakage
 - **AND** benchmark skills MUST be mounted only under
   `.agents/skills/<safe-skill-id>/SKILL.md` with Codex skill metadata
 

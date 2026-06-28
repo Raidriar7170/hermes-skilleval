@@ -198,6 +198,9 @@ Expected work:
 - Keep `no-skill` free of benchmark/global skills.
 - Reject runner-control `extra_args` in both split and `--flag=value` forms;
   only the runner may add `--skip-git-repo-check` after help confirms support.
+- Reject `extra_env` overrides for runner-controlled home/config keys,
+  including `CODEX_HOME`, `HOME`, Windows home/config keys, and XDG
+  config/data/cache keys.
 - Parse JSONL events for tool calls, file reads, `SKILL.md` reads, final
   messages, token usage when reliable, and unknown event types.
 - Kill the full process group on timeout.
