@@ -38,13 +38,16 @@ non-interactively without using live benchmark tasks.
 
 - **WHEN** the runner is configured in default isolated mode
 - **THEN** it MUST use an isolated run-local `CODEX_HOME`
+- **AND** it MUST set `HOME` to a run-local empty home for final evidence
 - **AND** it MUST invoke `codex exec` with JSONL output, ephemeral session,
   workspace-write sandbox, ignored user config, ignored rules, and output-last
   message capture
 - **AND** it MUST NOT use `--yolo`, `danger-full-access`, or dangerous bypass
   flags
-- **AND** it MUST reject runner-control flag overrides and `CODEX_HOME`
-  overrides
+- **AND** it MUST reject runner-control flag overrides, including
+  `--flag=value` forms, and `CODEX_HOME` overrides
+- **AND** it MAY add runner-controlled `--skip-git-repo-check` only when
+  `codex exec --help` advertises support
 - **AND** prompt text MUST NOT be parsed as runner flags
 
 #### Scenario: Allow inherited mode only for smoke tests
@@ -69,6 +72,10 @@ unsafe or unsupported Codex CLI conditions.
 - **WHEN** global skills, plugins, MCP config, or inherited user config would be
   consumed by a final evidence run
 - **THEN** preflight MUST fail closed
+- **AND** isolated final-evidence preflight MUST inventory user, admin,
+  workspace-parent, and bundled skill surfaces
+- **AND** benchmark skills MUST be mounted only under
+  `.agents/skills/<safe-skill-id>/SKILL.md` with Codex skill metadata
 
 #### Scenario: Reject no-skill leakage
 

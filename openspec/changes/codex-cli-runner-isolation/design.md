@@ -16,10 +16,14 @@ replace verifier success.
 - Use `codex exec` in non-interactive JSONL mode.
 - Default to isolated `CODEX_HOME`; allow inherit mode only for explicit smoke
   tests.
+- Set `HOME` to a run-local empty home in isolated final-evidence mode and
+  inventory all known skill surfaces before subprocess execution.
 - Use workspace-write sandbox and approval policy never.
 - Fail closed on unsupported or unsafe CLI flags, `danger-full-access`, bypass
-  flags, inherited global skill/plugin/MCP/config leakage, and no-skill skill
-  injection.
+  flags, `--flag=value` control-flag forms, global skill/plugin/MCP/config
+  leakage, and no-skill skill injection.
+- Mount benchmark skills in Codex-discoverable repo skill format under
+  `.agents/skills/<safe-skill-id>/SKILL.md`.
 - Preserve PR-4 condition/workspace mounted-skill ordering and verifier source
   of truth.
 - Parse JSONL defensively and retain unknown events without crashing.
@@ -40,26 +44,33 @@ replace verifier success.
    semantics. The fake API remains stable.
 
 2. **Isolated mode is default.** By default the runner creates a run-local
-   `CODEX_HOME` with no user config. Inherit mode exists for smoke tests only
-   and is marked as not final evidence.
+   `CODEX_HOME` and a run-local empty `HOME`. Inherit mode exists for smoke
+   tests only and is marked as not final evidence.
 
 3. **Command construction is explicit.** The default invocation uses
    `codex exec --json --ephemeral --ignore-user-config --ignore-rules
    --sandbox workspace-write --cd <workspace> --output-last-message <file>`.
    Dangerous bypass flags, `danger-full-access`, control-flag overrides, and
-   `CODEX_HOME` environment overrides are rejected before running. Prompt text
-   is passed after `--` so prompt text beginning with flags is not parsed as
-   runner configuration.
+   `CODEX_HOME` environment overrides are rejected before running. Rejection
+   normalizes `--flag=value` to `--flag`, and runner-controlled
+   `--skip-git-repo-check` is added only when supported by help output. Prompt
+   text is passed after `--` so prompt text beginning with flags is not parsed
+   as runner configuration.
 
 4. **Preflight happens before subprocess execution.** Preflight records Codex
    version/help, checks supported flags, scans inherited `CODEX_HOME` surfaces
-   when inheritance is requested, and rejects no-skill mounted skills.
+   when inheritance is requested, inventories user/admin/workspace-parent skill
+   surfaces, and rejects no-skill mounted skills.
 
-5. **JSONL parsing is defensive.** Malformed JSONL lines are preserved as
+5. **Benchmark skill mounts use Codex skill layout.** Mounted records point to
+   `.agents/skills/<safe-skill-id>/SKILL.md`; each file includes `name` and
+   `description` frontmatter so the repo skill is discoverable by Codex.
+
+6. **JSONL parsing is defensive.** Malformed JSONL lines are preserved as
    unknown events rather than crashing the runner. Unknown event types are
    preserved and can mark skill activation `UNKNOWN`.
 
-6. **Verifier remains authoritative.** The subprocess exit code is reported,
+7. **Verifier remains authoritative.** The subprocess exit code is reported,
    but task success remains verifier pass/fail through PR-4
    `execute_live_agent`.
 
@@ -68,7 +79,9 @@ replace verifier success.
 - **Risk: real CLI flags drift.** Mitigation: preflight reads `codex exec
   --help` and records version/help support in metadata.
 - **Risk: global config leaks into evidence.** Mitigation: isolated
-  `CODEX_HOME` is default; inherit mode is explicitly smoke-only and scanned.
+  `CODEX_HOME` and isolated `HOME` are default; preflight scans user, admin,
+  and workspace-parent skill surfaces, and inherit mode is explicitly
+  smoke-only.
 - **Risk: process hangs.** Mitigation: timeout sends process-group `SIGTERM`
   and then bounded `SIGKILL` fallback, not only parent-process cleanup.
 - **Risk: runner output leaks before trace serialization.** Mitigation:

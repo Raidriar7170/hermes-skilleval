@@ -82,8 +82,10 @@
     <ul>
       <li>新增 <code>CodexCliRunnerConfig</code> 和 <code>CodexCliRunner</code>，保持 PR-4 <code>AgentRunner</code> / verifier contract。</li>
       <li>默认使用 isolated <code>CODEX_HOME</code>、<code>--json</code>、<code>--ephemeral</code>、<code>--ignore-user-config</code>、<code>--ignore-rules</code>、<code>--sandbox workspace-write</code>、<code>--output-last-message</code>。</li>
-      <li>继承 <code>CODEX_HOME</code> 只允许 smoke-only metadata，并 fail-closed 检测 global skills/plugins/MCP/config leakage。</li>
-      <li>拒绝 <code>danger-full-access</code>、dangerous bypass flags、<code>--yolo</code>、runner control flag override 和 <code>CODEX_HOME</code> override。</li>
+      <li>benchmark skills 挂载到 <code>.agents/skills/&lt;safe-skill-id&gt;/SKILL.md</code>，每个文件包含 Codex skill <code>name</code> / <code>description</code> metadata。</li>
+      <li>final-evidence isolated mode 同时隔离 <code>HOME</code>，并记录 user/admin/workspace-parent/bundled skill inventory；继承 <code>CODEX_HOME</code> 只允许 smoke-only metadata。</li>
+      <li>拒绝 <code>danger-full-access</code>、dangerous bypass flags、<code>--yolo</code>、runner control flag override、<code>--flag=value</code> control forms 和 <code>CODEX_HOME</code> override。</li>
+      <li><code>--skip-git-repo-check</code> 只能由 runner 在 help 显示支持时受控加入，不能通过用户 <code>extra_args</code> 注入。</li>
       <li>用 fake executable 覆盖 success、timeout process-group cleanup、JSONL parsing、malformed/unknown events、skill evidence、redaction、truncation。</li>
       <li>新增并收紧 <code>schemas/live-agent-trace.schema.json</code>，验证 fake 和 Codex runner trace 以及非法 skill state。</li>
     </ul>

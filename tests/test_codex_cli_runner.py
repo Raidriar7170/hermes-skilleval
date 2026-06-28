@@ -76,9 +76,15 @@ def test_codex_cli_runner_builds_safe_default_command_and_isolated_home(tmp_path
             print("codex 1.2.3")
             raise SystemExit(0)
         if sys.argv[1:3] == ["exec", "--help"]:
-            print("--json --ephemeral --ignore-user-config --ignore-rules --sandbox --cd --output-last-message")
+            print("--json --ephemeral --ignore-user-config --ignore-rules --sandbox --cd --output-last-message --skip-git-repo-check")
             raise SystemExit(0)
-        record = {"argv": sys.argv[1:], "env": {"CODEX_HOME": os.environ.get("CODEX_HOME")}}
+        record = {
+            "argv": sys.argv[1:],
+            "env": {
+                "CODEX_HOME": os.environ.get("CODEX_HOME"),
+                "HOME": os.environ.get("HOME"),
+            },
+        }
         out = os.environ["FAKE_CODEX_RECORD"]
         open(out, "w", encoding="utf-8").write(json.dumps(record))
         output_file = sys.argv[sys.argv.index("--output-last-message") + 1]
@@ -106,10 +112,13 @@ def test_codex_cli_runner_builds_safe_default_command_and_isolated_home(tmp_path
         "--cd",
         str(request.workspace_path),
         "--output-last-message",
+        "--skip-git-repo-check",
     ]:
         assert flag in record["argv"]
     assert record["env"]["CODEX_HOME"].startswith(str(tmp_path / "codex-home"))
     assert record["env"]["CODEX_HOME"] != os.environ.get("CODEX_HOME")
+    assert record["env"]["HOME"].startswith(record["env"]["CODEX_HOME"])
+    assert record["env"]["HOME"] != os.environ.get("HOME")
     assert output.events[-1]["type"] == "final"
     assert output.events[-1]["message"] == "done"
 
@@ -134,6 +143,12 @@ def test_codex_cli_runner_rejects_codex_home_extra_env_override(tmp_path):
         ({"extra_args": ["--cd", "/tmp"]}, "--cd"),
         ({"extra_args": ["--output-last-message", "/tmp/out"]}, "--output-last-message"),
         ({"extra_args": ["--config", "approval_policy=\"on-request\""]}, "--config"),
+        ({"extra_args": ["--sandbox=danger-full-access"]}, "--sandbox"),
+        ({"extra_args": ["--config=approval_policy=\"on-request\""]}, "--config"),
+        ({"extra_args": ["-c=approval_policy=\"on-request\""]}, "-c"),
+        ({"extra_args": ["--add-dir=/"]}, "--add-dir"),
+        ({"extra_args": ["--yolo=true"]}, "--yolo"),
+        ({"extra_args": ["--profile=unsafe"]}, "--profile"),
     ],
 )
 def test_codex_cli_runner_rejects_unsafe_flags(tmp_path, kwargs, match):
@@ -253,6 +268,62 @@ def test_codex_cli_runner_preflight_rejects_global_leakage_in_inherit_mode(tmp_p
 
     with pytest.raises(ValueError, match="global Codex leakage"):
         runner.run(_request(tmp_path))
+
+
+def test_codex_cli_runner_isolated_clean_home_passes(tmp_path, monkeypatch):
+    codex = _fake_codex(
+        tmp_path,
+        """
+        if sys.argv[1:] == ["--version"]:
+            print("codex 1.2.3")
+            raise SystemExit(0)
+        if sys.argv[1:3] == ["exec", "--help"]:
+            print("--json --ephemeral --ignore-user-config --ignore-rules --sandbox --cd --output-last-message")
+            raise SystemExit(0)
+        print(json.dumps({"type": "final", "message": "done"}))
+        """,
+    )
+    host_home = tmp_path / "host-home"
+    host_home.mkdir()
+    monkeypatch.setenv("HOME", str(host_home))
+
+    output = _runner(tmp_path, codex).run(_request(tmp_path))
+
+    inventory = output.events[0]["global_capability_inventory"]
+    assert inventory["home_isolated"] is True
+    assert inventory["user_skill_dir"]["status"] == "ISOLATED_HOME"
+
+
+def test_codex_cli_runner_rejects_user_home_skill_leakage_when_not_isolating_home(
+    tmp_path,
+    monkeypatch,
+):
+    codex = _fake_codex(tmp_path, "print('should not run')\n")
+    host_home = tmp_path / "host-home"
+    (host_home / ".agents" / "skills" / "global").mkdir(parents=True)
+    monkeypatch.setenv("HOME", str(host_home))
+
+    with pytest.raises(ValueError, match="user skill leakage"):
+        _runner(tmp_path, codex, isolate_home=False).run(_request(tmp_path))
+
+
+def test_codex_cli_runner_rejects_admin_skill_leakage(tmp_path):
+    codex = _fake_codex(tmp_path, "print('should not run')\n")
+    admin_skills = tmp_path / "etc-codex-skills"
+    (admin_skills / "admin").mkdir(parents=True)
+
+    with pytest.raises(ValueError, match="admin skill leakage"):
+        _runner(tmp_path, codex, admin_skill_paths=[admin_skills]).run(_request(tmp_path))
+
+
+def test_codex_cli_runner_rejects_preexisting_parent_repo_skills(tmp_path):
+    codex = _fake_codex(tmp_path, "print('should not run')\n")
+    repo = tmp_path / "repo"
+    (repo / ".agents" / "skills" / "global").mkdir(parents=True)
+    request = _request(repo / "workspaces")
+
+    with pytest.raises(ValueError, match="workspace parent skill leakage"):
+        _runner(tmp_path, codex).run(request)
 
 
 def test_codex_cli_runner_rejects_no_skill_leakage_before_subprocess(tmp_path):

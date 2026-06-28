@@ -26,6 +26,13 @@
 - [x] 3.5 Add RED tests for global skill/plugin/MCP/config leakage and
   no-skill leakage.
 - [x] 3.6 Implement `CodexCliRunner` configuration and preflight.
+- [x] 3.7 Mount benchmark skills under
+  `.agents/skills/<safe-skill-id>/SKILL.md` with `name` and `description`
+  metadata.
+- [x] 3.8 Add final-evidence inventory and fail-closed checks for user HOME,
+  admin, and workspace-parent skill surfaces.
+- [x] 3.9 Reject runner control flags in both split and `--flag=value` forms,
+  and add runner-controlled `--skip-git-repo-check` only when supported.
 
 ## 4. Subprocess Execution
 
