@@ -26,8 +26,9 @@ SUPPORTED_TIERS = {"easy", "hard"}
 SUPPORTED_FIELD_VIEWS = {"name_only", "metadata", "full_body"}
 SUPPORTED_ROUTERS = {"baseline-minilm", "finetuned-embedding"}
 SAFE_FILENAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+BASELINE_MINILM_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 IMMUTABLE_REVISION_RE = re.compile(r"^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$")
-DIRTY_PATH_PREFIXES = ("src/", "tests/", "scripts/", "docs/", "openspec/")
+DIRTY_PATH_PREFIXES = ("src/", "tests/", "scripts/", "docs/", "openspec/", "configs/")
 DIRTY_PATH_NAMES = {"README.md", "pyproject.toml"}
 
 
@@ -103,6 +104,8 @@ def write_skillrouter_prediction_artifacts(
     tasks = _load_task_records(tasks_path)
     task_ids = {task.task_id for task in tasks}
     code_state = _git_state()
+    if final_evidence and embedding_model is not None:
+        raise ValueError("final evidence cannot use injected embedding models")
     if final_evidence and code_state.get("dirty_paths"):
         raise ValueError(
             "production prediction export requires clean source/config/test paths: "
@@ -141,6 +144,7 @@ def write_skillrouter_prediction_artifacts(
             normalized,
             embedding_backend=backend,
             injected_model=embedding_model is not None,
+            final_evidence=final_evidence,
         )
         artifact_base = _artifact_record(
             normalized,
@@ -302,6 +306,7 @@ def _router_availability(
     *,
     embedding_backend: str,
     injected_model: bool,
+    final_evidence: bool,
 ) -> dict[str, Any]:
     if config.router_id not in SUPPORTED_ROUTERS:
         return {
@@ -320,6 +325,14 @@ def _router_availability(
             ),
         }
     if config.router_id == "baseline-minilm":
+        if final_evidence and config.model_name != BASELINE_MINILM_MODEL:
+            return {
+                "status": "UNAVAILABLE",
+                "reason": (
+                    "baseline-minilm final evidence requires canonical model_name "
+                    f"{BASELINE_MINILM_MODEL}"
+                ),
+            }
         if not config.model_revision:
             return {
                 "status": "UNAVAILABLE",
@@ -556,6 +569,7 @@ def _git_state() -> dict[str, Any]:
                 "scripts",
                 "docs",
                 "openspec",
+                "configs",
                 "pyproject.toml",
                 "README.md",
             ],

@@ -302,6 +302,62 @@ def test_exporter_does_not_require_relevance_json_for_prediction_generation(tmp_
     assert Path(manifest["artifacts"][0]["output_path"]).exists()
 
 
+def test_final_evidence_rejects_injected_embedding_model(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "hermes_skilleval.external.skillrouter_prediction_export._git_state",
+        lambda: {"commit": "fixture", "tag": None, "dirty": False, "dirty_paths": []},
+    )
+    with pytest.raises(ValueError, match="final evidence cannot use injected embedding models"):
+        write_skillrouter_prediction_artifacts(
+            data_root=FIXTURE,
+            output_dir=tmp_path / "predictions",
+            run_id="final-injected",
+            configs=[
+                FrozenRouterConfig(
+                    router_id="baseline-minilm",
+                    config_id="baseline-minilm__metadata__easy",
+                    field_view="metadata",
+                    tier="easy",
+                    model_name="sentence-transformers/all-MiniLM-L6-v2",
+                    model_revision="0" * 40,
+                )
+            ],
+            top_k=50,
+            command=["fixture"],
+            embedding_model=HashingEmbeddingModel(dimensions=64),
+            final_evidence=True,
+        )
+
+
+def test_final_baseline_minilm_requires_canonical_model_name(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "hermes_skilleval.external.skillrouter_prediction_export._git_state",
+        lambda: {"commit": "fixture", "tag": None, "dirty": False, "dirty_paths": []},
+    )
+    manifest = write_skillrouter_prediction_artifacts(
+        data_root=FIXTURE,
+        output_dir=tmp_path / "predictions",
+        run_id="wrong-model",
+        configs=[
+            FrozenRouterConfig(
+                router_id="baseline-minilm",
+                config_id="baseline-minilm__metadata__easy",
+                field_view="metadata",
+                tier="easy",
+                model_name="sentence-transformers/not-minilm",
+                model_revision="0" * 40,
+            )
+        ],
+        top_k=50,
+        command=["fixture"],
+        final_evidence=True,
+    )
+
+    artifact = manifest["artifacts"][0]
+    assert artifact["status"] == "UNAVAILABLE"
+    assert "canonical model_name" in artifact["reason"]
+
+
 def test_cli_hashing_backend_cannot_label_baseline_minilm_artifacts(tmp_path):
     output_dir = tmp_path / "cli-predictions"
 
@@ -478,6 +534,8 @@ def test_dirty_code_path_detection_covers_staged_unstaged_and_untracked_sources(
         "M  src/hermes_skilleval/cli.py",
         " M tests/test_external_skillrouter_prediction_export.py",
         "?? src/hermes_skilleval/new_file.py",
+        "?? configs/v0.3/export.yaml",
+        " M configs/v0.3/plan.yaml",
         "?? artifacts/v0.3/run/output.json",
     ]
 
@@ -485,6 +543,8 @@ def test_dirty_code_path_detection_covers_staged_unstaged_and_untracked_sources(
         "src/hermes_skilleval/cli.py",
         "tests/test_external_skillrouter_prediction_export.py",
         "src/hermes_skilleval/new_file.py",
+        "configs/v0.3/export.yaml",
+        "configs/v0.3/plan.yaml",
     ]
 
 
