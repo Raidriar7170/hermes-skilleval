@@ -39,6 +39,11 @@ from hermes_skilleval.external.skillrouter_matrix import (
     run_skillrouter_matrix,
     write_skillrouter_matrix_plan,
 )
+from hermes_skilleval.external.skillrouter_prediction_export import (
+    FrozenRouterConfig,
+    _is_immutable_revision,
+    write_skillrouter_prediction_artifacts,
+)
 from hermes_skilleval.external.skillrouter_scorer import write_skillrouter_score_report
 from hermes_skilleval.evidence_gate import write_evidence_decision_report
 from hermes_skilleval.failure_analysis import (
@@ -380,6 +385,48 @@ def _build_parser() -> argparse.ArgumentParser:
     external_matrix_parser.add_argument("--plan", required=True)
     external_matrix_parser.add_argument("--output", required=True)
     external_matrix_parser.set_defaults(handler=_run_external_matrix)
+
+    prediction_export_parser = subparsers.add_parser(
+        "external-export-predictions",
+        help="export frozen SkillRouter prediction files for existing routers",
+    )
+    prediction_export_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    prediction_export_parser.add_argument("--data-root", required=True)
+    prediction_export_parser.add_argument("--output-dir", required=True)
+    prediction_export_parser.add_argument("--run-id", required=True)
+    prediction_export_parser.add_argument(
+        "--router-config",
+        action="append",
+        required=True,
+        help=(
+            "frozen router config as router_id:field_view:tier "
+            "or config_id:router_id:field_view:tier"
+        ),
+    )
+    prediction_export_parser.add_argument("--top-k", type=int, default=50)
+    prediction_export_parser.add_argument(
+        "--non-final",
+        action="store_true",
+        help="mark export as non-final evidence; required for dirty local fixture smoke runs",
+    )
+    prediction_export_parser.add_argument(
+        "--embedding-backend",
+        choices=EMBEDDING_BACKENDS,
+        default="sentence-transformers",
+    )
+    prediction_export_parser.add_argument(
+        "--baseline-minilm-model",
+        default="sentence-transformers/all-MiniLM-L6-v2",
+    )
+    prediction_export_parser.add_argument("--baseline-minilm-revision", default=None)
+    prediction_export_parser.add_argument("--finetuned-embedding-checkpoint", default=None)
+    prediction_export_parser.add_argument("--finetuned-embedding-revision", default=None)
+    prediction_export_parser.add_argument("--finetuned-embedding-sha256", default=None)
+    prediction_export_parser.set_defaults(handler=_run_external_export_predictions)
 
     skillsbench_validate_parser = subparsers.add_parser(
         "skillsbench-validate",
@@ -1097,6 +1144,41 @@ def _run_external_matrix(args: argparse.Namespace) -> None:
     )
 
 
+def _run_external_export_predictions(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    configs = [
+        _parse_prediction_export_router_config(value, args)
+        for value in args.router_config
+    ]
+    _validate_prediction_export_cli_configs(configs, args)
+    model = (
+        HashingEmbeddingModel()
+        if args.embedding_backend == "hashing"
+        else None
+    )
+    manifest = write_skillrouter_prediction_artifacts(
+        data_root=args.data_root,
+        output_dir=args.output_dir,
+        run_id=args.run_id,
+        configs=configs,
+        top_k=args.top_k,
+        command=["skilleval", *sys.argv[1:]],
+        embedding_model=model,
+        embedding_backend=args.embedding_backend,
+        final_evidence=not args.non_final,
+    )
+    pass_count = sum(1 for item in manifest["artifacts"] if item["status"] == "PASS")
+    unavailable_count = sum(
+        1 for item in manifest["artifacts"] if item["status"] == "UNAVAILABLE"
+    )
+    print(
+        "External predictions "
+        f"{manifest['run_id']}: {args.output_dir} "
+        f"({pass_count} exported, {unavailable_count} unavailable)"
+    )
+
+
 def _run_skillsbench_validate(args: argparse.Namespace) -> None:
     adapter = SkillsBenchAdapter(
         data_root=args.data_root,
@@ -1197,6 +1279,68 @@ def _parse_external_router_config(value: str) -> dict[str, str]:
             "--router-config must use router_id:field_view:predictions_path "
             "or config_id:router_id:field_view:predictions_path"
         )
+
+
+def _parse_prediction_export_router_config(
+    value: str,
+    args: argparse.Namespace,
+) -> FrozenRouterConfig:
+    parts = value.split(":", 3)
+    if len(parts) == 3 and all(part.strip() for part in parts):
+        router_id, field_view, tier = parts
+        config_id = f"{router_id}__{field_view}__{tier}"
+    elif len(parts) == 4 and all(part.strip() for part in parts):
+        config_id, router_id, field_view, tier = parts
+    else:
+        raise ValueError(
+            "--router-config must use router_id:field_view:tier "
+            "or config_id:router_id:field_view:tier"
+        )
+    if router_id == "baseline-minilm":
+        return FrozenRouterConfig(
+            router_id=router_id,
+            config_id=config_id,
+            field_view=field_view,
+            tier=tier,
+            model_name=args.baseline_minilm_model,
+            model_revision=args.baseline_minilm_revision,
+        )
+    if router_id == "finetuned-embedding":
+        return FrozenRouterConfig(
+            router_id=router_id,
+            config_id=config_id,
+            field_view=field_view,
+            tier=tier,
+            model_name="finetuned-embedding",
+            model_revision=args.finetuned_embedding_revision,
+            checkpoint_path=args.finetuned_embedding_checkpoint,
+            checkpoint_sha256=args.finetuned_embedding_sha256,
+        )
+    return FrozenRouterConfig(
+        router_id=router_id,
+        config_id=config_id,
+        field_view=field_view,
+        tier=tier,
+        model_name=router_id,
+    )
+
+
+def _validate_prediction_export_cli_configs(
+    configs: list[FrozenRouterConfig],
+    args: argparse.Namespace,
+) -> None:
+    for config in configs:
+        if args.embedding_backend == "hashing" and config.router_id == "baseline-minilm":
+            raise ValueError(
+                "CLI hashing backend cannot export baseline-minilm prediction artifacts"
+            )
+        if config.router_id == "baseline-minilm" and not _is_immutable_revision(
+            config.model_revision
+        ):
+            raise ValueError(
+                "baseline-minilm requires --baseline-minilm-revision as an immutable "
+                "model commit SHA"
+            )
 
 
 def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:
