@@ -8,9 +8,16 @@ import pytest
 import jsonschema
 
 from hermes_skilleval.cli import main
-from hermes_skilleval.live_agent_runtime import FakeAgentRunner, FakeVerifier
+from hermes_skilleval.live_agent_runtime import (
+    AgentRequest,
+    FakeAgentRunner,
+    FakeVerifier,
+    RunnerOutput,
+    VerifierResult,
+)
 from hermes_skilleval.live_agent_skillsbench import (
     SkillsBenchAdapter,
+    _canonical_hash,
     run_skillsbench_matrix,
     write_skillsbench_plan,
 )
@@ -19,6 +26,203 @@ from hermes_skilleval.live_agent_skillsbench import (
 FIXTURE = Path("tests/fixtures/live_agent/skillsbench_tiny")
 SKILLROUTER_FIXTURE = Path("tests/fixtures/external/skillrouter_eval_core_tiny")
 UPSTREAM_SHA = "a" * 40
+
+
+class _RecordingRunner:
+    def __init__(self, *, events: list[dict] | None = None) -> None:
+        self.events = events or [_real_preflight()]
+        self.requests: list[AgentRequest] = []
+
+    def run(self, request: AgentRequest) -> RunnerOutput:
+        self.requests.append(request)
+        return RunnerOutput(
+            exit_code=0,
+            timed_out=False,
+            stdout="",
+            stderr="",
+            events=self.events,
+        )
+
+
+class _PassingDeterministicVerifier:
+    def verify(self, request: AgentRequest, output: RunnerOutput) -> VerifierResult:
+        return VerifierResult(
+            passed=True,
+            details={"source": "unit-test-deterministic-verifier"},
+        )
+
+
+def _real_preflight() -> dict:
+    return {
+        "type": "preflight",
+        "codex_home_mode": "isolated",
+        "evidence_mode": "final-evidence",
+        "global_capability_inventory": {
+            "home_isolated": True,
+            "user_skill_dir": {"status": "ISOLATED_HOME", "entry_count": 0},
+            "admin_skill_dirs": [{"status": "ABSENT", "entry_count": 0}],
+            "workspace_skill_dirs": {
+                "workspace_status": "CLEAR",
+                "mounted_entry_count": 0,
+                "parent_skill_dirs_checked": 1,
+                "empty_parent_skill_dirs": 0,
+            },
+            "bundled_skills": {"status": "SYSTEM_MANAGED_UNKNOWN"},
+        },
+    }
+
+
+def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
+    root.mkdir()
+    verifier_dir = root / "verifiers"
+    verifier_dir.mkdir()
+    (verifier_dir / "check.py").write_text("def verify(): return True\n", encoding="utf-8")
+    (verifier_dir / "config.json").write_text('{"mode":"deterministic"}\n', encoding="utf-8")
+    (verifier_dir / "input.json").write_text('{"fixture":"unit"}\n', encoding="utf-8")
+
+    skills = []
+    tasks = []
+    oracle_records = []
+    predictions: dict[str, list[str]] = {}
+    for index in range(4):
+        task_id = f"sb-real-{index + 1}"
+        skill_id = f"skill/real-{index + 1}"
+        skill = {
+            "skill_id": skill_id,
+            "name": f"Real Pilot Skill {index + 1}",
+            "description": f"Deterministic helper for pilot task {index + 1}.",
+            "body": f"Follow the deterministic procedure for pilot task {index + 1}.",
+        }
+        verifier = {
+            "type": "deterministic",
+            "name": f"real-verifier-{index + 1}",
+            "code_path": "verifiers/check.py",
+            "config_path": "verifiers/config.json",
+            "input_path": "verifiers/input.json",
+        }
+        task = {
+            "task_id": task_id,
+            "prompt": f"Complete the deterministic pilot activity number {index + 1}.",
+            "verifier": verifier,
+            "requires_private_credentials": False,
+            "network": "none",
+            "oracle_skill_ids": [skill_id],
+            "source": "approved-unit-real-pilot-source",
+            "provenance": {"upstream_task_id": f"upstream-{index + 1}"},
+        }
+        metadata = {
+            "source": task["source"],
+            "provenance": task["provenance"],
+        }
+        task_hash = _canonical_hash(
+            {
+                "task_id": task_id,
+                "prompt": task["prompt"],
+                "verifier": verifier,
+                "oracle_skill_ids": [skill_id],
+                "network": "none",
+                "requires_private_credentials": False,
+                "metadata": metadata,
+            }
+        )
+        skill_hash = _canonical_hash(
+            {
+                "skill_id": skill_id,
+                "name": skill["name"],
+                "description": skill["description"],
+                "body": skill["body"],
+            }
+        )
+        oracle_records.append(
+            {
+                "task_id": task_id,
+                "condition": "oracle-skill",
+                "verifier_passed": True,
+                "task_hash": task_hash,
+                "verifier_hash": _canonical_hash(verifier),
+                "skill_hash": skill_hash,
+                "skill_id": skill_id,
+                "trials": 1,
+                "pass_rate": 1.0,
+                "constraints": {
+                    "credentials": "none",
+                    "network": "none",
+                    "verifier": "deterministic",
+                },
+            }
+        )
+        skills.append(skill)
+        tasks.append(task)
+        predictions[task_id] = [skill_id]
+
+    (root / "tasks.jsonl").write_text(
+        "".join(json.dumps(task, sort_keys=True) + "\n" for task in tasks),
+        encoding="utf-8",
+    )
+    (root / "skills.jsonl").write_text(
+        "".join(json.dumps(skill, sort_keys=True) + "\n" for skill in skills),
+        encoding="utf-8",
+    )
+    (root / "manifest.json").write_text(
+        json.dumps(
+            {
+                "dataset": "approved-unit-real-pilot-source",
+                "license_note": "approved-real-pilot-unit",
+                "upstream_ref": UPSTREAM_SHA,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (root / "oracle_qualification.jsonl").write_text(
+        "".join(json.dumps(record, sort_keys=True) + "\n" for record in oracle_records),
+        encoding="utf-8",
+    )
+    (root / "routed_predictions.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "v0.3.routed-predictions.v1",
+                "router": {
+                    "router_id": "unit-router",
+                    "config_hash": "c" * 64,
+                    "top_k": 1,
+                },
+                "predictions": predictions,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "data_root": root,
+        "routed_predictions": root / "routed_predictions.json",
+        "oracle_qualification": root / "oracle_qualification.jsonl",
+    }
+
+
+def _write_real_like_pilot_plan(tmp_path: Path) -> tuple[Path, Path]:
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    plan_path = tmp_path / "plan.json"
+    matrix_path = tmp_path / "matrix.json"
+    write_skillsbench_plan(
+        data_root=paths["data_root"],
+        output_path=plan_path,
+        upstream_ref=UPSTREAM_SHA,
+        license_note="approved-real-pilot-unit",
+        run_id="stage2-real-pilot-prep",
+        mode="pilot",
+        selected_task_ids=[f"sb-real-{index}" for index in range(1, 5)],
+        routed_predictions_path=paths["routed_predictions"],
+        oracle_qualification_path=paths["oracle_qualification"],
+        matrix_output_path=matrix_path,
+        workspace_root=tmp_path / "workspaces",
+        router_top_k=1,
+    )
+    return plan_path, matrix_path
 
 
 def _rewrite_plan_digest(plan_path: Path) -> None:
@@ -589,6 +793,114 @@ def test_frozen_upstream_ref_requires_commit_sha_outside_fixture_or_pilot(tmp_pa
         selected_task_ids=["sb-task-login"],
         routed_predictions_path=root / "routed_predictions.json",
     )
+
+
+def test_real_evidence_mode_rejects_fake_runner_and_verifier(tmp_path):
+    plan_path, matrix_path = _write_real_like_pilot_plan(tmp_path)
+
+    with pytest.raises(ValueError, match="FakeAgentRunner"):
+        run_skillsbench_matrix(
+            plan_path=plan_path,
+            output_path=matrix_path,
+            runner=FakeAgentRunner(),
+            verifier=_PassingDeterministicVerifier(),
+            evidence_mode="real",
+        )
+
+    with pytest.raises(ValueError, match="FakeVerifier"):
+        run_skillsbench_matrix(
+            plan_path=plan_path,
+            output_path=matrix_path,
+            runner=_RecordingRunner(),
+            verifier=FakeVerifier(pass_=True),
+            evidence_mode="real",
+        )
+
+
+def test_real_evidence_mode_rejects_fixture_only_skillsbench_data(tmp_path):
+    plan_path = tmp_path / "fixture-plan.json"
+    matrix_path = tmp_path / "fixture-matrix.json"
+    write_skillsbench_plan(
+        data_root=FIXTURE,
+        output_path=plan_path,
+        upstream_ref="fixture-ref",
+        license_note="fixture-only",
+        run_id="fixture-pilot",
+        mode="pilot",
+        selected_task_ids=["sb-task-login", "sb-task-edit"],
+        routed_predictions_path=FIXTURE / "routed_predictions.json",
+        oracle_qualification_path=FIXTURE / "oracle_qualification.jsonl",
+        matrix_output_path=matrix_path,
+    )
+
+    with pytest.raises(ValueError, match="fixture-only SkillsBench data"):
+        run_skillsbench_matrix(
+            plan_path=plan_path,
+            output_path=matrix_path,
+            runner=_RecordingRunner(),
+            verifier=_PassingDeterministicVerifier(),
+            evidence_mode="real",
+        )
+
+
+def test_real_evidence_mode_requires_no_skill_preflight(tmp_path):
+    plan_path, matrix_path = _write_real_like_pilot_plan(tmp_path)
+
+    with pytest.raises(ValueError, match="missing real runner preflight"):
+        run_skillsbench_matrix(
+            plan_path=plan_path,
+            output_path=matrix_path,
+            runner=_RecordingRunner(events=[{"type": "final", "message": "ok"}]),
+            verifier=_PassingDeterministicVerifier(),
+            evidence_mode="real",
+        )
+
+
+def test_stage2_pilot_plan_records_task_verifier_oracle_and_routing_hashes(tmp_path):
+    plan_path, _matrix_path = _write_real_like_pilot_plan(tmp_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+
+    assert plan["mode"] == "pilot"
+    assert plan["evidence_label"] == "pilot_non_final"
+    assert len(plan["selected_tasks"]) == 4
+    assert len(plan["matrix"]) == 12
+    assert {entry["condition"] for entry in plan["matrix"]} == {
+        "no-skill",
+        "routed-skill",
+        "oracle-skill",
+    }
+    assert plan["global_skill_registry_hash"] == _canonical_hash(
+        plan["global_skill_registry"]
+    )
+    assert plan["routing_provenance"]["router"]["router_id"] == "unit-router"
+    assert plan["routing_provenance"]["router"]["config_hash"] == "c" * 64
+    assert plan["routing_provenance"]["router"]["top_k"] == 1
+
+    selected_by_id = {task["task_id"]: task for task in plan["selected_tasks"]}
+    assert all(task["prompt_hash"] for task in selected_by_id.values())
+    assert all(task["task_hash"] for task in selected_by_id.values())
+    assert all(task["verifier_hash"] for task in selected_by_id.values())
+    assert all(
+        set(task["verifier_artifacts"]) == {"code", "config", "input"}
+        for task in selected_by_id.values()
+    )
+
+    for task_id, record in plan["oracle_qualification_records"].items():
+        task = selected_by_id[task_id]
+        assert record["task_hash"] == task["task_hash"]
+        assert record["verifier_hash"] == task["verifier_hash"]
+        assert record["skill_hash"]
+        assert record["trials"] == 1
+        assert record["pass_rate"] == 1.0
+        assert record["constraints"]
+
+    for task_id, record in plan["routed_prediction_records"].items():
+        assert task_id in selected_by_id
+        assert record["router_id"] == "unit-router"
+        assert record["router_config_hash"] == "c" * 64
+        assert record["router_top_k"] == 1
+        assert record["global_skill_registry_hash"] == plan["global_skill_registry_hash"]
+        assert record["prediction_hash"]
 
 
 def test_cli_skillsbench_plan_and_matrix_write_outputs(tmp_path):

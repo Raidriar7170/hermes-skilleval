@@ -31,8 +31,10 @@ SEED = 20260625
 CONDITIONS = ("no-skill", "routed-skill", "oracle-skill")
 CONTROLLED_NETWORKS = {"none", "controlled"}
 DEFAULT_ROUTER_TOP_K = 3
+EVIDENCE_MODES = {"fixture", "real"}
 COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 LABEL_LEAKAGE_TOKENS = ("oracle", "gold", "source-task", "source_task")
+VERIFIER_ARTIFACT_ROLES = ("code", "config", "input")
 
 
 @dataclass(frozen=True)
@@ -140,6 +142,13 @@ class SkillsBenchAdapter:
                 errors.append(f"empty prompt for task: {task.task_id}")
             if task.verifier.get("type") != "deterministic":
                 errors.append(f"missing deterministic verifier: {task.task_id}")
+            errors.extend(
+                _verifier_artifact_errors(
+                    verifier=task.verifier,
+                    data_root=self.data_root,
+                    task_id=task.task_id,
+                )
+            )
             if task.requires_private_credentials:
                 errors.append(f"task requires private credentials: {task.task_id}")
             if task.network not in CONTROLLED_NETWORKS:
@@ -244,7 +253,10 @@ def write_skillsbench_plan(
     selected_ids = list(selected_task_ids) or sorted(tasks_by_id)
     selected_tasks = [_selected_task(tasks_by_id, task_id) for task_id in selected_ids]
     skills = adapter.load_skills()
-    routed_predictions = _read_predictions(Path(routed_predictions_path))
+    routed_prediction_artifact = _read_routed_prediction_artifact(
+        Path(routed_predictions_path)
+    )
+    routed_predictions = routed_prediction_artifact["predictions"]
     qualifications = (
         _read_oracle_qualification(Path(oracle_qualification_path))
         if oracle_qualification_path
@@ -261,8 +273,10 @@ def write_skillsbench_plan(
     derived = _derive_plan_fields(
         run_id=run_id,
         selected_tasks=selected_tasks,
+        data_root=Path(data_root),
         skills=skills,
         routed_predictions=routed_predictions,
+        routed_prediction_artifact=routed_prediction_artifact,
         qualifications=qualifications,
         router_top_k=router_top_k,
         skillrouter_tasks=_load_skillrouter_tasks(
@@ -296,10 +310,16 @@ def write_skillsbench_plan(
         "validation": validation,
         "selected_tasks": derived["selected_tasks"],
         "global_skill_registry": derived["global_skill_registry"],
+        "global_skill_registry_hash": derived["global_skill_registry_hash"],
         "matrix": derived["matrix"],
         "matrix_output_path": str(matrix_output_path) if matrix_output_path else None,
         "workspace_root": str(workspace_root) if workspace_root else None,
         "oracle_qualification_records": derived["oracle_qualification_records"],
+        "routing_provenance": _routing_provenance(
+            routed_prediction_artifact,
+            router_top_k=router_top_k,
+        ),
+        "routed_prediction_records": derived["routed_prediction_records"],
         "routing_diagnostics": derived["routing_diagnostics"],
         "overlap_report": derived["overlap_report"],
         "leakage_scan": validation["leakage_scan"],
@@ -328,7 +348,9 @@ def run_skillsbench_matrix(
     output_path: Path | str,
     runner: AgentRunner | None = None,
     verifier: AgentVerifier | None = None,
+    evidence_mode: str = "fixture",
 ) -> dict[str, Any]:
+    evidence_mode = _evidence_mode(evidence_mode)
     plan_file = Path(plan_path)
     _verify_plan_digest(plan_file)
     plan = json.loads(plan_file.read_text(encoding="utf-8"))
@@ -336,14 +358,19 @@ def run_skillsbench_matrix(
         raise ValueError("unsupported SkillsBench plan schema")
     _verify_plan_inputs(plan)
     _verify_derived_fields(plan)
+    if evidence_mode == "real":
+        _validate_real_evidence_plan(plan)
     output = Path(output_path)
     if plan.get("matrix_output_path") and str(output) != str(plan["matrix_output_path"]):
         raise ValueError("matrix output path does not match frozen plan")
-    selected_runner = runner or FakeAgentRunner(
-        exit_code=0,
-        events=[{"type": "final", "message": "fixture matrix run"}],
+    selected_runner = _select_runner(
+        runner=runner,
+        evidence_mode=evidence_mode,
     )
-    selected_verifier = verifier or FakeVerifier(pass_=True, details={"mode": "fixture"})
+    selected_verifier = _select_verifier(
+        verifier=verifier,
+        evidence_mode=evidence_mode,
+    )
     tasks_by_id = {task["task_id"]: task for task in plan["selected_tasks"]}
     skills = {
         skill_id: LiveAgentSkill(
@@ -399,6 +426,8 @@ def run_skillsbench_matrix(
             runner=selected_runner,
             verifier=selected_verifier,
         )
+        if evidence_mode == "real":
+            _validate_real_runner_preflight(result.events)
         trace_path = trace_root / f"{entry['workspace_run_id']}.json"
         trace_path.write_text(
             json.dumps(result.to_trace(), indent=2, sort_keys=True) + "\n",
@@ -433,6 +462,7 @@ def run_skillsbench_matrix(
         "benchmark_id": "skillsbench",
         "run_id": plan["run_id"],
         "mode": plan["mode"],
+        "evidence_mode": evidence_mode,
         "plan_path": str(plan_file),
         "skill_inventory": plan["global_skill_registry"],
         "leakage_scan": plan.get("leakage_scan"),
@@ -456,8 +486,10 @@ def _derive_plan_fields(
     *,
     run_id: str,
     selected_tasks: list[SkillsBenchTask],
+    data_root: Path,
     skills: dict[str, LiveAgentSkill],
     routed_predictions: dict[str, list[str]],
+    routed_prediction_artifact: dict[str, Any],
     qualifications: dict[str, dict[str, Any]],
     router_top_k: int,
     skillrouter_tasks: list[ExternalTask] | None,
@@ -490,6 +522,14 @@ def _derive_plan_fields(
         skill_id: _skill_to_plan(skills[skill_id])
         for skill_id in sorted(registry_ids)
     }
+    registry_hash = _canonical_hash(registry)
+    routed_prediction_records = _routed_prediction_records(
+        selected_tasks=selected_tasks,
+        routed_predictions=routed_predictions,
+        routed_prediction_artifact=routed_prediction_artifact,
+        router_top_k=router_top_k,
+        global_skill_registry_hash=registry_hash,
+    )
     matrix = []
     for task in selected_tasks:
         condition_hashes = []
@@ -530,10 +570,14 @@ def _derive_plan_fields(
             raise ValueError(f"prompt hash mismatch for task: {task.task_id}")
 
     return {
-        "selected_tasks": [_task_to_plan(task) for task in selected_tasks],
+        "selected_tasks": [
+            _task_to_plan(task, data_root=data_root) for task in selected_tasks
+        ],
         "global_skill_registry": registry,
+        "global_skill_registry_hash": registry_hash,
         "matrix": matrix,
         "oracle_qualification_records": qualifications,
+        "routed_prediction_records": routed_prediction_records,
         "routing_diagnostics": routing_diagnostics,
         "overlap_report": _overlap_report(selected_tasks, skillrouter_tasks),
     }
@@ -565,8 +609,12 @@ def _verify_derived_fields(plan: dict[str, Any]) -> None:
     expected = _derive_plan_fields(
         run_id=plan["run_id"],
         selected_tasks=selected_tasks,
+        data_root=Path(plan["data_root"]),
         skills=adapter.load_skills(),
         routed_predictions=_read_predictions(Path(plan["routed_predictions"]["path"])),
+        routed_prediction_artifact=_read_routed_prediction_artifact(
+            Path(plan["routed_predictions"]["path"])
+        ),
         qualifications=(
             _read_oracle_qualification(Path(plan["oracle_qualification"]["path"]))
             if plan.get("oracle_qualification")
@@ -580,8 +628,10 @@ def _verify_derived_fields(plan: dict[str, Any]) -> None:
     for key in (
         "selected_tasks",
         "global_skill_registry",
+        "global_skill_registry_hash",
         "matrix",
         "oracle_qualification_records",
+        "routed_prediction_records",
         "routing_diagnostics",
         "overlap_report",
     ):
@@ -604,10 +654,32 @@ def _read_jsonl(path: Path, *, role: str) -> list[dict[str, Any]]:
 
 
 def _read_predictions(path: Path) -> dict[str, list[str]]:
+    return _read_routed_prediction_artifact(path)["predictions"]
+
+
+def _read_routed_prediction_artifact(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("routed predictions must be an object")
-    return {str(task_id): _string_list(value, "routed prediction") for task_id, value in data.items()}
+    if isinstance(data.get("predictions"), dict):
+        predictions = data["predictions"]
+        router = data.get("router")
+    else:
+        predictions = data
+        router = {
+            "status": "UNAVAILABLE",
+            "reason": "legacy routed prediction map has no router metadata",
+        }
+    if not isinstance(router, dict):
+        raise ValueError("routed predictions router metadata must be an object")
+    return {
+        "path": str(path),
+        "router": router,
+        "predictions": {
+            str(task_id): _string_list(value, "routed prediction")
+            for task_id, value in predictions.items()
+        },
+    }
 
 
 def _read_oracle_qualification(path: Path) -> dict[str, dict[str, Any]]:
@@ -698,14 +770,25 @@ def _selected_task(tasks_by_id: dict[str, SkillsBenchTask], task_id: str) -> Ski
     return tasks_by_id[task_id]
 
 
-def _task_to_plan(task: SkillsBenchTask) -> dict[str, Any]:
-    return {
+def _task_to_plan(task: SkillsBenchTask, *, data_root: Path) -> dict[str, Any]:
+    base = {
         "task_id": task.task_id,
         "prompt": task.prompt,
         "verifier": task.verifier,
         "oracle_skill_ids": task.oracle_skill_ids,
         "network": task.network,
+        "requires_private_credentials": task.requires_private_credentials,
         "metadata": task.metadata,
+    }
+    return {
+        **base,
+        "prompt_hash": _sha256_text(task.prompt),
+        "task_hash": _canonical_hash(base),
+        "verifier_hash": _canonical_hash(task.verifier),
+        "verifier_artifacts": _verifier_artifact_records(
+            verifier=task.verifier,
+            data_root=data_root,
+        ),
     }
 
 
@@ -718,8 +801,256 @@ def _skill_to_plan(skill: LiveAgentSkill) -> dict[str, Any]:
     }
 
 
+def _routing_provenance(
+    routed_prediction_artifact: dict[str, Any],
+    *,
+    router_top_k: int,
+) -> dict[str, Any]:
+    predictions = routed_prediction_artifact["predictions"]
+    return {
+        "schema_version": "v0.3.skillsbench-routing-provenance.v1",
+        "router": routed_prediction_artifact["router"],
+        "router_top_k": router_top_k,
+        "predictions_hash": _canonical_hash(predictions),
+    }
+
+
+def _routed_prediction_records(
+    *,
+    selected_tasks: list[SkillsBenchTask],
+    routed_predictions: dict[str, list[str]],
+    routed_prediction_artifact: dict[str, Any],
+    router_top_k: int,
+    global_skill_registry_hash: str,
+) -> dict[str, Any]:
+    router = routed_prediction_artifact["router"]
+    router_id = router.get("router_id", "UNAVAILABLE")
+    router_config_hash = router.get("config_hash") or _canonical_hash(
+        router.get("config", {})
+    )
+    records = {}
+    for task in selected_tasks:
+        full_prediction = routed_predictions[task.task_id]
+        deduped = _dedupe(full_prediction)
+        records[task.task_id] = {
+            "task_id": task.task_id,
+            "router_id": router_id,
+            "router_config_hash": router_config_hash,
+            "router_top_k": router_top_k,
+            "global_skill_registry_hash": global_skill_registry_hash,
+            "full_prediction_count": len(full_prediction),
+            "deduped_prediction_count": len(deduped),
+            "mounted_top_k": deduped[:router_top_k],
+            "prediction_hash": _canonical_hash(full_prediction),
+        }
+    return records
+
+
+def _verifier_artifact_records(
+    *,
+    verifier: dict[str, Any],
+    data_root: Path,
+) -> dict[str, dict[str, Any]]:
+    artifacts = verifier.get("artifacts")
+    artifacts = artifacts if isinstance(artifacts, dict) else {}
+    records = {}
+    for role in VERIFIER_ARTIFACT_ROLES:
+        value = artifacts.get(role) or verifier.get(f"{role}_path")
+        if not value:
+            continue
+        path = Path(str(value))
+        if not path.is_absolute():
+            path = data_root / path
+        records[role] = _file_record(path)
+    return records
+
+
+def _verifier_artifact_errors(
+    *,
+    verifier: dict[str, Any],
+    data_root: Path,
+    task_id: str,
+) -> list[str]:
+    artifacts = verifier.get("artifacts")
+    artifacts = artifacts if isinstance(artifacts, dict) else {}
+    errors = []
+    for role in VERIFIER_ARTIFACT_ROLES:
+        value = artifacts.get(role) or verifier.get(f"{role}_path")
+        if not value:
+            continue
+        path = Path(str(value))
+        if not path.is_absolute():
+            path = data_root / path
+        if not path.exists():
+            errors.append(f"missing verifier {role} artifact for task: {task_id}")
+    return errors
+
+
+def _select_runner(
+    *,
+    runner: AgentRunner | None,
+    evidence_mode: str,
+) -> AgentRunner:
+    if runner is None:
+        if evidence_mode == "real":
+            raise ValueError(
+                "real evidence mode requires explicit AgentRunner; "
+                "FakeAgentRunner is fixture-only"
+            )
+        return FakeAgentRunner(
+            exit_code=0,
+            events=[{"type": "final", "message": "fixture matrix run"}],
+        )
+    if evidence_mode == "real" and isinstance(runner, FakeAgentRunner):
+        raise ValueError("FakeAgentRunner cannot be used in real evidence mode")
+    return runner
+
+
+def _select_verifier(
+    *,
+    verifier: AgentVerifier | None,
+    evidence_mode: str,
+) -> AgentVerifier:
+    if verifier is None:
+        if evidence_mode == "real":
+            raise ValueError(
+                "real evidence mode requires explicit deterministic verifier; "
+                "FakeVerifier is fixture-only"
+            )
+        return FakeVerifier(pass_=True, details={"mode": "fixture"})
+    if evidence_mode == "real" and isinstance(verifier, FakeVerifier):
+        raise ValueError("FakeVerifier cannot be used in real evidence mode")
+    return verifier
+
+
+def _validate_real_evidence_plan(plan: dict[str, Any]) -> None:
+    if plan.get("evidence_label") == "fixture-only" or _fixture_path(plan.get("data_root")):
+        raise ValueError("fixture-only SkillsBench data cannot be used in real evidence mode")
+
+    selected_tasks = plan.get("selected_tasks")
+    matrix = plan.get("matrix")
+    if not isinstance(selected_tasks, list) or not isinstance(matrix, list):
+        raise ValueError("real evidence mode requires selected tasks and matrix entries")
+
+    errors: list[str] = []
+    if plan.get("mode") == "pilot":
+        if len(selected_tasks) != 4:
+            errors.append("pilot real evidence mode requires exactly 4 selected tasks")
+        if len(matrix) != 12:
+            errors.append("pilot real evidence mode requires exactly 12 matrix runs")
+        expected_conditions = set(CONDITIONS)
+        for task in selected_tasks:
+            task_conditions = {
+                entry.get("condition")
+                for entry in matrix
+                if entry.get("task_id") == task.get("task_id")
+            }
+            if task_conditions != expected_conditions:
+                errors.append(
+                    f"pilot task does not have all three conditions: {task.get('task_id')}"
+                )
+
+    tasks_by_id = {
+        str(task.get("task_id")): task for task in selected_tasks if isinstance(task, dict)
+    }
+    for task_id, task in tasks_by_id.items():
+        metadata = task.get("metadata")
+        if not isinstance(metadata, dict) or not (
+            metadata.get("source") or metadata.get("provenance")
+        ):
+            errors.append(f"missing task source/provenance: {task_id}")
+        for field in ("prompt_hash", "task_hash", "verifier_hash"):
+            if not isinstance(task.get(field), str) or not task[field]:
+                errors.append(f"missing {field}: {task_id}")
+        artifacts = task.get("verifier_artifacts")
+        if not isinstance(artifacts, dict) or set(artifacts) != set(
+            VERIFIER_ARTIFACT_ROLES
+        ):
+            errors.append(f"missing verifier code/config/input hashes: {task_id}")
+
+    qualifications = plan.get("oracle_qualification_records")
+    if not isinstance(qualifications, dict):
+        errors.append("missing oracle qualification records")
+        qualifications = {}
+    for task_id, task in tasks_by_id.items():
+        record = qualifications.get(task_id)
+        if not isinstance(record, dict):
+            errors.append(f"missing oracle qualification: {task_id}")
+            continue
+        if record.get("verifier_passed") is not True:
+            errors.append(f"oracle qualification did not pass: {task_id}")
+        if record.get("task_hash") != task.get("task_hash"):
+            errors.append(f"oracle qualification task hash mismatch: {task_id}")
+        if record.get("verifier_hash") != task.get("verifier_hash"):
+            errors.append(f"oracle qualification verifier hash mismatch: {task_id}")
+        if not isinstance(record.get("skill_hash"), str) or not record["skill_hash"]:
+            errors.append(f"missing oracle qualification skill hash: {task_id}")
+        if int(record.get("trials", 0)) < 1:
+            errors.append(f"missing oracle qualification trials: {task_id}")
+        if float(record.get("pass_rate", 0.0)) < 1.0:
+            errors.append(f"oracle qualification pass rate below 1.0: {task_id}")
+        if not record.get("constraints"):
+            errors.append(f"missing oracle qualification constraints: {task_id}")
+
+    routing = plan.get("routing_provenance")
+    router = routing.get("router") if isinstance(routing, dict) else None
+    if not isinstance(router, dict) or router.get("status") == "UNAVAILABLE":
+        errors.append("missing routed prediction router metadata")
+    else:
+        if not router.get("router_id"):
+            errors.append("missing router_id for routed predictions")
+        if not router.get("config_hash"):
+            errors.append("missing router config_hash for routed predictions")
+        if int(router.get("top_k", 0)) != int(plan.get("router_top_k", 0)):
+            errors.append("routed prediction router top_k does not match plan")
+
+    registry_hash = plan.get("global_skill_registry_hash")
+    if registry_hash != _canonical_hash(plan.get("global_skill_registry")):
+        errors.append("global skill registry hash mismatch")
+    routed_records = plan.get("routed_prediction_records")
+    if not isinstance(routed_records, dict):
+        errors.append("missing routed prediction records")
+        routed_records = {}
+    for task_id in tasks_by_id:
+        record = routed_records.get(task_id)
+        if not isinstance(record, dict):
+            errors.append(f"missing routed prediction record: {task_id}")
+            continue
+        if record.get("global_skill_registry_hash") != registry_hash:
+            errors.append(f"routed prediction registry hash mismatch: {task_id}")
+        if not record.get("prediction_hash"):
+            errors.append(f"missing routed prediction hash: {task_id}")
+        if not record.get("router_id") or record.get("router_id") == "UNAVAILABLE":
+            errors.append(f"missing routed prediction router id: {task_id}")
+
+    if errors:
+        raise ValueError("real evidence mode prerequisites failed: " + "; ".join(errors))
+
+
+def _validate_real_runner_preflight(events: list[dict[str, Any]]) -> None:
+    preflight = next(
+        (
+            event
+            for event in events
+            if isinstance(event, dict) and event.get("type") == "preflight"
+        ),
+        None,
+    )
+    if preflight is None:
+        raise ValueError("missing real runner preflight")
+    if preflight.get("evidence_mode") != "final-evidence":
+        raise ValueError("real runner preflight is not final-evidence mode")
+    if preflight.get("codex_home_mode") != "isolated":
+        raise ValueError("real runner preflight did not use isolated CODEX_HOME")
+    inventory = preflight.get("global_capability_inventory")
+    if not isinstance(inventory, dict) or inventory.get("home_isolated") is not True:
+        raise ValueError("real runner preflight did not prove isolated HOME")
+
+
 def _routed_ids(plan: dict[str, Any], task_id: str) -> list[str]:
     predictions = json.loads(Path(plan["routed_predictions"]["path"]).read_text(encoding="utf-8"))
+    if isinstance(predictions, dict) and isinstance(predictions.get("predictions"), dict):
+        predictions = predictions["predictions"]
     return _dedupe([str(skill_id) for skill_id in predictions[task_id]])[
         : int(plan.get("router_top_k", DEFAULT_ROUTER_TOP_K))
     ]
@@ -873,14 +1204,22 @@ def _validate_overlap_input_choice(
 
 def _is_fixture_evidence(data_root: Path | str, license_note: str) -> bool:
     path = Path(data_root)
-    return license_note == "fixture-only" and "tests" in path.parts and "fixtures" in path.parts
+    return license_note == "fixture-only" and _fixture_path(path)
+
+
+def _fixture_path(path_value: Any) -> bool:
+    try:
+        parts = Path(str(path_value)).parts
+    except TypeError:
+        return False
+    return "tests" in parts and "fixtures" in parts
 
 
 def _evidence_label(mode: str, allow_fixture_ref: bool) -> str:
     if allow_fixture_ref:
         return "fixture-only"
     if mode == "pilot":
-        return "pilot-non-final"
+        return "pilot_non_final"
     return "frozen-final"
 
 
@@ -898,9 +1237,15 @@ def _derived_hashes(plan: dict[str, Any]) -> dict[str, str]:
     return {
         "selected_tasks": _canonical_hash(plan.get("selected_tasks")),
         "global_skill_registry": _canonical_hash(plan.get("global_skill_registry")),
+        "global_skill_registry_hash": _canonical_hash(
+            plan.get("global_skill_registry_hash")
+        ),
         "matrix": _canonical_hash(plan.get("matrix")),
         "oracle_qualification_records": _canonical_hash(
             plan.get("oracle_qualification_records")
+        ),
+        "routed_prediction_records": _canonical_hash(
+            plan.get("routed_prediction_records")
         ),
         "task_prompt_verifier": _canonical_hash(prompt_verifier),
         "routing_diagnostics": _canonical_hash(plan.get("routing_diagnostics")),
@@ -1004,6 +1349,12 @@ def _mode(value: str) -> str:
     return value
 
 
+def _evidence_mode(value: str) -> str:
+    if value not in EVIDENCE_MODES:
+        raise ValueError("evidence_mode must be fixture or real")
+    return value
+
+
 def _positive_int(value: int, field: str) -> int:
     if int(value) <= 0:
         raise ValueError(f"{field} must be positive")
@@ -1018,3 +1369,7 @@ def _non_empty(value: str, field: str) -> str:
 
 def _safe_run_id(value: str) -> str:
     return "".join(char if char.isalnum() or char in "._-" else "_" for char in value)
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()

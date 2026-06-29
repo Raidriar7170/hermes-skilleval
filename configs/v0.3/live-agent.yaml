@@ -39,6 +39,31 @@ conditions:
   - routed-skill
   - oracle-skill
 
+pilot_preparation:
+  status: missing_real_inputs
+  evidence_label: pilot_non_final
+  task_count: 4
+  trials_per_condition: 1
+  total_runs: 12
+  require_non_fixture_data_root: true
+  reject_fixture_data_root: "tests/fixtures/live_agent/skillsbench_tiny"
+  reject_fake_runner: true
+  reject_fake_verifier: true
+  require_real_runner_preflight: true
+  require_verifier_artifact_hashes:
+    - code
+    - config
+    - input
+  require_oracle_qualification_hashes:
+    - task_hash
+    - verifier_hash
+    - skill_hash
+  require_routed_prediction_metadata:
+    - router_id
+    - config_hash
+    - top_k
+    - global_skill_registry_hash
+
 trials_per_condition: 3
 
 judging:
