@@ -1,0 +1,161 @@
+{
+  "schema_version": "v0.3.stage2-real-pilot-input-package-blocked.v1",
+  "status": "BLOCKED_MISSING_REAL_INPUTS",
+  "run_id": "v0.3-stage2-real-pilot-input-package-blocked-20260629T112515Z",
+  "created_at": "2026-06-29T11:25:15Z",
+  "branch": "ops/stage2-real-pilot-input-package",
+  "base_branch": "codex/v0.3-pr0-protocol",
+  "base_merge_commit": "6d4fbef910f437ca2c508c26d73da49299b96f02",
+  "previous_missing_input_report": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-pilot-prep-missing-inputs-20260629T053333Z/stage2-real-codex-pilot-prep-missing-input-report.json",
+  "requested_pilot_shape": {
+    "task_count": 4,
+    "conditions": [
+      "no-skill",
+      "routed-skill",
+      "oracle-skill"
+    ],
+    "trials_per_condition": 1,
+    "total_runs": 12,
+    "evidence_label": "pilot_non_final"
+  },
+  "inspected_paths": [
+    {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-pilot-prep-missing-inputs-20260629T053333Z/stage2-real-codex-pilot-prep-missing-input-report.json",
+      "finding": "Previous preparation report already records missing non-fixture 4-task data root, deterministic verifier artifacts, oracle qualification, routed predictions, and real verifier integration."
+    },
+    {
+      "path": "docs/v0.3/runbook-frozen-evidence.md",
+      "finding": "Runbook requires a 4-task SkillsBench/Codex pilot with deterministic verifiers and explicitly rejects fake-runner artifacts for final evidence."
+    },
+    {
+      "path": "configs/v0.3/live-agent.yaml",
+      "finding": "Config remains placeholder-only. pilot_preparation.status is missing_real_inputs and no concrete task IDs, verifier artifacts, oracle qualification, routed predictions, or registry manifest are configured."
+    },
+    {
+      "path": "src/hermes_skilleval/live_agent_skillsbench.py",
+      "finding": "Real evidence mode and the new input-package validator fail closed for fixture data, missing verifier hashes, missing oracle qualification, unknown routed skills, and leakage in public prompts or public skill text."
+    },
+    {
+      "path": "src/hermes_skilleval/live_agent_runtime.py",
+      "finding": "CodexCliRunner supports isolated CODEX_HOME/HOME preflight, but no real Codex run is allowed or performed in this branch."
+    }
+  ],
+  "repository_input_search": {
+    "non_fixture_skillsbench_data_root_found": false,
+    "non_fixture_task_files_found": [],
+    "fixture_only_paths_rejected": [
+      "tests/fixtures/live_agent/skillsbench_tiny/tasks.jsonl",
+      "tests/fixtures/live_agent/skillsbench_tiny/skills.jsonl",
+      "tests/fixtures/live_agent/skillsbench_tiny/oracle_qualification.jsonl",
+      "tests/fixtures/live_agent/skillsbench_tiny/routed_predictions.json"
+    ],
+    "blocked_reports_found": [
+      "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-blocked-20260629T045907Z/stage2-pilot-blocked-report.json",
+      "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-pilot-prep-missing-inputs-20260629T053333Z/stage2-real-codex-pilot-prep-missing-input-report.json"
+    ]
+  },
+  "missing_fields": {
+    "non_fixture_four_task_pilot_data_root_or_manifest": {
+      "status": "MISSING",
+      "required_fields": [
+        "exactly 4 selectable task records",
+        "task_id",
+        "source_or_provenance",
+        "prompt text path or prompt hash",
+        "task hash",
+        "prompt hash",
+        "license or source note",
+        "public prompt leakage guard result"
+      ],
+      "why_it_blocks_freeze_plan": "A pilot freeze-plan cannot select real tasks or prove prompt/task provenance without a non-fixture or explicitly approved 4-task data root."
+    },
+    "deterministic_verifier_package": {
+      "status": "MISSING",
+      "required_fields": [
+        "verifier code hash",
+        "verifier config hash",
+        "verifier input hash",
+        "expected output format",
+        "local/network/credential constraints",
+        "deterministic or stability assumptions"
+      ],
+      "rejected_success_sources": [
+        "process exit code",
+        "LLM judge"
+      ],
+      "why_it_blocks_freeze_plan": "The matrix contract requires verifier output as the only task-success source. Without verifier code/config/input hashes, the pilot cannot be frozen for real evidence."
+    },
+    "oracle_qualification_package": {
+      "status": "MISSING",
+      "required_fields": [
+        "task hash",
+        "verifier hash",
+        "skill hash",
+        "trials",
+        "pass rate",
+        "constraints",
+        "qualification command",
+        "output hash"
+      ],
+      "why_it_blocks_freeze_plan": "Oracle-skill runs cannot be interpreted without a non-fabricated qualification record proving the oracle skill passes the deterministic verifier for each selected task."
+    },
+    "routed_predictions_package": {
+      "status": "MISSING",
+      "required_fields": [
+        "router_id",
+        "config_hash",
+        "top_k",
+        "global skill registry hash",
+        "per-task prediction hash",
+        "predicted skill IDs"
+      ],
+      "why_it_blocks_freeze_plan": "Routed-skill runs cannot be frozen from ad hoc labels or oracle labels. Unknown skill IDs must fail closed against the global registry."
+    },
+    "global_skill_registry_package": {
+      "status": "MISSING",
+      "required_fields": [
+        "stable skill IDs",
+        "skill name hash",
+        "skill description hash",
+        "skill body hash",
+        "public skill text leakage guard result"
+      ],
+      "why_it_blocks_freeze_plan": "Routed and oracle mounting need a stable registry hash and leakage-checked public skill text before the 12 pilot runs can be frozen."
+    }
+  },
+  "prepared_fail_closed_checks": [
+    "Fixture-only SkillsBench data roots are rejected for real input packages.",
+    "Exactly 4 selected pilot tasks are required.",
+    "Missing verifier code/config/input hashes fail closed.",
+    "Missing oracle qualification records fail closed.",
+    "Routed predictions containing unknown skill IDs fail closed.",
+    "Prompt, task, verifier, and skill hashes are required in the input package.",
+    "Public prompt and public skill text leakage guards catch task_id, oracle, and gold labels."
+  ],
+  "preflight_readiness_checklist_for_future_execution": {
+    "required_runner": "--runner codex-cli",
+    "required_evidence_mode": "--evidence-mode real",
+    "isolated_home_required": true,
+    "isolated_codex_home_required": true,
+    "final_evidence_preflight_required": true,
+    "clean_user_admin_workspace_skill_inventory_required": true,
+    "codex_execution_allowed_in_this_branch": false
+  },
+  "non_actions": {
+    "stage2_pilot_run": false,
+    "codex_cli_run": false,
+    "pilot_plan_frozen": false,
+    "live_agent_traces_created": false,
+    "evidence_gate_rerun_with_fake_live_artifacts": false,
+    "fixture_data_used_as_real_evidence": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "performance_claims": false
+  },
+  "remaining_blockers": [
+    "Provide or approve a non-fixture SkillsBench pilot data root with exactly 4 selectable tasks.",
+    "Provide deterministic verifier code/config/input artifacts and expected output formats for all 4 tasks.",
+    "Run and record non-fabricated oracle qualification for all 4 tasks against the deterministic verifiers.",
+    "Provide routed predictions generated by the approved router/config over the global skill registry.",
+    "Provide a stable global skill registry package with leakage-checked public skill text."
+  ]
+}

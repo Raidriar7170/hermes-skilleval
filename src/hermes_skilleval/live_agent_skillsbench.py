@@ -27,6 +27,7 @@ from hermes_skilleval.release_manifest import sha256_file
 
 PLAN_SCHEMA = "v0.3.skillsbench-live-plan.v1"
 REPORT_SCHEMA = "v0.3.skillsbench-live-matrix-report.v1"
+STAGE2_INPUT_PACKAGE_SCHEMA = "v0.3.stage2-real-pilot-input-package.v1"
 SEED = 20260625
 CONDITIONS = ("no-skill", "routed-skill", "oracle-skill")
 CONTROLLED_NETWORKS = {"none", "controlled"}
@@ -340,6 +341,165 @@ def write_skillsbench_plan(
     output.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     _write_plan_digest(output)
     return plan
+
+
+def build_stage2_real_pilot_input_package(
+    *,
+    data_root: Path | str,
+    upstream_ref: str,
+    license_note: str,
+    run_id: str,
+    selected_task_ids: Iterable[str],
+    routed_predictions_path: Path | str,
+    oracle_qualification_path: Path | str,
+    router_top_k: int = 1,
+) -> dict[str, Any]:
+    """Build a reviewable Stage 2 pilot input package without freezing a plan."""
+
+    data_root_path = Path(data_root)
+    if _fixture_path(data_root_path) or license_note == "fixture-only":
+        raise ValueError("fixture-only SkillsBench data cannot be used for real input package")
+
+    selected_ids = list(selected_task_ids)
+    if len(selected_ids) != 4:
+        raise ValueError("stage2 real pilot input package requires exactly 4 selected tasks")
+    if len(set(selected_ids)) != len(selected_ids):
+        raise ValueError("stage2 real pilot input package requires unique selected tasks")
+
+    router_top_k = _positive_int(router_top_k, "router_top_k")
+    adapter = SkillsBenchAdapter(
+        data_root=data_root_path,
+        upstream_ref=upstream_ref,
+        license_note=license_note,
+        allow_non_sha_upstream=True,
+    )
+    validation = adapter.validate()
+    if validation["status"] != "PASS":
+        raise ValueError(
+            "SkillsBench validation failed: " + "; ".join(validation["errors"])
+        )
+
+    tasks_by_id = {task.task_id: task for task in adapter.load_tasks()}
+    selected_tasks = [_selected_task(tasks_by_id, task_id) for task_id in selected_ids]
+    skills = adapter.load_skills()
+    routed_prediction_artifact = _read_routed_prediction_artifact(
+        Path(routed_predictions_path)
+    )
+    routed_predictions = routed_prediction_artifact["predictions"]
+    qualifications = _read_oracle_qualification(Path(oracle_qualification_path))
+
+    errors: list[str] = []
+    errors.extend(_public_skill_text_leakage_errors(selected_tasks, skills.values()))
+    errors.extend(
+        _routed_prediction_input_errors(
+            selected_tasks=selected_tasks,
+            routed_predictions=routed_predictions,
+            router=routed_prediction_artifact["router"],
+            skills=skills,
+            router_top_k=router_top_k,
+        )
+    )
+
+    selected_task_records = [
+        _stage2_input_task_record(
+            task,
+            data_root=data_root_path,
+            license_note=license_note,
+        )
+        for task in selected_tasks
+    ]
+    selected_by_id = {task["task_id"]: task for task in selected_task_records}
+    verifier_records, verifier_errors = _stage2_verifier_package_records(
+        selected_task_records
+    )
+    errors.extend(verifier_errors)
+
+    global_registry = {
+        skill_id: _stage2_skill_registry_record(skill)
+        for skill_id, skill in sorted(skills.items())
+    }
+    global_registry_hash = _canonical_hash(global_registry)
+    oracle_records, oracle_errors = _stage2_oracle_package_records(
+        selected_tasks=selected_tasks,
+        selected_by_id=selected_by_id,
+        skills=skills,
+        qualifications=qualifications,
+    )
+    errors.extend(oracle_errors)
+    routed_records, routed_errors = _stage2_routed_prediction_records(
+        selected_tasks=selected_tasks,
+        routed_prediction_artifact=routed_prediction_artifact,
+        router_top_k=router_top_k,
+        global_skill_registry_hash=global_registry_hash,
+    )
+    errors.extend(routed_errors)
+
+    if errors:
+        raise ValueError(
+            "stage2 real pilot input package prerequisites failed: "
+            + "; ".join(errors)
+        )
+
+    package = {
+        "schema_version": STAGE2_INPUT_PACKAGE_SCHEMA,
+        "status": "READY_FOR_REVIEW_NOT_EXECUTED",
+        "run_id": _non_empty(run_id, "run_id"),
+        "created_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "evidence_label": "pilot_non_final",
+        "pilot_shape": {
+            "task_count": 4,
+            "conditions": list(CONDITIONS),
+            "trials_per_condition": 1,
+            "total_runs": 12,
+        },
+        "data_root_package": {
+            "data_root": str(data_root_path),
+            "upstream_ref": _non_empty(upstream_ref, "upstream_ref"),
+            "license_note": _non_empty(license_note, "license_note"),
+            "selected_task_ids": selected_ids,
+            "task_count": len(selected_task_records),
+            "adapter_provenance": adapter.provenance(validation),
+            "selected_tasks": selected_task_records,
+        },
+        "deterministic_verifier_package": {
+            "success_source": "deterministic_verifier_output_only",
+            "process_exit_code_success_source": False,
+            "llm_judge_accepted": False,
+            "records": verifier_records,
+        },
+        "oracle_qualification_package": {
+            "records": oracle_records,
+        },
+        "routed_predictions_package": {
+            "router_id": routed_prediction_artifact["router"].get("router_id"),
+            "config_hash": routed_prediction_artifact["router"].get("config_hash"),
+            "top_k": router_top_k,
+            "global_skill_registry_hash": global_registry_hash,
+            "records": routed_records,
+        },
+        "global_skill_registry_package": {
+            "global_skill_registry_hash": global_registry_hash,
+            "skills": global_registry,
+        },
+        "preflight_readiness_checklist": {
+            "runner": "--runner codex-cli",
+            "evidence_mode": "--evidence-mode real",
+            "isolated_home_required": True,
+            "isolated_codex_home_required": True,
+            "final_evidence_preflight_required": True,
+            "clean_user_admin_workspace_skill_inventory_required": True,
+            "codex_execution_allowed_in_this_branch": False,
+        },
+        "non_actions": {
+            "stage2_pilot_run": False,
+            "codex_cli_run": False,
+            "pilot_plan_frozen": False,
+            "live_agent_traces_created": False,
+            "performance_claims": False,
+        },
+    }
+    _reject_sensitive_values(package)
+    return package
 
 
 def run_skillsbench_matrix(
@@ -923,6 +1083,197 @@ def _select_verifier(
     return verifier
 
 
+def _stage2_input_task_record(
+    task: SkillsBenchTask,
+    *,
+    data_root: Path,
+    license_note: str,
+) -> dict[str, Any]:
+    record = _task_to_plan(task, data_root=data_root)
+    source_or_provenance = task.metadata.get("source") or task.metadata.get("provenance")
+    return {
+        **record,
+        "source_or_provenance": source_or_provenance,
+        "license_note": license_note,
+        "public_prompt_leakage_guard": "PASS",
+    }
+
+
+def _stage2_verifier_package_records(
+    selected_task_records: list[dict[str, Any]],
+) -> tuple[dict[str, Any], list[str]]:
+    records: dict[str, Any] = {}
+    errors: list[str] = []
+    for task in selected_task_records:
+        task_id = str(task["task_id"])
+        verifier = task.get("verifier")
+        artifacts = task.get("verifier_artifacts")
+        if not isinstance(verifier, dict):
+            errors.append(f"missing deterministic verifier: {task_id}")
+            continue
+        if verifier.get("type") != "deterministic":
+            errors.append(f"missing deterministic verifier: {task_id}")
+        if not isinstance(artifacts, dict) or set(artifacts) != set(
+            VERIFIER_ARTIFACT_ROLES
+        ):
+            errors.append(f"missing verifier code/config/input hashes: {task_id}")
+            continue
+        for field in (
+            "expected_output_format",
+            "constraints",
+            "deterministic_assumptions",
+        ):
+            if not verifier.get(field):
+                errors.append(f"missing verifier {field}: {task_id}")
+        if verifier.get("success_source") == "process_exit_code":
+            errors.append(f"process exit code cannot be task success source: {task_id}")
+        if verifier.get("judge") == "llm" or verifier.get("llm_judge") is True:
+            errors.append(f"LLM judge cannot be task success source: {task_id}")
+        records[task_id] = {
+            "task_id": task_id,
+            "verifier_hash": task.get("verifier_hash"),
+            "code_hash": artifacts["code"]["sha256"],
+            "config_hash": artifacts["config"]["sha256"],
+            "input_hash": artifacts["input"]["sha256"],
+            "artifacts": artifacts,
+            "expected_output_format": verifier.get("expected_output_format"),
+            "constraints": verifier.get("constraints"),
+            "deterministic_assumptions": verifier.get("deterministic_assumptions"),
+        }
+    return records, errors
+
+
+def _stage2_skill_registry_record(skill: LiveAgentSkill) -> dict[str, Any]:
+    body = skill.body
+    description = skill.description or ""
+    return {
+        "skill_id": skill.skill_id,
+        "name": skill.name,
+        "description": description,
+        "body": body,
+        "skill_hash": _canonical_hash(_skill_to_plan(skill)),
+        "name_hash": _sha256_text(skill.name),
+        "description_hash": _sha256_text(description),
+        "body_hash": _sha256_text(body),
+        "public_skill_text_leakage_guard": "PASS",
+    }
+
+
+def _stage2_oracle_package_records(
+    *,
+    selected_tasks: list[SkillsBenchTask],
+    selected_by_id: dict[str, dict[str, Any]],
+    skills: dict[str, LiveAgentSkill],
+    qualifications: dict[str, dict[str, Any]],
+) -> tuple[dict[str, Any], list[str]]:
+    records: dict[str, Any] = {}
+    errors: list[str] = []
+    for task in selected_tasks:
+        task_record = selected_by_id[task.task_id]
+        record = qualifications.get(task.task_id)
+        if not isinstance(record, dict):
+            errors.append(f"missing oracle qualification: {task.task_id}")
+            continue
+        expected_skill_hash = _oracle_skill_hash(task, skills)
+        if record.get("verifier_passed") is not True:
+            errors.append(f"oracle qualification did not pass: {task.task_id}")
+        if record.get("task_hash") != task_record.get("task_hash"):
+            errors.append(f"oracle qualification task hash mismatch: {task.task_id}")
+        if record.get("verifier_hash") != task_record.get("verifier_hash"):
+            errors.append(f"oracle qualification verifier hash mismatch: {task.task_id}")
+        if record.get("skill_hash") != expected_skill_hash:
+            errors.append(f"oracle qualification skill hash mismatch: {task.task_id}")
+        if int(record.get("trials", 0)) < 1:
+            errors.append(f"missing oracle qualification trials: {task.task_id}")
+        if float(record.get("pass_rate", 0.0)) < 1.0:
+            errors.append(f"oracle qualification pass rate below 1.0: {task.task_id}")
+        if not record.get("constraints"):
+            errors.append(f"missing oracle qualification constraints: {task.task_id}")
+        if not record.get("qualification_command"):
+            errors.append(f"missing oracle qualification command: {task.task_id}")
+        if not record.get("output_hash"):
+            errors.append(f"missing oracle qualification output hash: {task.task_id}")
+        records[task.task_id] = {
+            **record,
+            "expected_skill_hash": expected_skill_hash,
+        }
+    return records, errors
+
+
+def _stage2_routed_prediction_records(
+    *,
+    selected_tasks: list[SkillsBenchTask],
+    routed_prediction_artifact: dict[str, Any],
+    router_top_k: int,
+    global_skill_registry_hash: str,
+) -> tuple[dict[str, Any], list[str]]:
+    router = routed_prediction_artifact["router"]
+    routed_predictions = routed_prediction_artifact["predictions"]
+    records: dict[str, Any] = {}
+    errors: list[str] = []
+    if not router.get("router_id"):
+        errors.append("missing router_id for routed predictions")
+    if not router.get("config_hash"):
+        errors.append("missing router config_hash for routed predictions")
+    if int(router.get("top_k", 0)) != router_top_k:
+        errors.append("routed prediction router top_k does not match package")
+    for task in selected_tasks:
+        full_prediction = routed_predictions.get(task.task_id)
+        if not full_prediction:
+            errors.append(f"missing routed predictions for task: {task.task_id}")
+            continue
+        predicted = _dedupe(full_prediction)
+        records[task.task_id] = {
+            "task_id": task.task_id,
+            "router_id": router.get("router_id"),
+            "config_hash": router.get("config_hash"),
+            "top_k": router_top_k,
+            "global_skill_registry_hash": global_skill_registry_hash,
+            "predicted_skill_ids": predicted,
+            "mounted_top_k": predicted[:router_top_k],
+            "prediction_hash": _canonical_hash(full_prediction),
+        }
+    return records, errors
+
+
+def _routed_prediction_input_errors(
+    *,
+    selected_tasks: list[SkillsBenchTask],
+    routed_predictions: dict[str, list[str]],
+    router: dict[str, Any],
+    skills: dict[str, LiveAgentSkill],
+    router_top_k: int,
+) -> list[str]:
+    errors: list[str] = []
+    if not router.get("router_id"):
+        errors.append("missing router_id for routed predictions")
+    if not router.get("config_hash"):
+        errors.append("missing router config_hash for routed predictions")
+    if int(router.get("top_k", 0)) != router_top_k:
+        errors.append("routed prediction router top_k does not match package")
+    for task in selected_tasks:
+        predictions = routed_predictions.get(task.task_id)
+        if not predictions:
+            errors.append(f"missing routed predictions for task: {task.task_id}")
+            continue
+        for skill_id in _dedupe(predictions):
+            if skill_id not in skills:
+                errors.append(
+                    f"unknown routed prediction skill id: {task.task_id} -> {skill_id}"
+                )
+    return errors
+
+
+def _oracle_skill_hash(
+    task: SkillsBenchTask,
+    skills: dict[str, LiveAgentSkill],
+) -> str:
+    skill_records = [_skill_to_plan(skills[skill_id]) for skill_id in task.oracle_skill_ids]
+    if len(skill_records) == 1:
+        return _canonical_hash(skill_records[0])
+    return _canonical_hash(skill_records)
+
+
 def _validate_real_evidence_plan(plan: dict[str, Any]) -> None:
     if plan.get("evidence_label") == "fixture-only" or _fixture_path(plan.get("data_root")):
         raise ValueError("fixture-only SkillsBench data cannot be used in real evidence mode")
@@ -1346,6 +1697,29 @@ def _skill_leakage_errors(
                 errors.append(
                     f"leakage in public skill metadata for {skill.skill_id}: {token}"
                 )
+    return errors
+
+
+def _public_skill_text_leakage_errors(
+    tasks: list[SkillsBenchTask],
+    skills: Iterable[LiveAgentSkill],
+) -> list[str]:
+    task_ids = {task.task_id.lower() for task in tasks}
+    oracle_skill_ids = {
+        skill_id.lower() for task in tasks for skill_id in task.oracle_skill_ids
+    }
+    errors = []
+    for skill in skills:
+        public = f"{skill.name} {skill.description or ''} {skill.body}".lower()
+        if any(task_id in public for task_id in task_ids):
+            errors.append(f"leakage in public skill text for {skill.skill_id}: task_id")
+        if any(skill_id in public for skill_id in oracle_skill_ids):
+            errors.append(
+                f"leakage in public skill text for {skill.skill_id}: oracle skill id"
+            )
+        for token in LABEL_LEAKAGE_TOKENS:
+            if token in public:
+                errors.append(f"leakage in public skill text for {skill.skill_id}: {token}")
     return errors
 
 

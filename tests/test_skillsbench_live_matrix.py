@@ -17,6 +17,7 @@ from hermes_skilleval.live_agent_runtime import (
 )
 from hermes_skilleval.live_agent_skillsbench import (
     SkillsBenchAdapter,
+    build_stage2_real_pilot_input_package,
     _canonical_hash,
     _validate_real_runner_preflight,
     run_skillsbench_matrix,
@@ -100,6 +101,20 @@ def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
             "code_path": "verifiers/check.py",
             "config_path": "verifiers/config.json",
             "input_path": "verifiers/input.json",
+            "expected_output_format": {
+                "type": "json",
+                "required_fields": ["passed", "details"],
+            },
+            "constraints": {
+                "credentials": "none",
+                "network": "none",
+                "local_execution": True,
+            },
+            "deterministic_assumptions": {
+                "network": "disabled",
+                "clock": "not_used",
+                "randomness": "not_used",
+            },
         }
         task = {
             "task_id": task_id,
@@ -150,6 +165,8 @@ def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
                     "network": "none",
                     "verifier": "deterministic",
                 },
+                "qualification_command": "python verifiers/check.py --qualification",
+                "output_hash": "d" * 64,
             }
         )
         skills.append(skill)
@@ -241,6 +258,34 @@ def _mutate_plan(plan_path: Path, mutator) -> None:
     mutator(plan)
     plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     _rewrite_plan_digest(plan_path)
+
+
+def _read_jsonl_file(path: Path) -> list[dict]:
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+
+def _write_jsonl_file(path: Path, records: list[dict]) -> None:
+    path.write_text(
+        "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
+        encoding="utf-8",
+    )
+
+
+def _build_real_like_pilot_input_package(paths: dict[str, Path]) -> dict:
+    return build_stage2_real_pilot_input_package(
+        data_root=paths["data_root"],
+        upstream_ref=UPSTREAM_SHA,
+        license_note="approved-real-pilot-unit",
+        run_id="stage2-real-pilot-input-package-unit",
+        selected_task_ids=[f"sb-real-{index}" for index in range(1, 5)],
+        routed_predictions_path=paths["routed_predictions"],
+        oracle_qualification_path=paths["oracle_qualification"],
+        router_top_k=1,
+    )
 
 
 def test_skillsbench_adapter_validates_tiny_fixture():
@@ -1012,6 +1057,160 @@ def test_stage2_pilot_plan_records_task_verifier_oracle_and_routing_hashes(tmp_p
         assert record["router_top_k"] == 1
         assert record["global_skill_registry_hash"] == plan["global_skill_registry_hash"]
         assert record["prediction_hash"]
+
+
+def test_stage2_real_pilot_input_package_rejects_fixture_only_data_root():
+    with pytest.raises(ValueError, match="fixture-only SkillsBench data"):
+        build_stage2_real_pilot_input_package(
+            data_root=FIXTURE,
+            upstream_ref="fixture-ref",
+            license_note="fixture-only",
+            run_id="stage2-real-pilot-input-package-unit",
+            selected_task_ids=["sb-task-login", "sb-task-edit"],
+            routed_predictions_path=FIXTURE / "routed_predictions.json",
+            oracle_qualification_path=FIXTURE / "oracle_qualification.jsonl",
+            router_top_k=1,
+        )
+
+
+def test_stage2_real_pilot_input_package_requires_exactly_four_tasks(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+
+    with pytest.raises(ValueError, match="exactly 4 selected tasks"):
+        build_stage2_real_pilot_input_package(
+            data_root=paths["data_root"],
+            upstream_ref=UPSTREAM_SHA,
+            license_note="approved-real-pilot-unit",
+            run_id="stage2-real-pilot-input-package-unit",
+            selected_task_ids=["sb-real-1", "sb-real-2", "sb-real-3"],
+            routed_predictions_path=paths["routed_predictions"],
+            oracle_qualification_path=paths["oracle_qualification"],
+            router_top_k=1,
+        )
+
+
+def test_stage2_real_pilot_input_package_missing_verifier_hashes_fail_closed(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    tasks = _read_jsonl_file(paths["data_root"] / "tasks.jsonl")
+    tasks[0]["verifier"].pop("code_path")
+    _write_jsonl_file(paths["data_root"] / "tasks.jsonl", tasks)
+
+    with pytest.raises(ValueError, match="missing verifier code/config/input hashes"):
+        _build_real_like_pilot_input_package(paths)
+
+
+def test_stage2_real_pilot_input_package_missing_oracle_qualification_fail_closed(
+    tmp_path,
+):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    records = _read_jsonl_file(paths["oracle_qualification"])
+    _write_jsonl_file(paths["oracle_qualification"], records[:-1])
+
+    with pytest.raises(ValueError, match="missing oracle qualification: sb-real-4"):
+        _build_real_like_pilot_input_package(paths)
+
+
+def test_stage2_real_pilot_input_package_unknown_routed_skill_fails_closed(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    predictions = json.loads(paths["routed_predictions"].read_text(encoding="utf-8"))
+    predictions["predictions"]["sb-real-2"] = ["skill/unknown"]
+    paths["routed_predictions"].write_text(
+        json.dumps(predictions, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="unknown routed prediction skill id"):
+        _build_real_like_pilot_input_package(paths)
+
+
+def test_stage2_real_pilot_input_package_records_required_hashes(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+
+    package = _build_real_like_pilot_input_package(paths)
+
+    assert package["schema_version"] == "v0.3.stage2-real-pilot-input-package.v1"
+    assert package["status"] == "READY_FOR_REVIEW_NOT_EXECUTED"
+    assert package["pilot_shape"] == {
+        "task_count": 4,
+        "conditions": ["no-skill", "routed-skill", "oracle-skill"],
+        "trials_per_condition": 1,
+        "total_runs": 12,
+    }
+    assert package["non_actions"]["stage2_pilot_run"] is False
+    assert package["deterministic_verifier_package"]["success_source"] == (
+        "deterministic_verifier_output_only"
+    )
+    assert package["deterministic_verifier_package"]["process_exit_code_success_source"] is False
+    assert package["deterministic_verifier_package"]["llm_judge_accepted"] is False
+
+    selected_by_id = {
+        task["task_id"]: task
+        for task in package["data_root_package"]["selected_tasks"]
+    }
+    assert set(selected_by_id) == {f"sb-real-{index}" for index in range(1, 5)}
+    for task in selected_by_id.values():
+        assert task["source_or_provenance"]
+        assert task["license_note"] == "approved-real-pilot-unit"
+        assert task["prompt_hash"]
+        assert task["task_hash"]
+        assert set(task["verifier_artifacts"]) == {"code", "config", "input"}
+
+    registry = package["global_skill_registry_package"]
+    assert registry["global_skill_registry_hash"] == _canonical_hash(registry["skills"])
+    assert set(registry["skills"]) == {f"skill/real-{index}" for index in range(1, 5)}
+    assert all(record["body_hash"] for record in registry["skills"].values())
+    assert all(record["name_hash"] for record in registry["skills"].values())
+    assert all(record["description_hash"] for record in registry["skills"].values())
+
+    for task_id, record in package["deterministic_verifier_package"]["records"].items():
+        assert task_id in selected_by_id
+        assert record["verifier_hash"] == selected_by_id[task_id]["verifier_hash"]
+        assert record["code_hash"]
+        assert record["config_hash"]
+        assert record["input_hash"]
+        assert record["expected_output_format"]
+        assert record["constraints"]
+        assert record["deterministic_assumptions"]
+
+    for task_id, record in package["oracle_qualification_package"]["records"].items():
+        assert task_id in selected_by_id
+        assert record["task_hash"] == selected_by_id[task_id]["task_hash"]
+        assert record["verifier_hash"] == selected_by_id[task_id]["verifier_hash"]
+        assert record["skill_hash"]
+        assert record["trials"] == 1
+        assert record["pass_rate"] == 1.0
+        assert record["qualification_command"]
+        assert record["output_hash"]
+
+    routed = package["routed_predictions_package"]
+    assert routed["router_id"] == "unit-router"
+    assert routed["config_hash"] == "c" * 64
+    assert routed["top_k"] == 1
+    assert routed["global_skill_registry_hash"] == registry["global_skill_registry_hash"]
+    for task_id, record in routed["records"].items():
+        assert task_id in selected_by_id
+        assert record["prediction_hash"]
+        assert record["predicted_skill_ids"]
+
+
+def test_stage2_real_pilot_input_package_leakage_guard_catches_prompt_and_skill_text(
+    tmp_path,
+):
+    prompt_paths = _write_real_like_pilot_inputs(tmp_path / "prompt-leak")
+    tasks = _read_jsonl_file(prompt_paths["data_root"] / "tasks.jsonl")
+    tasks[0]["prompt"] = "Complete sb-real-1 using the gold oracle label."
+    _write_jsonl_file(prompt_paths["data_root"] / "tasks.jsonl", tasks)
+
+    with pytest.raises(ValueError, match="leakage in prompt"):
+        _build_real_like_pilot_input_package(prompt_paths)
+
+    skill_paths = _write_real_like_pilot_inputs(tmp_path / "skill-leak")
+    skills = _read_jsonl_file(skill_paths["data_root"] / "skills.jsonl")
+    skills[0]["body"] = "This public skill text is the oracle path for sb-real-1."
+    _write_jsonl_file(skill_paths["data_root"] / "skills.jsonl", skills)
+
+    with pytest.raises(ValueError, match="leakage in public skill text"):
+        _build_real_like_pilot_input_package(skill_paths)
 
 
 def test_cli_skillsbench_plan_and_matrix_write_outputs(tmp_path):
