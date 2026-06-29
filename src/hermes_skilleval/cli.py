@@ -57,6 +57,7 @@ from hermes_skilleval.live_agent_skillsbench import (
     run_skillsbench_matrix,
     write_skillsbench_plan,
 )
+from hermes_skilleval.live_agent_runtime import CodexCliRunner, CodexCliRunnerConfig
 from hermes_skilleval.metrics import (
     abstention_rate,
     accepted_count,
@@ -464,6 +465,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     skillsbench_matrix_parser.add_argument("--plan", required=True)
     skillsbench_matrix_parser.add_argument("--output", required=True)
+    skillsbench_matrix_parser.add_argument(
+        "--evidence-mode",
+        choices=("fixture", "real"),
+        default="fixture",
+        help="fixture mode may use fake test runner defaults; real mode fails closed",
+    )
+    skillsbench_matrix_parser.add_argument(
+        "--runner",
+        choices=("fake", "codex-cli"),
+        default="fake",
+        help="runner implementation to configure for matrix execution",
+    )
+    skillsbench_matrix_parser.add_argument("--codex-binary", default="codex")
+    skillsbench_matrix_parser.add_argument("--codex-home-base", default=None)
     skillsbench_matrix_parser.set_defaults(handler=_run_skillsbench_matrix)
 
     evidence_gate_parser = subparsers.add_parser(
@@ -1231,7 +1246,22 @@ def _run_skillsbench_plan(args: argparse.Namespace) -> None:
 
 
 def _run_skillsbench_matrix(args: argparse.Namespace) -> None:
-    report = run_skillsbench_matrix(plan_path=args.plan, output_path=args.output)
+    runner = None
+    if args.runner == "codex-cli" and args.evidence_mode != "real":
+        raise ValueError("--runner codex-cli requires --evidence-mode real")
+    if args.runner == "codex-cli":
+        runner = CodexCliRunner(
+            CodexCliRunnerConfig(
+                codex_binary=args.codex_binary,
+                codex_home_base=args.codex_home_base,
+            )
+        )
+    report = run_skillsbench_matrix(
+        plan_path=args.plan,
+        output_path=args.output,
+        runner=runner,
+        evidence_mode=args.evidence_mode,
+    )
     print(
         "SkillsBench live-agent matrix "
         f"{report['run_id']}: {args.output} "

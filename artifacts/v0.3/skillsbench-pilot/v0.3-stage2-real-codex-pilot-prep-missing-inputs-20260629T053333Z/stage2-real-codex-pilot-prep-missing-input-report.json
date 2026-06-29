@@ -1,0 +1,78 @@
+{
+  "schema_version": "v0.3.stage2-real-codex-pilot-prep.v1",
+  "status": "BLOCKED_MISSING_INPUTS",
+  "created_at": "2026-06-29T05:33:33Z",
+  "branch": "ops/prepare-stage2-real-codex-pilot-inputs",
+  "base_accepted_blocked_artifact_commit": "98eec36601cd504c3c9466ed36ed7fd4421fb1fa",
+  "previous_blocked_report": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-blocked-20260629T045907Z/stage2-pilot-blocked-report.json",
+  "requested_pilot_shape": {
+    "task_count": 4,
+    "conditions": [
+      "no-skill",
+      "routed-skill",
+      "oracle-skill"
+    ],
+    "trials_per_condition": 1,
+    "total_runs": 12,
+    "evidence_label": "pilot_non_final"
+  },
+  "inspection_summary": {
+    "blocked_report": "Accepted Stage 2 report already recorded missing real or approved 4-task SkillsBench data, deterministic verifier artifacts, oracle qualification, routed predictions, and real matrix runner wiring.",
+    "runbook": "Stage 2 pilot is a wiring and safety check only, not frozen live-agent evidence or a performance claim.",
+    "live_agent_runtime": "CodexCliRunner exists with isolated CODEX_HOME/HOME preflight and no-skill leakage checks.",
+    "live_agent_skillsbench": "Plan and matrix helpers existed, but fixture defaults needed real-evidence fail-closed guards.",
+    "skillsbench_live_matrix_tests": "Fixture tests remain allowed for unit coverage only.",
+    "codex_cli_runner_tests": "Fake Codex executables remain test doubles, not real evidence.",
+    "live_agent_config": "Config remains placeholder-only and not executable evidence."
+  },
+  "preparation_results": {
+    "real_or_approved_four_task_data_root": {
+      "status": "BLOCKED",
+      "reason": "No non-fixture or explicitly approved SkillsBench pilot data root with exactly 4 selectable tasks is present in this branch."
+    },
+    "deterministic_verifier_artifacts": {
+      "status": "BLOCKED",
+      "reason": "No deterministic verifier implementation/artifact set was provided for 4 real pilot tasks. Real evidence mode now requires verifier code/config/input hashes before execution."
+    },
+    "oracle_qualification": {
+      "status": "BLOCKED",
+      "reason": "No oracle qualification artifact exists for 4 real tasks. Real evidence mode now requires task hash, verifier hash, skill hash, trials, pass rate, and constraints."
+    },
+    "routed_predictions": {
+      "status": "BLOCKED",
+      "reason": "No routed prediction artifact exists for 4 real tasks. Routed prediction envelopes now record router id, config hash, top-k, per-task prediction hash, and global registry hash."
+    },
+    "real_codex_runner_path": {
+      "status": "PREPARED_BUT_NOT_EXECUTED",
+      "reason": "skillsbench-matrix exposes CodexCliRunner via --runner codex-cli and --evidence-mode real. Real mode fails closed without an explicit deterministic verifier and final-evidence preflight."
+    },
+    "stage2_pilot_shape_support": {
+      "status": "PREPARED_BUT_NOT_FROZEN",
+      "reason": "Pilot mode supports 4 selected tasks x 3 conditions x 1 trial = 12 matrix entries. No real pilot plan was frozen in this branch."
+    }
+  },
+  "new_fail_closed_guards": [
+    "Real evidence mode rejects tests/fixtures/live_agent/skillsbench_tiny and other fixture-only SkillsBench data.",
+    "Real evidence mode rejects FakeAgentRunner and FakeVerifier.",
+    "Real evidence mode requires a runner preflight event proving final-evidence mode, isolated CODEX_HOME, and isolated HOME.",
+    "Real evidence mode requires task/verifier/oracle/routing hashes before matrix execution."
+  ],
+  "non_actions": {
+    "stage2_pilot_run": false,
+    "codex_cli_run": false,
+    "pilot_plan_frozen": false,
+    "live_agent_traces_created": false,
+    "evidence_gate_rerun_with_fake_live_artifacts": false,
+    "fixture_data_used_as_real_evidence": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "performance_claims": false
+  },
+  "remaining_blockers": [
+    "Provide or approve a non-fixture SkillsBench pilot data root with exactly 4 selectable tasks.",
+    "Provide deterministic verifier code/config/input artifacts for each selected task.",
+    "Run and record non-fabricated oracle qualification for all 4 tasks.",
+    "Provide routed predictions over the global skill registry with router id, config hash, and top-k.",
+    "Add a deterministic verifier integration to pair with CodexCliRunner for real matrix execution."
+  ]
+}

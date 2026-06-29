@@ -166,6 +166,22 @@ this repository. Do not substitute fake-runner artifacts for final evidence.
 Preserve redacted `live-agent.v1` traces and preflight/global capability
 inventory in the pilot artifact directory.
 
+Before this execution step is allowed, the pilot inputs must pass real evidence
+mode preparation checks:
+
+- the data root is not `tests/fixtures/live_agent/skillsbench_tiny` and is
+  explicitly approved for this pilot;
+- exactly 4 selected tasks expand to 12 planned runs;
+- each selected task records source/provenance, prompt hash, task hash,
+  deterministic verifier hash, and verifier code/config/input hashes;
+- oracle qualification records contain matching task/verifier/skill hashes,
+  trials, pass rate, and constraints;
+- routed predictions record router id, config hash, top-k, per-task prediction
+  hash, and global skill registry hash;
+- real matrix execution uses `--evidence-mode real --runner codex-cli` and
+  fails closed if it would use fixture data, `FakeAgentRunner`, `FakeVerifier`,
+  or a runner without final-evidence isolated-home preflight.
+
 ## 5. Run Evidence Gate On Pilot Artifacts
 
 Run the gate with both external and pilot live-agent artifacts:
