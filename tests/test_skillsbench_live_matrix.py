@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -72,6 +73,36 @@ def _real_preflight() -> dict:
             "bundled_skills": {"status": "SYSTEM_MANAGED_UNKNOWN"},
         },
     }
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _stage2_expected_registry_hash(skills: list[dict]) -> str:
+    records = {}
+    for skill in skills:
+        description = skill["description"]
+        body = skill["body"]
+        records[skill["skill_id"]] = {
+            "skill_id": skill["skill_id"],
+            "name": skill["name"],
+            "description": description,
+            "body": body,
+            "skill_hash": _canonical_hash(
+                {
+                    "skill_id": skill["skill_id"],
+                    "name": skill["name"],
+                    "description": description,
+                    "body": body,
+                }
+            ),
+            "name_hash": _sha256_text(skill["name"]),
+            "description_hash": _sha256_text(description),
+            "body_hash": _sha256_text(body),
+            "public_skill_text_leakage_guard": "PASS",
+        }
+    return _canonical_hash(dict(sorted(records.items())))
 
 
 def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
@@ -198,6 +229,7 @@ def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
         "".join(json.dumps(record, sort_keys=True) + "\n" for record in oracle_records),
         encoding="utf-8",
     )
+    registry_hash = _stage2_expected_registry_hash(skills)
     (root / "routed_predictions.json").write_text(
         json.dumps(
             {
@@ -206,6 +238,10 @@ def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
                     "router_id": "unit-router",
                     "config_hash": "c" * 64,
                     "top_k": 1,
+                    "global_skill_registry_hash": registry_hash,
+                    "generation_command": "python -m hermes_skilleval.cli route-skills",
+                    "oracle_labels_read": False,
+                    "label_source": "router_predictions",
                 },
                 "predictions": predictions,
             },
@@ -1099,6 +1135,19 @@ def test_stage2_real_pilot_input_package_missing_verifier_hashes_fail_closed(tmp
         _build_real_like_pilot_input_package(paths)
 
 
+def test_stage2_real_pilot_input_package_missing_source_provenance_fails_closed(
+    tmp_path,
+):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    tasks = _read_jsonl_file(paths["data_root"] / "tasks.jsonl")
+    tasks[0].pop("source")
+    tasks[0].pop("provenance")
+    _write_jsonl_file(paths["data_root"] / "tasks.jsonl", tasks)
+
+    with pytest.raises(ValueError, match="missing task source/provenance: sb-real-1"):
+        _build_real_like_pilot_input_package(paths)
+
+
 def test_stage2_real_pilot_input_package_missing_oracle_qualification_fail_closed(
     tmp_path,
 ):
@@ -1120,6 +1169,140 @@ def test_stage2_real_pilot_input_package_unknown_routed_skill_fails_closed(tmp_p
     )
 
     with pytest.raises(ValueError, match="unknown routed prediction skill id"):
+        _build_real_like_pilot_input_package(paths)
+
+
+def test_stage2_real_pilot_input_package_missing_routing_provenance_fails_closed(
+    tmp_path,
+):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    routed = json.loads(paths["routed_predictions"].read_text(encoding="utf-8"))
+    routed["router"].pop("generation_command")
+    paths["routed_predictions"].write_text(
+        json.dumps(routed, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="missing routed prediction generation provenance"):
+        _build_real_like_pilot_input_package(paths)
+
+
+@pytest.mark.parametrize(
+    ("mutator", "message"),
+    [
+        (
+            lambda router: router.__setitem__("oracle_labels_read", True),
+            "oracle labels were read",
+        ),
+        (
+            lambda router: router.__setitem__("label_source", "oracle"),
+            "routed prediction label_source is not allowed",
+        ),
+        (
+            lambda router: router.__setitem__("label_source", "manual"),
+            "routed prediction label_source is not allowed",
+        ),
+        (
+            lambda router: router.__setitem__("label_source", "ad_hoc"),
+            "routed prediction label_source is not allowed",
+        ),
+    ],
+)
+def test_stage2_real_pilot_input_package_rejects_oracle_or_ad_hoc_routing(
+    tmp_path,
+    mutator,
+    message,
+):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    routed = json.loads(paths["routed_predictions"].read_text(encoding="utf-8"))
+    mutator(routed["router"])
+    paths["routed_predictions"].write_text(
+        json.dumps(routed, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match=message):
+        _build_real_like_pilot_input_package(paths)
+
+
+def test_stage2_real_pilot_input_package_rejects_registry_hash_mismatch(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    routed = json.loads(paths["routed_predictions"].read_text(encoding="utf-8"))
+    routed["router"]["global_skill_registry_hash"] = "e" * 64
+    paths["routed_predictions"].write_text(
+        json.dumps(routed, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="routed prediction registry hash mismatch"):
+        _build_real_like_pilot_input_package(paths)
+
+
+def test_stage2_real_pilot_input_package_requires_enough_routed_top_k(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    routed = json.loads(paths["routed_predictions"].read_text(encoding="utf-8"))
+    routed["router"]["top_k"] = 2
+    routed["predictions"]["sb-real-1"] = ["skill/real-1", "skill/real-1"]
+    paths["routed_predictions"].write_text(
+        json.dumps(routed, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="insufficient routed top-k"):
+        build_stage2_real_pilot_input_package(
+            data_root=paths["data_root"],
+            upstream_ref=UPSTREAM_SHA,
+            license_note="approved-real-pilot-unit",
+            run_id="stage2-real-pilot-input-package-unit",
+            selected_task_ids=[f"sb-real-{index}" for index in range(1, 5)],
+            routed_predictions_path=paths["routed_predictions"],
+            oracle_qualification_path=paths["oracle_qualification"],
+            router_top_k=2,
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutator", "message"),
+    [
+        (
+            lambda routed, oracle: routed["router"].__setitem__(
+                "config_hash",
+                "not-a-sha",
+            ),
+            "malformed routed prediction config_hash",
+        ),
+        (
+            lambda routed, oracle: routed["router"].__setitem__(
+                "global_skill_registry_hash",
+                "not-a-sha",
+            ),
+            "malformed routed prediction global_skill_registry_hash",
+        ),
+        (
+            lambda routed, oracle: oracle[0].__setitem__(
+                "output_hash",
+                "not-a-sha",
+            ),
+            "malformed oracle qualification output hash",
+        ),
+    ],
+)
+def test_stage2_real_pilot_input_package_rejects_malformed_hash_strings(
+    tmp_path,
+    mutator,
+    message,
+):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    routed = json.loads(paths["routed_predictions"].read_text(encoding="utf-8"))
+    oracle = _read_jsonl_file(paths["oracle_qualification"])
+    mutator(routed, oracle)
+    paths["routed_predictions"].write_text(
+        json.dumps(routed, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    _write_jsonl_file(paths["oracle_qualification"], oracle)
+
+    with pytest.raises(ValueError, match=message):
         _build_real_like_pilot_input_package(paths)
 
 
@@ -1187,6 +1370,9 @@ def test_stage2_real_pilot_input_package_records_required_hashes(tmp_path):
     assert routed["config_hash"] == "c" * 64
     assert routed["top_k"] == 1
     assert routed["global_skill_registry_hash"] == registry["global_skill_registry_hash"]
+    assert routed["generation_command"] == "python -m hermes_skilleval.cli route-skills"
+    assert routed["oracle_labels_read"] is False
+    assert routed["label_source"] == "router_predictions"
     for task_id, record in routed["records"].items():
         assert task_id in selected_by_id
         assert record["prediction_hash"]

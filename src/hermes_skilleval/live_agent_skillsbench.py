@@ -34,8 +34,10 @@ CONTROLLED_NETWORKS = {"none", "controlled"}
 DEFAULT_ROUTER_TOP_K = 3
 EVIDENCE_MODES = {"fixture", "real"}
 COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 LABEL_LEAKAGE_TOKENS = ("oracle", "gold", "source-task", "source_task")
 VERIFIER_ARTIFACT_ROLES = ("code", "config", "input")
+DISALLOWED_ROUTED_LABEL_SOURCES = {"oracle", "manual", "ad_hoc"}
 
 
 @dataclass(frozen=True)
@@ -390,15 +392,6 @@ def build_stage2_real_pilot_input_package(
 
     errors: list[str] = []
     errors.extend(_public_skill_text_leakage_errors(selected_tasks, skills.values()))
-    errors.extend(
-        _routed_prediction_input_errors(
-            selected_tasks=selected_tasks,
-            routed_predictions=routed_predictions,
-            router=routed_prediction_artifact["router"],
-            skills=skills,
-            router_top_k=router_top_k,
-        )
-    )
 
     selected_task_records = [
         _stage2_input_task_record(
@@ -408,6 +401,7 @@ def build_stage2_real_pilot_input_package(
         )
         for task in selected_tasks
     ]
+    errors.extend(_stage2_task_source_errors(selected_task_records))
     selected_by_id = {task["task_id"]: task for task in selected_task_records}
     verifier_records, verifier_errors = _stage2_verifier_package_records(
         selected_task_records
@@ -419,6 +413,16 @@ def build_stage2_real_pilot_input_package(
         for skill_id, skill in sorted(skills.items())
     }
     global_registry_hash = _canonical_hash(global_registry)
+    errors.extend(
+        _routed_prediction_input_errors(
+            selected_tasks=selected_tasks,
+            routed_predictions=routed_predictions,
+            router=routed_prediction_artifact["router"],
+            skills=skills,
+            router_top_k=router_top_k,
+            global_skill_registry_hash=global_registry_hash,
+        )
+    )
     oracle_records, oracle_errors = _stage2_oracle_package_records(
         selected_tasks=selected_tasks,
         selected_by_id=selected_by_id,
@@ -475,6 +479,16 @@ def build_stage2_real_pilot_input_package(
             "config_hash": routed_prediction_artifact["router"].get("config_hash"),
             "top_k": router_top_k,
             "global_skill_registry_hash": global_registry_hash,
+            "generation_command": routed_prediction_artifact["router"].get(
+                "generation_command"
+            ),
+            "generation_artifact_hash": routed_prediction_artifact["router"].get(
+                "generation_artifact_hash"
+            ),
+            "oracle_labels_read": routed_prediction_artifact["router"].get(
+                "oracle_labels_read"
+            ),
+            "label_source": routed_prediction_artifact["router"].get("label_source"),
             "records": routed_records,
         },
         "global_skill_registry_package": {
@@ -1099,6 +1113,14 @@ def _stage2_input_task_record(
     }
 
 
+def _stage2_task_source_errors(selected_task_records: list[dict[str, Any]]) -> list[str]:
+    errors = []
+    for task in selected_task_records:
+        if not _non_empty_metadata_value(task.get("source_or_provenance")):
+            errors.append(f"missing task source/provenance: {task.get('task_id')}")
+    return errors
+
+
 def _stage2_verifier_package_records(
     selected_task_records: list[dict[str, Any]],
 ) -> tuple[dict[str, Any], list[str]]:
@@ -1118,6 +1140,9 @@ def _stage2_verifier_package_records(
         ):
             errors.append(f"missing verifier code/config/input hashes: {task_id}")
             continue
+        for role in VERIFIER_ARTIFACT_ROLES:
+            if not _sha256_hex(artifacts[role].get("sha256")):
+                errors.append(f"malformed verifier {role} artifact sha256: {task_id}")
         for field in (
             "expected_output_format",
             "constraints",
@@ -1193,6 +1218,8 @@ def _stage2_oracle_package_records(
             errors.append(f"missing oracle qualification command: {task.task_id}")
         if not record.get("output_hash"):
             errors.append(f"missing oracle qualification output hash: {task.task_id}")
+        elif not _sha256_hex(record.get("output_hash")):
+            errors.append(f"malformed oracle qualification output hash: {task.task_id}")
         records[task.task_id] = {
             **record,
             "expected_skill_hash": expected_skill_hash,
@@ -1215,6 +1242,10 @@ def _stage2_routed_prediction_records(
         errors.append("missing router_id for routed predictions")
     if not router.get("config_hash"):
         errors.append("missing router config_hash for routed predictions")
+    elif not _sha256_hex(router.get("config_hash")):
+        errors.append("malformed routed prediction config_hash")
+    if not _sha256_hex(router.get("global_skill_registry_hash")):
+        errors.append("malformed routed prediction global_skill_registry_hash")
     if int(router.get("top_k", 0)) != router_top_k:
         errors.append("routed prediction router top_k does not match package")
     for task in selected_tasks:
@@ -1243,12 +1274,37 @@ def _routed_prediction_input_errors(
     router: dict[str, Any],
     skills: dict[str, LiveAgentSkill],
     router_top_k: int,
+    global_skill_registry_hash: str,
 ) -> list[str]:
     errors: list[str] = []
     if not router.get("router_id"):
         errors.append("missing router_id for routed predictions")
     if not router.get("config_hash"):
         errors.append("missing router config_hash for routed predictions")
+    elif not _sha256_hex(router.get("config_hash")):
+        errors.append("malformed routed prediction config_hash")
+    routed_registry_hash = router.get("global_skill_registry_hash")
+    if not routed_registry_hash:
+        errors.append("missing routed prediction global_skill_registry_hash")
+    elif not _sha256_hex(routed_registry_hash):
+        errors.append("malformed routed prediction global_skill_registry_hash")
+    elif routed_registry_hash != global_skill_registry_hash:
+        errors.append("routed prediction registry hash mismatch")
+    if not (
+        _non_empty_metadata_value(router.get("generation_command"))
+        or _sha256_hex(router.get("generation_artifact_hash"))
+    ):
+        errors.append("missing routed prediction generation provenance")
+    generation_artifact_hash = router.get("generation_artifact_hash")
+    if generation_artifact_hash and not _sha256_hex(generation_artifact_hash):
+        errors.append("malformed routed prediction generation_artifact_hash")
+    if router.get("oracle_labels_read") is not False:
+        errors.append("routed predictions oracle labels were read or not proven unread")
+    label_source = router.get("label_source")
+    if not isinstance(label_source, str) or not label_source.strip():
+        errors.append("missing routed prediction label_source")
+    elif label_source in DISALLOWED_ROUTED_LABEL_SOURCES:
+        errors.append("routed prediction label_source is not allowed")
     if int(router.get("top_k", 0)) != router_top_k:
         errors.append("routed prediction router top_k does not match package")
     for task in selected_tasks:
@@ -1256,7 +1312,10 @@ def _routed_prediction_input_errors(
         if not predictions:
             errors.append(f"missing routed predictions for task: {task.task_id}")
             continue
-        for skill_id in _dedupe(predictions):
+        deduped = _dedupe(predictions)
+        if len(deduped) < router_top_k:
+            errors.append(f"insufficient routed top-k for task: {task.task_id}")
+        for skill_id in deduped:
             if skill_id not in skills:
                 errors.append(
                     f"unknown routed prediction skill id: {task.task_id} -> {skill_id}"
@@ -1779,6 +1838,18 @@ def _non_empty(value: str, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field} must be non-empty")
     return value
+
+
+def _non_empty_metadata_value(value: Any) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (dict, list, tuple, set)):
+        return bool(value)
+    return value is not None
+
+
+def _sha256_hex(value: Any) -> bool:
+    return isinstance(value, str) and SHA256_RE.fullmatch(value) is not None
 
 
 def _safe_run_id(value: str) -> str:

@@ -106,6 +106,9 @@
         "config_hash",
         "top_k",
         "global skill registry hash",
+        "generation command or generation artifact hash",
+        "oracle_labels_read false",
+        "non-oracle, non-manual, non-ad-hoc label source",
         "per-task prediction hash",
         "predicted skill IDs"
       ],
@@ -129,6 +132,7 @@
     "Missing verifier code/config/input hashes fail closed.",
     "Missing oracle qualification records fail closed.",
     "Routed predictions containing unknown skill IDs fail closed.",
+    "Routed predictions missing generation provenance, registry hash match, or oracle-label-read exclusion fail closed.",
     "Prompt, task, verifier, and skill hashes are required in the input package.",
     "Public prompt and public skill text leakage guards catch task_id, oracle, and gold labels."
   ],
