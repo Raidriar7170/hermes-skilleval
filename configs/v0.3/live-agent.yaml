@@ -64,7 +64,11 @@ pilot_preparation:
     - top_k
     - global_skill_registry_hash
 
-trials_per_condition: 3
+frozen_live_agent_evaluation:
+  # Future frozen live-agent evaluation only. This is not the Stage 2 pilot.
+  # The Stage 2 pilot shape remains 4 tasks x 3 conditions x 1 trial = 12 runs.
+  status: future_only_after_pilot_acceptance
+  trials_per_condition: 3
 
 judging:
   primary_success_judge: deterministic_verifier

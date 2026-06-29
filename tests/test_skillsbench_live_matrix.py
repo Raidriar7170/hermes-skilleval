@@ -18,6 +18,7 @@ from hermes_skilleval.live_agent_runtime import (
 from hermes_skilleval.live_agent_skillsbench import (
     SkillsBenchAdapter,
     _canonical_hash,
+    _validate_real_runner_preflight,
     run_skillsbench_matrix,
     write_skillsbench_plan,
 )
@@ -856,6 +857,116 @@ def test_real_evidence_mode_requires_no_skill_preflight(tmp_path):
         )
 
 
+@pytest.mark.parametrize(
+    "events",
+    [
+        [],
+        [{"type": "final", "message": "ok"}],
+        ["malformed"],
+    ],
+)
+def test_real_runner_preflight_requires_preflight_record(events):
+    with pytest.raises(ValueError, match="missing real runner preflight"):
+        _validate_real_runner_preflight(events)
+
+
+@pytest.mark.parametrize(
+    ("mutator", "message"),
+    [
+        (
+            lambda preflight: preflight.__setitem__("evidence_mode", "smoke-only"),
+            "final-evidence",
+        ),
+        (
+            lambda preflight: preflight.__setitem__("codex_home_mode", "inherit"),
+            "isolated CODEX_HOME",
+        ),
+        (
+            lambda preflight: preflight.pop("global_capability_inventory"),
+            "global_capability_inventory",
+        ),
+        (
+            lambda preflight: preflight.__setitem__(
+                "global_capability_inventory",
+                ["malformed"],
+            ),
+            "global_capability_inventory",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"].__setitem__(
+                "home_isolated",
+                False,
+            ),
+            "home_isolated",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"][
+                "user_skill_dir"
+            ].__setitem__("status", "CLEAR"),
+            "user_skill_dir",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"][
+                "user_skill_dir"
+            ].__setitem__("entry_count", 1),
+            "user_skill_dir",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"].__setitem__(
+                "admin_skill_dirs",
+                {"status": "CLEAR", "entry_count": 0},
+            ),
+            "admin_skill_dirs",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"][
+                "admin_skill_dirs"
+            ][0].__setitem__("status", "LEAKED"),
+            "admin_skill_dirs",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"][
+                "admin_skill_dirs"
+            ][0].__setitem__("entry_count", 1),
+            "admin_skill_dirs",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"].pop(
+                "workspace_skill_dirs"
+            ),
+            "workspace_skill_dirs",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"][
+                "workspace_skill_dirs"
+            ].__setitem__("workspace_status", "LEAKED"),
+            "workspace_skill_dirs",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"][
+                "workspace_skill_dirs"
+            ].__setitem__("parent_skill_dirs_checked", "many"),
+            "workspace_skill_dirs",
+        ),
+        (
+            lambda preflight: preflight["global_capability_inventory"][
+                "workspace_skill_dirs"
+            ].__setitem__("empty_parent_skill_dirs", 2),
+            "workspace_skill_dirs",
+        ),
+    ],
+)
+def test_real_runner_preflight_rejects_malformed_or_leaky_records(
+    mutator,
+    message,
+):
+    preflight = json.loads(json.dumps(_real_preflight()))
+    mutator(preflight)
+
+    with pytest.raises(ValueError, match=message):
+        _validate_real_runner_preflight([preflight])
+
+
 def test_stage2_pilot_plan_records_task_verifier_oracle_and_routing_hashes(tmp_path):
     plan_path, _matrix_path = _write_real_like_pilot_plan(tmp_path)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -962,3 +1073,21 @@ def test_cli_skillsbench_plan_and_matrix_write_outputs(tmp_path):
     )
     assert matrix_exit == 0
     assert json.loads(matrix_path.read_text(encoding="utf-8"))["run_id"] == "cli-skillsbench-run"
+
+
+def test_cli_codex_cli_runner_requires_real_evidence_mode(tmp_path, capsys):
+    exit_code = main(
+        [
+            "skillsbench-matrix",
+            "--plan",
+            str(tmp_path / "plan.json"),
+            "--output",
+            str(tmp_path / "matrix.json"),
+            "--runner",
+            "codex-cli",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--runner codex-cli requires --evidence-mode real" in captured.err

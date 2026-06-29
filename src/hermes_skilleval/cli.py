@@ -1247,6 +1247,8 @@ def _run_skillsbench_plan(args: argparse.Namespace) -> None:
 
 def _run_skillsbench_matrix(args: argparse.Namespace) -> None:
     runner = None
+    if args.runner == "codex-cli" and args.evidence_mode != "real":
+        raise ValueError("--runner codex-cli requires --evidence-mode real")
     if args.runner == "codex-cli":
         runner = CodexCliRunner(
             CodexCliRunnerConfig(

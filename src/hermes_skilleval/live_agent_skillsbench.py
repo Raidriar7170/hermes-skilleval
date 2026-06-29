@@ -1043,8 +1043,44 @@ def _validate_real_runner_preflight(events: list[dict[str, Any]]) -> None:
     if preflight.get("codex_home_mode") != "isolated":
         raise ValueError("real runner preflight did not use isolated CODEX_HOME")
     inventory = preflight.get("global_capability_inventory")
-    if not isinstance(inventory, dict) or inventory.get("home_isolated") is not True:
-        raise ValueError("real runner preflight did not prove isolated HOME")
+    if not isinstance(inventory, dict):
+        raise ValueError("real runner preflight missing global_capability_inventory")
+    if inventory.get("home_isolated") is not True:
+        raise ValueError("real runner preflight did not prove home_isolated")
+
+    user_skill_dir = inventory.get("user_skill_dir")
+    if (
+        not isinstance(user_skill_dir, dict)
+        or user_skill_dir.get("status") != "ISOLATED_HOME"
+        or user_skill_dir.get("entry_count") != 0
+    ):
+        raise ValueError("real runner preflight user_skill_dir is not isolated")
+
+    admin_skill_dirs = inventory.get("admin_skill_dirs")
+    if not isinstance(admin_skill_dirs, list):
+        raise ValueError("real runner preflight admin_skill_dirs malformed")
+    for record in admin_skill_dirs:
+        if (
+            not isinstance(record, dict)
+            or record.get("status") not in {"CLEAR", "ABSENT"}
+            or record.get("entry_count") != 0
+        ):
+            raise ValueError("real runner preflight admin_skill_dirs leaked")
+
+    workspace_skill_dirs = inventory.get("workspace_skill_dirs")
+    if not isinstance(workspace_skill_dirs, dict):
+        raise ValueError("real runner preflight workspace_skill_dirs malformed")
+    parent_checked = workspace_skill_dirs.get("parent_skill_dirs_checked")
+    empty_parent = workspace_skill_dirs.get("empty_parent_skill_dirs")
+    mounted_entries = workspace_skill_dirs.get("mounted_entry_count")
+    if (
+        workspace_skill_dirs.get("workspace_status") not in {"CLEAR", "ABSENT"}
+        or not _nonnegative_int(parent_checked)
+        or not _nonnegative_int(empty_parent)
+        or not _nonnegative_int(mounted_entries)
+        or empty_parent > parent_checked
+    ):
+        raise ValueError("real runner preflight workspace_skill_dirs leaked")
 
 
 def _routed_ids(plan: dict[str, Any], task_id: str) -> list[str]:
@@ -1353,6 +1389,10 @@ def _evidence_mode(value: str) -> str:
     if value not in EVIDENCE_MODES:
         raise ValueError("evidence_mode must be fixture or real")
     return value
+
+
+def _nonnegative_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
 
 def _positive_int(value: int, field: str) -> int:
