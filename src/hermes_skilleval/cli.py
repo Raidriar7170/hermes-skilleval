@@ -55,6 +55,7 @@ from hermes_skilleval.github_action_gate import run_github_action_gate
 from hermes_skilleval.live_agent_skillsbench import (
     SkillsBenchAdapter,
     run_skillsbench_matrix,
+    write_stage2_pilot_routed_prediction_artifacts,
     write_skillsbench_plan,
 )
 from hermes_skilleval.live_agent_runtime import CodexCliRunner, CodexCliRunnerConfig
@@ -438,6 +439,30 @@ def _build_parser() -> argparse.ArgumentParser:
     skillsbench_validate_parser.add_argument("--upstream-ref", required=True)
     skillsbench_validate_parser.add_argument("--license-note", required=True)
     skillsbench_validate_parser.set_defaults(handler=_run_skillsbench_validate)
+
+    skillsbench_export_routed_parser = subparsers.add_parser(
+        "skillsbench-export-routed-predictions",
+        help="export Stage 2 pilot routed predictions without running live agents",
+    )
+    skillsbench_export_routed_parser.add_argument("--tasks-manifest", required=True)
+    skillsbench_export_routed_parser.add_argument("--global-skill-registry", required=True)
+    skillsbench_export_routed_parser.add_argument("--output", required=True)
+    skillsbench_export_routed_parser.add_argument("--manifest-output", required=True)
+    skillsbench_export_routed_parser.add_argument(
+        "--router-id",
+        choices=("keyword", "hybrid", "embedding", "gated"),
+        required=True,
+    )
+    skillsbench_export_routed_parser.add_argument("--config-id", required=True)
+    skillsbench_export_routed_parser.add_argument("--top-k", type=int, required=True)
+    skillsbench_export_routed_parser.add_argument(
+        "--final-evidence",
+        action="store_true",
+        help="fail closed for fixture inputs; does not execute Stage 2",
+    )
+    skillsbench_export_routed_parser.set_defaults(
+        handler=_run_skillsbench_export_routed_predictions
+    )
 
     skillsbench_plan_parser = subparsers.add_parser(
         "skillsbench-plan",
@@ -1219,6 +1244,47 @@ def _run_skillsbench_validate(args: argparse.Namespace) -> None:
     )
     if validation["status"] != "PASS":
         raise ValueError("SkillsBench validation failed")
+
+
+def _run_skillsbench_export_routed_predictions(args: argparse.Namespace) -> None:
+    generation_command = [
+        "python",
+        "-m",
+        "hermes_skilleval.cli",
+        "skillsbench-export-routed-predictions",
+        "--tasks-manifest",
+        args.tasks_manifest,
+        "--global-skill-registry",
+        args.global_skill_registry,
+        "--output",
+        args.output,
+        "--manifest-output",
+        args.manifest_output,
+        "--router-id",
+        args.router_id,
+        "--config-id",
+        args.config_id,
+        "--top-k",
+        str(args.top_k),
+    ]
+    if args.final_evidence:
+        generation_command.append("--final-evidence")
+    export = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=args.tasks_manifest,
+        global_skill_registry_path=args.global_skill_registry,
+        output_path=args.output,
+        manifest_output_path=args.manifest_output,
+        router_id=args.router_id,
+        config_id=args.config_id,
+        top_k=args.top_k,
+        generation_command=generation_command,
+        final_evidence=args.final_evidence,
+    )
+    print(
+        "SkillsBench routed predictions "
+        f"{args.config_id}: {args.output} "
+        f"({export['task_count']} tasks, top_k={args.top_k})"
+    )
 
 
 def _run_skillsbench_plan(args: argparse.Namespace) -> None:
