@@ -449,6 +449,11 @@ def _build_parser() -> argparse.ArgumentParser:
     skillsbench_export_routed_parser.add_argument("--output", required=True)
     skillsbench_export_routed_parser.add_argument("--manifest-output", required=True)
     skillsbench_export_routed_parser.add_argument(
+        "--approved-router-config",
+        default=None,
+        help="approved frozen router config JSON required for final evidence export",
+    )
+    skillsbench_export_routed_parser.add_argument(
         "--router-id",
         choices=("keyword", "hybrid", "embedding", "gated"),
         required=True,
@@ -1267,6 +1272,13 @@ def _run_skillsbench_export_routed_predictions(args: argparse.Namespace) -> None
         "--top-k",
         str(args.top_k),
     ]
+    if args.approved_router_config:
+        generation_command.extend(
+            [
+                "--approved-router-config",
+                args.approved_router_config,
+            ]
+        )
     if args.final_evidence:
         generation_command.append("--final-evidence")
     export = write_stage2_pilot_routed_prediction_artifacts(
@@ -1277,6 +1289,7 @@ def _run_skillsbench_export_routed_predictions(args: argparse.Namespace) -> None
         router_id=args.router_id,
         config_id=args.config_id,
         top_k=args.top_k,
+        approved_router_config_path=args.approved_router_config,
         generation_command=generation_command,
         final_evidence=args.final_evidence,
     )
