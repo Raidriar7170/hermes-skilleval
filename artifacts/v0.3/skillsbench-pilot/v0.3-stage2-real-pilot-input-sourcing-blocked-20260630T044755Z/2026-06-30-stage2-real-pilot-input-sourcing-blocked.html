@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes v0.3 Stage 2 Pilot Input Sourcing Blocked</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172026;
+      --muted: #5b6670;
+      --line: #d7dde2;
+      --panel: #f7f9fb;
+      --accent: #0f766e;
+      --warn: #9f5b00;
+      --bad: #b42318;
+    }
+    body {
+      margin: 0;
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 36px 24px 48px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    ul {
+      margin: 8px 0 0 20px;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+    .status {
+      display: inline-block;
+      margin: 8px 0 12px;
+      padding: 4px 8px;
+      border: 1px solid #f3c47b;
+      border-radius: 6px;
+      background: #fff7e8;
+      color: var(--warn);
+      font-weight: 700;
+    }
+    .summary {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--bad);
+      background: var(--panel);
+      border-radius: 8px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: #fff;
+    }
+    .box strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--accent);
+    }
+    a {
+      color: #075985;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Hermes v0.3 Stage 2 Pilot Input Sourcing</h1>
+    <div class="status">当前状态：blocked</div>
+    <section class="summary">
+      <p><strong>一句话结论：</strong>本轮没有生成 Stage 2 real Codex pilot input package；缺少 human-approved 4-task real inputs、deterministic verifier package、oracle qualification、stable registry，以及 approved routed-prediction exporter。</p>
+    </section>
+
+    <h2>本轮做了什么</h2>
+    <ul>
+      <li>从 <code>origin/codex/v0.3-pr0-protocol</code> 的 PR #10 merge commit <code>c0d264b6a68820b25b9ea73e726de64cffcd83e0</code> 创建干净 dedicated worktree。</li>
+      <li>审计 <code>Issue #11</code>、v0.3 frozen evidence runbook、live-agent placeholder config、既有 Stage 2 blocked artifacts、<code>live_agent_skillsbench.py</code> 和 <code>live_agent_runtime.py</code>。</li>
+      <li>确认 <code>skillsbench-freeze-plan</code> 不是当前 CLI 命令；实际 plan surface 是 <code>skillsbench-plan</code>。</li>
+      <li>检查 repo-local benchmark YAML：它们不能直接作为 real Stage 2 package，因为缺少 approved SkillsBench-style root、deterministic verifier artifacts、oracle qualification 和 non-oracle routed predictions。</li>
+    </ul>
+
+    <h2>关键产物</h2>
+    <div class="grid">
+      <div class="box">
+        <strong>Blocked artifact</strong>
+        <a href="stage2-real-pilot-input-sourcing-blocked.json"><code>stage2-real-pilot-input-sourcing-blocked.json</code></a>
+      </div>
+      <div class="box">
+        <strong>Existing validator surface</strong>
+        <code>src/hermes_skilleval/live_agent_skillsbench.py</code>
+      </div>
+      <div class="box">
+        <strong>Existing runner surface</strong>
+        <code>src/hermes_skilleval/live_agent_runtime.py</code>
+      </div>
+    </div>
+
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>openspec validate --all --strict</code>：23 passed, 0 failed。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli --help</code>：通过，列出 <code>skillsbench-plan</code> / <code>skillsbench-matrix</code> / <code>v0.3-evidence-gate</code>。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli skillsbench-freeze-plan --help</code>：失败，invalid choice；这是命令面事实，不是代码错误。</li>
+    </ul>
+
+    <h2>不能夸大的地方</h2>
+    <ul>
+      <li>没有运行 Stage 2 pilot、没有运行 Codex CLI、没有 freeze pilot plan、没有生成 traces。</li>
+      <li>没有使用 <code>tests/fixtures/live_agent/skillsbench_tiny</code> 作为 real evidence。</li>
+      <li>没有手写 routed predictions，也没有从 gold/oracle labels 派生 routed predictions。</li>
+      <li>这不是 final frozen live-agent benchmark，也不是 performance evidence。</li>
+    </ul>
+
+    <h2>建议下一步</h2>
+    <p>先开一个最小 ops patch：<code>ops/export-stage2-pilot-routed-predictions</code>。该 patch 只暴露 approved frozen router/config over approved global skill registry，输出 Stage 2 pilot <code>routed_predictions.json</code>；不运行 pilot、不 freeze plan、不调参、不改 scorer/matrix/evidence-gate/verifier semantics。</p>
+  </main>
+</body>
+</html>
