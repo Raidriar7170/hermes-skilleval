@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import jsonschema
 
+import hermes_skilleval.live_agent_skillsbench as live_agent_skillsbench
 from hermes_skilleval.cli import main
 from hermes_skilleval.live_agent_runtime import (
     AgentRequest,
@@ -19,6 +20,7 @@ from hermes_skilleval.live_agent_runtime import (
 from hermes_skilleval.live_agent_skillsbench import (
     SkillsBenchAdapter,
     build_stage2_real_pilot_input_package,
+    write_stage2_pilot_routed_prediction_artifacts,
     _canonical_hash,
     _validate_real_runner_preflight,
     run_skillsbench_matrix,
@@ -29,6 +31,7 @@ from hermes_skilleval.live_agent_skillsbench import (
 FIXTURE = Path("tests/fixtures/live_agent/skillsbench_tiny")
 SKILLROUTER_FIXTURE = Path("tests/fixtures/external/skillrouter_eval_core_tiny")
 UPSTREAM_SHA = "a" * 40
+STAGE2_APPROVED_ROUTER_CONFIG_SCHEMA = "v0.3.stage2-routed-prediction-router-config.v1"
 
 
 class _RecordingRunner:
@@ -77,6 +80,10 @@ def _real_preflight() -> dict:
 
 def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _stage2_expected_registry_hash(skills: list[dict]) -> str:
@@ -236,6 +243,7 @@ def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
                 "schema_version": "v0.3.routed-predictions.v1",
                 "router": {
                     "router_id": "unit-router",
+                    "config_id": "unit-router-config",
                     "config_hash": "c" * 64,
                     "top_k": 1,
                     "global_skill_registry_hash": registry_hash,
@@ -256,6 +264,66 @@ def _write_real_like_pilot_inputs(root: Path) -> dict[str, Path]:
         "routed_predictions": root / "routed_predictions.json",
         "oracle_qualification": root / "oracle_qualification.jsonl",
     }
+
+
+def _export_stage2_routed_predictions(paths: dict[str, Path], output_dir: Path) -> dict:
+    return write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+        global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+        output_path=output_dir / "routed_predictions.json",
+        manifest_output_path=output_dir / "routed_predictions.manifest.json",
+        router_id="keyword",
+        config_id="stage2-keyword-unit",
+        top_k=1,
+        generation_command=[
+            "python",
+            "-m",
+            "hermes_skilleval.cli",
+            "skillsbench-export-routed-predictions",
+        ],
+    )
+
+
+def _write_stage2_approved_router_config(
+    paths: dict[str, Path],
+    output_path: Path,
+    *,
+    router_id: str = "keyword",
+    config_id: str = "stage2-keyword-unit",
+    top_k: int = 1,
+) -> Path:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    skills = _read_jsonl_file(paths["data_root"] / "skills.jsonl")
+    config = {
+        "schema_version": STAGE2_APPROVED_ROUTER_CONFIG_SCHEMA,
+        "config_id": config_id,
+        "router_id": router_id,
+        "top_k": top_k,
+        "global_skill_registry_hash": _stage2_expected_registry_hash(skills),
+        "approval": {
+            "source": "unit-test-approved-router-config",
+            "approved_for": "stage2-routed-prediction-export",
+        },
+    }
+    output_path.write_text(
+        json.dumps(config, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return output_path
+
+
+def _patch_stage2_clean_code_provenance(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        live_agent_skillsbench,
+        "_stage2_export_code_provenance",
+        lambda *args, **kwargs: {
+            "commit": "d" * 40,
+            "tag": "v0.3-test",
+            "dirty": False,
+            "dirty_paths": [],
+        },
+        raising=False,
+    )
 
 
 def _write_real_like_pilot_plan(tmp_path: Path) -> tuple[Path, Path]:
@@ -1187,6 +1255,421 @@ def test_stage2_real_pilot_input_package_missing_routing_provenance_fails_closed
         _build_real_like_pilot_input_package(paths)
 
 
+def test_stage2_routed_prediction_exporter_writes_validator_ready_artifacts(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    export = _export_stage2_routed_predictions(paths, tmp_path / "export")
+    routed_path = Path(export["output_path"])
+    manifest_path = Path(export["manifest_output_path"])
+
+    routed = json.loads(routed_path.read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    assert routed["schema_version"] == "v0.3.routed-predictions.v1"
+    assert routed["router"]["router_id"] == "keyword"
+    assert routed["router"]["config_id"] == "stage2-keyword-unit"
+    assert routed["router"]["config_hash"]
+    assert routed["router"]["global_skill_registry_hash"] == _stage2_expected_registry_hash(
+        _read_jsonl_file(paths["data_root"] / "skills.jsonl")
+    )
+    assert routed["router"]["oracle_labels_read"] is False
+    assert routed["router"]["label_source"] == "router_generated"
+    assert routed["router"]["generation_artifact_hash"]
+    assert manifest["output"]["sha256"]
+    assert set(routed["predictions"]) == {f"sb-real-{index}" for index in range(1, 5)}
+    assert all(len(prediction) == 1 for prediction in routed["predictions"].values())
+    assert set(manifest["per_task_prediction_hashes"]) == set(routed["predictions"])
+
+    package = build_stage2_real_pilot_input_package(
+        data_root=paths["data_root"],
+        upstream_ref=UPSTREAM_SHA,
+        license_note="approved-real-pilot-unit",
+        run_id="stage2-real-pilot-input-package-unit",
+        selected_task_ids=[f"sb-real-{index}" for index in range(1, 5)],
+        routed_predictions_path=routed_path,
+        oracle_qualification_path=paths["oracle_qualification"],
+        router_top_k=1,
+    )
+
+    assert package["status"] == "READY_FOR_REVIEW_NOT_EXECUTED"
+    assert package["routed_predictions_package"]["label_source"] == "router_generated"
+    assert package["routed_predictions_package"]["config_id"] == "stage2-keyword-unit"
+
+
+def test_stage2_routed_prediction_exporter_rejects_fixture_final_evidence(tmp_path):
+    with pytest.raises(ValueError, match="fixture routing cannot be exported as final evidence"):
+        write_stage2_pilot_routed_prediction_artifacts(
+            tasks_manifest_path=FIXTURE / "tasks.jsonl",
+            global_skill_registry_path=FIXTURE / "skills.jsonl",
+            output_path=tmp_path / "routed_predictions.json",
+            manifest_output_path=tmp_path / "manifest.json",
+            router_id="keyword",
+            config_id="stage2-keyword-unit",
+            top_k=1,
+            final_evidence=True,
+        )
+
+
+def test_stage2_routed_prediction_final_evidence_requires_approved_router_config(
+    tmp_path,
+    monkeypatch,
+):
+    _patch_stage2_clean_code_provenance(monkeypatch)
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+
+    with pytest.raises(ValueError, match="approved router config is required"):
+        write_stage2_pilot_routed_prediction_artifacts(
+            tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+            global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+            output_path=tmp_path / "routed_predictions.json",
+            manifest_output_path=tmp_path / "manifest.json",
+            router_id="keyword",
+            config_id="stage2-keyword-unit",
+            top_k=1,
+            final_evidence=True,
+        )
+
+
+def test_stage2_routed_prediction_final_evidence_rejects_config_id_mismatch(
+    tmp_path,
+    monkeypatch,
+):
+    _patch_stage2_clean_code_provenance(monkeypatch)
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    config_path = _write_stage2_approved_router_config(
+        paths,
+        tmp_path / "approved-router-config.json",
+        config_id="different-approved-config",
+    )
+
+    with pytest.raises(ValueError, match="router config_id mismatch"):
+        write_stage2_pilot_routed_prediction_artifacts(
+            tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+            global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+            output_path=tmp_path / "routed_predictions.json",
+            manifest_output_path=tmp_path / "manifest.json",
+            router_id="keyword",
+            config_id="stage2-keyword-unit",
+            top_k=1,
+            approved_router_config_path=config_path,
+            final_evidence=True,
+        )
+
+
+def test_stage2_routed_prediction_final_evidence_records_config_hash_stably(
+    tmp_path,
+    monkeypatch,
+):
+    _patch_stage2_clean_code_provenance(monkeypatch)
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    config_path = _write_stage2_approved_router_config(
+        paths,
+        tmp_path / "approved-router-config.json",
+    )
+
+    first = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+        global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+        output_path=tmp_path / "first" / "routed_predictions.json",
+        manifest_output_path=tmp_path / "first" / "manifest.json",
+        router_id="keyword",
+        config_id="stage2-keyword-unit",
+        top_k=1,
+        approved_router_config_path=config_path,
+        final_evidence=True,
+    )
+    second = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+        global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+        output_path=tmp_path / "second" / "routed_predictions.json",
+        manifest_output_path=tmp_path / "second" / "manifest.json",
+        router_id="keyword",
+        config_id="stage2-keyword-unit",
+        top_k=1,
+        approved_router_config_path=config_path,
+        final_evidence=True,
+    )
+
+    routed = json.loads(Path(first["output_path"]).read_text(encoding="utf-8"))
+    manifest = json.loads(Path(first["manifest_output_path"]).read_text(encoding="utf-8"))
+    expected_hash = _sha256_file(config_path)
+
+    assert first["config_hash"] == second["config_hash"] == expected_hash
+    assert routed["router"]["config_hash"] == expected_hash
+    assert routed["router"]["router_config"]["sha256"] == expected_hash
+    assert manifest["router_config"] == routed["router"]["router_config"]
+    assert manifest["router_config"]["schema_version"] == STAGE2_APPROVED_ROUTER_CONFIG_SCHEMA
+    assert manifest["router_config"]["config_id"] == "stage2-keyword-unit"
+    assert manifest["router_config"]["size_bytes"] == config_path.stat().st_size
+
+
+@pytest.mark.parametrize("router_id", ["keyword", "hybrid"])
+def test_stage2_routed_prediction_final_evidence_allows_keyword_and_hybrid(
+    tmp_path,
+    monkeypatch,
+    router_id,
+):
+    _patch_stage2_clean_code_provenance(monkeypatch)
+    paths = _write_real_like_pilot_inputs(tmp_path / f"skillsbench-real-{router_id}")
+    config_id = f"stage2-{router_id}-unit"
+    config_path = _write_stage2_approved_router_config(
+        paths,
+        tmp_path / router_id / "approved-router-config.json",
+        router_id=router_id,
+        config_id=config_id,
+    )
+
+    export = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+        global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+        output_path=tmp_path / router_id / "routed_predictions.json",
+        manifest_output_path=tmp_path / router_id / "manifest.json",
+        router_id=router_id,
+        config_id=config_id,
+        top_k=1,
+        approved_router_config_path=config_path,
+        final_evidence=True,
+    )
+
+    manifest = json.loads(Path(export["manifest_output_path"]).read_text(encoding="utf-8"))
+    assert manifest["final_evidence"]["mode"] == "strict_provenance_only"
+    assert manifest["router"]["router_id"] == router_id
+
+
+@pytest.mark.parametrize("router_id", ["embedding", "gated"])
+def test_stage2_routed_prediction_final_evidence_rejects_unpinned_model_routers(
+    tmp_path,
+    monkeypatch,
+    router_id,
+):
+    _patch_stage2_clean_code_provenance(monkeypatch)
+    paths = _write_real_like_pilot_inputs(tmp_path / f"skillsbench-real-{router_id}")
+    config_path = _write_stage2_approved_router_config(
+        paths,
+        tmp_path / router_id / "approved-router-config.json",
+        router_id=router_id,
+        config_id=f"stage2-{router_id}-unit",
+    )
+
+    with pytest.raises(ValueError, match="requires pinned model/checkpoint provenance"):
+        write_stage2_pilot_routed_prediction_artifacts(
+            tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+            global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+            output_path=tmp_path / router_id / "routed_predictions.json",
+            manifest_output_path=tmp_path / router_id / "manifest.json",
+            router_id=router_id,
+            config_id=f"stage2-{router_id}-unit",
+            top_k=1,
+            approved_router_config_path=config_path,
+            final_evidence=True,
+        )
+
+
+def test_stage2_routed_prediction_final_evidence_records_code_provenance(
+    tmp_path,
+    monkeypatch,
+):
+    _patch_stage2_clean_code_provenance(monkeypatch)
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    config_path = _write_stage2_approved_router_config(
+        paths,
+        tmp_path / "approved-router-config.json",
+    )
+
+    export = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+        global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+        output_path=tmp_path / "routed_predictions.json",
+        manifest_output_path=tmp_path / "manifest.json",
+        router_id="keyword",
+        config_id="stage2-keyword-unit",
+        top_k=1,
+        approved_router_config_path=config_path,
+        generation_command=["skilleval", "skillsbench-export-routed-predictions"],
+        final_evidence=True,
+    )
+
+    manifest = json.loads(Path(export["manifest_output_path"]).read_text(encoding="utf-8"))
+    assert manifest["code"] == {
+        "commit": "d" * 40,
+        "tag": "v0.3-test",
+        "dirty": False,
+        "dirty_paths": [],
+    }
+    assert manifest["router_implementation"] == {
+        "module": "hermes_skilleval.routers.keyword",
+        "class": "KeywordRouter",
+    }
+    assert manifest["generation_command"] == "skilleval skillsbench-export-routed-predictions"
+
+
+def test_stage2_routed_prediction_final_evidence_rejects_dirty_source_config_or_tests(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        live_agent_skillsbench,
+        "_stage2_export_code_provenance",
+        lambda *args, **kwargs: {
+            "commit": "d" * 40,
+            "tag": None,
+            "dirty": True,
+            "dirty_paths": [
+                "artifacts/v0.3/skillsbench-pilot/local-note.json",
+                "src/hermes_skilleval/live_agent_skillsbench.py",
+            ],
+        },
+        raising=False,
+    )
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    config_path = _write_stage2_approved_router_config(
+        paths,
+        tmp_path / "approved-router-config.json",
+    )
+
+    with pytest.raises(ValueError, match="dirty source/config/test paths"):
+        write_stage2_pilot_routed_prediction_artifacts(
+            tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+            global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+            output_path=tmp_path / "routed_predictions.json",
+            manifest_output_path=tmp_path / "manifest.json",
+            router_id="keyword",
+            config_id="stage2-keyword-unit",
+            top_k=1,
+            approved_router_config_path=config_path,
+            final_evidence=True,
+        )
+
+
+def test_stage2_routed_prediction_final_evidence_rejects_copied_fixture_like_inputs(
+    tmp_path,
+    monkeypatch,
+):
+    _patch_stage2_clean_code_provenance(monkeypatch)
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    tasks = _read_jsonl_file(paths["data_root"] / "tasks.jsonl")
+    tasks[0].pop("source")
+    tasks[0].pop("provenance")
+    _write_jsonl_file(paths["data_root"] / "tasks.jsonl", tasks)
+    config_path = _write_stage2_approved_router_config(
+        paths,
+        tmp_path / "approved-router-config.json",
+    )
+
+    with pytest.raises(ValueError, match="final evidence task source/provenance"):
+        write_stage2_pilot_routed_prediction_artifacts(
+            tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+            global_skill_registry_path=paths["data_root"] / "skills.jsonl",
+            output_path=tmp_path / "routed_predictions.json",
+            manifest_output_path=tmp_path / "manifest.json",
+            router_id="keyword",
+            config_id="stage2-keyword-unit",
+            top_k=1,
+            approved_router_config_path=config_path,
+            final_evidence=True,
+        )
+
+
+def test_cli_stage2_routed_prediction_final_evidence_requires_approved_config(
+    tmp_path,
+):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+
+    exit_code = main(
+        [
+            "skillsbench-export-routed-predictions",
+            "--tasks-manifest",
+            str(paths["data_root"] / "tasks.jsonl"),
+            "--global-skill-registry",
+            str(paths["data_root"] / "skills.jsonl"),
+            "--output",
+            str(tmp_path / "routed_predictions.json"),
+            "--manifest-output",
+            str(tmp_path / "manifest.json"),
+            "--router-id",
+            "keyword",
+            "--config-id",
+            "stage2-keyword-unit",
+            "--top-k",
+            "1",
+            "--final-evidence",
+        ]
+    )
+
+    assert exit_code == 2
+
+
+def test_stage2_routed_prediction_exporter_orders_and_dedupes_stably(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    skills = _read_jsonl_file(paths["data_root"] / "skills.jsonl")
+    skills.append(dict(skills[0]))
+    _write_jsonl_file(paths["data_root"] / "skills-with-duplicate.jsonl", skills)
+
+    first = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+        global_skill_registry_path=paths["data_root"] / "skills-with-duplicate.jsonl",
+        output_path=tmp_path / "first" / "routed_predictions.json",
+        manifest_output_path=tmp_path / "first" / "manifest.json",
+        router_id="keyword",
+        config_id="stage2-keyword-unit",
+        top_k=2,
+    )
+    second = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=paths["data_root"] / "tasks.jsonl",
+        global_skill_registry_path=paths["data_root"] / "skills-with-duplicate.jsonl",
+        output_path=tmp_path / "second" / "routed_predictions.json",
+        manifest_output_path=tmp_path / "second" / "manifest.json",
+        router_id="keyword",
+        config_id="stage2-keyword-unit",
+        top_k=2,
+    )
+
+    assert json.loads(Path(first["output_path"]).read_text(encoding="utf-8"))[
+        "predictions"
+    ] == json.loads(Path(second["output_path"]).read_text(encoding="utf-8"))[
+        "predictions"
+    ]
+    assert all(
+        len(prediction) == len(set(prediction)) == 2
+        for prediction in json.loads(Path(first["output_path"]).read_text(encoding="utf-8"))[
+            "predictions"
+        ].values()
+    )
+
+
+def test_cli_stage2_routed_prediction_exporter_writes_outputs(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    output_path = tmp_path / "cli" / "routed_predictions.json"
+    manifest_path = tmp_path / "cli" / "manifest.json"
+
+    exit_code = main(
+        [
+            "skillsbench-export-routed-predictions",
+            "--tasks-manifest",
+            str(paths["data_root"] / "tasks.jsonl"),
+            "--global-skill-registry",
+            str(paths["data_root"] / "skills.jsonl"),
+            "--output",
+            str(output_path),
+            "--manifest-output",
+            str(manifest_path),
+            "--router-id",
+            "keyword",
+            "--config-id",
+            "stage2-keyword-unit",
+            "--top-k",
+            "1",
+        ]
+    )
+
+    assert exit_code == 0
+    assert json.loads(output_path.read_text(encoding="utf-8"))["router"][
+        "label_source"
+    ] == "router_generated"
+    assert json.loads(manifest_path.read_text(encoding="utf-8"))["output"]["path"] == str(
+        output_path
+    )
+
+
 @pytest.mark.parametrize(
     ("mutator", "message"),
     [
@@ -1367,6 +1850,7 @@ def test_stage2_real_pilot_input_package_records_required_hashes(tmp_path):
 
     routed = package["routed_predictions_package"]
     assert routed["router_id"] == "unit-router"
+    assert routed["config_id"] == "unit-router-config"
     assert routed["config_hash"] == "c" * 64
     assert routed["top_k"] == 1
     assert routed["global_skill_registry_hash"] == registry["global_skill_registry_hash"]

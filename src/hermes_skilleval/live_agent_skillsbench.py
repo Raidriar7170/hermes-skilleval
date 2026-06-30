@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 import hashlib
 import re
+import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable
 
 from hermes_skilleval.external.skillrouter import ExternalTask, SkillRouterAdapter
+from hermes_skilleval.models import BenchmarkTask, Skill
 from hermes_skilleval.live_agent_runtime import (
     AgentRunner,
     AgentRequest,
@@ -23,11 +25,19 @@ from hermes_skilleval.live_agent_runtime import (
 )
 from hermes_skilleval.provenance import _reject_sensitive_values
 from hermes_skilleval.release_manifest import sha256_file
+from hermes_skilleval.routers.base import SkillRouter
+from hermes_skilleval.routers.embedding import EmbeddingRouter
+from hermes_skilleval.routers.gated import VerificationGatedRouter
+from hermes_skilleval.routers.hybrid import HybridRouter
+from hermes_skilleval.routers.keyword import KeywordRouter
 
 
 PLAN_SCHEMA = "v0.3.skillsbench-live-plan.v1"
 REPORT_SCHEMA = "v0.3.skillsbench-live-matrix-report.v1"
 STAGE2_INPUT_PACKAGE_SCHEMA = "v0.3.stage2-real-pilot-input-package.v1"
+STAGE2_ROUTED_PREDICTIONS_SCHEMA = "v0.3.routed-predictions.v1"
+STAGE2_ROUTED_PREDICTIONS_MANIFEST_SCHEMA = "v0.3.stage2-routed-prediction-export-manifest.v1"
+STAGE2_ROUTED_PREDICTION_CONFIG_SCHEMA = "v0.3.stage2-routed-prediction-router-config.v1"
 SEED = 20260625
 CONDITIONS = ("no-skill", "routed-skill", "oracle-skill")
 CONTROLLED_NETWORKS = {"none", "controlled"}
@@ -38,6 +48,10 @@ SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 LABEL_LEAKAGE_TOKENS = ("oracle", "gold", "source-task", "source_task")
 VERIFIER_ARTIFACT_ROLES = ("code", "config", "input")
 DISALLOWED_ROUTED_LABEL_SOURCES = {"oracle", "manual", "ad_hoc"}
+SUPPORTED_STAGE2_EXPORT_ROUTERS = {"keyword", "hybrid", "embedding", "gated"}
+MODEL_PROVENANCE_ROUTER_IDS = {"embedding", "gated"}
+FINAL_EVIDENCE_SUPPORTED_ROUTER_IDS = {"keyword", "hybrid"}
+FINAL_EVIDENCE_DIRTY_GUARD_PREFIXES = ("src/", "configs/", "tests/")
 
 
 @dataclass(frozen=True)
@@ -476,6 +490,7 @@ def build_stage2_real_pilot_input_package(
         },
         "routed_predictions_package": {
             "router_id": routed_prediction_artifact["router"].get("router_id"),
+            "config_id": routed_prediction_artifact["router"].get("config_id"),
             "config_hash": routed_prediction_artifact["router"].get("config_hash"),
             "top_k": router_top_k,
             "global_skill_registry_hash": global_registry_hash,
@@ -514,6 +529,529 @@ def build_stage2_real_pilot_input_package(
     }
     _reject_sensitive_values(package)
     return package
+
+
+def write_stage2_pilot_routed_prediction_artifacts(
+    *,
+    tasks_manifest_path: Path | str,
+    global_skill_registry_path: Path | str,
+    output_path: Path | str,
+    manifest_output_path: Path | str,
+    router_id: str,
+    config_id: str,
+    top_k: int,
+    approved_router_config_path: Path | str | None = None,
+    generation_command: Iterable[str] | str | None = None,
+    final_evidence: bool = False,
+) -> dict[str, Any]:
+    """Export Stage 2 pilot routed predictions without running the pilot."""
+
+    task_path = Path(tasks_manifest_path)
+    registry_path = Path(global_skill_registry_path)
+    if final_evidence and (_fixture_path(task_path) or _fixture_path(registry_path)):
+        raise ValueError("fixture routing cannot be exported as final evidence")
+
+    config_id = _non_empty(config_id, "config_id").strip()
+    top_k = _positive_int(top_k, "top_k")
+    router_name = _stage2_export_router_name(router_id)
+    if final_evidence and router_name in MODEL_PROVENANCE_ROUTER_IDS:
+        raise ValueError(
+            f"{router_name} final evidence requires pinned model/checkpoint provenance"
+        )
+    router = _stage2_export_router(router_name)
+    tasks = _load_stage2_export_tasks(task_path)
+    if len(tasks) != 4:
+        raise ValueError("Stage 2 pilot routed export requires exactly 4 tasks")
+    if final_evidence:
+        _validate_stage2_final_evidence_task_manifest(task_path)
+    skills = _load_stage2_export_registry(registry_path)
+    if len(skills) < top_k:
+        raise ValueError("stable global skill registry has fewer skills than top_k")
+
+    registry_records = {
+        skill.id: _stage2_skill_registry_record(
+            LiveAgentSkill(
+                skill_id=skill.id,
+                name=skill.name,
+                description=skill.description,
+                body=skill.body,
+            )
+        )
+        for skill in skills
+    }
+    global_skill_registry_hash = _canonical_hash(dict(sorted(registry_records.items())))
+    code_provenance = _stage2_export_code_provenance()
+    router_config_record: dict[str, Any] | None = None
+    if final_evidence:
+        if router_name not in FINAL_EVIDENCE_SUPPORTED_ROUTER_IDS:
+            raise ValueError(
+                f"{router_name} final evidence requires pinned model/checkpoint provenance"
+            )
+        router_config_record, frozen_config = _stage2_approved_router_config(
+            approved_router_config_path,
+            router_id=router_name,
+            config_id=config_id,
+            top_k=top_k,
+            global_skill_registry_hash=global_skill_registry_hash,
+        )
+        _validate_stage2_final_evidence_clean_code(
+            code_provenance,
+            approved_router_config_path=router_config_record["path"],
+        )
+        config_hash = router_config_record["sha256"]
+    else:
+        frozen_config = {
+            "schema_version": STAGE2_ROUTED_PREDICTION_CONFIG_SCHEMA,
+            "router_id": router_name,
+            "config_id": config_id,
+            "router_class": type(router).__name__,
+            "top_k": top_k,
+            "global_skill_registry_hash": global_skill_registry_hash,
+        }
+        config_hash = _canonical_hash(frozen_config)
+    predictions = _stage2_export_predictions(
+        router=router,
+        tasks=tasks,
+        skills=skills,
+        top_k=top_k,
+    )
+    per_task_prediction_hashes = {
+        task_id: _canonical_hash(prediction)
+        for task_id, prediction in sorted(predictions.items())
+    }
+    generation_artifact_hash = _canonical_hash(
+        {
+            "frozen_config": frozen_config,
+            "predictions": predictions,
+            "per_task_prediction_hashes": per_task_prediction_hashes,
+        }
+    )
+    command_text = _generation_command_text(generation_command)
+    if not command_text:
+        command_text = (
+            "python -m hermes_skilleval.cli skillsbench-export-routed-predictions"
+        )
+
+    routed = {
+        "schema_version": STAGE2_ROUTED_PREDICTIONS_SCHEMA,
+        "router": {
+            "router_id": router_name,
+            "config_id": config_id,
+            "config_hash": config_hash,
+            "config": frozen_config,
+            "router_config": router_config_record,
+            "top_k": top_k,
+            "global_skill_registry_hash": global_skill_registry_hash,
+            "generation_command": command_text,
+            "generation_artifact_hash": generation_artifact_hash,
+            "oracle_labels_read": False,
+            "label_source": "router_generated",
+            "per_task_prediction_hashes": per_task_prediction_hashes,
+        },
+        "predictions": predictions,
+    }
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(routed, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    manifest = {
+        "schema_version": STAGE2_ROUTED_PREDICTIONS_MANIFEST_SCHEMA,
+        "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "task_manifest": _file_record(task_path),
+        "global_skill_registry": {
+            **_file_record(registry_path),
+            "global_skill_registry_hash": global_skill_registry_hash,
+            "skill_count": len(skills),
+        },
+        "router": routed["router"],
+        "router_config": router_config_record,
+        "router_implementation": _stage2_router_implementation_record(router),
+        "code": code_provenance,
+        "generation_command": command_text,
+        "output": _file_record(output),
+        "per_task_prediction_hashes": per_task_prediction_hashes,
+        "final_evidence": {
+            "mode": "strict_provenance_only" if final_evidence else "non_final_export",
+            "strict_provenance": final_evidence,
+            "pilot_approved": False,
+        },
+        "non_actions": {
+            "stage2_pilot_run": False,
+            "codex_cli_run": False,
+            "pilot_plan_frozen": False,
+            "live_agent_traces_created": False,
+            "evidence_gate_rerun": False,
+            "oracle_labels_read": False,
+        },
+        "scope_guards": {
+            "no_training": True,
+            "no_threshold_tuning": True,
+            "no_new_router_variants": True,
+            "no_scorer_matrix_gate_changes": True,
+            "no_oracle_label_derived_predictions": True,
+        },
+    }
+    manifest_output = Path(manifest_output_path)
+    manifest_output.parent.mkdir(parents=True, exist_ok=True)
+    manifest_output.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "output_path": str(output),
+        "manifest_output_path": str(manifest_output),
+        "output_sha256": sha256_file(output),
+        "manifest_sha256": sha256_file(manifest_output),
+        "global_skill_registry_hash": global_skill_registry_hash,
+        "config_hash": config_hash,
+        "task_count": len(tasks),
+        "skill_count": len(skills),
+    }
+
+
+def _stage2_approved_router_config(
+    path_value: Path | str | None,
+    *,
+    router_id: str,
+    config_id: str,
+    top_k: int,
+    global_skill_registry_hash: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if path_value is None:
+        raise ValueError("approved router config is required for final evidence export")
+    path = Path(path_value)
+    if not path.exists():
+        raise ValueError(f"approved router config is missing: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("approved router config must be a JSON object")
+
+    schema_version = _required_string(payload, "schema_version")
+    if schema_version != STAGE2_ROUTED_PREDICTION_CONFIG_SCHEMA:
+        raise ValueError("approved router config schema_version mismatch")
+    approved_config_id = _required_string(payload, "config_id")
+    if approved_config_id != config_id:
+        raise ValueError("router config_id mismatch")
+    approved_router_id = _required_string(payload, "router_id")
+    if approved_router_id != router_id:
+        raise ValueError("router config router_id mismatch")
+    if int(payload.get("top_k", 0)) != top_k:
+        raise ValueError("router config top_k mismatch")
+    approved_registry_hash = _required_string(payload, "global_skill_registry_hash")
+    if not _sha256_hex(approved_registry_hash):
+        raise ValueError("approved router config global_skill_registry_hash is malformed")
+    if approved_registry_hash != global_skill_registry_hash:
+        raise ValueError("approved router config registry hash mismatch")
+
+    return (
+        {
+            **_file_record(path),
+            "schema_version": schema_version,
+            "config_id": approved_config_id,
+        },
+        dict(payload),
+    )
+
+
+def _validate_stage2_final_evidence_task_manifest(path: Path) -> None:
+    records = _read_stage2_export_records(path, record_key="tasks")
+    for record in records:
+        task_id = _required_string(record, "task_id")
+        metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+        source = record.get("source") or metadata.get("source")
+        provenance = record.get("provenance") or metadata.get("provenance")
+        if not isinstance(source, str) or not source.strip():
+            raise ValueError(f"final evidence task source/provenance missing: {task_id}")
+        if "fixture" in source.lower():
+            raise ValueError(f"final evidence task source/provenance is fixture-like: {task_id}")
+        if not isinstance(provenance, dict) or not provenance:
+            raise ValueError(f"final evidence task source/provenance missing: {task_id}")
+
+
+def _stage2_export_code_provenance() -> dict[str, Any]:
+    commit = _git_output(["git", "rev-parse", "HEAD"])
+    tag = _git_output(["git", "describe", "--tags", "--exact-match", "HEAD"])
+    dirty_paths = _git_dirty_paths()
+    return {
+        "commit": commit,
+        "tag": tag,
+        "dirty": bool(dirty_paths),
+        "dirty_paths": dirty_paths,
+    }
+
+
+def _git_output(args: list[str]) -> str | None:
+    try:
+        result = subprocess.run(
+            args,
+            cwd=Path.cwd(),
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    output = result.stdout.strip()
+    return output or None
+
+
+def _git_dirty_paths() -> list[str]:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=Path.cwd(),
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return ["<git-status-unavailable>"]
+    paths: list[str] = []
+    for line in result.stdout.splitlines():
+        if not line:
+            continue
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1].strip()
+        if path:
+            paths.append(path)
+    return sorted(paths)
+
+
+def _validate_stage2_final_evidence_clean_code(
+    code_provenance: dict[str, Any],
+    *,
+    approved_router_config_path: str,
+) -> None:
+    commit = code_provenance.get("commit")
+    if not isinstance(commit, str) or not COMMIT_SHA_RE.fullmatch(commit):
+        raise ValueError("missing code commit provenance for final evidence export")
+    dirty_paths = code_provenance.get("dirty_paths")
+    if not isinstance(dirty_paths, list) or not all(
+        isinstance(path, str) for path in dirty_paths
+    ):
+        raise ValueError("malformed code dirty_paths provenance")
+    approved_config_dirty_paths = [
+        path for path in dirty_paths if _same_dirty_path(path, approved_router_config_path)
+    ]
+    if approved_config_dirty_paths:
+        raise ValueError(
+            "approved router config is dirty: " + ", ".join(approved_config_dirty_paths)
+        )
+    protected_dirty_paths = [
+        path for path in dirty_paths if _stage2_protected_dirty_path(path)
+    ]
+    if protected_dirty_paths:
+        raise ValueError(
+            "dirty source/config/test paths: " + ", ".join(protected_dirty_paths)
+        )
+
+
+def _same_dirty_path(dirty_path: str, path_value: str) -> bool:
+    path = str(path_value)
+    if dirty_path == path:
+        return True
+    if Path(path).is_absolute():
+        return path.endswith(f"/{dirty_path}")
+    return dirty_path.endswith(f"/{path}")
+
+
+def _stage2_protected_dirty_path(path: str) -> bool:
+    normalized = path.strip().lstrip("./")
+    return normalized in {"src", "configs", "tests"} or normalized.startswith(
+        FINAL_EVIDENCE_DIRTY_GUARD_PREFIXES
+    )
+
+
+def _stage2_router_implementation_record(router: SkillRouter) -> dict[str, Any]:
+    return {
+        "module": type(router).__module__,
+        "class": type(router).__name__,
+    }
+
+
+def _load_stage2_export_tasks(path: Path) -> list[BenchmarkTask]:
+    records = _read_stage2_export_records(path, record_key="tasks")
+    tasks: list[BenchmarkTask] = []
+    seen: set[str] = set()
+    for record in records:
+        task_id = _required_string(record, "task_id")
+        if task_id in seen:
+            raise ValueError(f"duplicate task id: {task_id}")
+        seen.add(task_id)
+        prompt = _required_string(record, "prompt")
+        metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+        category = _optional_string(record.get("category")) or _optional_string(
+            metadata.get("category")
+        ) or "skillsbench"
+        difficulty = _optional_string(record.get("difficulty")) or _optional_string(
+            metadata.get("difficulty")
+        ) or "pilot"
+        split = _optional_string(record.get("split")) or "dev"
+        tasks.append(
+            BenchmarkTask(
+                id=task_id,
+                category=category,
+                difficulty=difficulty,
+                prompt=prompt,
+                gold_skills=[],
+                negative_skills=[],
+                verifier="deterministic",
+                split=split if split in {"dev", "test"} else "dev",
+                robustness_tags=["stage2-pilot"],
+            )
+        )
+    return tasks
+
+
+def _load_stage2_export_registry(path: Path) -> list[Skill]:
+    records = _read_stage2_export_records(path, record_key="skills")
+    by_id: dict[str, Skill] = {}
+    canonical_by_id: dict[str, dict[str, Any]] = {}
+    for record in records:
+        skill_id = record.get("skill_id") or record.get("id")
+        if not isinstance(skill_id, str) or not skill_id.strip():
+            raise ValueError("skill registry record missing skill_id")
+        description = _optional_string(record.get("description")) or ""
+        body = _required_string(record, "body")
+        normalized = {
+            "skill_id": skill_id,
+            "name": _required_string(record, "name"),
+            "description": description,
+            "body": body,
+            "category": _optional_string(record.get("category")),
+            "path": _optional_string(record.get("path")) or skill_id,
+            "trigger_terms": _optional_string_list(record.get("trigger_terms")),
+            "token_count_estimate": _token_count_estimate(record, body),
+        }
+        previous = canonical_by_id.get(skill_id)
+        if previous is not None:
+            if previous != normalized:
+                raise ValueError(f"conflicting duplicate skill id: {skill_id}")
+            continue
+        canonical_by_id[skill_id] = normalized
+        by_id[skill_id] = Skill(
+            id=skill_id,
+            name=normalized["name"],
+            path=normalized["path"],
+            category=normalized["category"],
+            description=description,
+            body=body,
+            trigger_terms=normalized["trigger_terms"],
+            token_count_estimate=normalized["token_count_estimate"],
+        )
+    if not by_id:
+        raise ValueError("stable global skill registry is empty")
+    return [by_id[skill_id] for skill_id in sorted(by_id)]
+
+
+def _stage2_export_predictions(
+    *,
+    router: SkillRouter,
+    tasks: list[BenchmarkTask],
+    skills: list[Skill],
+    top_k: int,
+) -> dict[str, list[str]]:
+    skill_ids = {skill.id for skill in skills}
+    predictions: dict[str, list[str]] = {}
+    for task in sorted(tasks, key=lambda item: item.id):
+        result = router.route(task, skills, top_k)
+        deduped = _dedupe(result.selected_skill_ids)
+        if len(deduped) < top_k:
+            raise ValueError(f"insufficient routed top-k for task: {task.id}")
+        unknown = sorted(skill_id for skill_id in deduped if skill_id not in skill_ids)
+        if unknown:
+            raise ValueError(
+                f"unknown routed prediction skill id: {task.id} -> {unknown[0]}"
+            )
+        predictions[task.id] = deduped[:top_k]
+    return predictions
+
+
+def _read_stage2_export_records(path: Path, *, record_key: str) -> list[dict[str, Any]]:
+    if not path.exists():
+        raise ValueError(f"missing {record_key} input: {path}")
+    text = path.read_text(encoding="utf-8")
+    stripped = text.lstrip()
+    if path.suffix == ".jsonl" or not stripped.startswith(("[", "{")):
+        records = [
+            json.loads(line)
+            for line in text.splitlines()
+            if line.strip()
+        ]
+    else:
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError:
+            records = [
+                json.loads(line)
+                for line in text.splitlines()
+                if line.strip()
+            ]
+        else:
+            if isinstance(payload, dict):
+                payload = (
+                    payload.get(record_key)
+                    or payload.get("records")
+                    or payload.get("items")
+                )
+            if not isinstance(payload, list):
+                raise ValueError(f"{record_key} JSON input must contain a list")
+            records = payload
+    if not all(isinstance(record, dict) for record in records):
+        raise ValueError(f"{record_key} records must be objects")
+    return list(records)
+
+
+def _stage2_export_router_name(router_id: str) -> str:
+    router_name = _non_empty(router_id, "router_id")
+    if router_name not in SUPPORTED_STAGE2_EXPORT_ROUTERS:
+        raise ValueError(f"unsupported Stage 2 routed prediction router_id: {router_name}")
+    return router_name
+
+
+def _stage2_export_router(router_id: str) -> SkillRouter:
+    if router_id == "keyword":
+        return KeywordRouter()
+    if router_id == "hybrid":
+        return HybridRouter()
+    if router_id == "embedding":
+        return EmbeddingRouter()
+    if router_id == "gated":
+        return VerificationGatedRouter()
+    raise AssertionError("unreachable")
+
+
+def _generation_command_text(command: Iterable[str] | str | None) -> str:
+    if command is None:
+        return ""
+    if isinstance(command, str):
+        return command
+    return " ".join(str(part) for part in command if str(part).strip())
+
+
+def _optional_string(value: Any) -> str | None:
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
+def _optional_string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+
+
+def _token_count_estimate(record: dict[str, Any], body: str) -> int:
+    value = record.get("token_count_estimate")
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return value
+    return max(1, len(body.split()))
 
 
 def run_skillsbench_matrix(
@@ -1240,6 +1778,8 @@ def _stage2_routed_prediction_records(
     errors: list[str] = []
     if not router.get("router_id"):
         errors.append("missing router_id for routed predictions")
+    if not router.get("config_id"):
+        errors.append("missing router config_id for routed predictions")
     if not router.get("config_hash"):
         errors.append("missing router config_hash for routed predictions")
     elif not _sha256_hex(router.get("config_hash")):
@@ -1257,6 +1797,7 @@ def _stage2_routed_prediction_records(
         records[task.task_id] = {
             "task_id": task.task_id,
             "router_id": router.get("router_id"),
+            "config_id": router.get("config_id"),
             "config_hash": router.get("config_hash"),
             "top_k": router_top_k,
             "global_skill_registry_hash": global_skill_registry_hash,
@@ -1279,6 +1820,8 @@ def _routed_prediction_input_errors(
     errors: list[str] = []
     if not router.get("router_id"):
         errors.append("missing router_id for routed predictions")
+    if not router.get("config_id"):
+        errors.append("missing router config_id for routed predictions")
     if not router.get("config_hash"):
         errors.append("missing router config_hash for routed predictions")
     elif not _sha256_hex(router.get("config_hash")):
