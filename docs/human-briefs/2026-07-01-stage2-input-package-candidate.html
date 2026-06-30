@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes Stage 2 4-task input package candidate</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f7f9; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
+h1 { font-size: 28px; margin: 0 0 10px; }
+h2 { font-size: 18px; margin: 26px 0 10px; }
+.summary { background: #fff; border: 1px solid #d8dde4; border-radius: 8px; padding: 18px; }
+.status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #fff4ce; border: 1px solid #e2b842; font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.item { background: #fff; border: 1px solid #d8dde4; border-radius: 8px; padding: 12px; }
+code { background: #eef1f5; padding: 1px 4px; border-radius: 4px; }
+ul { margin-top: 8px; }
+li { margin: 7px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 4-task input package candidate</h1>
+  <p class="status">REVIEW_REQUIRED_NOT_APPROVED</p>
+  <section class="summary">
+    <p><strong>结论：</strong>已准备一个真实上游 4-task candidate 供 review，但它不能直接作为 Stage 2 real input package 使用，也没有执行 Stage 2。</p>
+  </section>
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="item">任务数：<code>4</code></div>
+    <div class="item">上游：<code>benchflow-ai/skillsbench@bf3793e9</code></div>
+    <div class="item">验证：<code>INVALID / REVIEW_REQUIRED</code></div>
+    <div class="item">隐私：<code>REVIEW_REQUIRED</code></div>
+  </div>
+  <h2>本阶段产物</h2>
+  <ul>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/tasks.jsonl</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/skills.jsonl</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-scan.review-required.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json</code></li>
+  </ul>
+  <h2>候选任务</h2>
+  <ul>
+    <li><code>citation-check</code></li>
+    <li><code>dialogue-parser</code></li>
+    <li><code>offer-letter-generator</code></li>
+    <li><code>powerlifting-coef-calc</code></li>
+  </ul>
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>skillsbench-validate</code>：预期 fail-closed，结果 <code>INVALID</code>，仅记录 4 个 <code>uncontrolled network requirement</code> blocker。</li>
+    <li><code>skillsbench-export-routed-predictions</code>：已生成 non-final candidate artifact，未读取 oracle labels，未 freeze plan。</li>
+    <li><code>privacy-scan.review-required.json</code>：<code>court-form-filling</code> 已因疑似个人信息被排除，剩余 public upstream metadata 仍需 review。</li>
+    <li><code>cleaned_with_coefficients.xlsx</code>：单元格值和 shared strings 检查未发现 email、phone、address 或 secret marker 匹配。</li>
+  </ul>
+  <h2>阻塞点</h2>
+  <ul>
+    <li>4 个 task 尚未 human-approved。</li>
+    <li>4 个 task 都声明 <code>environment.network_mode=public</code>，仍需 network/control 决策。</li>
+    <li>oracle qualification 未运行，未产生 verifier_passed=true 记录。</li>
+    <li>routed predictions 只是 candidate，不是 final evidence。</li>
+    <li><code>court-form-filling</code> 因复制疑似个人信息被排除；剩余 public author metadata 仍需 reviewer 接受或决定 redaction。</li>
+  </ul>
+  <h2>明确未做</h2>
+  <ul>
+    <li>未运行 Stage 2、未运行 Codex、未 freeze pilot plan、未创建 traces、未 rerun evidence gate。</li>
+    <li>未使用 fixture/fake evidence 作为 real evidence，未写 performance claims。</li>
+    <li>未修改 scorer/matrix/evidence-gate semantics，未训练、调参或新增 router variant。</li>
+  </ul>
+  <h2>建议下一步</h2>
+  <p>先 review task/network/privacy/router 四项，再决定是否授权 oracle qualification；在此之前不要启动 Stage 2。</p>
+</main>
+</body>
+</html>
