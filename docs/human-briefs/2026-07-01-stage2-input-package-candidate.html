@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hermes Stage 2 controlled-local-snapshot packet</title>
+<title>Hermes Stage 2 non-execution qualification</title>
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f7f9; }
 main { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
 h1 { font-size: 28px; margin: 0 0 10px; }
 h2 { font-size: 18px; margin: 26px 0 10px; }
 .summary { background: #fff; border: 1px solid #d8dde4; border-radius: 8px; padding: 18px; }
-.status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #fff4ce; border: 1px solid #e2b842; font-weight: 600; }
+.status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #ffe8e8; border: 1px solid #d46a6a; font-weight: 600; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .item { background: #fff; border: 1px solid #d8dde4; border-radius: 8px; padding: 12px; }
 code { background: #eef1f5; padding: 1px 4px; border-radius: 4px; }
@@ -20,49 +20,39 @@ li { margin: 7px 0; }
 </head>
 <body>
 <main>
-  <h1>Stage 2 4-task controlled-local-snapshot packet</h1>
-  <p class="status">READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED</p>
+  <h1>Stage 2 non-execution qualification packet</h1>
+  <p class="status">APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED</p>
   <section class="summary">
-    <p><strong>结论：</strong>已替换为 1 个 no-network task 与 3 个 controlled-local-snapshot 派生 task；<code>skillsbench-validate</code> 现在为 <code>PASS</code>，public-network blocker 已消除。此包仅供人工批准决策，仍未执行 Stage 2。</p>
+    <p><strong>结论：</strong>human approval 已记录，strict routed predictions 已用 approved router config 导出；oracle qualification 因 Docker daemon 不可用未能执行，PR #10 input-package validator 已 fail-closed。未执行 Stage 2。</p>
   </section>
   <h2>当前状态</h2>
   <div class="grid">
     <div class="item">任务数：<code>4</code></div>
-    <div class="item">网络：<code>none / controlled</code></div>
-    <div class="item">验证：<code>PASS</code></div>
-    <div class="item">执行：<code>NOT_ALLOWED</code></div>
+    <div class="item">validation：<code>PASS</code></div>
+    <div class="item">strict routing：<code>EXPORTED</code></div>
+    <div class="item">validator：<code>BLOCKED_ORACLE_QUALIFICATION_NOT_EXECUTED</code></div>
   </div>
-  <h2>候选任务</h2>
+  <h2>完成项</h2>
   <ul>
-    <li><code>bike-rebalance</code>：native no-network，effective <code>none</code>，<code>fixture=false</code></li>
-    <li><code>dialogue-parser</code>：controlled-local-snapshot，effective <code>controlled</code>，<code>fixture=false</code></li>
-    <li><code>offer-letter-generator</code>：controlled-local-snapshot，effective <code>controlled</code>，<code>fixture=false</code></li>
-    <li><code>powerlifting-coef-calc</code>：controlled-local-snapshot，effective <code>controlled</code>，<code>fixture=false</code></li>
+    <li>记录 human approval：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval.non-execution-qualification.json</code></li>
+    <li>新增 approved router config：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/router-config.approved-non-execution.json</code></li>
+    <li>导出 strict routed predictions：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.json</code></li>
+    <li>运行 PR #10 input-package validator 并记录 fail-closed：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/input-package-validator.blocked.json</code></li>
   </ul>
-  <h2>关键产物</h2>
+  <h2>阻塞项</h2>
   <ul>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/tasks.jsonl</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/controlled-local-snapshot-manifest.json</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/validation/validation.json</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.candidate.json</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json</code></li>
+    <li>Docker daemon 不可用，oracle/verifier 容器无法启动；没有产生 <code>verifier_passed=true</code> qualification records。</li>
+    <li>privacy scan 仍为 <code>REVIEW_REQUIRED</code>，下一份报告必须继续可见。</li>
+    <li>input-package validator 必须等 oracle qualification 真实通过后才能 PASS。</li>
   </ul>
-  <h2>验证结果</h2>
-  <ul>
-    <li><code>skillsbench-validate</code>：<code>PASS</code>，4 tasks，9 skills，errors=[]。</li>
-    <li>Routed predictions 由 exporter 生成，<code>oracle_labels_read=false</code>，<code>label_source=router_generated</code>，仍是 non-final candidate output。</li>
-  </ul>
-  <h2>仍未做</h2>
+  <h2>未执行</h2>
   <ul>
     <li>未运行 Stage 2、未运行 Codex、未 freeze pilot plan、未创建 traces、未 rerun evidence gate。</li>
     <li>未手写 routed predictions，未从 oracle labels 派生 routed predictions。</li>
-    <li>未运行 oracle qualification；未产生 verifier_passed=true qualification records。</li>
-    <li>privacy scan 仍为 <code>REVIEW_REQUIRED</code>。</li>
     <li>未写 performance claims，未改 scorer/matrix/evidence-gate semantics，未训练、调参或新增 router variant。</li>
   </ul>
   <h2>建议下一步</h2>
-  <p>由人类 review controlled snapshot、privacy 和 routed prediction；在 oracle qualification 获授权前不要启动 Stage 2。</p>
+  <p>启动 Docker daemon 后只重跑 oracle qualification 与 input-package validator；在 validator PASS 前不要 freeze pilot plan 或启动 Stage 2。</p>
 </main>
 </body>
 </html>

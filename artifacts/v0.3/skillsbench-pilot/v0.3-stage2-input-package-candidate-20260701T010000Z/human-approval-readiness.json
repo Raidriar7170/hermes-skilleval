@@ -7,6 +7,7 @@
     "does_not_mark_validation_passed_without_cli_validation": true,
     "execution_readiness": false,
     "human_approval_packet_ready": true,
+    "human_non_execution_approval_recorded": true,
     "validation_no_longer_blocked_by_public_network": true
   },
   "approval_decision_items": [
@@ -16,7 +17,7 @@
         "candidate-data/tasks.jsonl",
         "controlled-local-snapshot-manifest.json"
       ],
-      "status": "READY_FOR_HUMAN_DECISION"
+      "status": "HUMAN_APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ONLY"
     },
     {
       "decision": "accept_or_request_changes_for_controlled_local_snapshot_derivations",
@@ -24,39 +25,53 @@
         "controlled-local-snapshot-manifest.json",
         "validation/validation.json"
       ],
-      "status": "READY_FOR_HUMAN_DECISION"
+      "status": "HUMAN_APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ONLY"
     },
     {
       "decision": "accept_or_request_redaction_for_privacy_review_items",
       "evidence_refs": [
         "privacy-scan.review-required.json"
       ],
-      "status": "READY_FOR_HUMAN_DECISION"
+      "status": "ACKNOWLEDGED_REVIEW_REQUIRED_MUST_REMAIN_VISIBLE"
     },
     {
       "decision": "approve_or_request_new_candidate_routed_predictions",
       "evidence_refs": [
-        "routed_predictions.candidate.json",
-        "routed_predictions.candidate.manifest.json"
+        "routed_predictions.strict.json",
+        "routed_predictions.strict.manifest.json",
+        "router-config.approved-non-execution.json"
       ],
-      "status": "READY_FOR_HUMAN_DECISION"
+      "status": "SUPERSEDED_BY_STRICT_ROUTED_PREDICTIONS_EXPORTED"
     },
     {
       "decision": "authorize_or_defer_oracle_qualification_after_human_approval",
       "evidence_refs": [
         "oracle-artifacts-manifest.json",
-        "oracle_qualification.required-not-run.jsonl"
+        "oracle_qualification.blocked-docker-daemon.jsonl",
+        "oracle-qualification.blocked-docker-daemon.json"
       ],
-      "status": "READY_FOR_HUMAN_DECISION"
+      "status": "AUTHORIZED_FOR_NON_EXECUTION_QUALIFICATION_ATTEMPT_BLOCKED_DOCKER_DAEMON"
     }
   ],
   "execution_blockers_preserved": [
-    "oracle qualification has not been run",
-    "routed predictions are non-final candidate outputs and may include review-required routes",
+    "oracle qualification could not be executed because Docker daemon was unavailable",
+    "input-package validator remains fail-closed until oracle qualification passes",
     "privacy scan remains REVIEW_REQUIRED",
     "no Codex real-runner preflight was run",
     "no Stage 2 pilot plan was frozen"
   ],
+  "human_approval_artifact": {
+    "name": "human-approval.non-execution-qualification.json",
+    "path": "human-approval.non-execution-qualification.json",
+    "sha256": "26e60a09da6ca80fa4f417a4e82ebede5ec55b2ff0c33087f2c7ba44d27b2901",
+    "size_bytes": 14653
+  },
+  "input_package_validator_artifact": {
+    "name": "input-package-validator.blocked.json",
+    "path": "input-package-validator.blocked.json",
+    "sha256": "8952ee03a9307dafb5ba702eb674ced13b90d3b08468d4969a04c2b63bf6afc3",
+    "size_bytes": 2726
+  },
   "non_actions": {
     "codex_cli_run": false,
     "evidence_gate_rerun": false,
@@ -71,6 +86,20 @@
     "stage2_pilot_run": false,
     "training_or_tuning_or_new_router_variant": false
   },
+  "oracle_qualification_artifacts": {
+    "blocked_records": {
+      "name": "oracle_qualification.blocked-docker-daemon.jsonl",
+      "path": "oracle_qualification.blocked-docker-daemon.jsonl",
+      "sha256": "3b85f238a3fa23576e14d24da5a13623a87f8e7b1f116fbda40e47f22e9fb8a0",
+      "size_bytes": 5796
+    },
+    "blocked_report": {
+      "name": "oracle-qualification.blocked-docker-daemon.json",
+      "path": "oracle-qualification.blocked-docker-daemon.json",
+      "sha256": "7109db46bcf32be8930286428af34dcef54814f549eedd61eb86a32975bdda67",
+      "size_bytes": 1227
+    }
+  },
   "readiness_summary": {
     "can_be_used_as_real_stage2_input_package_now": false,
     "effective_network_modes": {
@@ -79,32 +108,43 @@
       "offer-letter-generator": "controlled",
       "powerlifting-coef-calc": "controlled"
     },
+    "human_approval_recorded": true,
+    "input_package_validator_status": "BLOCKED_ORACLE_QUALIFICATION_NOT_EXECUTED",
     "non_fixture_source": true,
-    "ready_for_human_approval_now": true,
-    "recommended_next_step": "Human reviewer should approve, reject, or request changes for the controlled-local-snapshot candidate package. Stage 2 execution remains disallowed until later oracle qualification, privacy/routing approval, Codex preflight, and plan freeze steps are explicitly authorized.",
+    "oracle_qualification_status": "BLOCKED_DOCKER_DAEMON_NOT_RUNNING",
+    "post_approval_status": "NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DAEMON",
+    "ready_for_human_approval_now": false,
+    "recommended_next_step": "Start Docker daemon, then rerun only the authorized non-execution oracle qualification against deterministic verifiers and rerun the PR #10 input-package validator. Stage 2 execution, Codex runs, frozen pilot plan, traces, and evidence-gate reruns remain disallowed.",
+    "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
     "validation_status": "PASS"
   },
   "routed_prediction_artifacts": {
+    "approved_router_config": {
+      "name": "router-config.approved-non-execution.json",
+      "path": "router-config.approved-non-execution.json",
+      "sha256": "7227fe9e4642a7f3e5a193008b86a74036091063c0976b3bd0b6d2b1e71fd1ca",
+      "size_bytes": 1618
+    },
     "label_source": "router_generated",
-    "manifest": {
-      "name": "routed_predictions.candidate.manifest.json",
-      "path": "routed_predictions.candidate.manifest.json",
-      "sha256": "a5e482944e76a6c7e1011dfd07695e1579e41e50b6e0e4fce3530fb0db079995",
-      "size_bytes": 15232
-    },
     "oracle_labels_read": false,
-    "predictions": {
-      "name": "routed_predictions.candidate.json",
-      "path": "routed_predictions.candidate.json",
-      "sha256": "c2a1d7a5bd265cf4dea930af515ba1aa50551fde603938359cf397af893ff908",
-      "size_bytes": 2396
+    "status": "EXPORTED_STRICT_PROVENANCE",
+    "strict_manifest": {
+      "name": "routed_predictions.strict.manifest.json",
+      "path": "routed_predictions.strict.manifest.json",
+      "sha256": "646764bfdb1b17a2fc6b13dc0815d0a6a92a48837bc145867b045672611bbf6c",
+      "size_bytes": 7883
     },
-    "status": "REVIEW_REQUIRED_NOT_APPROVED"
+    "strict_predictions": {
+      "name": "routed_predictions.strict.json",
+      "path": "routed_predictions.strict.json",
+      "sha256": "28c4d20f0e535aa8c6a2b1f8603a99df385dffae8794be1abe86c0669feb9ea1",
+      "size_bytes": 4487
+    }
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-human-approval-readiness.v1",
-  "status": "READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,
@@ -118,7 +158,7 @@
     "validation_manifest": {
       "name": "manifest.json",
       "path": "validation/manifest.json",
-      "sha256": "89ec13e356f272e864d961a574f785a3c92422b2bbfad0b9ebbf9e84216ac10d",
+      "sha256": "55d4dc17a49c07fa1d131a31df1a6b91c6c241dc3e19ddff329987d6f74f81ff",
       "size_bytes": 1256
     }
   }
