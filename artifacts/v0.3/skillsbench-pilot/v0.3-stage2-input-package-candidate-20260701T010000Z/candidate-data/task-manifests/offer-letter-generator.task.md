@@ -34,7 +34,7 @@ verifier:
 agent:
   timeout_sec: 900.0
 environment:
-  network_mode: public
+  network_mode: controlled
   build_timeout_sec: 600.0
   os: linux
   cpus: 1

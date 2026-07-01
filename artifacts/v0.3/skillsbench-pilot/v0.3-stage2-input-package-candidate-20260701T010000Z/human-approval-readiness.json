@@ -1,26 +1,28 @@
 {
   "approval_boundary": {
-    "approval_decision_scope": "Human approval decision for the candidate input package, network/privacy acceptance, and whether to authorize the next non-execution qualification step.",
+    "approval_decision_scope": "Human approval decision for the controlled-local-snapshot candidate package, privacy acceptance, routed prediction review, and whether to authorize oracle qualification later.",
     "does_not_authorize_stage2_execution": true,
     "does_not_freeze_pilot_plan": true,
-    "does_not_mark_validation_passed": true,
+    "does_not_mark_oracle_qualification_complete": true,
+    "does_not_mark_validation_passed_without_cli_validation": true,
     "execution_readiness": false,
-    "human_approval_packet_ready": true
+    "human_approval_packet_ready": true,
+    "validation_no_longer_blocked_by_public_network": true
   },
   "approval_decision_items": [
     {
       "decision": "approve_or_reject_selected_tasks",
       "evidence_refs": [
         "candidate-data/tasks.jsonl",
-        "candidate-data/task-manifests/"
+        "controlled-local-snapshot-manifest.json"
       ],
       "status": "READY_FOR_HUMAN_DECISION"
     },
     {
-      "decision": "accept_or_reject_public_network_requirement_for_candidate_review",
+      "decision": "accept_or_request_changes_for_controlled_local_snapshot_derivations",
       "evidence_refs": [
-        "validation/validation.json",
-        "candidate-data/manifest.json"
+        "controlled-local-snapshot-manifest.json",
+        "validation/validation.json"
       ],
       "status": "READY_FOR_HUMAN_DECISION"
     },
@@ -35,8 +37,7 @@
       "decision": "approve_or_request_new_candidate_routed_predictions",
       "evidence_refs": [
         "routed_predictions.candidate.json",
-        "routed_predictions.candidate.manifest.json",
-        "router-config.candidate-review-required.json"
+        "routed_predictions.candidate.manifest.json"
       ],
       "status": "READY_FOR_HUMAN_DECISION"
     },
@@ -50,9 +51,8 @@
     }
   ],
   "execution_blockers_preserved": [
-    "skillsbench validation remains INVALID because all four tasks declare public network requirements",
     "oracle qualification has not been run",
-    "routed predictions are non-final candidate outputs and include review-required records",
+    "routed predictions are non-final candidate outputs and may include review-required routes",
     "privacy scan remains REVIEW_REQUIRED",
     "no Codex real-runner preflight was run",
     "no Stage 2 pilot plan was frozen"
@@ -73,11 +73,53 @@
   },
   "readiness_summary": {
     "can_be_used_as_real_stage2_input_package_now": false,
+    "effective_network_modes": {
+      "bike-rebalance": "none",
+      "dialogue-parser": "controlled",
+      "offer-letter-generator": "controlled",
+      "powerlifting-coef-calc": "controlled"
+    },
+    "non_fixture_source": true,
     "ready_for_human_approval_now": true,
-    "recommended_next_step": "Human reviewer should approve, reject, or request changes for the candidate package. Stage 2 execution remains disallowed.",
-    "validation_status": "INVALID"
+    "recommended_next_step": "Human reviewer should approve, reject, or request changes for the controlled-local-snapshot candidate package. Stage 2 execution remains disallowed until later oracle qualification, privacy/routing approval, Codex preflight, and plan freeze steps are explicitly authorized.",
+    "validation_no_longer_blocked_by_public_network": true,
+    "validation_status": "PASS"
+  },
+  "routed_prediction_artifacts": {
+    "label_source": "router_generated",
+    "manifest": {
+      "name": "routed_predictions.candidate.manifest.json",
+      "path": "routed_predictions.candidate.manifest.json",
+      "sha256": "a5e482944e76a6c7e1011dfd07695e1579e41e50b6e0e4fce3530fb0db079995",
+      "size_bytes": 15232
+    },
+    "oracle_labels_read": false,
+    "predictions": {
+      "name": "routed_predictions.candidate.json",
+      "path": "routed_predictions.candidate.json",
+      "sha256": "c2a1d7a5bd265cf4dea930af515ba1aa50551fde603938359cf397af893ff908",
+      "size_bytes": 2396
+    },
+    "status": "REVIEW_REQUIRED_NOT_APPROVED"
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-human-approval-readiness.v1",
-  "status": "READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED"
+  "status": "READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED",
+  "validation_artifacts": {
+    "errors": [],
+    "public_network_blocker_present": false,
+    "status": "PASS",
+    "validation": {
+      "name": "validation.json",
+      "path": "validation/validation.json",
+      "sha256": "4a6de58db0fb6baabb3314e5e08c6402703407be52fe3c33294a3ae0fc91845a",
+      "size_bytes": 287
+    },
+    "validation_manifest": {
+      "name": "manifest.json",
+      "path": "validation/manifest.json",
+      "sha256": "89ec13e356f272e864d961a574f785a3c92422b2bbfad0b9ebbf9e84216ac10d",
+      "size_bytes": 1256
+    }
+  }
 }

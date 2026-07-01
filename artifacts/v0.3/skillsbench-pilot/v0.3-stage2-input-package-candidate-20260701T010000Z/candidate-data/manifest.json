@@ -1,40 +1,46 @@
 {
-  "excluded_for_privacy_review": [
-    "court-form-filling"
-  ],
+  "controlled_local_snapshot_manifest": "controlled-local-snapshot-manifest.json",
+  "effective_network_modes": {
+    "bike-rebalance": "none",
+    "dialogue-parser": "controlled",
+    "offer-letter-generator": "controlled",
+    "powerlifting-coef-calc": "controlled"
+  },
   "files": {
     "skills": {
       "name": "skills.jsonl",
-      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/skills.jsonl",
-      "sha256": "d12c9e16ec9d2cf5124ce06a7c7a038146929104d601cf2676eec24f743143a0",
-      "size_bytes": 81157
+      "path": "candidate-data/skills.jsonl",
+      "sha256": "4be46ecba8279438b0b924d2817ab3c536059ee8a68cf3186bd200dc0d6db6f7",
+      "size_bytes": 82177
     },
     "tasks": {
       "name": "tasks.jsonl",
-      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/tasks.jsonl",
-      "sha256": "e58cc985edc658712eb193b63a230affce8c3f0330a00c9b5e8bdbf1dc6f11e5",
-      "size_bytes": 11422
+      "path": "candidate-data/tasks.jsonl",
+      "sha256": "1058ee34a45808520da8ae55759c9cd88a7fbf767005cfcfcefde671d7b5814c",
+      "size_bytes": 17473
     }
   },
-  "license_note": "Apache-2.0 upstream repository; candidate task selection pending human approval",
+  "fixture_source": false,
+  "license_note": "Apache-2.0 upstream repository; controlled-local-snapshot candidate selection pending human approval",
   "native_network_modes": {
-    "citation-check": "public",
+    "bike-rebalance": "no-network",
     "dialogue-parser": "public",
     "offer-letter-generator": "public",
     "powerlifting-coef-calc": "public"
   },
-  "network_review_required": true,
+  "network_review_required": false,
+  "non_fixture_source": true,
   "privacy_review_required": true,
   "schema_version": "v0.3.stage2-input-package-candidate-data-root.v1",
   "selected_task_ids": [
-    "citation-check",
+    "bike-rebalance",
     "dialogue-parser",
     "offer-letter-generator",
     "powerlifting-coef-calc"
   ],
-  "selection_rationale": "Four deploy-smoke-v1.1 tasks selected for review after excluding court-form-filling because its public upstream task/oracle/verifier duplicate names, home addresses, phone numbers, and email addresses.",
-  "status": "REVIEW_REQUIRED_NOT_APPROVED",
-  "task_set": "deploy-smoke-v1.1",
+  "selection_rationale": "Exactly four non-fixture deterministic tasks selected from the pinned upstream tree. bike-rebalance is native no-network; dialogue-parser, offer-letter-generator, and powerlifting-coef-calc are derived as controlled-local-snapshot tasks with task, environment input, verifier, oracle, and skill files vendored into this package.",
+  "status": "READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED",
+  "task_set": "controlled-local-snapshot-v1",
   "upstream_commit": "bf3793e9ec20e9682e6f18dbf4de3c69163dc9c7",
   "upstream_repo": "benchflow-ai/skillsbench",
   "upstream_url": "https://github.com/benchflow-ai/skillsbench/tree/bf3793e9ec20e9682e6f18dbf4de3c69163dc9c7"

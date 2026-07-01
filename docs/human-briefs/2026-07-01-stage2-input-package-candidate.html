@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hermes Stage 2 4-task input package candidate</title>
+<title>Hermes Stage 2 controlled-local-snapshot packet</title>
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f7f9; }
 main { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
@@ -20,65 +20,49 @@ li { margin: 7px 0; }
 </head>
 <body>
 <main>
-  <h1>Stage 2 4-task input package candidate</h1>
+  <h1>Stage 2 4-task controlled-local-snapshot packet</h1>
   <p class="status">READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED</p>
   <section class="summary">
-    <p><strong>结论：</strong>这个真实上游 4-task packet 已可提交人工批准决策，但它仍不是可执行 Stage 2 real input package，也没有执行 Stage 2。</p>
+    <p><strong>结论：</strong>已替换为 1 个 no-network task 与 3 个 controlled-local-snapshot 派生 task；<code>skillsbench-validate</code> 现在为 <code>PASS</code>，public-network blocker 已消除。此包仅供人工批准决策，仍未执行 Stage 2。</p>
   </section>
   <h2>当前状态</h2>
   <div class="grid">
     <div class="item">任务数：<code>4</code></div>
-    <div class="item">上游：<code>benchflow-ai/skillsbench@bf3793e9</code></div>
-    <div class="item">验证：<code>INVALID / REVIEW_REQUIRED</code></div>
+    <div class="item">网络：<code>none / controlled</code></div>
+    <div class="item">验证：<code>PASS</code></div>
     <div class="item">执行：<code>NOT_ALLOWED</code></div>
-    <div class="item">隐私：<code>REVIEW_REQUIRED</code></div>
   </div>
-  <h2>本阶段产物</h2>
-  <ul>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/tasks.jsonl</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/skills.jsonl</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-scan.review-required.json</code></li>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json</code></li>
-  </ul>
   <h2>候选任务</h2>
   <ul>
-    <li><code>citation-check</code></li>
-    <li><code>dialogue-parser</code></li>
-    <li><code>offer-letter-generator</code></li>
-    <li><code>powerlifting-coef-calc</code></li>
+    <li><code>bike-rebalance</code>：native no-network，effective <code>none</code>，<code>fixture=false</code></li>
+    <li><code>dialogue-parser</code>：controlled-local-snapshot，effective <code>controlled</code>，<code>fixture=false</code></li>
+    <li><code>offer-letter-generator</code>：controlled-local-snapshot，effective <code>controlled</code>，<code>fixture=false</code></li>
+    <li><code>powerlifting-coef-calc</code>：controlled-local-snapshot，effective <code>controlled</code>，<code>fixture=false</code></li>
+  </ul>
+  <h2>关键产物</h2>
+  <ul>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/tasks.jsonl</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/controlled-local-snapshot-manifest.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/validation/validation.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.candidate.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json</code></li>
   </ul>
   <h2>验证结果</h2>
   <ul>
-    <li><code>skillsbench-validate</code>：预期 fail-closed，结果 <code>INVALID</code>，仅记录 4 个 <code>uncontrolled network requirement</code> blocker。</li>
-    <li><code>skillsbench-export-routed-predictions</code>：已生成 non-final candidate artifact，未读取 oracle labels，未 freeze plan。</li>
-    <li><code>privacy-scan.review-required.json</code>：<code>court-form-filling</code> 已因疑似个人信息被排除，剩余 public upstream metadata 仍需 review。</li>
-    <li><code>cleaned_with_coefficients.xlsx</code>：单元格值和 shared strings 检查未发现 email、phone、address 或 secret marker 匹配。</li>
+    <li><code>skillsbench-validate</code>：<code>PASS</code>，4 tasks，9 skills，errors=[]。</li>
+    <li>Routed predictions 由 exporter 生成，<code>oracle_labels_read=false</code>，<code>label_source=router_generated</code>，仍是 non-final candidate output。</li>
   </ul>
-  <h2>人工审批项</h2>
-  <ul>
-    <li>批准或拒绝这 4 个 task 作为 pilot candidate。</li>
-    <li>接受或拒绝 4 个 <code>environment.network_mode=public</code> task 进入下一步非执行 qualification。</li>
-    <li>接受 privacy scan 中的 public upstream metadata，或要求 redaction / task 替换。</li>
-    <li>批准当前 non-final routed predictions 作为下一步 review input，或要求重新导出。</li>
-    <li>决定是否在人工批准后授权 oracle qualification；在此之前不启动 Stage 2。</li>
-  </ul>
-  <h2>执行前阻塞</h2>
-  <ul>
-    <li><code>skillsbench-validate</code> 仍是 <code>INVALID</code>，原因是 uncontrolled public network requirement。</li>
-    <li>oracle qualification 未运行，未产生 verifier_passed=true 记录。</li>
-    <li>routed predictions 只是 candidate，不是 approved final evidence。</li>
-    <li>没有 Codex real-runner preflight，也没有 frozen pilot plan。</li>
-  </ul>
-  <h2>明确未做</h2>
+  <h2>仍未做</h2>
   <ul>
     <li>未运行 Stage 2、未运行 Codex、未 freeze pilot plan、未创建 traces、未 rerun evidence gate。</li>
-    <li>未使用 fixture/fake evidence 作为 real evidence，未写 performance claims。</li>
     <li>未手写 routed predictions，未从 oracle labels 派生 routed predictions。</li>
-    <li>未修改 scorer/matrix/evidence-gate semantics，未训练、调参或新增 router variant。</li>
+    <li>未运行 oracle qualification；未产生 verifier_passed=true qualification records。</li>
+    <li>privacy scan 仍为 <code>REVIEW_REQUIRED</code>。</li>
+    <li>未写 performance claims，未改 scorer/matrix/evidence-gate semantics，未训练、调参或新增 router variant。</li>
   </ul>
   <h2>建议下一步</h2>
-  <p>先 review task/network/privacy/router 四项，再决定是否授权 oracle qualification；在此之前不要启动 Stage 2。</p>
+  <p>由人类 review controlled snapshot、privacy 和 routed prediction；在 oracle qualification 获授权前不要启动 Stage 2。</p>
 </main>
 </body>
 </html>
