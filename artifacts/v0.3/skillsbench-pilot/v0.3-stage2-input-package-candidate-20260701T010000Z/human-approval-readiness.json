@@ -1,0 +1,83 @@
+{
+  "approval_boundary": {
+    "approval_decision_scope": "Human approval decision for the candidate input package, network/privacy acceptance, and whether to authorize the next non-execution qualification step.",
+    "does_not_authorize_stage2_execution": true,
+    "does_not_freeze_pilot_plan": true,
+    "does_not_mark_validation_passed": true,
+    "execution_readiness": false,
+    "human_approval_packet_ready": true
+  },
+  "approval_decision_items": [
+    {
+      "decision": "approve_or_reject_selected_tasks",
+      "evidence_refs": [
+        "candidate-data/tasks.jsonl",
+        "candidate-data/task-manifests/"
+      ],
+      "status": "READY_FOR_HUMAN_DECISION"
+    },
+    {
+      "decision": "accept_or_reject_public_network_requirement_for_candidate_review",
+      "evidence_refs": [
+        "validation/validation.json",
+        "candidate-data/manifest.json"
+      ],
+      "status": "READY_FOR_HUMAN_DECISION"
+    },
+    {
+      "decision": "accept_or_request_redaction_for_privacy_review_items",
+      "evidence_refs": [
+        "privacy-scan.review-required.json"
+      ],
+      "status": "READY_FOR_HUMAN_DECISION"
+    },
+    {
+      "decision": "approve_or_request_new_candidate_routed_predictions",
+      "evidence_refs": [
+        "routed_predictions.candidate.json",
+        "routed_predictions.candidate.manifest.json",
+        "router-config.candidate-review-required.json"
+      ],
+      "status": "READY_FOR_HUMAN_DECISION"
+    },
+    {
+      "decision": "authorize_or_defer_oracle_qualification_after_human_approval",
+      "evidence_refs": [
+        "oracle-artifacts-manifest.json",
+        "oracle_qualification.required-not-run.jsonl"
+      ],
+      "status": "READY_FOR_HUMAN_DECISION"
+    }
+  ],
+  "execution_blockers_preserved": [
+    "skillsbench validation remains INVALID because all four tasks declare public network requirements",
+    "oracle qualification has not been run",
+    "routed predictions are non-final candidate outputs and include review-required records",
+    "privacy scan remains REVIEW_REQUIRED",
+    "no Codex real-runner preflight was run",
+    "no Stage 2 pilot plan was frozen"
+  ],
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "performance_claims": false,
+    "pilot_plan_frozen": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "readiness_summary": {
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "ready_for_human_approval_now": true,
+    "recommended_next_step": "Human reviewer should approve, reject, or request changes for the candidate package. Stage 2 execution remains disallowed.",
+    "validation_status": "INVALID"
+  },
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "schema_version": "v0.3.stage2-human-approval-readiness.v1",
+  "status": "READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED"
+}
