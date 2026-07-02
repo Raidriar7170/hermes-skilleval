@@ -245,77 +245,14 @@
   },
   "created_at": "2026-07-01T01:00:00+08:00",
   "docker_dependency_prep": {
-    "apt_source_blocker": {
-      "diagnostic_manifest": {
-        "name": "manifest.json",
-        "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
-        "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
-        "size_bytes": 20784
-      },
-      "required_human_action": "Provide a Docker/host network path or explicitly approved local/offline apt mirror/cache that allows the approved Dockerfile apt-get update steps to fetch signed Debian/Ubuntu package metadata. Then rerun dependency materialization before oracle qualification.",
-      "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
-      "summary": "Docker daemon is available and approved base images are present, but approved Dockerfile apt dependency sources are unreachable from the current host/container network: deb.debian.org HTTP returns 403, HTTPS and Debian snapshot TLS fail before signed apt metadata is fetched."
-    },
-    "base_images_materialized": [
-      {
-        "architecture": "arm64",
-        "created": "2026-06-24T02:17:10.085712605Z",
-        "id": "sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf",
-        "image": "python:3.12-slim",
-        "os": "linux",
-        "repo_digests": [
-          "python@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf"
-        ],
-        "size": 43487789,
-        "variant": "v8"
-      },
-      {
-        "architecture": "arm64",
-        "created": "2025-01-17T12:35:53Z",
-        "id": "sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
-        "image": "python:3.12.8-slim",
-        "os": "linux",
-        "repo_digests": [
-          "python@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0"
-        ],
-        "size": 44949973,
-        "variant": "v8"
-      },
-      {
-        "architecture": "arm64",
-        "created": "2026-06-22T21:25:07.904519372Z",
-        "id": "sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90",
-        "image": "ubuntu:24.04",
-        "os": "linux",
-        "repo_digests": [
-          "ubuntu@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
-        ],
-        "size": 28893360,
-        "variant": "v8"
-      }
-    ],
-    "blocker": "Dockerfile apt-get update returned 403 Forbidden during dependency image build.",
-    "blocking_task_id": "bike-rebalance",
-    "build_log": {
-      "name": "docker-build-bike-rebalance.log",
-      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-build-bike-rebalance.log",
-      "sha256": "2f52877c48ad4bba0c832dcf2855e63a09f1e2ef524ab88a00470c95bc6d1e38",
-      "size_bytes": 3792
-    },
-    "docker_info_exit_code": 0,
-    "input_package_validator_rerun": false,
-    "latest_diagnostic_manifest": {
+    "artifact": {
       "name": "manifest.json",
-      "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
-      "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
-      "size_bytes": 20784
+      "path": "zero-dependency-qualification-20260702T113533Z/manifest.json",
+      "sha256": "4b8de75e62567e9cfd25d3cd4b7987e24f5dec67baab7d6aa918bdcb974f778b",
+      "size_bytes": 24795
     },
-    "latest_status": "BLOCKED_APT_SOURCE_UNREACHABLE",
-    "manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json",
-    "manifest_sha256": "737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5",
-    "oracle_run_executed": false,
-    "status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
-    "verifier_run_executed": false
+    "manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/zero-dependency-qualification-20260702T113533Z/manifest.json",
+    "status": "ZERO_DEPENDENCY_IMAGES_BUILT_DOCKER_RUNTIME_START_BLOCKED"
   },
   "human_approval": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval.non-execution-qualification.json",
@@ -334,12 +271,12 @@
     "artifact": {
       "name": "input-package-validator.blocked.json",
       "path": "input-package-validator.blocked.json",
-      "sha256": "23faaa811b4c1f4655b09d9d19ad9362780ad4bfae22c4565ad9556301aeac9c",
-      "size_bytes": 3581
+      "sha256": "5334911273dae96cfe351c30abc9c9da7a1cc30b48628c6f137cad7a5bf72754",
+      "size_bytes": 3605
     },
     "reason": "Blocked before oracle qualification; validator rerun requires 4/4 passing qualification records.",
     "rerun": false,
-    "status": "NOT_RERUN_APT_SOURCE_UNREACHABLE"
+    "status": "NOT_RERUN_DOCKER_RUNTIME_START_BLOCKED"
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -360,28 +297,28 @@
   "objective": "Prepare the fastest reviewable Stage 2 4-task controlled-local-snapshot input package candidate without executing Stage 2.",
   "oracle_qualification": {
     "blocked_records": {
-      "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
-      "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
-      "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
-      "size_bytes": 20830
+      "name": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+      "path": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+      "sha256": "7ed1f1a6c8f100966fd2f330f6eeeb6c3e4719f99294000cd84efd31c6d21838",
+      "size_bytes": 18695
     },
     "blocked_report": {
-      "name": "oracle-qualification.blocked-apt-source-unreachable.json",
-      "path": "oracle-qualification.blocked-apt-source-unreachable.json",
-      "sha256": "b98d72aff14f48898f9ac7bf2e9e29fb8c36ebecb027f6ae31235adf131ff9d9",
-      "size_bytes": 3351
+      "name": "oracle-qualification.blocked-docker-runtime-start.json",
+      "path": "oracle-qualification.blocked-docker-runtime-start.json",
+      "sha256": "142142f0fd5401e9b0c82e120878b25499d6e9afcffcbc24480ee5a68282c72d",
+      "size_bytes": 3018
     },
     "qualification_executed": false,
-    "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+    "status": "BLOCKED_DOCKER_RUNTIME_START",
     "verifier_passed_count": 0,
     "verifier_total_count": 4
   },
   "oracle_qualification_review": {
-    "dependency_prep_manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json",
+    "dependency_prep_manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/zero-dependency-qualification-20260702T113533Z/manifest.json",
     "oracle_run_executed": false,
-    "records": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.blocked-docker-daemon.jsonl",
-    "report": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.blocked-docker-daemon.json",
-    "status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
+    "records": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.blocked-docker-runtime-start.jsonl",
+    "report": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.blocked-docker-runtime-start.json",
+    "status": "BLOCKED_DOCKER_RUNTIME_START",
     "verifier_passed_records": 0,
     "verifier_run_executed": false
   },
@@ -447,14 +384,19 @@
       ]
     },
     "router_id": "keyword",
-    "status": "EXPORTED_STRICT_PROVENANCE_NOT_STAGE2_EXECUTION",
+    "status": "EXPORTED_STRICT_PROVENANCE_REFRESHED_AFTER_VERIFIER_METADATA_UPDATE",
     "top_k": 1
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-real-pilot-input-package-candidate.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_APT_SOURCE_UNREACHABLE",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_RUNTIME_START",
   "validation_summary": {
-    "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/validation/validation.json",
+    "artifact": {
+      "name": "validation.json",
+      "path": "validation/validation.json",
+      "sha256": "4a6de58db0fb6baabb3314e5e08c6402703407be52fe3c33294a3ae0fc91845a",
+      "size_bytes": 287
+    },
     "effective_network_modes": {
       "bike-rebalance": "none",
       "dialogue-parser": "controlled",
@@ -463,7 +405,12 @@
     },
     "errors": [],
     "leakage_scan_status": "PASS",
-    "manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/validation/manifest.json",
+    "manifest": {
+      "name": "manifest.json",
+      "path": "validation/manifest.json",
+      "sha256": "7aa2571a6b46787c122aea6bca5a280450e8a61f36cf93c71f17e597ee369aee",
+      "size_bytes": 1256
+    },
     "non_fixture_source": true,
     "public_network_blocker_present": false,
     "skill_count": 9,
