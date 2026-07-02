@@ -53,9 +53,16 @@
       "status": "AUTHORIZED_FOR_NON_EXECUTION_QUALIFICATION_ATTEMPT_BLOCKED_DOCKER_DAEMON"
     }
   ],
+  "docker_dependency_prep_artifact": {
+    "name": "manifest.json",
+    "path": "docker-dependency-prep-20260702T050200Z/manifest.json",
+    "sha256": "737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5",
+    "size_bytes": 13290
+  },
   "execution_blockers_preserved": [
-    "oracle qualification could not be executed because Docker daemon was unavailable",
-    "input-package validator remains fail-closed until oracle qualification passes",
+    "Docker daemon is available, but approved dependency image build failed during bike-rebalance Dockerfile apt-get update with 403 Forbidden",
+    "oracle qualification did not execute because dependency materialization did not complete",
+    "input-package validator was not rerun because oracle qualification did not pass",
     "privacy scan remains REVIEW_REQUIRED",
     "no Codex real-runner preflight was run",
     "no Stage 2 pilot plan was frozen"
@@ -102,6 +109,7 @@
   },
   "readiness_summary": {
     "can_be_used_as_real_stage2_input_package_now": false,
+    "docker_dependency_prep_status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
     "effective_network_modes": {
       "bike-rebalance": "none",
       "dialogue-parser": "controlled",
@@ -109,12 +117,12 @@
       "powerlifting-coef-calc": "controlled"
     },
     "human_approval_recorded": true,
-    "input_package_validator_status": "BLOCKED_ORACLE_QUALIFICATION_NOT_EXECUTED",
+    "input_package_validator_status": "NOT_RERUN_DOCKER_DEPENDENCY_BUILD_FAILED",
     "non_fixture_source": true,
-    "oracle_qualification_status": "BLOCKED_DOCKER_DAEMON_NOT_RUNNING",
-    "post_approval_status": "NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DAEMON",
+    "oracle_qualification_status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
+    "post_approval_status": "NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
     "ready_for_human_approval_now": false,
-    "recommended_next_step": "Start Docker daemon, then rerun only the authorized non-execution oracle qualification against deterministic verifiers and rerun the PR #10 input-package validator. Stage 2 execution, Codex runs, frozen pilot plan, traces, and evidence-gate reruns remain disallowed.",
+    "recommended_next_step": "Fix the approved Dockerfile dependency build blocker (apt-get update 403 Forbidden for bike-rebalance), then rerun dependency materialization before oracle qualification. Stage 2 execution, Codex runs, frozen pilot plan, traces, and evidence-gate reruns remain disallowed.",
     "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
     "validation_status": "PASS"
@@ -144,7 +152,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-human-approval-readiness.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,
@@ -158,7 +166,7 @@
     "validation_manifest": {
       "name": "manifest.json",
       "path": "validation/manifest.json",
-      "sha256": "55d4dc17a49c07fa1d131a31df1a6b91c6c241dc3e19ddff329987d6f74f81ff",
+      "sha256": "6bad62c376bb280245ec0e5c2cf3f700a1099d0f1c9d5bee896413e993e6ee8e",
       "size_bytes": 1256
     }
   }

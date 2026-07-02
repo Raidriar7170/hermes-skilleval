@@ -31,6 +31,12 @@
       "sha256": "d9b4ef8d207f3c39e6d4910d48e4c7c4defb4a6ac2cc40b717273b9ab1cec11f",
       "size_bytes": 14323
     },
+    "docker_dependency_prep_manifest": {
+      "name": "manifest.json",
+      "path": "docker-dependency-prep-20260702T050200Z/manifest.json",
+      "sha256": "737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5",
+      "size_bytes": 13290
+    },
     "human-approval-readiness.json": {
       "name": "human-approval-readiness.json",
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json",
@@ -52,8 +58,8 @@
     "human_approval_readiness": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "b73885855515c94b7e00f9edb59eb010ddc130ff28115c3198caa3d47bb2af65",
-      "size_bytes": 6927
+      "sha256": "3582365f39a269cfda938ad8c40a56c890532c74366b25c7e4864fd66034cc9a",
+      "size_bytes": 7467
     },
     "input-package-validator.blocked.json": {
       "name": "input-package-validator.blocked.json",
@@ -178,7 +184,7 @@
     "validation_manifest": {
       "name": "manifest.json",
       "path": "validation/manifest.json",
-      "sha256": "55d4dc17a49c07fa1d131a31df1a6b91c6c241dc3e19ddff329987d6f74f81ff",
+      "sha256": "6bad62c376bb280245ec0e5c2cf3f700a1099d0f1c9d5bee896413e993e6ee8e",
       "size_bytes": 1256
     },
     "verifier-artifacts-manifest.json": {
@@ -220,6 +226,91 @@
     "upstream_url": "https://github.com/benchflow-ai/skillsbench/tree/bf3793e9ec20e9682e6f18dbf4de3c69163dc9c7"
   },
   "created_at": "2026-07-01T01:00:00+08:00",
+  "docker_dependency_prep": {
+    "base_images_materialized": [
+      {
+        "image": "python:3.12-slim",
+        "inspect": {
+          "architecture": "arm64",
+          "created": "2026-06-24T02:17:10.085712605Z",
+          "id": "sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf",
+          "image": "python:3.12-slim",
+          "os": "linux",
+          "repo_digests": [
+            "python@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf"
+          ],
+          "size": 43487789
+        },
+        "materialized": true,
+        "pull_command": "docker pull python:3.12-slim",
+        "pull_log": {
+          "name": "docker-pull-python-3.12-slim.log",
+          "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12-slim.log",
+          "sha256": "eca479e1a60eaa22f96566904824808c3eb25e8f8c70d90fe13711c2b236486d",
+          "size_bytes": 634
+        }
+      },
+      {
+        "image": "python:3.12.8-slim",
+        "inspect": {
+          "architecture": "arm64",
+          "created": "2025-01-17T12:35:53Z",
+          "id": "sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
+          "image": "python:3.12.8-slim",
+          "os": "linux",
+          "repo_digests": [
+            "python@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0"
+          ],
+          "size": 44949973
+        },
+        "materialized": true,
+        "pull_command": "docker pull python:3.12.8-slim",
+        "pull_log": {
+          "name": "docker-pull-python-3.12.8-slim.log",
+          "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12.8-slim.log",
+          "sha256": "c1ba42f7f135cf17381223af96fa223ed832d3d047b57f5594d0cfdd8bc60856",
+          "size_bytes": 640
+        }
+      },
+      {
+        "image": "ubuntu:24.04",
+        "inspect": {
+          "architecture": "arm64",
+          "created": "2026-06-22T21:25:07.904519372Z",
+          "id": "sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90",
+          "image": "ubuntu:24.04",
+          "os": "linux",
+          "repo_digests": [
+            "ubuntu@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
+          ],
+          "size": 28893360
+        },
+        "materialized": true,
+        "pull_command": "docker pull ubuntu:24.04",
+        "pull_log": {
+          "name": "docker-pull-ubuntu-24.04.log",
+          "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-ubuntu-24.04.log",
+          "sha256": "3d3b9dbd8d99d919936d69208885c129945043286bff2e2b980274df41d1f7f7",
+          "size_bytes": 317
+        }
+      }
+    ],
+    "blocker": "Dockerfile apt-get update returned 403 Forbidden during dependency image build.",
+    "blocking_task_id": "bike-rebalance",
+    "build_log": {
+      "name": "docker-build-bike-rebalance.log",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-build-bike-rebalance.log",
+      "sha256": "2f52877c48ad4bba0c832dcf2855e63a09f1e2ef524ab88a00470c95bc6d1e38",
+      "size_bytes": 3792
+    },
+    "docker_info_exit_code": 0,
+    "input_package_validator_rerun": false,
+    "manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json",
+    "manifest_sha256": "737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5",
+    "oracle_run_executed": false,
+    "status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
+    "verifier_run_executed": false
+  },
   "human_approval": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval.non-execution-qualification.json",
     "commit_reviewed": "ef7542d6dc24bf4823a4aa65c5c06deb118c45a3",
@@ -229,15 +320,15 @@
     "readiness": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "b73885855515c94b7e00f9edb59eb010ddc130ff28115c3198caa3d47bb2af65",
-      "size_bytes": 6927
+      "sha256": "3582365f39a269cfda938ad8c40a56c890532c74366b25c7e4864fd66034cc9a",
+      "size_bytes": 7467
     }
   },
   "input_package_validator": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/input-package-validator.blocked.json",
-    "error": "ValueError: oracle qualification failed for task: bike-rebalance",
+    "error": "Input-package validator was not rerun because oracle/verifier qualification did not execute after Docker dependency build failed.",
     "fail_closed": true,
-    "status": "BLOCKED_ORACLE_QUALIFICATION_NOT_EXECUTED"
+    "status": "NOT_RERUN_DOCKER_DEPENDENCY_BUILD_FAILED"
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -255,10 +346,11 @@
   },
   "objective": "Prepare the fastest reviewable Stage 2 4-task controlled-local-snapshot input package candidate without executing Stage 2.",
   "oracle_qualification_review": {
+    "dependency_prep_manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json",
     "oracle_run_executed": false,
     "records": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.blocked-docker-daemon.jsonl",
     "report": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.blocked-docker-daemon.json",
-    "status": "BLOCKED_DOCKER_DAEMON_NOT_RUNNING",
+    "status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
     "verifier_passed_records": 0,
     "verifier_run_executed": false
   },
@@ -279,14 +371,17 @@
     "reasons": [
       "Human approval for non-execution qualification was recorded for the controlled-local-snapshot candidate.",
       "Strict routed predictions were generated with the approved router config and clean code provenance.",
-      "Oracle qualification could not be executed because Docker daemon was unavailable; no verifier_passed=true records were produced.",
-      "The PR #10 input-package validator was run and remained fail-closed because oracle qualification did not pass.",
+      "Docker daemon is now available and approved base images were pulled, but dependency image build failed before oracle/verifier qualification.",
+      "The blocking build step was bike-rebalance Dockerfile apt-get update, which returned 403 Forbidden from deb.debian.org.",
+      "Oracle/verifier qualification did not execute; no verifier_passed=true records were produced.",
+      "The PR #10 input-package validator was not rerun because oracle qualification did not complete.",
       "Privacy/sensitive-data scan remains REVIEW_REQUIRED.",
       "No Stage 2 pilot, Codex run, frozen plan, traces, or evidence-gate rerun occurred."
     ],
     "recommended_review_questions": [
-      "Start Docker daemon and rerun only the authorized non-execution oracle qualification against deterministic verifiers.",
-      "Rerun the PR #10 input-package validator after oracle qualification produces verifier_passed=true records.",
+      "Make the approved Dockerfile apt repositories reachable from Docker build, or provide an approved local/offline apt package mirror/cache.",
+      "Rerun dependency materialization, then run only the authorized non-execution oracle qualification against deterministic verifiers.",
+      "Rerun the PR #10 input-package validator only after oracle qualification produces verifier_passed=true records.",
       "Keep privacy-scan.review-required.json visible in the next review packet.",
       "Do not freeze a pilot plan or run Stage 2 until the validator passes and a separate authorization is given."
     ],
@@ -326,7 +421,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-real-pilot-input-package-candidate.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
   "validation_summary": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/validation/validation.json",
     "effective_network_modes": {

@@ -1,58 +1,51 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hermes Stage 2 non-execution qualification</title>
-<style>
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #17202a; background: #f6f7f9; }
-main { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
-h1 { font-size: 28px; margin: 0 0 10px; }
-h2 { font-size: 18px; margin: 26px 0 10px; }
-.summary { background: #fff; border: 1px solid #d8dde4; border-radius: 8px; padding: 18px; }
-.status { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #ffe8e8; border: 1px solid #d46a6a; font-weight: 600; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-.item { background: #fff; border: 1px solid #d8dde4; border-radius: 8px; padding: 12px; }
-code { background: #eef1f5; padding: 1px 4px; border-radius: 4px; }
-ul { margin-top: 8px; }
-li { margin: 7px 0; }
-</style>
+  <meta charset="utf-8" />
+  <title>Stage 2 input package candidate - non-execution qualification blocked</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 32px; line-height: 1.55; color: #17202a; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 17px; margin-top: 24px; }
+    code { background: #f2f4f7; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #b45309; padding: 10px 14px; background: #fff7ed; }
+    ul { padding-left: 22px; }
+  </style>
 </head>
 <body>
-<main>
-  <h1>Stage 2 non-execution qualification packet</h1>
-  <p class="status">APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED</p>
-  <section class="summary">
-    <p><strong>结论：</strong>human approval 已记录，strict routed predictions 已用 approved router config 导出；oracle qualification 因 Docker daemon 不可用未能执行，PR #10 input-package validator 已 fail-closed。未执行 Stage 2。</p>
-  </section>
+  <h1>Hermes SkillEval PR #13 非执行资格状态</h1>
+  <p class="status"><strong>结论：</strong>Docker daemon 已可用，批准的 base images 已拉取；但 <code>bike-rebalance</code> 环境镜像在 Dockerfile <code>apt-get update</code> 阶段遇到 <code>403 Forbidden</code>，因此 oracle/verifier qualification 未执行，validator 未重跑。</p>
+
   <h2>当前状态</h2>
-  <div class="grid">
-    <div class="item">任务数：<code>4</code></div>
-    <div class="item">validation：<code>PASS</code></div>
-    <div class="item">strict routing：<code>EXPORTED</code></div>
-    <div class="item">validator：<code>BLOCKED_ORACLE_QUALIFICATION_NOT_EXECUTED</code></div>
-  </div>
-  <h2>完成项</h2>
   <ul>
-    <li>记录 human approval：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval.non-execution-qualification.json</code></li>
-    <li>新增 approved router config：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/router-config.approved-non-execution.json</code></li>
-    <li>导出 strict routed predictions：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.json</code></li>
-    <li>运行 PR #10 input-package validator 并记录 fail-closed：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/input-package-validator.blocked.json</code></li>
+    <li><code>APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED</code></li>
+    <li><code>can_be_used_as_real_stage2_input_package_now=false</code></li>
+    <li>Privacy scan 仍为 <code>REVIEW_REQUIRED</code></li>
   </ul>
-  <h2>阻塞项</h2>
+
+  <h2>本阶段变化</h2>
   <ul>
-    <li>Docker daemon 不可用，oracle/verifier 容器无法启动；没有产生 <code>verifier_passed=true</code> qualification records。</li>
-    <li>privacy scan 仍为 <code>REVIEW_REQUIRED</code>，下一份报告必须继续可见。</li>
-    <li>input-package validator 必须等 oracle qualification 真实通过后才能 PASS。</li>
+    <li>记录 Docker context/info/image ls。</li>
+    <li>只拉取批准的 <code>python:3.12-slim</code>、<code>python:3.12.8-slim</code>、<code>ubuntu:24.04</code>。</li>
+    <li>尝试 build <code>bike-rebalance</code> qualification image，失败于 Dockerfile 声明的 apt dependency step。</li>
+    <li>未运行 oracle/verifier qualification，未产生 <code>verifier_passed=true</code>。</li>
   </ul>
-  <h2>未执行</h2>
+
+  <h2>关键 artifact</h2>
   <ul>
-    <li>未运行 Stage 2、未运行 Codex、未 freeze pilot plan、未创建 traces、未 rerun evidence gate。</li>
-    <li>未手写 routed predictions，未从 oracle labels 派生 routed predictions。</li>
-    <li>未写 performance claims，未改 scorer/matrix/evidence-gate semantics，未训练、调参或新增 router variant。</li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json</code> sha256 <code>737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5</code></li>
+    <li><code>docker-dependency-prep-20260702T050200Z/logs/docker-build-bike-rebalance.log</code> sha256 <code>2f52877c48ad4bba0c832dcf2855e63a09f1e2ef524ab88a00470c95bc6d1e38</code></li>
   </ul>
-  <h2>建议下一步</h2>
-  <p>启动 Docker daemon 后只重跑 oracle qualification 与 input-package validator；在 validator PASS 前不要 freeze pilot plan 或启动 Stage 2。</p>
-</main>
+
+  <h2>验证与边界</h2>
+  <ul>
+    <li>没有 Stage 2 pilot execution。</li>
+    <li>没有 Codex run。</li>
+    <li>没有 frozen pilot plan、traces、evidence-gate rerun。</li>
+    <li>没有使用 process exit code 或 LLM judge 作为任务成功来源。</li>
+  </ul>
+
+  <h2>下一步</h2>
+  <p>需要让批准 Dockerfile 的 apt dependency source 在 Docker build 内可达，或提供批准的本地/offline apt mirror/cache；之后再重跑 dependency materialization 和非执行 oracle qualification。</p>
 </body>
 </html>
