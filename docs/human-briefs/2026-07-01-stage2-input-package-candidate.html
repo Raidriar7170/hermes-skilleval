@@ -14,27 +14,29 @@
 </head>
 <body>
   <h1>Hermes SkillEval PR #13 非执行资格状态</h1>
-  <p class="status"><strong>结论：</strong>Docker daemon 已可用，批准的 base images 已拉取；但 <code>bike-rebalance</code> 环境镜像在 Dockerfile <code>apt-get update</code> 阶段遇到 <code>403 Forbidden</code>，因此 oracle/verifier qualification 未执行，validator 未重跑。</p>
+  <p class="status"><strong>结论：</strong>Docker daemon 已可用，批准的 base images 已存在；但当前 host/container 网络无法获取 Debian apt metadata：默认 <code>http://deb.debian.org</code> 返回 <code>403 Forbidden</code>，HTTPS 与 Debian snapshot probe 在 TLS 阶段失败。因此 oracle/verifier qualification 未执行，validator 未重跑。</p>
 
   <h2>当前状态</h2>
   <ul>
-    <li><code>APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED</code></li>
+    <li><code>APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_APT_SOURCE_UNREACHABLE</code></li>
     <li><code>can_be_used_as_real_stage2_input_package_now=false</code></li>
     <li>Privacy scan 仍为 <code>REVIEW_REQUIRED</code></li>
   </ul>
 
   <h2>本阶段变化</h2>
   <ul>
-    <li>记录 Docker context/info/image ls。</li>
-    <li>只拉取批准的 <code>python:3.12-slim</code>、<code>python:3.12.8-slim</code>、<code>ubuntu:24.04</code>。</li>
-    <li>尝试 build <code>bike-rebalance</code> qualification image，失败于 Dockerfile 声明的 apt dependency step。</li>
+    <li>记录 Docker context/info/image ls，并用 qualified image names 记录批准 base image inspect。</li>
+    <li>在 <code>python:3.12-slim</code> 中复现默认 apt source 的 <code>403 Forbidden</code>。</li>
+    <li>测试最小 HTTPS scheme rewrite 与 Debian snapshot source，均未成功获取 signed apt metadata。</li>
+    <li>记录 host 与 container 的 network-shape probe，确认 blocker 不是单个 Dockerfile 语义问题。</li>
     <li>未运行 oracle/verifier qualification，未产生 <code>verifier_passed=true</code>。</li>
   </ul>
 
   <h2>关键 artifact</h2>
   <ul>
-    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json</code> sha256 <code>737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5</code></li>
-    <li><code>docker-dependency-prep-20260702T050200Z/logs/docker-build-bike-rebalance.log</code> sha256 <code>2f52877c48ad4bba0c832dcf2855e63a09f1e2ef524ab88a00470c95bc6d1e38</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/apt-source-diagnostics-20260702T052036Z/manifest.json</code> sha256 <code>973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a</code></li>
+    <li><code>oracle_qualification.blocked-apt-source-unreachable.jsonl</code> sha256 <code>3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77</code></li>
+    <li><code>oracle-qualification.blocked-apt-source-unreachable.json</code> sha256 <code>b98d72aff14f48898f9ac7bf2e9e29fb8c36ebecb027f6ae31235adf131ff9d9</code></li>
   </ul>
 
   <h2>验证与边界</h2>
@@ -46,6 +48,6 @@
   </ul>
 
   <h2>下一步</h2>
-  <p>需要让批准 Dockerfile 的 apt dependency source 在 Docker build 内可达，或提供批准的本地/offline apt mirror/cache；之后再重跑 dependency materialization 和非执行 oracle qualification。</p>
+  <p>需要提供可用的 Docker/host network path，或显式批准的本地/offline apt mirror/cache，使批准 Dockerfile 的 <code>apt-get update</code> 能获取 signed Debian/Ubuntu metadata；之后再重跑 dependency materialization 和非执行 oracle qualification。</p>
 </body>
 </html>

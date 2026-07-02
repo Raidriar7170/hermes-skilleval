@@ -47,20 +47,29 @@
       "decision": "authorize_or_defer_oracle_qualification_after_human_approval",
       "evidence_refs": [
         "oracle-artifacts-manifest.json",
-        "oracle_qualification.blocked-docker-daemon.jsonl",
-        "oracle-qualification.blocked-docker-daemon.json"
+        "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+        "oracle-qualification.blocked-apt-source-unreachable.json",
+        "apt-source-diagnostics-20260702T052036Z/manifest.json"
       ],
-      "status": "AUTHORIZED_FOR_NON_EXECUTION_QUALIFICATION_ATTEMPT_BLOCKED_DOCKER_DAEMON"
+      "status": "AUTHORIZED_FOR_NON_EXECUTION_QUALIFICATION_ATTEMPT_BLOCKED_APT_SOURCE_UNREACHABLE"
     }
   ],
+  "apt_source_diagnostics_artifact": {
+    "name": "manifest.json",
+    "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+    "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+    "size_bytes": 20784
+  },
   "docker_dependency_prep_artifact": {
     "name": "manifest.json",
-    "path": "docker-dependency-prep-20260702T050200Z/manifest.json",
-    "sha256": "737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5",
-    "size_bytes": 13290
+    "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+    "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+    "size_bytes": 20784
   },
   "execution_blockers_preserved": [
-    "Docker daemon is available, but approved dependency image build failed during bike-rebalance Dockerfile apt-get update with 403 Forbidden",
+    "Docker daemon is available and approved base images are present, but approved Dockerfile apt sources are unreachable from the current host/container network",
+    "Default deb.debian.org HTTP apt metadata requests return 403 Forbidden",
+    "HTTPS deb.debian.org and Debian snapshot probes fail TLS before signed apt metadata is fetched",
     "oracle qualification did not execute because dependency materialization did not complete",
     "input-package validator was not rerun because oracle qualification did not pass",
     "privacy scan remains REVIEW_REQUIRED",
@@ -76,8 +85,8 @@
   "input_package_validator_artifact": {
     "name": "input-package-validator.blocked.json",
     "path": "input-package-validator.blocked.json",
-    "sha256": "8952ee03a9307dafb5ba702eb674ced13b90d3b08468d4969a04c2b63bf6afc3",
-    "size_bytes": 2726
+    "sha256": "23faaa811b4c1f4655b09d9d19ad9362780ad4bfae22c4565ad9556301aeac9c",
+    "size_bytes": 3581
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -85,31 +94,39 @@
     "fake_runner_or_verifier_used_as_real_evidence": false,
     "fixture_data_used_as_real_evidence": false,
     "live_agent_traces_created": false,
+    "llm_judge_used": false,
     "manual_routed_predictions_written": false,
     "oracle_label_derived_predictions": false,
     "performance_claims": false,
     "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
     "scorer_matrix_or_evidence_gate_semantics_modified": false,
     "stage2_pilot_run": false,
     "training_or_tuning_or_new_router_variant": false
   },
   "oracle_qualification_artifacts": {
+    "apt_source_diagnostics": {
+      "name": "manifest.json",
+      "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+      "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+      "size_bytes": 20784
+    },
     "blocked_records": {
-      "name": "oracle_qualification.blocked-docker-daemon.jsonl",
-      "path": "oracle_qualification.blocked-docker-daemon.jsonl",
-      "sha256": "3b85f238a3fa23576e14d24da5a13623a87f8e7b1f116fbda40e47f22e9fb8a0",
-      "size_bytes": 5796
+      "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+      "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+      "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
+      "size_bytes": 20830
     },
     "blocked_report": {
-      "name": "oracle-qualification.blocked-docker-daemon.json",
-      "path": "oracle-qualification.blocked-docker-daemon.json",
-      "sha256": "7109db46bcf32be8930286428af34dcef54814f549eedd61eb86a32975bdda67",
-      "size_bytes": 1227
+      "name": "oracle-qualification.blocked-apt-source-unreachable.json",
+      "path": "oracle-qualification.blocked-apt-source-unreachable.json",
+      "sha256": "b98d72aff14f48898f9ac7bf2e9e29fb8c36ebecb027f6ae31235adf131ff9d9",
+      "size_bytes": 3351
     }
   },
   "readiness_summary": {
     "can_be_used_as_real_stage2_input_package_now": false,
-    "docker_dependency_prep_status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
+    "docker_dependency_prep_status": "BLOCKED_APT_SOURCE_UNREACHABLE",
     "effective_network_modes": {
       "bike-rebalance": "none",
       "dialogue-parser": "controlled",
@@ -117,12 +134,12 @@
       "powerlifting-coef-calc": "controlled"
     },
     "human_approval_recorded": true,
-    "input_package_validator_status": "NOT_RERUN_DOCKER_DEPENDENCY_BUILD_FAILED",
+    "input_package_validator_status": "NOT_RERUN_APT_SOURCE_UNREACHABLE",
     "non_fixture_source": true,
-    "oracle_qualification_status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
-    "post_approval_status": "NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
+    "oracle_qualification_status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+    "post_approval_status": "NON_EXECUTION_QUALIFICATION_BLOCKED_APT_SOURCE_UNREACHABLE",
     "ready_for_human_approval_now": false,
-    "recommended_next_step": "Fix the approved Dockerfile dependency build blocker (apt-get update 403 Forbidden for bike-rebalance), then rerun dependency materialization before oracle qualification. Stage 2 execution, Codex runs, frozen pilot plan, traces, and evidence-gate reruns remain disallowed.",
+    "recommended_next_step": "Provide a Docker/host network path or explicitly approved local/offline apt mirror/cache that allows the approved Dockerfile apt-get update steps to fetch signed Debian/Ubuntu package metadata. Then rerun dependency materialization before oracle qualification. Stage 2 execution, Codex runs, frozen pilot plan, traces, and evidence-gate reruns remain disallowed.",
     "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
     "validation_status": "PASS"
@@ -152,7 +169,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-human-approval-readiness.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_APT_SOURCE_UNREACHABLE",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,

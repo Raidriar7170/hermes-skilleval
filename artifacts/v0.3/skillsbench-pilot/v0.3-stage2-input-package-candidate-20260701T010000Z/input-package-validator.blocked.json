@@ -1,16 +1,22 @@
 {
+  "apt_source_diagnostics": {
+    "name": "manifest.json",
+    "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+    "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+    "size_bytes": 20784
+  },
   "blocked_task_ids": [
     "bike-rebalance",
     "dialogue-parser",
     "offer-letter-generator",
     "powerlifting-coef-calc"
   ],
-  "error": "ValueError: oracle qualification failed for task: bike-rebalance",
+  "error": "BLOCKED_APT_SOURCE_UNREACHABLE: oracle qualification did not execute because approved Dockerfile apt metadata sources are unreachable",
   "fail_closed": true,
   "invocation": {
     "data_root": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data",
     "license_note": "Apache-2.0 upstream repository; controlled-local-snapshot candidate selection pending human approval",
-    "oracle_qualification_path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.blocked-docker-daemon.jsonl",
+    "oracle_qualification_path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.blocked-apt-source-unreachable.jsonl",
     "routed_predictions_path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.json",
     "router_top_k": 1,
     "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
@@ -25,21 +31,30 @@
   "non_actions": {
     "codex_cli_run": false,
     "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
     "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
     "performance_claims": false,
     "pilot_plan_frozen": false,
-    "stage2_pilot_run": false
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
   },
   "notes": [
-    "Validator was invoked with blocked oracle qualification records to preserve fail-closed behavior.",
-    "It stops at the first non-passing oracle qualification record; all four records are marked BLOCKED_DOCKER_DAEMON_NOT_RUNNING."
+    "Validator was not rerun after the apt-source diagnostic because PR #10 validator requires passed oracle qualification records.",
+    "All four qualification records are blocked before verifier execution and have verifier_passed=false.",
+    "Process exit code was not used as success; apt output and deterministic verifier output policy remain authoritative."
   ],
   "oracle_qualification_blocker_present": true,
   "oracle_qualification_records": {
-    "name": "oracle_qualification.blocked-docker-daemon.jsonl",
-    "path": "oracle_qualification.blocked-docker-daemon.jsonl",
-    "sha256": "3b85f238a3fa23576e14d24da5a13623a87f8e7b1f116fbda40e47f22e9fb8a0",
-    "size_bytes": 5796
+    "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+    "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+    "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
+    "size_bytes": 20830
   },
   "public_network_blocker_present": false,
   "routed_predictions_strict_artifact": {
@@ -55,7 +70,7 @@
     "size_bytes": 7883
   },
   "schema_version": "v0.3.stage2-input-package-validator-result.v1",
-  "status": "BLOCKED_ORACLE_QUALIFICATION_NOT_EXECUTED",
+  "status": "NOT_RERUN_APT_SOURCE_UNREACHABLE",
   "validator": "build_stage2_real_pilot_input_package",
   "validator_source": "PR #10 real pilot input-package validator"
 }

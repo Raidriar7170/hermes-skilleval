@@ -1,0 +1,440 @@
+{
+  "approved_base_images": [
+    "python:3.12-slim",
+    "python:3.12.8-slim",
+    "ubuntu:24.04"
+  ],
+  "apt_source_diagnostics": [
+    {
+      "command": "docker run --rm python:3.12-slim sh -lc 'cat /etc/os-release; find /etc/apt -maxdepth 3 -type f -print -exec sed -n \"1,120p\" {} \\; ; apt-get update'",
+      "exit_code": 100,
+      "log": {
+        "name": "docker-run-python312-slim-apt-update.log",
+        "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-apt-update.log",
+        "sha256": "f71d38c54638ea05f7a629b3843c831eba6c62593b4a23f836349dbbf0ecb9fe",
+        "size_bytes": 57283
+      },
+      "name": "default_python_3_12_slim_apt_update",
+      "observed_failures": [
+        "http://deb.debian.org/debian trixie InRelease returned 403 Forbidden",
+        "http://deb.debian.org/debian trixie-updates InRelease returned 403 Forbidden",
+        "http://deb.debian.org/debian-security trixie-security InRelease returned 403 Forbidden"
+      ],
+      "source_hashes": {
+        "original_debian_sources_sha256": "06d9b04e907c5069252ba6aee4864378d4cca7ef2efad6623fb57cc1b024872a"
+      },
+      "status": "BLOCKED_HTTP_403_FORBIDDEN",
+      "success_source": "apt output, not process exit code alone"
+    },
+    {
+      "command": "docker run --rm python:3.12-slim ... sed http://deb.debian.org to https://deb.debian.org ... apt-get update",
+      "exit_code": 0,
+      "log": {
+        "name": "docker-run-python312-slim-apt-update-https-source.log",
+        "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-apt-update-https-source.log",
+        "sha256": "c5d863bb9c0182157f55bdc42ad30157105e456aadf345f2bf0bc96361bae3a3",
+        "size_bytes": 2461
+      },
+      "name": "https_scheme_rewrite_probe",
+      "observed_failures": [
+        "https://deb.debian.org/debian trixie InRelease failed with SSL wrong version number",
+        "https://deb.debian.org/debian-security trixie-security InRelease failed with SSL wrong version number"
+      ],
+      "process_exit_code_used_as_success": false,
+      "source_hashes": {
+        "modified_debian_sources_sha256": "1c52e682d2da6ed10817887616685d064441342b0558b8bfa4f6720e79fcf587",
+        "original_debian_sources_sha256": "06d9b04e907c5069252ba6aee4864378d4cca7ef2efad6623fb57cc1b024872a"
+      },
+      "status": "BLOCKED_TLS_WRONG_VERSION_NUMBER",
+      "success_source": "apt output was inspected; warnings show metadata was not fetched successfully"
+    },
+    {
+      "command": "docker run --rm python:3.12-slim ... use https://snapshot.debian.org/archive/debian/20260623T000000Z ... apt-get update",
+      "exit_code": 0,
+      "log": {
+        "name": "docker-run-python312-slim-apt-update-snapshot-source.log",
+        "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-apt-update-snapshot-source.log",
+        "sha256": "eb5d2bd5179581c58604c9de22e9bd13798cba898f82fd3290cb0b518d64cace",
+        "size_bytes": 2971
+      },
+      "name": "debian_snapshot_probe",
+      "observed_failures": [
+        "https://snapshot.debian.org/archive/debian/20260623T000000Z trixie InRelease failed with SSL wrong version number",
+        "https://snapshot.debian.org/archive/debian-security/20260623T000000Z trixie-security InRelease failed with SSL wrong version number"
+      ],
+      "process_exit_code_used_as_success": false,
+      "source_hashes": {
+        "modified_debian_sources_sha256": "974356c6f5ab4d3627928fafdf175cdad7256b34510300836e4d0bb29dcd3c03",
+        "original_debian_sources_sha256": "06d9b04e907c5069252ba6aee4864378d4cca7ef2efad6623fb57cc1b024872a"
+      },
+      "status": "BLOCKED_TLS_WRONG_VERSION_NUMBER",
+      "success_source": "apt output was inspected; warnings show metadata was not fetched successfully"
+    },
+    {
+      "log": {
+        "name": "docker-run-python312-slim-network-shape.log",
+        "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-network-shape.log",
+        "sha256": "4602fd7e42c10aee864601a3a5ca6f638401502ada9c252fa9c889e75d7e2479",
+        "size_bytes": 383
+      },
+      "name": "container_network_shape",
+      "observed_failures": [
+        "Raw HTTP HEAD to deb.debian.org:80 returns HTTP/1.1 403 Forbidden.",
+        "TLS handshake to deb.debian.org:443 fails with SSL WRONG_VERSION_NUMBER.",
+        "TLS handshake to snapshot.debian.org:443 fails with SSL WRONG_VERSION_NUMBER."
+      ],
+      "status": "BLOCKED_AT_HTTP_OR_TLS_HANDSHAKE"
+    },
+    {
+      "log": {
+        "name": "host-python-network-shape.log",
+        "path": "apt-source-diagnostics-20260702T052036Z/logs/host-python-network-shape.log",
+        "sha256": "be16b1481672c4e6b1e6c7c0070e85cf7bf731d9812690bb5f8635553f7c0dad",
+        "size_bytes": 411
+      },
+      "name": "host_network_shape",
+      "observed_failures": [
+        "Host Python HEAD to deb.debian.org HTTP returns 403 Forbidden.",
+        "Host Python HEAD to deb.debian.org HTTPS fails with SSL record layer failure.",
+        "Host Python HEAD to snapshot.debian.org HTTPS fails with SSL record layer failure."
+      ],
+      "status": "BLOCKED_AT_HTTP_OR_TLS_HANDSHAKE"
+    }
+  ],
+  "base_image_inspect": {
+    "images": [
+      {
+        "architecture": "arm64",
+        "created": "2026-06-24T02:17:10.085712605Z",
+        "id": "sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf",
+        "image": "python:3.12-slim",
+        "os": "linux",
+        "repo_digests": [
+          "python@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf"
+        ],
+        "size": 43487789,
+        "variant": "v8"
+      },
+      {
+        "architecture": "arm64",
+        "created": "2025-01-17T12:35:53Z",
+        "id": "sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
+        "image": "python:3.12.8-slim",
+        "os": "linux",
+        "repo_digests": [
+          "python@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0"
+        ],
+        "size": 44949973,
+        "variant": "v8"
+      },
+      {
+        "architecture": "arm64",
+        "created": "2026-06-22T21:25:07.904519372Z",
+        "id": "sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90",
+        "image": "ubuntu:24.04",
+        "os": "linux",
+        "repo_digests": [
+          "ubuntu@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
+        ],
+        "size": 28893360,
+        "variant": "v8"
+      }
+    ],
+    "qualified_command": "docker image inspect docker.io/library/python:3.12-slim docker.io/library/python:3.12.8-slim docker.io/library/ubuntu:24.04",
+    "qualified_log": {
+      "name": "docker-image-inspect-approved-bases-qualified.json",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-image-inspect-approved-bases-qualified.json",
+      "sha256": "d9be796f94b0446fa328e6e6aa5c84e7a6cc2736d05b0dcd1576319bb27b841c",
+      "size_bytes": 5254
+    },
+    "qualified_status": "PASS",
+    "short_name_command": "docker image inspect python:3.12-slim python:3.12.8-slim ubuntu:24.04",
+    "short_name_log": {
+      "name": "docker-image-inspect-approved-bases-short-name-failed.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-image-inspect-approved-bases-short-name-failed.log",
+      "sha256": "657721e85a55ffd939a134c9a9b7c823ac6c0a11899a10b21474be274e3d5f33",
+      "size_bytes": 181
+    },
+    "short_name_status": "FAILED_TAG_RESOLUTION_IN_CURRENT_DOCKER_CONTEXT"
+  },
+  "branch": "ops/stage2-input-package-candidate",
+  "created_at": "2026-07-02T05:20:36Z",
+  "docker_preflight": {
+    "context_ls": {
+      "name": "docker-context-ls.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-context-ls.log",
+      "sha256": "adedeb7f6b29e20181f2e5171178b5d3c7acaf55eee33fd2cd7740853b1e50a9",
+      "size_bytes": 335
+    },
+    "daemon_available": true,
+    "docker_info": {
+      "name": "docker-info.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-info.log",
+      "sha256": "8ae4fa1d7a1b10c9da633a9eee2ce2e7f117bb36adb541a5d8e9d53f6bb73bfb",
+      "size_bytes": 3491
+    },
+    "docker_info_notes": [
+      "Docker Desktop context desktop-linux is active.",
+      "Docker daemon reports Server Version 29.6.1 and Architecture aarch64 in docker-info.log."
+    ],
+    "image_ls": {
+      "name": "docker-image-ls.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-image-ls.log",
+      "sha256": "22db4d1a9a091e7f9ccce68fdecb80f6c4f0127a10fccb5744e71f15e47ee2ac",
+      "size_bytes": 280
+    }
+  },
+  "head": "d289460dd0eeecfc6e7b2275c465f6f030f3e7cc",
+  "input_package_validator": {
+    "reason": "PR #10 input-package validator is only rerun after 4/4 oracle qualification records pass; no qualification record passed.",
+    "rerun": false,
+    "status": "NOT_RERUN_APT_SOURCE_UNREACHABLE"
+  },
+  "logs": {
+    "docker-context-ls.log": {
+      "name": "docker-context-ls.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-context-ls.log",
+      "sha256": "adedeb7f6b29e20181f2e5171178b5d3c7acaf55eee33fd2cd7740853b1e50a9",
+      "size_bytes": 335
+    },
+    "docker-image-inspect-approved-bases-qualified.json": {
+      "name": "docker-image-inspect-approved-bases-qualified.json",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-image-inspect-approved-bases-qualified.json",
+      "sha256": "d9be796f94b0446fa328e6e6aa5c84e7a6cc2736d05b0dcd1576319bb27b841c",
+      "size_bytes": 5254
+    },
+    "docker-image-inspect-approved-bases-short-name-failed.log": {
+      "name": "docker-image-inspect-approved-bases-short-name-failed.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-image-inspect-approved-bases-short-name-failed.log",
+      "sha256": "657721e85a55ffd939a134c9a9b7c823ac6c0a11899a10b21474be274e3d5f33",
+      "size_bytes": 181
+    },
+    "docker-image-ls.log": {
+      "name": "docker-image-ls.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-image-ls.log",
+      "sha256": "22db4d1a9a091e7f9ccce68fdecb80f6c4f0127a10fccb5744e71f15e47ee2ac",
+      "size_bytes": 280
+    },
+    "docker-info.log": {
+      "name": "docker-info.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-info.log",
+      "sha256": "8ae4fa1d7a1b10c9da633a9eee2ce2e7f117bb36adb541a5d8e9d53f6bb73bfb",
+      "size_bytes": 3491
+    },
+    "docker-run-python312-slim-apt-update-https-source.log": {
+      "name": "docker-run-python312-slim-apt-update-https-source.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-apt-update-https-source.log",
+      "sha256": "c5d863bb9c0182157f55bdc42ad30157105e456aadf345f2bf0bc96361bae3a3",
+      "size_bytes": 2461
+    },
+    "docker-run-python312-slim-apt-update-snapshot-source.log": {
+      "name": "docker-run-python312-slim-apt-update-snapshot-source.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-apt-update-snapshot-source.log",
+      "sha256": "eb5d2bd5179581c58604c9de22e9bd13798cba898f82fd3290cb0b518d64cace",
+      "size_bytes": 2971
+    },
+    "docker-run-python312-slim-apt-update.log": {
+      "name": "docker-run-python312-slim-apt-update.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-apt-update.log",
+      "sha256": "f71d38c54638ea05f7a629b3843c831eba6c62593b4a23f836349dbbf0ecb9fe",
+      "size_bytes": 57283
+    },
+    "docker-run-python312-slim-env.log": {
+      "name": "docker-run-python312-slim-env.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-env.log",
+      "sha256": "46e26d5bda5c1f7a7321b920bdd64fcb869b9446bf6bc15d37014123eace80df",
+      "size_bytes": 278
+    },
+    "docker-run-python312-slim-network-shape.log": {
+      "name": "docker-run-python312-slim-network-shape.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/docker-run-python312-slim-network-shape.log",
+      "sha256": "4602fd7e42c10aee864601a3a5ca6f638401502ada9c252fa9c889e75d7e2479",
+      "size_bytes": 383
+    },
+    "git-diff-check.log": {
+      "name": "git-diff-check.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "host-python-network-shape.log": {
+      "name": "host-python-network-shape.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/host-python-network-shape.log",
+      "sha256": "be16b1481672c4e6b1e6c7c0070e85cf7bf731d9812690bb5f8635553f7c0dad",
+      "size_bytes": 411
+    },
+    "openspec-validate-all-strict.log": {
+      "name": "openspec-validate-all-strict.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/openspec-validate-all-strict.log",
+      "sha256": "f74ab5ad7fa863e6f74bc093a086d4d1fe1c19220e21590649b2b0e23c16b91e",
+      "size_bytes": 947
+    },
+    "pytest-full.log": {
+      "name": "pytest-full.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/pytest-full.log",
+      "sha256": "4e035c72f2055a1b46d678c85e156b1b9169e48d37d201304490c287a7524757",
+      "size_bytes": 821
+    },
+    "pytest-skillsbench-live-matrix.log": {
+      "name": "pytest-skillsbench-live-matrix.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/pytest-skillsbench-live-matrix.log",
+      "sha256": "5dd0e178c04b766155a394ae413832ab14759c3ff4afa2a12671d79403d1bb08",
+      "size_bytes": 179
+    },
+    "release-check.log": {
+      "name": "release-check.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/release-check.log",
+      "sha256": "da64a03f263e5daed453a80ffb58198522e6bc248450f0b4f625536a0fa00e29",
+      "size_bytes": 97
+    },
+    "skillsbench-validate.log": {
+      "name": "skillsbench-validate.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/skillsbench-validate.log",
+      "sha256": "5654834ffc7a547fd30dd8173b6745bd0e17dbaa65245adbceb09eb6b21d9c5e",
+      "size_bytes": 186
+    }
+  },
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "privacy": {
+    "artifact": {
+      "name": "privacy-scan.review-required.json",
+      "path": "privacy-scan.review-required.json",
+      "sha256": "faa3767dc3701a22c34b319cdad6d2246b700bd0e4bd3c78dfe361fc2fb3c827",
+      "size_bytes": 8818
+    },
+    "preserved": true,
+    "status": "REVIEW_REQUIRED"
+  },
+  "qualification": {
+    "no_public_network_runtime_confirmation": "not available because qualification images were not built and runtime qualification did not execute",
+    "oracle_qualification_executed": false,
+    "reason": "Dependency materialization did not complete because apt metadata sources are unreachable; oracle/verifier qualification did not start.",
+    "verifier_passed_records": 0,
+    "verifier_run_executed": false,
+    "verifier_total_records": 4
+  },
+  "required_human_action": "Provide a Docker/host network path or explicitly approved local/offline apt mirror/cache that allows the approved Dockerfile apt-get update steps to fetch signed Debian/Ubuntu package metadata. Then rerun dependency materialization before oracle qualification.",
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "schema_version": "v0.3.stage2-apt-source-diagnostics.v1",
+  "scope": "PR_13_ORACLE_VERIFIER_QUALIFICATION_ONLY",
+  "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+  "summary": "Docker daemon is available and approved base images are present, but approved Dockerfile apt dependency sources are unreachable from the current host/container network: deb.debian.org HTTP returns 403, HTTPS and Debian snapshot TLS fail before signed apt metadata is fetched.",
+  "task_build_status": [
+    {
+      "base_image": "python:3.12-slim",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/bike-rebalance/Dockerfile",
+        "sha256": "afd7df77ab59e64036f344583590172f7a24e079093dc83074537cca244e819b",
+        "size_bytes": 393
+      },
+      "effective_network_mode": "none",
+      "status": "NOT_ATTEMPTED_AFTER_APT_SOURCE_DIAGNOSTIC_BLOCKER",
+      "task_id": "bike-rebalance",
+      "task_manifest_sha256": "bc5bdbd0dd634edd8acebe4f2dd8cf28f3ad07aaee267e9332953edd5f3bd993"
+    },
+    {
+      "base_image": "python:3.12.8-slim",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/dialogue-parser/Dockerfile",
+        "sha256": "e0fdab0e028c11d5437caf3b827f10aa65fcf224c8a9689fecc7fa49f3ec92e7",
+        "size_bytes": 429
+      },
+      "effective_network_mode": "controlled",
+      "status": "NOT_ATTEMPTED_AFTER_APT_SOURCE_DIAGNOSTIC_BLOCKER",
+      "task_id": "dialogue-parser",
+      "task_manifest_sha256": "e575fb60e2c1974a2d0e42a966ec3a035a466d23f6f3a2e8a7d8f293d5554450"
+    },
+    {
+      "base_image": "ubuntu:24.04",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/offer-letter-generator/Dockerfile",
+        "sha256": "5ffb0d7fecb51602aad769604cf637b0de3411b8e983eb4bf202ff04838f539a",
+        "size_bytes": 453
+      },
+      "effective_network_mode": "controlled",
+      "status": "NOT_ATTEMPTED_AFTER_APT_SOURCE_DIAGNOSTIC_BLOCKER",
+      "task_id": "offer-letter-generator",
+      "task_manifest_sha256": "0a96958a8dc97a12e753076211b0f4e867184ae5ca88b21b3891675e0fbd32d2"
+    },
+    {
+      "base_image": "ubuntu:24.04",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/powerlifting-coef-calc/Dockerfile",
+        "sha256": "87cf1da3fa2003b9e0573ef76af7865480f5bb34a3c8033dc8d5b01a38e14ee5",
+        "size_bytes": 805
+      },
+      "effective_network_mode": "controlled",
+      "status": "NOT_ATTEMPTED_AFTER_APT_SOURCE_DIAGNOSTIC_BLOCKER",
+      "task_id": "powerlifting-coef-calc",
+      "task_manifest_sha256": "0ee5139bb24b1fe678f9a7c193acefede1e5ede3e5b618b4a1c8702a26a43403"
+    }
+  ],
+  "verification": {
+    "git_diff_check": {
+      "name": "git-diff-check.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "openspec_validate_all_strict": {
+      "name": "openspec-validate-all-strict.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/openspec-validate-all-strict.log",
+      "sha256": "f74ab5ad7fa863e6f74bc093a086d4d1fe1c19220e21590649b2b0e23c16b91e",
+      "size_bytes": 947
+    },
+    "pytest_full": {
+      "name": "pytest-full.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/pytest-full.log",
+      "sha256": "4e035c72f2055a1b46d678c85e156b1b9169e48d37d201304490c287a7524757",
+      "size_bytes": 821
+    },
+    "pytest_skillsbench_live_matrix": {
+      "name": "pytest-skillsbench-live-matrix.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/pytest-skillsbench-live-matrix.log",
+      "sha256": "5dd0e178c04b766155a394ae413832ab14759c3ff4afa2a12671d79403d1bb08",
+      "size_bytes": 179
+    },
+    "release_check": {
+      "name": "release-check.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/release-check.log",
+      "sha256": "da64a03f263e5daed453a80ffb58198522e6bc248450f0b4f625536a0fa00e29",
+      "size_bytes": 97
+    },
+    "skillsbench_validate_log": {
+      "name": "skillsbench-validate.log",
+      "path": "apt-source-diagnostics-20260702T052036Z/logs/skillsbench-validate.log",
+      "sha256": "5654834ffc7a547fd30dd8173b6745bd0e17dbaa65245adbceb09eb6b21d9c5e",
+      "size_bytes": 186
+    },
+    "skillsbench_validate_manifest": {
+      "name": "manifest.json",
+      "path": "apt-source-diagnostics-20260702T052036Z/skillsbench-validate/manifest.json",
+      "sha256": "8e1a1080a1e9b562d288ad04b5da5c878f94be9cf155bfda60f480be86a4c9c4",
+      "size_bytes": 1256
+    },
+    "skillsbench_validate_validation": {
+      "name": "validation.json",
+      "path": "apt-source-diagnostics-20260702T052036Z/skillsbench-validate/validation.json",
+      "sha256": "4a6de58db0fb6baabb3314e5e08c6402703407be52fe3c33294a3ae0fc91845a",
+      "size_bytes": 287
+    }
+  }
+}

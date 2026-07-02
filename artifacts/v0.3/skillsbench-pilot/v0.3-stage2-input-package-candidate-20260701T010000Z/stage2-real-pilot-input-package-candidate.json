@@ -7,6 +7,12 @@
     "status_semantics": "READY_FOR_HUMAN_APPROVAL_NOT_EXECUTED means the packet is complete enough for a human approval decision; it does not mean oracle qualification is complete or Stage 2 execution is allowed."
   },
   "artifacts": {
+    "apt_source_diagnostics_manifest": {
+      "name": "manifest.json",
+      "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+      "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+      "size_bytes": 20784
+    },
     "candidate-data/manifest.json": {
       "name": "manifest.json",
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/manifest.json",
@@ -39,9 +45,9 @@
     },
     "human-approval-readiness.json": {
       "name": "human-approval-readiness.json",
-      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json",
-      "sha256": "b73885855515c94b7e00f9edb59eb010ddc130ff28115c3198caa3d47bb2af65",
-      "size_bytes": 6927
+      "path": "human-approval-readiness.json",
+      "sha256": "abf20c4285d8b586dcd7a72d15a5049a2ac4247c0af5f26d171fe60507cd5fb9",
+      "size_bytes": 8421
     },
     "human-approval.non-execution-qualification.json": {
       "name": "human-approval.non-execution-qualification.json",
@@ -58,8 +64,8 @@
     "human_approval_readiness": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "3582365f39a269cfda938ad8c40a56c890532c74366b25c7e4864fd66034cc9a",
-      "size_bytes": 7467
+      "sha256": "abf20c4285d8b586dcd7a72d15a5049a2ac4247c0af5f26d171fe60507cd5fb9",
+      "size_bytes": 8421
     },
     "input-package-validator.blocked.json": {
       "name": "input-package-validator.blocked.json",
@@ -70,8 +76,8 @@
     "input_package_validator_blocked": {
       "name": "input-package-validator.blocked.json",
       "path": "input-package-validator.blocked.json",
-      "sha256": "8952ee03a9307dafb5ba702eb674ced13b90d3b08468d4969a04c2b63bf6afc3",
-      "size_bytes": 2726
+      "sha256": "23faaa811b4c1f4655b09d9d19ad9362780ad4bfae22c4565ad9556301aeac9c",
+      "size_bytes": 3581
     },
     "oracle-artifacts-manifest.json": {
       "name": "oracle-artifacts-manifest.json",
@@ -96,6 +102,18 @@
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.required-not-run.jsonl",
       "sha256": "5090b09684a87502afcb687010a46b5c7cdf175cc0349c64b3a40e9a7e148eed",
       "size_bytes": 1101
+    },
+    "oracle_qualification_blocked_apt_source_records": {
+      "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+      "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+      "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
+      "size_bytes": 20830
+    },
+    "oracle_qualification_blocked_apt_source_report": {
+      "name": "oracle-qualification.blocked-apt-source-unreachable.json",
+      "path": "oracle-qualification.blocked-apt-source-unreachable.json",
+      "sha256": "b98d72aff14f48898f9ac7bf2e9e29fb8c36ebecb027f6ae31235adf131ff9d9",
+      "size_bytes": 3351
     },
     "oracle_qualification_blocked_records": {
       "name": "oracle_qualification.blocked-docker-daemon.jsonl",
@@ -227,72 +245,53 @@
   },
   "created_at": "2026-07-01T01:00:00+08:00",
   "docker_dependency_prep": {
+    "apt_source_blocker": {
+      "diagnostic_manifest": {
+        "name": "manifest.json",
+        "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+        "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+        "size_bytes": 20784
+      },
+      "required_human_action": "Provide a Docker/host network path or explicitly approved local/offline apt mirror/cache that allows the approved Dockerfile apt-get update steps to fetch signed Debian/Ubuntu package metadata. Then rerun dependency materialization before oracle qualification.",
+      "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+      "summary": "Docker daemon is available and approved base images are present, but approved Dockerfile apt dependency sources are unreachable from the current host/container network: deb.debian.org HTTP returns 403, HTTPS and Debian snapshot TLS fail before signed apt metadata is fetched."
+    },
     "base_images_materialized": [
       {
+        "architecture": "arm64",
+        "created": "2026-06-24T02:17:10.085712605Z",
+        "id": "sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf",
         "image": "python:3.12-slim",
-        "inspect": {
-          "architecture": "arm64",
-          "created": "2026-06-24T02:17:10.085712605Z",
-          "id": "sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf",
-          "image": "python:3.12-slim",
-          "os": "linux",
-          "repo_digests": [
-            "python@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf"
-          ],
-          "size": 43487789
-        },
-        "materialized": true,
-        "pull_command": "docker pull python:3.12-slim",
-        "pull_log": {
-          "name": "docker-pull-python-3.12-slim.log",
-          "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12-slim.log",
-          "sha256": "eca479e1a60eaa22f96566904824808c3eb25e8f8c70d90fe13711c2b236486d",
-          "size_bytes": 634
-        }
+        "os": "linux",
+        "repo_digests": [
+          "python@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf"
+        ],
+        "size": 43487789,
+        "variant": "v8"
       },
       {
+        "architecture": "arm64",
+        "created": "2025-01-17T12:35:53Z",
+        "id": "sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
         "image": "python:3.12.8-slim",
-        "inspect": {
-          "architecture": "arm64",
-          "created": "2025-01-17T12:35:53Z",
-          "id": "sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
-          "image": "python:3.12.8-slim",
-          "os": "linux",
-          "repo_digests": [
-            "python@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0"
-          ],
-          "size": 44949973
-        },
-        "materialized": true,
-        "pull_command": "docker pull python:3.12.8-slim",
-        "pull_log": {
-          "name": "docker-pull-python-3.12.8-slim.log",
-          "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12.8-slim.log",
-          "sha256": "c1ba42f7f135cf17381223af96fa223ed832d3d047b57f5594d0cfdd8bc60856",
-          "size_bytes": 640
-        }
+        "os": "linux",
+        "repo_digests": [
+          "python@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0"
+        ],
+        "size": 44949973,
+        "variant": "v8"
       },
       {
+        "architecture": "arm64",
+        "created": "2026-06-22T21:25:07.904519372Z",
+        "id": "sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90",
         "image": "ubuntu:24.04",
-        "inspect": {
-          "architecture": "arm64",
-          "created": "2026-06-22T21:25:07.904519372Z",
-          "id": "sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90",
-          "image": "ubuntu:24.04",
-          "os": "linux",
-          "repo_digests": [
-            "ubuntu@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
-          ],
-          "size": 28893360
-        },
-        "materialized": true,
-        "pull_command": "docker pull ubuntu:24.04",
-        "pull_log": {
-          "name": "docker-pull-ubuntu-24.04.log",
-          "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-ubuntu-24.04.log",
-          "sha256": "3d3b9dbd8d99d919936d69208885c129945043286bff2e2b980274df41d1f7f7",
-          "size_bytes": 317
-        }
+        "os": "linux",
+        "repo_digests": [
+          "ubuntu@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
+        ],
+        "size": 28893360,
+        "variant": "v8"
       }
     ],
     "blocker": "Dockerfile apt-get update returned 403 Forbidden during dependency image build.",
@@ -305,6 +304,13 @@
     },
     "docker_info_exit_code": 0,
     "input_package_validator_rerun": false,
+    "latest_diagnostic_manifest": {
+      "name": "manifest.json",
+      "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+      "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+      "size_bytes": 20784
+    },
+    "latest_status": "BLOCKED_APT_SOURCE_UNREACHABLE",
     "manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json",
     "manifest_sha256": "737db7d85077d57530390a995372daa6a8336a561201bad6f482e42c4d4cd0d5",
     "oracle_run_executed": false,
@@ -325,10 +331,15 @@
     }
   },
   "input_package_validator": {
-    "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/input-package-validator.blocked.json",
-    "error": "Input-package validator was not rerun because oracle/verifier qualification did not execute after Docker dependency build failed.",
-    "fail_closed": true,
-    "status": "NOT_RERUN_DOCKER_DEPENDENCY_BUILD_FAILED"
+    "artifact": {
+      "name": "input-package-validator.blocked.json",
+      "path": "input-package-validator.blocked.json",
+      "sha256": "23faaa811b4c1f4655b09d9d19ad9362780ad4bfae22c4565ad9556301aeac9c",
+      "size_bytes": 3581
+    },
+    "reason": "Blocked before oracle qualification; validator rerun requires 4/4 passing qualification records.",
+    "rerun": false,
+    "status": "NOT_RERUN_APT_SOURCE_UNREACHABLE"
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -336,15 +347,35 @@
     "fake_runner_or_verifier_used_as_real_evidence": false,
     "fixture_data_used_as_real_evidence": false,
     "live_agent_traces_created": false,
+    "llm_judge_used": false,
     "manual_routed_predictions_written": false,
     "oracle_label_derived_predictions": false,
     "performance_claims": false,
     "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
     "scorer_matrix_or_evidence_gate_semantics_modified": false,
     "stage2_pilot_run": false,
     "training_or_tuning_or_new_router_variant": false
   },
   "objective": "Prepare the fastest reviewable Stage 2 4-task controlled-local-snapshot input package candidate without executing Stage 2.",
+  "oracle_qualification": {
+    "blocked_records": {
+      "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+      "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+      "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
+      "size_bytes": 20830
+    },
+    "blocked_report": {
+      "name": "oracle-qualification.blocked-apt-source-unreachable.json",
+      "path": "oracle-qualification.blocked-apt-source-unreachable.json",
+      "sha256": "b98d72aff14f48898f9ac7bf2e9e29fb8c36ebecb027f6ae31235adf131ff9d9",
+      "size_bytes": 3351
+    },
+    "qualification_executed": false,
+    "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+    "verifier_passed_count": 0,
+    "verifier_total_count": 4
+  },
   "oracle_qualification_review": {
     "dependency_prep_manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/docker-dependency-prep-20260702T050200Z/manifest.json",
     "oracle_run_executed": false,
@@ -421,7 +452,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-real-pilot-input-package-candidate.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_APT_SOURCE_UNREACHABLE",
   "validation_summary": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/validation/validation.json",
     "effective_network_modes": {
