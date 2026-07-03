@@ -1,14 +1,14 @@
 {
   "approval_boundary": {
-    "approval_decision_scope": "Human approval decision for the controlled-local-snapshot candidate package, privacy acceptance, routed prediction review, and whether to authorize oracle qualification later.",
+    "does_not_authorize_codex_run": true,
     "does_not_authorize_stage2_execution": true,
+    "does_not_authorize_traces": true,
     "does_not_freeze_pilot_plan": true,
-    "does_not_mark_oracle_qualification_complete": true,
-    "does_not_mark_validation_passed_without_cli_validation": true,
     "execution_readiness": false,
-    "human_approval_packet_ready": true,
     "human_non_execution_approval_recorded": true,
-    "validation_no_longer_blocked_by_public_network": true
+    "input_package_validator_passed": true,
+    "oracle_qualification_complete": true,
+    "privacy_review_required": true
   },
   "approval_decision_items": [
     {
@@ -67,10 +67,10 @@
     "size_bytes": 20784
   },
   "execution_blockers_preserved": [
-    "PR #10 input-package validator has not been rerun in this Phase C2-only update",
     "privacy scan remains REVIEW_REQUIRED",
     "no Codex real-runner preflight was run",
-    "no Stage 2 pilot plan was frozen"
+    "no Stage 2 pilot plan was frozen",
+    "no Stage 2 pilot execution was authorized or run"
   ],
   "human_approval_artifact": {
     "name": "human-approval.non-execution-qualification.json",
@@ -79,10 +79,10 @@
     "size_bytes": 14653
   },
   "input_package_validator_artifact": {
-    "name": "input-package-validator.blocked.json",
-    "path": "input-package-validator.blocked.json",
-    "sha256": "5334911273dae96cfe351c30abc9c9da7a1cc30b48628c6f137cad7a5bf72754",
-    "size_bytes": 3605
+    "name": "input-package-validator.passed.json",
+    "path": "input-package-validator.passed.json",
+    "sha256": "de087717fe4fcd36344f1d1b5788898ebff3b512f42c2a1d39686bbc09e843cc",
+    "size_bytes": 5062
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -159,12 +159,12 @@
       "powerlifting-coef-calc": "controlled"
     },
     "human_approval_recorded": true,
-    "input_package_validator_status": "NOT_RERUN_PHASE_C2_ONLY",
+    "input_package_validator_status": "PASS",
     "non_fixture_source": true,
     "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
-    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_NOT_RERUN",
+    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_NOT_EXECUTED",
     "ready_for_human_approval_now": false,
-    "recommended_next_step": "Run Phase C3 PR #10 input-package validator using oracle_qualification.jsonl, strict routed predictions, approved router config, and global skill registry. Keep privacy REVIEW_REQUIRED visible.",
+    "recommended_next_step": "Review privacy-scan.review-required.json and decide whether to authorize a separate next phase for Codex real-runner preflight or frozen pilot planning. Do not run Stage 2 from this C3 phase.",
     "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
     "validation_status": "PASS"
@@ -195,7 +195,13 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-human-approval-readiness.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_NOT_RERUN",
+  "stage2_real_pilot_input_package_artifact": {
+    "name": "stage2-real-pilot-input-package.json",
+    "path": "stage2-real-pilot-input-package.json",
+    "sha256": "235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739",
+    "size_bytes": 180520
+  },
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_NOT_EXECUTED",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,

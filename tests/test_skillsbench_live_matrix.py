@@ -1863,6 +1863,69 @@ def test_stage2_real_pilot_input_package_records_required_hashes(tmp_path):
         assert record["predicted_skill_ids"]
 
 
+def test_stage2_real_pilot_input_package_allows_container_root_paths(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+    tasks = _read_jsonl_file(paths["data_root"] / "tasks.jsonl")
+    tasks[0]["prompt"] = "Write the deterministic answer to /root/output.json."
+    tasks[0]["verifier"]["expected_output_format"]["path"] = "/root/output.json"
+    _write_jsonl_file(paths["data_root"] / "tasks.jsonl", tasks)
+    oracle_records = _read_jsonl_file(paths["oracle_qualification"])
+    oracle_records[0]["task_hash"] = _canonical_hash(
+        {
+            "task_id": tasks[0]["task_id"],
+            "prompt": tasks[0]["prompt"],
+            "verifier": tasks[0]["verifier"],
+            "oracle_skill_ids": tasks[0]["oracle_skill_ids"],
+            "network": tasks[0]["network"],
+            "requires_private_credentials": tasks[0]["requires_private_credentials"],
+            "metadata": {
+                "source": tasks[0]["source"],
+                "provenance": tasks[0]["provenance"],
+            },
+        }
+    )
+    oracle_records[0]["verifier_hash"] = _canonical_hash(tasks[0]["verifier"])
+    _write_jsonl_file(paths["oracle_qualification"], oracle_records)
+
+    package = _build_real_like_pilot_input_package(paths)
+
+    selected_task = package["data_root_package"]["selected_tasks"][0]
+    assert selected_task["task_id"] == "sb-real-1"
+    assert selected_task["prompt_hash"]
+
+
+def test_stage2_real_pilot_input_package_still_rejects_credentials(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+
+    with pytest.raises(ValueError, match="sensitive value"):
+        build_stage2_real_pilot_input_package(
+            data_root=paths["data_root"],
+            upstream_ref=UPSTREAM_SHA,
+            license_note="SECRET=not-a-real-secret",
+            run_id="stage2-real-pilot-input-package-unit",
+            selected_task_ids=[f"sb-real-{index}" for index in range(1, 5)],
+            routed_predictions_path=paths["routed_predictions"],
+            oracle_qualification_path=paths["oracle_qualification"],
+            router_top_k=1,
+        )
+
+
+def test_stage2_real_pilot_input_package_rejects_non_container_root_paths(tmp_path):
+    paths = _write_real_like_pilot_inputs(tmp_path / "skillsbench-real")
+
+    with pytest.raises(ValueError, match="sensitive value found: /root"):
+        build_stage2_real_pilot_input_package(
+            data_root=paths["data_root"],
+            upstream_ref=UPSTREAM_SHA,
+            license_note="review cache was under /root/private-cache",
+            run_id="stage2-real-pilot-input-package-unit",
+            selected_task_ids=[f"sb-real-{index}" for index in range(1, 5)],
+            routed_predictions_path=paths["routed_predictions"],
+            oracle_qualification_path=paths["oracle_qualification"],
+            router_top_k=1,
+        )
+
+
 def test_stage2_real_pilot_input_package_leakage_guard_catches_prompt_and_skill_text(
     tmp_path,
 ):

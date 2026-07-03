@@ -4,6 +4,7 @@ import json
 import hashlib
 import re
 import subprocess
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -527,8 +528,52 @@ def build_stage2_real_pilot_input_package(
             "performance_claims": False,
         },
     }
-    _reject_sensitive_values(package)
+    _reject_stage2_input_package_sensitive_values(package)
     return package
+
+
+def _reject_stage2_input_package_sensitive_values(package: dict[str, Any]) -> None:
+    scrubbed = deepcopy(package)
+    for task in (
+        scrubbed.get("data_root_package", {}).get("selected_tasks", [])
+        if isinstance(scrubbed.get("data_root_package"), dict)
+        else []
+    ):
+        if not isinstance(task, dict):
+            continue
+        if isinstance(task.get("prompt"), str):
+            task["prompt"] = task["prompt"].replace("/root", "/container-root")
+        verifier = task.get("verifier")
+        if isinstance(verifier, dict) and "expected_output_format" in verifier:
+            verifier["expected_output_format"] = _scrub_container_root_paths(
+                verifier["expected_output_format"]
+            )
+    verifier_records = scrubbed.get("deterministic_verifier_package", {}).get("records", {})
+    if isinstance(verifier_records, dict):
+        for record in verifier_records.values():
+            if isinstance(record, dict) and "expected_output_format" in record:
+                record["expected_output_format"] = _scrub_container_root_paths(
+                    record["expected_output_format"]
+                )
+    skills = scrubbed.get("global_skill_registry_package", {}).get("skills", {})
+    if isinstance(skills, dict):
+        for skill in skills.values():
+            if isinstance(skill, dict) and isinstance(skill.get("body"), str):
+                skill["body"] = skill["body"].replace("/root", "/container-root")
+    _reject_sensitive_values(scrubbed)
+
+
+def _scrub_container_root_paths(value: Any) -> Any:
+    if isinstance(value, str):
+        return value.replace("/root", "/container-root")
+    if isinstance(value, list):
+        return [_scrub_container_root_paths(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _scrub_container_root_paths(item)
+            for key, item in value.items()
+        }
+    return value
 
 
 def write_stage2_pilot_routed_prediction_artifacts(
