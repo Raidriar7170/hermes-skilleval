@@ -4,7 +4,7 @@
     "does_not_freeze_pilot_plan": true,
     "execution_readiness": false,
     "human_approval_packet_ready": true,
-    "status_semantics": "Validator-passed means the PR #10 input package gate accepted the non-executed package; it does not mean privacy review is complete or Stage 2 execution is allowed."
+    "status_semantics": "Validator-passed and privacy-accepted means the PR #13 non-execution package is ready for human review or merge consideration; it does not mean Stage 2 execution is allowed."
   },
   "artifacts": {
     "apt_source_diagnostics_manifest": {
@@ -46,8 +46,8 @@
     "human-approval-readiness.json": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "80cc77689dff4f72f66e9cad53e0a0a37138eb0cfd93d2f531aaf2f630b2dfab",
-      "size_bytes": 9344
+      "sha256": "54bebda4faebb66ed826a523ce47055ff8cb3cac441b12ee8058ad4a702cf8bf",
+      "size_bytes": 9957
     },
     "human-approval.non-execution-qualification.json": {
       "name": "human-approval.non-execution-qualification.json",
@@ -64,8 +64,8 @@
     "human_approval_readiness": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "80cc77689dff4f72f66e9cad53e0a0a37138eb0cfd93d2f531aaf2f630b2dfab",
-      "size_bytes": 9344
+      "sha256": "54bebda4faebb66ed826a523ce47055ff8cb3cac441b12ee8058ad4a702cf8bf",
+      "size_bytes": 9957
     },
     "input-package-validator.blocked.json": {
       "name": "input-package-validator.blocked.json",
@@ -162,6 +162,12 @@
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-scan.review-required.json",
       "sha256": "faa3767dc3701a22c34b319cdad6d2246b700bd0e4bd3c78dfe361fc2fb3c827",
       "size_bytes": 8818
+    },
+    "privacy-review.accepted-non-execution.json": {
+      "name": "privacy-review.accepted-non-execution.json",
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.accepted-non-execution.json",
+      "sha256": "15d95796a1cd106c4b40efec896dc85fcb357de9d32c04fc2ecd4bcc8db21c81",
+      "size_bytes": 7637
     },
     "routed_predictions.candidate.json": {
       "name": "routed_predictions.candidate.json",
@@ -305,8 +311,8 @@
     "readiness": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "80cc77689dff4f72f66e9cad53e0a0a37138eb0cfd93d2f531aaf2f630b2dfab",
-      "size_bytes": 9344
+      "sha256": "54bebda4faebb66ed826a523ce47055ff8cb3cac441b12ee8058ad4a702cf8bf",
+      "size_bytes": 9957
     }
   },
   "input_package_validator": {
@@ -381,31 +387,54 @@
   },
   "privacy_review": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-scan.review-required.json",
+    "decision_artifact": {
+      "name": "privacy-review.accepted-non-execution.json",
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.accepted-non-execution.json",
+      "sha256": "15d95796a1cd106c4b40efec896dc85fcb357de9d32c04fc2ecd4bcc8db21c81",
+      "size_bytes": 7637
+    },
     "excluded_task_ids": [],
     "finding_context_counts": {
       "PUBLIC_UPSTREAM_AUTHOR_METADATA": 4,
       "REVIEW_REQUIRED": 24
     },
     "finding_count": 28,
-    "status": "REVIEW_REQUIRED"
+    "finding_resolution_counts": {
+      "dialogue_parser_private_key_marker_false_positive_narrative_label_text": 14,
+      "phone_like_scanner_false_positive_numeric_constants": 7,
+      "powerlifting_public_upstream_author_contact_citation_accepted": 3,
+      "public_upstream_author_metadata_accepted_from_task_manifests": 4,
+      "redaction_required": 0,
+      "total_resolved": 28
+    },
+    "redaction_required": false,
+    "reviewed_scan": {
+      "name": "privacy-scan.review-required.json",
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-scan.review-required.json",
+      "sha256": "faa3767dc3701a22c34b319cdad6d2246b700bd0e4bd3c78dfe361fc2fb3c827",
+      "size_bytes": 8818,
+      "status": "REVIEW_REQUIRED"
+    },
+    "status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
   },
   "readiness_decision": {
     "can_be_used_as_real_stage2_input_package_now": false,
     "non_fixture_source": true,
-    "ready_for_human_approval_now": false,
+    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "ready_for_human_approval_now": true,
     "reasons": [
       "Human approval for non-execution qualification was recorded for the controlled-local-snapshot candidate.",
       "Strict routed predictions were generated with the approved router config and clean code provenance.",
       "Phase C2 oracle/verifier qualification ran under Docker --network none for all four approved tasks.",
       "All four deterministic verifier outputs produced reward.txt=1 and CTRF tests passed.",
       "Phase C3 reran the PR #10 input-package validator and it passed.",
-      "Privacy/sensitive-data scan remains REVIEW_REQUIRED.",
+      "Phase C4 privacy review accepted the 28 scan findings with no redaction required under public-upstream benchmark scope.",
       "No Stage 2 pilot, Codex run, frozen plan, traces, or evidence-gate rerun occurred."
     ],
     "recommended_review_questions": [
-      "Review privacy-scan.review-required.json and decide whether redaction/approval is needed before any pilot authorization.",
-      "If privacy review is accepted, open a separate bounded phase for Codex real-runner preflight or frozen pilot planning.",
-      "Do not freeze a pilot plan or run Stage 2 from this C3 validator pass alone."
+      "Review PR #13 for non-execution evidence completeness and merge consideration.",
+      "Open a separate bounded phase for Codex real-runner preflight only with explicit later authorization.",
+      "Open frozen pilot planning only with explicit later authorization; do not run Stage 2 from this C4 privacy closeout."
     ],
     "validation_no_longer_blocked_by_public_network": true,
     "validator_passed": true
@@ -443,7 +472,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-real-pilot-input-package-candidate.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_NOT_EXECUTED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
   "validation_summary": {
     "artifact": {
       "name": "validation.json",

@@ -8,7 +8,8 @@
     "human_non_execution_approval_recorded": true,
     "input_package_validator_passed": true,
     "oracle_qualification_complete": true,
-    "privacy_review_required": true
+    "privacy_review_required": false,
+    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
   },
   "approval_decision_items": [
     {
@@ -30,9 +31,10 @@
     {
       "decision": "accept_or_request_redaction_for_privacy_review_items",
       "evidence_refs": [
-        "privacy-scan.review-required.json"
+        "privacy-scan.review-required.json",
+        "privacy-review.accepted-non-execution.json"
       ],
-      "status": "ACKNOWLEDGED_REVIEW_REQUIRED_MUST_REMAIN_VISIBLE"
+      "status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
     },
     {
       "decision": "approve_or_request_new_candidate_routed_predictions",
@@ -67,10 +69,11 @@
     "size_bytes": 20784
   },
   "execution_blockers_preserved": [
-    "privacy scan remains REVIEW_REQUIRED",
     "no Codex real-runner preflight was run",
     "no Stage 2 pilot plan was frozen",
-    "no Stage 2 pilot execution was authorized or run"
+    "no Stage 2 pilot execution was authorized or run",
+    "no live-agent traces were created",
+    "no evidence-gate rerun was performed"
   ],
   "human_approval_artifact": {
     "name": "human-approval.non-execution-qualification.json",
@@ -83,6 +86,12 @@
     "path": "input-package-validator.passed.json",
     "sha256": "de087717fe4fcd36344f1d1b5788898ebff3b512f42c2a1d39686bbc09e843cc",
     "size_bytes": 5062
+  },
+  "privacy_review_artifact": {
+    "name": "privacy-review.accepted-non-execution.json",
+    "path": "privacy-review.accepted-non-execution.json",
+    "sha256": "15d95796a1cd106c4b40efec896dc85fcb357de9d32c04fc2ecd4bcc8db21c81",
+    "size_bytes": 7637
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -162,9 +171,10 @@
     "input_package_validator_status": "PASS",
     "non_fixture_source": true,
     "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
-    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_NOT_EXECUTED",
-    "ready_for_human_approval_now": false,
-    "recommended_next_step": "Review privacy-scan.review-required.json and decide whether to authorize a separate next phase for Codex real-runner preflight or frozen pilot planning. Do not run Stage 2 from this C3 phase.",
+    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
+    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "ready_for_human_approval_now": true,
+    "recommended_next_step": "PR #13 can proceed to human review/merge consideration as a non-execution package. Authorize a separate bounded phase before any Codex real-runner preflight or frozen pilot planning; do not run Stage 2 from this C4 privacy closeout.",
     "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
     "validation_status": "PASS"
@@ -201,7 +211,7 @@
     "sha256": "235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739",
     "size_bytes": 180520
   },
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_NOT_EXECUTED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,
