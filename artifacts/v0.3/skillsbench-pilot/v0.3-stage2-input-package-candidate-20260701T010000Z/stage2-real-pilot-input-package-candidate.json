@@ -15,9 +15,9 @@
     },
     "candidate-data/manifest.json": {
       "name": "manifest.json",
-      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/manifest.json",
-      "sha256": "e4b2d692565f1ec70f6edeb7a2bba36237fb996e6d9fd1dacda60d3e7dc03f56",
-      "size_bytes": 2022
+      "path": "candidate-data/manifest.json",
+      "sha256": "d054fa5ed79ba23c1304d821768818328e79170929b3d41cbee4dae31cc49a81",
+      "size_bytes": 2386
     },
     "candidate-data/skills.jsonl": {
       "name": "skills.jsonl",
@@ -46,8 +46,8 @@
     "human-approval-readiness.json": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "abf20c4285d8b586dcd7a72d15a5049a2ac4247c0af5f26d171fe60507cd5fb9",
-      "size_bytes": 8421
+      "sha256": "c338da95893d6ecefacaca6d1ae5db072e948079506ae0204df22f1fe7ec181e",
+      "size_bytes": 9344
     },
     "human-approval.non-execution-qualification.json": {
       "name": "human-approval.non-execution-qualification.json",
@@ -81,15 +81,21 @@
     },
     "oracle-artifacts-manifest.json": {
       "name": "oracle-artifacts-manifest.json",
-      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-artifacts-manifest.json",
-      "sha256": "c7836d6774a46b792c6487817e5d97d6aea897bfc3553249cbc4cb701e23dee9",
-      "size_bytes": 3172
+      "path": "oracle-artifacts-manifest.json",
+      "sha256": "cd4461d16cee655d863300151300091547ea4c48d495376d29ee9e1e81dabc96",
+      "size_bytes": 5486
     },
     "oracle-qualification.blocked-docker-daemon.json": {
       "name": "oracle-qualification.blocked-docker-daemon.json",
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.blocked-docker-daemon.json",
       "sha256": "7109db46bcf32be8930286428af34dcef54814f549eedd61eb86a32975bdda67",
       "size_bytes": 1227
+    },
+    "oracle_qualification": {
+      "name": "oracle_qualification.jsonl",
+      "path": "oracle_qualification.jsonl",
+      "sha256": "5a8bdded8528f39f4515dddbe60d8b353dd1e0a53889cf206aecd6b25b844a27",
+      "size_bytes": 39229
     },
     "oracle_qualification.blocked-docker-daemon.jsonl": {
       "name": "oracle_qualification.blocked-docker-daemon.jsonl",
@@ -126,6 +132,18 @@
       "path": "oracle-qualification.blocked-docker-daemon.json",
       "sha256": "7109db46bcf32be8930286428af34dcef54814f549eedd61eb86a32975bdda67",
       "size_bytes": 1227
+    },
+    "oracle_qualification_manifest": {
+      "name": "manifest.json",
+      "path": "oracle-qualification-20260703T042700Z/manifest.json",
+      "sha256": "5deea91c901d7a4594e2e13268ba2088729724a8f2dc03d88f13c79967b30944",
+      "size_bytes": 6501
+    },
+    "oracle_qualification_report": {
+      "name": "oracle-qualification.report.json",
+      "path": "oracle-qualification.report.json",
+      "sha256": "89e0c75d0bcdd88b360cb09b85e876a2a89f9eb86155b4cc55cf30242d54d21e",
+      "size_bytes": 6857
     },
     "privacy-scan.review-required.json": {
       "name": "privacy-scan.review-required.json",
@@ -180,6 +198,12 @@
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/router-config.candidate-review-required.json",
       "sha256": "3c73cee01fada0a6d19970612648dd903b9eafb677a8f6516841ccac8e1104cd",
       "size_bytes": 1475
+    },
+    "stage2-real-pilot-input-package-candidate.json": {
+      "name": "stage2-real-pilot-input-package-candidate.json",
+      "path": "stage2-real-pilot-input-package-candidate.json",
+      "sha256": "477c4a16c2b2e9f31d51193bb4503d355a9a5f57bbfb3996d7c27886cfbb089c",
+      "size_bytes": 21847
     },
     "validation": {
       "name": "validation.json",
@@ -252,7 +276,7 @@
       "size_bytes": 24795
     },
     "manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/zero-dependency-qualification-20260702T113533Z/manifest.json",
-    "status": "ZERO_DEPENDENCY_IMAGES_BUILT_DOCKER_RUNTIME_START_BLOCKED"
+    "status": "ZERO_DEPENDENCY_IMAGES_AVAILABLE_DOCKER_RUNTIME_START_VERIFIED"
   },
   "human_approval": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval.non-execution-qualification.json",
@@ -274,9 +298,9 @@
       "sha256": "5334911273dae96cfe351c30abc9c9da7a1cc30b48628c6f137cad7a5bf72754",
       "size_bytes": 3605
     },
-    "reason": "Blocked before oracle qualification; validator rerun requires 4/4 passing qualification records.",
+    "reason": "Phase C2 was limited to oracle/verifier qualification; Phase C3 validator rerun remains next.",
     "rerun": false,
-    "status": "NOT_RERUN_DOCKER_RUNTIME_START_BLOCKED"
+    "status": "NOT_RERUN_PHASE_C2_ONLY"
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -296,31 +320,38 @@
   },
   "objective": "Prepare the fastest reviewable Stage 2 4-task controlled-local-snapshot input package candidate without executing Stage 2.",
   "oracle_qualification": {
-    "blocked_records": {
-      "name": "oracle_qualification.blocked-docker-runtime-start.jsonl",
-      "path": "oracle_qualification.blocked-docker-runtime-start.jsonl",
-      "sha256": "7ed1f1a6c8f100966fd2f330f6eeeb6c3e4719f99294000cd84efd31c6d21838",
-      "size_bytes": 18695
+    "manifest": {
+      "name": "manifest.json",
+      "path": "oracle-qualification-20260703T042700Z/manifest.json",
+      "sha256": "5deea91c901d7a4594e2e13268ba2088729724a8f2dc03d88f13c79967b30944",
+      "size_bytes": 6501
     },
-    "blocked_report": {
-      "name": "oracle-qualification.blocked-docker-runtime-start.json",
-      "path": "oracle-qualification.blocked-docker-runtime-start.json",
-      "sha256": "142142f0fd5401e9b0c82e120878b25499d6e9afcffcbc24480ee5a68282c72d",
-      "size_bytes": 3018
+    "qualification_executed": true,
+    "records": {
+      "name": "oracle_qualification.jsonl",
+      "path": "oracle_qualification.jsonl",
+      "sha256": "5a8bdded8528f39f4515dddbe60d8b353dd1e0a53889cf206aecd6b25b844a27",
+      "size_bytes": 39229
     },
-    "qualification_executed": false,
-    "status": "BLOCKED_DOCKER_RUNTIME_START",
-    "verifier_passed_count": 0,
+    "report": {
+      "name": "oracle-qualification.report.json",
+      "path": "oracle-qualification.report.json",
+      "sha256": "89e0c75d0bcdd88b360cb09b85e876a2a89f9eb86155b4cc55cf30242d54d21e",
+      "size_bytes": 6857
+    },
+    "status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "verifier_passed_count": 4,
+    "verifier_run_executed": true,
     "verifier_total_count": 4
   },
   "oracle_qualification_review": {
-    "dependency_prep_manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/zero-dependency-qualification-20260702T113533Z/manifest.json",
-    "oracle_run_executed": false,
-    "records": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.blocked-docker-runtime-start.jsonl",
-    "report": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.blocked-docker-runtime-start.json",
-    "status": "BLOCKED_DOCKER_RUNTIME_START",
-    "verifier_passed_records": 0,
-    "verifier_run_executed": false
+    "manifest": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification-20260703T042700Z/manifest.json",
+    "oracle_run_executed": true,
+    "records": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.jsonl",
+    "report": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.report.json",
+    "status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "verifier_passed_records": 4,
+    "verifier_run_executed": true
   },
   "privacy_review": {
     "artifact": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-scan.review-required.json",
@@ -339,17 +370,14 @@
     "reasons": [
       "Human approval for non-execution qualification was recorded for the controlled-local-snapshot candidate.",
       "Strict routed predictions were generated with the approved router config and clean code provenance.",
-      "Docker daemon is now available and approved base images were pulled, but dependency image build failed before oracle/verifier qualification.",
-      "The blocking build step was bike-rebalance Dockerfile apt-get update, which returned 403 Forbidden from deb.debian.org.",
-      "Oracle/verifier qualification did not execute; no verifier_passed=true records were produced.",
-      "The PR #10 input-package validator was not rerun because oracle qualification did not complete.",
+      "Phase C2 oracle/verifier qualification ran under Docker --network none for all four approved tasks.",
+      "All four deterministic verifier outputs produced reward.txt=1 and CTRF tests passed.",
+      "The PR #10 input-package validator has not been rerun in this Phase C2-only update.",
       "Privacy/sensitive-data scan remains REVIEW_REQUIRED.",
       "No Stage 2 pilot, Codex run, frozen plan, traces, or evidence-gate rerun occurred."
     ],
     "recommended_review_questions": [
-      "Make the approved Dockerfile apt repositories reachable from Docker build, or provide an approved local/offline apt package mirror/cache.",
-      "Rerun dependency materialization, then run only the authorized non-execution oracle qualification against deterministic verifiers.",
-      "Rerun the PR #10 input-package validator only after oracle qualification produces verifier_passed=true records.",
+      "Run Phase C3 PR #10 input-package validator with oracle_qualification.jsonl and strict routed predictions.",
       "Keep privacy-scan.review-required.json visible in the next review packet.",
       "Do not freeze a pilot plan or run Stage 2 until the validator passes and a separate authorization is given."
     ],
@@ -389,7 +417,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-real-pilot-input-package-candidate.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_RUNTIME_START",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_NOT_RERUN",
   "validation_summary": {
     "artifact": {
       "name": "validation.json",

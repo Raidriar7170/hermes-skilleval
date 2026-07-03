@@ -47,11 +47,11 @@
       "decision": "authorize_or_defer_oracle_qualification_after_human_approval",
       "evidence_refs": [
         "oracle-artifacts-manifest.json",
-        "oracle_qualification.blocked-docker-runtime-start.jsonl",
-        "oracle-qualification.blocked-docker-runtime-start.json",
-        "zero-dependency-qualification-20260702T113533Z/manifest.json"
+        "oracle_qualification.jsonl",
+        "oracle-qualification.report.json",
+        "oracle-qualification-20260703T042700Z/manifest.json"
       ],
-      "status": "AUTHORIZED_FOR_NON_EXECUTION_QUALIFICATION_ATTEMPT_BLOCKED_DOCKER_RUNTIME_START"
+      "status": "AUTHORIZED_NON_EXECUTION_ORACLE_QUALIFICATION_COMPLETED"
     }
   ],
   "apt_source_diagnostics_artifact": {
@@ -67,10 +67,7 @@
     "size_bytes": 20784
   },
   "execution_blockers_preserved": [
-    "Zero-dependency qualification images were built without apt/pip/curl/public network build steps",
-    "Docker runtime cannot start containers: python:3.12-slim smoke remains Created with no start event",
-    "oracle qualification did not execute because Docker runtime start is blocked",
-    "input-package validator was not rerun because oracle qualification did not pass",
+    "PR #10 input-package validator has not been rerun in this Phase C2-only update",
     "privacy scan remains REVIEW_REQUIRED",
     "no Codex real-runner preflight was run",
     "no Stage 2 pilot plan was frozen"
@@ -104,28 +101,57 @@
     "training_or_tuning_or_new_router_variant": false
   },
   "oracle_qualification_artifacts": {
-    "blocked_records": {
-      "name": "oracle_qualification.blocked-docker-runtime-start.jsonl",
-      "path": "oracle_qualification.blocked-docker-runtime-start.jsonl",
-      "sha256": "7ed1f1a6c8f100966fd2f330f6eeeb6c3e4719f99294000cd84efd31c6d21838",
-      "size_bytes": 18695
+    "historical_blocked_records_preserved": {
+      "apt_source_unreachable": {
+        "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+        "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+        "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
+        "size_bytes": 20830
+      },
+      "docker_daemon": {
+        "name": "oracle_qualification.blocked-docker-daemon.jsonl",
+        "path": "oracle_qualification.blocked-docker-daemon.jsonl",
+        "sha256": "3b85f238a3fa23576e14d24da5a13623a87f8e7b1f116fbda40e47f22e9fb8a0",
+        "size_bytes": 5796
+      },
+      "docker_runtime_start": {
+        "name": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+        "path": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+        "sha256": "7ed1f1a6c8f100966fd2f330f6eeeb6c3e4719f99294000cd84efd31c6d21838",
+        "size_bytes": 18695
+      },
+      "required_not_run": {
+        "name": "oracle_qualification.required-not-run.jsonl",
+        "path": "oracle_qualification.required-not-run.jsonl",
+        "sha256": "5090b09684a87502afcb687010a46b5c7cdf175cc0349c64b3a40e9a7e148eed",
+        "size_bytes": 1101
+      }
     },
-    "blocked_report": {
-      "name": "oracle-qualification.blocked-docker-runtime-start.json",
-      "path": "oracle-qualification.blocked-docker-runtime-start.json",
-      "sha256": "142142f0fd5401e9b0c82e120878b25499d6e9afcffcbc24480ee5a68282c72d",
-      "size_bytes": 3018
-    },
-    "zero_dependency_manifest": {
+    "manifest": {
       "name": "manifest.json",
-      "path": "zero-dependency-qualification-20260702T113533Z/manifest.json",
-      "sha256": "4b8de75e62567e9cfd25d3cd4b7987e24f5dec67baab7d6aa918bdcb974f778b",
-      "size_bytes": 24795
-    }
+      "path": "oracle-qualification-20260703T042700Z/manifest.json",
+      "sha256": "5deea91c901d7a4594e2e13268ba2088729724a8f2dc03d88f13c79967b30944",
+      "size_bytes": 6501
+    },
+    "records": {
+      "name": "oracle_qualification.jsonl",
+      "path": "oracle_qualification.jsonl",
+      "sha256": "5a8bdded8528f39f4515dddbe60d8b353dd1e0a53889cf206aecd6b25b844a27",
+      "size_bytes": 39229
+    },
+    "report": {
+      "name": "oracle-qualification.report.json",
+      "path": "oracle-qualification.report.json",
+      "sha256": "89e0c75d0bcdd88b360cb09b85e876a2a89f9eb86155b4cc55cf30242d54d21e",
+      "size_bytes": 6857
+    },
+    "status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "verifier_passed_count": 4,
+    "verifier_total_count": 4
   },
   "readiness_summary": {
     "can_be_used_as_real_stage2_input_package_now": false,
-    "docker_dependency_prep_status": "ZERO_DEPENDENCY_IMAGES_BUILT_DOCKER_RUNTIME_START_BLOCKED",
+    "docker_dependency_prep_status": "ZERO_DEPENDENCY_IMAGES_AVAILABLE_DOCKER_RUNTIME_START_VERIFIED",
     "effective_network_modes": {
       "bike-rebalance": "none",
       "dialogue-parser": "controlled",
@@ -133,12 +159,12 @@
       "powerlifting-coef-calc": "controlled"
     },
     "human_approval_recorded": true,
-    "input_package_validator_status": "NOT_RERUN_DOCKER_RUNTIME_START_BLOCKED",
+    "input_package_validator_status": "NOT_RERUN_PHASE_C2_ONLY",
     "non_fixture_source": true,
-    "oracle_qualification_status": "BLOCKED_DOCKER_RUNTIME_START",
-    "post_approval_status": "NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_RUNTIME_START",
+    "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_NOT_RERUN",
     "ready_for_human_approval_now": false,
-    "recommended_next_step": "Fix/restart Docker Desktop container runtime so `docker run --rm python:3.12-slim python3 --version` reaches Started and exits normally, then rerun only oracle/verifier qualification. Do not run Stage 2, Codex, traces, evidence gate, or freeze a pilot plan.",
+    "recommended_next_step": "Run Phase C3 PR #10 input-package validator using oracle_qualification.jsonl, strict routed predictions, approved router config, and global skill registry. Keep privacy REVIEW_REQUIRED visible.",
     "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
     "validation_status": "PASS"
@@ -169,7 +195,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-human-approval-readiness.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_DOCKER_RUNTIME_START",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_NOT_RERUN",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,
