@@ -1,0 +1,238 @@
+{
+  "approval_boundary": {
+    "does_not_authorize_codex_run": true,
+    "does_not_authorize_stage2_execution": true,
+    "does_not_authorize_traces": true,
+    "does_not_freeze_pilot_plan": true,
+    "execution_readiness": false,
+    "human_non_execution_approval_recorded": true,
+    "input_package_validator_passed": true,
+    "oracle_qualification_complete": true,
+    "privacy_review_required": false,
+    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
+  },
+  "approval_decision_items": [
+    {
+      "decision": "approve_or_reject_selected_tasks",
+      "evidence_refs": [
+        "candidate-data/tasks.jsonl",
+        "controlled-local-snapshot-manifest.json"
+      ],
+      "status": "HUMAN_APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ONLY"
+    },
+    {
+      "decision": "accept_or_request_changes_for_controlled_local_snapshot_derivations",
+      "evidence_refs": [
+        "controlled-local-snapshot-manifest.json",
+        "validation/validation.json"
+      ],
+      "status": "HUMAN_APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ONLY"
+    },
+    {
+      "decision": "accept_or_request_redaction_for_privacy_review_items",
+      "evidence_refs": [
+        "privacy-scan.review-required.json",
+        "privacy-review.accepted-non-execution.json"
+      ],
+      "status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
+    },
+    {
+      "decision": "approve_or_request_new_candidate_routed_predictions",
+      "evidence_refs": [
+        "routed_predictions.strict.json",
+        "routed_predictions.strict.manifest.json",
+        "router-config.approved-non-execution.json"
+      ],
+      "status": "SUPERSEDED_BY_STRICT_ROUTED_PREDICTIONS_EXPORTED"
+    },
+    {
+      "decision": "authorize_or_defer_oracle_qualification_after_human_approval",
+      "evidence_refs": [
+        "oracle-artifacts-manifest.json",
+        "oracle_qualification.jsonl",
+        "oracle-qualification.report.json",
+        "oracle-qualification-20260703T042700Z/manifest.json"
+      ],
+      "status": "AUTHORIZED_NON_EXECUTION_ORACLE_QUALIFICATION_COMPLETED"
+    }
+  ],
+  "apt_source_diagnostics_artifact": {
+    "name": "manifest.json",
+    "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+    "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+    "size_bytes": 20784
+  },
+  "docker_dependency_prep_artifact": {
+    "name": "manifest.json",
+    "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+    "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+    "size_bytes": 20784
+  },
+  "execution_blockers_preserved": [
+    "no Codex real-runner preflight was run",
+    "no Stage 2 pilot plan was frozen",
+    "no Stage 2 pilot execution was authorized or run",
+    "no live-agent traces were created",
+    "no evidence-gate rerun was performed"
+  ],
+  "human_approval_artifact": {
+    "name": "human-approval.non-execution-qualification.json",
+    "path": "human-approval.non-execution-qualification.json",
+    "sha256": "26e60a09da6ca80fa4f417a4e82ebede5ec55b2ff0c33087f2c7ba44d27b2901",
+    "size_bytes": 14653
+  },
+  "input_package_validator_artifact": {
+    "name": "input-package-validator.passed.json",
+    "path": "input-package-validator.passed.json",
+    "sha256": "de087717fe4fcd36344f1d1b5788898ebff3b512f42c2a1d39686bbc09e843cc",
+    "size_bytes": 5062
+  },
+  "privacy_review_artifact": {
+    "name": "privacy-review.accepted-non-execution.json",
+    "path": "privacy-review.accepted-non-execution.json",
+    "sha256": "15d95796a1cd106c4b40efec896dc85fcb357de9d32c04fc2ecd4bcc8db21c81",
+    "size_bytes": 7637
+  },
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "performance_claims": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "oracle_qualification_artifacts": {
+    "historical_blocked_records_preserved": {
+      "apt_source_unreachable": {
+        "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+        "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+        "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
+        "size_bytes": 20830
+      },
+      "docker_daemon": {
+        "name": "oracle_qualification.blocked-docker-daemon.jsonl",
+        "path": "oracle_qualification.blocked-docker-daemon.jsonl",
+        "sha256": "3b85f238a3fa23576e14d24da5a13623a87f8e7b1f116fbda40e47f22e9fb8a0",
+        "size_bytes": 5796
+      },
+      "docker_runtime_start": {
+        "name": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+        "path": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+        "sha256": "7ed1f1a6c8f100966fd2f330f6eeeb6c3e4719f99294000cd84efd31c6d21838",
+        "size_bytes": 18695
+      },
+      "required_not_run": {
+        "name": "oracle_qualification.required-not-run.jsonl",
+        "path": "oracle_qualification.required-not-run.jsonl",
+        "sha256": "5090b09684a87502afcb687010a46b5c7cdf175cc0349c64b3a40e9a7e148eed",
+        "size_bytes": 1101
+      }
+    },
+    "manifest": {
+      "name": "manifest.json",
+      "path": "oracle-qualification-20260703T042700Z/manifest.json",
+      "sha256": "5deea91c901d7a4594e2e13268ba2088729724a8f2dc03d88f13c79967b30944",
+      "size_bytes": 6501
+    },
+    "records": {
+      "name": "oracle_qualification.jsonl",
+      "path": "oracle_qualification.jsonl",
+      "sha256": "5a8bdded8528f39f4515dddbe60d8b353dd1e0a53889cf206aecd6b25b844a27",
+      "size_bytes": 39229
+    },
+    "report": {
+      "name": "oracle-qualification.report.json",
+      "path": "oracle-qualification.report.json",
+      "sha256": "89e0c75d0bcdd88b360cb09b85e876a2a89f9eb86155b4cc55cf30242d54d21e",
+      "size_bytes": 6857
+    },
+    "status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "verifier_passed_count": 4,
+    "verifier_total_count": 4
+  },
+  "readiness_summary": {
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "docker_dependency_prep_status": "ZERO_DEPENDENCY_IMAGES_AVAILABLE_DOCKER_RUNTIME_START_VERIFIED",
+    "effective_network_modes": {
+      "bike-rebalance": "none",
+      "dialogue-parser": "controlled",
+      "offer-letter-generator": "controlled",
+      "powerlifting-coef-calc": "controlled"
+    },
+    "human_approval_recorded": true,
+    "input_package_validator_status": "PASS",
+    "non_fixture_source": true,
+    "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
+    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "ready_for_human_approval_now": true,
+    "recommended_next_step": "PR #13 can proceed to human review/merge consideration as a non-execution package. Authorize a separate bounded phase before any Codex real-runner preflight or frozen pilot planning; do not run Stage 2 from this C4 privacy closeout.",
+    "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
+    "validation_no_longer_blocked_by_public_network": true,
+    "validation_status": "PASS"
+  },
+  "routed_prediction_artifacts": {
+    "approved_router_config": {
+      "name": "router-config.approved-non-execution.json",
+      "path": "router-config.approved-non-execution.json",
+      "sha256": "7227fe9e4642a7f3e5a193008b86a74036091063c0976b3bd0b6d2b1e71fd1ca",
+      "size_bytes": 1618
+    },
+    "config_id": "stage2-keyword-controlled-local-snapshot-approved-non-execution",
+    "label_source": "router_generated",
+    "oracle_labels_read": false,
+    "status": "EXPORTED_STRICT_PROVENANCE_REFRESHED_AFTER_VERIFIER_METADATA_UPDATE",
+    "strict_manifest": {
+      "name": "routed_predictions.strict.manifest.json",
+      "path": "routed_predictions.strict.manifest.json",
+      "sha256": "084a8ec222756bc5cc0fc6affbab6a419429ff08a7f80d9b33b5442533a96304",
+      "size_bytes": 15449
+    },
+    "strict_predictions": {
+      "name": "routed_predictions.strict.json",
+      "path": "routed_predictions.strict.json",
+      "sha256": "28c4d20f0e535aa8c6a2b1f8603a99df385dffae8794be1abe86c0669feb9ea1",
+      "size_bytes": 4487
+    }
+  },
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "schema_version": "v0.3.stage2-human-approval-readiness.v1",
+  "stage2_real_pilot_input_package_artifact": {
+    "name": "stage2-real-pilot-input-package.json",
+    "path": "stage2-real-pilot-input-package.json",
+    "sha256": "235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739",
+    "size_bytes": 180520
+  },
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
+  "validation_artifacts": {
+    "errors": [],
+    "public_network_blocker_present": false,
+    "status": "PASS",
+    "validation": {
+      "name": "validation.json",
+      "path": "validation/validation.json",
+      "sha256": "4a6de58db0fb6baabb3314e5e08c6402703407be52fe3c33294a3ae0fc91845a",
+      "size_bytes": 287
+    },
+    "validation_manifest": {
+      "name": "manifest.json",
+      "path": "validation/manifest.json",
+      "sha256": "7aa2571a6b46787c122aea6bca5a280450e8a61f36cf93c71f17e597ee369aee",
+      "size_bytes": 1256
+    }
+  },
+  "zero_dependency_qualification_artifact": {
+    "name": "manifest.json",
+    "path": "zero-dependency-qualification-20260702T113533Z/manifest.json",
+    "sha256": "4b8de75e62567e9cfd25d3cd4b7987e24f5dec67baab7d6aa918bdcb974f778b",
+    "size_bytes": 24795
+  }
+}

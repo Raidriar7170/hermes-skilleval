@@ -1,0 +1,285 @@
+{
+  "approval_scope": "PR_13_ORACLE_VERIFIER_QUALIFICATION_ONLY",
+  "approved_base_images": [
+    "python:3.12-slim",
+    "python:3.12.8-slim",
+    "ubuntu:24.04"
+  ],
+  "approved_current_head": "bba2f4c38963c68999e85634818b9f059db43833",
+  "base_images": [
+    {
+      "image": "python:3.12-slim",
+      "inspect": {
+        "architecture": "arm64",
+        "created": "2026-06-24T02:17:10.085712605Z",
+        "id": "sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf",
+        "image": "python:3.12-slim",
+        "os": "linux",
+        "repo_digests": [
+          "python@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf"
+        ],
+        "size": 43487789
+      },
+      "materialized": true,
+      "pull_command": "docker pull python:3.12-slim",
+      "pull_log": {
+        "name": "docker-pull-python-3.12-slim.log",
+        "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12-slim.log",
+        "sha256": "eca479e1a60eaa22f96566904824808c3eb25e8f8c70d90fe13711c2b236486d",
+        "size_bytes": 634
+      }
+    },
+    {
+      "image": "python:3.12.8-slim",
+      "inspect": {
+        "architecture": "arm64",
+        "created": "2025-01-17T12:35:53Z",
+        "id": "sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
+        "image": "python:3.12.8-slim",
+        "os": "linux",
+        "repo_digests": [
+          "python@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0"
+        ],
+        "size": 44949973
+      },
+      "materialized": true,
+      "pull_command": "docker pull python:3.12.8-slim",
+      "pull_log": {
+        "name": "docker-pull-python-3.12.8-slim.log",
+        "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12.8-slim.log",
+        "sha256": "c1ba42f7f135cf17381223af96fa223ed832d3d047b57f5594d0cfdd8bc60856",
+        "size_bytes": 640
+      }
+    },
+    {
+      "image": "ubuntu:24.04",
+      "inspect": {
+        "architecture": "arm64",
+        "created": "2026-06-22T21:25:07.904519372Z",
+        "id": "sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90",
+        "image": "ubuntu:24.04",
+        "os": "linux",
+        "repo_digests": [
+          "ubuntu@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
+        ],
+        "size": 28893360
+      },
+      "materialized": true,
+      "pull_command": "docker pull ubuntu:24.04",
+      "pull_log": {
+        "name": "docker-pull-ubuntu-24.04.log",
+        "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-ubuntu-24.04.log",
+        "sha256": "3d3b9dbd8d99d919936d69208885c129945043286bff2e2b980274df41d1f7f7",
+        "size_bytes": 317
+      }
+    }
+  ],
+  "build_attempts": [
+    {
+      "blocker_excerpt": [
+        "#7 [3/5] RUN apt-get update && apt-get install -y --no-install-recommends     bash     ca-certificates     curl     libgfortran5   && rm -rf /var/lib/apt/lists/*",
+        "#7 0.358   403  Forbidden [IP: 146.75.46.132 80]",
+        "#7 0.529   403  Forbidden [IP: 146.75.46.132 80]",
+        "#7 0.996   403  Forbidden [IP: 146.75.46.132 80]",
+        "#7 1.007 E: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  403  Forbidden [IP: 146.75.46.132 80]",
+        "#7 1.007 E: Failed to fetch http://deb.debian.org/debian/dists/trixie-updates/InRelease  403  Forbidden [IP: 146.75.46.132 80]",
+        "#7 1.007 E: Failed to fetch http://deb.debian.org/debian-security/dists/trixie-security/InRelease  403  Forbidden [IP: 146.75.46.132 80]",
+        "#7 ERROR: process \"/bin/sh -c apt-get update && apt-get install -y --no-install-recommends     bash     ca-certificates     curl     libgfortran5   && rm -rf /var/lib/apt/lists/*\" did not complete successfully: exit code: 100",
+        " > [3/5] RUN apt-get update && apt-get install -y --no-install-recommends     bash     ca-certificates     curl     libgfortran5   && rm -rf /var/lib/apt/lists/*:",
+        "0.529   403  Forbidden [IP: 146.75.46.132 80]",
+        "0.996   403  Forbidden [IP: 146.75.46.132 80]",
+        "1.007 E: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  403  Forbidden [IP: 146.75.46.132 80]"
+      ],
+      "build_command": "docker build --pull=false -t hermes-pr13-qual-bike-rebalance:20260702T050200Z artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/environment-snapshots/bike-rebalance",
+      "build_log": {
+        "name": "docker-build-bike-rebalance.log",
+        "path": "docker-dependency-prep-20260702T050200Z/logs/docker-build-bike-rebalance.log",
+        "sha256": "2f52877c48ad4bba0c832dcf2855e63a09f1e2ef524ab88a00470c95bc6d1e38",
+        "size_bytes": 3792
+      },
+      "context": "candidate-data/environment-snapshots/bike-rebalance",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/bike-rebalance/Dockerfile",
+        "sha256": "afd7df77ab59e64036f344583590172f7a24e079093dc83074537cca244e819b",
+        "size_bytes": 393
+      },
+      "exit_code": 1,
+      "image": "hermes-pr13-qual-bike-rebalance:20260702T050200Z",
+      "status": "BLOCKED_APT_GET_UPDATE_403_FORBIDDEN",
+      "task_id": "bike-rebalance"
+    },
+    {
+      "context": "candidate-data/environment-snapshots/dialogue-parser",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/dialogue-parser/Dockerfile",
+        "sha256": "e0fdab0e028c11d5437caf3b827f10aa65fcf224c8a9689fecc7fa49f3ec92e7",
+        "size_bytes": 429
+      },
+      "image": "hermes-pr13-qual-dialogue-parser:20260702T050200Z",
+      "status": "NOT_ATTEMPTED_AFTER_PRIOR_BUILD_BLOCKER",
+      "task_id": "dialogue-parser"
+    },
+    {
+      "context": "candidate-data/environment-snapshots/offer-letter-generator",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/offer-letter-generator/Dockerfile",
+        "sha256": "5ffb0d7fecb51602aad769604cf637b0de3411b8e983eb4bf202ff04838f539a",
+        "size_bytes": 453
+      },
+      "image": "hermes-pr13-qual-offer-letter-generator:20260702T050200Z",
+      "status": "NOT_ATTEMPTED_AFTER_PRIOR_BUILD_BLOCKER",
+      "task_id": "offer-letter-generator"
+    },
+    {
+      "context": "candidate-data/environment-snapshots/powerlifting-coef-calc",
+      "dockerfile": {
+        "name": "Dockerfile",
+        "path": "candidate-data/environment-snapshots/powerlifting-coef-calc/Dockerfile",
+        "sha256": "87cf1da3fa2003b9e0573ef76af7865480f5bb34a3c8033dc8d5b01a38e14ee5",
+        "size_bytes": 805
+      },
+      "image": "hermes-pr13-qual-powerlifting-coef-calc:20260702T050200Z",
+      "status": "NOT_ATTEMPTED_AFTER_PRIOR_BUILD_BLOCKER",
+      "task_id": "powerlifting-coef-calc"
+    }
+  ],
+  "dependency_file_hashes": {
+    "name": "dependency-file-sha256.txt",
+    "path": "docker-dependency-prep-20260702T050200Z/logs/dependency-file-sha256.txt",
+    "sha256": "053aa72e8def8dcc7d95206c54b7b548aa79898da6fa8f3a9d7eb0f32b9aef36",
+    "size_bytes": 2579
+  },
+  "docker_preflight": {
+    "context_ls": {
+      "name": "docker-context-ls.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-context-ls.txt",
+      "sha256": "7182393d7b2415dadde440291ac8f92ae84e43dc9528ce336442bc9960ceea67",
+      "size_bytes": 310
+    },
+    "docker_info": {
+      "name": "docker-info.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-info.txt",
+      "sha256": "047757f4f63c81e590206bd67f09391ed8a390577902432d4f50630537286eda",
+      "size_bytes": 3490
+    },
+    "docker_info_exit_code": 0,
+    "image_ls_after": {
+      "name": "docker-image-ls-after.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-image-ls-after.txt",
+      "sha256": "239d9616fe41d51269630dfad8d6056d1c977c0c92a514f69df27b38306c9d96",
+      "size_bytes": 551
+    },
+    "image_ls_before": {
+      "name": "docker-image-ls-before.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-image-ls-before.txt",
+      "sha256": "34ccac461c475c84e6690b65bafc622a40489421a5099ee8e81817eeeb9734be",
+      "size_bytes": 59
+    }
+  },
+  "does_not_authorize_codex_run": true,
+  "does_not_authorize_evidence_gate_rerun": true,
+  "does_not_authorize_pilot_plan_freeze": true,
+  "does_not_authorize_stage2_execution": true,
+  "does_not_authorize_trace_creation": true,
+  "does_not_make_performance_claims": true,
+  "image_inspect_log": {
+    "name": "docker-image-inspect-approved-base-images.json",
+    "path": "docker-dependency-prep-20260702T050200Z/logs/docker-image-inspect-approved-base-images.json",
+    "sha256": "d9be796f94b0446fa328e6e6aa5c84e7a6cc2736d05b0dcd1576319bb27b841c",
+    "size_bytes": 5254
+  },
+  "logs": {
+    "dependency-file-sha256.txt": {
+      "name": "dependency-file-sha256.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/dependency-file-sha256.txt",
+      "sha256": "053aa72e8def8dcc7d95206c54b7b548aa79898da6fa8f3a9d7eb0f32b9aef36",
+      "size_bytes": 2579
+    },
+    "docker-build-bike-rebalance.log": {
+      "name": "docker-build-bike-rebalance.log",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-build-bike-rebalance.log",
+      "sha256": "2f52877c48ad4bba0c832dcf2855e63a09f1e2ef524ab88a00470c95bc6d1e38",
+      "size_bytes": 3792
+    },
+    "docker-context-ls.txt": {
+      "name": "docker-context-ls.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-context-ls.txt",
+      "sha256": "7182393d7b2415dadde440291ac8f92ae84e43dc9528ce336442bc9960ceea67",
+      "size_bytes": 310
+    },
+    "docker-image-inspect-approved-base-images.json": {
+      "name": "docker-image-inspect-approved-base-images.json",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-image-inspect-approved-base-images.json",
+      "sha256": "d9be796f94b0446fa328e6e6aa5c84e7a6cc2736d05b0dcd1576319bb27b841c",
+      "size_bytes": 5254
+    },
+    "docker-image-inspect-approved-base-images.stderr": {
+      "name": "docker-image-inspect-approved-base-images.stderr",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-image-inspect-approved-base-images.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "docker-image-ls-after.txt": {
+      "name": "docker-image-ls-after.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-image-ls-after.txt",
+      "sha256": "239d9616fe41d51269630dfad8d6056d1c977c0c92a514f69df27b38306c9d96",
+      "size_bytes": 551
+    },
+    "docker-image-ls-before.txt": {
+      "name": "docker-image-ls-before.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-image-ls-before.txt",
+      "sha256": "34ccac461c475c84e6690b65bafc622a40489421a5099ee8e81817eeeb9734be",
+      "size_bytes": 59
+    },
+    "docker-info.txt": {
+      "name": "docker-info.txt",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-info.txt",
+      "sha256": "047757f4f63c81e590206bd67f09391ed8a390577902432d4f50630537286eda",
+      "size_bytes": 3490
+    },
+    "docker-pull-python-3.12-slim.log": {
+      "name": "docker-pull-python-3.12-slim.log",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12-slim.log",
+      "sha256": "eca479e1a60eaa22f96566904824808c3eb25e8f8c70d90fe13711c2b236486d",
+      "size_bytes": 634
+    },
+    "docker-pull-python-3.12.8-slim.log": {
+      "name": "docker-pull-python-3.12.8-slim.log",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-python-3.12.8-slim.log",
+      "sha256": "c1ba42f7f135cf17381223af96fa223ed832d3d047b57f5594d0cfdd8bc60856",
+      "size_bytes": 640
+    },
+    "docker-pull-ubuntu-24.04.log": {
+      "name": "docker-pull-ubuntu-24.04.log",
+      "path": "docker-dependency-prep-20260702T050200Z/logs/docker-pull-ubuntu-24.04.log",
+      "sha256": "3d3b9dbd8d99d919936d69208885c129945043286bff2e2b980274df41d1f7f7",
+      "size_bytes": 317
+    }
+  },
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false
+  },
+  "qualification": {
+    "input_package_validator_rerun": false,
+    "oracle_run_executed": false,
+    "reason": "Dependency materialization stopped before qualification because the first approved task image build failed during Dockerfile apt-get update with 403 Forbidden.",
+    "verifier_passed_records": 0,
+    "verifier_run_executed": false
+  },
+  "required_human_or_environment_action": "Make the approved Dockerfile apt repositories reachable from Docker build, or provide an approved local/offline apt package mirror/cache. Do not proceed to oracle qualification until dependency image build succeeds.",
+  "run_id": "docker-dependency-prep-20260702T050200Z",
+  "schema_version": "v0.3.stage2-docker-dependency-prep.v1",
+  "status": "BLOCKED_DOCKER_DEPENDENCY_BUILD_FAILED"
+}

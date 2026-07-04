@@ -1,0 +1,64 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 432B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-slim
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 3.16kB done
+#4 DONE 0.0s
+
+#5 [1/5] FROM docker.io/library/python:3.12-slim@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf
+#5 resolve docker.io/library/python:3.12-slim@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf done
+#5 DONE 0.0s
+
+#6 [2/5] WORKDIR /root
+#6 DONE 0.1s
+
+#7 [3/5] RUN apt-get update && apt-get install -y --no-install-recommends     bash     ca-certificates     curl     libgfortran5   && rm -rf /var/lib/apt/lists/*
+#7 0.358 Err:1 http://deb.debian.org/debian trixie InRelease
+#7 0.358   403  Forbidden [IP: 146.75.46.132 80]
+#7 0.529 Err:2 http://deb.debian.org/debian trixie-updates InRelease
+#7 0.529   403  Forbidden [IP: 146.75.46.132 80]
+#7 0.996 Err:3 http://deb.debian.org/debian-security trixie-security InRelease
+#7 0.996   403  Forbidden [IP: 146.75.46.132 80]
+#7 0.999 Reading package lists...
+#7 1.007 E: The repository 'http://deb.debian.org/debian trixie InRelease' is no longer signed.
+#7 1.007 E: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  403  Forbidden [IP: 146.75.46.132 80]
+#7 1.007 E: Failed to fetch http://deb.debian.org/debian/dists/trixie-updates/InRelease  403  Forbidden [IP: 146.75.46.132 80]
+#7 1.007 E: The repository 'http://deb.debian.org/debian trixie-updates InRelease' is no longer signed.
+#7 1.007 E: Failed to fetch http://deb.debian.org/debian-security/dists/trixie-security/InRelease  403  Forbidden [IP: 146.75.46.132 80]
+#7 1.007 E: The repository 'http://deb.debian.org/debian-security trixie-security InRelease' is no longer signed.
+#7 ERROR: process "/bin/sh -c apt-get update && apt-get install -y --no-install-recommends     bash     ca-certificates     curl     libgfortran5   && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 100
+------
+ > [3/5] RUN apt-get update && apt-get install -y --no-install-recommends     bash     ca-certificates     curl     libgfortran5   && rm -rf /var/lib/apt/lists/*:
+0.529   403  Forbidden [IP: 146.75.46.132 80]
+0.996 Err:3 http://deb.debian.org/debian-security trixie-security InRelease
+0.996   403  Forbidden [IP: 146.75.46.132 80]
+0.999 Reading package lists...
+1.007 E: The repository 'http://deb.debian.org/debian trixie InRelease' is no longer signed.
+1.007 E: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  403  Forbidden [IP: 146.75.46.132 80]
+1.007 E: Failed to fetch http://deb.debian.org/debian/dists/trixie-updates/InRelease  403  Forbidden [IP: 146.75.46.132 80]
+1.007 E: The repository 'http://deb.debian.org/debian trixie-updates InRelease' is no longer signed.
+1.007 E: Failed to fetch http://deb.debian.org/debian-security/dists/trixie-security/InRelease  403  Forbidden [IP: 146.75.46.132 80]
+1.007 E: The repository 'http://deb.debian.org/debian-security trixie-security InRelease' is no longer signed.
+------
+Dockerfile:7
+--------------------
+   6 |
+   7 | >>> RUN apt-get update && apt-get install -y --no-install-recommends \
+   8 | >>>     bash \
+   9 | >>>     ca-certificates \
+  10 | >>>     curl \
+  11 | >>>     libgfortran5 \
+  12 | >>>   && rm -rf /var/lib/apt/lists/*
+  13 |
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c apt-get update && apt-get install -y --no-install-recommends     bash     ca-certificates     curl     libgfortran5   && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 100
