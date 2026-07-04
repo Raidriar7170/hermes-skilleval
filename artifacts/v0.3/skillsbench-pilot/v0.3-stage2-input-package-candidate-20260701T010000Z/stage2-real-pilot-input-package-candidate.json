@@ -4,9 +4,10 @@
     "does_not_freeze_pilot_plan": true,
     "execution_readiness": false,
     "human_approval_packet_ready": true,
-    "status_semantics": "Validator-passed plus repo-local privacy classification does not prove explicit human privacy acceptance; the PR #13 package remains non-execution and blocked on privacy acceptance provenance.",
-    "privacy_acceptance_provenance_required": true,
-    "explicit_human_privacy_acceptance_found": false
+    "status_semantics": "Validator-passed plus explicit human no-redaction acceptance means the non-execution input package privacy provenance blocker is resolved; it does not authorize Stage 2 execution, Codex runs, pilot freeze, traces, evidence-gate rerun, or performance claims.",
+    "privacy_acceptance_provenance_required": false,
+    "explicit_human_privacy_acceptance_found": true,
+    "privacy_acceptance_provenance_status": "HUMAN_ACCEPTANCE_RECORDED"
   },
   "artifacts": {
     "apt_source_diagnostics_manifest": {
@@ -48,8 +49,8 @@
     "human-approval-readiness.json": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "cff1f32f1a15fd9244ef2a1ed72190c84c3f3d606a1c8fdea93f6a98a1ebe673",
-      "size_bytes": 10467
+      "sha256": "db6f7822c0ed83700fdd25755cb26dd37075a7fbaa0687b4e2dd2cbe0c493b98",
+      "size_bytes": 11100
     },
     "human-approval.non-execution-qualification.json": {
       "name": "human-approval.non-execution-qualification.json",
@@ -66,8 +67,8 @@
     "human_approval_readiness": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "cff1f32f1a15fd9244ef2a1ed72190c84c3f3d606a1c8fdea93f6a98a1ebe673",
-      "size_bytes": 10467
+      "sha256": "db6f7822c0ed83700fdd25755cb26dd37075a7fbaa0687b4e2dd2cbe0c493b98",
+      "size_bytes": 11100
     },
     "input-package-validator.blocked.json": {
       "name": "input-package-validator.blocked.json",
@@ -266,6 +267,12 @@
       "path": "privacy-acceptance-provenance.audit.json",
       "sha256": "0a79ca797af0e1ec60ba28c1440a5330e10aa3a3e1c21d9cac44cc84d3be5585",
       "size_bytes": 2665
+    },
+    "privacy-review.human-accepted-non-execution.json": {
+      "name": "privacy-review.human-accepted-non-execution.json",
+      "path": "privacy-review.human-accepted-non-execution.json",
+      "sha256": "b1d4a08ac99ad32242def96b92817003e87642cf951cae80042526c820fcb4ff",
+      "size_bytes": 5116
     }
   },
   "artifacts_note": "The package summary file intentionally does not include a hash record for itself because self-referential JSON hashes are not stable.",
@@ -319,8 +326,8 @@
     "readiness": {
       "name": "human-approval-readiness.json",
       "path": "human-approval-readiness.json",
-      "sha256": "cff1f32f1a15fd9244ef2a1ed72190c84c3f3d606a1c8fdea93f6a98a1ebe673",
-      "size_bytes": 10467
+      "sha256": "db6f7822c0ed83700fdd25755cb26dd37075a7fbaa0687b4e2dd2cbe0c493b98",
+      "size_bytes": 11100
     }
   },
   "input_package_validator": {
@@ -423,24 +430,32 @@
       "size_bytes": 8818,
       "status": "REVIEW_REQUIRED"
     },
-    "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "status": "HUMAN_ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
     "repo_local_decision_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
-    "explicit_human_privacy_acceptance_found": false,
+    "explicit_human_privacy_acceptance_found": true,
     "privacy_acceptance_provenance": {
-      "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
-      "artifact": {
+      "status": "HUMAN_ACCEPTANCE_RECORDED",
+      "resolves_previous_blocker": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+      "human_acceptance_artifact": {
+        "name": "privacy-review.human-accepted-non-execution.json",
+        "path": "privacy-review.human-accepted-non-execution.json",
+        "sha256": "b1d4a08ac99ad32242def96b92817003e87642cf951cae80042526c820fcb4ff",
+        "size_bytes": 5116
+      },
+      "prior_blocker_artifact": {
         "name": "privacy-acceptance-provenance.audit.json",
         "path": "privacy-acceptance-provenance.audit.json",
         "sha256": "0a79ca797af0e1ec60ba28c1440a5330e10aa3a3e1c21d9cac44cc84d3be5585",
         "size_bytes": 2665
       },
-      "required_human_action": "Provide explicit human privacy acceptance or redaction decision before marking privacy accepted."
-    }
+      "required_future_action": "Separate explicit human approval is required before pilot freeze or real Codex 12-run execution."
+    },
+    "previous_provenance_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING"
   },
   "readiness_decision": {
     "can_be_used_as_real_stage2_input_package_now": false,
     "non_fixture_source": true,
-    "privacy_review_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "privacy_review_status": "HUMAN_ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
     "ready_for_human_approval_now": false,
     "reasons": [
       "Human approval for non-execution qualification was recorded for the controlled-local-snapshot candidate.",
@@ -449,18 +464,20 @@
       "All four deterministic verifier outputs produced reward.txt=1 and CTRF tests passed.",
       "Phase C3 reran the PR #10 input-package validator and it passed.",
       "No Stage 2 pilot, Codex run, frozen plan, traces, or evidence-gate rerun occurred.",
-      "Phase C4 repo-local privacy review artifact exists, but explicit human privacy acceptance provenance is missing."
+      "Explicit human no-redaction acceptance is recorded for the non-execution input package only.",
+      "Execution readiness remains false; pilot freeze and real Codex runs require separate explicit approval."
     ],
     "recommended_review_questions": [
-      "Keep Issue #11 open until explicit human privacy acceptance or redaction decision is recorded.",
-      "If privacy acceptance is supplied later, update only the privacy provenance artifact and rerun hash/boundary checks.",
-      "Review PR #14 independently; do not treat it as replacing PR #13 privacy provenance.",
-      "Do not freeze a pilot plan or run Stage 2 from this corrective evidence update."
+      "After this PR is merged and verified clean, Issue #11 may be closed for the privacy provenance blocker.",
+      "Open a separate bounded phase before freezing the 4x3x1 pilot plan.",
+      "Require separate explicit human approval before any real Codex 12-run execution.",
+      "Do not treat this privacy acceptance as Stage 2 execution readiness or a performance claim."
     ],
     "validation_no_longer_blocked_by_public_network": true,
     "validator_passed": true,
     "execution_readiness": false,
-    "explicit_human_privacy_acceptance_found": false
+    "explicit_human_privacy_acceptance_found": true,
+    "privacy_acceptance_provenance_status": "HUMAN_ACCEPTANCE_RECORDED"
   },
   "routed_prediction_review": {
     "approved_router_config": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/router-config.approved-non-execution.json",
@@ -495,7 +512,7 @@
   },
   "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
   "schema_version": "v0.3.stage2-real-pilot-input-package-candidate.v1",
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTANCE_PROVENANCE_MISSING_NOT_EXECUTED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_HUMAN_ACCEPTED_NOT_EXECUTED",
   "validation_summary": {
     "artifact": {
       "name": "validation.json",
