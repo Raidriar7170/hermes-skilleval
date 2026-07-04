@@ -8,8 +8,10 @@
     "human_non_execution_approval_recorded": true,
     "input_package_validator_passed": true,
     "oracle_qualification_complete": true,
-    "privacy_review_required": false,
-    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
+    "privacy_review_required": true,
+    "privacy_review_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "explicit_human_privacy_acceptance_found": false,
+    "privacy_acceptance_provenance_required": true
   },
   "approval_decision_items": [
     {
@@ -32,9 +34,10 @@
       "decision": "accept_or_request_redaction_for_privacy_review_items",
       "evidence_refs": [
         "privacy-scan.review-required.json",
-        "privacy-review.accepted-non-execution.json"
+        "privacy-review.accepted-non-execution.json",
+        "privacy-acceptance-provenance.audit.json"
       ],
-      "status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
+      "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING"
     },
     {
       "decision": "approve_or_request_new_candidate_routed_predictions",
@@ -73,7 +76,8 @@
     "no Stage 2 pilot plan was frozen",
     "no Stage 2 pilot execution was authorized or run",
     "no live-agent traces were created",
-    "no evidence-gate rerun was performed"
+    "no evidence-gate rerun was performed",
+    "privacy acceptance provenance missing"
   ],
   "human_approval_artifact": {
     "name": "human-approval.non-execution-qualification.json",
@@ -90,8 +94,8 @@
   "privacy_review_artifact": {
     "name": "privacy-review.accepted-non-execution.json",
     "path": "privacy-review.accepted-non-execution.json",
-    "sha256": "15d95796a1cd106c4b40efec896dc85fcb357de9d32c04fc2ecd4bcc8db21c81",
-    "size_bytes": 7637
+    "sha256": "84e124326f96fd62b594c960e8c7b307b38627eb0e88e30bf37052dd8d79f2f5",
+    "size_bytes": 8611
   },
   "non_actions": {
     "codex_cli_run": false,
@@ -171,13 +175,15 @@
     "input_package_validator_status": "PASS",
     "non_fixture_source": true,
     "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
-    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
-    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
-    "ready_for_human_approval_now": true,
-    "recommended_next_step": "PR #13 can proceed to human review/merge consideration as a non-execution package. Authorize a separate bounded phase before any Codex real-runner preflight or frozen pilot planning; do not run Stage 2 from this C4 privacy closeout.",
+    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTANCE_PROVENANCE_MISSING_NOT_EXECUTED",
+    "privacy_review_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "ready_for_human_approval_now": false,
+    "recommended_next_step": "Leave Issue #11 open and request explicit human privacy acceptance or redaction decision. Do not run Stage 2, Codex, freeze a pilot plan, create traces, or rerun the evidence gate from this package.",
     "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
-    "validation_status": "PASS"
+    "validation_status": "PASS",
+    "execution_readiness": false,
+    "explicit_human_privacy_acceptance_found": false
   },
   "routed_prediction_artifacts": {
     "approved_router_config": {
@@ -211,7 +217,7 @@
     "sha256": "235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739",
     "size_bytes": 180520
   },
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTANCE_PROVENANCE_MISSING_NOT_EXECUTED",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,
@@ -225,7 +231,7 @@
     "validation_manifest": {
       "name": "manifest.json",
       "path": "validation/manifest.json",
-      "sha256": "7aa2571a6b46787c122aea6bca5a280450e8a61f36cf93c71f17e597ee369aee",
+      "sha256": "c4ef7525b51b5857ba0eda2b1a81b623b56bedc1a5e495c13371c59c45a860ea",
       "size_bytes": 1256
     }
   },
@@ -234,5 +240,11 @@
     "path": "zero-dependency-qualification-20260702T113533Z/manifest.json",
     "sha256": "4b8de75e62567e9cfd25d3cd4b7987e24f5dec67baab7d6aa918bdcb974f778b",
     "size_bytes": 24795
+  },
+  "privacy_acceptance_provenance_artifact": {
+    "name": "privacy-acceptance-provenance.audit.json",
+    "path": "privacy-acceptance-provenance.audit.json",
+    "sha256": "0a79ca797af0e1ec60ba28c1440a5330e10aa3a3e1c21d9cac44cc84d3be5585",
+    "size_bytes": 2665
   }
 }

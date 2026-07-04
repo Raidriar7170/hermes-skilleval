@@ -1,0 +1,60 @@
+{
+  "schema_version": "v0.3.stage2-input-package-privacy-acceptance-provenance-audit.v1",
+  "created_at": "2026-07-04T13:21:09+08:00",
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+  "explicit_human_privacy_acceptance_found": false,
+  "audited_repo_commit": "f36f17000dc42a92fc63c4e0be53fc748e0f88f3",
+  "audited_pr": {
+    "number": 13,
+    "merge_commit_sha": "f36f17000dc42a92fc63c4e0be53fc748e0f88f3",
+    "head_commit_sha": "367074509083e44e9cfddaf0011e511b12e4ba4c"
+  },
+  "audited_issue": {
+    "number": 11,
+    "state_at_audit": "OPEN",
+    "latest_comment_observed_stale_relative_to_pr13_merge": true
+  },
+  "audited_sources": [
+    "GitHub PR #13 metadata/body/comments queried read-only",
+    "GitHub Issue #11 metadata/body/comments queried read-only",
+    "git history for privacy-review.accepted-non-execution.json and stage2-real-pilot-input-package-candidate.json",
+    "repo-local privacy review and scan artifacts"
+  ],
+  "prior_repo_local_privacy_decision": {
+    "status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "artifact": {
+      "name": "privacy-review.accepted-non-execution.json",
+      "path": "privacy-review.accepted-non-execution.json",
+      "sha256": "84e124326f96fd62b594c960e8c7b307b38627eb0e88e30bf37052dd8d79f2f5",
+      "size_bytes": 8611
+    },
+    "note": "This is retained as repo-local classification evidence only; it is not explicit human privacy acceptance."
+  },
+  "reviewed_scan": {
+    "name": "privacy-scan.review-required.json",
+    "path": "privacy-scan.review-required.json",
+    "sha256": "faa3767dc3701a22c34b319cdad6d2246b700bd0e4bd3c78dfe361fc2fb3c827",
+    "size_bytes": 8818,
+    "status": "REVIEW_REQUIRED"
+  },
+  "finding": "No explicit human privacy acceptance wording was found for ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE.",
+  "blocker": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+  "required_human_action": "Keep Issue #11 open or add an explicit human-authored privacy acceptance/redaction decision before closing input sourcing as privacy-accepted.",
+  "readiness_decision": {
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "execution_readiness": false,
+    "privacy_review_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "ready_for_human_approval_now": false
+  },
+  "non_actions": {
+    "stage2_pilot_run": false,
+    "codex_cli_run": false,
+    "pilot_plan_frozen": false,
+    "live_agent_traces_created": false,
+    "evidence_gate_rerun": false,
+    "performance_claims": false,
+    "llm_judge_used": false,
+    "process_exit_code_used_as_success": false
+  }
+}

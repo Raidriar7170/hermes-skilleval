@@ -68,7 +68,7 @@
   "created_at": "2026-07-04T01:22:40+08:00",
   "decision_scope": {
     "can_be_used_as_real_stage2_input_package_now": false,
-    "decision": "Privacy review is accepted for the PR #13 non-execution input-package candidate, with no redaction required under public-upstream benchmark scope.",
+    "decision": "Repo-local privacy review classified the 28 scan findings as no-redaction-required for the non-execution package, but no explicit human privacy acceptance was found in PR #13 or Issue #11 during the provenance audit.",
     "does_not_authorize_codex_run": true,
     "does_not_authorize_evidence_gate_rerun": true,
     "does_not_authorize_live_agent_traces": true,
@@ -77,7 +77,9 @@
     "execution_readiness": false,
     "package_scope": "PR #13 Stage 2 input-package candidate evidence review only",
     "public_upstream_benchmark_scope": true,
-    "redaction_required": false
+    "redaction_required": false,
+    "explicit_human_privacy_acceptance_found": false,
+    "privacy_acceptance_provenance_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING"
   },
   "finding_count": 28,
   "finding_resolution_counts": {
@@ -154,7 +156,8 @@
     "no live-agent traces were created",
     "no evidence-gate rerun was performed",
     "execution_readiness remains false",
-    "can_be_used_as_real_stage2_input_package_now remains false"
+    "can_be_used_as_real_stage2_input_package_now remains false",
+    "privacy acceptance provenance missing"
   ],
   "reviewed_scan": {
     "finding_count": 28,
@@ -172,5 +175,18 @@
     "offer-letter-generator",
     "powerlifting-coef-calc"
   ],
-  "status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
+  "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+  "acceptance_provenance": {
+    "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "audited_at": "2026-07-04T13:21:09+08:00",
+    "explicit_human_privacy_acceptance_found": false,
+    "audited_sources": [
+      "GitHub PR #13 body/comments/merge metadata",
+      "GitHub Issue #11 body/comments",
+      "repo-local privacy-review.accepted-non-execution.json",
+      "repo-local privacy-scan.review-required.json"
+    ],
+    "finding": "The repository contains a Codex-authored privacy review artifact, but no separate human-authored acceptance wording was found.",
+    "required_human_action": "Provide an explicit human privacy acceptance or redaction decision before treating privacy as accepted for PR #13 evidence closeout."
+  }
 }
