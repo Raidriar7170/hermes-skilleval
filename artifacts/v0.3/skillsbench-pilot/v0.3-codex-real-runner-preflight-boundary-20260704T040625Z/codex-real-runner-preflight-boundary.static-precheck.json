@@ -1,0 +1,144 @@
+{
+  "schema_version": "v0.3.codex-real-runner-preflight-boundary.static-precheck.v1",
+  "run_id": "v0.3-codex-real-runner-preflight-boundary-20260704T040625Z",
+  "created_at": "2026-07-04T04:06:25Z",
+  "source_branch": "ops/codex-real-runner-preflight-boundary",
+  "base_branch": "codex/v0.3-pr0-protocol",
+  "source_commit": "f36f17000dc42a92fc63c4e0be53fc748e0f88f3",
+  "objective": "Record the non-execution boundary and static readiness checks before any Codex real-runner smoke/preflight phase.",
+  "status": "STATIC_PRECHECK_PASSED_FOR_EXPLICIT_SMOKE_AUTHORIZATION_REVIEW_NOT_EXECUTED",
+  "decision": {
+    "static_precheck_complete": true,
+    "ready_for_explicit_codex_real_runner_smoke_authorization_review": true,
+    "authorizes_codex_cli_run_now": false,
+    "authorizes_stage2_execution": false,
+    "execution_readiness": false,
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "decision_summary": "The merged PR #13 package has enough committed non-execution evidence to design or request a later Codex real-runner smoke/preflight phase, but this artifact does not run Codex or make Stage 2 executable."
+  },
+  "required_inputs": [
+    {
+      "id": "human_approval_readiness",
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json",
+      "sha256": "54bebda4faebb66ed826a523ce47055ff8cb3cac441b12ee8058ad4a702cf8bf",
+      "size_bytes": 9957,
+      "status": "PRESENT_PARSED"
+    },
+    {
+      "id": "stage2_real_pilot_input_package_candidate",
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json",
+      "sha256": "a35c930f1599409494d466aaa636d0f3b33f6f82dd0edebdbaf0add2deedc4e9",
+      "size_bytes": 24743,
+      "status": "PRESENT_PARSED"
+    },
+    {
+      "id": "privacy_review_accepted_non_execution",
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.accepted-non-execution.json",
+      "sha256": "15d95796a1cd106c4b40efec896dc85fcb357de9d32c04fc2ecd4bcc8db21c81",
+      "size_bytes": 7637,
+      "status": "PRESENT_PARSED"
+    },
+    {
+      "id": "live_agent_placeholder_config",
+      "path": "configs/v0.3/live-agent.yaml",
+      "sha256": "a0187b7bd69120dc69221460d69686ced9d2025f74c718f38b02ff6edc90e7d4",
+      "size_bytes": 2517,
+      "status": "PRESENT_INSPECTED"
+    },
+    {
+      "id": "codex_cli_runner_contract_source",
+      "path": "src/hermes_skilleval/live_agent_runtime.py",
+      "sha256": "f05e2fef07289e88a6b6006c141c9541aa4332c4e0b9b3bb19a741ef309584e7",
+      "size_bytes": 33350,
+      "status": "PRESENT_INSPECTED"
+    }
+  ],
+  "package_readiness_from_pr13": {
+    "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
+    "non_fixture_source": true,
+    "human_approval_recorded": true,
+    "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "input_package_validator_status": "PASS",
+    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "validation_status": "PASS",
+    "validation_no_longer_blocked_by_public_network": true,
+    "effective_network_modes": {
+      "bike-rebalance": "none",
+      "dialogue-parser": "controlled",
+      "offer-letter-generator": "controlled",
+      "powerlifting-coef-calc": "controlled"
+    }
+  },
+  "runner_contract_static_checks": {
+    "codex_cli_runner_class_present": true,
+    "requires_json_mode": true,
+    "requires_ephemeral_sessions": true,
+    "requires_ignore_user_config": true,
+    "requires_ignore_rules": true,
+    "requires_workspace_write_sandbox": true,
+    "requires_approval_policy_never": true,
+    "rejects_danger_full_access": true,
+    "rejects_runner_controlled_env_overrides": true,
+    "supports_skip_git_repo_check_only_after_help_confirms": true,
+    "live_agent_config_requires_real_runner_preflight": true,
+    "live_agent_config_rejects_fake_runner": true,
+    "live_agent_config_rejects_fake_verifier": true,
+    "raw_traces_in_git": false
+  },
+  "static_precheck_limitations": {
+    "codex_exec_help_invoked": false,
+    "codex_binary_version_checked": false,
+    "subprocess_smoke_invoked": false,
+    "runner_workspace_created": false,
+    "codex_home_created": false,
+    "runtime_skill_inventory_collected": false,
+    "reason": "This phase is boundary design and static precheck only. CLI/help/runtime smoke belongs to a later explicitly authorized phase."
+  },
+  "remaining_execution_blockers": [
+    "no Codex CLI real-runner smoke or preflight command was run",
+    "no installed Codex CLI version/help snapshot was recorded in this phase",
+    "no isolated CODEX_HOME runtime workspace was created",
+    "no Stage 2 pilot plan was frozen",
+    "no Stage 2 pilot execution was authorized or run",
+    "no live-agent traces were created",
+    "no evidence-gate rerun was performed",
+    "execution_readiness remains false",
+    "can_be_used_as_real_stage2_input_package_now remains false"
+  ],
+  "permitted_next_action": {
+    "action": "OPEN_EXPLICIT_CODEX_REAL_RUNNER_SMOKE_PREFLIGHT_PHASE",
+    "description": "A later bounded phase may check the installed Codex CLI version/help and run a minimal isolated smoke/preflight only after explicit authorization.",
+    "must_remain_out_of_scope": [
+      "Stage 2 pilot execution",
+      "frozen pilot planning",
+      "matrix run-order generation",
+      "live-agent trace creation beyond the explicitly authorized smoke scope",
+      "evidence-gate rerun",
+      "router promotion",
+      "release, deploy, archive, or public performance claim"
+    ]
+  },
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "performance_claims": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "validation_plan": [
+    "python -m json.tool artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-preflight-boundary-20260704T040625Z/codex-real-runner-preflight-boundary.static-precheck.json",
+    "openspec validate --all --strict",
+    "PYTHONPATH=src python -m hermes_skilleval.cli release-check",
+    "git diff --check",
+    "boundary scan for any true execution markers in the new artifact directory"
+  ]
+}
