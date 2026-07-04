@@ -31,7 +31,7 @@ execution evidence.
   `pilot_plan_frozen=false`, and `evidence_gate_rerun=false`
 - **AND** it MUST keep `execution_readiness=false` unless a later authorized
   real-runner smoke/preflight phase records real runtime evidence
-- **AND** it MUST NOT modify existing PR #13 input-package truth surfaces
+- **AND** it MUST NOT modify existing Stage 2 input-package truth surfaces
 
 ### Requirement: Gate next action narrowly
 

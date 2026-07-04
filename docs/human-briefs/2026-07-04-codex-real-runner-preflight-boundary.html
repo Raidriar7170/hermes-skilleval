@@ -15,7 +15,7 @@
 </head>
 <body>
   <h1>Hermes SkillEval Codex Real-runner Preflight Boundary</h1>
-  <p class="status"><strong>结论：</strong>本阶段完成的是静态边界设计/预检：PR #13 合并后的非执行 input package 足够进入后续 real-runner smoke/preflight 授权评审；但本阶段没有运行 Codex，<code>execution_readiness=false</code>，不能直接执行 Stage 2。</p>
+  <p class="status"><strong>结论：</strong>本阶段完成的是静态边界设计/预检：当前 base 中包含 PR #13 input package、PR #15 provenance blocker 记录和 PR #16 human privacy acceptance 的非执行 package 足够进入后续 real-runner smoke/preflight 授权评审；但本阶段没有运行 Codex，<code>execution_readiness=false</code>，不能直接执行 Stage 2。</p>
 
   <h2>当前状态</h2>
   <ul>
@@ -29,12 +29,12 @@
   <ul>
     <li>新增 OpenSpec change：<code>openspec/changes/codex-real-runner-preflight-boundary/</code>。</li>
     <li>新增静态预检 JSON：<code>artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-preflight-boundary-20260704T040625Z/codex-real-runner-preflight-boundary.static-precheck.json</code>。</li>
-    <li>没有修改 <code>src/hermes_skilleval/**</code>、<code>tests/**</code>、release gate、<code>configs/v0.3/live-agent.yaml</code> 或 PR #13 truth surfaces。</li>
+    <li>没有修改 <code>src/hermes_skilleval/**</code>、<code>tests/**</code>、release gate、<code>configs/v0.3/live-agent.yaml</code> 或 Stage 2 input-package truth surfaces。</li>
   </ul>
 
   <h2>静态预检内容</h2>
   <ul>
-    <li>PR #13 readiness：human approval 已记录，oracle qualification 为 <code>QUALIFIED_NO_NETWORK_VERIFIER_PASSED</code>，input-package validator 为 <code>PASS</code>，privacy review 为 accepted non-execution。</li>
+    <li>Current-base readiness：human approval 已记录，oracle qualification 为 <code>QUALIFIED_NO_NETWORK_VERIFIER_PASSED</code>，input-package validator 为 <code>PASS</code>，privacy provenance 为 <code>HUMAN_ACCEPTANCE_RECORDED</code>，decision 为 <code>ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE</code>。</li>
     <li>Runner contract：源码包含 isolated <code>CODEX_HOME</code>、<code>workspace-write</code> sandbox、approval policy <code>never</code>、required <code>codex exec</code> flags、danger bypass 拒绝和 runner-controlled env override 拒绝。</li>
     <li>配置边界：<code>configs/v0.3/live-agent.yaml</code> 仍要求 real-runner preflight，拒绝 fake runner/verifier，并禁止 raw traces 入 Git。</li>
   </ul>

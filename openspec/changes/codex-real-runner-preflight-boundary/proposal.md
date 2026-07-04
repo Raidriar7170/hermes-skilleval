@@ -1,19 +1,20 @@
 ## Why
 
 PR #13 merged a non-execution Stage 2 input-package candidate with validator
-and privacy blockers closed, but the truth surface still explicitly says no
-Codex real-runner preflight has run. Before any future smoke run, pilot plan,
-or Stage 2 execution, Hermes needs a small fail-closed boundary packet that
-turns the existing PR-5 runner contract and PR #13 package state into concrete
-preflight criteria without invoking Codex.
+evidence, and PR #16 later recorded explicit human privacy acceptance while
+keeping execution readiness false. The current truth surface still explicitly
+says no Codex real-runner preflight has run. Before any future smoke run, pilot
+plan, or Stage 2 execution, Hermes needs a small fail-closed boundary packet
+that turns the existing PR-5 runner contract and current merged package state
+into concrete preflight criteria without invoking Codex.
 
 ## What Changes
 
 - Add an OpenSpec change that defines the Codex real-runner preflight boundary
   as a separate non-execution phase.
-- Record a static preflight readiness artifact for the merged PR #13 package,
-  including required inputs, current blockers, permitted next action, and
-  explicit non-actions.
+- Record a static preflight readiness artifact for the current merged package
+  state, including PR #16 privacy acceptance provenance, required inputs,
+  current blockers, permitted next action, and explicit non-actions.
 - Add a concise Chinese Human Brief for human review of the boundary decision.
 - Preserve the existing runner implementation, Stage 2 package artifacts,
   release gates, tests, and historical evidence.

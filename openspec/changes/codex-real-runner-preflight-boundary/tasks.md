@@ -3,12 +3,13 @@
 - [x] 1.1 Create proposal, design, and capability spec for the static
   Codex real-runner preflight boundary.
 - [x] 1.2 Keep scope limited to non-execution boundary design; do not modify
-  runtime code, tests, release logic, or PR #13 truth surfaces.
+  runtime code, tests, release logic, or Stage 2 input-package truth surfaces.
 
 ## 2. Static Precheck Artifact
 
-- [x] 2.1 Inspect the merged PR #13 input-package readiness artifacts and the
-  existing PR-5 Codex runner contract.
+- [x] 2.1 Inspect the current merged Stage 2 input-package readiness artifacts,
+  PR #16 privacy acceptance provenance, and the existing PR-5 Codex runner
+  contract.
 - [x] 2.2 Write a static precheck JSON artifact with required inputs, blocker
   state, allowed next action, and explicit non-actions.
 

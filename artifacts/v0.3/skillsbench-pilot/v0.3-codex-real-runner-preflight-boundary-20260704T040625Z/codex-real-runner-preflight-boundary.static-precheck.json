@@ -4,7 +4,7 @@
   "created_at": "2026-07-04T04:06:25Z",
   "source_branch": "ops/codex-real-runner-preflight-boundary",
   "base_branch": "codex/v0.3-pr0-protocol",
-  "source_commit": "f36f17000dc42a92fc63c4e0be53fc748e0f88f3",
+  "source_commit": "22267cc2a87e1720203efb285adfbf15847d0aaf",
   "objective": "Record the non-execution boundary and static readiness checks before any Codex real-runner smoke/preflight phase.",
   "status": "STATIC_PRECHECK_PASSED_FOR_EXPLICIT_SMOKE_AUTHORIZATION_REVIEW_NOT_EXECUTED",
   "decision": {
@@ -14,28 +14,35 @@
     "authorizes_stage2_execution": false,
     "execution_readiness": false,
     "can_be_used_as_real_stage2_input_package_now": false,
-    "decision_summary": "The merged PR #13 package has enough committed non-execution evidence to design or request a later Codex real-runner smoke/preflight phase, but this artifact does not run Codex or make Stage 2 executable."
+    "decision_summary": "The current merged base package, including PR #16 human privacy acceptance provenance, has enough committed non-execution evidence to design or request a later Codex real-runner smoke/preflight phase, but this artifact does not run Codex or make Stage 2 executable."
   },
   "required_inputs": [
     {
       "id": "human_approval_readiness",
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json",
-      "sha256": "54bebda4faebb66ed826a523ce47055ff8cb3cac441b12ee8058ad4a702cf8bf",
-      "size_bytes": 9957,
+      "sha256": "db6f7822c0ed83700fdd25755cb26dd37075a7fbaa0687b4e2dd2cbe0c493b98",
+      "size_bytes": 11100,
       "status": "PRESENT_PARSED"
     },
     {
       "id": "stage2_real_pilot_input_package_candidate",
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json",
-      "sha256": "a35c930f1599409494d466aaa636d0f3b33f6f82dd0edebdbaf0add2deedc4e9",
-      "size_bytes": 24743,
+      "sha256": "1f7e3515d462a611866bbd3e296ee6581dc075af519dce496606c6e0ee601c41",
+      "size_bytes": 26925,
       "status": "PRESENT_PARSED"
     },
     {
       "id": "privacy_review_accepted_non_execution",
       "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.accepted-non-execution.json",
-      "sha256": "15d95796a1cd106c4b40efec896dc85fcb357de9d32c04fc2ecd4bcc8db21c81",
-      "size_bytes": 7637,
+      "sha256": "84e124326f96fd62b594c960e8c7b307b38627eb0e88e30bf37052dd8d79f2f5",
+      "size_bytes": 8611,
+      "status": "PRESENT_PARSED"
+    },
+    {
+      "id": "privacy_review_human_accepted_non_execution",
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.human-accepted-non-execution.json",
+      "sha256": "b1d4a08ac99ad32242def96b92817003e87642cf951cae80042526c820fcb4ff",
+      "size_bytes": 5116,
       "status": "PRESENT_PARSED"
     },
     {
@@ -53,13 +60,22 @@
       "status": "PRESENT_INSPECTED"
     }
   ],
-  "package_readiness_from_pr13": {
-    "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTED_NOT_EXECUTED",
+  "package_readiness_from_current_base": {
+    "base_commit": "22267cc2a87e1720203efb285adfbf15847d0aaf",
+    "source_prs": [
+      "#13",
+      "#15",
+      "#16"
+    ],
+    "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_HUMAN_ACCEPTED_NOT_EXECUTED",
     "non_fixture_source": true,
     "human_approval_recorded": true,
+    "human_privacy_acceptance_recorded": true,
     "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
     "input_package_validator_status": "PASS",
-    "privacy_review_status": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "privacy_review_status": "HUMAN_ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "privacy_decision": "ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "privacy_acceptance_provenance_status": "HUMAN_ACCEPTANCE_RECORDED",
     "validation_status": "PASS",
     "validation_no_longer_blocked_by_public_network": true,
     "effective_network_modes": {

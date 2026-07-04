@@ -2,10 +2,11 @@
 
 PR-5 added the real `CodexCliRunner` subprocess layer and its fail-closed
 preflight contract. PR #13 later merged a non-execution Stage 2 input-package
-candidate whose oracle qualification, input-package validator, and privacy
-review are complete for review purposes, while preserving
-`execution_readiness=false` and explicitly recording that no Codex real-runner
-preflight, Stage 2 pilot, frozen plan, traces, or evidence-gate rerun occurred.
+candidate whose oracle qualification and input-package validator are complete
+for review purposes, and PR #16 recorded explicit human privacy acceptance.
+The current base still preserves `execution_readiness=false` and explicitly
+records that no Codex real-runner preflight, Stage 2 pilot, frozen plan, traces,
+or evidence-gate rerun occurred.
 
 This change is the boundary step between those two facts. It does not exercise
 the runner. It records whether the merged package has enough static evidence to
@@ -16,8 +17,8 @@ justify a later, separately authorized real-runner smoke/preflight phase.
 **Goals:**
 
 - Define a fail-closed boundary for Codex real-runner preflight readiness.
-- Consume existing committed evidence from PR-5/PR-6/PR #13 without rewriting
-  their truth surfaces.
+- Consume existing committed evidence from PR-5/PR-6/PR #13/PR #16 without
+  rewriting their truth surfaces.
 - Record the current decision as a static JSON artifact and a concise Chinese
   Human Brief.
 - Keep the next permitted action narrow: a later smoke/preflight design review
@@ -30,7 +31,7 @@ justify a later, separately authorized real-runner smoke/preflight phase.
 - No Stage 2 pilot execution, frozen pilot plan, run-order generation, or
   evidence-gate rerun.
 - No changes to `src/hermes_skilleval/**`, `tests/**`, release logic,
-  `configs/v0.3/live-agent.yaml`, or existing PR #13 artifacts.
+  `configs/v0.3/live-agent.yaml`, or existing Stage 2 input-package artifacts.
 - No release, archive, deploy, or public performance claim.
 
 ## Decisions
@@ -49,15 +50,17 @@ justify a later, separately authorized real-runner smoke/preflight phase.
    validator/privacy success into Stage 2 readiness.
 
 3. **Fail closed on missing committed evidence.**
-   Required inputs include the merged PR #13 readiness artifact, stage2 package
-   candidate artifact, privacy decision artifact, `configs/v0.3/live-agent.yaml`,
-   and the PR-5 runner implementation. Missing or unparsable inputs make the
-   boundary decision `BLOCKED_STATIC_PRECHECK`.
+   Required inputs include the current-base readiness artifact, stage2 package
+   candidate artifact, privacy decision artifact, PR #16 human privacy
+   acceptance artifact, `configs/v0.3/live-agent.yaml`, and the PR-5 runner
+   implementation. Missing or unparsable inputs make the boundary decision
+   `BLOCKED_STATIC_PRECHECK`.
 
 4. **No mutation of historical truth surfaces.**
    This phase writes new artifacts under a new run directory and links back to
-   existing evidence. Existing PR #13 JSON files are not updated, because they
-   correctly describe the C4 closeout state.
+   existing evidence. Existing Stage 2 input-package JSON files are not updated
+   by this boundary phase; the current base already records PR #16 privacy
+   acceptance provenance.
 
 5. **Human Brief is explanatory only.**
    The HTML brief summarizes the same decision for review. It is not a second
@@ -73,7 +76,8 @@ justify a later, separately authorized real-runner smoke/preflight phase.
   record CLI drift as a blocker that the next separately authorized smoke
   phase must check against `codex exec --help`.
 - [Risk] Existing artifact paths may move in a later cleanup. -> Mitigation:
-  fail closed on missing inputs and keep this phase tied to PR #13 merge state.
+  fail closed on missing inputs and keep this phase tied to current merged base
+  evidence.
 - [Risk] The new capability duplicates completed PR-5/PR-6 deltas. ->
   Mitigation: define only the boundary decision capability; do not modify the
   historical runner or matrix capability requirements.
