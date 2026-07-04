@@ -8,10 +8,12 @@
     "human_non_execution_approval_recorded": true,
     "input_package_validator_passed": true,
     "oracle_qualification_complete": true,
-    "privacy_review_required": true,
-    "privacy_review_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
-    "explicit_human_privacy_acceptance_found": false,
-    "privacy_acceptance_provenance_required": true
+    "privacy_review_required": false,
+    "privacy_review_status": "HUMAN_ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "explicit_human_privacy_acceptance_found": true,
+    "privacy_acceptance_provenance_required": false,
+    "privacy_acceptance_provenance_status": "HUMAN_ACCEPTANCE_RECORDED",
+    "human_privacy_acceptance_recorded": true
   },
   "approval_decision_items": [
     {
@@ -35,9 +37,10 @@
       "evidence_refs": [
         "privacy-scan.review-required.json",
         "privacy-review.accepted-non-execution.json",
-        "privacy-acceptance-provenance.audit.json"
+        "privacy-acceptance-provenance.audit.json",
+        "privacy-review.human-accepted-non-execution.json"
       ],
-      "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING"
+      "status": "HUMAN_ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE"
     },
     {
       "decision": "approve_or_request_new_candidate_routed_predictions",
@@ -77,7 +80,7 @@
     "no Stage 2 pilot execution was authorized or run",
     "no live-agent traces were created",
     "no evidence-gate rerun was performed",
-    "privacy acceptance provenance missing"
+    "privacy accepted for non-execution package only; execution still requires separate approval"
   ],
   "human_approval_artifact": {
     "name": "human-approval.non-execution-qualification.json",
@@ -175,15 +178,16 @@
     "input_package_validator_status": "PASS",
     "non_fixture_source": true,
     "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
-    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTANCE_PROVENANCE_MISSING_NOT_EXECUTED",
-    "privacy_review_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "post_approval_status": "NON_EXECUTION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_HUMAN_ACCEPTED_NOT_EXECUTED",
+    "privacy_review_status": "HUMAN_ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
     "ready_for_human_approval_now": false,
-    "recommended_next_step": "Leave Issue #11 open and request explicit human privacy acceptance or redaction decision. Do not run Stage 2, Codex, freeze a pilot plan, create traces, or rerun the evidence gate from this package.",
+    "recommended_next_step": "After this PR is merged and verified clean, Issue #11 may be closed for privacy provenance. Do not run Stage 2, Codex, freeze a pilot plan, create traces, or rerun the evidence gate from this package.",
     "strict_routed_predictions_status": "EXPORTED_STRICT_PROVENANCE",
     "validation_no_longer_blocked_by_public_network": true,
     "validation_status": "PASS",
     "execution_readiness": false,
-    "explicit_human_privacy_acceptance_found": false
+    "explicit_human_privacy_acceptance_found": true,
+    "privacy_acceptance_provenance_status": "HUMAN_ACCEPTANCE_RECORDED"
   },
   "routed_prediction_artifacts": {
     "approved_router_config": {
@@ -217,7 +221,7 @@
     "sha256": "235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739",
     "size_bytes": 180520
   },
-  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTANCE_PROVENANCE_MISSING_NOT_EXECUTED",
+  "status": "APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_HUMAN_ACCEPTED_NOT_EXECUTED",
   "validation_artifacts": {
     "errors": [],
     "public_network_blocker_present": false,
@@ -246,5 +250,11 @@
     "path": "privacy-acceptance-provenance.audit.json",
     "sha256": "0a79ca797af0e1ec60ba28c1440a5330e10aa3a3e1c21d9cac44cc84d3be5585",
     "size_bytes": 2665
+  },
+  "human_privacy_acceptance_artifact": {
+    "name": "privacy-review.human-accepted-non-execution.json",
+    "path": "privacy-review.human-accepted-non-execution.json",
+    "sha256": "b1d4a08ac99ad32242def96b92817003e87642cf951cae80042526c820fcb4ff",
+    "size_bytes": 5116
   }
 }
