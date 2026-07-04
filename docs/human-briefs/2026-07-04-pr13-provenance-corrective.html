@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>PR #13 provenance corrective</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 32px; line-height: 1.55; color: #17202a; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 17px; margin-top: 24px; }
+    code { background: #f2f4f7; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #b45309; padding: 10px 14px; background: #fff7ed; }
+    .ok { border-left-color: #166534; background: #f0fdf4; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+  <h1>Hermes SkillEval PR #13 Provenance Corrective</h1>
+  <p class="status"><strong>结论：</strong>PR #13 input-package 仍是非执行证据包；privacy findings 的 repo-local 分类保留，但当前阻塞项是 <code>PRIVACY_ACCEPTANCE_PROVENANCE_MISSING</code>，不能把它当作 human privacy acceptance 或 Stage 2 readiness。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li><code>APPROVED_FOR_NON_EXECUTION_QUALIFICATION_ORACLE_QUALIFIED_VALIDATOR_PASSED_PRIVACY_ACCEPTANCE_PROVENANCE_MISSING_NOT_EXECUTED</code></li>
+    <li><code>can_be_used_as_real_stage2_input_package_now=false</code></li>
+    <li><code>execution_readiness=false</code></li>
+    <li><code>explicit_human_privacy_acceptance_found=false</code></li>
+  </ul>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>新增 <code>privacy-acceptance-provenance.audit.json</code>，记录 PR #13 / Issue #11 中未找到明确 human privacy acceptance。</li>
+    <li>更新 <code>privacy-review.accepted-non-execution.json</code>：保留 no-redaction 分类，但标记 acceptance provenance missing。</li>
+    <li>更新 <code>human-approval-readiness.json</code> 与 <code>stage2-real-pilot-input-package-candidate.json</code>，移除隐含 privacy accepted 的 readiness 结论。</li>
+    <li>刷新 candidate summary 中若干 stale embedded SHA-256 引用。</li>
+  </ul>
+
+  <h2>关键证据文件</h2>
+  <ul>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-acceptance-provenance.audit.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.accepted-non-execution.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json</code></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>jq empty</code> for changed JSON artifacts: PASS.</li>
+    <li>Recursive embedded SHA-256/size reference check for <code>stage2-real-pilot-input-package-candidate.json</code>: PASS, 55/55 refs checked.</li>
+    <li>Readiness/provenance guard and prohibited true-flag scan: PASS.</li>
+    <li><code>PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src pytest -q</code>: PASS, original validation result 664 passed.</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: PASS, 23 passed.</li>
+    <li><code>PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: PASS.</li>
+    <li><code>git diff --check</code>: PASS.</li>
+  </ul>
+
+  <h2>剩余风险</h2>
+  <p class="status">Issue #11 应保持 open，直到有人明确给出 privacy acceptance 或 redaction decision。PR #14 可独立 review，但不能替代 PR #13 的 privacy provenance。</p>
+
+  <h2>禁止过度声明</h2>
+  <p class="status ok">本阶段没有 Stage 2 run、Codex run、pilot plan freeze、traces、evidence-gate rerun、qualification rerun、validator rerun或 performance claim。</p>
+</body>
+</html>
