@@ -4,7 +4,7 @@
 - [x] 1.2 Create OpenSpec proposal, design, delta spec, and tasks for isolated-auth smoke/preflight.
 - [x] 1.3 Validate proposal artifacts with `OPENSPEC_TELEMETRY=0 openspec validate --all --strict`.
 - [x] 1.4 Add a concise Chinese Human Brief for the proposal stage.
-- [ ] 1.5 Commit, push, and open a draft PR for proposal review.
+- [x] 1.5 Commit, push, and open a draft PR for proposal review.
 
 ## 2. Base and Boundary Verification
 
