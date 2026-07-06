@@ -1,0 +1,496 @@
+{
+  "schema_version": 1,
+  "artifact_type": "codex_real_runner_smoke_preflight",
+  "created_at_utc": "2026-07-06T07:08:35Z",
+  "status": "BLOCKED_ISOLATED_CODEX_HOME_AUTH_401_AFTER_PREFLIGHT",
+  "status_summary": "Codex CLI and project runner preflight reached an isolated real-runner invocation boundary, but the Codex subprocess exited with 401 Unauthorized because the isolated CODEX_HOME did not contain usable authentication.",
+  "phase_boundary": {
+    "status_is_smoke_preflight_only": true,
+    "codex_real_runner_smoke_preflight_performed": true,
+    "stage2_pilot_run": false,
+    "matrix_4x3x1_run": false,
+    "pilot_plan_frozen": false,
+    "task_traces_created": false,
+    "evidence_gate_rerun": false,
+    "oracle_qualification_rerun": false,
+    "verifier_outputs_rewritten": false,
+    "routed_predictions_changed": false,
+    "performance_claim_made": false,
+    "execution_readiness": false,
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "real_codex_12_run_execution_authorized": false,
+    "next_permitted_action": "Resolve isolated Codex authentication for smoke/preflight in a separate bounded step; after an unblocked smoke/preflight, request a separate pilot-freeze PR approval. Real Codex 12-run execution still requires separate explicit approval."
+  },
+  "git": {
+    "branch": "ops/codex-real-runner-smoke-preflight",
+    "source_commit": "c1b08544975393302993f688f159f3699cecb4cb",
+    "base_ref": "origin/codex/v0.3-pr0-protocol",
+    "base_commit": "c1b08544975393302993f688f159f3699cecb4cb"
+  },
+  "human_authorization": {
+    "provided": true,
+    "scope": "Codex real-runner smoke/preflight phase only",
+    "does_not_authorize_stage2_pilot": true,
+    "does_not_authorize_4x3x1_matrix": true,
+    "does_not_authorize_real_codex_12_run_execution": true
+  },
+  "required_prerequisite_artifacts": {
+    "stage2_input_package_candidate": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json",
+      "exists": true,
+      "size_bytes": 26925,
+      "sha256": "1f7e3515d462a611866bbd3e296ee6581dc075af519dce496606c6e0ee601c41"
+    },
+    "oracle_qualification_jsonl": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.jsonl",
+      "exists": true,
+      "size_bytes": 39229,
+      "sha256": "5a8bdded8528f39f4515dddbe60d8b353dd1e0a53889cf206aecd6b25b844a27"
+    },
+    "oracle_qualification_report": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.report.json",
+      "exists": true,
+      "size_bytes": 6857,
+      "sha256": "89e0c75d0bcdd88b360cb09b85e876a2a89f9eb86155b4cc55cf30242d54d21e"
+    },
+    "input_package_validator_passed": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/input-package-validator.passed.json",
+      "exists": true,
+      "size_bytes": 5062,
+      "sha256": "de087717fe4fcd36344f1d1b5788898ebff3b512f42c2a1d39686bbc09e843cc"
+    },
+    "routed_predictions_strict": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.json",
+      "exists": true,
+      "size_bytes": 4487,
+      "sha256": "28c4d20f0e535aa8c6a2b1f8603a99df385dffae8794be1abe86c0669feb9ea1"
+    },
+    "routed_predictions_strict_manifest": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.manifest.json",
+      "exists": true,
+      "size_bytes": 15449,
+      "sha256": "084a8ec222756bc5cc0fc6affbab6a419429ff08a7f80d9b33b5442533a96304"
+    },
+    "router_config_approved_non_execution": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/router-config.approved-non-execution.json",
+      "exists": true,
+      "size_bytes": 1618,
+      "sha256": "7227fe9e4642a7f3e5a193008b86a74036091063c0976b3bd0b6d2b1e71fd1ca"
+    },
+    "privacy_review_human_accepted_non_execution": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.human-accepted-non-execution.json",
+      "exists": true,
+      "size_bytes": 5116,
+      "sha256": "b1d4a08ac99ad32242def96b92817003e87642cf951cae80042526c820fcb4ff"
+    },
+    "codex_real_runner_static_precheck": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-preflight-boundary-20260704T040625Z/codex-real-runner-preflight-boundary.static-precheck.json",
+      "exists": true,
+      "size_bytes": 7537,
+      "sha256": "d2011c85ee424c80c071b1aa28f940c8057c5b8559914321ed65c3b1305548f2"
+    },
+    "codex_real_runner_preflight_boundary_spec": {
+      "path": "openspec/specs/codex-real-runner-preflight-boundary/spec.md",
+      "exists": true,
+      "size_bytes": 2713,
+      "sha256": "3b6a3d1e667007f49777d9d045f1050b2f274c5fa007d8f337d1b325fa07f95d"
+    }
+  },
+  "prerequisite_assertions": {
+    "oracle_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "task_count": 4,
+    "qualified_task_count": 4,
+    "verifier_passed_count": 4,
+    "oracle_jsonl_record_count": 4,
+    "oracle_jsonl_all_verifier_passed": true,
+    "validator_status": "PASS",
+    "privacy_provenance_status": "HUMAN_ACCEPTANCE_RECORDED",
+    "privacy_review_provenance_status": "HUMAN_ACCEPTANCE_RECORDED",
+    "execution_readiness": false,
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "static_precheck_permitted_next_action": "OPEN_EXPLICIT_CODEX_REAL_RUNNER_SMOKE_PREFLIGHT_PHASE",
+    "no_pilot_plan_frozen": true,
+    "no_stage2_pilot_run": true,
+    "no_codex_12_run_execution": true,
+    "no_traces": true,
+    "no_evidence_gate_rerun": true,
+    "can_be_used_source": "input-package-validator.passed.json readiness_decision",
+    "stage2_input_package_status": "READY_FOR_REVIEW_NOT_EXECUTED",
+    "static_precheck_permitted_next_action_record": {
+      "action": "OPEN_EXPLICIT_CODEX_REAL_RUNNER_SMOKE_PREFLIGHT_PHASE",
+      "description": "A later bounded phase may check the installed Codex CLI version/help and run a minimal isolated smoke/preflight only after explicit authorization.",
+      "must_remain_out_of_scope": [
+        "Stage 2 pilot execution",
+        "frozen pilot planning",
+        "matrix run-order generation",
+        "live-agent trace creation beyond the explicitly authorized smoke scope",
+        "evidence-gate rerun",
+        "router promotion",
+        "release, deploy, archive, or public performance claim"
+      ]
+    }
+  },
+  "codex_cli_evidence": {
+    "path": "/Users/raidriar/.local/bin/codex",
+    "version": "codex-cli 0.142.5",
+    "command_outputs": {
+      "which_codex_stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-path.stdout.txt",
+        "exists": true,
+        "size_bytes": 33,
+        "sha256": "20242e93e042073729ad2410c8d13f4aea3387028be16d143960f7ee9649bfd4"
+      },
+      "which_codex_stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-path.stderr.txt",
+        "exists": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "codex_version_stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-version.stdout.txt",
+        "exists": true,
+        "size_bytes": 18,
+        "sha256": "42a8599802ad6039277e232cba7eadecc3cec1c19d8600bf5dddff85ff30fca9"
+      },
+      "codex_version_stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-version.stderr.txt",
+        "exists": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "codex_exec_help_stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-exec-help.stdout.txt",
+        "exists": true,
+        "size_bytes": 3651,
+        "sha256": "71e55de96e5126b214ad5abd775ca42b692b771bf332bd5f0b5d384964a212e0"
+      },
+      "codex_exec_help_stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-exec-help.stderr.txt",
+        "exists": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "required_help_flags_present": {
+      "--json": true,
+      "--ephemeral": true,
+      "--ignore-user-config": true,
+      "--ignore-rules": true,
+      "--sandbox": true,
+      "--cd": true,
+      "--output-last-message": true,
+      "--skip-git-repo-check": true
+    },
+    "help_stdout_trailing_whitespace_normalized_for_git_diff_check": true,
+    "help_stdout_original_sha256_before_normalization": "9f86f0115238ddde2514587e5f95b0ab0aa6b89495e5912878d49ad26038aa19"
+  },
+  "runner_contract_compatibility": {
+    "runner": "hermes_skilleval.live_agent_runtime.CodexCliRunner",
+    "synthetic_task_id": "codex-real-runner-smoke-preflight-no-task",
+    "condition": "no-skill",
+    "mounted_skills": [],
+    "preflight_event": {
+      "approval_policy": "never",
+      "codex_home_mode": "isolated",
+      "codex_version": "codex-cli 0.142.5",
+      "evidence_mode": "final-evidence",
+      "global_capability_inventory": {
+        "admin_skill_dirs": [
+          {
+            "entry_count": 0,
+            "status": "ABSENT"
+          }
+        ],
+        "bundled_skills": {
+          "status": "SYSTEM_MANAGED_UNKNOWN"
+        },
+        "home_isolated": true,
+        "user_skill_dir": {
+          "entry_count": 0,
+          "status": "ISOLATED_HOME"
+        },
+        "workspace_skill_dirs": {
+          "empty_parent_skill_dirs": 0,
+          "mounted_entry_count": 0,
+          "parent_skill_dirs_checked": 3,
+          "workspace_status": "ABSENT"
+        }
+      },
+      "sandbox": "workspace-write",
+      "skill_inventory": {
+        "admin_skill_dirs": [
+          {
+            "entry_count": 0,
+            "status": "ABSENT"
+          }
+        ],
+        "bundled_skills": {
+          "status": "SYSTEM_MANAGED_UNKNOWN"
+        },
+        "home_isolated": true,
+        "user_skill_dir": {
+          "entry_count": 0,
+          "status": "ISOLATED_HOME"
+        },
+        "workspace_skill_dirs": {
+          "empty_parent_skill_dirs": 0,
+          "mounted_entry_count": 0,
+          "parent_skill_dirs_checked": 3,
+          "workspace_status": "ABSENT"
+        }
+      },
+      "supports_skip_git_repo_check": true,
+      "type": "preflight"
+    },
+    "completion_event": {
+      "stderr_truncated": false,
+      "stdout_truncated": false,
+      "type": "codex_process"
+    },
+    "turn_failed_event": {
+      "error": {
+        "message": "unexpected status 401 Unauthorized: Missing [REDACTED] basic authentication in header, url: https://api.openai.com/v1/responses, cf-ray: a16cb89209faf7e3-LAX, request id: 46665b55-5053-4905-a2f0-05e30f0332c7"
+      },
+      "type": "turn.failed"
+    },
+    "blocked_reason": "Isolated CODEX_HOME did not contain usable Codex authentication; subprocess returned 401 Unauthorized after runner preflight succeeded.",
+    "process_exit_code_used_as_task_success": false
+  },
+  "isolated_runtime": {
+    "external_runtime_root": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z",
+    "workspace": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/workspace",
+    "isolated_home": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-home-base/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/home",
+    "isolated_codex_home": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-home-base/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z",
+    "runtime_manifest": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/isolated-runtime-manifest.json",
+      "exists": true,
+      "size_bytes": 716533,
+      "sha256": "fbd8399bf658949022484d622c6285948eccf2fa26c84b5a8ca744ab38d7e3cd"
+    },
+    "workspace_record": {
+      "path": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/workspace",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": null,
+      "sha256": null
+    },
+    "isolated_home_record": {
+      "path": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-home-base/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/home",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": null,
+      "sha256": null
+    },
+    "isolated_codex_home_record": {
+      "path": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-home-base/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": null,
+      "sha256": null
+    },
+    "home_isolated": true,
+    "clean_skill_inventory": {
+      "admin_skill_dirs": [
+        {
+          "entry_count": 0,
+          "status": "ABSENT"
+        }
+      ],
+      "bundled_skills": {
+        "status": "SYSTEM_MANAGED_UNKNOWN"
+      },
+      "home_isolated": true,
+      "user_skill_dir": {
+        "entry_count": 0,
+        "status": "ISOLATED_HOME"
+      },
+      "workspace_skill_dirs": {
+        "empty_parent_skill_dirs": 0,
+        "mounted_entry_count": 0,
+        "parent_skill_dirs_checked": 3,
+        "workspace_status": "ABSENT"
+      }
+    }
+  },
+  "commands": [
+    {
+      "purpose": "Codex CLI path snapshot",
+      "command_line": "which codex",
+      "stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-path.stdout.txt",
+        "exists": true,
+        "size_bytes": 33,
+        "sha256": "20242e93e042073729ad2410c8d13f4aea3387028be16d143960f7ee9649bfd4"
+      },
+      "stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-path.stderr.txt",
+        "exists": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "purpose": "Codex CLI version snapshot",
+      "command_line": "codex --version",
+      "stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-version.stdout.txt",
+        "exists": true,
+        "size_bytes": 18,
+        "sha256": "42a8599802ad6039277e232cba7eadecc3cec1c19d8600bf5dddff85ff30fca9"
+      },
+      "stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-version.stderr.txt",
+        "exists": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "purpose": "Codex exec help snapshot",
+      "command_line": "codex exec --help",
+      "stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-exec-help.stdout.txt",
+        "exists": true,
+        "size_bytes": 3651,
+        "sha256": "71e55de96e5126b214ad5abd775ca42b692b771bf332bd5f0b5d384964a212e0",
+        "trailing_whitespace_normalized_for_git_diff_check": true,
+        "original_sha256_before_normalization": "9f86f0115238ddde2514587e5f95b0ab0aa6b89495e5912878d49ad26038aa19"
+      },
+      "stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-exec-help.stderr.txt",
+        "exists": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "purpose": "Minimal non-task real-runner smoke/preflight invocation",
+      "command_line": "/Users/raidriar/.local/bin/codex exec --json --ephemeral --ignore-user-config --ignore-rules --sandbox workspace-write --config approval_policy=\"never\" --cd /tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/workspace --output-last-message /tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-home-base/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/runner-output/codex-last-message.txt --skip-git-repo-check -- <non-task smoke prompt sha256:3e0cfea4463c7cf4928b9f93088842f2ee2bcbabdda14b19c43b18be6cdf5e91>",
+      "prompt_sha256": "3e0cfea4463c7cf4928b9f93088842f2ee2bcbabdda14b19c43b18be6cdf5e91",
+      "stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-runner-smoke.stdout.txt",
+        "exists": true,
+        "size_bytes": 2896,
+        "sha256": "edeb8c3a4b7e52bd0d5d2c233ef480d6782f7af7030d5399515e77a7f9ca5c1f"
+      },
+      "stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-runner-smoke.stderr.txt",
+        "exists": true,
+        "size_bytes": 1277,
+        "sha256": "eb2ef761a038df8b0f0305677200bbf4a0464cc644666938eca8a31a83157843"
+      },
+      "events": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-runner-smoke.events.json",
+        "exists": true,
+        "size_bytes": 4629,
+        "sha256": "d8b4597b9f6d8480126cd0935200daea89e4653ff4b8eaeb1be70ee68d357b40"
+      },
+      "meta": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-runner-smoke.meta.json",
+        "exists": true,
+        "size_bytes": 2125,
+        "sha256": "60d7ea02cf1a026be7dfb39e9288af4ede44b7946e2c7c569afd63c09f3c1fec"
+      }
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "BLOCKED_WORKSPACE_PARENT_SKILL_LEAKAGE_PRECHECK",
+      "reason": "Initial repo-local runtime workspace lived under a parent path containing .agents/skills/hivemind-memory, and the runner failed closed before invoking Codex.",
+      "stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/attempt-1-parent-leakage/codex-runner-smoke.stdout.txt",
+        "exists": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/attempt-1-parent-leakage/codex-runner-smoke.stderr.txt",
+        "exists": true,
+        "size_bytes": 52,
+        "sha256": "3366968cca6af76512f3ea969ab4a21622341574285b4a9eaa1cc0b42cab6862"
+      },
+      "events": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/attempt-1-parent-leakage/codex-runner-smoke.events.json",
+        "exists": true,
+        "size_bytes": 3,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      "codex_subprocess_invoked": false
+    },
+    {
+      "attempt": 2,
+      "status": "BLOCKED_ISOLATED_CODEX_HOME_AUTH_401_AFTER_PREFLIGHT",
+      "reason": "External /tmp runtime avoided parent skill leakage; runner preflight proved isolation and invoked Codex, then Codex exited with 401 because isolated CODEX_HOME lacked usable authentication.",
+      "stdout": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-runner-smoke.stdout.txt",
+        "exists": true,
+        "size_bytes": 2896,
+        "sha256": "edeb8c3a4b7e52bd0d5d2c233ef480d6782f7af7030d5399515e77a7f9ca5c1f"
+      },
+      "stderr": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/command-output/codex-runner-smoke.stderr.txt",
+        "exists": true,
+        "size_bytes": 1277,
+        "sha256": "eb2ef761a038df8b0f0305677200bbf4a0464cc644666938eca8a31a83157843"
+      },
+      "events": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-runner-smoke.events.json",
+        "exists": true,
+        "size_bytes": 4629,
+        "sha256": "d8b4597b9f6d8480126cd0935200daea89e4653ff4b8eaeb1be70ee68d357b40"
+      },
+      "meta": {
+        "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-runner-smoke.meta.json",
+        "exists": true,
+        "size_bytes": 2125,
+        "sha256": "60d7ea02cf1a026be7dfb39e9288af4ede44b7946e2c7c569afd63c09f3c1fec"
+      },
+      "codex_subprocess_invoked": true,
+      "codex_turn_completed": false,
+      "exit_code": 1,
+      "timed_out": false
+    }
+  ],
+  "environment_allowlist": {
+    "runner_controlled_env": {
+      "CODEX_HOME": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-home-base/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z",
+      "HOME": "/tmp/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-home-base/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/home",
+      "NO_COLOR": "1",
+      "PYTHONUNBUFFERED": "1"
+    },
+    "explicit_network_mode": "Codex CLI default network behavior; no Stage 2 task network access requested by the smoke prompt.",
+    "sandbox_mode": "workspace-write",
+    "approval_policy": "never"
+  },
+  "non_task_prompt_proof": {
+    "prompt_sha256": "3e0cfea4463c7cf4928b9f93088842f2ee2bcbabdda14b19c43b18be6cdf5e91",
+    "prompt_excerpt": "Hermes SkillEval Codex real-runner smoke/preflight only. Do not inspect repository files. Do not run shell commands. Do not use or mention any Stage 2 task prompt. Reply exactly: HERMES_CODEX_REAL_RUNNER_SMOKE_PREFLIGHT_OK",
+    "stage2_task_prompts_used": false,
+    "selected_stage2_task_ids_used": [],
+    "selected_stage2_public_prompts_used": [],
+    "verifier_scoring_used_as_task_success": false,
+    "llm_judge_used": false
+  },
+  "non_actions": {
+    "stage2_pilot_run": false,
+    "matrix_4x3x1_run": false,
+    "pilot_plan_frozen": false,
+    "stage2_task_prompts_used": false,
+    "stage2_task_traces_created": false,
+    "evidence_gate_rerun": false,
+    "oracle_qualification_rerun": false,
+    "verifier_outputs_rewritten": false,
+    "routed_predictions_changed": false,
+    "performance_claim_made": false,
+    "router_promoted": false,
+    "task_success_claimed": false,
+    "real_codex_12_run_execution": false
+  },
+  "readiness": {
+    "execution_readiness": false,
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "smoke_preflight_success_is_task_success": false,
+    "recommended_next_action": "Resolve the isolated Codex authentication blocker in a separate bounded step, then request separate pilot-freeze PR approval if smoke/preflight completes; do not run real Codex 12-run execution without separate explicit approval."
+  }
+}
