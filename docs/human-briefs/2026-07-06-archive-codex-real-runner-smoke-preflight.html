@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex real-runner smoke/preflight OpenSpec archive closeout</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2937; background: #f8fafc; }
+    main { max-width: 920px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    ul { padding-left: 20px; }
+    .status { background: #f9fafb; border-left: 4px solid #64748b; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Codex real-runner smoke/preflight OpenSpec archive closeout</h1>
+  <p class="status"><strong>结论：</strong>本阶段只归档 PR #18 对应的 OpenSpec change，并把 smoke/preflight 规则同步为主规格；没有修复 isolated auth，没有运行 Codex，没有运行 Stage 2 pilot。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li>状态：archive closeout。</li>
+    <li>已归档 change：<code>codex-real-runner-smoke-preflight</code>。</li>
+    <li>PR #18 仍作为 blocker/evidence record：<code>BLOCKED_ISOLATED_CODEX_HOME_AUTH_401_AFTER_PREFLIGHT</code>。</li>
+  </ul>
+
+  <h2>本阶段改动</h2>
+  <ul>
+    <li>新增主规格：<code>openspec/specs/codex-real-runner-smoke-preflight/spec.md</code>。</li>
+    <li>移动 OpenSpec change 到：<code>openspec/changes/archive/2026-07-06-codex-real-runner-smoke-preflight/</code>。</li>
+    <li>勾选已完成的 PR publication closeout task。</li>
+  </ul>
+
+  <h2>未发生事项</h2>
+  <ul>
+    <li>没有运行新的 Codex runner 命令。</li>
+    <li>没有修复或绕过 isolated <code>CODEX_HOME</code> authentication blocker。</li>
+    <li>没有运行 Stage 2 pilot、4x3x1 matrix、evidence gate 或 oracle qualification。</li>
+    <li>没有冻结 pilot plan，没有创建 task traces，没有写 performance claim。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>合并本 archive-only PR 后，再单独开启 <code>ops/codex-real-runner-isolated-auth-smoke-preflight</code>，只处理 isolated auth resolution smoke/preflight。</p>
+</main>
+</body>
+</html>
