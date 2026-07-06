@@ -31,4 +31,4 @@
 - [x] 5.4 Run `OPENSPEC_TELEMETRY=0 openspec validate --all --strict`.
 - [x] 5.5 Run `PYTHONPATH=src python -m hermes_skilleval.cli release-check`.
 - [x] 5.6 Run `git diff --check`.
-- [ ] 5.7 Commit, push, and open a PR against `codex/v0.3-pr0-protocol`.
+- [x] 5.7 Commit, push, and open a PR against `codex/v0.3-pr0-protocol`.
