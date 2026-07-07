@@ -1006,6 +1006,57 @@ def test_real_evidence_mode_requires_no_skill_preflight(tmp_path):
         )
 
 
+def test_real_evidence_mode_defaults_workspace_root_outside_output_tree(
+    tmp_path, monkeypatch
+):
+    plan_path, matrix_path = _write_real_like_pilot_plan(tmp_path)
+    _mutate_plan(plan_path, lambda plan: plan.__setitem__("workspace_root", None))
+    runtime_root = tmp_path / "external-runtime"
+    monkeypatch.setenv(
+        "HERMES_SKILLEVAL_REAL_WORKSPACE_ROOT",
+        str(runtime_root),
+    )
+    runner = _RecordingRunner()
+
+    report = run_skillsbench_matrix(
+        plan_path=plan_path,
+        output_path=matrix_path,
+        runner=runner,
+        verifier=_PassingDeterministicVerifier(),
+        evidence_mode="real",
+    )
+
+    assert report["workspace_root"].startswith(str(runtime_root))
+    assert all(
+        request.workspace_path.is_relative_to(runtime_root)
+        for request in runner.requests
+    )
+    assert not (matrix_path.parent / "workspaces").exists()
+
+
+def test_real_evidence_mode_rejects_workspace_parent_skill_leakage(tmp_path):
+    plan_path, matrix_path = _write_real_like_pilot_plan(tmp_path)
+    unsafe_parent = tmp_path / "unsafe-parent"
+    leaked_skill = unsafe_parent / ".agents" / "skills" / "leaked-skill"
+    leaked_skill.mkdir(parents=True)
+    _mutate_plan(
+        plan_path,
+        lambda plan: plan.__setitem__(
+            "workspace_root",
+            str(unsafe_parent / "workspaces"),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="workspace parent skill leakage"):
+        run_skillsbench_matrix(
+            plan_path=plan_path,
+            output_path=matrix_path,
+            runner=_RecordingRunner(),
+            verifier=_PassingDeterministicVerifier(),
+            evidence_mode="real",
+        )
+
+
 @pytest.mark.parametrize(
     "events",
     [

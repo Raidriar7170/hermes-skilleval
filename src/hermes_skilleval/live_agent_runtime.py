@@ -821,6 +821,8 @@ def _parse_events(
             message = _redact(str(raw.get("message", "")))
             final_message = message
             events.append({"type": "final", "message": message})
+        elif event_type == "preflight":
+            events.append({"type": "preflight", **_redact_value(raw)})
         else:
             skill_id = raw.get("skill_id")
             if isinstance(skill_id, str) and skill_id.strip():

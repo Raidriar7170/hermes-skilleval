@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import re
 import subprocess
+import tempfile
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -20,6 +22,7 @@ from hermes_skilleval.live_agent_runtime import (
     FakeVerifier,
     LiveAgentSkill,
     _redact_value,
+    _visible_child_count,
     build_condition,
     execute_live_agent,
     prepare_live_agent_workspace,
@@ -44,6 +47,7 @@ CONDITIONS = ("no-skill", "routed-skill", "oracle-skill")
 CONTROLLED_NETWORKS = {"none", "controlled"}
 DEFAULT_ROUTER_TOP_K = 3
 EVIDENCE_MODES = {"fixture", "real"}
+REAL_WORKSPACE_ROOT_ENV = "HERMES_SKILLEVAL_REAL_WORKSPACE_ROOT"
 COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 LABEL_LEAKAGE_TOKENS = ("oracle", "gold", "source-task", "source_task")
@@ -1138,7 +1142,11 @@ def run_skillsbench_matrix(
         )
         for skill_id, record in plan["global_skill_registry"].items()
     }
-    workspace_root = Path(plan.get("workspace_root") or output.parent / "workspaces")
+    workspace_root = _matrix_workspace_root(
+        plan=plan,
+        output=output,
+        evidence_mode=evidence_mode,
+    )
     trace_root = output.parent / "traces"
     trace_root.mkdir(parents=True, exist_ok=True)
     runs = []
@@ -1221,6 +1229,7 @@ def run_skillsbench_matrix(
         "mode": plan["mode"],
         "evidence_mode": evidence_mode,
         "plan_path": str(plan_file),
+        "workspace_root": str(workspace_root),
         "skill_inventory": plan["global_skill_registry"],
         "leakage_scan": plan.get("leakage_scan"),
         "runs": runs,
@@ -1237,6 +1246,43 @@ def run_skillsbench_matrix(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return report
+
+
+def _matrix_workspace_root(
+    *,
+    plan: dict[str, Any],
+    output: Path,
+    evidence_mode: str,
+) -> Path:
+    configured = plan.get("workspace_root")
+    if evidence_mode != "real":
+        return Path(configured or output.parent / "workspaces")
+
+    if configured:
+        root = Path(configured)
+    else:
+        runtime_root = Path(
+            os.environ.get(REAL_WORKSPACE_ROOT_ENV, tempfile.gettempdir())
+        )
+        output_digest = _sha256_text(str(output.resolve()))[:16]
+        root = (
+            runtime_root
+            / "hermes-skilleval-live-agent-workspaces"
+            / f"{_safe_run_id(str(plan['run_id']))}-{output_digest}"
+        )
+    _validate_workspace_parent_skill_free(root)
+    return root
+
+
+def _validate_workspace_parent_skill_free(root: Path) -> None:
+    resolved = root.resolve(strict=False)
+    for parent in (resolved, *resolved.parents):
+        skill_dir = parent / ".agents" / "skills"
+        if _visible_child_count(skill_dir):
+            raise ValueError(
+                "real evidence workspace parent skill leakage detected: "
+                f"{skill_dir}"
+            )
 
 
 def _derive_plan_fields(
