@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage 2 real Codex 12-run execution</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2937; background: #f8fafc; }
+    main { max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    ul { padding-left: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: left; }
+    th { background: #f9fafb; }
+    .status { background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 14px; }
+    .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 real Codex 12-run execution</h1>
+  <p class="status"><strong>结论：</strong>本阶段按 PR #22 frozen plan 执行了 exactly 4 tasks x 3 conditions x 1 trial = 12 个真实 Codex run，并记录 deterministic verifier 输出；结果是 6 passed / 6 failed 的 raw verifier facts，不是性能结论。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li>执行 artifact 状态：<code>STAGE2_REAL_CODEX_12_RUN_EXECUTION_COMPLETED_VERIFIER_RECORDED</code>。</li>
+    <li>冻结计划：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json</code>。</li>
+    <li>冻结计划 sha256：<code>aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b</code>。</li>
+    <li>run order sha256：<code>86a7f74febf47ce31601b3238d2785267fbc84bb0b4dc1021680f33897af25fb</code>。</li>
+    <li>执行 artifact：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-execution.json</code>。</li>
+    <li>执行 artifact sha256：<code>70adb8e1e7dd953fcd1efdf541a0174dfae559e8b4efaa194f1641a8f8f6a243</code>。</li>
+  </ul>
+
+  <h2>Raw verifier outcomes</h2>
+  <table>
+    <thead>
+      <tr><th>Task</th><th>no-skill</th><th>routed-skill</th><th>oracle-skill</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>bike-rebalance</code></td><td>passed</td><td>passed</td><td>passed</td></tr>
+      <tr><td><code>dialogue-parser</code></td><td>failed</td><td>failed</td><td>failed</td></tr>
+      <tr><td><code>offer-letter-generator</code></td><td>passed</td><td>passed</td><td>passed</td></tr>
+      <tr><td><code>powerlifting-coef-calc</code></td><td>failed</td><td>failed</td><td>failed</td></tr>
+    </tbody>
+  </table>
+
+  <h2>本阶段证据</h2>
+  <ul>
+    <li>12 个 trace 位于 <code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/traces/</code>。</li>
+    <li>per-run Codex stdout/stderr 位于 <code>.../codex-output/</code>。</li>
+    <li>per-run verifier reward/CTRF/stdout/stderr 位于 <code>.../verifier-output/</code>。</li>
+    <li>isolated runtime manifest：<code>.../isolated-runtime-manifest.json</code>。</li>
+    <li>matrix report：<code>.../stage2-real-codex-12-run-matrix-report.json</code>。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>Phase-time original validation result：<code>PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q</code>：<code>666 passed</code>。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：<code>25 passed, 0 failed</code>。</li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：PASS。</li>
+    <li><code>git diff --check</code>：PASS。</li>
+    <li>JSON parse、manifest hash-pointer、no-extra-runs、verifier-success-source、secret/prohibited-flag scans：PASS。</li>
+  </ul>
+
+  <h2>边界与未发生事项</h2>
+  <ul>
+    <li>所有 12 个 run 使用 frozen run order；没有额外 trial，没有替换 run。</li>
+    <li>verifier output 是唯一 task success source；process exit code 没有被用作 task success。</li>
+    <li>没有使用 LLM judge。</li>
+    <li>没有 rerun evidence gate 或 oracle qualification。</li>
+    <li>没有修改 frozen plan、task manifests、public prompts、verifier、scorer、matrix、router 或 evidence-gate semantics。</li>
+    <li>没有重写 routed predictions，没有 router promotion。</li>
+    <li>没有 performance claim；任何推广或性能判断都需要后续单独 evidence-gate/review 阶段。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p class="note">将本 PR 作为真实 12-run execution evidence review；如果接受该证据，下一阶段应单独请求 evidence-gate/review 授权，仍不得在本 PR 内做性能结论或 router promotion。</p>
+</main>
+</body>
+</html>

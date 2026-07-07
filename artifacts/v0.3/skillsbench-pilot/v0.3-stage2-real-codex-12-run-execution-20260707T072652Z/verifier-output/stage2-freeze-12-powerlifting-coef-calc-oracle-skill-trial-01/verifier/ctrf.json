@@ -1,0 +1,32 @@
+{
+  "results": {
+    "summary": {
+      "failed": 3,
+      "passed": 0,
+      "tests": 3
+    },
+    "tests": [
+      {
+        "message": "\"There is no item named 'xl/xl/worksheets/sheet1.xml' in the archive\"",
+        "name": "sheet_structure",
+        "status": "failed",
+        "trace": "Traceback (most recent call last):\n  File \"/verifier/test_outputs.py\", line 221, in run_test\n    fn()\n  File \"/verifier/test_outputs.py\", line 156, in assert_sheet_structure\n    data_rows = parse_sheet(archive, \"Data\")\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/verifier/test_outputs.py\", line 109, in parse_sheet\n    root = ET.fromstring(archive.read(paths[sheet_name]))\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1584, in read\n    with self.open(name, \"r\", pwd) as fp:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1621, in open\n    zinfo = self.getinfo(name)\n            ^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1549, in getinfo\n    raise KeyError(\nKeyError: \"There is no item named 'xl/xl/worksheets/sheet1.xml' in the archive\"\n"
+      },
+      {
+        "message": "\"There is no item named 'xl/xl/worksheets/sheet2.xml' in the archive\"",
+        "name": "dots_formulas",
+        "status": "failed",
+        "trace": "Traceback (most recent call last):\n  File \"/verifier/test_outputs.py\", line 221, in run_test\n    fn()\n  File \"/verifier/test_outputs.py\", line 170, in assert_dots_formulas\n    rows = raw_sheet_rows(archive, \"Dots\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/verifier/test_outputs.py\", line 133, in raw_sheet_rows\n    root = ET.fromstring(archive.read(paths[sheet_name]))\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1584, in read\n    with self.open(name, \"r\", pwd) as fp:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1621, in open\n    zinfo = self.getinfo(name)\n            ^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1549, in getinfo\n    raise KeyError(\nKeyError: \"There is no item named 'xl/xl/worksheets/sheet2.xml' in the archive\"\n"
+      },
+      {
+        "message": "\"There is no item named 'xl/xl/worksheets/sheet1.xml' in the archive\"",
+        "name": "dots_accuracy",
+        "status": "failed",
+        "trace": "Traceback (most recent call last):\n  File \"/verifier/test_outputs.py\", line 221, in run_test\n    fn()\n  File \"/verifier/test_outputs.py\", line 185, in assert_dots_accuracy\n    data_rows = parse_sheet(output_archive, \"Data\")\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/verifier/test_outputs.py\", line 109, in parse_sheet\n    root = ET.fromstring(archive.read(paths[sheet_name]))\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1584, in read\n    with self.open(name, \"r\", pwd) as fp:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1621, in open\n    zinfo = self.getinfo(name)\n            ^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/zipfile/__init__.py\", line 1549, in getinfo\n    raise KeyError(\nKeyError: \"There is no item named 'xl/xl/worksheets/sheet1.xml' in the archive\"\n"
+      }
+    ],
+    "tool": {
+      "name": "stdlib-powerlifting-verifier"
+    }
+  }
+}

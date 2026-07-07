@@ -1,0 +1,36 @@
+{
+  "results": {
+    "summary": {
+      "failed": 1,
+      "passed": 4,
+      "tests": 5
+    },
+    "tests": [
+      {
+        "name": "system_basics",
+        "status": "passed"
+      },
+      {
+        "name": "narrative_content",
+        "status": "passed"
+      },
+      {
+        "message": "Unreachable nodes found: ['End']",
+        "name": "graph_logic",
+        "status": "failed",
+        "trace": "Traceback (most recent call last):\n  File \"/verifier/test_outputs.py\", line 178, in run_test\n    fn()\n  File \"/verifier/test_outputs.py\", line 194, in <lambda>\n    run_test(\"graph_logic\", lambda: assert_graph_logic(data, nodes, edges_by_source), results)\n                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/verifier/test_outputs.py\", line 112, in assert_graph_logic\n    raise VerifierFailure(f\"Unreachable nodes found: {sorted(unreachable)[:3]}\")\nVerifierFailure: Unreachable nodes found: ['End']\n"
+      },
+      {
+        "name": "content_integrity",
+        "status": "passed"
+      },
+      {
+        "name": "structural_edges",
+        "status": "passed"
+      }
+    ],
+    "tool": {
+      "name": "stdlib-dialogue-parser-verifier"
+    }
+  }
+}
