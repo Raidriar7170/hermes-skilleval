@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage 2 pilot freeze plan</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2937; background: #f8fafc; }
+    main { max-width: 960px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    ul { padding-left: 20px; }
+    .status { background: #f9fafb; border-left: 4px solid #64748b; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 pilot freeze plan</h1>
+  <p class="status"><strong>结论：</strong>本阶段只冻结 Stage 2 的 4 tasks x 3 conditions x 1 trial pilot plan，共 12 个 planned runs；没有运行 Codex、没有运行 Stage 2、没有创建 traces，也没有授权真实 Codex 12-run execution。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li>输入包、oracle qualification、validator、privacy acceptance 已完成。</li>
+    <li>Codex isolated-auth real-runner smoke/preflight 已完成并归档，状态为 <code>ISOLATED_AUTH_SMOKE_PREFLIGHT_REACHED_MODEL</code>。</li>
+    <li><code>execution_readiness=false</code>。</li>
+    <li><code>can_be_used_as_real_stage2_input_package_now=false</code>。</li>
+  </ul>
+
+  <h2>本阶段改动</h2>
+  <ul>
+    <li>新增冻结计划 artifact：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json</code>。</li>
+    <li>冻结 task list：<code>bike-rebalance</code>, <code>dialogue-parser</code>, <code>offer-letter-generator</code>, <code>powerlifting-coef-calc</code>。</li>
+    <li>冻结 condition list：<code>no-skill</code>, <code>routed-skill</code>, <code>oracle-skill</code>。</li>
+    <li>冻结 run order：task-major，每个 task 内按上述 condition 顺序，1 trial。</li>
+  </ul>
+
+  <h2>关键哈希</h2>
+  <ul>
+    <li>frozen plan sha256：<code>aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b</code></li>
+    <li>run order sha256：<code>86a7f74febf47ce31601b3238d2785267fbc84bb0b4dc1021680f33897af25fb</code></li>
+    <li>input package sha256：<code>235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739</code></li>
+    <li>strict routed predictions sha256：<code>28c4d20f0e535aa8c6a2b1f8603a99df385dffae8794be1abe86c0669feb9ea1</code></li>
+    <li>isolated-auth smoke/preflight sha256：<code>881d47b6a6b667c90a1caf98adae5688f43438006e6c8b218a9ed47afd89f1b7</code></li>
+  </ul>
+
+  <h2>未发生事项</h2>
+  <ul>
+    <li>没有运行 Stage 2 pilot tasks，没有运行 4x3x1 matrix。</li>
+    <li>没有运行真实 Codex 12 runs，没有创建 task traces。</li>
+    <li>没有 rerun evidence gate 或 oracle qualification。</li>
+    <li>没有重写 verifier/oracle evidence 或 routed predictions。</li>
+    <li>没有修改 task manifests、public prompts、scorer、matrix 或 evidence-gate semantics。</li>
+    <li>没有 performance claim，没有 router promotion，没有 task-success claim。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>Review 并合并本 freeze-plan PR 后，下一步只能是单独请求真实 Codex 12-run execution approval；执行仍需另一次明确 human authorization。</p>
+</main>
+</body>
+</html>
