@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage 2 real Codex 12-run execution blocked</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2937; background: #f8fafc; }
+    main { max-width: 960px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    ul { padding-left: 20px; }
+    .status { background: #fff7ed; border-left: 4px solid #f97316; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 real Codex 12-run execution blocked</h1>
+  <p class="status"><strong>结论：</strong>本阶段进入真实 Stage 2 Codex 12-run execution，但在第 1 个 frozen run 的 runner preflight 阶段 fail-closed；没有调用 <code>codex exec</code>，没有完成任何 frozen run，也没有形成任务成功结论。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li>冻结计划仍为 <code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json</code>。</li>
+    <li>冻结计划 sha256：<code>aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b</code>。</li>
+    <li>执行 artifact 状态：<code>BLOCKED_WORKSPACE_PARENT_SKILL_LEAKAGE_BEFORE_CODEX_EXEC</code>。</li>
+    <li>阻塞原因：workspace parent chain 可见 <code>/Users/raidriar/.agents/skills/hivemind-memory</code>，触发 runner 的 clean skill inventory 防线。</li>
+  </ul>
+
+  <h2>本阶段证据</h2>
+  <ul>
+    <li>执行 artifact：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T032920Z/stage2-real-codex-12-run-execution.json</code>。</li>
+    <li>matrix report：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T032920Z/stage2-real-codex-12-run-matrix-report.json</code>。</li>
+    <li>preflight failure trace：<code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T032920Z/traces/stage2-freeze-01-bike-rebalance-no-skill-trial-01.failed-before-trace.json</code>。</li>
+    <li>Codex CLI path/version/help evidence 已记录；<code>codex exec</code> invocation count 为 <code>0</code>。</li>
+  </ul>
+
+  <h2>未发生事项</h2>
+  <ul>
+    <li>没有完成 Stage 2 pilot run，没有运行 4x3x1 matrix。</li>
+    <li>没有执行真实 Codex 12-run，没有创建任务成功 trace。</li>
+    <li>没有 rerun evidence gate 或 oracle qualification。</li>
+    <li>没有重写 verifier/oracle evidence 或 routed predictions。</li>
+    <li>没有修改 task manifests、public prompts、scorer、matrix 或 evidence-gate semantics。</li>
+    <li>没有使用 process exit code 作为 task success，没有使用 LLM judge。</li>
+    <li>没有 performance claim，没有 router promotion。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>将本 PR 作为 execution-preflight blocker/evidence record review；后续单独开一个 very small PR，把 real-run workspaces 移到不经过用户级 <code>.agents/skills</code> 父目录链的隔离位置，并在 fresh safety verification 后重新请求执行。</p>
+</main>
+</body>
+</html>
