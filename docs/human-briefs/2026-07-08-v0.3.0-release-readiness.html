@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>v0.3.0 release readiness</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #17202a; line-height: 1.5; }
+    main { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; }
+    code { background: #eef2f6; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #7a5c00; padding: 12px 16px; background: #fff9e8; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .card { border: 1px solid #d6dde5; border-radius: 8px; padding: 12px; background: #ffffff; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>v0.3.0 release readiness</h1>
+  <p class="status"><strong>结论：</strong>v0.3.0 是 Stage 2 real Codex pilot evidence-chain release-prep；最终 gate posture 保持 <code>REVIEW_REQUIRED / KEEP_BASELINE</code>，不是 benchmark PASS、性能提升结论或 router promotion。</p>
+
+  <section class="grid">
+    <div class="card"><strong>Target</strong><br><code>v0.3.0</code></div>
+    <div class="card"><strong>Gate status</strong><br><code>REVIEW_REQUIRED</code></div>
+    <div class="card"><strong>Router decision</strong><br><code>KEEP_BASELINE</code></div>
+    <div class="card"><strong>Remaining caveat</strong><br><code>live_agent.overlap_status</code></div>
+  </section>
+
+  <h2>本阶段完成什么</h2>
+  <ul>
+    <li>将 package metadata 从 <code>0.2.1</code> 准备到 <code>0.3.0</code>。</li>
+    <li>新增 <code>docs/release-notes/v0.3.0.md</code>。</li>
+    <li>新增 <code>artifacts/v0.3/release/v0.3.0-release-readiness.json</code>。</li>
+    <li>更新 README、usage、evidence map 和 release handoff 的当前 release-prep 入口。</li>
+  </ul>
+
+  <h2>证据链状态</h2>
+  <ul>
+    <li>Stage 2 real Codex 12-run execution evidence 已存在。</li>
+    <li>12 runs completed with verifier output；raw verifier facts 为 6 passed / 6 failed。</li>
+    <li>这些只是 raw verifier facts，不是 performance claim。</li>
+    <li><code>blocking_failure_count=0</code>。</li>
+  </ul>
+
+  <h2>明确不声明</h2>
+  <ul>
+    <li>不声明 benchmark PASS。</li>
+    <li>不声明性能提升。</li>
+    <li>不声明 routed-skill beats baseline。</li>
+    <li>不 promote router。</li>
+    <li>不把 <code>REVIEW_REQUIRED</code> 当作 PASS。</li>
+    <li>不把 <code>KEEP_BASELINE</code> 当作性能结论。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>python -m pytest -q</code>: 668 passed。</li>
+    <li><code>openspec validate --all --strict</code>: 25 passed, 0 failed。</li>
+    <li><code>python -m hermes_skilleval.cli release-check</code>: PASS。</li>
+    <li><code>git diff --check</code>: PASS。</li>
+    <li>JSON/hash-pointer、secret/token、boundary、overclaim scans: PASS。</li>
+  </ul>
+
+  <h2>下一步</h2>
+  <p>review/merge release-prep PR；合并后如果要发布，必须单独请求 <code>v0.3.0</code> tag 和 GitHub Release approval。</p>
+</main>
+</body>
+</html>

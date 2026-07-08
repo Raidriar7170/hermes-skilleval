@@ -3,7 +3,7 @@
 This directory is a public-safe fixture for trying the Reusable GitHub Action
 from a fresh checkout. It includes two small skills, two labeled benchmark
 tasks, and a workflow that references the published
-`Raidriar7170/hermes-skilleval@v0.2.1` repository Action.
+`Raidriar7170/hermes-skilleval@v0.3.0` repository Action.
 
 Run the same gate locally:
 

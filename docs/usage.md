@@ -8,7 +8,11 @@ Human Brief evidence, see [`docs/evidence-map.md`](evidence-map.md); it is a
 navigation layer, not a second source of truth, and not release approval.
 For concrete blocked-regression and diagnostic-risk examples, use
 [`docs/failure-gallery.md`](failure-gallery.md) as a review aid.
-For current patch release notes, use
+For current v0.3.0 release-prep notes, use
+[`docs/release-notes/v0.3.0.md`](release-notes/v0.3.0.md). The v0.3.0 notes
+record the Stage 2 real Codex pilot evidence-chain closeout as
+`REVIEW_REQUIRED / KEEP_BASELINE`, not benchmark PASS, performance improvement,
+or router promotion. For the previous v0.2.1 patch release notes, use
 [`docs/release-notes/v0.2.1.md`](release-notes/v0.2.1.md). For the historical
 pre-publish v0.2.0 release decision package, use
 [`docs/demo/v0.2.0-release-decision/release-decision.md`](demo/v0.2.0-release-decision/release-decision.md);
@@ -105,7 +109,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - uses: Raidriar7170/hermes-skilleval@v0.2.1
+      - uses: Raidriar7170/hermes-skilleval@v0.3.0
         with:
           skill-path: skills
           benchmark-path: benchmark
@@ -613,7 +617,7 @@ pytest -q
 Expected:
 
 ```text
-419 passed
+668 passed
 ```
 
 ## 18. Regenerate the External Skill Library Validation Pack
@@ -730,7 +734,7 @@ skilleval github-action-gate \
 
 The example workflow under
 [`examples/github-action/.github/workflows/skilleval.yml`](../examples/github-action/.github/workflows/skilleval.yml)
-uses `Raidriar7170/hermes-skilleval@v0.2.1`. Use a pinned commit SHA only when
+uses `Raidriar7170/hermes-skilleval@v0.3.0`. Use a pinned commit SHA only when
 you intentionally want to test an exact commit instead of the published tag.
 
 The historical local external-consumer smoke pack under
@@ -771,13 +775,15 @@ not GitHub API PR comments, not PR annotations, not SaaS, not a runtime MCP
 router, not a SOTA claim, not benchmark status, not production readiness, not
 release approval, not automatic merge approval, and not automatic publication.
 Any further patch tag, GitHub Release, Marketplace publication, or public
-release action after v0.2.1 still requires explicit human confirmation.
+release action after v0.3.0 release-prep still requires explicit human
+confirmation.
 
 ## 23. Review the v0.2.0 Release Notes And Final Approval Checklist
 
 The v0.2.0 release notes remain the release notes for that published version.
-The current patch release notes are in
-[`release-notes/v0.2.1.md`](release-notes/v0.2.1.md). The final approval
+The v0.2.1 patch release notes remain historical post-release cleanup evidence,
+and the current v0.3.0 release-prep notes are in
+[`release-notes/v0.3.0.md`](release-notes/v0.3.0.md). The final approval
 checklist is historical pre-publish review evidence:
 
 - [`release-notes/v0.2.0.md`](release-notes/v0.2.0.md)
