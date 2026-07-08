@@ -669,8 +669,82 @@ def _verify_external_inputs(plan: dict[str, Any]) -> None:
         license_note=plan["adapter_provenance"]["license_note"],
         tiers=tuple(plan.get("tiers") or ("easy", "hard")),
     )
-    _verify_external_adapter_provenance(adapter, plan)
+    if Path(plan["data_root"]).exists():
+        _verify_external_adapter_provenance(adapter, plan)
+    else:
+        _verify_frozen_external_data_root_provenance(plan)
     _verify_frozen_predictions(plan)
+
+
+def _verify_frozen_external_data_root_provenance(plan: dict[str, Any]) -> None:
+    validation = plan.get("validation")
+    provenance = plan.get("adapter_provenance")
+    if not isinstance(validation, dict) or validation.get("status") != PASS:
+        raise ValueError("frozen external validation is not PASS")
+    if not isinstance(provenance, dict) or provenance.get("validation_status") != PASS:
+        raise ValueError("frozen external adapter provenance is not PASS")
+    files = provenance.get("files")
+    if not isinstance(files, list) or not files:
+        raise ValueError("frozen external adapter provenance has no files")
+
+    by_role: dict[str, list[dict[str, Any]]] = {}
+    for record in files:
+        if not isinstance(record, dict):
+            raise ValueError("frozen external adapter provenance file record is invalid")
+        role = record.get("role")
+        if not isinstance(role, str) or not role:
+            raise ValueError("frozen external adapter provenance file role is missing")
+        if not isinstance(record.get("path"), str) or not record["path"]:
+            raise ValueError("frozen external adapter provenance file path is missing")
+        if not isinstance(record.get("sha256"), str) or len(record["sha256"]) != 64:
+            raise ValueError("frozen external adapter provenance file sha256 is invalid")
+        if not isinstance(record.get("size_bytes"), int) or record["size_bytes"] <= 0:
+            raise ValueError("frozen external adapter provenance file size is invalid")
+        by_role.setdefault(role, []).append(record)
+
+    required_roles = {"tasks", "relevance", "manifest"}
+    required_roles.update(f"skills:{tier}" for tier in plan.get("tiers", ("easy", "hard")))
+    missing_roles = sorted(required_roles - set(by_role))
+    if missing_roles:
+        raise ValueError(f"frozen external adapter provenance missing roles: {missing_roles}")
+
+    _verify_external_record_count(by_role["tasks"], validation.get("task_count"), "task_count")
+    _verify_external_positive_count(validation.get("relevance_count"), "relevance_count")
+    _verify_external_provenance_counts_are_positive(by_role["relevance"], "relevance")
+    skill_counts = validation.get("skill_count_by_tier")
+    if not isinstance(skill_counts, dict):
+        raise ValueError("frozen external validation skill counts are missing")
+    for tier in plan.get("tiers", ("easy", "hard")):
+        role = f"skills:{tier}"
+        _verify_external_record_count(by_role[role], skill_counts.get(tier), f"skills:{tier}")
+
+
+def _verify_external_record_count(
+    records: list[dict[str, Any]],
+    expected: Any,
+    label: str,
+) -> None:
+    if not isinstance(expected, int) or expected <= 0:
+        raise ValueError(f"frozen external validation {label} is invalid")
+    counts = [record.get("record_count") for record in records]
+    if not all(isinstance(count, int) and count > 0 for count in counts):
+        raise ValueError(f"frozen external adapter provenance {label} count is invalid")
+    if sum(counts) != expected:
+        raise ValueError(f"frozen external adapter provenance {label} count changed")
+
+
+def _verify_external_positive_count(value: Any, label: str) -> None:
+    if not isinstance(value, int) or value <= 0:
+        raise ValueError(f"frozen external validation {label} is invalid")
+
+
+def _verify_external_provenance_counts_are_positive(
+    records: list[dict[str, Any]],
+    label: str,
+) -> None:
+    counts = [record.get("record_count") for record in records]
+    if not all(isinstance(count, int) and count > 0 for count in counts):
+        raise ValueError(f"frozen external adapter provenance {label} count is invalid")
 
 
 def _promotion_gate(validity_status: str, external: dict[str, Any]) -> dict[str, Any]:

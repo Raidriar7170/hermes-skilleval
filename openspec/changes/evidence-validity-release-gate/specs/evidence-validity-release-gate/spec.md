@@ -39,6 +39,14 @@ The system SHALL summarize external routing evidence and live-agent evidence in 
 - **WHEN** a SkillRouter external matrix report is supplied
 - **THEN** the validator MUST report official routing metrics separately from Hermes diagnostics and overlap caveats
 
+#### Scenario: Frozen external data-root provenance is accepted when local data is unmaterialized
+
+- **WHEN** a SkillRouter frozen plan references a local external `data_root` that is not materialized in the repository
+- **AND** the frozen plan contains PASS validation and complete adapter provenance fingerprints
+- **THEN** the validator MUST accept the frozen provenance as the external input contract without requiring the 402MB input directory to be committed
+- **AND** committed routed prediction files MUST still be rehashed against the frozen plan
+- **AND** this MUST NOT imply router promotion or a performance claim
+
 #### Scenario: Live-agent verifier outcomes are namespaced
 
 - **WHEN** a SkillsBench live-agent matrix report is supplied

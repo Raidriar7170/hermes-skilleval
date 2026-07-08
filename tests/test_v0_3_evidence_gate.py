@@ -104,6 +104,27 @@ def test_evidence_gate_promotion_uses_evaluated_configs_not_hardcoded_names(tmp_
     assert "finetuned-embedding" not in json.dumps(report["router_promotion_gate"])
 
 
+def test_evidence_gate_accepts_frozen_external_data_root_provenance_when_data_root_unmaterialized(
+    tmp_path,
+):
+    external_plan, external_report = _write_external_artifacts(tmp_path)
+    live_plan, live_report = _write_live_artifacts(tmp_path, disjoint_overlap=True)
+    plan = json.loads(external_plan.read_text(encoding="utf-8"))
+    plan["data_root"] = str(tmp_path / "not-materialized" / "skillrouter_eval_core")
+    external_plan.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        external_plan_path=external_plan,
+        external_report_path=external_report,
+        live_plan_path=live_plan,
+        live_report_path=live_report,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "VALID_EVIDENCE"
+    assert _check_by_id(report, "external.input_hashes")["status"] == "PASS"
+
+
 def test_evidence_gate_accepts_stage2_real_codex_execution_schema(tmp_path):
     report = write_evidence_decision_report(
         output_path=tmp_path / "evidence.json",
