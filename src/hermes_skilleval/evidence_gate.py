@@ -26,6 +26,8 @@ from hermes_skilleval.release_manifest import sha256_file
 
 REPORT_SCHEMA = "v0.3.evidence-decision-report.v1"
 ARTIFACT_TYPE = "v0.3-evidence-validity-release-gate"
+STAGE2_FROZEN_PLAN_SCHEMA = "v0.3.stage2-pilot-plan-freeze.v1"
+STAGE2_REAL_CODEX_EXECUTION_SCHEMA = "v0.3.stage2-real-codex-12-run-execution.v1"
 VALID_EVIDENCE = "VALID_EVIDENCE"
 INVALID_EVIDENCE = "INVALID_EVIDENCE"
 REVIEW_REQUIRED = "REVIEW_REQUIRED"
@@ -295,14 +297,23 @@ def _evaluate_live_agent(
     inputs["live_report"] = _input_record(report_path)
     field_markers["live_agent"] = {"status": PRESENT}
 
+    plan = _read_json_for_gate(checks, "live_agent.plan_load", plan_path)
+    report = _read_json_for_gate(checks, "live_agent.report_load", report_path)
+    if _is_stage2_real_codex_packet(plan, report):
+        return _evaluate_stage2_real_codex_live_agent(
+            plan_path=plan_path,
+            report_path=report_path,
+            plan=plan,
+            report=report,
+            checks=checks,
+        )
+
     _call_check(
         checks,
         "live_agent.plan_digest",
         "SkillsBench plan digest matches its sidecar",
         lambda: _verify_live_plan_digest(plan_path),
     )
-    plan = _read_json_for_gate(checks, "live_agent.plan_load", plan_path)
-    report = _read_json_for_gate(checks, "live_agent.report_load", report_path)
     _schema_check(checks, "live_agent.plan_schema", plan, LIVE_PLAN_SCHEMA)
     _schema_check(checks, "live_agent.report_schema", report, LIVE_REPORT_SCHEMA)
     _call_check(
@@ -363,6 +374,292 @@ def _evaluate_live_agent(
             "reason": "explicit negative labels are not present for SkillsBench",
         },
     }
+
+
+def _is_stage2_real_codex_packet(plan: dict[str, Any], report: dict[str, Any]) -> bool:
+    return (
+        isinstance(plan, dict)
+        and isinstance(report, dict)
+        and plan.get("schema_version") == STAGE2_FROZEN_PLAN_SCHEMA
+        and report.get("schema_version") == STAGE2_REAL_CODEX_EXECUTION_SCHEMA
+    )
+
+
+def _evaluate_stage2_real_codex_live_agent(
+    *,
+    plan_path: Path,
+    report_path: Path,
+    plan: dict[str, Any],
+    report: dict[str, Any],
+    checks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    adapter_failures = _stage2_adapter_failures(plan_path, report_path, plan, report)
+    _check(
+        checks,
+        "live_agent.stage2_schema_adapter",
+        PASS if not adapter_failures else FAIL,
+        BLOCKING,
+        "Stage 2 real Codex execution schema was adapted for live-agent evidence checks"
+        if not adapter_failures
+        else "Stage 2 real Codex execution schema cannot be adapted for live-agent evidence checks",
+        {"failures": adapter_failures},
+    )
+    normalized_plan, normalized_report = _stage2_live_agent_view(
+        plan_path=plan_path,
+        report_path=report_path,
+        plan=plan,
+        report=report,
+    )
+
+    _check_live_matrix_completeness(checks, normalized_plan, normalized_report)
+    _check_prompt_hash_equality(checks, normalized_plan, normalized_report)
+    _check_oracle_qualification(checks, normalized_plan)
+    _check_verifier_evidence(checks, normalized_report)
+    _check_no_skill_leakage(checks, normalized_report)
+    _check_global_capability_inventory(checks, normalized_report, report_path.parent)
+    _check_trace_completeness(checks, normalized_report, report_path.parent)
+    _check_overlap_status(checks, normalized_report)
+    _check_secret_redaction(checks, normalized_report, report_path.parent)
+
+    run_records = normalized_report["runs"]
+    condition_summary = _condition_summary(run_records)
+    no_skill_rate = _success_rate(condition_summary.get("no-skill"))
+    routed_rate = _success_rate(condition_summary.get("routed-skill"))
+    oracle_rate = _success_rate(condition_summary.get("oracle-skill"))
+    timeout_process_errors = _timeout_process_errors(run_records)
+    per_task_regressions = _per_task_regressions(run_records)
+    _check_live_runtime_anomalies(checks, timeout_process_errors)
+    _check_live_task_regressions(checks, per_task_regressions)
+    return {
+        "status": PRESENT,
+        "run_id": normalized_report.get("run_id"),
+        "mode": normalized_report.get("mode"),
+        "condition_summary": condition_summary,
+        "routed_vs_no_skill_delta": {
+            "task_success_delta": _nullable_delta(routed_rate, no_skill_rate),
+        },
+        "oracle_gap": {
+            "routed_minus_oracle_success_delta": _nullable_delta(routed_rate, oracle_rate),
+        },
+        "timeout_process_errors": timeout_process_errors,
+        "skill_use_evidence": _skill_use_summary(run_records),
+        "per_task_regressions": per_task_regressions,
+        "overlap_report": normalized_report.get("overlap_report"),
+        "negative_hit_rate": {
+            "status": UNAVAILABLE,
+            "reason": "explicit negative labels are not present for SkillsBench",
+        },
+        "stage2_schema_adapter": {
+            "status": PASS if not adapter_failures else FAIL,
+            "source_plan_schema": plan.get("schema_version"),
+            "source_report_schema": report.get("schema_version"),
+        },
+    }
+
+
+def _stage2_adapter_failures(
+    plan_path: Path,
+    report_path: Path,
+    plan: dict[str, Any],
+    report: dict[str, Any],
+) -> list[dict[str, Any]]:
+    failures: list[dict[str, Any]] = []
+    expected_runs = plan.get("pilot_shape", {}).get("runs")
+    actual_runs = report.get("run_records")
+    if not isinstance(expected_runs, list):
+        failures.append({"reason": "stage2 frozen plan pilot_shape.runs is missing"})
+        expected_runs = []
+    if not isinstance(actual_runs, list):
+        failures.append({"reason": "stage2 execution run_records is missing"})
+        actual_runs = []
+    expected_ids = [str(run.get("run_id")) for run in expected_runs if isinstance(run, dict)]
+    actual_ids = [str(run.get("run_id")) for run in actual_runs if isinstance(run, dict)]
+    if expected_ids != actual_ids:
+        failures.append(
+            {
+                "reason": "stage2 execution run order does not match frozen plan",
+                "expected_run_ids": expected_ids,
+                "actual_run_ids": actual_ids,
+            }
+        )
+    summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
+    if summary.get("runs_planned") != len(expected_ids):
+        failures.append({"reason": "runs_planned does not match frozen run count"})
+    if summary.get("runs_completed_with_verifier_output") != len(expected_ids):
+        failures.append({"reason": "not every frozen run has verifier output"})
+    if summary.get("pass_fail_counts_are_verifier_output_facts_only") is not True:
+        failures.append({"reason": "pass/fail counts are not marked as verifier-output facts"})
+    boundaries = report.get("boundaries") if isinstance(report.get("boundaries"), dict) else {}
+    forbidden_true = {
+        "process_exit_code_used_as_task_success",
+        "llm_judge_used",
+        "llm_judge_used_as_task_success",
+        "performance_claim_made",
+        "router_promoted",
+        "evidence_gate_rerun",
+        "oracle_qualification_rerun",
+        "routed_predictions_changed",
+        "verifier_outputs_rewritten",
+        "task_manifests_or_public_prompts_changed",
+        "scorer_matrix_router_evidence_gate_semantics_modified",
+    }
+    for key in sorted(forbidden_true):
+        if boundaries.get(key) is not False:
+            failures.append({"reason": f"stage2 boundary {key} is not false"})
+    input_package = _stage2_input_package(plan)
+    if input_package is None:
+        failures.append({"reason": "stage2 input package cannot be loaded"})
+    for run in actual_runs:
+        if not isinstance(run, dict):
+            failures.append({"reason": "stage2 run record is not an object"})
+            continue
+        verifier = run.get("verifier")
+        if not isinstance(verifier, dict) or not isinstance(verifier.get("passed"), bool):
+            failures.append({"run_id": run.get("run_id"), "reason": "missing verifier.passed"})
+        if run.get("success_source", {}).get("task_success_source") != "deterministic verifier output only":
+            failures.append(
+                {"run_id": run.get("run_id"), "reason": "task success source is not deterministic verifier"}
+            )
+        if run.get("codex", {}).get("process_exit_code_is_task_success") is not False:
+            failures.append(
+                {"run_id": run.get("run_id"), "reason": "Codex process exit code is marked as task success"}
+            )
+        if not isinstance(verifier, dict) or verifier.get("llm_judge_used") is not False:
+            failures.append({"run_id": run.get("run_id"), "reason": "LLM judge use is not false"})
+        trace = run.get("trace") if isinstance(run.get("trace"), dict) else {}
+        trace_path = _stage2_relative_to_report_dir(report_path, trace.get("path"))
+        if trace_path is None:
+            failures.append({"run_id": run.get("run_id"), "reason": "trace path is not under report directory"})
+        reward = verifier.get("reward") if isinstance(verifier, dict) else None
+        ctrf = verifier.get("ctrf") if isinstance(verifier, dict) else None
+        if not isinstance(reward, dict) and not isinstance(ctrf, dict):
+            failures.append({"run_id": run.get("run_id"), "reason": "missing reward or CTRF verifier artifact"})
+    return failures
+
+
+def _stage2_live_agent_view(
+    *,
+    plan_path: Path,
+    report_path: Path,
+    plan: dict[str, Any],
+    report: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    input_package = _stage2_input_package(plan) or {}
+    selected_tasks = input_package.get("data_root_package", {}).get("selected_tasks", [])
+    oracle_records = input_package.get("oracle_qualification_package", {}).get("records", {})
+    run_records = [run for run in report.get("run_records", []) if isinstance(run, dict)]
+    prompt_hashes = {
+        str(run.get("run_id")): run.get("inputs", {}).get("task_prompt_sha256")
+        for run in run_records
+    }
+    matrix = []
+    for entry in plan.get("pilot_shape", {}).get("runs", []):
+        if not isinstance(entry, dict):
+            continue
+        run_id = str(entry.get("run_id"))
+        matching_run = next((run for run in run_records if run.get("run_id") == run_id), {})
+        mounted_skills = matching_run.get("workspace", {}).get("mounted_skills", [])
+        matrix.append(
+            {
+                "run_id": run_id,
+                "task_id": entry.get("task_id"),
+                "condition": entry.get("condition_id"),
+                "prompt_hash": prompt_hashes.get(run_id),
+                "mounted_skill_ids": _skill_ids(mounted_skills),
+            }
+        )
+    normalized_plan = {
+        "schema_version": LIVE_PLAN_SCHEMA,
+        "matrix": matrix,
+        "selected_tasks": selected_tasks,
+        "oracle_qualification_records": oracle_records,
+    }
+    normalized_report = {
+        "schema_version": LIVE_REPORT_SCHEMA,
+        "run_id": report.get("artifact_timestamp"),
+        "mode": "stage2-real-codex",
+        "plan_path": str(plan_path),
+        "summary": {"task_success_source": "verifier_pass_fail"},
+        "overlap_report": {
+            "decision": "UNAVAILABLE",
+            "independent_generalization_claim": False,
+        },
+        "runs": [
+            _stage2_run_view(run, report_path)
+            for run in run_records
+        ],
+    }
+    return normalized_plan, normalized_report
+
+
+def _stage2_input_package(plan: dict[str, Any]) -> dict[str, Any] | None:
+    ref = plan.get("artifact_refs", {}).get("stage2_real_pilot_input_package")
+    if not isinstance(ref, dict):
+        return None
+    path = ref.get("path")
+    if not isinstance(path, str):
+        return None
+    package_path = Path(path)
+    if not package_path.exists():
+        return None
+    if ref.get("sha256") and sha256_file(package_path) != ref.get("sha256"):
+        return None
+    try:
+        payload = _read_json(package_path)
+    except (OSError, json.JSONDecodeError, ValueError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _stage2_run_view(run: dict[str, Any], report_path: Path) -> dict[str, Any]:
+    trace_meta = run.get("trace") if isinstance(run.get("trace"), dict) else {}
+    trace_path = _stage2_relative_to_report_dir(report_path, trace_meta.get("path"))
+    trace_file = report_path.parent / trace_path if trace_path else None
+    trace = _read_json(trace_file) if trace_file is not None and trace_file.exists() else {}
+    mounted_skills = trace.get("mounted_skills") if isinstance(trace.get("mounted_skills"), list) else []
+    skill_use = trace.get("skill_use") if isinstance(trace.get("skill_use"), dict) else {}
+    verifier = run.get("verifier") if isinstance(run.get("verifier"), dict) else {}
+    codex = run.get("codex") if isinstance(run.get("codex"), dict) else {}
+    passed = verifier.get("passed")
+    return {
+        "run_id": run.get("run_id"),
+        "task_id": run.get("task_id"),
+        "condition": run.get("condition"),
+        "prompt_hash": run.get("inputs", {}).get("task_prompt_sha256"),
+        "mounted_skill_ids": _skill_ids(mounted_skills),
+        "mounted_skill_count": len(mounted_skills),
+        "skill_use": skill_use,
+        "process_exit_code": codex.get("process_exit_code"),
+        "timed_out": codex.get("timed_out"),
+        "task_success": passed,
+        "verifier_passed": passed,
+        "verifier": {"passed": passed},
+        "trace_path": str(trace_path) if trace_path else None,
+        "trace_sha256": trace_meta.get("sha256"),
+    }
+
+
+def _stage2_relative_to_report_dir(report_path: Path, raw_path: Any) -> Path | None:
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        return None
+    path = Path(raw_path)
+    if path.is_absolute():
+        return None
+    report_dir = report_path.parent
+    try:
+        return path.resolve().relative_to(report_dir.resolve())
+    except (OSError, ValueError):
+        return None
+
+
+def _skill_ids(records: Any) -> list[str]:
+    if not isinstance(records, list):
+        return []
+    return [
+        str(record.get("skill_id"))
+        for record in records
+        if isinstance(record, dict) and record.get("skill_id")
+    ]
 
 
 def _verify_external_inputs(plan: dict[str, Any]) -> None:

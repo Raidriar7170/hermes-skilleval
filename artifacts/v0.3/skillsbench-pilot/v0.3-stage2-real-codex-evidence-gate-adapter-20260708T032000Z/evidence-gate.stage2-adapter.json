@@ -1,0 +1,262 @@
+{
+  "artifact_type": "v0.3-evidence-validity-release-gate",
+  "benchmark_validity_gate": {
+    "checks": [
+      {
+        "details": {},
+        "id": "external.available",
+        "severity": "review",
+        "status": "UNAVAILABLE",
+        "summary": "external routing evidence was not provided"
+      },
+      {
+        "details": {
+          "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json"
+        },
+        "id": "live_agent.plan_load",
+        "severity": "info",
+        "status": "PASS",
+        "summary": "JSON artifact loaded"
+      },
+      {
+        "details": {
+          "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-execution.json"
+        },
+        "id": "live_agent.report_load",
+        "severity": "info",
+        "status": "PASS",
+        "summary": "JSON artifact loaded"
+      },
+      {
+        "details": {
+          "failures": []
+        },
+        "id": "live_agent.stage2_schema_adapter",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "Stage 2 real Codex execution schema was adapted for live-agent evidence checks"
+      },
+      {
+        "details": {
+          "duplicate_actual_run_ids": [],
+          "duplicate_expected_run_ids": [],
+          "extra_run_ids": [],
+          "mismatches": [],
+          "missing_run_ids": []
+        },
+        "id": "live_agent.matrix_completeness",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "live-agent report contains exactly the frozen matrix runs"
+      },
+      {
+        "details": {
+          "task_ids": []
+        },
+        "id": "live_agent.prompt_hash_equality",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "all conditions use the same prompt hash per task"
+      },
+      {
+        "details": {
+          "failures": []
+        },
+        "id": "live_agent.oracle_qualification",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "oracle qualification passed for every selected live task"
+      },
+      {
+        "details": {
+          "failures": []
+        },
+        "id": "live_agent.verifier_evidence",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "deterministic verifier records are complete and source task success"
+      },
+      {
+        "details": {
+          "failures": []
+        },
+        "id": "live_agent.no_skill_leakage",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "no-skill condition mounted no benchmark skills"
+      },
+      {
+        "details": {
+          "failures": [],
+          "inventory_count": 12,
+          "reviews": []
+        },
+        "id": "live_agent.global_capability_inventory",
+        "severity": "info",
+        "status": "PASS",
+        "summary": "global capability inventory has no detected user/admin/repo leakage"
+      },
+      {
+        "details": {
+          "failures": []
+        },
+        "id": "live_agent.trace_completeness",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "all live-agent runs have complete trace files"
+      },
+      {
+        "details": {
+          "decision": "UNAVAILABLE",
+          "independent_generalization_claim": false
+        },
+        "id": "live_agent.overlap_status",
+        "severity": "review",
+        "status": "REVIEW",
+        "summary": "overlap report requires caveated generalization claims"
+      },
+      {
+        "details": {
+          "leaks": []
+        },
+        "id": "live_agent.secret_redaction",
+        "severity": "blocking",
+        "status": "PASS",
+        "summary": "live-agent report and traces do not contain obvious secret tokens"
+      },
+      {
+        "details": {
+          "errors": []
+        },
+        "id": "live_agent.timeout_process_errors",
+        "severity": "info",
+        "status": "PASS",
+        "summary": "no live-agent timeout or process errors were reported"
+      },
+      {
+        "details": {
+          "regressions": []
+        },
+        "id": "live_agent.per_task_regressions",
+        "severity": "info",
+        "status": "PASS",
+        "summary": "no routed-skill per-task regressions versus no-skill were reported"
+      }
+    ],
+    "status": "REVIEW_REQUIRED"
+  },
+  "claim_boundaries": {
+    "benchmark_validity_gate_statuses": [
+      "VALID_EVIDENCE",
+      "INVALID_EVIDENCE",
+      "REVIEW_REQUIRED"
+    ],
+    "default_router_promotion_decision": "KEEP_BASELINE",
+    "deterministic_verifier_is_live_agent_success_source": true,
+    "no_new_model_runs": true,
+    "no_training_or_threshold_tuning": true,
+    "promotion_requires_valid_evidence": true,
+    "unavailable_is_field_level_only": true
+  },
+  "external_routing": {
+    "reason": "external routing plan/report paths were not provided",
+    "status": "UNAVAILABLE"
+  },
+  "field_markers": {
+    "external_routing": {
+      "reason": "external routing plan/report paths were not provided",
+      "status": "UNAVAILABLE"
+    },
+    "live_agent": {
+      "status": "PRESENT"
+    }
+  },
+  "generated_at": "2026-07-08T03:24:30.153727Z",
+  "inputs": {
+    "live_plan": {
+      "exists": true,
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json",
+      "sha256": "aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b",
+      "size_bytes": 20829
+    },
+    "live_report": {
+      "exists": true,
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-execution.json",
+      "sha256": "70adb8e1e7dd953fcd1efdf541a0174dfae559e8b4efaa194f1641a8f8f6a243",
+      "size_bytes": 120528
+    }
+  },
+  "live_agent": {
+    "condition_summary": {
+      "no-skill": {
+        "process_error_count": 0,
+        "run_count": 4,
+        "task_success_count": 2,
+        "timeout_count": 0,
+        "verifier_pass_count": 2
+      },
+      "oracle-skill": {
+        "process_error_count": 0,
+        "run_count": 4,
+        "task_success_count": 2,
+        "timeout_count": 0,
+        "verifier_pass_count": 2
+      },
+      "routed-skill": {
+        "process_error_count": 0,
+        "run_count": 4,
+        "task_success_count": 2,
+        "timeout_count": 0,
+        "verifier_pass_count": 2
+      }
+    },
+    "mode": "stage2-real-codex",
+    "negative_hit_rate": {
+      "reason": "explicit negative labels are not present for SkillsBench",
+      "status": "UNAVAILABLE"
+    },
+    "oracle_gap": {
+      "routed_minus_oracle_success_delta": 0.0
+    },
+    "overlap_report": {
+      "decision": "UNAVAILABLE",
+      "independent_generalization_claim": false
+    },
+    "per_task_regressions": [],
+    "routed_vs_no_skill_delta": {
+      "task_success_delta": 0.0
+    },
+    "run_id": "20260707T072652Z",
+    "skill_use_evidence": {
+      "DECLARED": 0,
+      "MOUNTED": 0,
+      "MOUNTED_ONLY": 13,
+      "READ": 0,
+      "UNKNOWN": 0
+    },
+    "stage2_schema_adapter": {
+      "source_plan_schema": "v0.3.stage2-pilot-plan-freeze.v1",
+      "source_report_schema": "v0.3.stage2-real-codex-12-run-execution.v1",
+      "status": "PASS"
+    },
+    "status": "PRESENT",
+    "timeout_process_errors": []
+  },
+  "router_promotion_gate": {
+    "baseline_router": {
+      "reason": "no preregistered promotion artifact was provided",
+      "status": "UNAVAILABLE"
+    },
+    "blocked_by_validity": false,
+    "candidate_router": {
+      "reason": "no preregistered promotion artifact was provided",
+      "status": "UNAVAILABLE"
+    },
+    "decision": "KEEP_BASELINE",
+    "evaluated_router_configs": [],
+    "reasons": [
+      "benchmark evidence requires review; promotion defaults to baseline"
+    ]
+  },
+  "schema_version": "v0.3.evidence-decision-report.v1"
+}

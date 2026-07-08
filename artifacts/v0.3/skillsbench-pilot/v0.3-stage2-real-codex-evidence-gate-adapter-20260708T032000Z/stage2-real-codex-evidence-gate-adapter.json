@@ -1,0 +1,63 @@
+{
+  "artifact_type": "stage2-real-codex-evidence-gate-adapter-contract",
+  "base": {
+    "branch": "codex/v0.3-pr0-protocol",
+    "head_sha": "ce6210707759cf600788c669ed50c11693b34648",
+    "source_execution_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/25",
+    "source_fail_closed_gate_review_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/26"
+  },
+  "boundaries": {
+    "codex_rerun": false,
+    "evidence_gate_rerun": true,
+    "llm_judge_used": false,
+    "performance_claim_made": false,
+    "router_promoted": false,
+    "stage2_rerun": false,
+    "task_traces_created": false
+  },
+  "created_at_utc": "2026-07-08T03:20:00Z",
+  "evidence_gate": {
+    "benchmark_validity_gate_status": "REVIEW_REQUIRED",
+    "blocking_failure_count": 0,
+    "markdown_output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-adapter-20260708T032000Z/evidence-gate.stage2-adapter.md",
+      "sha256": "cc5298fc290e1d9637e196a3195d822bb83b221ccf3c883da4f86b6249a5d6ab"
+    },
+    "output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-adapter-20260708T032000Z/evidence-gate.stage2-adapter.json",
+      "sha256": "0e77ab02397c37e55dbb6a9f505ac5f733049f00ca8906d2c20bdb5609afd929"
+    },
+    "review_or_unavailable_field_count": 2,
+    "router_promotion_gate_decision": "KEEP_BASELINE",
+    "router_promotion_is_blocked_by_validity": false
+  },
+  "inputs": {
+    "stage2_execution_artifact": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-execution.json",
+      "sha256": "70adb8e1e7dd953fcd1efdf541a0174dfae559e8b4efaa194f1641a8f8f6a243"
+    },
+    "stage2_frozen_plan": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json",
+      "sha256": "aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b"
+    }
+  },
+  "review_findings": [
+    {
+      "code": "STAGE2_SCHEMA_ADAPTER_LIVE_AGENT_CHECKS_PASS",
+      "severity": "info",
+      "summary": "The Stage 2 frozen plan and full real Codex execution artifact can now be consumed by the existing live-agent evidence checks."
+    },
+    {
+      "code": "REVIEW_REQUIRED_EXTERNAL_AND_OVERLAP_CAVEATS",
+      "severity": "review",
+      "summary": "The resulting evidence gate remains REVIEW_REQUIRED because no external routing packet was supplied in this adapter smoke and overlap/generalization status is unavailable."
+    },
+    {
+      "code": "ROUTER_PROMOTION_NOT_MADE",
+      "severity": "info",
+      "summary": "The router promotion gate remains KEEP_BASELINE."
+    }
+  ],
+  "schema_version": "v0.3.stage2-real-codex-evidence-gate-adapter-contract.v1",
+  "status": "REVIEW_REQUIRED_KEEP_BASELINE_STAGE2_SCHEMA_ADAPTED"
+}

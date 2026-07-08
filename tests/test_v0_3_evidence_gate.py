@@ -23,6 +23,15 @@ SKILLROUTER_FIXTURE = Path("tests/fixtures/external/skillrouter_eval_core_tiny")
 SKILLROUTER_PREDICTIONS = SKILLROUTER_FIXTURE / "predictions.json"
 SKILLSBENCH_FIXTURE = Path("tests/fixtures/live_agent/skillsbench_tiny")
 UPSTREAM_SHA = "b" * 40
+STAGE2_FROZEN_PLAN = Path(
+    "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/"
+    "stage2-pilot-plan.frozen.json"
+)
+STAGE2_REAL_CODEX_EXECUTION = Path(
+    "artifacts/v0.3/skillsbench-pilot/"
+    "v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/"
+    "stage2-real-codex-12-run-execution.json"
+)
 
 
 def test_evidence_gate_validates_full_packet_and_keeps_baseline(tmp_path):
@@ -93,6 +102,36 @@ def test_evidence_gate_promotion_uses_evaluated_configs_not_hardcoded_names(tmp_
     ]
     assert "baseline-minilm" not in json.dumps(report["router_promotion_gate"])
     assert "finetuned-embedding" not in json.dumps(report["router_promotion_gate"])
+
+
+def test_evidence_gate_accepts_stage2_real_codex_execution_schema(tmp_path):
+    report = write_evidence_decision_report(
+        output_path=tmp_path / "evidence.json",
+        live_plan_path=STAGE2_FROZEN_PLAN,
+        live_report_path=STAGE2_REAL_CODEX_EXECUTION,
+    )
+
+    assert report["benchmark_validity_gate"]["status"] == "REVIEW_REQUIRED"
+    assert report["router_promotion_gate"]["decision"] == "KEEP_BASELINE"
+    assert report["router_promotion_gate"]["blocked_by_validity"] is False
+    assert report["live_agent"]["mode"] == "stage2-real-codex"
+    assert report["live_agent"]["condition_summary"]["no-skill"]["run_count"] == 4
+    assert report["live_agent"]["condition_summary"]["routed-skill"]["run_count"] == 4
+    assert report["live_agent"]["condition_summary"]["oracle-skill"]["run_count"] == 4
+    assert report["live_agent"]["condition_summary"]["no-skill"]["verifier_pass_count"] == 2
+    assert report["live_agent"]["condition_summary"]["routed-skill"]["verifier_pass_count"] == 2
+    assert report["live_agent"]["condition_summary"]["oracle-skill"]["verifier_pass_count"] == 2
+
+    live_failures = [
+        check
+        for check in report["benchmark_validity_gate"]["checks"]
+        if check["id"].startswith("live_agent.") and check["status"] == "FAIL"
+    ]
+    assert live_failures == []
+    assert _check_by_id(report, "live_agent.stage2_schema_adapter")["status"] == "PASS"
+    assert _check_by_id(report, "live_agent.verifier_evidence")["status"] == "PASS"
+    assert _check_by_id(report, "live_agent.no_skill_leakage")["status"] == "PASS"
+    assert _check_by_id(report, "live_agent.trace_completeness")["status"] == "PASS"
 
 
 def test_evidence_gate_fails_when_external_report_missing_frozen_configs(tmp_path):
