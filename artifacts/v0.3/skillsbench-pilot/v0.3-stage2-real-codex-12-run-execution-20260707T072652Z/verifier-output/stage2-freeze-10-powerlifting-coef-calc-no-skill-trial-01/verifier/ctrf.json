@@ -1,0 +1,28 @@
+{
+  "results": {
+    "summary": {
+      "failed": 1,
+      "passed": 2,
+      "tests": 3
+    },
+    "tests": [
+      {
+        "name": "sheet_structure",
+        "status": "passed"
+      },
+      {
+        "message": "Expected G2 total formula =D2+E2+F2, got '=ROUND(SUM(D2:F2),3)'",
+        "name": "dots_formulas",
+        "status": "failed",
+        "trace": "Traceback (most recent call last):\n  File \"/verifier/test_outputs.py\", line 221, in run_test\n    fn()\n  File \"/verifier/test_outputs.py\", line 176, in assert_dots_formulas\n    raise VerifierFailure(f\"Expected G2 total formula =D2+E2+F2, got {total_formula!r}\")\nVerifierFailure: Expected G2 total formula =D2+E2+F2, got '=ROUND(SUM(D2:F2),3)'\n"
+      },
+      {
+        "name": "dots_accuracy",
+        "status": "passed"
+      }
+    ],
+    "tool": {
+      "name": "stdlib-powerlifting-verifier"
+    }
+  }
+}
