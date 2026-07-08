@@ -16,6 +16,7 @@
 - [x] 3.2 Implement external routing evidence validation and summary extraction.
 - [x] 3.3 Implement live-agent evidence validation and summary extraction.
 - [x] 3.4 Implement validity status derivation and conservative promotion gate.
+- [x] 3.5 Add a conservative Stage 2 real Codex schema adapter for frozen-plan and full execution artifacts.
 
 ## 4. CLI And Reporting
 

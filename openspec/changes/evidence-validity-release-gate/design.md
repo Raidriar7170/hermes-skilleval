@@ -28,7 +28,9 @@ PR-1 through PR-6 created bounded inputs: SkillRouter adapter/provenance, offici
 
 4. **Earlier PR contracts remain source of truth.** PR-7 validates existing plan/report fields and hashes; it does not recompute official metrics, rerun routers, rerun live agents, or mutate evidence artifacts.
 
-5. **Reports are conservative.** Linked-transfer overlap, missing optional diagnostics, and partial evidence are surfaced as caveats or review requirements. Public numeric claims are not generated unless backing artifacts are present.
+5. **Stage 2 real Codex artifacts are adapted, not reinterpreted.** The gate can consume the frozen Stage 2 pilot plan plus the full real Codex execution artifact by normalizing them into the existing live-agent evidence contract. The adapter preserves deterministic verifier output as the only task-success source, keeps process exit code and LLM judge disabled as success sources, and does not change promotion logic.
+
+6. **Reports are conservative.** Linked-transfer overlap, missing optional diagnostics, and partial evidence are surfaced as caveats or review requirements. Public numeric claims are not generated unless backing artifacts are present.
 
 ## Risks / Trade-offs
 

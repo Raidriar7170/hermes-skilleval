@@ -43,3 +43,11 @@ The system SHALL summarize external routing evidence and live-agent evidence in 
 
 - **WHEN** a SkillsBench live-agent matrix report is supplied
 - **THEN** the validator MUST report verifier pass/fail, no-skill/routed/oracle outcomes, oracle gap, routed-vs-no-skill delta, timeout/process errors, skill-use evidence, and per-task regressions separately
+
+#### Scenario: Stage 2 real Codex execution schema is consumable
+
+- **WHEN** a frozen Stage 2 pilot plan and full Stage 2 real Codex execution artifact are supplied as live-agent evidence
+- **THEN** the validator MUST adapt the Stage 2 schema into the live-agent evidence checks without rerunning Codex or Stage 2
+- **AND** deterministic verifier output MUST remain the only task success source
+- **AND** process exit code and LLM judge MUST NOT become task success sources
+- **AND** router promotion MUST remain governed by the existing conservative promotion gate

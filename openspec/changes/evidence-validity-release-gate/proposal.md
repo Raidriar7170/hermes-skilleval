@@ -8,6 +8,7 @@ v0.3 now has frozen SkillRouter external artifacts and live-agent artifacts, but
 - Separate Benchmark Validity Gate status from Router Promotion Gate decision.
 - Validate frozen plan hashes, plan digests, derived hashes, scorer/report separation, overlap caveats, prompt-hash equality, oracle qualification, verifier evidence, trace completeness, leakage inventory, and field-level `UNAVAILABLE` markers.
 - Summarize external routing metrics, live-agent verifier outcomes, oracle gap, routed-vs-no-skill delta, timeout/process errors, skill-use evidence, and per-task regressions separately.
+- Accept the Stage 2 real Codex frozen-plan and execution artifact schema through a conservative adapter contract, while preserving the same verifier-only success source and promotion boundaries.
 - Default promotion to `KEEP_BASELINE` and block promotion when validity is `INVALID_EVIDENCE`.
 - Add focused tests, CLI wiring, OpenSpec artifacts, and a concise Chinese Human Brief.
 
