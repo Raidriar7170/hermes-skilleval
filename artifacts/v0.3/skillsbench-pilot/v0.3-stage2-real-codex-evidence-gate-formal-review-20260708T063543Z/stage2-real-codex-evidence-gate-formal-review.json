@@ -1,0 +1,96 @@
+{
+  "artifact_type": "stage2-real-codex-evidence-gate-formal-review",
+  "base": {
+    "branch": "codex/v0.3-pr0-protocol",
+    "head_sha": "a17ecf0b753861fc935188f99b9315fc52bb6b96",
+    "source_adapter_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/27",
+    "source_execution_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/25",
+    "source_prior_fail_closed_review_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/26"
+  },
+  "boundaries": {
+    "codex_rerun": false,
+    "evidence_gate_rerun": true,
+    "llm_judge_used": false,
+    "performance_claim_made": false,
+    "router_promoted": false,
+    "stage2_rerun": false,
+    "task_traces_created": false
+  },
+  "created_at_utc": "2026-07-08T06:35:43Z",
+  "evidence_gate": {
+    "benchmark_validity_gate_status": "INVALID_EVIDENCE",
+    "blocking_failure_count": 1,
+    "markdown_output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-formal-review-20260708T063543Z/evidence-gate.formal-review.md",
+      "sha256": "e1ab678d69600c572baf31b92af5f25043781ee8a316927b53f11d5fbb494f71"
+    },
+    "output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-formal-review-20260708T063543Z/evidence-gate.formal-review.json",
+      "sha256": "f9476ee2d5d72445558db9278bc5747a4c14fc362d6662298eba5f44b7628ed5"
+    },
+    "review_or_unavailable_field_count": 1,
+    "router_promotion_gate_decision": "KEEP_BASELINE",
+    "router_promotion_is_blocked_by_validity": true
+  },
+  "inputs": {
+    "adapter_contract": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-adapter-20260708T032000Z/stage2-real-codex-evidence-gate-adapter.json",
+      "sha256": "c773910a631c129f43f8f60e8d2dc8ea2a4746a666df334b5eb7b9aae3f467ce"
+    },
+    "adapter_smoke_evidence_gate": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-adapter-20260708T032000Z/evidence-gate.stage2-adapter.json",
+      "sha256": "0e77ab02397c37e55dbb6a9f505ac5f733049f00ca8906d2c20bdb5609afd929"
+    },
+    "external_matrix_plan": {
+      "path": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z/plan.json",
+      "sha256": "8452efc602fbed0e4040bbed91c804c8795508f57b6d840642e75c8e7f6c8f64"
+    },
+    "external_matrix_report": {
+      "path": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z/matrix-report.json",
+      "sha256": "712c1c3e3879c87394332b17491a0c6ac3c224289ffa0574a42c3067092db03c"
+    },
+    "stage2_execution_artifact": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-execution.json",
+      "sha256": "70adb8e1e7dd953fcd1efdf541a0174dfae559e8b4efaa194f1641a8f8f6a243"
+    },
+    "stage2_frozen_plan": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json",
+      "sha256": "aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b"
+    }
+  },
+  "review_findings": [
+    {
+      "code": "EXTERNAL_INPUT_HASHES_FAIL_CLOSED",
+      "severity": "blocking",
+      "summary": "The formal evidence gate still fails closed because the frozen external matrix plan's data_root cannot be validated in the merged base worktree.",
+      "details": {
+        "check_id": "external.input_hashes",
+        "validation_status": "INVALID",
+        "validation_errors": [
+          "missing relevance file under <data-root>",
+          "missing relevance file under <data-root>",
+          "missing relevance file under <data-root>",
+          "missing skill shard for tier easy",
+          "missing skill shard for tier hard"
+        ]
+      }
+    },
+    {
+      "code": "STAGE2_SCHEMA_ADAPTER_AVAILABLE",
+      "severity": "info",
+      "summary": "After PR #27, the gate can consume the Stage 2 frozen plan and full Stage 2 real Codex execution artifact through the live-agent adapter path."
+    },
+    {
+      "code": "OVERLAP_STATUS_REVIEW_REQUIRED",
+      "severity": "review",
+      "summary": "The Stage 2 live-agent overlap/generalization status remains caveated and requires review."
+    },
+    {
+      "code": "ROUTER_PROMOTION_BLOCKED",
+      "severity": "blocking",
+      "summary": "Router promotion remains KEEP_BASELINE and is blocked by invalid evidence."
+    }
+  ],
+  "schema_version": "v0.3.stage2-real-codex-evidence-gate-formal-review.v1",
+  "status": "INVALID_EVIDENCE_KEEP_BASELINE_EXTERNAL_INPUT_BLOCKER"
+}
