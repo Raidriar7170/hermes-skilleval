@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Stage 2 Real Codex Evidence Gate Review</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #1f2933; line-height: 1.55; }
+    main { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8dee4; padding-bottom: 6px; }
+    code { background: #f4f6f8; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #b42318; background: #fff4f2; padding: 12px 16px; margin: 18px 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .card { border: 1px solid #d8dee4; border-radius: 8px; padding: 12px 14px; background: #fff; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 Real Codex Evidence Gate Review</h1>
+  <p class="status"><strong>结论：</strong>PR #25 的 real Codex 12-run execution evidence 已合并，但现有 v0.3 evidence gate 对这组 Stage 2 real-run artifact 给出 <code>INVALID_EVIDENCE</code>，router promotion 保持 <code>KEEP_BASELINE</code>。</p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="card"><strong>Base</strong><br><code>59d20f1dd44a829a699ace395730ca3823d8f2bc</code></div>
+    <div class="card"><strong>Gate status</strong><br><code>INVALID_EVIDENCE</code></div>
+    <div class="card"><strong>Promotion decision</strong><br><code>KEEP_BASELINE</code></div>
+    <div class="card"><strong>Blocking failures</strong><br><code>12</code></div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>基于已合并的 PR #25 execution evidence 运行现有 <code>v0.3-evidence-gate</code>。</li>
+    <li>没有重新运行 Codex，没有重新运行 Stage 2，没有新增 task traces。</li>
+    <li>没有改 frozen plan、task prompts、verifier/scorer/matrix/router/evidence-gate semantics。</li>
+    <li>没有写 performance claim，没有做 router promotion。</li>
+  </ul>
+
+  <h2>关键发现</h2>
+  <ul>
+    <li>旧 external matrix plan 指向的 <code>artifacts/v0.3/v0.3-stage1-external-20260628T105038Z/inputs/skillrouter_eval_core</code> 不在当前 merged base 中。</li>
+    <li>PR #25 的 Stage 2 real Codex artifacts 使用 <code>v0.3.stage2-*</code> schema；现有 evidence gate 仍期望 <code>v0.3.skillsbench-live-plan.v1</code> 和 <code>v0.3.skillsbench-live-matrix-report.v1</code>。</li>
+    <li>因此当前 gate 不能把 PR #25 raw verifier outcomes 升级成 benchmark validity 或 promotion evidence。</li>
+  </ul>
+
+  <h2>证据文件</h2>
+  <ul>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-review-20260708T030000Z/evidence-gate.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-review-20260708T030000Z/evidence-gate.md</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-review-20260708T030000Z/stage2-real-codex-evidence-gate-review.json</code></li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 performance result。</li>
+    <li>这不是 router promotion。</li>
+    <li>这不是 evidence gate pass。</li>
+    <li>PR #25 的 6/12 passed 仍只是 raw deterministic verifier facts。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>开一个独立的小 PR，修复或新增 Stage 2 real-run evidence adapter/review contract，让 evidence gate 能消费 PR #25 的 Stage 2 artifact schema；在那之前不要发布性能或推广结论。</p>
+</main>
+</body>
+</html>

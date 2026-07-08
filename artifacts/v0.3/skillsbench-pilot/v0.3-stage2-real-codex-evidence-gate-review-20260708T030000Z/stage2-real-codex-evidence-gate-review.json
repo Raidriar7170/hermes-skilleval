@@ -1,0 +1,70 @@
+{
+  "artifact_type": "stage2-real-codex-evidence-gate-review",
+  "base": {
+    "branch": "codex/v0.3-pr0-protocol",
+    "head_sha": "59d20f1dd44a829a699ace395730ca3823d8f2bc",
+    "source_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/25"
+  },
+  "boundaries": {
+    "codex_rerun": false,
+    "evidence_gate_rerun": true,
+    "llm_judge_used": false,
+    "performance_claim_made": false,
+    "router_promoted": false,
+    "stage2_rerun": false,
+    "task_traces_created": false
+  },
+  "created_at_utc": "2026-07-08T03:02:09Z",
+  "evidence_gate": {
+    "blocking_failure_count": 12,
+    "benchmark_validity_gate_status": "INVALID_EVIDENCE",
+    "markdown_output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-review-20260708T030000Z/evidence-gate.md",
+      "sha256": "5bc8823d757fec6b430353e04506418504d4a268ae79a30254be024fcb68f06d"
+    },
+    "output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-review-20260708T030000Z/evidence-gate.json",
+      "sha256": "55650ef26569d60f6adf2bfaff15ad2de3326c17fc6361a480fc581d543d8fc1"
+    },
+    "router_promotion_gate_decision": "KEEP_BASELINE",
+    "router_promotion_is_blocked_by_validity": true,
+    "review_or_unavailable_field_count": 1
+  },
+  "inputs": {
+    "external_matrix_plan": {
+      "path": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z/plan.json",
+      "sha256": "8452efc602fbed0e4040bbed91c804c8795508f57b6d840642e75c8e7f6c8f64"
+    },
+    "external_matrix_report": {
+      "path": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z/matrix-report.json",
+      "sha256": "712c1c3e3879c87394332b17491a0c6ac3c224289ffa0574a42c3067092db03c"
+    },
+    "stage2_execution_matrix_report": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-matrix-report.json",
+      "sha256": "4205f8e8f5e141a67afdebb388a7c6927cc7b45f03a1c6966326e5cc5efc8f7f"
+    },
+    "stage2_frozen_plan": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json",
+      "sha256": "aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b"
+    }
+  },
+  "review_findings": [
+    {
+      "code": "EXTERNAL_STAGE1_INPUT_DATA_ROOT_NOT_COMMITTED_IN_BASE",
+      "severity": "blocking",
+      "summary": "The existing external matrix plan points at artifacts/v0.3/v0.3-stage1-external-20260628T105038Z/inputs/skillrouter_eval_core, which is not present in the merged base worktree used for this review."
+    },
+    {
+      "code": "STAGE2_REAL_CODEX_EXECUTION_SCHEMA_NOT_ACCEPTED_BY_EXISTING_LIVE_AGENT_GATE",
+      "severity": "blocking",
+      "summary": "The Stage 2 frozen plan and real Codex execution matrix use stage2-specific schemas, while the current v0.3 evidence gate expects v0.3.skillsbench-live-plan.v1 and v0.3.skillsbench-live-matrix-report.v1."
+    },
+    {
+      "code": "ROUTER_PROMOTION_BLOCKED",
+      "severity": "blocking",
+      "summary": "The evidence gate decision remains KEEP_BASELINE, and invalid evidence blocks promotion."
+    }
+  ],
+  "schema_version": "v0.3.stage2-real-codex-evidence-gate-review.v1",
+  "status": "INVALID_EVIDENCE_KEEP_BASELINE_REVIEW_REQUIRED"
+}
