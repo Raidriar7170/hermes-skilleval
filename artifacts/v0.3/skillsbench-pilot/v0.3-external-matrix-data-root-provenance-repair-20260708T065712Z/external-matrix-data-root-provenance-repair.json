@@ -1,0 +1,83 @@
+{
+  "artifact_type": "external-matrix-data-root-provenance-repair",
+  "base": {
+    "branch": "codex/v0.3-pr0-protocol",
+    "head_sha": "a03e0cab77bd86a69fcb12bbe38aba1dc371fc8b",
+    "source_formal_review_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/28",
+    "source_adapter_pr": "https://github.com/Raidriar7170/hermes-skilleval/pull/27"
+  },
+  "boundaries": {
+    "codex_rerun": false,
+    "evidence_gate_rerun": true,
+    "llm_judge_used": false,
+    "performance_claim_made": false,
+    "router_promoted": false,
+    "stage2_rerun": false,
+    "task_traces_created": false
+  },
+  "created_at_utc": "2026-07-08T06:57:12Z",
+  "evidence_gate_after_repair": {
+    "benchmark_validity_gate_status": "REVIEW_REQUIRED",
+    "blocking_failure_count": 0,
+    "markdown_output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-external-matrix-data-root-provenance-repair-20260708T065712Z/evidence-gate.after-data-root-provenance-repair.md",
+      "sha256": "1c0e02ea23ab1ef3a6fda18f0c6892dfe957c7dea4995904889d9c29be5192ac"
+    },
+    "output": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-external-matrix-data-root-provenance-repair-20260708T065712Z/evidence-gate.after-data-root-provenance-repair.json",
+      "sha256": "013cea03002f69b704573f1054ea9486cdb0a82a90f091a218d32f4fd180fbd0"
+    },
+    "remaining_review_fields": [
+      "live_agent.overlap_status"
+    ],
+    "review_or_unavailable_field_count": 1,
+    "router_promotion_gate_decision": "KEEP_BASELINE",
+    "router_promotion_is_blocked_by_validity": false
+  },
+  "inputs": {
+    "external_matrix_plan": {
+      "path": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z/plan.json",
+      "sha256": "8452efc602fbed0e4040bbed91c804c8795508f57b6d840642e75c8e7f6c8f64"
+    },
+    "external_matrix_report": {
+      "path": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z/matrix-report.json",
+      "sha256": "712c1c3e3879c87394332b17491a0c6ac3c224289ffa0574a42c3067092db03c"
+    },
+    "prior_formal_review": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-formal-review-20260708T063543Z/stage2-real-codex-evidence-gate-formal-review.json",
+      "sha256": "c478421521d4152a1601c98705cf4e12f8927a720382dc3a65021523d59a4f46"
+    },
+    "stage2_execution_artifact": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-execution.json",
+      "sha256": "70adb8e1e7dd953fcd1efdf541a0174dfae559e8b4efaa194f1641a8f8f6a243"
+    },
+    "stage2_frozen_plan": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json",
+      "sha256": "aaa0f4c4d1939cff9bcba08ce6549284726353ed199d7bedd31614be970f579b"
+    }
+  },
+  "repair_findings": [
+    {
+      "code": "EXTERNAL_INPUT_HASHES_BLOCKER_REPAIRED",
+      "severity": "info",
+      "summary": "The evidence gate can now validate frozen external data-root provenance when the large local Eval Core data_root is intentionally not materialized in the repository."
+    },
+    {
+      "code": "ROUTED_PREDICTIONS_STILL_REHASHED",
+      "severity": "info",
+      "summary": "Committed routed prediction files continue to be rehashed against the frozen external matrix plan."
+    },
+    {
+      "code": "REVIEW_REQUIRED_OVERLAP_CAVEAT_REMAINS",
+      "severity": "review",
+      "summary": "The resulting evidence gate remains REVIEW_REQUIRED because live-agent overlap/generalization status is still caveated."
+    },
+    {
+      "code": "ROUTER_PROMOTION_NOT_MADE",
+      "severity": "info",
+      "summary": "The router promotion gate remains KEEP_BASELINE."
+    }
+  ],
+  "schema_version": "v0.3.external-matrix-data-root-provenance-repair.v1",
+  "status": "REVIEW_REQUIRED_KEEP_BASELINE_EXTERNAL_INPUT_BLOCKER_REPAIRED"
+}

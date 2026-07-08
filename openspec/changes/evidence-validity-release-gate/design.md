@@ -30,7 +30,9 @@ PR-1 through PR-6 created bounded inputs: SkillRouter adapter/provenance, offici
 
 5. **Stage 2 real Codex artifacts are adapted, not reinterpreted.** The gate can consume the frozen Stage 2 pilot plan plus the full real Codex execution artifact by normalizing them into the existing live-agent evidence contract. The adapter preserves deterministic verifier output as the only task-success source, keeps process exit code and LLM judge disabled as success sources, and does not change promotion logic.
 
-6. **Reports are conservative.** Linked-transfer overlap, missing optional diagnostics, and partial evidence are surfaced as caveats or review requirements. Public numeric claims are not generated unless backing artifacts are present.
+6. **Frozen external data-root provenance can stand in for unmaterialized local data.** The Stage 1 external matrix intentionally did not commit the 402MB Eval Core input directory. When that `data_root` is absent, the gate may validate the frozen plan's PASS validation record and adapter provenance fingerprints instead of rereading the local dataset, while still rehashing committed routed prediction files.
+
+7. **Reports are conservative.** Linked-transfer overlap, missing optional diagnostics, and partial evidence are surfaced as caveats or review requirements. Public numeric claims are not generated unless backing artifacts are present.
 
 ## Risks / Trade-offs
 
@@ -38,3 +40,4 @@ PR-1 through PR-6 created bounded inputs: SkillRouter adapter/provenance, offici
 - **Risk: missing optional artifacts produce a misleading PASS.** Mitigation: optional groups are field-level `UNAVAILABLE`; required provided artifacts still fail closed when corrupt.
 - **Risk: promotion status leaks into validity.** Mitigation: separate enums and tests that reject top-level `UNAVAILABLE`.
 - **Risk: trace validation grows too broad.** Mitigation: check core schema-like fields and redaction markers without changing runtime trace schema.
+- **Risk: provenance-only validation hides missing external data.** Mitigation: accept it only when the frozen validation status and adapter provenance are internally complete and self-consistent; keep promotion separate and conservative.
