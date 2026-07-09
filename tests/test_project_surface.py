@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_FULL_SUITE_COUNT = "419"
+CURRENT_FULL_SUITE_COUNT = "668"
 README = ROOT / "README.md"
 RESUME = ROOT / "docs" / "resume.md"
 INTERVIEW_OVERVIEW = ROOT / "docs" / "interview-project-overview.html"
@@ -301,7 +301,10 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert "多类路由策略" in first_screen
     assert "错误的 negative skill" in first_screen
     assert "继续保留 `baseline-minilm`" in first_screen
-    assert "`v0.2.1` 已发布，`419` 个 pytest 用例通过" in first_screen
+    assert "`v0.3.0` 已发布，当前测试面为 `668` 个 pytest cases" in first_screen
+    assert "`REVIEW_REQUIRED / KEEP_BASELINE`" in first_screen
+    assert "`live_agent.overlap_status`" in first_screen
+    assert "这不是 benchmark PASS、性能提升结论或 router promotion" in first_screen
     assert (
         "[中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)"
         in first_screen
@@ -327,8 +330,8 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert dashboard_preview < screenshot < architecture
     assert limitations < architecture
     assert "actions/workflows/validate.yml/badge.svg" in readme
-    assert "badge/release-v0.2.1" in readme
-    assert "badge/tests-419%20passed" in readme
+    assert "badge/release-v0.3.0" in readme
+    assert "badge/tests-668%20passed" in readme
     assert "badge/action-reusable%20repo%20Action" in readme
     assert "badge/A100-validated" not in first_screen
     assert "run filtering" in readme
@@ -354,7 +357,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
     )
 
     assert f"{CURRENT_FULL_SUITE_COUNT} pytest cases" in combined
-    assert f"{CURRENT_FULL_SUITE_COUNT} tests" in combined
+    assert f"{CURRENT_FULL_SUITE_COUNT} passing tests" in combined
     assert "314 tests" not in combined
     assert "314-test" not in combined
     assert "413 passed" not in combined
@@ -432,7 +435,7 @@ def test_readme_keeps_quick_start_short_and_links_full_usage():
 
     assert "For full CLI usage, see [`docs/usage.md`](docs/usage.md)." in readme
     assert "skilleval github-action-gate" in readme
-    assert "Raidriar7170/hermes-skilleval@v0.2.1" in readme
+    assert "Raidriar7170/hermes-skilleval@v0.3.0" in readme
     assert "### 1. Index a Hermes-style Skill Library" not in readme
     assert "## Fresh-clone local demo" in usage
     assert "## GitHub Action trial" in usage
@@ -1265,6 +1268,8 @@ def _historical_count_boundary_phrases() -> list[str]:
         "baseline before implementation",
         "phase-time",
         "at the time",
+        "本阶段",
+        "当时",
     ]
 
 
