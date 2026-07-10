@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Any
 
 from hermes_skilleval.model_manifest import write_model_manifest
-from hermes_skilleval.remote_paths import A100_USER_ROOT, validate_path_within_root
+from hermes_skilleval.remote_paths import (
+    A100_USER_ROOT,
+    resolve_path_root,
+    validate_path_within_root,
+)
 
 
 def main() -> int:
@@ -25,13 +29,9 @@ def main() -> int:
         else config.get("output_root", A100_USER_ROOT)
     )
     try:
-        output_root = validate_path_within_root(
-            ".",
-            root=selected_root,
-            field="output_root",
-        )
+        output_root = resolve_path_root(selected_root, field="output_root")
         output_dir = validate_path_within_root(
-            str(config["output_dir"]),
+            config["output_dir"],
             root=output_root,
             field="output_dir",
         )

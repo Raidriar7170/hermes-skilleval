@@ -28,7 +28,7 @@
 ## 4. Update Live Guidance Without Rewriting Evidence
 
 - [x] 4.1 Update `docs/phase14.md`, `docs/usage.md`, and the source template for future model cards to document the `/mnt/data/minghongsun` default, config behavior, explicit CLI override, and one local-root example; do not edit the committed demo model card.
-- [ ] 4.2 Capture protected blob IDs at the bridge commit and compare them with final `HEAD` for `docs/demo/phase14-finetuned-embedding-router/**`, `docs/demo/phase15-held-out-generalization/**`, `docs/demo/phase16-blind-validation/regression-summary.json`, and `docs/demo/phase7a-cross-encoder/embedding-cache.json`; also prove the five closed-exception entries retain identical mode/blob IDs and a clean path-limited bridge-to-HEAD diff, then inspect `git diff --name-only <bridge> HEAD`.
+- [x] 4.2 Capture protected blob IDs at the bridge commit and compare them with final `HEAD` for `docs/demo/phase14-finetuned-embedding-router/**`, `docs/demo/phase15-held-out-generalization/**`, `docs/demo/phase16-blind-validation/regression-summary.json`, and `docs/demo/phase7a-cross-encoder/embedding-cache.json`; also prove the five closed-exception entries retain identical mode/blob IDs and a clean path-limited bridge-to-HEAD diff, then inspect `git diff --name-only <bridge> HEAD`.
 - [x] 4.3 Scan active docs and code for stale claims that training output is unconditionally fixed to `/mnt/data/minghongsun`, without changing unrelated A100-specific workflows.
 
 ## 5. Validate and Review the Complete Change

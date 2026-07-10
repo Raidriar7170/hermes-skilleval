@@ -8,6 +8,7 @@ from typing import Any
 from hermes_skilleval.models import BenchmarkTask, Skill
 from hermes_skilleval.remote_paths import (
     A100_USER_ROOT,
+    resolve_path_root,
     validate_path_within_root,
 )
 
@@ -80,7 +81,7 @@ def build_train_config(
     seed: int,
     output_root: str | Path = A100_USER_ROOT,
 ) -> dict[str, Any]:
-    validated_output_root = str(Path(output_root).resolve(strict=False))
+    validated_output_root = resolve_path_root(output_root, field="output_root")
     validated_output_dir = validate_path_within_root(
         output_dir,
         root=validated_output_root,

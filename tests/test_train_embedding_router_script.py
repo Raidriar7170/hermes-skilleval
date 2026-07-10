@@ -137,16 +137,7 @@ def test_train_script_rejects_cli_root_mismatch_before_imports_or_writes(
             str(cli_root),
         ],
     )
-    dependency_imports = []
-    real_import = builtins.__import__
-
-    def guarded_import(name, *args, **kwargs):
-        if name == "torch" or name.startswith("sentence_transformers"):
-            dependency_imports.append(name)
-            raise AssertionError(f"dependency imported before path validation: {name}")
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
 
     with pytest.raises(
         SystemExit,
@@ -157,6 +148,90 @@ def test_train_script_rejects_cli_root_mismatch_before_imports_or_writes(
     assert dependency_imports == []
     assert not config_root.exists()
     assert not cli_root.exists()
+
+
+def test_train_script_rejects_existing_file_config_root_before_imports_or_writes(
+    monkeypatch,
+    tmp_path,
+):
+    module = _load_train_script()
+    root_file = tmp_path / "root-file"
+    root_file.write_text("not a directory\n", encoding="utf-8")
+    config = _write_minimal_training_config(
+        tmp_path,
+        output_dir="models/minilm",
+        output_root=str(root_file),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["train_embedding_router.py", "--config", str(config)],
+    )
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+
+    with pytest.raises(SystemExit, match="output_root must be a directory"):
+        module.main()
+
+    assert dependency_imports == []
+    assert not (root_file / "models" / "minilm").exists()
+
+
+def test_train_script_rejects_existing_file_cli_root_before_imports_or_writes(
+    monkeypatch,
+    tmp_path,
+):
+    module = _load_train_script()
+    root_file = tmp_path / "root-file"
+    root_file.write_text("not a directory\n", encoding="utf-8")
+    config_root = tmp_path / "config-root"
+    config = _write_minimal_training_config(
+        tmp_path,
+        output_dir="models/minilm",
+        output_root=str(config_root),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_embedding_router.py",
+            "--config",
+            str(config),
+            "--output-root",
+            str(root_file),
+        ],
+    )
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+
+    with pytest.raises(SystemExit, match="output_root must be a directory"):
+        module.main()
+
+    assert dependency_imports == []
+    assert not config_root.exists()
+    assert not (root_file / "models" / "minilm").exists()
+
+
+def test_train_script_rejects_non_path_config_root_before_imports_or_writes(
+    monkeypatch,
+    tmp_path,
+):
+    module = _load_train_script()
+    config = _write_minimal_training_config(
+        tmp_path,
+        output_dir="models/minilm",
+        output_root=7170,
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["train_embedding_router.py", "--config", str(config)],
+    )
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+
+    with pytest.raises(SystemExit, match="output_root must be a path"):
+        module.main()
+
+    assert dependency_imports == []
+    assert not (tmp_path / "models" / "minilm").exists()
 
 
 def test_train_script_runs_manual_training_loop_with_fake_dependencies(
@@ -341,7 +416,7 @@ def _write_minimal_training_config(
     directory: Path,
     *,
     output_dir: str,
-    output_root: str | None = None,
+    output_root: object | None = None,
 ) -> Path:
     training_pairs = directory / "training-pairs.jsonl"
     training_pairs.write_text(
@@ -370,6 +445,20 @@ def _write_minimal_training_config(
     config = directory / "train-config.json"
     config.write_text(json.dumps(payload), encoding="utf-8")
     return config
+
+
+def _guard_training_dependency_imports(monkeypatch):
+    dependency_imports = []
+    real_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        if name == "torch" or name.startswith("sentence_transformers"):
+            dependency_imports.append(name)
+            raise AssertionError(f"dependency imported before path validation: {name}")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    return dependency_imports
 
 
 def _mapping_path_factory(tmp_path: Path):

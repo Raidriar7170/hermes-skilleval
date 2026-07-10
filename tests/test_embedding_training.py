@@ -182,6 +182,37 @@ def test_build_train_config_resolves_relative_root_from_process_cwd(
     )
 
 
+def test_build_train_config_rejects_existing_file_output_root(tmp_path):
+    output_root = tmp_path / "root-file"
+    output_root.write_text("not a directory\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="output_root must be a directory"):
+        build_train_config(
+            training_pairs="training-pairs.jsonl",
+            output_root=output_root,
+            output_dir="models/minilm-skill-router",
+            base_model="sentence-transformers/all-MiniLM-L6-v2",
+            epochs=1,
+            batch_size=16,
+            learning_rate=2e-5,
+            seed=7170,
+        )
+
+
+def test_build_train_config_rejects_non_path_output_root():
+    with pytest.raises(ValueError, match="output_root must be a path"):
+        build_train_config(
+            training_pairs="training-pairs.jsonl",
+            output_root=7170,
+            output_dir="models/minilm-skill-router",
+            base_model="sentence-transformers/all-MiniLM-L6-v2",
+            epochs=1,
+            batch_size=16,
+            learning_rate=2e-5,
+            seed=7170,
+        )
+
+
 def test_build_train_config_rejects_outputs_outside_minghongsun_path():
     with pytest.raises(ValueError, match="/mnt/data/minghongsun"):
         build_train_config(
