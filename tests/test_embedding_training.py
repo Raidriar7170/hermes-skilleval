@@ -6,6 +6,7 @@ import pytest
 from hermes_skilleval.embedding_training import (
     build_train_config,
     export_embedding_training_pairs,
+    render_model_card,
     write_train_config,
     write_training_pairs,
 )
@@ -128,10 +129,57 @@ def test_build_train_config_keeps_outputs_under_minghongsun_path():
     )
 
     assert config["phase"] == "Phase 14"
+    assert config["output_root"] == "/mnt/data/minghongsun"
     assert config["output_dir"].startswith("/mnt/data/minghongsun/")
     assert config["loss"] == "MultipleNegativesRankingLoss+ContrastiveLoss"
     assert config["hard_negative_margin"] == 1.5
     assert config["model_checkpoint_committed"] is False
+
+
+def test_build_train_config_records_local_root_and_relative_output_dir(tmp_path):
+    root = tmp_path / "portable-output"
+
+    config = build_train_config(
+        training_pairs="training-pairs.jsonl",
+        output_root=root,
+        output_dir="models/minilm-skill-router",
+        base_model="sentence-transformers/all-MiniLM-L6-v2",
+        epochs=1,
+        batch_size=16,
+        learning_rate=2e-5,
+        seed=7170,
+    )
+
+    assert config["output_root"] == str(root.resolve(strict=False))
+    assert config["output_dir"] == str(
+        (root / "models/minilm-skill-router").resolve(strict=False)
+    )
+
+
+def test_build_train_config_resolves_relative_root_from_process_cwd(
+    monkeypatch,
+    tmp_path,
+):
+    process_cwd = tmp_path / "process-cwd"
+    process_cwd.mkdir()
+    monkeypatch.chdir(process_cwd)
+
+    config = build_train_config(
+        training_pairs="training-pairs.jsonl",
+        output_root="portable-output",
+        output_dir="models/minilm-skill-router",
+        base_model="sentence-transformers/all-MiniLM-L6-v2",
+        epochs=1,
+        batch_size=16,
+        learning_rate=2e-5,
+        seed=7170,
+    )
+
+    expected_root = (process_cwd / "portable-output").resolve(strict=False)
+    assert config["output_root"] == str(expected_root)
+    assert config["output_dir"] == str(
+        (expected_root / "models/minilm-skill-router").resolve(strict=False)
+    )
 
 
 def test_build_train_config_rejects_outputs_outside_minghongsun_path():
@@ -175,3 +223,26 @@ def test_write_train_config_writes_json(tmp_path: Path):
 
     written = json.loads((tmp_path / "train-config.json").read_text(encoding="utf-8"))
     assert written["seed"] == 7170
+
+
+def test_render_model_card_documents_default_and_local_output_roots():
+    card = render_model_card(
+        {"training_pairs": "training-pairs.jsonl"},
+        {"pair_count": 1, "positive_count": 1, "hard_negative_count": 0},
+    )
+
+    assert "Configured output root: `/mnt/data/minghongsun`" in card
+    assert "CLI `--output-root` overrides the config" in card
+    assert '--output-root "$PWD/.hermes-training"' in card
+
+
+def test_render_model_card_uses_configured_output_root():
+    card = render_model_card(
+        {
+            "training_pairs": "training-pairs.jsonl",
+            "output_root": "/work/hermes",
+        },
+        {"pair_count": 1, "positive_count": 1, "hard_negative_count": 0},
+    )
+
+    assert "Configured output root: `/work/hermes`" in card

@@ -1,3 +1,4 @@
+import builtins
 import importlib.util
 import json
 import sys
@@ -8,6 +9,154 @@ import pytest
 
 
 SCRIPT_PATH = Path("scripts/train_embedding_router.py")
+
+
+def test_train_script_cli_output_root_overrides_config_root(monkeypatch, tmp_path):
+    module = _load_train_script()
+    _install_fake_training_modules(monkeypatch)
+    monkeypatch.setattr(module, "write_model_manifest", lambda **kwargs: {})
+    config_root = tmp_path / "config-root"
+    cli_root = tmp_path / "cli-root"
+    config = _write_minimal_training_config(
+        tmp_path,
+        output_dir="models/minilm",
+        output_root=str(config_root),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_embedding_router.py",
+            "--config",
+            str(config),
+            "--output-root",
+            str(cli_root),
+        ],
+    )
+
+    assert module.main() == 0
+
+    assert (cli_root / "models" / "minilm" / "config.json").is_file()
+    assert not config_root.exists()
+
+
+def test_train_script_uses_relative_config_root_from_process_cwd(
+    monkeypatch,
+    tmp_path,
+):
+    module = _load_train_script()
+    _install_fake_training_modules(monkeypatch)
+    monkeypatch.setattr(module, "write_model_manifest", lambda **kwargs: {})
+    config_dir = tmp_path / "config-dir"
+    config_dir.mkdir()
+    config = _write_minimal_training_config(
+        config_dir,
+        output_dir="models/minilm",
+        output_root="portable-output",
+    )
+    process_cwd = tmp_path / "process-cwd"
+    process_cwd.mkdir()
+    monkeypatch.chdir(process_cwd)
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
+
+    assert module.main() == 0
+
+    expected = process_cwd / "portable-output" / "models" / "minilm"
+    assert (expected / "config.json").is_file()
+    assert not (config_dir / "portable-output").exists()
+
+
+def test_train_script_defaults_output_root_to_a100_user_root(monkeypatch, tmp_path):
+    module = _load_train_script()
+    _install_fake_training_modules(monkeypatch)
+    monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
+    monkeypatch.setattr(module, "write_model_manifest", lambda **kwargs: {})
+    config = _write_minimal_training_config(
+        tmp_path,
+        output_dir="phase14/models/minilm",
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
+
+    assert module.main() == 0
+
+    expected = tmp_path / "mapped-mnt" / "phase14" / "models" / "minilm"
+    assert (expected / "config.json").is_file()
+
+
+def test_train_script_records_selected_root_in_manifest_and_summary(
+    monkeypatch,
+    tmp_path,
+):
+    module = _load_train_script()
+    _install_fake_training_modules(monkeypatch)
+    output_root = tmp_path / "portable-output"
+    config = _write_minimal_training_config(
+        tmp_path,
+        output_dir="models/minilm",
+        output_root=str(output_root),
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
+
+    assert module.main() == 0
+
+    canonical_root = output_root.resolve(strict=False)
+    canonical_output = (canonical_root / "models" / "minilm").resolve(strict=False)
+    summary = json.loads((canonical_output / "train-run-summary.json").read_text())
+    manifest = json.loads((canonical_output / "model-manifest.json").read_text())
+    assert summary["output_root"] == str(canonical_root)
+    assert summary["output_dir"] == str(canonical_output)
+    assert manifest["model_dir"] == summary["output_dir"]
+
+
+def test_train_script_rejects_cli_root_mismatch_before_imports_or_writes(
+    monkeypatch,
+    tmp_path,
+):
+    module = _load_train_script()
+    config_root = tmp_path / "config-root"
+    cli_root = tmp_path / "cli-root"
+    config = _write_minimal_training_config(
+        tmp_path,
+        output_dir=str(config_root / "models" / "minilm"),
+        output_root=str(config_root),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_embedding_router.py",
+            "--config",
+            str(config),
+            "--output-root",
+            str(cli_root),
+        ],
+    )
+    dependency_imports = []
+    real_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        if name == "torch" or name.startswith("sentence_transformers"):
+            dependency_imports.append(name)
+            raise AssertionError(f"dependency imported before path validation: {name}")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+
+    with pytest.raises(
+        SystemExit,
+        match=rf"output_dir must be under {cli_root.resolve(strict=False)}/",
+    ):
+        module.main()
+
+    assert dependency_imports == []
+    assert not config_root.exists()
+    assert not cli_root.exists()
 
 
 def test_train_script_runs_manual_training_loop_with_fake_dependencies(
@@ -66,7 +215,9 @@ def test_train_script_runs_manual_training_loop_with_fake_dependencies(
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(sys, "argv", ["train_embedding_router.py", "--config", str(config)])
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
 
     assert module.main() == 0
 
@@ -124,7 +275,9 @@ def test_train_script_rejects_nonpositive_batch_size(monkeypatch, tmp_path: Path
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(sys, "argv", ["train_embedding_router.py", "--config", str(config)])
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
 
     with pytest.raises(SystemExit, match="batch_size must be positive"):
         module.main()
@@ -163,9 +316,13 @@ def test_train_script_rejects_output_dir_traversal(monkeypatch, tmp_path: Path):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(sys, "argv", ["train_embedding_router.py", "--config", str(config)])
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
 
-    with pytest.raises(SystemExit, match="output_dir must be under /mnt/data/minghongsun/"):
+    with pytest.raises(
+        SystemExit, match="output_dir must be under /mnt/data/minghongsun/"
+    ):
         module.main()
 
     assert not (tmp_path / "leak" / "model").exists()
@@ -178,6 +335,41 @@ def _load_train_script():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def _write_minimal_training_config(
+    directory: Path,
+    *,
+    output_dir: str,
+    output_root: str | None = None,
+) -> Path:
+    training_pairs = directory / "training-pairs.jsonl"
+    training_pairs.write_text(
+        json.dumps(
+            {
+                "query_text": "open dashboard",
+                "skill_text": "browser smoke testing",
+                "label": 1,
+                "split": "dev",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    payload = {
+        "base_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "batch_size": 1,
+        "epochs": 1,
+        "learning_rate": 2e-5,
+        "output_dir": output_dir,
+        "seed": 7170,
+        "training_pairs": str(training_pairs),
+    }
+    if output_root is not None:
+        payload["output_root"] = output_root
+    config = directory / "train-config.json"
+    config.write_text(json.dumps(payload), encoding="utf-8")
+    return config
 
 
 def _mapping_path_factory(tmp_path: Path):
@@ -206,16 +398,28 @@ def _install_fake_training_modules(monkeypatch) -> None:
     fake_torch = types.ModuleType("torch")
     setattr(fake_torch, "seed_value", None)
     setattr(fake_torch, "cuda", types.SimpleNamespace(is_available=lambda: True))
-    setattr(fake_torch, "empty", lambda length, device: FakeTensor([0] * length, device))
-    setattr(fake_torch, "zeros", lambda length, device: FakeTensor([0] * length, device))
-    setattr(fake_torch, "manual_seed", lambda seed: setattr(fake_torch, "seed_value", seed))
+    setattr(
+        fake_torch, "empty", lambda length, device: FakeTensor([0] * length, device)
+    )
+    setattr(
+        fake_torch, "zeros", lambda length, device: FakeTensor([0] * length, device)
+    )
+    setattr(
+        fake_torch, "manual_seed", lambda seed: setattr(fake_torch, "seed_value", seed)
+    )
     setattr(fake_torch, "optim", types.SimpleNamespace(AdamW=FakeOptimizer))
 
     sentence_transformers = types.ModuleType("sentence_transformers")
     setattr(sentence_transformers, "SentenceTransformer", FakeSentenceTransformer)
-    sentence_transformer_module = types.ModuleType("sentence_transformers.sentence_transformer")
-    losses_module = types.ModuleType("sentence_transformers.sentence_transformer.losses")
-    setattr(losses_module, "MultipleNegativesRankingLoss", FakeMultipleNegativesRankingLoss)
+    sentence_transformer_module = types.ModuleType(
+        "sentence_transformers.sentence_transformer"
+    )
+    losses_module = types.ModuleType(
+        "sentence_transformers.sentence_transformer.losses"
+    )
+    setattr(
+        losses_module, "MultipleNegativesRankingLoss", FakeMultipleNegativesRankingLoss
+    )
     setattr(losses_module, "ContrastiveLoss", FakeContrastiveLoss)
     setattr(sentence_transformer_module, "losses", losses_module)
 

@@ -496,7 +496,30 @@ skilleval export-embedding-training-data \
 Phase 14 exports supervised task-skill pairs and a remote-ready training config
 for a domain-specific embedding router. It does not commit model checkpoints,
 embedding caches, or downloaded models. Fine-tuned evaluation artifacts are
-added only after a real model path is evaluated:
+added only after a real model path is evaluated.
+
+Training selects the CLI `--output-root` first, then config `output_root`, then
+the backward-compatible `/mnt/data/minghongsun` default. Relative roots resolve
+from the trainer process working directory. Relative `output_dir` values resolve
+beneath the selected root; absolute values must already be contained by it.
+The committed historical config keeps its A100 path, so its default command is:
+
+```bash
+python scripts/train_embedding_router.py \
+  --config docs/demo/phase14-finetuned-embedding-router/train-config.json
+```
+
+For a local config with `"output_dir": "models/minilm-skill-router"`, override
+the selected root explicitly:
+
+```bash
+python scripts/train_embedding_router.py \
+  --config /path/to/train-config.local.json \
+  --output-root "$PWD/.hermes-training"
+```
+
+An absolute config `output_dir` outside the selected root fails before output
+writes. Fine-tuned evaluation after a real model path exists uses:
 
 ```bash
 skilleval judge-finetuned-embedding \

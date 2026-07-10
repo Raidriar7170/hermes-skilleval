@@ -6,7 +6,10 @@ from pathlib import Path
 from typing import Any
 
 from hermes_skilleval.models import BenchmarkTask, Skill
-from hermes_skilleval.remote_paths import validate_a100_user_path
+from hermes_skilleval.remote_paths import (
+    A100_USER_ROOT,
+    validate_path_within_root,
+)
 
 
 def export_embedding_training_pairs(
@@ -75,8 +78,14 @@ def build_train_config(
     batch_size: int,
     learning_rate: float,
     seed: int,
+    output_root: str | Path = A100_USER_ROOT,
 ) -> dict[str, Any]:
-    validated_output_dir = validate_a100_user_path(output_dir, field="output_dir")
+    validated_output_root = str(Path(output_root).resolve(strict=False))
+    validated_output_dir = validate_path_within_root(
+        output_dir,
+        root=validated_output_root,
+        field="output_dir",
+    )
     if epochs <= 0:
         raise ValueError("epochs must be positive")
     if batch_size <= 0:
@@ -87,6 +96,7 @@ def build_train_config(
         "phase": "Phase 14",
         "base_model": base_model,
         "training_pairs": training_pairs,
+        "output_root": validated_output_root,
         "output_dir": validated_output_dir,
         "epochs": epochs,
         "batch_size": batch_size,
@@ -108,6 +118,7 @@ def write_train_config(config: dict[str, Any], output_path: Path | str) -> None:
 
 
 def render_model_card(config: dict[str, Any], summary: dict[str, Any]) -> str:
+    output_root = config.get("output_root", str(A100_USER_ROOT))
     return "\n".join(
         [
             "# Phase 14 Fine-Tuned Embedding Router Model Card",
@@ -131,11 +142,29 @@ def render_model_card(config: dict[str, Any], summary: dict[str, Any]) -> str:
             "`MultipleNegativesRankingLoss` and train-like hard negatives "
             "with `ContrastiveLoss` at margin 1.5.",
             "",
+            "## Output Root",
+            "",
+            f"- Configured output root: `{output_root}`",
+            "- Legacy configs without `output_root` default to "
+            "`/mnt/data/minghongsun`.",
+            "- CLI `--output-root` overrides the config; relative roots resolve "
+            "from the trainer process working directory.",
+            "- Relative `output_dir` values resolve beneath the selected root; "
+            "absolute values must already be contained by it.",
+            "",
             "## Training Command",
             "",
             "```bash",
             "python scripts/train_embedding_router.py \\",
             "  --config docs/demo/phase14-finetuned-embedding-router/train-config.json",
+            "```",
+            "",
+            "For a local config with a relative `output_dir`, override the root:",
+            "",
+            "```bash",
+            "python scripts/train_embedding_router.py \\",
+            "  --config /path/to/train-config.local.json \\",
+            '  --output-root "$PWD/.hermes-training"',
             "```",
             "",
             "## Evaluation",
@@ -217,8 +246,8 @@ def _leakage_guard(tasks: list[BenchmarkTask]) -> str:
     task_ids_by_split: dict[str, set[str]] = {}
     for task in tasks:
         task_ids_by_split.setdefault(task.split, set()).add(task.id)
-    train_like_ids = (
-        task_ids_by_split.get("train", set()) | task_ids_by_split.get("dev", set())
+    train_like_ids = task_ids_by_split.get("train", set()) | task_ids_by_split.get(
+        "dev", set()
     )
     test_ids = task_ids_by_split.get("test", set())
     return "PASS" if not (train_like_ids & test_ids) else "FAIL"

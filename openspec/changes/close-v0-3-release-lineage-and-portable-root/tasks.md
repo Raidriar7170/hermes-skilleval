@@ -17,19 +17,19 @@
 
 ## 3. Add Portable Root Behavior with TDD
 
-- [ ] 3.1 Add focused failing tests for generic containment, the A100 compatibility wrapper, local roots, relative output directories, contained absolute paths, sibling-prefix escape, `..` escape, and existing-symlink escape; run them and record the expected red state.
-- [ ] 3.2 Implement the minimal generic root-containment helper in `src/hermes_skilleval/remote_paths.py` and refactor `validate_a100_user_path()` into a backward-compatible wrapper.
-- [ ] 3.3 Add focused failing tests for `build_train_config()` root recording/defaults, relative-root resolution from process CWD, and trainer selection precedence (`--output-root` over config over A100 default); run them and record the expected red state.
-- [ ] 3.4 Extend `build_train_config()` to accept, validate, canonicalize, and record `output_root` together with its contained `output_dir` while preserving legacy-call defaults.
-- [ ] 3.5 Add focused failing tests proving the selected root reaches model-manifest validation and `train-run-summary.json`, and proving a mismatched root fails before output writes.
-- [ ] 3.6 Add `--output-root` selection to `scripts/train_embedding_router.py`, remove its duplicate fixed-root validator, pass the selected root to model-manifest validation, and record canonical root/output provenance.
-- [ ] 3.7 Extend model-manifest functions with a backward-compatible selected-root parameter and run all focused portability tests to green.
+- [x] 3.1 Add focused failing tests for generic containment, the A100 compatibility wrapper, local roots, relative output directories, contained absolute paths, sibling-prefix escape, `..` escape, and existing-symlink escape; run them and record the expected red state.
+- [x] 3.2 Implement the minimal generic root-containment helper in `src/hermes_skilleval/remote_paths.py` and refactor `validate_a100_user_path()` into a backward-compatible wrapper.
+- [x] 3.3 Add focused failing tests for `build_train_config()` root recording/defaults, relative-root resolution from process CWD, and trainer selection precedence (`--output-root` over config over A100 default); run them and record the expected red state.
+- [x] 3.4 Extend `build_train_config()` to accept, validate, canonicalize, and record `output_root` together with its contained `output_dir` while preserving legacy-call defaults.
+- [x] 3.5 Add focused failing tests proving the selected root reaches model-manifest validation and `train-run-summary.json`, and proving a mismatched root fails before output writes.
+- [x] 3.6 Add `--output-root` selection to `scripts/train_embedding_router.py`, remove its duplicate fixed-root validator, pass the selected root to model-manifest validation, and record canonical root/output provenance.
+- [x] 3.7 Extend model-manifest functions with a backward-compatible selected-root parameter and run all focused portability tests to green.
 
 ## 4. Update Live Guidance Without Rewriting Evidence
 
-- [ ] 4.1 Update `docs/phase14.md`, `docs/usage.md`, and the source template for future model cards to document the `/mnt/data/minghongsun` default, config behavior, explicit CLI override, and one local-root example; do not edit the committed demo model card.
+- [x] 4.1 Update `docs/phase14.md`, `docs/usage.md`, and the source template for future model cards to document the `/mnt/data/minghongsun` default, config behavior, explicit CLI override, and one local-root example; do not edit the committed demo model card.
 - [ ] 4.2 Capture protected blob IDs at the bridge commit and compare them with final `HEAD` for `docs/demo/phase14-finetuned-embedding-router/**`, `docs/demo/phase15-held-out-generalization/**`, `docs/demo/phase16-blind-validation/regression-summary.json`, and `docs/demo/phase7a-cross-encoder/embedding-cache.json`; also prove the five closed-exception entries retain identical mode/blob IDs and a clean path-limited bridge-to-HEAD diff, then inspect `git diff --name-only <bridge> HEAD`.
-- [ ] 4.3 Scan active docs and code for stale claims that training output is unconditionally fixed to `/mnt/data/minghongsun`, without changing unrelated A100-specific workflows.
+- [x] 4.3 Scan active docs and code for stale claims that training output is unconditionally fixed to `/mnt/data/minghongsun`, without changing unrelated A100-specific workflows.
 
 ## 5. Validate and Review the Complete Change
 
