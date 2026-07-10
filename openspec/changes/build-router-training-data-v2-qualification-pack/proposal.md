@@ -5,11 +5,12 @@ The current embedding-router training export contains only 28 task-skill pairs, 
 ## What Changes
 
 - Add a deterministic router-training-data-v2 qualification pack for the existing 16-skill migration-router universe, built only from `benchmarks/migration-tasks` and the canonical Phase 9 skill index.
-- Export a closed-world candidate-pair matrix that distinguishes positives, same-category hard-negative candidates, and cross-category easy negatives without fabricating prompts or treating easy negatives as qualified hard negatives.
-- Add a fail-closed qualification report and hash-backed manifest covering input identity, deterministic ordering, pair/schema integrity, prompt-hash split leakage, skill-universe membership, eligible-pair volume, reject coverage, explicit family metadata, independent train/calibration/test splits, and train-positive skill coverage.
+- Export a closed-world candidate-pair matrix that distinguishes positives, unreviewed same-category negative candidates, and cross-category easy negatives without fabricating prompts or treating either negative class as qualified hard negatives.
+- Add a diagnostic-only, fail-closed qualification report and hash-backed manifest covering input identity, deterministic ordering, pair/schema integrity, prompt-hash split leakage, skill-universe membership, candidate/accepted pair volume, reject coverage, explicit family metadata, independent train/calibration/test splits, and train-positive skill coverage.
 - Commit an auditable demo pack under `docs/demo/router-training-data-v2-qualification-pack/` with a regeneration README, `candidate-pairs.jsonl`, `manifest.json`, and `qualification-report.json`.
-- Preserve `benchmarks/blind-migration-tasks/**` and all Phase 14/15/16 evidence as immutable exclusions. A resolved blind source path, `blind-*` task identity, or protected-evidence mutation fails closed.
-- Record the canonical snapshot honestly as blocked when the qualified subset is below 100 pairs, true reviewed reject examples are absent, explicit family metadata is absent, or an independent calibration split is absent. The pack is evidence for the next data-curation decision, not authorization to train.
+- Preserve `benchmarks/blind-migration-tasks/**` and all Phase 14/15/16/17/18 evidence as immutable exclusions. A resolved blind source path/file, `blind-*` task-directory or metadata identity, protected output target, or protected-evidence mutation fails closed before prompt loading or pack publication.
+- Record the canonical snapshot honestly as `REVIEW_REQUIRED`, `KEEP_BASELINE`, and `can_start_training=false`. Version 1 is deliberately a diagnostic snapshot and has no acceptance/reject/family/calibration input schema, so it cannot authorize training; a later scoped change must add and validate those reviewed evidence types.
+- Publish only into a new output whose resolved real path is non-protected, using a temporary sibling under the same resolved safe parent and an atomic rename. Reject an existing target so stale trainer-ready files cannot survive regeneration.
 - Exclude model training, checkpoint creation, A100/GPU execution, threshold calibration, model selection, blind evaluation reruns, router promotion, release publication, merge, and archive actions.
 
 ## Capabilities

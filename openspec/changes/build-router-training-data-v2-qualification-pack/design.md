@@ -35,9 +35,9 @@ The 80-task/45-skill corpus is excluded even though it could produce 100–200 r
 
 ### 2. Reject blind sources before loading prompt content
 
-The CLI command `qualify-router-training-data-v2` runs a path/identity preflight before calling `load_tasks()`. It rejects a resolved source whose path contains `blind-migration-tasks` and rejects any discovered task directory whose basename starts with `blind-`. The loaded task identities are checked again as defense in depth.
+The CLI command `qualify-router-training-data-v2` runs a path/identity preflight before calling `load_tasks()`. It resolves the source root, every discovered task directory, and each `task.yaml` / `prompt.md` file; any real path containing `blind-migration-tasks` is rejected. It also rejects a task-directory basename beginning `blind-`, reads only `task.yaml` during preflight, and rejects a metadata `id` beginning `blind-` before the prompt loader can run. The loaded task identities are checked again as defense in depth.
 
-The pack does not accept a blind-root argument and does not calculate blind prompt hashes. This is intentional: consulting blind prompts to filter or select training candidates would itself contaminate the data-selection process. Protected Phase 14/15/16 blob identities are verified separately at the Git boundary.
+The pack does not accept a blind-root argument and does not calculate blind prompt hashes. This is intentional: consulting blind prompts to filter or select training candidates would itself contaminate the data-selection process. Protected Phase 14/15/16/17/18 blob identities are verified separately at the Git boundary.
 
 ### 3. Emit candidates, not trainer-ready rows
 
@@ -49,7 +49,14 @@ Candidate types are:
 - `same_category_negative_candidate`: the non-gold skill shares the gold ecosystem category and still requires review before it can be called a hard negative;
 - `cross_category_easy_negative`: the non-gold skill is outside that category and is never counted toward the qualified-pair target.
 
-All rows derived from source `test` tasks receive a reserved disposition and are never train candidates. `dev` positives and same-category negatives are reported as policy candidates, but the latter remain unreviewed. No `training-pairs.jsonl` is written while qualification is incomplete.
+The row schema is fixed at `router-training-data-v2-candidate-v1`. Task and skill IDs containing `/` are rejected so `pair_id=<task-id>/<skill-id>` cannot collide; `prompt_text_sha256` hashes the UTF-8 loaded prompt text after the loader's surrounding-whitespace normalization, while manifest file hashes cover raw file bytes. Rows are ordered by `(task_id, skill_id)` and use exactly these dispositions:
+
+- `TRAIN_CANDIDATE_POSITIVE` for a `dev` positive;
+- `REVIEW_REQUIRED_NEGATIVE_CANDIDATE` for a `dev` same-category negative candidate;
+- `EXCLUDED_EASY_NEGATIVE` for a `dev` cross-category easy negative;
+- `RESERVED_SOURCE_TEST` for every row derived from a source `test` task.
+
+All rows set `accepted_for_training=false`. This does not erase source evidence: the canonical report separately records 11 `dev` positives covering 11/16 skills, 21 `dev` same-category review candidates, 32 total train-policy candidates, 0 accepted train pairs, 64 reserved matrix rows, and 16 reserved positive-or-same-category candidates. No `training-pairs.jsonl` is written by version 1.
 
 Alternatives rejected:
 
@@ -60,7 +67,7 @@ Alternatives rejected:
 
 ### 4. Separate candidate volume from qualification
 
-`qualification-report.json` records `qualification_status="REVIEW_REQUIRED"`, `router_decision="KEEP_BASELINE"`, and `can_start_training=false` until every required check passes. The required checks are:
+`qualification-report.json` always records `qualification_status="REVIEW_REQUIRED"`, `router_decision="KEEP_BASELINE"`, and `can_start_training=false` in version 1. The command is a diagnostic snapshot, not a state machine that can become ready: it intentionally accepts no reviewed-negative, reject, task-family, calibration-split, or human-acceptance inputs. The report evaluates and exposes these future readiness requirements without claiming it can satisfy them:
 
 1. accepted train-pair count is within 100–200;
 2. train positives cover all 16 target skills;
@@ -70,7 +77,18 @@ Alternatives rejected:
 6. train, calibration, and test are all non-empty and prompt/task identities do not cross them;
 7. a human acceptance record covers the exact input/output hashes.
 
-The current source cannot pass these gates. The canonical report retains exact blocker codes such as `PAIR_COUNT_BELOW_MINIMUM`, `TARGET_POSITIVE_COVERAGE_INCOMPLETE`, `SAME_CATEGORY_NEGATIVES_UNREVIEWED`, `REJECT_EXAMPLES_MISSING`, `TASK_FAMILY_SPLIT_NOT_INDEPENDENT`, `INDEPENDENT_CALIBRATION_SPLIT_MISSING`, and `MANUAL_ACCEPTANCE_MISSING`.
+The canonical report contains exactly these blocker codes, sorted lexically:
+
+- `INDEPENDENT_CALIBRATION_SPLIT_MISSING`
+- `MANUAL_ACCEPTANCE_MISSING`
+- `PAIR_COUNT_BELOW_MINIMUM`
+- `REJECT_EXAMPLES_MISSING`
+- `SAME_CATEGORY_NEGATIVES_UNREVIEWED`
+- `TARGET_POSITIVE_COVERAGE_INCOMPLETE`
+- `TASK_FAMILY_METADATA_MISSING`
+- `TASK_FAMILY_SPLIT_NOT_INDEPENDENT`
+
+Its canonical counts are: 28 source pairs; 192 matrix candidates; 16 positives; 32 same-category negative candidates; 144 easy negatives; 32 train-policy candidates; 0 accepted train pairs; 64 reserved matrix rows; 11/16 train-positive skill coverage; and 0 reject examples.
 
 Blind-source identity violations are harder failures: the command exits before writing a pack instead of recording a reviewable blocker.
 
@@ -86,9 +104,19 @@ docs/demo/router-training-data-v2-qualification-pack/
 └── qualification-report.json
 ```
 
-The manifest records schema/artifact versions, logical input paths, SHA-256 hashes for every non-blind `task.yaml` and `prompt.md`, the canonical skill index hash, output hashes for the candidate matrix and report, deterministic ordering rules, counts, and explicit non-actions. It does not hash itself and does not record machine-specific absolute output paths.
+The manifest records `policy_id="router-training-data-v2-qualification-v1"`, schema/artifact versions, logical input paths relative to the discovered repository root, SHA-256 hashes for every non-blind `task.yaml` and `prompt.md`, the canonical skill index hash, output hashes for the candidate matrix and report, deterministic ordering rules, counts, and explicit non-actions. It does not hash itself and does not record machine-specific absolute output paths. Inputs outside the discovered repository root are rejected because they cannot have portable logical identities in this version.
 
-The README contains only the regeneration command, authority links, expected `REVIEW_REQUIRED` state, artifact roles, and non-claims. The Chinese Human Brief is generated from these sources and does not become a second source of truth.
+Before writing, the command resolves the requested absent target with `Path.resolve(strict=False)`, which resolves every existing symlink ancestor, and compares that real target in both directions with the resolved protected paths. It rejects a target that already exists, lies within, or contains any protected path:
+
+- `docs/demo/phase14-finetuned-embedding-router`
+- `docs/demo/phase15-held-out-generalization`
+- `docs/demo/phase16-blind-validation`
+- `docs/demo/phase17-calibrated-release-selector`
+- `docs/demo/phase18-ci-release-reproducibility`
+
+The pack is written into a fresh temporary sibling under the resolved safe parent and atomically renamed to the resolved absent target. Failure removes the temporary directory, so no partial pack or stale `training-pairs.jsonl` can survive. The requested pack is the only persistent output; the temporary sibling is an implementation detail and never remains after success or failure.
+
+The README contains only a regeneration command targeting a newly created temporary destination, byte/hash comparison instructions against the committed pack, authority links, expected `REVIEW_REQUIRED` state, artifact roles, and non-claims. It never instructs the user to overwrite the existing committed target. The Chinese Human Brief is generated from these sources and does not become a second source of truth.
 
 ### 6. Keep the implementation isolated from Phase 14 behavior
 
@@ -99,13 +127,13 @@ The existing `export_embedding_training_pairs()` API and committed Phase 14 arti
 - **[A 192-row matrix may be mistaken for 192 qualified examples]** → Use `candidate-pairs.jsonl`, report the positive/same-category/easy split, omit `training-pairs.jsonl`, and keep `can_start_training=false`.
 - **[Same-category candidates may still be false negatives]** → Name them candidates, require explicit acceptance, and keep `SAME_CATEGORY_NEGATIVES_UNREVIEWED` blocking.
 - **[Source `dev`/`test` labels may be mistaken for independent train/calibration/test]** → Preserve them as `source_split`, reserve all test rows, and fail the family/calibration gates.
-- **[Blind contamination occurs during validation]** → Preflight paths and directory names without reading blind prompt content; do not compute blind prompt hashes.
+- **[Blind contamination occurs during validation]** → Resolve root/directory/file symlinks, read only task metadata for `blind-*` ID preflight, and do not read or hash blind prompt content.
 - **[Manifest paths become machine-specific]** → Record logical relative inputs and content hashes, not resolved absolute output paths.
-- **[Historical evidence is accidentally regenerated]** → Limit writes to the new output directory and compare protected blob IDs from the base commit after apply.
+- **[Historical evidence is accidentally regenerated]** → Reject protected or existing output targets, publish atomically, and compare the five protected directory inventories against apply base `aec4a09e7a60a5a1eb534b4198078acc24ff5cd5` after apply.
 
 ## Migration Plan
 
-1. Add RED tests for path preflight, deterministic classification, exact canonical counts, blockers, hashing, and CLI output.
+1. Add RED tests for symlink/metadata-aware path preflight, deterministic classification, exact schema/counts/blockers, output-path protection, atomic publication, hashing, and CLI output.
 2. Implement the independent builder and CLI command, then generate the canonical blocked pack.
 3. Add artifact-contract tests, the regeneration README, and the Chinese Human Brief.
 4. Run focused/full tests, Ruff, strict OpenSpec validation, release checks, JSON/JSONL/hash/determinism checks, protected-evidence identity checks, and read-only review.
