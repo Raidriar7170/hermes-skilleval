@@ -86,7 +86,9 @@ CANONICAL_SKILL_IDS = frozenset(
 @dataclass(frozen=True)
 class TaskSource:
     task_id: str
+    task_yaml_entry: Path
     task_yaml: Path
+    prompt_md_entry: Path
     prompt_md: Path
     task_yaml_logical: str
     prompt_md_logical: str
@@ -95,6 +97,7 @@ class TaskSource:
 @dataclass(frozen=True)
 class InputFileSnapshot:
     logical_path: str
+    entry_path: Path
     physical_path: Path
     sha256: str
 
@@ -123,7 +126,7 @@ def _qualify_router_training_data_v2(
     skills_index_path: Path | str,
     output_dir: Path | str,
     repository_root: Path | str | None = None,
-    enforce_canonical: bool = False,
+    enforce_canonical: bool,
 ) -> dict[str, Any]:
     """Private generic builder used by isolated validation fixtures."""
 
@@ -134,11 +137,17 @@ def _qualify_router_training_data_v2(
     )
     target = _validated_output_target(Path(output_dir), repo_root)
     task_sources = preflight_task_source(Path(tasks_path), repo_root)
-    skills_index = Path(skills_index_path).resolve(strict=True)
+    skills_index_entry = Path(skills_index_path).absolute()
+    skills_index = skills_index_entry.resolve(strict=True)
     skills_index_logical = _logical_path(skills_index, repo_root, "skills index")
     tasks_root = Path(tasks_path).resolve(strict=True)
     tasks_root_logical = _logical_path(tasks_root, repo_root, "task source")
-    input_snapshot = _snapshot_inputs(task_sources, skills_index, skills_index_logical)
+    input_snapshot = _snapshot_inputs(
+        task_sources,
+        skills_index_entry,
+        skills_index,
+        skills_index_logical,
+    )
     if enforce_canonical:
         _validate_canonical_snapshot(
             tasks_root_logical=tasks_root_logical,
@@ -219,12 +228,12 @@ def preflight_task_source(tasks_path: Path, repository_root: Path) -> list[TaskS
 
         if "task.yaml" not in filenames:
             continue
-        task_yaml_link = current / "task.yaml"
-        prompt_link = current / "prompt.md"
-        if not prompt_link.exists():
+        task_yaml_entry = (current / "task.yaml").absolute()
+        prompt_md_entry = (current / "prompt.md").absolute()
+        if not prompt_md_entry.exists():
             raise ValueError(f"missing prompt.md in {current}")
-        task_yaml = task_yaml_link.resolve(strict=True)
-        prompt_md = prompt_link.resolve(strict=True)
+        task_yaml = task_yaml_entry.resolve(strict=True)
+        prompt_md = prompt_md_entry.resolve(strict=True)
         _reject_blind_path(task_yaml, "task metadata")
         _reject_blind_path(prompt_md, "task prompt")
         task_yaml_logical = _logical_path(task_yaml, repository_root, "task metadata")
@@ -242,7 +251,9 @@ def preflight_task_source(tasks_path: Path, repository_root: Path) -> list[TaskS
         sources.append(
             TaskSource(
                 task_id=task_id,
+                task_yaml_entry=task_yaml_entry,
                 task_yaml=task_yaml,
+                prompt_md_entry=prompt_md_entry,
                 prompt_md=prompt_md,
                 task_yaml_logical=task_yaml_logical,
                 prompt_md_logical=prompt_md_logical,
@@ -385,20 +396,26 @@ def _build_qualification_report(
 
 def _snapshot_inputs(
     task_sources: list[TaskSource],
+    skills_index_entry: Path,
     skills_index: Path,
     skills_index_logical: str,
 ) -> tuple[InputFileSnapshot, ...]:
     paths = [
-        (source.task_yaml_logical, source.task_yaml) for source in task_sources
-    ] + [(source.prompt_md_logical, source.prompt_md) for source in task_sources]
-    paths.append((skills_index_logical, skills_index))
+        (source.task_yaml_logical, source.task_yaml_entry, source.task_yaml)
+        for source in task_sources
+    ] + [
+        (source.prompt_md_logical, source.prompt_md_entry, source.prompt_md)
+        for source in task_sources
+    ]
+    paths.append((skills_index_logical, skills_index_entry, skills_index))
     return tuple(
         InputFileSnapshot(
             logical_path=logical_path,
+            entry_path=entry_path,
             physical_path=physical_path,
             sha256=_sha256(physical_path.read_bytes()),
         )
-        for logical_path, physical_path in sorted(paths)
+        for logical_path, entry_path, physical_path in sorted(paths)
     )
 
 
@@ -462,7 +479,12 @@ def _assert_input_snapshot_unchanged(
 ) -> None:
     for entry in input_snapshot:
         try:
-            current_sha256 = _sha256(entry.physical_path.read_bytes())
+            current_target = entry.entry_path.resolve(strict=True)
+            if current_target != entry.physical_path:
+                raise ValueError(
+                    f"input changed during qualification: {entry.logical_path}"
+                )
+            current_sha256 = _sha256(current_target.read_bytes())
         except OSError as exc:
             raise ValueError(
                 f"input changed during qualification: {entry.logical_path}"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import shutil
 from pathlib import Path
@@ -139,6 +140,7 @@ def test_blind_identity_is_rejected_before_task_loading(
             skills_index_path=skills,
             output_dir=root / "pack",
             repository_root=root,
+            enforce_canonical=False,
         )
     assert not (root / "pack").exists()
 
@@ -183,6 +185,7 @@ def test_symlinked_task_entry_into_blind_root_is_rejected_before_prompt_read(
             skills_index_path=skills,
             output_dir=root / "pack",
             repository_root=root,
+            enforce_canonical=False,
         )
 
 
@@ -234,6 +237,7 @@ def test_input_identity_and_category_validation_fails_closed(
             skills_index_path=skills,
             output_dir=root / "pack",
             repository_root=root,
+            enforce_canonical=False,
         )
     assert not (root / "pack").exists()
 
@@ -364,6 +368,7 @@ def test_existing_protected_and_symlink_redirected_outputs_are_rejected(tmp_path
                 skills_index_path=skills,
                 output_dir=output,
                 repository_root=root,
+                enforce_canonical=False,
             )
 
     redirect = root / "redirect"
@@ -374,6 +379,7 @@ def test_existing_protected_and_symlink_redirected_outputs_are_rejected(tmp_path
             skills_index_path=skills,
             output_dir=redirect / "new-pack",
             repository_root=root,
+            enforce_canonical=False,
         )
     assert not (protected / "new-pack").exists()
 
@@ -394,6 +400,7 @@ def test_atomic_failure_cleans_temporary_sibling(
             skills_index_path=skills,
             output_dir=output,
             repository_root=root,
+            enforce_canonical=False,
         )
     assert not output.exists()
     assert not list(root.glob(".pack.tmp-*"))
@@ -512,6 +519,7 @@ def test_whitespace_padded_blind_identity_stops_before_loader_and_prompt_read(
             skills_index_path=skills,
             output_dir=root / "pack",
             repository_root=root,
+            enforce_canonical=False,
         )
     assert not (root / "pack").exists()
 
@@ -538,6 +546,7 @@ def test_whitespace_padded_loaded_blind_id_is_rejected_defensively(
             skills_index_path=skills,
             output_dir=root / "pack",
             repository_root=root,
+            enforce_canonical=False,
         )
 
 
@@ -561,6 +570,7 @@ def test_input_mutation_after_snapshot_fails_before_publication(
             skills_index_path=skills,
             output_dir=output,
             repository_root=root,
+            enforce_canonical=False,
         )
     assert not output.exists()
 
@@ -588,6 +598,60 @@ def test_target_created_during_staging_is_preserved_and_publication_fails(
             skills_index_path=skills,
             output_dir=output,
             repository_root=root,
+            enforce_canonical=False,
         )
     assert (output / "sentinel.txt").read_text(encoding="utf-8") == "do not replace\n"
     assert not list(root.glob(".pack.tmp-*"))
+
+
+@pytest.mark.parametrize("entry_kind", ["task-yaml", "prompt-md", "skills-index"])
+def test_input_symlink_retarget_after_snapshot_fails_before_publication(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    entry_kind: str,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    sources = root / "entry-sources"
+    sources.mkdir()
+    if entry_kind == "task-yaml":
+        entry = tasks / "task-one/task.yaml"
+        alternate_suffix = b"\n# retargeted metadata\n"
+    elif entry_kind == "prompt-md":
+        entry = tasks / "task-one/prompt.md"
+        alternate_suffix = b"\nRetargeted prompt.\n"
+    else:
+        entry = skills
+        alternate_suffix = b"\n"
+    original_target = sources / f"{entry_kind}-original"
+    original_target.write_bytes(entry.read_bytes())
+    alternate_target = sources / f"{entry_kind}-alternate"
+    alternate_target.write_bytes(entry.read_bytes() + alternate_suffix)
+    entry.unlink()
+    entry.symlink_to(original_target)
+    output = root / "pack"
+    original_loader = qualification.load_tasks
+
+    def retarget_then_load(tasks_path: Path) -> list[BenchmarkTask]:
+        entry.unlink()
+        entry.symlink_to(alternate_target)
+        return original_loader(tasks_path)
+
+    monkeypatch.setattr(qualification, "load_tasks", retarget_then_load)
+    with pytest.raises(ValueError, match="input changed during qualification"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not output.exists()
+    assert not list(root.glob(".pack.tmp-*"))
+
+
+def test_private_qualification_helper_requires_explicit_canonical_choice():
+    parameter = inspect.signature(
+        qualification._qualify_router_training_data_v2
+    ).parameters["enforce_canonical"]
+
+    assert parameter.default is inspect.Parameter.empty
