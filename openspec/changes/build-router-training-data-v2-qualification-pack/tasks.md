@@ -6,18 +6,18 @@
 
 ## 2. Add Qualification Tests First
 
-- [ ] 2.1 Add failing unit tests for root/directory/file symlink resolution and `blind-*` directory/metadata preflight before prompt loading, duplicate/missing identities, mixed gold ecosystem categories, and slash-bearing IDs; record the expected RED result.
-- [ ] 2.2 Add failing unit tests for the exact candidate-row schema, deterministic ordering/IDs, normalized prompt hashes, candidate classification, four dispositions, and exact 192/16/32/144 canonical counts; record the expected RED result.
-- [ ] 2.3 Add failing unit tests for 32 train-policy vs 0 accepted pairs, 64 reserved rows, 11/16 positive coverage, the exact eight canonical blockers, `REVIEW_REQUIRED`, `KEEP_BASELINE`, `can_start_training=false`, and absent `training-pairs.jsonl`; record the expected RED result.
-- [ ] 2.4 Add failing tests for resolved protected/existing output rejection including symlink ancestors, safe-parent atomic publication/cleanup, deterministic manifest policy/input/output hashes, repository-relative logical paths, JSONL uniqueness, repeated regeneration, and CLI output with no training-framework/subprocess side effects; record the expected RED result.
+- [x] 2.1 Add failing unit tests for root/directory/file symlink resolution and `blind-*` directory/metadata preflight before prompt loading, duplicate/missing identities, mixed gold ecosystem categories, and slash-bearing IDs; record the expected RED result.
+- [x] 2.2 Add failing unit tests for the exact candidate-row schema, deterministic ordering/IDs, normalized prompt hashes, candidate classification, four dispositions, and exact 192/16/32/144 canonical counts; record the expected RED result.
+- [x] 2.3 Add failing unit tests for 32 train-policy vs 0 accepted pairs, 64 reserved rows, 11/16 positive coverage, the exact eight canonical blockers, `REVIEW_REQUIRED`, `KEEP_BASELINE`, `can_start_training=false`, and absent `training-pairs.jsonl`; record the expected RED result.
+- [x] 2.4 Add failing tests for resolved protected/existing output rejection including symlink ancestors, safe-parent atomic publication/cleanup, deterministic manifest policy/input/output hashes, repository-relative logical paths, JSONL uniqueness, repeated regeneration, and CLI output with no training-framework/subprocess side effects; record the expected RED result.
 
 ## 3. Implement the Fail-Closed Pack
 
-- [ ] 3.1 Add `src/hermes_skilleval/router_training_data_v2.py` with preflight validation, deterministic candidate construction, qualification checks, and manifest/pack writers.
-- [ ] 3.2 Classify non-gold candidates as same-category review candidates or cross-category easy negatives, reserve all source-test rows, and keep every version 1 row non-accepted.
-- [ ] 3.3 Emit the canonical counts and exact eight blocker codes without accepting or fabricating reject, family, calibration, reviewed-negative, or human-acceptance evidence.
-- [ ] 3.4 Add `qualify-router-training-data-v2` to the CLI, ensuring preflight runs before task loading and only the requested pack remains as persistent output.
-- [ ] 3.5 Run the focused qualification and CLI tests to GREEN and apply scoped Ruff formatting/checks.
+- [x] 3.1 Add `src/hermes_skilleval/router_training_data_v2.py` with preflight validation, deterministic candidate construction, qualification checks, and manifest/pack writers.
+- [x] 3.2 Classify non-gold candidates as same-category review candidates or cross-category easy negatives, reserve all source-test rows, and keep every version 1 row non-accepted.
+- [x] 3.3 Emit the canonical counts and exact eight blocker codes without accepting or fabricating reject, family, calibration, reviewed-negative, or human-acceptance evidence.
+- [x] 3.4 Add `qualify-router-training-data-v2` to the CLI, ensuring preflight runs before task loading and only the requested pack remains as persistent output.
+- [x] 3.5 Run the focused qualification and CLI tests to GREEN and apply scoped Ruff formatting/checks.
 
 ## 4. Generate Review Artifacts
 
