@@ -24,13 +24,13 @@
 - [x] 4.1 Regenerate `docs/demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl`, `manifest.json`, and `qualification-report.json` from the canonical non-blind inputs.
 - [x] 4.2 Add the pack README with a fresh-temporary-target regeneration and byte/hash comparison command, authority links, artifact roles, current blocked state, and explicit non-claims.
 - [x] 4.3 Add artifact-contract tests that parse all JSON/JSONL, recompute hashes/counts, verify canonical blockers, and reject any trainer-ready output.
-- [ ] 4.4 Generate `docs/human-briefs/2026-07-11-build-router-training-data-v2-qualification-pack.html` from the OpenSpec artifacts, pack, diff, and validation evidence.
+- [x] 4.4 Generate `docs/human-briefs/2026-07-11-build-router-training-data-v2-qualification-pack.html` from the OpenSpec artifacts, pack, diff, and validation evidence.
 
 ## 5. Verify and Review
 
-- [ ] 5.1 Run focused tests and the full `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q` suite.
-- [ ] 5.2 Run scoped Ruff checks/format checks, `OPENSPEC_TELEMETRY=0 openspec validate --all --strict`, the release reproducibility gate, JSON/JSONL/hash/determinism checks, and `git diff --check`.
-- [ ] 5.3 Compare protected Phase 14/15/16/17/18 blob identities with apply base `aec4a09e7a60a5a1eb534b4198078acc24ff5cd5` and scan changed paths/output text for blind-source, training, checkpoint, A100/GPU, and unsupported performance claims.
+- [x] 5.1 Run focused tests and the full `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q` suite.
+- [x] 5.2 Run scoped Ruff checks/format checks, `OPENSPEC_TELEMETRY=0 openspec validate --all --strict`, the release reproducibility gate, JSON/JSONL/hash/determinism checks, and `git diff --check`.
+- [x] 5.3 Compare protected Phase 14/15/16/17/18 blob identities with apply base `aec4a09e7a60a5a1eb534b4198078acc24ff5cd5` and scan changed paths/output text for blind-source, training, checkpoint, A100/GPU, and unsupported performance claims.
 - [ ] 5.4 Start a read-only Reviewer over the complete diff and require `Must Fix`, `Should Fix`, `Nice to Have`, `Re-plan Needed`, and `Final Verdict`.
 - [ ] 5.5 If `Re-plan Needed = No`, return only in-scope Must Fix items to the Worker and rerun focused/full verification; if `Re-plan Needed = Yes`, stop and revise the OpenSpec artifacts before further edits.
 

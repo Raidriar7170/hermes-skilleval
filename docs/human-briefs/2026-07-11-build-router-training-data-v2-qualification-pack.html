@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router Training Data V2 资格审查包 · Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #556277;
+      --line: #d8dfeb;
+      --panel: #f6f8fc;
+      --accent: #2457a7;
+      --accent-soft: #eaf1ff;
+      --review: #8a5300;
+      --review-soft: #fff5df;
+      --ok: #17643a;
+      --ok-soft: #eaf8f0;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--accent); }
+    a:focus-visible { outline: 3px solid #efb53d; outline-offset: 3px; }
+    code {
+      padding: 0.1rem 0.34rem;
+      border-radius: 0.3rem;
+      background: #edf1f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9em;
+      overflow-wrap: anywhere;
+    }
+    header, main, footer {
+      width: min(1040px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+    header { padding: 3rem 0 1.4rem; }
+    h1 {
+      max-width: 860px;
+      margin: 0 0 0.7rem;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.16;
+      letter-spacing: -0.025em;
+    }
+    h2 { margin: 0 0 0.85rem; font-size: 1.35rem; }
+    h3 { margin: 0 0 0.42rem; font-size: 1rem; }
+    p { margin: 0.45rem 0; }
+    ul, ol { margin: 0.55rem 0; padding-left: 1.35rem; }
+    li + li { margin-top: 0.32rem; }
+    section { margin: 1.25rem 0 2.1rem; }
+    .eyebrow {
+      margin: 0 0 0.5rem;
+      color: var(--accent);
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .conclusion {
+      max-width: 940px;
+      padding: 1rem 1.15rem;
+      border-left: 5px solid var(--review);
+      background: var(--review-soft);
+      font-size: 1.08rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+      gap: 0.85rem;
+    }
+    .card {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      background: #fff;
+    }
+    .status { border-top: 4px solid var(--accent); background: var(--panel); }
+    .status.review { border-top-color: var(--review); }
+    .status.ok { border-top-color: var(--ok); }
+    .label {
+      display: block;
+      margin-bottom: 0.2rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 750;
+      letter-spacing: 0.055em;
+      text-transform: uppercase;
+    }
+    .value { font-size: 1.05rem; font-weight: 760; }
+    .callout {
+      padding: 0.9rem 1rem;
+      border: 1px solid #c7d7f2;
+      border-radius: 0.7rem;
+      background: var(--accent-soft);
+    }
+    .callout.warning { border-color: #ead09b; background: var(--review-soft); }
+    .callout.ok { border-color: #b9dfc8; background: var(--ok-soft); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+    th, td {
+      padding: 0.68rem 0.72rem;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--panel); }
+    .result { color: var(--ok); font-weight: 750; }
+    .blocked { color: var(--review); font-weight: 750; }
+    .hash { font-size: 0.82rem; }
+    footer {
+      margin-top: 2rem;
+      padding: 1.35rem 0 3rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    @media (max-width: 620px) {
+      header { padding-top: 2rem; }
+      th, td { padding: 0.55rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Human Brief · 2026-07-11</p>
+    <h1>Router Training Data V2 资格审查包</h1>
+    <p class="conclusion"><strong>一句话结论：</strong>本阶段已把 Phase 14 的 16-skill 非盲数据扩成可复现的 192-row 候选审查矩阵，但它仍是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code>，且 <code>can_start_training=false</code>；候选数量不能被表述成训练数据已经合格。</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="status-title">
+      <h2 id="status-title">当前状态</h2>
+      <div class="grid">
+        <article class="card status review">
+          <span class="label">Qualification</span>
+          <span class="value"><code>REVIEW_REQUIRED</code></span>
+          <p>8 个 blocker 仍在，v1 只做诊断，不提供 ready 转换通道。</p>
+        </article>
+        <article class="card status review">
+          <span class="label">Router decision</span>
+          <span class="value"><code>KEEP_BASELINE</code></span>
+          <p>没有训练新模型，也没有改变 Phase 16 的 router 选择。</p>
+        </article>
+        <article class="card status review">
+          <span class="label">Training readiness</span>
+          <span class="value"><code>false</code></span>
+          <p>0 个 pair 被接受用于训练；仓库中没有生成 <code>training-pairs.jsonl</code>。</p>
+        </article>
+        <article class="card status ok">
+          <span class="label">Local apply</span>
+          <span class="value">实现与验证完成</span>
+          <p>仍未 push、建 PR、merge、release 或 archive。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="data-title">
+      <h2 id="data-title">候选矩阵与真实可用边界</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">字段</th><th scope="col">数量</th><th scope="col">解释</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">原始 source pairs</th><td>28</td><td>Phase 14 的 16 positive + 12 既有 negative。</td></tr>
+            <tr><th scope="row">候选矩阵</th><td>192</td><td>12 个非盲 migration tasks × 16 个 canonical skills。</td></tr>
+            <tr><th scope="row">Positive</th><td>16</td><td>来自 gold skill 标注。</td></tr>
+            <tr><th scope="row">同类别 negative candidates</th><td>32</td><td>只是待审候选，尚不能称为已接受 hard negatives。</td></tr>
+            <tr><th scope="row">跨类别 easy negatives</th><td>144</td><td>明确排除在合格 pair 门槛之外。</td></tr>
+            <tr><th scope="row">Train-policy candidates</th><td>32</td><td>11 个 dev positives + 21 个 dev 同类别待审 negatives。</td></tr>
+            <tr><th scope="row">Accepted train pairs</th><td class="blocked">0</td><td>没有人工 acceptance 证据。</td></tr>
+            <tr><th scope="row">Reserved source-test rows</th><td>64</td><td>已用 held-out source，不回流到训练候选。</td></tr>
+            <tr><th scope="row">Train positive skill coverage</th><td class="blocked">11/16</td><td>仍未覆盖全部目标 skills。</td></tr>
+            <tr><th scope="row">Reviewed reject examples</th><td class="blocked">0</td><td>没有真实、人工审核的 no-skill query。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="changes-title">
+      <h2 id="changes-title">本阶段做了什么</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>确定性资格审查 CLI</h3>
+          <p>新增 <code>qualify-router-training-data-v2</code>，固定 canonical 逻辑路径、12/16 ID 集合与输入 snapshot；不同 clone 仍可字节级复现。</p>
+        </article>
+        <article class="card">
+          <h3>Fail-closed 输入边界</h3>
+          <p>在读取 prompt 前检查 real path、symlink、<code>blind-*</code> directory/metadata；publication 前再次验证输入 hash 与 symlink target 未变。</p>
+        </article>
+        <article class="card">
+          <h3>安全 publication</h3>
+          <p>拒绝现存或 Phase 14–18 protected output，先写安全 sibling staging，再检查竞争 target 并原子 rename。</p>
+        </article>
+        <article class="card">
+          <h3>机器可读 evidence</h3>
+          <p>提交 candidate JSONL、qualification report、hash manifest、再生成说明和 artifact-contract tests。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="blockers-title">
+      <h2 id="blockers-title">仍然阻断训练的 8 项证据</h2>
+      <ol>
+        <li><code>INDEPENDENT_CALIBRATION_SPLIT_MISSING</code></li>
+        <li><code>MANUAL_ACCEPTANCE_MISSING</code></li>
+        <li><code>PAIR_COUNT_BELOW_MINIMUM</code></li>
+        <li><code>REJECT_EXAMPLES_MISSING</code></li>
+        <li><code>SAME_CATEGORY_NEGATIVES_UNREVIEWED</code></li>
+        <li><code>TARGET_POSITIVE_COVERAGE_INCOMPLETE</code></li>
+        <li><code>TASK_FAMILY_METADATA_MISSING</code></li>
+        <li><code>TASK_FAMILY_SPLIT_NOT_INDEPENDENT</code></li>
+      </ol>
+      <p class="callout warning">192 是 candidate matrix 大小，不是 accepted training pair 数量。跨类别 easy negatives、reserved test rows 和未审核同类别 negatives 都不能用来填满 100–200 的合格门槛。</p>
+    </section>
+
+    <section aria-labelledby="artifacts-title">
+      <h2 id="artifacts-title">权威材料与哈希</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>OpenSpec</h3>
+          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/proposal.md">proposal.md</a></p>
+          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/design.md">design.md</a></p>
+          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/specs/router-training-data-v2-qualification-pack/spec.md">delta spec</a></p>
+          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/tasks.md">tasks.md</a></p>
+        </article>
+        <article class="card">
+          <h3>Machine evidence</h3>
+          <p><a href="../demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl">candidate-pairs.jsonl</a></p>
+          <p class="hash"><code>fbfc626d0b5fa98f3eb505042a3bf002d697ec0ca9ea1328edec6fd637cb82c3</code></p>
+          <p><a href="../demo/router-training-data-v2-qualification-pack/qualification-report.json">qualification-report.json</a></p>
+          <p class="hash"><code>7a5b61ec9245cb6ffbdb514899c637005652382cd6db4a19b7fafcff5c6d62d7</code></p>
+        </article>
+        <article class="card">
+          <h3>Provenance and regeneration</h3>
+          <p><a href="../demo/router-training-data-v2-qualification-pack/manifest.json">manifest.json</a></p>
+          <p class="hash"><code>b1f8fb98b9eac2f21bed137506eec63d678053d03205ce0248b843fc3e5a80ab</code></p>
+          <p><a href="../demo/router-training-data-v2-qualification-pack/README.md">README regeneration guide</a></p>
+        </article>
+        <article class="card">
+          <h3>Implementation and tests</h3>
+          <p><a href="../../src/hermes_skilleval/router_training_data_v2.py">router_training_data_v2.py</a></p>
+          <p><a href="../../tests/test_router_training_data_v2.py">unit tests</a></p>
+          <p><a href="../../tests/test_router_training_data_v2_artifacts.py">artifact tests</a></p>
+        </article>
+      </div>
+      <p class="callout"><strong>权威性说明：</strong>本页是 companion brief。OpenSpec、JSON/JSONL、source、tests 与 fresh validation output 才是 source of truth。</p>
+    </section>
+
+    <section aria-labelledby="verification-title">
+      <h2 id="verification-title">最终 HEAD 的新鲜验证</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Gate</th><th scope="col">结果</th><th scope="col">证据</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Focused qualification / artifact / CLI</th><td class="result">PASS</td><td><code>79 passed</code></td></tr>
+            <tr><th scope="row">Full pytest</th><td class="result">PASS</td><td><code>734 passed</code></td></tr>
+            <tr><th scope="row">Scoped Ruff</th><td class="result">PASS</td><td>check 通过；3 个新增文件 format clean。</td></tr>
+            <tr><th scope="row">Strict OpenSpec</th><td class="result">PASS</td><td><code>28 passed, 0 failed</code></td></tr>
+            <tr><th scope="row">Release reproducibility</th><td class="result">PASS</td><td>现有 Phase 18 release gate 仍为 PASS，执行后工作树 clean。</td></tr>
+            <tr><th scope="row">Deterministic regeneration</th><td class="result">PASS</td><td>全新 absent target 的 3 个机器产物逐字节一致。</td></tr>
+            <tr><th scope="row">Manifest hashes</th><td class="result">PASS</td><td>25 个 inputs 与 2 个 hashed outputs 全部重算一致。</td></tr>
+            <tr><th scope="row">Protected / blind boundaries</th><td class="result">PASS</td><td>Phase 14–18 与 <code>benchmarks/blind-migration-tasks</code> 相对 apply base 零变更。</td></tr>
+            <tr><th scope="row">Read-only review</th><td class="result">PASS</td><td>核心复审 <code>Must Fix=None</code>、<code>Re-plan Needed=No</code>；额外 symlink-retarget hardening 已完成。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">明确没有发生什么</h2>
+      <ul>
+        <li>没有读取或哈希 blind prompt 内容，也没有使用 Phase 16 做 negative mining、calibration 或 model selection。</li>
+        <li>没有训练或 fine-tune router，没有 A100/GPU job、checkpoint、threshold tuning 或 benchmark rerun。</li>
+        <li>没有声明模型提升、Negative Hit Rate 改善、SOTA 或 public performance gain。</li>
+        <li>没有 push、PR、merge、tag、release、deploy 或 OpenSpec archive。</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="next-title">
+      <h2 id="next-title">推荐下一步</h2>
+      <p class="callout ok"><strong>先停在本地 publication gate：</strong>审阅本 pack 与完整 diff，再单独选择是否 merge/push。若继续算法阶段，应新开一个很小的 OpenSpec change，只补目标域人工接受 pairs、真实 reject examples、family metadata 与独立 calibration split；在这些 gate 关闭前不启动训练。</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>生成依据：approved OpenSpec、canonical qualification pack、final git diff、fresh verification 与 read-only review。本页不替代任何权威 artifact。</p>
+  </footer>
+</body>
+</html>
