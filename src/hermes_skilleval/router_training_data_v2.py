@@ -40,6 +40,47 @@ PROTECTED_DEMO_PATHS = (
     "docs/demo/phase17-calibrated-release-selector",
     "docs/demo/phase18-ci-release-reproducibility",
 )
+CANONICAL_TASK_ROOT = "benchmarks/migration-tasks"
+CANONICAL_SKILLS_INDEX = "docs/demo/phase9-real-skill-library-migration/skills.json"
+CANONICAL_INPUT_SNAPSHOT_SHA256 = (
+    "f3585cb91c103c7fa19488f114871f1146fa966ce9a272a3911bb8d0b69d2cd5"
+)
+CANONICAL_TASK_IDS = frozenset(
+    {
+        "browser-accessibility-audit",
+        "browser-form-regression",
+        "browser-local-dashboard",
+        "claude-command-routing",
+        "claude-mcp-selection",
+        "claude-plan-to-tasks",
+        "codex-git-hygiene",
+        "codex-minimal-diff",
+        "codex-worker-handoff",
+        "sp-debug-red-green",
+        "sp-isolated-worktree",
+        "sp-verify-before-claim",
+    }
+)
+CANONICAL_SKILL_IDS = frozenset(
+    {
+        "accessibility-tree-inspection",
+        "apply-patch-discipline",
+        "browser-smoke-testing",
+        "evidence-backed-final",
+        "form-interaction-flow",
+        "mcp-tool-routing",
+        "plan-mode",
+        "slash-command-workflow",
+        "subagent-worker-protocol",
+        "systematic-debugging",
+        "task-tool-delegation",
+        "test-driven-development",
+        "using-git-worktrees",
+        "verification-before-completion",
+        "visual-regression-review",
+        "workspace-git-hygiene",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -51,6 +92,13 @@ class TaskSource:
     prompt_md_logical: str
 
 
+@dataclass(frozen=True)
+class InputFileSnapshot:
+    logical_path: str
+    physical_path: Path
+    sha256: str
+
+
 def qualify_router_training_data_v2(
     *,
     tasks_path: Path | str,
@@ -58,7 +106,26 @@ def qualify_router_training_data_v2(
     output_dir: Path | str,
     repository_root: Path | str | None = None,
 ) -> dict[str, Any]:
-    """Build and atomically publish a diagnostic v1 qualification pack."""
+    """Build the frozen canonical diagnostic v1 qualification pack."""
+
+    return _qualify_router_training_data_v2(
+        tasks_path=tasks_path,
+        skills_index_path=skills_index_path,
+        output_dir=output_dir,
+        repository_root=repository_root,
+        enforce_canonical=True,
+    )
+
+
+def _qualify_router_training_data_v2(
+    *,
+    tasks_path: Path | str,
+    skills_index_path: Path | str,
+    output_dir: Path | str,
+    repository_root: Path | str | None = None,
+    enforce_canonical: bool = False,
+) -> dict[str, Any]:
+    """Private generic builder used by isolated validation fixtures."""
 
     repo_root = _resolve_repository_root(
         repository_root,
@@ -69,10 +136,21 @@ def qualify_router_training_data_v2(
     task_sources = preflight_task_source(Path(tasks_path), repo_root)
     skills_index = Path(skills_index_path).resolve(strict=True)
     skills_index_logical = _logical_path(skills_index, repo_root, "skills index")
+    tasks_root = Path(tasks_path).resolve(strict=True)
+    tasks_root_logical = _logical_path(tasks_root, repo_root, "task source")
+    input_snapshot = _snapshot_inputs(task_sources, skills_index, skills_index_logical)
+    if enforce_canonical:
+        _validate_canonical_snapshot(
+            tasks_root_logical=tasks_root_logical,
+            skills_index_logical=skills_index_logical,
+            input_snapshot=input_snapshot,
+        )
 
-    tasks = load_tasks(Path(tasks_path).resolve(strict=True))
+    tasks = load_tasks(tasks_root)
     skills = load_skill_index(skills_index)
     _validate_loaded_inputs(tasks, skills, task_sources)
+    if enforce_canonical:
+        _validate_canonical_ids(tasks, skills)
 
     source_by_id = {source.task_id: source for source in task_sources}
     rows = _build_candidate_matrix(
@@ -86,10 +164,9 @@ def qualify_router_training_data_v2(
     report_bytes = _json_bytes(report)
     manifest = _build_manifest(
         repo_root=repo_root,
-        tasks_root=Path(tasks_path).resolve(strict=True),
-        task_sources=task_sources,
-        skills_index=skills_index,
+        tasks_root=tasks_root,
         skills_index_logical=skills_index_logical,
+        input_snapshot=input_snapshot,
         report=report,
         output_bytes={
             "candidate-pairs.jsonl": candidate_bytes,
@@ -101,7 +178,7 @@ def qualify_router_training_data_v2(
         "qualification-report.json": report_bytes,
         "manifest.json": _json_bytes(manifest),
     }
-    _atomic_publish(target, files)
+    _atomic_publish(target, files, input_snapshot=input_snapshot)
     return report
 
 
@@ -123,9 +200,7 @@ def preflight_task_source(tasks_path: Path, repository_root: Path) -> list[TaskS
         current = Path(current_text)
         current_real = current.resolve(strict=True)
         _reject_blind_path(current_real, "task directory")
-        if current.name.lower().startswith(
-            "blind-"
-        ) or current_real.name.lower().startswith("blind-"):
+        if _is_blind_identity(current.name) or _is_blind_identity(current_real.name):
             raise ValueError(f"blind task directory is forbidden: {current}")
         if current_real in visited:
             dirnames[:] = []
@@ -137,9 +212,7 @@ def preflight_task_source(tasks_path: Path, repository_root: Path) -> list[TaskS
             child = current / dirname
             child_real = child.resolve(strict=True)
             _reject_blind_path(child_real, "task directory")
-            if dirname.lower().startswith(
-                "blind-"
-            ) or child_real.name.lower().startswith("blind-"):
+            if _is_blind_identity(dirname) or _is_blind_identity(child_real.name):
                 raise ValueError(f"blind task directory is forbidden: {child}")
             retained_dirs.append(dirname)
         dirnames[:] = retained_dirs
@@ -162,7 +235,7 @@ def preflight_task_source(tasks_path: Path, repository_root: Path) -> list[TaskS
             raise ValueError(
                 f"task metadata id must be a non-empty string: {task_yaml}"
             )
-        if task_id.lower().startswith("blind-"):
+        if _is_blind_identity(task_id):
             raise ValueError(f"blind task metadata id is forbidden: {task_id}")
         if "/" in task_id:
             raise ValueError(f"task ID must not contain '/': {task_id}")
@@ -310,27 +383,109 @@ def _build_qualification_report(
     }
 
 
+def _snapshot_inputs(
+    task_sources: list[TaskSource],
+    skills_index: Path,
+    skills_index_logical: str,
+) -> tuple[InputFileSnapshot, ...]:
+    paths = [
+        (source.task_yaml_logical, source.task_yaml) for source in task_sources
+    ] + [(source.prompt_md_logical, source.prompt_md) for source in task_sources]
+    paths.append((skills_index_logical, skills_index))
+    return tuple(
+        InputFileSnapshot(
+            logical_path=logical_path,
+            physical_path=physical_path,
+            sha256=_sha256(physical_path.read_bytes()),
+        )
+        for logical_path, physical_path in sorted(paths)
+    )
+
+
+def _snapshot_records(
+    input_snapshot: tuple[InputFileSnapshot, ...],
+) -> list[dict[str, str]]:
+    return [
+        {"path": entry.logical_path, "sha256": entry.sha256} for entry in input_snapshot
+    ]
+
+
+def _snapshot_aggregate_sha256(
+    input_snapshot: tuple[InputFileSnapshot, ...],
+) -> str:
+    payload = json.dumps(
+        _snapshot_records(input_snapshot),
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return _sha256(payload)
+
+
+def _validate_canonical_snapshot(
+    *,
+    tasks_root_logical: str,
+    skills_index_logical: str,
+    input_snapshot: tuple[InputFileSnapshot, ...],
+) -> None:
+    if tasks_root_logical != CANONICAL_TASK_ROOT:
+        raise ValueError(
+            f"router-training-data-v2 v1 requires canonical task root: "
+            f"{CANONICAL_TASK_ROOT}"
+        )
+    if skills_index_logical != CANONICAL_SKILLS_INDEX:
+        raise ValueError(
+            "router-training-data-v2 v1 requires canonical skills index: "
+            f"{CANONICAL_SKILLS_INDEX}"
+        )
+    actual_snapshot = _snapshot_aggregate_sha256(input_snapshot)
+    if actual_snapshot != CANONICAL_INPUT_SNAPSHOT_SHA256:
+        raise ValueError(
+            "router-training-data-v2 v1 canonical input snapshot mismatch: "
+            f"expected {CANONICAL_INPUT_SNAPSHOT_SHA256}, got {actual_snapshot}"
+        )
+
+
+def _validate_canonical_ids(
+    tasks: list[BenchmarkTask],
+    skills: list[Skill],
+) -> None:
+    task_ids = {task.id for task in tasks}
+    if task_ids != CANONICAL_TASK_IDS:
+        raise ValueError("router-training-data-v2 v1 canonical task IDs mismatch")
+    skill_ids = {skill.id for skill in skills}
+    if skill_ids != CANONICAL_SKILL_IDS:
+        raise ValueError("router-training-data-v2 v1 canonical skill IDs mismatch")
+
+
+def _assert_input_snapshot_unchanged(
+    input_snapshot: tuple[InputFileSnapshot, ...],
+) -> None:
+    for entry in input_snapshot:
+        try:
+            current_sha256 = _sha256(entry.physical_path.read_bytes())
+        except OSError as exc:
+            raise ValueError(
+                f"input changed during qualification: {entry.logical_path}"
+            ) from exc
+        if current_sha256 != entry.sha256:
+            raise ValueError(
+                f"input changed during qualification: {entry.logical_path}"
+            )
+
+
 def _build_manifest(
     *,
     repo_root: Path,
     tasks_root: Path,
-    task_sources: list[TaskSource],
-    skills_index: Path,
     skills_index_logical: str,
+    input_snapshot: tuple[InputFileSnapshot, ...],
     report: dict[str, Any],
     output_bytes: dict[str, bytes],
 ) -> dict[str, Any]:
-    input_files = [
-        {
-            "path": path,
-            "sha256": _sha256(file_path.read_bytes()),
-        }
-        for path, file_path in sorted(
-            [(source.task_yaml_logical, source.task_yaml) for source in task_sources]
-            + [(source.prompt_md_logical, source.prompt_md) for source in task_sources]
-            + [(skills_index_logical, skills_index)]
-        )
-    ]
+    input_files = _snapshot_records(input_snapshot)
+    skills_index_record = next(
+        record for record in input_files if record["path"] == skills_index_logical
+    )
     return {
         "artifact_type": "router-training-data-v2-qualification-manifest",
         "artifact_version": 1,
@@ -339,7 +494,7 @@ def _build_manifest(
             "files": input_files,
             "skills_index": {
                 "path": skills_index_logical,
-                "sha256": _sha256(skills_index.read_bytes()),
+                "sha256": skills_index_record["sha256"],
             },
             "task_root": _logical_path(tasks_root, repo_root, "task source"),
         },
@@ -377,6 +532,9 @@ def _validate_loaded_inputs(
     task_sources: list[TaskSource],
 ) -> None:
     task_ids = [task.id for task in tasks]
+    for task_id in task_ids:
+        if _is_blind_identity(task_id):
+            raise ValueError(f"blind loaded task ID is forbidden: {task_id}")
     duplicate_task_ids = sorted(
         task_id for task_id, count in Counter(task_ids).items() if count > 1
     )
@@ -402,8 +560,6 @@ def _validate_loaded_inputs(
     for task in tasks:
         if "/" in task.id:
             raise ValueError(f"task ID must not contain '/': {task.id}")
-        if task.id.lower().startswith("blind-"):
-            raise ValueError(f"blind loaded task ID is forbidden: {task.id}")
         for skill_id in task.gold_skills + task.negative_skills:
             if skill_id not in skill_by_id:
                 raise ValueError(f"task {task.id} references missing skill: {skill_id}")
@@ -438,12 +594,20 @@ def _validated_output_target(output_dir: Path, repo_root: Path) -> Path:
     return target
 
 
-def _atomic_publish(target: Path, files: dict[str, bytes]) -> None:
+def _atomic_publish(
+    target: Path,
+    files: dict[str, bytes],
+    *,
+    input_snapshot: tuple[InputFileSnapshot, ...],
+) -> None:
     stage = Path(
         tempfile.mkdtemp(prefix=f".{target.name}.tmp-", dir=str(target.parent))
     )
     try:
         _publish_staged_pack(stage, files)
+        _assert_input_snapshot_unchanged(input_snapshot)
+        if target.exists() or target.is_symlink():
+            raise ValueError(f"output target appeared during staging: {target}")
         stage.rename(target)
     except BaseException:
         shutil.rmtree(stage, ignore_errors=True)
@@ -485,8 +649,12 @@ def _logical_path(path: Path, repo_root: Path, label: str) -> str:
 
 
 def _reject_blind_path(path: Path, label: str) -> None:
-    if "blind-migration-tasks" in {part.lower() for part in path.parts}:
+    if "blind-migration-tasks" in {part.strip().lower() for part in path.parts}:
         raise ValueError(f"blind source path is forbidden for {label}: {path}")
+
+
+def _is_blind_identity(value: str) -> bool:
+    return value.strip().lower().startswith("blind-")
 
 
 def _load_metadata(path: Path) -> dict[str, Any]:

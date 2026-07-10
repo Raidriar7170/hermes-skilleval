@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 import yaml
 
 import hermes_skilleval.router_training_data_v2 as qualification
+from hermes_skilleval.models import BenchmarkTask
 from hermes_skilleval.router_training_data_v2 import (
     BLOCKER_CODES,
     qualify_router_training_data_v2,
@@ -83,6 +85,17 @@ def _read_jsonl(path: Path) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
+def _copy_canonical_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
+    root = tmp_path / "copied-repository"
+    (root / ".git").mkdir(parents=True)
+    tasks = root / "benchmarks/migration-tasks"
+    skills = root / "docs/demo/phase9-real-skill-library-migration/skills.json"
+    shutil.copytree(CANONICAL_TASKS, tasks)
+    skills.parent.mkdir(parents=True)
+    shutil.copy2(CANONICAL_SKILLS, skills)
+    return root, tasks, skills
+
+
 def test_v1_blockers_are_exact_and_sorted():
     assert BLOCKER_CODES == sorted(
         [
@@ -121,7 +134,7 @@ def test_blind_identity_is_rejected_before_task_loading(
 
     monkeypatch.setattr(qualification, "load_tasks", forbidden_loader)
     with pytest.raises(ValueError, match="blind"):
-        qualify_router_training_data_v2(
+        qualification._qualify_router_training_data_v2(
             tasks_path=tasks,
             skills_index_path=skills,
             output_dir=root / "pack",
@@ -165,7 +178,7 @@ def test_symlinked_task_entry_into_blind_root_is_rejected_before_prompt_read(
 
     monkeypatch.setattr(qualification, "load_tasks", forbidden_loader)
     with pytest.raises(ValueError, match="blind"):
-        qualify_router_training_data_v2(
+        qualification._qualify_router_training_data_v2(
             tasks_path=tasks,
             skills_index_path=skills,
             output_dir=root / "pack",
@@ -216,7 +229,7 @@ def test_input_identity_and_category_validation_fails_closed(
         skills.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(ValueError, match=message):
-        qualify_router_training_data_v2(
+        qualification._qualify_router_training_data_v2(
             tasks_path=tasks,
             skills_index_path=skills,
             output_dir=root / "pack",
@@ -346,7 +359,7 @@ def test_existing_protected_and_symlink_redirected_outputs_are_rejected(tmp_path
 
     for output in (existing, protected / "new-pack", protected.parent):
         with pytest.raises(ValueError, match="output target"):
-            qualify_router_training_data_v2(
+            qualification._qualify_router_training_data_v2(
                 tasks_path=tasks,
                 skills_index_path=skills,
                 output_dir=output,
@@ -356,7 +369,7 @@ def test_existing_protected_and_symlink_redirected_outputs_are_rejected(tmp_path
     redirect = root / "redirect"
     redirect.symlink_to(protected, target_is_directory=True)
     with pytest.raises(ValueError, match="protected"):
-        qualify_router_training_data_v2(
+        qualification._qualify_router_training_data_v2(
             tasks_path=tasks,
             skills_index_path=skills,
             output_dir=redirect / "new-pack",
@@ -376,6 +389,26 @@ def test_atomic_failure_cleans_temporary_sibling(
 
     monkeypatch.setattr(qualification, "_publish_staged_pack", fail_after_stage)
     with pytest.raises(OSError, match="simulated"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+        )
+    assert not output.exists()
+    assert not list(root.glob(".pack.tmp-*"))
+
+
+def test_public_v1_rejects_byte_identical_inputs_from_alternate_logical_task_root(
+    tmp_path: Path,
+):
+    root, tasks, skills = _copy_canonical_inputs(tmp_path)
+    alternate_tasks = root / "benchmarks/alternate-migration-tasks"
+    tasks.rename(alternate_tasks)
+    tasks = alternate_tasks
+    output = root / "pack"
+
+    with pytest.raises(ValueError, match="canonical task root"):
         qualify_router_training_data_v2(
             tasks_path=tasks,
             skills_index_path=skills,
@@ -383,4 +416,178 @@ def test_atomic_failure_cleans_temporary_sibling(
             repository_root=root,
         )
     assert not output.exists()
+
+
+def test_public_v1_rejects_superset_skill_index_snapshot(
+    tmp_path: Path,
+):
+    root, tasks, skills = _copy_canonical_inputs(tmp_path)
+    payload = json.loads(skills.read_text(encoding="utf-8"))
+    payload.append(_skill("unexpected-superset-skill", "browser-gui"))
+    skills.write_text(json.dumps(payload), encoding="utf-8")
+    output = root / "pack"
+
+    with pytest.raises(
+        ValueError, match="canonical input snapshot|canonical skill IDs"
+    ):
+        qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+        )
+    assert not output.exists()
+
+
+def test_public_v1_rejects_changed_canonical_task_snapshot(tmp_path: Path):
+    root, tasks, skills = _copy_canonical_inputs(tmp_path)
+    prompt = tasks / "browser-form-regression/prompt.md"
+    prompt.write_bytes(prompt.read_bytes() + b"\nchanged\n")
+    output = root / "pack"
+
+    with pytest.raises(ValueError, match="canonical input snapshot"):
+        qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+        )
+    assert not output.exists()
+
+
+def test_public_v1_is_portable_across_byte_identical_clone(tmp_path: Path):
+    root, tasks, skills = _copy_canonical_inputs(tmp_path)
+    output = root / "pack"
+
+    qualify_router_training_data_v2(
+        tasks_path=tasks,
+        skills_index_path=skills,
+        output_dir=output,
+        repository_root=root,
+    )
+
+    committed = REPO_ROOT / "docs/demo/router-training-data-v2-qualification-pack"
+    for name in (
+        "candidate-pairs.jsonl",
+        "qualification-report.json",
+        "manifest.json",
+    ):
+        assert (output / name).read_bytes() == (committed / name).read_bytes()
+
+
+@pytest.mark.parametrize("blind_vector", ["root", "directory", "metadata"])
+def test_whitespace_padded_blind_identity_stops_before_loader_and_prompt_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    blind_vector: str,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    if blind_vector == "root":
+        padded_root = root / "benchmarks/  BLIND-MIGRATION-TASKS  "
+        tasks.rename(padded_root)
+        tasks = padded_root
+    elif blind_vector == "directory":
+        (tasks / "task-one").rename(tasks / "  BLIND-task-one  ")
+    else:
+        metadata = tasks / "task-one/task.yaml"
+        payload = yaml.safe_load(metadata.read_text(encoding="utf-8"))
+        payload["id"] = "  BLIND-task-one  "
+        metadata.write_text(yaml.safe_dump(payload), encoding="utf-8")
+
+    original_read_text = Path.read_text
+
+    def guarded_read_text(path: Path, *args: object, **kwargs: object) -> str:
+        if path.name == "prompt.md":
+            raise AssertionError("prompt content must not be read")
+        return original_read_text(path, *args, **kwargs)
+
+    def forbidden_loader(_: Path) -> object:
+        raise AssertionError("load_tasks must not run for blind input")
+
+    monkeypatch.setattr(Path, "read_text", guarded_read_text)
+    monkeypatch.setattr(qualification, "load_tasks", forbidden_loader)
+    with pytest.raises(ValueError, match="blind"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+        )
+    assert not (root / "pack").exists()
+
+
+def test_whitespace_padded_loaded_blind_id_is_rejected_defensively(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    loaded = BenchmarkTask(
+        id="  BLIND-task-one  ",
+        category="migration",
+        difficulty="medium",
+        prompt="prompt must already have come from a trusted loader",
+        gold_skills=["alpha-one"],
+        negative_skills=["beta-one"],
+        verifier="skill_selection",
+        split="dev",
+    )
+    monkeypatch.setattr(qualification, "load_tasks", lambda _: [loaded])
+
+    with pytest.raises(ValueError, match="blind loaded task ID"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+        )
+
+
+def test_input_mutation_after_snapshot_fails_before_publication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    output = root / "pack"
+    original_build = qualification._build_candidate_matrix
+
+    def mutate_after_build(*args: object, **kwargs: object) -> list[dict[str, object]]:
+        rows = original_build(*args, **kwargs)
+        metadata = tasks / "task-one/task.yaml"
+        metadata.write_bytes(metadata.read_bytes() + b"\n")
+        return rows
+
+    monkeypatch.setattr(qualification, "_build_candidate_matrix", mutate_after_build)
+    with pytest.raises(ValueError, match="input changed during qualification"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+        )
+    assert not output.exists()
+
+
+def test_target_created_during_staging_is_preserved_and_publication_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    output = root / "pack"
+    original_publish = qualification._publish_staged_pack
+
+    def create_competing_target(stage: Path, files: dict[str, bytes]) -> None:
+        original_publish(stage, files)
+        output.mkdir()
+        (output / "sentinel.txt").write_text("do not replace\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        qualification,
+        "_publish_staged_pack",
+        create_competing_target,
+    )
+    with pytest.raises(ValueError, match="output target appeared during staging"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+        )
+    assert (output / "sentinel.txt").read_text(encoding="utf-8") == "do not replace\n"
     assert not list(root.glob(".pack.tmp-*"))
