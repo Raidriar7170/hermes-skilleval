@@ -1,8 +1,8 @@
 ## 1. Freeze the Approved Boundary
 
-- [ ] 1.1 Record `pwd`, branch, clean status, apply base `aec4a09e7a60a5a1eb534b4198078acc24ff5cd5`, canonical input hashes/counts, and protected Phase 14/15/16/17/18 blob identities in the isolated Worker worktree.
-- [ ] 1.2 Confirm the canonical inputs remain 12 non-blind migration tasks and 16 Phase 9 skills; stop and re-plan if the skill universe, source counts, or protected evidence changed.
-- [ ] 1.3 Confirm the implementation scope excludes the 45-skill benchmark, blind prompt content/hashes, external evaluation-only sets, training, A100/GPU work, checkpoints, calibration, model selection, publication, merge, and archive actions.
+- [x] 1.1 Record `pwd`, branch, clean status, apply base `aec4a09e7a60a5a1eb534b4198078acc24ff5cd5`, canonical input hashes/counts, and protected Phase 14/15/16/17/18 blob identities in the isolated Worker worktree.
+- [x] 1.2 Confirm the canonical inputs remain 12 non-blind migration tasks and 16 Phase 9 skills; stop and re-plan if the skill universe, source counts, or protected evidence changed.
+- [x] 1.3 Confirm the implementation scope excludes the 45-skill benchmark, blind prompt content/hashes, external evaluation-only sets, training, A100/GPU work, checkpoints, calibration, model selection, publication, merge, and archive actions.
 
 ## 2. Add Qualification Tests First
 
@@ -21,9 +21,9 @@
 
 ## 4. Generate Review Artifacts
 
-- [ ] 4.1 Regenerate `docs/demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl`, `manifest.json`, and `qualification-report.json` from the canonical non-blind inputs.
-- [ ] 4.2 Add the pack README with a fresh-temporary-target regeneration and byte/hash comparison command, authority links, artifact roles, current blocked state, and explicit non-claims.
-- [ ] 4.3 Add artifact-contract tests that parse all JSON/JSONL, recompute hashes/counts, verify canonical blockers, and reject any trainer-ready output.
+- [x] 4.1 Regenerate `docs/demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl`, `manifest.json`, and `qualification-report.json` from the canonical non-blind inputs.
+- [x] 4.2 Add the pack README with a fresh-temporary-target regeneration and byte/hash comparison command, authority links, artifact roles, current blocked state, and explicit non-claims.
+- [x] 4.3 Add artifact-contract tests that parse all JSON/JSONL, recompute hashes/counts, verify canonical blockers, and reject any trainer-ready output.
 - [ ] 4.4 Generate `docs/human-briefs/2026-07-11-build-router-training-data-v2-qualification-pack.html` from the OpenSpec artifacts, pack, diff, and validation evidence.
 
 ## 5. Verify and Review
