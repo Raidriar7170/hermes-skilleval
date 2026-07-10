@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Stage 2 Real Codex Evidence Gate Adapter</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #1f2933; line-height: 1.55; }
+    main { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #d8dee4; padding-bottom: 6px; }
+    code { background: #f4f6f8; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #8250df; background: #f6f2ff; padding: 12px 16px; margin: 18px 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .card { border: 1px solid #d8dee4; border-radius: 8px; padding: 12px 14px; background: #fff; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 Real Codex Evidence Gate Adapter</h1>
+  <p class="status"><strong>结论：</strong>现有 evidence gate 已能消费 Stage 2 real Codex frozen plan + full execution artifact；结果为 <code>REVIEW_REQUIRED</code>，router promotion 仍保持 <code>KEEP_BASELINE</code>。</p>
+
+  <h2>当前状态</h2>
+  <div class="grid">
+    <div class="card"><strong>Base</strong><br><code>ce6210707759cf600788c669ed50c11693b34648</code></div>
+    <div class="card"><strong>Gate status</strong><br><code>REVIEW_REQUIRED</code></div>
+    <div class="card"><strong>Promotion decision</strong><br><code>KEEP_BASELINE</code></div>
+    <div class="card"><strong>Blocking failures</strong><br><code>0</code></div>
+  </div>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>为 <code>v0.3-evidence-gate</code> 添加 Stage 2 real Codex schema adapter。</li>
+    <li>复用既有 live-agent checks：matrix completeness、prompt hash、oracle qualification、verifier evidence、no-skill leakage、capability inventory、trace completeness、secret redaction。</li>
+    <li>新增测试覆盖真实 PR #25 frozen plan 和 full execution artifact。</li>
+    <li>没有重新运行 Codex，没有重新运行 Stage 2，没有新增 task traces。</li>
+  </ul>
+
+  <h2>Gate 输出</h2>
+  <ul>
+    <li><code>evidence-gate.stage2-adapter.json</code>: <code>REVIEW_REQUIRED</code></li>
+    <li>live-agent / Stage 2 相关检查全部 PASS。</li>
+    <li>剩余 review 项为 external routing evidence 未提供，以及 overlap/generalization caveat。</li>
+  </ul>
+
+  <h2>不要夸大的结论</h2>
+  <ul>
+    <li>这不是 performance result。</li>
+    <li>这不是 router promotion。</li>
+    <li>这不是 evidence gate 的全量 VALID_EVIDENCE。</li>
+    <li>PR #25 的 6/12 passed 仍是 raw deterministic verifier facts。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>合并后可以单独准备完整 evidence packet review：同时提供可验证的 external routing packet 和 Stage 2 real Codex packet，再由 gate 产出最终 validity 状态。</p>
+</main>
+</body>
+</html>

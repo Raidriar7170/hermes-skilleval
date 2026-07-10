@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes SkillEval v0.3 PR-7 Evidence Gate Human Brief</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #17202a; background: #f7f9fb; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 24px 56px; }
+    header { border-left: 6px solid #2563eb; padding-left: 18px; margin-bottom: 28px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 26px 0 10px; }
+    p, li { line-height: 1.7; }
+    code { background: #e8edf5; padding: 2px 5px; border-radius: 4px; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #dcfce7; color: #14532d; font-weight: 700; }
+    section { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px 20px; margin: 16px 0; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>PR-7 证据有效性与发布门禁</h1>
+    <p><span class="status">needs review</span> 结论：已实现统一证据 validator/reporting，默认保持基线，不执行模型、训练、live benchmark 或 release promotion。</p>
+  </header>
+
+  <section>
+    <h2>本阶段变更</h2>
+    <ul>
+      <li>新增 <code>hermes_skilleval.evidence_gate</code>，消费 PR-3 SkillRouter external matrix 与 PR-6 SkillsBench live-agent artifacts。</li>
+      <li>新增 <code>v0.3-evidence-gate</code> CLI，输出 JSON 决策报告和可选 Markdown 摘要。</li>
+      <li>Benchmark Validity Gate 只产生 <code>VALID_EVIDENCE</code>、<code>INVALID_EVIDENCE</code>、<code>REVIEW_REQUIRED</code>；<code>UNAVAILABLE</code> 只作为字段级 marker。</li>
+      <li>Router Promotion Gate 默认 <code>KEEP_BASELINE</code>；无有效证据时阻止 promotion。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>关键检查</h2>
+    <ul>
+      <li>External: frozen plan schema、input hash/provenance、prediction hash、official metrics 与 Hermes diagnostics 分离。</li>
+      <li>Live-agent: plan digest、input hash、derived hash、prompt hash equality、oracle qualification、verifier evidence、trace completeness、no-skill leakage、overlap status、secret redaction。</li>
+      <li>Reporting: external metrics、live condition pass count、routed-vs-no-skill delta、oracle gap、timeout/process errors、skill-use evidence、per-task regressions 分开呈现。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>验证结果</h2>
+    <ul>
+      <li><code>python -m pytest -q tests/test_v0_3_evidence_gate.py</code>: 本次本地验证通过。</li>
+      <li><code>python -m pytest -q</code>: 本次本地验证通过。</li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: 23 passed。</li>
+      <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check ...</code>: PASS。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>不要过度声明</h2>
+    <p>PR-7 只验证和汇总 frozen evidence。它不证明新 router 可上线，不运行真实 Codex benchmark，不替代 PR-1..PR-6 的 artifact 合同，也不允许把 linked transfer 当作独立泛化结论。</p>
+  </section>
+
+  <section>
+    <h2>下一步</h2>
+    <p>完成 diff、YAML、CRLF 检查后，进入 PR-7 review。若 review 通过，再合回 <code>codex/v0.3-pr0-protocol</code>。</p>
+  </section>
+</main>
+</body>
+</html>

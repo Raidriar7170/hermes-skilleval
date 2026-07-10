@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_FULL_SUITE_COUNT = "668"
+CURRENT_FULL_SUITE_COUNT = "698"
 README = ROOT / "README.md"
 RESUME = ROOT / "docs" / "resume.md"
 INTERVIEW_OVERVIEW = ROOT / "docs" / "interview-project-overview.html"
@@ -140,11 +140,11 @@ def test_post_release_metadata_and_action_onboarding_are_current():
         ]
     )
 
-    assert pyproject["project"]["version"] == "0.2.1"
-    assert '__version__ = "0.2.1"' in package_init
+    assert pyproject["project"]["version"] == "0.3.0"
+    assert '__version__ = "0.3.0"' in package_init
     assert "Hermes SkillEval Reusable GitHub Action" in action
     assert "Hermes SkillEval Reusable Action RC" not in action
-    assert "Raidriar7170/hermes-skilleval@v0.2.1" in current_docs
+    assert "Raidriar7170/hermes-skilleval@v0.3.0" in current_docs
     assert "Raidriar7170/hermes-skilleval@main" not in "\n".join(
         path.read_text(encoding="utf-8")
         for path in [
@@ -301,7 +301,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert "多类路由策略" in first_screen
     assert "错误的 negative skill" in first_screen
     assert "继续保留 `baseline-minilm`" in first_screen
-    assert "`v0.3.0` 已发布，当前测试面为 `668` 个 pytest cases" in first_screen
+    assert "`v0.3.0` 已发布，当前测试面为 `698` 个 pytest cases" in first_screen
     assert "`REVIEW_REQUIRED / KEEP_BASELINE`" in first_screen
     assert "`live_agent.overlap_status`" in first_screen
     assert "这不是 benchmark PASS、性能提升结论或 router promotion" in first_screen
@@ -319,6 +319,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
         "## What it does",
         "## Why skill routing is hard",
         "## Quick Start",
+        "## v0.3.0 release status",
         "## Use as GitHub Action",
         "## Example failure caught",
         "## Dashboard preview",
@@ -331,7 +332,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert limitations < architecture
     assert "actions/workflows/validate.yml/badge.svg" in readme
     assert "badge/release-v0.3.0" in readme
-    assert "badge/tests-668%20passed" in readme
+    assert "badge/tests-698%20passed" in readme
     assert "badge/action-reusable%20repo%20Action" in readme
     assert "badge/A100-validated" not in first_screen
     assert "run filtering" in readme
@@ -436,6 +437,18 @@ def test_readme_keeps_quick_start_short_and_links_full_usage():
     assert "For full CLI usage, see [`docs/usage.md`](docs/usage.md)." in readme
     assert "skilleval github-action-gate" in readme
     assert "Raidriar7170/hermes-skilleval@v0.3.0" in readme
+    assert (
+        "[`GitHub Release`](https://github.com/Raidriar7170/hermes-skilleval/"
+        "releases/tag/v0.3.0)"
+    ) in readme
+    assert "[`release notes`](docs/release-notes/v0.3.0.md)" in readme
+    assert (
+        "[`closeout`](artifacts/v0.3/skillsbench-pilot/"
+        "v0.3-stage2-real-codex-evidence-gate-closeout-20260708T080414Z/"
+        "stage2-real-codex-evidence-gate-closeout.json)"
+    ) in readme
+    assert "No performance claim" in readme
+    assert "router promotion" in readme
     assert "### 1. Index a Hermes-style Skill Library" not in readme
     assert "## Fresh-clone local demo" in usage
     assert "## GitHub Action trial" in usage
@@ -783,7 +796,7 @@ def test_v0_2_0_release_decision_surfaces_are_linked_and_bounded():
         "Published: `false`",
         "post-release evidence",
         "current publication record",
-        "Raidriar7170/hermes-skilleval@v0.2.1",
+        "Raidriar7170/hermes-skilleval@v0.3.0",
     ]:
         assert phrase in current
 
@@ -857,7 +870,7 @@ def test_v0_2_0_final_approval_surfaces_are_linked_and_bounded():
         "reusable GitHub Action support",
         "post-release evidence",
         "current publication record",
-        "Raidriar7170/hermes-skilleval@v0.2.1",
+        "Raidriar7170/hermes-skilleval@v0.3.0",
     ]:
         assert phrase in current
 

@@ -7,7 +7,7 @@ It does not claim that the repository already exists.
 
 Provide a tiny external consumer repository that copies the public
 `examples/github-action/skills/` and `examples/github-action/benchmark/`
-fixtures, then calls `Raidriar7170/hermes-skilleval@v0.2.1` from GitHub
+fixtures, then calls `Raidriar7170/hermes-skilleval@v0.3.0` from GitHub
 Actions.
 
 ## Good PR Scenario

@@ -1,0 +1,105 @@
+{
+  "schema_version": "v0.3.stage2-pilot-blocked.v1",
+  "stage": "Stage 2 SkillsBench/Codex pilot",
+  "status": "BLOCKED",
+  "created_at": "2026-06-29T04:59:07Z",
+  "code_commit": "81f80bea7e1ffbfa46d5e587fe0a5a9b6dd5a8fa",
+  "accepted_stage1_external_commit": "81f80bea7e1ffbfa46d5e587fe0a5a9b6dd5a8fa",
+  "accepted_stage1_artifact_root": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z",
+  "stage1_audit_note": "artifacts/v0.3/external-matrix/v0.3-stage1-external-matrix-20260629T042500Z/stage1-audit-note.md",
+  "requested_pilot_shape": {
+    "task_count": 4,
+    "conditions": [
+      "no-skill",
+      "routed-skill",
+      "oracle-skill"
+    ],
+    "trials_per_condition": 1,
+    "total_runs": 12,
+    "evidence_label": "pilot_non_final"
+  },
+  "scope_guards": {
+    "no_training": true,
+    "no_threshold_tuning": true,
+    "no_hard_negative_mining": true,
+    "no_router_variants_added": true,
+    "no_scorer_matrix_gate_changes": true,
+    "no_full_live_agent_benchmark": true,
+    "no_stage2_execution_started": true,
+    "no_fake_runner_substitution": true,
+    "no_performance_claims": true
+  },
+  "inspection_commands": [
+    "sed -n '1,240p' docs/v0.3/runbook-frozen-evidence.md",
+    "python -m hermes_skilleval.cli --help",
+    "python -m hermes_skilleval.cli skillsbench-freeze-plan --help 2>/dev/null || true",
+    "python -m hermes_skilleval.cli skillsbench-matrix --help 2>/dev/null || true",
+    "python -m hermes_skilleval.cli v0.3-evidence-gate --help",
+    "PYTHONPATH=src python -m hermes_skilleval.cli --help",
+    "PYTHONPATH=src python -m hermes_skilleval.cli skillsbench-plan --help",
+    "PYTHONPATH=src python -m hermes_skilleval.cli skillsbench-matrix --help",
+    "PYTHONPATH=src python -m hermes_skilleval.cli v0.3-evidence-gate --help",
+    "which codex || true; codex --version || true; codex exec --help || true",
+    "find /Users/raidriar/Documents /Users/raidriar/Desktop -maxdepth 5 ... skillsbench/task/oracle/routed discovery",
+    "source inspection of src/hermes_skilleval/live_agent_runtime.py and src/hermes_skilleval/live_agent_skillsbench.py"
+  ],
+  "observations": {
+    "python_module_invocation": {
+      "status": "REVIEW",
+      "detail": "Bare python -m hermes_skilleval.cli is not importable in this checkout; PYTHONPATH=src is required for local CLI execution."
+    },
+    "codex_cli": {
+      "status": "PASS",
+      "binary": "/Applications/Codex.app/Contents/Resources/codex",
+      "version": "codex-cli 0.142.3",
+      "exec_help_supports_noninteractive_json": true,
+      "exec_help_supports_workspace_write": true,
+      "exec_help_supports_ephemeral": true,
+      "exec_help_supports_ignore_user_config": true,
+      "exec_help_supports_ignore_rules": true,
+      "exec_help_supports_skip_git_repo_check": true
+    },
+    "isolated_codex_home": {
+      "status": "PASS",
+      "detail": "CodexCliRunnerConfig defaults codex_home_mode=isolated and isolate_home=true; runtime sets runner-controlled CODEX_HOME and HOME."
+    },
+    "global_capability_inventory_preflight": {
+      "status": "PASS",
+      "detail": "CodexCliRunner emits global_capability_inventory/skill_inventory in preflight and checks user/admin/workspace skill leakage."
+    },
+    "skillsbench_task_source": {
+      "status": "FAIL",
+      "detail": "No real or approved 4-task pilot SkillsBench data root was found. Only tests/fixtures/live_agent/skillsbench_tiny exists, and it contains 2 fixture-only tasks."
+    },
+    "deterministic_verifier": {
+      "status": "FAIL",
+      "detail": "No real deterministic verifier integration for selected pilot tasks was found. The current skillsbench-matrix CLI path defaults to FakeVerifier(pass_=true) when no verifier is injected."
+    },
+    "oracle_qualification": {
+      "status": "FAIL",
+      "detail": "No real oracle qualification artifact for 4 selected pilot tasks was found. The only oracle_qualification.jsonl discovered is fixture-only and covers 2 fixture tasks."
+    },
+    "routed_predictions": {
+      "status": "FAIL",
+      "detail": "No routed-skill prediction artifact connected to 4 real selected pilot tasks was found. The only routed_predictions.json discovered is fixture-only and covers 2 fixture tasks."
+    },
+    "real_codex_runner_cli_path": {
+      "status": "FAIL",
+      "detail": "skillsbench-matrix CLI does not expose CodexCliRunner configuration and run_skillsbench_matrix defaults to FakeAgentRunner/FakeVerifier when called through the CLI."
+    }
+  },
+  "blocking_reasons": [
+    "missing real or approved 4-task SkillsBench pilot data root",
+    "missing deterministic verifier integration/artifacts for selected pilot tasks",
+    "missing oracle qualification artifact for 4 selected pilot tasks",
+    "missing routed-skill predictions for 4 selected pilot tasks",
+    "current skillsbench-matrix CLI would use fake runner/verifier by default, which cannot be treated as real Codex pilot evidence"
+  ],
+  "decision": {
+    "stage2_pilot_plan_frozen": false,
+    "stage2_pilot_matrix_run": false,
+    "live_agent_traces_created": false,
+    "evidence_gate_rerun_with_live_artifacts": false,
+    "next_required_input": "Provide or approve a real/non-fixture SkillsBench pilot data root with exactly 4 selectable tasks, deterministic verifier implementation/artifacts, oracle qualification records, routed predictions over the global registry, and a real CodexCliRunner execution path before running Stage 2 pilot."
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "blocked_task_ids": [
+    "bike-rebalance",
+    "dialogue-parser",
+    "offer-letter-generator",
+    "powerlifting-coef-calc"
+  ],
+  "error": "BLOCKED_DOCKER_RUNTIME_START: oracle qualification did not execute because Docker containers remain Created and never emit a start event, including python:3.12-slim smoke container",
+  "fail_closed": true,
+  "invocation": {
+    "data_root": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data",
+    "license_note": "Apache-2.0 upstream repository; controlled-local-snapshot candidate selection pending human approval",
+    "oracle_qualification_path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.blocked-docker-runtime-start.jsonl",
+    "routed_predictions_path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.json",
+    "router_top_k": 1,
+    "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+    "selected_task_ids": [
+      "bike-rebalance",
+      "dialogue-parser",
+      "offer-letter-generator",
+      "powerlifting-coef-calc"
+    ],
+    "upstream_ref": "bf3793e9ec20e9682e6f18dbf4de3c69163dc9c7"
+  },
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "performance_claims": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "notes": [
+    "Validator was not rerun because PR #10 requires passed oracle qualification records.",
+    "All four qualification records are blocked before verifier execution and have verifier_passed=false.",
+    "Process exit code was not used as success; deterministic verifier output is unavailable because Docker runtime did not start."
+  ],
+  "oracle_qualification_blocker_present": true,
+  "oracle_qualification_records": {
+    "name": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+    "path": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+    "sha256": "7ed1f1a6c8f100966fd2f330f6eeeb6c3e4719f99294000cd84efd31c6d21838",
+    "size_bytes": 18695
+  },
+  "public_network_blocker_present": false,
+  "routed_predictions_strict_artifact": {
+    "name": "routed_predictions.strict.json",
+    "path": "routed_predictions.strict.json",
+    "sha256": "28c4d20f0e535aa8c6a2b1f8603a99df385dffae8794be1abe86c0669feb9ea1",
+    "size_bytes": 4487
+  },
+  "routed_predictions_strict_manifest": {
+    "name": "routed_predictions.strict.manifest.json",
+    "path": "routed_predictions.strict.manifest.json",
+    "sha256": "084a8ec222756bc5cc0fc6affbab6a419429ff08a7f80d9b33b5442533a96304",
+    "size_bytes": 15449
+  },
+  "schema_version": "v0.3.stage2-input-package-validator-result.v1",
+  "status": "NOT_RERUN_DOCKER_RUNTIME_START_BLOCKED",
+  "validator": "build_stage2_real_pilot_input_package",
+  "validator_source": "PR #10 real pilot input-package validator",
+  "zero_dependency_manifest": {
+    "name": "manifest.json",
+    "path": "zero-dependency-qualification-20260702T113533Z/manifest.json",
+    "sha256": "4b8de75e62567e9cfd25d3cd4b7987e24f5dec67baab7d6aa918bdcb974f778b",
+    "size_bytes": 24795
+  }
+}

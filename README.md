@@ -3,7 +3,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Validate](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml/badge.svg)](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml)
 [![Release: v0.3.0](https://img.shields.io/badge/release-v0.3.0-blue.svg)](https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.3.0)
-[![Tests: 668](https://img.shields.io/badge/tests-668%20passed-brightgreen.svg)](tests)
+[![Tests: 698](https://img.shields.io/badge/tests-698%20passed-brightgreen.svg)](tests)
 [![Reusable Action](https://img.shields.io/badge/action-reusable%20repo%20Action-0b6e69.svg)](action.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Benchmark](https://img.shields.io/badge/benchmark-80%20tasks%20%2F%2045%20skills-purple.svg)](benchmarks)
@@ -22,7 +22,7 @@ Hermes SkillEval 是一个面向 AI 编程 Agent 技能库的离线评测和 CI 
 
 最关键的一次结果是：`finetuned-embedding` 候选路由器虽然保留了 gold skill，但在盲测中新增选择了错误的 negative skill，所以 release gate 没有把它升级为默认路由器，而是继续保留 `baseline-minilm`。这也是项目想展示的核心能力：不仅能做评测，还能在候选方案看起来更“智能”但风险变高时拒绝上线。
 
-当前完成度：`v0.3.0` 已发布，当前测试面为 `668` 个 pytest cases。v0.3.0 记录 Stage 2 real Codex pilot evidence-chain closeout；最终 evidence-gate posture 是 `REVIEW_REQUIRED / KEEP_BASELINE`，`blocking_failure_count=0`，剩余 caveat 是 `live_agent.overlap_status`。这不是 benchmark PASS、性能提升结论或 router promotion。更完整的中文项目说明见 [中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)。
+当前完成度：`v0.3.0` 已发布，当前测试面为 `698` 个 pytest cases。v0.3.0 记录 Stage 2 real Codex pilot evidence-chain closeout；最终 evidence-gate posture 是 `REVIEW_REQUIRED / KEEP_BASELINE`，`blocking_failure_count=0`，剩余 caveat 是 `live_agent.overlap_status`。这不是 benchmark PASS、性能提升结论或 router promotion。更完整的中文项目说明见 [中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)。
 
 ## What it does
 
@@ -67,8 +67,16 @@ skilleval github-action-gate \
 pytest -q
 ```
 
-Expected: the example gate returns `ALLOW_MERGE`, and the v0.3.0 release
-validation records `668 passed` / `668 pytest cases`.
+Expected: the example gate returns `ALLOW_MERGE`, and the current suite reports `698 passed`.
+Historical v0.3.0 release-validation result at the time: `668 passed` / `668 pytest cases`.
+
+## v0.3.0 release status
+
+`v0.3.0` adds Stage 2 real Codex pilot evidence-chain support and records a
+real 4x3x1 Codex pilot closeout. Final gate posture is
+`REVIEW_REQUIRED / KEEP_BASELINE` with `blocking_failure_count=0` and
+`live_agent.overlap_status` remaining as a review caveat. No performance claim
+or router promotion is made. `KEEP_BASELINE` is not a performance conclusion.
 
 For full CLI usage, see [`docs/usage.md`](docs/usage.md). For reviewer
 navigation across release, diagnostic, external validation, CI, OpenSpec, and
@@ -152,11 +160,11 @@ dashboard remaining useful for earlier routing inspection.
 |---|---|---|
 | Phase 16 blind validation | `REVIEW_REQUIRED`; two regressions and worse negative-hit behavior | [`docs`](docs/phase16.md), [`comparison.md`](docs/demo/phase16-blind-validation/comparison.md) |
 | Phase 17 release selector | `KEEP_BASELINE`; `baseline-minilm` remains default | [`docs`](docs/phase17.md), [`release-decision.json`](docs/demo/phase17-calibrated-release-selector/release-decision.json) |
-| Phase 18 reproducibility pack | `PASS`; release-check reproduces the default-router decision | [`docs`](docs/phase18.md), [`release-manifest.json`](docs/demo/phase18-ci-release-reproducibility/release-manifest.json) |
+| Phase 18 reproducibility pack | release-check reproduces the default-router decision | [`docs`](docs/phase18.md), [`release-manifest.json`](docs/demo/phase18-ci-release-reproducibility/release-manifest.json) |
 | v0.2.0 historical pre-publish review | `NEEDS_REVIEW`, `Published: false`, and required human confirmation | [`release-decision.md`](docs/demo/v0.2.0-release-decision/release-decision.md), [`final checklist`](docs/demo/v0.2.0-final-approval/final-approval.md) |
 | v0.2.0 post-release evidence | post-release facts after human GO: Published `true`; tag and GitHub Release created; Marketplace published `false` | [`post-release.md`](docs/demo/v0.2.0-post-release/post-release.md), [`post-release.json`](docs/demo/v0.2.0-post-release/post-release.json) |
 | v0.2.1 patch release notes | post-release onboarding cleanup packaged as a conservative patch release | [`release notes`](docs/release-notes/v0.2.1.md), [`Human Brief`](docs/human-briefs/2026-06-05-post-release-onboarding-cleanup.html) |
-| v0.3.0 release | Stage 2 real Codex pilot evidence-chain release; final posture `REVIEW_REQUIRED / KEEP_BASELINE` with `blocking_failure_count=0` | [`GitHub Release`](https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.3.0), [`release prep PR`](https://github.com/Raidriar7170/hermes-skilleval/pull/31) |
+| v0.3.0 release | Stage 2 real Codex pilot evidence-chain release; final posture `REVIEW_REQUIRED / KEEP_BASELINE` with `blocking_failure_count=0` | [`GitHub Release`](https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.3.0), [`release prep PR`](https://github.com/Raidriar7170/hermes-skilleval/pull/31), [`release notes`](docs/release-notes/v0.3.0.md), [`closeout`](artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-closeout-20260708T080414Z/stage2-real-codex-evidence-gate-closeout.json) |
 
 v0.2.0 post-release status: Published: `true`; tag and GitHub Release created `true`;
 Marketplace published `false`.
@@ -191,7 +199,7 @@ project walkthrough, use
 | Benchmark tasks | 80 |
 | Hermes-style benchmark skills | 45 |
 | Router families | 5 |
-| Test cases | 668 |
+| Test cases | 698 |
 | Remote hardware validation | Single idle A100 GPU |
 
 ## Architecture / 系统架构
@@ -304,7 +312,7 @@ and [`docs/phase7b.md`](docs/phase7b.md).
 | Neural Retrieval | sentence-transformers MiniLM | Real embedding router |
 | Reranking | verification gate + cross-encoder | Selective and learned ranking |
 | Reports | JSONL + Markdown + static HTML dashboard | Reproducible experiment artifacts |
-| Testing | pytest | 668 pytest cases |
+| Testing | pytest | 698 pytest cases |
 | Hardware | Mac + A100 dev machine | Local development and remote model validation |
 
 ---
@@ -364,7 +372,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 >   ranking metrics such as Recall@k, MRR, NDCG, and Negative Hit Rate.
 > - **Infrastructure:** validated neural reranking on shared A100 infrastructure
 >   while selecting idle GPUs and preserving user-owned storage paths.
-> - **Engineering Quality:** shipped a typed Python CLI with 668 passing tests,
+> - **Engineering Quality:** shipped a typed Python CLI with 698 passing tests,
 >   reproducible benchmark artifacts, a static inspection dashboard, and a
 >   release gate that keeps `baseline-minilm` when blind validation finds a
 >   fine-tuned-router regression.

@@ -1,0 +1,89 @@
+# Hermes SkillEval v0.3 live-agent placeholder config.
+# This file is a template only. It is not executable evidence.
+
+schema_version: v0.3.live-agent.placeholder
+seed: 20260625
+status: FILL_BEFORE_RUN
+
+runtime:
+  contract: live-agent.v1
+  agent_binary: "${HERMES_LIVE_AGENT_BINARY:-FILL_BEFORE_RUN}"
+  agent_model: "${HERMES_LIVE_AGENT_MODEL:-FILL_BEFORE_RUN}"
+  agent_version: FILL_BEFORE_RUN
+  sandbox: workspace-write
+  approval_policy: never
+  timeout_seconds: 1200
+  retry_policy: no_retry_for_final_matrix
+  deterministic_seed_support: UNAVAILABLE
+  deterministic_seed_reason: verify live-agent backend support before final run
+  codex_home_mode: isolated
+
+task_selection:
+  source: SkillsBench
+  upstream_repo: benchflow-ai/skillsbench
+  upstream_ref: FILL_BEFORE_RUN
+  task_ids: FILL_BEFORE_RUN
+  require_no_external_credentials: true
+  require_network_free: true
+  require_oracle_pass: true
+  require_deterministic_verifier: true
+  overlap_with_skillrouter_queries: REVIEW_BEFORE_RUN
+
+registry:
+  manifest: FILL_BEFORE_RUN
+  router_top_k: 3
+  hide_source_task_id: true
+
+conditions:
+  - no-skill
+  - routed-skill
+  - oracle-skill
+
+pilot_preparation:
+  status: missing_real_inputs
+  evidence_label: pilot_non_final
+  task_count: 4
+  trials_per_condition: 1
+  total_runs: 12
+  require_non_fixture_data_root: true
+  reject_fixture_data_root: "tests/fixtures/live_agent/skillsbench_tiny"
+  reject_fake_runner: true
+  reject_fake_verifier: true
+  require_real_runner_preflight: true
+  require_verifier_artifact_hashes:
+    - code
+    - config
+    - input
+  require_oracle_qualification_hashes:
+    - task_hash
+    - verifier_hash
+    - skill_hash
+  require_routed_prediction_metadata:
+    - router_id
+    - config_hash
+    - top_k
+    - global_skill_registry_hash
+
+frozen_live_agent_evaluation:
+  # Future frozen live-agent evaluation only. This is not the Stage 2 pilot.
+  # The Stage 2 pilot shape remains 4 tasks x 3 conditions x 1 trial = 12 runs.
+  status: future_only_after_pilot_acceptance
+  trials_per_condition: 3
+
+judging:
+  primary_success_judge: deterministic_verifier
+  llm_judge_allowed: diagnostic_only
+  human_review_allowed: diagnostic_only
+
+retention:
+  raw_traces_in_git: false
+  stdout_stderr_in_git: redacted_summary_only
+  credentials_in_git: false
+  run_id: FILL_BEFORE_RUN
+  artifact_root: "artifacts/v0.3/{run_id}/live-agent"
+
+outputs:
+  manifest: "manifest.json"
+  verifier_results: "live-agent/verifier-results.jsonl"
+  summary: "live-agent/summary.json"
+  redacted_report: "report.md"

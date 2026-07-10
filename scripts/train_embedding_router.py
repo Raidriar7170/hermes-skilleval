@@ -7,6 +7,11 @@ from pathlib import Path
 from typing import Any
 
 from hermes_skilleval.model_manifest import write_model_manifest
+from hermes_skilleval.remote_paths import (
+    A100_USER_ROOT,
+    resolve_path_root,
+    validate_path_within_root,
+)
 
 
 def main() -> int:
@@ -14,11 +19,25 @@ def main() -> int:
         description="Train a SentenceTransformer skill router model."
     )
     parser.add_argument("--config", required=True)
+    parser.add_argument("--output-root")
     args = parser.parse_args()
 
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-    output_dir = str(config["output_dir"])
-    model_output = _validated_output_dir(output_dir)
+    selected_root = (
+        args.output_root
+        if args.output_root is not None
+        else config.get("output_root", A100_USER_ROOT)
+    )
+    try:
+        output_root = resolve_path_root(selected_root, field="output_root")
+        output_dir = validate_path_within_root(
+            config["output_dir"],
+            root=output_root,
+            field="output_dir",
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    model_output = Path(output_dir)
 
     try:
         import torch
@@ -41,7 +60,9 @@ def main() -> int:
     )
     pairs = [
         json.loads(line)
-        for line in Path(config["training_pairs"]).read_text(encoding="utf-8").splitlines()
+        for line in Path(config["training_pairs"])
+        .read_text(encoding="utf-8")
+        .splitlines()
         if line.strip()
     ]
     positive_pairs = [
@@ -128,6 +149,7 @@ def main() -> int:
         model_dir=model_output,
         model_dir_label=output_dir,
         output_path=model_output / "model-manifest.json",
+        output_root=output_root,
     )
     (model_output / "train-run-summary.json").write_text(
         json.dumps(
@@ -142,6 +164,7 @@ def main() -> int:
                     hard_negative_optimizer_step_count
                 ),
                 "optimizer_step_count": optimizer_step_count,
+                "output_root": output_root,
                 "output_dir": output_dir,
                 "trained_hard_negative_pair_count": len(hard_negative_pairs),
                 "trained_pair_count": len(positive_pairs),
@@ -160,16 +183,6 @@ def _batch_to_device(batch: dict[str, Any], device) -> dict[str, Any]:
         key: value.to(device) if hasattr(value, "to") else value
         for key, value in batch.items()
     }
-
-
-def _validated_output_dir(output_dir: str) -> Path:
-    allowed_root = Path("/mnt/data/minghongsun").resolve(strict=False)
-    resolved_output = Path(output_dir).resolve(strict=False)
-    try:
-        resolved_output.relative_to(allowed_root)
-    except ValueError as exc:
-        raise SystemExit("output_dir must be under /mnt/data/minghongsun/") from exc
-    return resolved_output
 
 
 def _positive_int(value: Any, field: str) -> int:

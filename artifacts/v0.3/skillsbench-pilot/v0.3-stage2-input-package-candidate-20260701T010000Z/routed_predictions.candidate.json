@@ -1,0 +1,43 @@
+{
+  "predictions": {
+    "bike-rebalance": [
+      "skillsbench/logistics-rules-to-optimization"
+    ],
+    "dialogue-parser": [
+      "skillsbench/xlsx"
+    ],
+    "offer-letter-generator": [
+      "skillsbench/docx"
+    ],
+    "powerlifting-coef-calc": [
+      "skillsbench/powerlifting"
+    ]
+  },
+  "router": {
+    "config": {
+      "config_id": "stage2-keyword-controlled-local-snapshot-candidate",
+      "global_skill_registry_hash": "8990c0bffbecdc8028a5abd46c97fa51daaafcb883916b5b1629a25daf6268ac",
+      "router_class": "KeywordRouter",
+      "router_id": "keyword",
+      "schema_version": "v0.3.stage2-routed-prediction-router-config.v1",
+      "top_k": 1
+    },
+    "config_hash": "6bda8951b5bab8b081e8a7d0dd283329b0ba488a20594aec940463c9f6dba27b",
+    "config_id": "stage2-keyword-controlled-local-snapshot-candidate",
+    "generation_artifact_hash": "1aa647d54b4680a8e34efbaea99be78400fe7853ccf366f5e8dab8e5648ee2be",
+    "generation_command": "python -m hermes_skilleval.cli skillsbench-export-routed-predictions --tasks-manifest artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/tasks.jsonl --global-skill-registry artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data/skills.jsonl --output artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.candidate.json --manifest-output artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.candidate.manifest.json --router-id keyword --config-id stage2-keyword-controlled-local-snapshot-candidate --top-k 1",
+    "global_skill_registry_hash": "8990c0bffbecdc8028a5abd46c97fa51daaafcb883916b5b1629a25daf6268ac",
+    "label_source": "router_generated",
+    "oracle_labels_read": false,
+    "per_task_prediction_hashes": {
+      "bike-rebalance": "c661c31fe9af1b982b4a332e3aabf8578ad11c1402931d8df8c7f9248d73652b",
+      "dialogue-parser": "b1dab94319b0a2f27ec61b998a52f55b129cc8dbb74131fd9d9186a98a95cec5",
+      "offer-letter-generator": "4c6517f9bfa6df5eb1abec3736208b7f4c5d2e67a9cbb2c5a38074887f68f94e",
+      "powerlifting-coef-calc": "3597eab55def5885eb26e3a76e2a5068e4ca0ed89c9df53e6039b1aeb3ff8904"
+    },
+    "router_config": null,
+    "router_id": "keyword",
+    "top_k": 1
+  },
+  "schema_version": "v0.3.routed-predictions.v1"
+}

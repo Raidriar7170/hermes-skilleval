@@ -34,12 +34,31 @@ from hermes_skilleval.embedding_training import (
     export_embedding_training_pairs,
     write_training_pairs,
 )
+from hermes_skilleval.external.skillrouter import write_external_validation
+from hermes_skilleval.external.skillrouter_matrix import (
+    run_skillrouter_matrix,
+    write_skillrouter_matrix_plan,
+)
+from hermes_skilleval.external.skillrouter_prediction_export import (
+    FrozenRouterConfig,
+    _is_immutable_revision,
+    write_skillrouter_prediction_artifacts,
+)
+from hermes_skilleval.external.skillrouter_scorer import write_skillrouter_score_report
+from hermes_skilleval.evidence_gate import write_evidence_decision_report
 from hermes_skilleval.failure_analysis import (
     result_paths_from_comparison_dir,
     write_failure_analysis_report,
 )
 from hermes_skilleval.finetuned_eval import write_finetuned_eval_summary
 from hermes_skilleval.github_action_gate import run_github_action_gate
+from hermes_skilleval.live_agent_skillsbench import (
+    SkillsBenchAdapter,
+    run_skillsbench_matrix,
+    write_stage2_pilot_routed_prediction_artifacts,
+    write_skillsbench_plan,
+)
+from hermes_skilleval.live_agent_runtime import CodexCliRunner, CodexCliRunnerConfig
 from hermes_skilleval.metrics import (
     abstention_rate,
     accepted_count,
@@ -267,6 +286,242 @@ def _build_parser() -> argparse.ArgumentParser:
     github_action_gate_parser.add_argument("--output-dir", required=True)
     github_action_gate_parser.add_argument("--top-k", type=int, default=5)
     github_action_gate_parser.set_defaults(handler=_run_github_action_gate)
+
+    external_validate_parser = subparsers.add_parser(
+        "external-validate",
+        help="validate external benchmark adapter inputs without scoring",
+    )
+    external_validate_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_validate_parser.add_argument("--data-root", required=True)
+    external_validate_parser.add_argument("--output-dir", required=True)
+    external_validate_parser.add_argument("--upstream-ref", default="FILL_BEFORE_RUN")
+    external_validate_parser.add_argument("--license-note", default="FILL_BEFORE_RUN")
+    external_validate_parser.add_argument("--acquired-at", default=None)
+    external_validate_parser.set_defaults(handler=_run_external_validate)
+
+    external_score_parser = subparsers.add_parser(
+        "external-score",
+        help="score external benchmark ranked predictions without running routers",
+    )
+    external_score_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_score_parser.add_argument("--data-root", required=True)
+    external_score_parser.add_argument("--predictions", required=True)
+    external_score_parser.add_argument("--output", required=True)
+    external_score_parser.add_argument("--tier", choices=("easy", "hard"), default=None)
+    external_score_parser.add_argument(
+        "--tiers",
+        choices=("easy", "hard"),
+        nargs="+",
+        default=None,
+    )
+    external_score_parser.add_argument(
+        "--mode",
+        choices=("core", "single"),
+        default="core",
+    )
+    external_score_parser.set_defaults(handler=_run_external_score)
+
+    external_plan_parser = subparsers.add_parser(
+        "external-plan",
+        help="write a frozen external SkillRouter matrix plan without scoring",
+    )
+    external_plan_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_plan_parser.add_argument("--data-root", required=True)
+    external_plan_parser.add_argument("--output", required=True)
+    external_plan_parser.add_argument("--upstream-ref", required=True)
+    external_plan_parser.add_argument("--license-note", required=True)
+    external_plan_parser.add_argument("--run-id", required=True)
+    external_plan_parser.add_argument(
+        "--router-config",
+        action="append",
+        required=True,
+        help=(
+            "frozen router config as router_id:field_view:predictions_path "
+            "or config_id:router_id:field_view:predictions_path"
+        ),
+    )
+    external_plan_parser.add_argument(
+        "--field-view",
+        choices=("name_only", "metadata", "full_body"),
+        action="append",
+        default=[],
+    )
+    external_plan_parser.add_argument(
+        "--tier",
+        choices=("easy", "hard"),
+        action="append",
+        default=[],
+    )
+    external_plan_parser.add_argument(
+        "--stress-candidate-size",
+        type=int,
+        action="append",
+        default=[],
+    )
+    external_plan_parser.add_argument("--matrix-output", default=None)
+    external_plan_parser.add_argument("--bootstrap-iterations", type=int, default=10000)
+    external_plan_parser.add_argument("--bootstrap-confidence", type=float, default=0.95)
+    external_plan_parser.set_defaults(handler=_run_external_plan)
+
+    external_matrix_parser = subparsers.add_parser(
+        "external-matrix",
+        help="run a frozen external SkillRouter matrix from an existing plan",
+    )
+    external_matrix_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    external_matrix_parser.add_argument("--plan", required=True)
+    external_matrix_parser.add_argument("--output", required=True)
+    external_matrix_parser.set_defaults(handler=_run_external_matrix)
+
+    prediction_export_parser = subparsers.add_parser(
+        "external-export-predictions",
+        help="export frozen SkillRouter prediction files for existing routers",
+    )
+    prediction_export_parser.add_argument(
+        "--benchmark",
+        choices=("skillrouter",),
+        required=True,
+    )
+    prediction_export_parser.add_argument("--data-root", required=True)
+    prediction_export_parser.add_argument("--output-dir", required=True)
+    prediction_export_parser.add_argument("--run-id", required=True)
+    prediction_export_parser.add_argument(
+        "--router-config",
+        action="append",
+        required=True,
+        help=(
+            "frozen router config as router_id:field_view:tier "
+            "or config_id:router_id:field_view:tier"
+        ),
+    )
+    prediction_export_parser.add_argument("--top-k", type=int, default=50)
+    prediction_export_parser.add_argument(
+        "--non-final",
+        action="store_true",
+        help="mark export as non-final evidence; required for dirty local fixture smoke runs",
+    )
+    prediction_export_parser.add_argument(
+        "--embedding-backend",
+        choices=EMBEDDING_BACKENDS,
+        default="sentence-transformers",
+    )
+    prediction_export_parser.add_argument(
+        "--baseline-minilm-model",
+        default="sentence-transformers/all-MiniLM-L6-v2",
+    )
+    prediction_export_parser.add_argument("--baseline-minilm-revision", default=None)
+    prediction_export_parser.add_argument("--finetuned-embedding-checkpoint", default=None)
+    prediction_export_parser.add_argument("--finetuned-embedding-revision", default=None)
+    prediction_export_parser.add_argument("--finetuned-embedding-sha256", default=None)
+    prediction_export_parser.set_defaults(handler=_run_external_export_predictions)
+
+    skillsbench_validate_parser = subparsers.add_parser(
+        "skillsbench-validate",
+        help="validate local SkillsBench live-agent inputs without running live agents",
+    )
+    skillsbench_validate_parser.add_argument("--data-root", required=True)
+    skillsbench_validate_parser.add_argument("--output-dir", required=True)
+    skillsbench_validate_parser.add_argument("--upstream-ref", required=True)
+    skillsbench_validate_parser.add_argument("--license-note", required=True)
+    skillsbench_validate_parser.set_defaults(handler=_run_skillsbench_validate)
+
+    skillsbench_export_routed_parser = subparsers.add_parser(
+        "skillsbench-export-routed-predictions",
+        help="export Stage 2 pilot routed predictions without running live agents",
+    )
+    skillsbench_export_routed_parser.add_argument("--tasks-manifest", required=True)
+    skillsbench_export_routed_parser.add_argument("--global-skill-registry", required=True)
+    skillsbench_export_routed_parser.add_argument("--output", required=True)
+    skillsbench_export_routed_parser.add_argument("--manifest-output", required=True)
+    skillsbench_export_routed_parser.add_argument(
+        "--approved-router-config",
+        default=None,
+        help="approved frozen router config JSON required for final evidence export",
+    )
+    skillsbench_export_routed_parser.add_argument(
+        "--router-id",
+        choices=("keyword", "hybrid", "embedding", "gated"),
+        required=True,
+    )
+    skillsbench_export_routed_parser.add_argument("--config-id", required=True)
+    skillsbench_export_routed_parser.add_argument("--top-k", type=int, required=True)
+    skillsbench_export_routed_parser.add_argument(
+        "--final-evidence",
+        action="store_true",
+        help="fail closed for fixture inputs; does not execute Stage 2",
+    )
+    skillsbench_export_routed_parser.set_defaults(
+        handler=_run_skillsbench_export_routed_predictions
+    )
+
+    skillsbench_plan_parser = subparsers.add_parser(
+        "skillsbench-plan",
+        help="write a frozen SkillsBench live-agent matrix plan without live benchmark claims",
+    )
+    skillsbench_plan_parser.add_argument("--data-root", required=True)
+    skillsbench_plan_parser.add_argument("--output", required=True)
+    skillsbench_plan_parser.add_argument("--upstream-ref", required=True)
+    skillsbench_plan_parser.add_argument("--license-note", required=True)
+    skillsbench_plan_parser.add_argument("--run-id", required=True)
+    skillsbench_plan_parser.add_argument("--mode", choices=("pilot", "frozen"), required=True)
+    skillsbench_plan_parser.add_argument("--selected-task-id", action="append", default=[])
+    skillsbench_plan_parser.add_argument("--routed-predictions", required=True)
+    skillsbench_plan_parser.add_argument("--oracle-qualification", default=None)
+    skillsbench_plan_parser.add_argument("--matrix-output", default=None)
+    skillsbench_plan_parser.add_argument("--workspace-root", default=None)
+    skillsbench_plan_parser.add_argument("--router-top-k", type=int, default=3)
+    skillsbench_plan_parser.add_argument("--skillrouter-data-root", default=None)
+    skillsbench_plan_parser.add_argument("--skillrouter-tasks", default=None)
+    skillsbench_plan_parser.set_defaults(handler=_run_skillsbench_plan)
+
+    skillsbench_matrix_parser = subparsers.add_parser(
+        "skillsbench-matrix",
+        help="run a SkillsBench live-agent matrix from an existing plan",
+    )
+    skillsbench_matrix_parser.add_argument("--plan", required=True)
+    skillsbench_matrix_parser.add_argument("--output", required=True)
+    skillsbench_matrix_parser.add_argument(
+        "--evidence-mode",
+        choices=("fixture", "real"),
+        default="fixture",
+        help="fixture mode may use fake test runner defaults; real mode fails closed",
+    )
+    skillsbench_matrix_parser.add_argument(
+        "--runner",
+        choices=("fake", "codex-cli"),
+        default="fake",
+        help="runner implementation to configure for matrix execution",
+    )
+    skillsbench_matrix_parser.add_argument("--codex-binary", default="codex")
+    skillsbench_matrix_parser.add_argument("--codex-home-base", default=None)
+    skillsbench_matrix_parser.set_defaults(handler=_run_skillsbench_matrix)
+
+    evidence_gate_parser = subparsers.add_parser(
+        "v0.3-evidence-gate",
+        help="validate frozen v0.3 external and live-agent evidence before promotion",
+    )
+    evidence_gate_parser.add_argument("--output", required=True)
+    evidence_gate_parser.add_argument("--markdown-output", default=None)
+    evidence_gate_parser.add_argument("--external-plan", default=None)
+    evidence_gate_parser.add_argument("--external-report", default=None)
+    evidence_gate_parser.add_argument("--live-plan", default=None)
+    evidence_gate_parser.add_argument("--live-report", default=None)
+    evidence_gate_parser.set_defaults(handler=_run_v0_3_evidence_gate)
 
     index_parser = subparsers.add_parser("index", help="scan skills and write an index")
     index_parser.add_argument("--skills-path", required=True)
@@ -857,6 +1112,344 @@ def _run_github_action_gate(args: argparse.Namespace) -> None:
     print(f"GitHub action gate {gate['decision']}: {args.output_dir}")
     if gate["decision"] != "ALLOW_MERGE":
         raise ValueError(f"github action gate decision: {gate['decision']}")
+
+
+def _run_external_validate(args: argparse.Namespace) -> None:
+    _, validation = write_external_validation(
+        benchmark=args.benchmark,
+        data_root=args.data_root,
+        output_dir=args.output_dir,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+        acquired_at=args.acquired_at,
+    )
+    print(
+        "External validation "
+        f"{validation['status']}: {args.output_dir} "
+        f"({validation['task_count']} tasks)"
+    )
+
+
+def _run_external_score(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    report = write_skillrouter_score_report(
+        data_root=args.data_root,
+        predictions_path=args.predictions,
+        output_path=args.output,
+        mode=args.mode,
+        tier=args.tier,
+        tiers=tuple(args.tiers) if args.tiers else None,
+    )
+    print(
+        "External score "
+        f"{report['mode']}: {args.output} "
+        f"({report['task_count']} tasks)"
+    )
+
+
+def _run_external_plan(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    plan = write_skillrouter_matrix_plan(
+        data_root=args.data_root,
+        output_path=args.output,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+        run_id=args.run_id,
+        routers=[_parse_external_router_config(value) for value in args.router_config],
+        field_views=tuple(args.field_view) if args.field_view else (
+            "name_only",
+            "metadata",
+            "full_body",
+        ),
+        tiers=tuple(args.tier) if args.tier else ("easy", "hard"),
+        stress_candidate_sizes=tuple(args.stress_candidate_size)
+        if args.stress_candidate_size
+        else (1000, 10000),
+        matrix_output_path=args.matrix_output,
+        bootstrap_iterations=args.bootstrap_iterations,
+        bootstrap_confidence=args.bootstrap_confidence,
+    )
+    print(
+        "External matrix plan "
+        f"{plan['run_id']}: {args.output} "
+        f"({len(plan['frozen_routers'])} frozen routers)"
+    )
+
+
+def _run_external_matrix(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    report = run_skillrouter_matrix(plan_path=args.plan, output_path=args.output)
+    print(
+        "External matrix "
+        f"{report['run_id']}: {args.output} "
+        f"({len(report['official'])} frozen routers)"
+    )
+
+
+def _run_external_export_predictions(args: argparse.Namespace) -> None:
+    if args.benchmark != "skillrouter":
+        raise ValueError(f"unsupported external benchmark: {args.benchmark}")
+    configs = [
+        _parse_prediction_export_router_config(value, args)
+        for value in args.router_config
+    ]
+    _validate_prediction_export_cli_configs(configs, args)
+    model = (
+        HashingEmbeddingModel()
+        if args.embedding_backend == "hashing"
+        else None
+    )
+    manifest = write_skillrouter_prediction_artifacts(
+        data_root=args.data_root,
+        output_dir=args.output_dir,
+        run_id=args.run_id,
+        configs=configs,
+        top_k=args.top_k,
+        command=["skilleval", *sys.argv[1:]],
+        embedding_model=model,
+        embedding_backend=args.embedding_backend,
+        final_evidence=not args.non_final,
+    )
+    pass_count = sum(1 for item in manifest["artifacts"] if item["status"] == "PASS")
+    unavailable_count = sum(
+        1 for item in manifest["artifacts"] if item["status"] == "UNAVAILABLE"
+    )
+    print(
+        "External predictions "
+        f"{manifest['run_id']}: {args.output_dir} "
+        f"({pass_count} exported, {unavailable_count} unavailable)"
+    )
+
+
+def _run_skillsbench_validate(args: argparse.Namespace) -> None:
+    adapter = SkillsBenchAdapter(
+        data_root=args.data_root,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+    )
+    validation = adapter.validate()
+    provenance = adapter.provenance(validation)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "validation.json").write_text(
+        json.dumps(validation, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "manifest.json").write_text(
+        json.dumps(provenance, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        "SkillsBench validation "
+        f"{validation['status']}: {args.output_dir} "
+        f"({validation['task_count']} tasks)"
+    )
+    if validation["status"] != "PASS":
+        raise ValueError("SkillsBench validation failed")
+
+
+def _run_skillsbench_export_routed_predictions(args: argparse.Namespace) -> None:
+    generation_command = [
+        "python",
+        "-m",
+        "hermes_skilleval.cli",
+        "skillsbench-export-routed-predictions",
+        "--tasks-manifest",
+        args.tasks_manifest,
+        "--global-skill-registry",
+        args.global_skill_registry,
+        "--output",
+        args.output,
+        "--manifest-output",
+        args.manifest_output,
+        "--router-id",
+        args.router_id,
+        "--config-id",
+        args.config_id,
+        "--top-k",
+        str(args.top_k),
+    ]
+    if args.approved_router_config:
+        generation_command.extend(
+            [
+                "--approved-router-config",
+                args.approved_router_config,
+            ]
+        )
+    if args.final_evidence:
+        generation_command.append("--final-evidence")
+    export = write_stage2_pilot_routed_prediction_artifacts(
+        tasks_manifest_path=args.tasks_manifest,
+        global_skill_registry_path=args.global_skill_registry,
+        output_path=args.output,
+        manifest_output_path=args.manifest_output,
+        router_id=args.router_id,
+        config_id=args.config_id,
+        top_k=args.top_k,
+        approved_router_config_path=args.approved_router_config,
+        generation_command=generation_command,
+        final_evidence=args.final_evidence,
+    )
+    print(
+        "SkillsBench routed predictions "
+        f"{args.config_id}: {args.output} "
+        f"({export['task_count']} tasks, top_k={args.top_k})"
+    )
+
+
+def _run_skillsbench_plan(args: argparse.Namespace) -> None:
+    plan = write_skillsbench_plan(
+        data_root=args.data_root,
+        output_path=args.output,
+        upstream_ref=args.upstream_ref,
+        license_note=args.license_note,
+        run_id=args.run_id,
+        mode=args.mode,
+        selected_task_ids=args.selected_task_id,
+        routed_predictions_path=args.routed_predictions,
+        oracle_qualification_path=args.oracle_qualification,
+        matrix_output_path=args.matrix_output,
+        workspace_root=args.workspace_root,
+        router_top_k=args.router_top_k,
+        skillrouter_data_root=args.skillrouter_data_root,
+        skillrouter_tasks_path=args.skillrouter_tasks,
+    )
+    print(
+        "SkillsBench live-agent plan "
+        f"{plan['run_id']}: {args.output} "
+        f"({len(plan['selected_tasks'])} tasks, {plan['mode']})"
+    )
+
+
+def _run_skillsbench_matrix(args: argparse.Namespace) -> None:
+    runner = None
+    if args.runner == "codex-cli" and args.evidence_mode != "real":
+        raise ValueError("--runner codex-cli requires --evidence-mode real")
+    if args.runner == "codex-cli":
+        runner = CodexCliRunner(
+            CodexCliRunnerConfig(
+                codex_binary=args.codex_binary,
+                codex_home_base=args.codex_home_base,
+            )
+        )
+    report = run_skillsbench_matrix(
+        plan_path=args.plan,
+        output_path=args.output,
+        runner=runner,
+        evidence_mode=args.evidence_mode,
+    )
+    print(
+        "SkillsBench live-agent matrix "
+        f"{report['run_id']}: {args.output} "
+        f"({len(report['runs'])} runs)"
+    )
+
+
+def _run_v0_3_evidence_gate(args: argparse.Namespace) -> None:
+    report = write_evidence_decision_report(
+        output_path=args.output,
+        markdown_output_path=args.markdown_output,
+        external_plan_path=args.external_plan,
+        external_report_path=args.external_report,
+        live_plan_path=args.live_plan,
+        live_report_path=args.live_report,
+    )
+    print(
+        "v0.3 evidence gate "
+        f"{report['benchmark_validity_gate']['status']}: {args.output} "
+        f"({report['router_promotion_gate']['decision']})"
+    )
+
+
+def _parse_external_router_config(value: str) -> dict[str, str]:
+    parts = value.split(":", 3)
+    if len(parts) == 3 and all(part.strip() for part in parts):
+        router_id, field_view, predictions_path = parts
+        return {
+            "router_id": router_id,
+            "field_view": field_view,
+            "predictions_path": predictions_path,
+            "version": "frozen-cli",
+        }
+    if len(parts) == 4 and all(part.strip() for part in parts):
+        config_id, router_id, field_view, predictions_path = parts
+        return {
+            "config_id": config_id,
+            "router_id": router_id,
+            "field_view": field_view,
+            "predictions_path": predictions_path,
+            "version": "frozen-cli",
+        }
+    else:
+        raise ValueError(
+            "--router-config must use router_id:field_view:predictions_path "
+            "or config_id:router_id:field_view:predictions_path"
+        )
+
+
+def _parse_prediction_export_router_config(
+    value: str,
+    args: argparse.Namespace,
+) -> FrozenRouterConfig:
+    parts = value.split(":", 3)
+    if len(parts) == 3 and all(part.strip() for part in parts):
+        router_id, field_view, tier = parts
+        config_id = f"{router_id}__{field_view}__{tier}"
+    elif len(parts) == 4 and all(part.strip() for part in parts):
+        config_id, router_id, field_view, tier = parts
+    else:
+        raise ValueError(
+            "--router-config must use router_id:field_view:tier "
+            "or config_id:router_id:field_view:tier"
+        )
+    if router_id == "baseline-minilm":
+        return FrozenRouterConfig(
+            router_id=router_id,
+            config_id=config_id,
+            field_view=field_view,
+            tier=tier,
+            model_name=args.baseline_minilm_model,
+            model_revision=args.baseline_minilm_revision,
+        )
+    if router_id == "finetuned-embedding":
+        return FrozenRouterConfig(
+            router_id=router_id,
+            config_id=config_id,
+            field_view=field_view,
+            tier=tier,
+            model_name="finetuned-embedding",
+            model_revision=args.finetuned_embedding_revision,
+            checkpoint_path=args.finetuned_embedding_checkpoint,
+            checkpoint_sha256=args.finetuned_embedding_sha256,
+        )
+    return FrozenRouterConfig(
+        router_id=router_id,
+        config_id=config_id,
+        field_view=field_view,
+        tier=tier,
+        model_name=router_id,
+    )
+
+
+def _validate_prediction_export_cli_configs(
+    configs: list[FrozenRouterConfig],
+    args: argparse.Namespace,
+) -> None:
+    for config in configs:
+        if args.embedding_backend == "hashing" and config.router_id == "baseline-minilm":
+            raise ValueError(
+                "CLI hashing backend cannot export baseline-minilm prediction artifacts"
+            )
+        if config.router_id == "baseline-minilm" and not _is_immutable_revision(
+            config.model_revision
+        ):
+            raise ValueError(
+                "baseline-minilm requires --baseline-minilm-revision as an immutable "
+                "model commit SHA"
+            )
 
 
 def _parse_ci_checks(values: list[str]) -> list[tuple[str, str]]:

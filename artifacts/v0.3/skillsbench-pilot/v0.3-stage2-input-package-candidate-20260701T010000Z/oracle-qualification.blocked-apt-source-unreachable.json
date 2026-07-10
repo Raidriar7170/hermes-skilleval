@@ -1,0 +1,72 @@
+{
+  "approved_tasks": [
+    {
+      "effective_network_mode": "none",
+      "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+      "task_id": "bike-rebalance",
+      "task_manifest_sha256": "bc5bdbd0dd634edd8acebe4f2dd8cf28f3ad07aaee267e9332953edd5f3bd993",
+      "verifier_passed": false
+    },
+    {
+      "effective_network_mode": "controlled",
+      "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+      "task_id": "dialogue-parser",
+      "task_manifest_sha256": "e575fb60e2c1974a2d0e42a966ec3a035a466d23f6f3a2e8a7d8f293d5554450",
+      "verifier_passed": false
+    },
+    {
+      "effective_network_mode": "controlled",
+      "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+      "task_id": "offer-letter-generator",
+      "task_manifest_sha256": "0a96958a8dc97a12e753076211b0f4e867184ae5ca88b21b3891675e0fbd32d2",
+      "verifier_passed": false
+    },
+    {
+      "effective_network_mode": "controlled",
+      "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+      "task_id": "powerlifting-coef-calc",
+      "task_manifest_sha256": "0ee5139bb24b1fe678f9a7c193acefede1e5ede3e5b618b4a1c8702a26a43403",
+      "verifier_passed": false
+    }
+  ],
+  "apt_source_diagnostics": {
+    "name": "manifest.json",
+    "path": "apt-source-diagnostics-20260702T052036Z/manifest.json",
+    "sha256": "973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a",
+    "size_bytes": 20784
+  },
+  "branch": "ops/stage2-input-package-candidate",
+  "created_at": "2026-07-02T05:20:36Z",
+  "head": "d289460dd0eeecfc6e7b2275c465f6f030f3e7cc",
+  "input_package_validator_status": "NOT_RERUN_APT_SOURCE_UNREACHABLE",
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "privacy_status": "REVIEW_REQUIRED",
+  "qualification_executed": false,
+  "records": {
+    "name": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+    "path": "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+    "sha256": "3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77",
+    "size_bytes": 20830
+  },
+  "required_human_action": "Provide a Docker/host network path or explicitly approved local/offline apt mirror/cache that allows the approved Dockerfile apt-get update steps to fetch signed Debian/Ubuntu package metadata. Then rerun dependency materialization before oracle qualification.",
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "schema_version": "v0.3.stage2-oracle-qualification-blocked-report.v1",
+  "status": "BLOCKED_APT_SOURCE_UNREACHABLE",
+  "summary": "Docker daemon is available and approved base images are present, but approved Dockerfile apt dependency sources are unreachable from the current host/container network: deb.debian.org HTTP returns 403, HTTPS and Debian snapshot TLS fail before signed apt metadata is fetched.",
+  "verifier_passed_count": 0,
+  "verifier_total_count": 4
+}

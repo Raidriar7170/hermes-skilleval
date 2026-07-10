@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>External matrix data-root provenance repair</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #17202a; line-height: 1.5; }
+    main { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; }
+    code { background: #eef2f6; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #1f7a4d; padding: 12px 16px; background: #f0fff6; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .card { border: 1px solid #d6dde5; border-radius: 8px; padding: 12px; background: #ffffff; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>External matrix data-root provenance repair</h1>
+  <p class="status"><strong>结论：</strong>external matrix 的 <code>data_root</code> blocker 已修复为 frozen provenance 校验路径；正式 gate 现在为 <code>REVIEW_REQUIRED</code>，router promotion 仍保持 <code>KEEP_BASELINE</code>。</p>
+
+  <section class="grid">
+    <div class="card"><strong>Gate status</strong><br><code>REVIEW_REQUIRED</code></div>
+    <div class="card"><strong>Blocking failures</strong><br><code>0</code></div>
+    <div class="card"><strong>Router decision</strong><br><code>KEEP_BASELINE</code></div>
+    <div class="card"><strong>Remaining caveat</strong><br><code>overlap_status</code></div>
+  </section>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>没有提交 402MB Eval Core input directory。</li>
+    <li>当 frozen external <code>data_root</code> 未 materialize 时，使用 frozen PASS validation 和 adapter provenance fingerprints 进行自洽验证。</li>
+    <li>committed routed prediction files 仍然按 frozen plan 重新哈希。</li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li><code>external.input_hashes</code> blocker 已消失。</li>
+    <li><code>blocking_failure_count = 0</code>。</li>
+    <li>剩余 <code>REVIEW_REQUIRED</code> 来自 live-agent overlap/generalization caveat。</li>
+  </ul>
+
+  <h2>明确没有发生</h2>
+  <ul>
+    <li>没有重跑 Codex。</li>
+    <li>没有重跑 Stage 2 12-run。</li>
+    <li>没有创建新 task traces。</li>
+    <li>没有 performance claim。</li>
+    <li>没有 router promotion。</li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>单独 final review 这个 repair PR；merge 后再开一个很小的 evidence-gate closeout/review PR，明确 <code>REVIEW_REQUIRED</code> 的剩余 overlap caveat 是否需要保持或补充证据。</p>
+</main>
+</body>
+</html>

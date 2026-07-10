@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from hermes_skilleval.remote_paths import validate_a100_user_path
+from hermes_skilleval.remote_paths import A100_USER_ROOT, validate_path_within_root
 
 
 EXCLUDED_EVIDENCE_FILES = {
@@ -18,8 +18,13 @@ def build_model_manifest(
     *,
     model_dir: Path | str,
     model_dir_label: str,
+    output_root: Path | str = A100_USER_ROOT,
 ) -> dict[str, Any]:
-    validated_label = validate_a100_user_path(model_dir_label, field="model_dir")
+    validated_label = validate_path_within_root(
+        model_dir_label,
+        root=output_root,
+        field="model_dir",
+    )
     root = Path(model_dir)
     files = []
     total_size_bytes = 0
@@ -54,10 +59,12 @@ def write_model_manifest(
     model_dir: Path | str,
     model_dir_label: str,
     output_path: Path | str,
+    output_root: Path | str = A100_USER_ROOT,
 ) -> dict[str, Any]:
     manifest = build_model_manifest(
         model_dir=model_dir,
         model_dir_label=model_dir_label,
+        output_root=output_root,
     )
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)

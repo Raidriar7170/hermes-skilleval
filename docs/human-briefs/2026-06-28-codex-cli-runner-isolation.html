@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PR-5 Codex CLI Runner Isolation - Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #64748b;
+      --line: #d6dde6;
+      --band: #f5f7fa;
+      --accent: #0f766e;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #fff;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 36px 24px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+    }
+    ul {
+      margin: 8px 0 0;
+      padding-left: 22px;
+    }
+    li {
+      margin: 5px 0;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94em;
+      background: var(--band);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+    .status {
+      display: inline-block;
+      margin: 8px 0 18px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      background: var(--band);
+      font-weight: 600;
+    }
+    .summary {
+      font-size: 18px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 16px 0;
+    }
+    .muted {
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>PR-5: Codex CLI Runner Isolation</h1>
+    <div class="status">状态：needs review</div>
+    <p class="summary">本阶段只新增 <code>CodexCliRunner</code> 隔离执行层，用 fake Codex executable 测试真实 subprocess 语义，不运行 SkillsBench 或 live-agent benchmark。</p>
+
+    <h2>本阶段变化</h2>
+    <ul>
+      <li>新增 <code>CodexCliRunnerConfig</code> 和 <code>CodexCliRunner</code>，保持 PR-4 <code>AgentRunner</code> / verifier contract。</li>
+      <li>默认使用 isolated <code>CODEX_HOME</code>、<code>--json</code>、<code>--ephemeral</code>、<code>--ignore-user-config</code>、<code>--ignore-rules</code>、<code>--sandbox workspace-write</code>、<code>--output-last-message</code>。</li>
+      <li>benchmark skills 挂载到 <code>.agents/skills/&lt;safe-skill-id&gt;/SKILL.md</code>，每个文件包含 Codex skill <code>name</code> / <code>description</code> metadata。</li>
+      <li>final-evidence isolated mode 同时隔离 <code>HOME</code>，并记录 user/admin/workspace-parent/bundled skill inventory；继承 <code>CODEX_HOME</code> 只允许 smoke-only metadata。</li>
+      <li>拒绝 <code>danger-full-access</code>、dangerous bypass flags、<code>--yolo</code>、runner control flag override、<code>--flag=value</code> control forms，以及 <code>CODEX_HOME</code> / <code>HOME</code> / XDG 等 runner-controlled env override。</li>
+      <li>dot-prefixed skill directories 如果包含 <code>SKILL.md</code>，也按可能的 skill leakage 计数。</li>
+      <li><code>--skip-git-repo-check</code> 只能由 runner 在 help 显示支持时受控加入，不能通过用户 <code>extra_args</code> 注入。</li>
+      <li>用 fake executable 覆盖 success、timeout process-group cleanup、JSONL parsing、malformed/unknown events、skill evidence、redaction、truncation。</li>
+      <li>新增并收紧 <code>schemas/live-agent-trace.schema.json</code>，验证 fake 和 Codex runner trace 以及非法 skill state。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/live_agent_runtime.py</code></li>
+      <li><code>tests/test_codex_cli_runner.py</code></li>
+      <li><code>schemas/live-agent-trace.schema.json</code></li>
+      <li><code>openspec/changes/codex-cli-runner-isolation/</code></li>
+    </ul>
+
+    <h2>验证</h2>
+    <p class="muted">最终验证结果以 PR 描述和命令输出为准。本 brief 只做人工审阅索引。</p>
+    <ul>
+      <li><code>python -m pytest -q tests/test_codex_cli_runner.py</code></li>
+      <li><code>python -m pytest -q tests/test_live_agent_runtime.py</code></li>
+      <li><code>python -m pytest -q</code></li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></li>
+      <li><code>release-check</code>、<code>git diff --check</code>、v0.3 YAML parse、CRLF/new-file check</li>
+    </ul>
+
+    <h2>边界与限制</h2>
+    <ul>
+      <li>没有接入 SkillsBench，没有运行 full live-agent benchmark。</li>
+      <li>没有修改 Phase 10 deterministic offline replay。</li>
+      <li>没有修改 external matrix、SkillRouter scorer、router promotion 或 release gate。</li>
+      <li>agent process exit code 只作为过程状态，task success 仍来自 verifier。</li>
+      <li>usage/cost 在没有可靠 token usage 时保持 <code>null</code>。</li>
+    </ul>
+
+    <h2>建议下一步</h2>
+    <p>先完成 PR-5 review；SkillsBench adapter、task freezing 和 live matrix 留到 PR-6。</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Stage 2 input package candidate - non-execution qualification blocked</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 32px; line-height: 1.55; color: #17202a; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 17px; margin-top: 24px; }
+    code { background: #f2f4f7; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #b45309; padding: 10px 14px; background: #fff7ed; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+  <h1>Hermes SkillEval PR #13 非执行资格状态</h1>
+  <p class="status"><strong>结论：</strong>Docker daemon 已可用，批准的 base images 已存在；但当前 host/container 网络无法获取 Debian apt metadata：默认 <code>http://deb.debian.org</code> 返回 <code>403 Forbidden</code>，HTTPS 与 Debian snapshot probe 在 TLS 阶段失败。因此 oracle/verifier qualification 未执行，validator 未重跑。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li><code>APPROVED_FOR_NON_EXECUTION_QUALIFICATION_BLOCKED_APT_SOURCE_UNREACHABLE</code></li>
+    <li><code>can_be_used_as_real_stage2_input_package_now=false</code></li>
+    <li>Privacy scan 仍为 <code>REVIEW_REQUIRED</code></li>
+  </ul>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>记录 Docker context/info/image ls，并用 qualified image names 记录批准 base image inspect。</li>
+    <li>在 <code>python:3.12-slim</code> 中复现默认 apt source 的 <code>403 Forbidden</code>。</li>
+    <li>测试最小 HTTPS scheme rewrite 与 Debian snapshot source，均未成功获取 signed apt metadata。</li>
+    <li>记录 host 与 container 的 network-shape probe，确认 blocker 不是单个 Dockerfile 语义问题。</li>
+    <li>未运行 oracle/verifier qualification，未产生 <code>verifier_passed=true</code>。</li>
+  </ul>
+
+  <h2>关键 artifact</h2>
+  <ul>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/apt-source-diagnostics-20260702T052036Z/manifest.json</code> sha256 <code>973d258d99e980803da07f5fd4fa5dd20e56bcac14b4b538bf6236320779c90a</code></li>
+    <li><code>oracle_qualification.blocked-apt-source-unreachable.jsonl</code> sha256 <code>3dc8fffc1f533890eb3c1836328860a0562eab33f92afb9d75ecb82d4d637a77</code></li>
+    <li><code>oracle-qualification.blocked-apt-source-unreachable.json</code> sha256 <code>b98d72aff14f48898f9ac7bf2e9e29fb8c36ebecb027f6ae31235adf131ff9d9</code></li>
+  </ul>
+
+  <h2>验证与边界</h2>
+  <ul>
+    <li>没有 Stage 2 pilot execution。</li>
+    <li>没有 Codex run。</li>
+    <li>没有 frozen pilot plan、traces、evidence-gate rerun。</li>
+    <li>没有使用 process exit code 或 LLM judge 作为任务成功来源。</li>
+  </ul>
+
+  <h2>下一步</h2>
+  <p>需要提供可用的 Docker/host network path，或显式批准的本地/offline apt mirror/cache，使批准 Dockerfile 的 <code>apt-get update</code> 能获取 signed Debian/Ubuntu metadata；之后再重跑 dependency materialization 和非执行 oracle qualification。</p>
+</body>
+</html>

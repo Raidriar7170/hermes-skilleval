@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v0.3 发布谱系与可移植训练根目录 · Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #526076;
+      --line: #d7deea;
+      --panel: #f6f8fc;
+      --accent: #2457a7;
+      --accent-soft: #eaf1ff;
+      --review: #8a5300;
+      --review-soft: #fff5df;
+      --ok: #17643a;
+      --ok-soft: #eaf8f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); }
+    a:focus-visible { outline: 3px solid #f2b84b; outline-offset: 3px; }
+
+    code {
+      padding: 0.1rem 0.34rem;
+      border-radius: 0.3rem;
+      background: #edf1f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9em;
+      overflow-wrap: anywhere;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: -4rem;
+      left: 1rem;
+      z-index: 10;
+      padding: 0.6rem 0.9rem;
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .skip-link:focus { top: 1rem; }
+
+    header,
+    main,
+    footer {
+      width: min(1060px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+
+    header { padding: 3rem 0 1.5rem; }
+
+    h1 {
+      max-width: 820px;
+      margin: 0 0 0.6rem;
+      font-size: clamp(1.9rem, 4vw, 3rem);
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+    }
+
+    h2 {
+      margin: 0 0 0.9rem;
+      font-size: 1.35rem;
+      line-height: 1.3;
+    }
+
+    h3 { margin: 0 0 0.45rem; font-size: 1rem; }
+    p { margin: 0.45rem 0; }
+    ul, ol { margin: 0.55rem 0; padding-left: 1.35rem; }
+    li + li { margin-top: 0.35rem; }
+
+    .eyebrow {
+      margin: 0 0 0.5rem;
+      color: var(--accent);
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .conclusion {
+      max-width: 920px;
+      padding: 1rem 1.15rem;
+      border-left: 5px solid var(--review);
+      background: var(--review-soft);
+      font-size: 1.08rem;
+    }
+
+    section { margin: 1.2rem 0 2.2rem; scroll-margin-top: 1rem; }
+
+    .status-grid,
+    .change-grid,
+    .artifact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .card {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      background: #fff;
+    }
+
+    .card p:last-child { color: var(--muted); }
+
+    .status-card {
+      border-top: 4px solid var(--accent);
+      background: var(--panel);
+    }
+
+    .status-card.review { border-top-color: var(--review); }
+    .status-card.ok { border-top-color: var(--ok); }
+
+    .label {
+      display: block;
+      margin-bottom: 0.22rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 750;
+      letter-spacing: 0.055em;
+      text-transform: uppercase;
+    }
+
+    .value { font-size: 1.04rem; font-weight: 750; }
+
+    .callout {
+      padding: 0.9rem 1rem;
+      border: 1px solid #c7d7f2;
+      border-radius: 0.7rem;
+      background: var(--accent-soft);
+    }
+
+    .callout.warning {
+      border-color: #ead09b;
+      background: var(--review-soft);
+    }
+
+    .callout.ok {
+      border-color: #b9dfc8;
+      background: var(--ok-soft);
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+    }
+
+    caption {
+      padding: 0 0 0.6rem;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    th,
+    td {
+      padding: 0.7rem 0.75rem;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { background: var(--panel); }
+    .result { color: var(--ok); font-weight: 750; }
+    .expected { color: var(--review); font-weight: 750; }
+
+    .artifact-grid a {
+      display: inline-block;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      margin-top: 2rem;
+      padding: 1.4rem 0 3rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 620px) {
+      header { padding-top: 2rem; }
+      th, td { padding: 0.58rem; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+
+  <header>
+    <p class="eyebrow">Human Brief · 2026-07-10</p>
+    <h1>v0.3 发布谱系与可移植训练根目录</h1>
+    <p class="conclusion"><strong>一句话结论：</strong>本地 apply 已用真实 merge bridge 接回不可变的 <code>v0.3.0</code> 发布线，并把 embedding 训练输出改为可选且受 containment 约束的根目录；当前状态仍是 <code>needs review</code>，尚未发布。</p>
+  </header>
+
+  <main id="main-content">
+    <section aria-labelledby="status-title">
+      <h2 id="status-title">当前状态</h2>
+      <div class="status-grid">
+        <article class="card status-card review">
+          <span class="label">Review</span>
+          <span class="value">needs review</span>
+          <p>本地实现与 required gates 已完成，尚待用户与只读 Reviewer 检查。</p>
+        </article>
+        <article class="card status-card ok">
+          <span class="label">Local apply</span>
+          <span class="value">complete</span>
+          <p>只完成批准的 lineage、portable-root、测试、文档与验证范围。</p>
+        </article>
+        <article class="card status-card review">
+          <span class="label">Publication</span>
+          <span class="value">not published</span>
+          <p>没有 push、PR、remote merge、tag 变更、release 或 deploy。</p>
+        </article>
+        <article class="card status-card">
+          <span class="label">Evidence posture</span>
+          <span class="value"><code>REVIEW_REQUIRED / KEEP_BASELINE</code></span>
+          <p>该真值面保持不变，不代表 benchmark PASS 或 router promotion。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="changes-title">
+      <h2 id="changes-title">本阶段改变了什么</h2>
+      <div class="change-grid">
+        <article class="card">
+          <h3>真实发布谱系 bridge</h3>
+          <p>通过 content-bearing、双亲、非 fast-forward merge 同时保留 current-main 与已发布 <code>v0.3.0</code> 历史；annotated tag 未移动。</p>
+        </article>
+        <article class="card">
+          <h3>可移植训练输出根目录</h3>
+          <p>训练入口支持显式 root、config root 与兼容默认值，并把同一 canonical root 传到 config、manifest 与 run summary。</p>
+        </article>
+        <article class="card">
+          <h3>历史证据不重写</h3>
+          <p>18 个受保护 demo/evidence entries 与 bridge 的 mode/blob ID 完全一致；既有 A100 运行记录仍按原始 provenance 保存。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="lineage-title">
+      <h2 id="lineage-title">关键提交、双亲与 tag</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>本地 Git 对象的现场验证结果</caption>
+          <thead>
+            <tr>
+              <th scope="col">角色</th>
+              <th scope="col">对象</th>
+              <th scope="col">说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Captured origin/main</th>
+              <td><code>1a219d755ce31b94fee9dfb6b7824d6b9236f821</code></td>
+              <td>bridge first parent 的祖先，也是最终本地 HEAD 的祖先。</td>
+            </tr>
+            <tr>
+              <th scope="row">Bridge</th>
+              <td><code>887672bba07235fd1b1d4c030866f4e74248c1c8</code></td>
+              <td>真实 content-bearing merge；fresh first-parent diff 为 563 files。</td>
+            </tr>
+            <tr>
+              <th scope="row">Bridge parent 1</th>
+              <td><code>1c44972f2777eafbc1fe5b64b2e8e02a72917e79</code></td>
+              <td>bridge 前的 Worker HEAD。</td>
+            </tr>
+            <tr>
+              <th scope="row">Bridge parent 2 / peeled tag</th>
+              <td><code>7fd85579edc34d2207b6472d2aa000904cfb554d</code></td>
+              <td><code>v0.3.0^{}</code>；发布线相对 captured main 有 93 个 unique commits。</td>
+            </tr>
+            <tr>
+              <th scope="row">Annotated tag object</th>
+              <td><code>f8656e336b35b703bc52acc4be9f5e55237cf7e1</code></td>
+              <td><code>v0.3.0</code> tag object，保持不可变。</td>
+            </tr>
+            <tr>
+              <th scope="row">Portable-root commits</th>
+              <td><code>33f5f4d59be90cf33e292720167a0ea7e35b3532</code><br><code>7becbdd5678a354084b773add412b85a64f6dcf3</code></td>
+              <td>可移植 root 实现与兼容性修正，位于 bridge 之后。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="path-title">
+      <h2 id="path-title">路径选择与 containment 合约</h2>
+      <ol>
+        <li><strong>选择优先级：</strong><code>--output-root</code> &gt; config 的 <code>output_root</code> &gt; 兼容默认 <code>/mnt/data/minghongsun</code>。</li>
+        <li><strong>相对 root：</strong>从 trainer 进程的当前工作目录解析，不跟随 config 文件目录。</li>
+        <li><strong>output_dir：</strong>相对值放在 selected root 下；绝对值只有在 canonicalize 后仍被 root 包含时才接受。</li>
+        <li><strong>Fail closed：</strong>拒绝 sibling-prefix、<code>..</code>、绝对路径与现存 symlink 逃逸，并在创建目录或写 model/manifest/summary 前失败。</li>
+        <li><strong>一致 provenance：</strong>train config、model manifest validation 与 <code>train-run-summary.json</code> 使用同一 canonical root/output_dir。</li>
+      </ol>
+      <p class="callout">这是文件系统 containment 检查，不承诺抵御敌对本地用户并发进行的 symlink-swap race。</p>
+    </section>
+
+    <section aria-labelledby="files-title">
+      <h2 id="files-title">关键文件与权威材料</h2>
+      <div class="artifact-grid">
+        <article class="card">
+          <h3>OpenSpec lifecycle</h3>
+          <p><a href="../../openspec/changes/close-v0-3-release-lineage-and-portable-root/proposal.md">proposal.md</a></p>
+          <p><a href="../../openspec/changes/close-v0-3-release-lineage-and-portable-root/design.md">design.md</a></p>
+          <p><a href="../../openspec/changes/close-v0-3-release-lineage-and-portable-root/tasks.md">tasks.md</a></p>
+        </article>
+        <article class="card">
+          <h3>Capability specs</h3>
+          <p><a href="../../openspec/changes/close-v0-3-release-lineage-and-portable-root/specs/release-lineage-integrity/spec.md">release-lineage-integrity</a></p>
+          <p><a href="../../openspec/changes/close-v0-3-release-lineage-and-portable-root/specs/portable-training-output-root/spec.md">portable-training-output-root</a></p>
+        </article>
+        <article class="card">
+          <h3>Lineage evidence</h3>
+          <p><a href="../release-lineage/v0.3.0-bridge-whitespace-exception.json">v0.3.0 bridge whitespace exception JSON</a></p>
+          <p><a href="../demo/phase17-calibrated-release-selector/release-decision.json">Phase 17 release decision</a></p>
+          <p><a href="../demo/phase18-ci-release-reproducibility/release-manifest.json">Phase 18 release manifest</a></p>
+        </article>
+        <article class="card">
+          <h3>Portable-root implementation</h3>
+          <p><a href="../../src/hermes_skilleval/remote_paths.py">remote_paths.py</a></p>
+          <p><a href="../../src/hermes_skilleval/embedding_training.py">embedding_training.py</a></p>
+          <p><a href="../../src/hermes_skilleval/model_manifest.py">model_manifest.py</a></p>
+          <p><a href="../../scripts/train_embedding_router.py">train_embedding_router.py</a></p>
+        </article>
+      </div>
+      <p class="callout"><strong>权威性说明：</strong>本页只是 companion brief。OpenSpec、source、tests、validation output 与 hash-backed evidence 才是 source of truth。</p>
+    </section>
+
+    <section aria-labelledby="verification-title">
+      <h2 id="verification-title">新鲜验证结果</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>本 Worker 在同一最终验证轮次获得的结果</caption>
+          <thead>
+            <tr>
+              <th scope="col">Gate</th>
+              <th scope="col">结果</th>
+              <th scope="col">证据摘要</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Focused portability tests</th>
+              <td class="result">PASS</td>
+              <td><code>43 passed</code></td>
+            </tr>
+            <tr>
+              <th scope="row">Full pytest</th>
+              <td class="result">PASS</td>
+              <td><code>698 passed</code></td>
+            </tr>
+            <tr>
+              <th scope="row">Scoped Ruff</th>
+              <td class="result">PASS</td>
+              <td>bridge→HEAD 的 8 个 Python 改动文件：check 全部通过，8 files already formatted。</td>
+            </tr>
+            <tr>
+              <th scope="row">Strict OpenSpec</th>
+              <td class="result">PASS</td>
+              <td><code>26 passed, 0 failed</code></td>
+            </tr>
+            <tr>
+              <th scope="row">Release reproducibility</th>
+              <td class="result">PASS</td>
+              <td>module CLI 与 installed <code>skilleval</code> entrypoint 均为 PASS；Phase 17/18 diff clean。</td>
+            </tr>
+            <tr>
+              <th scope="row">Version / truth surfaces</th>
+              <td class="result">PASS</td>
+              <td><code>0.3.0</code> 一致；<code>REVIEW_REQUIRED / KEEP_BASELINE</code> 保持。</td>
+            </tr>
+            <tr>
+              <th scope="row">Lineage / tag</th>
+              <td class="result">PASS</td>
+              <td>双亲顺序、三项 ancestry、tag object 与 peeled target 全部精确匹配。</td>
+            </tr>
+            <tr>
+              <th scope="row">Protected evidence</th>
+              <td class="result">PASS</td>
+              <td>18 entries 的 mode/blob ID 相等，bridge→HEAD path diff 与 name-only hit 均为 0。</td>
+            </tr>
+            <tr>
+              <th scope="row">Diff / boundary scans</th>
+              <td class="result">PASS</td>
+              <td>所有 exception-free diff checks，以及 conflict-marker、placeholder、高置信 secret scans 通过。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="callout warning" aria-labelledby="exception-title">
+        <h3 id="exception-title">透明记录：完整 first-parent whitespace check 是预期 exit 2</h3>
+        <p><code>git diff --check 1c44972f2777eafbc1fe5b64b2e8e02a72917e79 887672bba07235fd1b1d4c030866f4e74248c1c8</code> 精确返回 <span class="expected">exit 2</span>；原因只限 5 个不可变历史 blobs、12 条 <code>trailing whitespace</code> / <code>new blank line at EOF</code> diagnostics。</p>
+        <p>完整输出为 2681 bytes，SHA-256 为 <code>aa23d9fe555034fc86fd02ce22824d946dd09af8a119bee1ac49638841aa9c90</code>。exact-five exclusion、complete second-parent、两项 conflict files、tag→bridge、bridge→HEAD 以及所有 post-bridge/new-work checks 均为 exit 0；这不是把 exit 2 描述成 PASS。</p>
+      </aside>
+
+      <aside class="callout" aria-labelledby="ruff-title">
+        <h3 id="ruff-title">Repo-wide Ruff 是非 gate 的继承债务诊断</h3>
+        <p>项目的 <code>pyproject.toml</code> 与 CI workflows 没有配置 repo-wide Ruff gate。诊断性全仓运行发现 2 个继承的 F401 与 99 个 format drift 文件；两个 F401 文件相对 bridge 未改变，因此本阶段没有修改它们，也没有大范围格式化历史 evidence。当前变更适用的 8-file scoped Ruff gate 已通过。</p>
+      </aside>
+    </section>
+
+    <section aria-labelledby="risks-title">
+      <h2 id="risks-title">剩余风险与明确不声明</h2>
+      <ul>
+        <li>bridge 本身很大：发布线包含 93 个 unique commits，first-parent aggregate diff 为 563 files；必须按 topology、protected evidence 与小型 post-bridge runtime diff 分层审阅。</li>
+        <li>完整 first-parent whitespace check 仍保留预期 exit 2；闭合例外仅适用于已 hash 固定的 5 个历史 blobs，不延伸到任何新工作。</li>
+        <li>本阶段没有运行训练、GPU job 或 benchmark，也不声明模型质量、性能或 router uplift。</li>
+        <li>本阶段没有 push、创建或合并 PR、移动或创建 tag、发布 release、deploy，或 archive OpenSpec change。</li>
+        <li><code>REVIEW_REQUIRED / KEEP_BASELINE</code> 仍是适用真值面；local green 不等于发布批准。</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="next-title">
+      <h2 id="next-title">推荐下一步</h2>
+      <p class="callout ok"><strong>先审阅，再单独决定是否发布：</strong>请用户检查 bridge topology、5-blob closed exception、portable-root contract 与完整 diff；随后完成只读 Reviewer 阶段。只有审阅结论可接受时，才另行作出 push / PR / merge / publication 决定。</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>生成依据：approved OpenSpec artifacts、bridge→HEAD diff、fresh validation output 与 hash-backed exception evidence。此页不替代任何权威 artifact。</p>
+  </footer>
+</body>
+</html>

@@ -11,7 +11,7 @@ Boundary: This is a reusable repository Action, not a Marketplace-published Acti
 
 | Artifact | Helps verify | Limit |
 |---|---|---|
-| [`README.md`](../README.md) | Developer-tool front door, current `v0.2.1` onboarding, Action usage, dashboard preview, and compact evidence links. | The README summarizes; source artifacts remain authoritative. |
+| [`README.md`](../README.md) | Developer-tool front door, current `v0.3.0` release-prep onboarding, Action usage, dashboard preview, and compact evidence links. | The README summarizes; source artifacts remain authoritative. |
 | [`CONTEXT.md`](../CONTEXT.md) | Durable domain language for routing reliability, Skill Library Maintainers, diagnostics, and release gates. | It defines vocabulary, not a new release result. |
 | [`docs/release-handoff.md`](release-handoff.md) | Reviewer-ready handoff for Phase 16-18, historical release review, and post-release evidence. | It is not release approval or product readiness. |
 | [`docs/failure-gallery.md`](failure-gallery.md) | Gallery of blocked regressions and diagnostic risks. | It is an example index, not canonical evidence or a new verdict. |
@@ -34,6 +34,19 @@ Boundary: This is a reusable repository Action, not a Marketplace-published Acti
 | [`v0.2.0 post-release evidence`](demo/v0.2.0-post-release/post-release.md) | Current publication record: actual GitHub tag and GitHub Release facts after explicit human GO. | It is not Marketplace publication, PR comment automation, SaaS, or a runtime MCP router. |
 | [`v0.2.0 post-release JSON`](demo/v0.2.0-post-release/post-release.json) | Machine-readable current publication facts, release URL, tag, and verification commands. | It is not a public release action by itself. |
 | [`docs/phase18.md`](phase18.md) | Narrative summary for the CI-backed reproducibility pack. | It should be read with the manifest and release-check summary. |
+
+## v0.3 Stage 2 Evidence Chain
+
+| Artifact | Helps verify | Limit |
+|---|---|---|
+| [`v0.3.0 release-prep notes`](release-notes/v0.3.0.md) | Release framing for the Stage 2 real Codex pilot evidence-chain release. | This prepares release metadata only; it does not create a tag or GitHub Release. |
+| [`PR #30 closeout artifact`](../artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-closeout-20260708T080414Z/stage2-real-codex-evidence-gate-closeout.json) | Final closeout posture: `REVIEW_REQUIRED / KEEP_BASELINE`, `blocking_failure_count=0`, and `live_agent.overlap_status` as the remaining caveat. | `REVIEW_REQUIRED` is not PASS and `KEEP_BASELINE` is not a performance conclusion. |
+| [`PR #25 execution artifact`](../artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-execution.json) | Real Codex 12-run execution evidence over the frozen 4x3x1 plan. | Raw verifier facts only; no performance claim or router promotion. |
+| [`PR #25 matrix report`](../artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-12-run-execution-20260707T072652Z/stage2-real-codex-12-run-matrix-report.json) | 12 runs completed with verifier output; raw verifier facts are 6 passed and 6 failed. | Process exit code is not task success; deterministic verifier output is the only task success source. |
+| [`PR #22 frozen pilot plan`](../artifacts/v0.3/skillsbench-pilot/v0.3-stage2-pilot-freeze-20260707T025315Z/stage2-pilot-plan.frozen.json) | Frozen 4 tasks x 3 conditions x 1 trial plan and fixed run order. | It is a plan artifact, not execution evidence. |
+| [`PR #27 adapter artifact`](../artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-adapter-20260708T032000Z/stage2-real-codex-evidence-gate-adapter.json) | Adapter contract for mapping Stage 2 real Codex artifacts into the evidence gate. | Adapter support is not a router promotion. |
+| [`PR #29 data-root provenance repair`](../artifacts/v0.3/skillsbench-pilot/v0.3-external-matrix-data-root-provenance-repair-20260708T065712Z/external-matrix-data-root-provenance-repair.json) | External matrix data-root provenance/materialization repair with `blocking_failure_count=0` after repair. | The 402MB external data root is not committed. |
+| [`v0.3.0 release readiness artifact`](../artifacts/v0.3/release/v0.3.0-release-readiness.json) | Machine-readable release-prep summary of source PRs, key artifacts, non-claims, and validation commands. | It is not a tag, GitHub Release, benchmark PASS, or performance claim. |
 
 ## Diagnostic Onboarding Evidence
 
@@ -67,7 +80,7 @@ Boundary: This is a reusable repository Action, not a Marketplace-published Acti
 |---|---|---|
 | [`action.yml`](../action.yml) | Root composite action metadata for running the offline SkillEval gate from an external repository. | It is a reusable repository Action, not Marketplace publication or PR automation. |
 | [`examples/github-action/README.md`](../examples/github-action/README.md) | Public-safe fresh-clone fixture with two skills, two labeled tasks, and local gate commands. | It is an example fixture, not benchmark status or production readiness. |
-| [`examples/github-action/.github/workflows/skilleval.yml`](../examples/github-action/.github/workflows/skilleval.yml) | Current copy/paste workflow using `Raidriar7170/hermes-skilleval@v0.2.1` with bounded thresholds. | It does not post PR comments or annotations and does not approve merges automatically. |
+| [`examples/github-action/.github/workflows/skilleval.yml`](../examples/github-action/.github/workflows/skilleval.yml) | Current copy/paste workflow using `Raidriar7170/hermes-skilleval@v0.3.0` with bounded thresholds. | It does not post PR comments or annotations and does not approve merges automatically. |
 | [`docs/demo-repo-plan.md`](demo-repo-plan.md) | Future external demo repository plan for `Raidriar7170/hermes-skilleval-demo`. | It is a plan only; it does not claim the repository exists. |
 | [`OpenSpec: reusable-github-action-rc`](../openspec/specs/reusable-github-action-rc/spec.md) | Archived/root capability contract including the post-release cleanup delta. | The capability name is historical; current onboarding uses the published Action ref. |
 
@@ -83,7 +96,7 @@ Boundary: This is a reusable repository Action, not a Marketplace-published Acti
 
 | Artifact | Helps verify | Limit |
 |---|---|---|
-| [`Hosted Consumer Action Smoke`](demo/hosted-consumer-action-smoke/README.md) | Historical hosted smoke run from a dedicated consumer repository. | Captured action refs are historical; current onboarding recommends `Raidriar7170/hermes-skilleval@v0.2.1`. |
+| [`Hosted Consumer Action Smoke`](demo/hosted-consumer-action-smoke/README.md) | Historical hosted smoke run from a dedicated consumer repository. | Captured action refs are historical; current onboarding recommends `Raidriar7170/hermes-skilleval@v0.3.0` after the v0.3.0 tag is published. |
 | [`Hosted run metadata`](demo/hosted-consumer-action-smoke/run-metadata.json) | Run URL, run id, workflow name, conclusion, action ref, commit, and artifact names. | It is a captured run record, not ongoing monitoring. |
 | [`Hosted consumer gate report`](demo/hosted-consumer-action-smoke/output/gate-report.md) | Downloaded hosted artifact with `ALLOW_MERGE`, `recall_at_5=1.0`, and `negative_hit_rate=0.0`. | It is smoke evidence, not benchmark status or automatic merge approval. |
 | [`Hosted consumer CI summary`](demo/hosted-consumer-action-smoke/output/ci-summary.md) | Downloaded step-summary style Markdown from the hosted consumer run. | It does not post GitHub API PR comments or PR annotations. |
@@ -98,6 +111,8 @@ Boundary: This is a reusable repository Action, not a Marketplace-published Acti
 | [`v0.2.1 patch release notes`](release-notes/v0.2.1.md) | Patch release notes for packaging the post-release onboarding cleanup. | It is not a feature expansion, Marketplace publication, SaaS, or runtime routing. |
 | [`v0.2.1 post-release evidence`](demo/v0.2.1-post-release/post-release.md) | Current patch publication record: tag and GitHub Release exist, Marketplace remains false. | It is not PR automation, SaaS, or runtime routing. |
 | [`v0.2.1 post-release JSON`](demo/v0.2.1-post-release/post-release.json) | Machine-readable patch publication facts and verification commands. | It is evidence only, not a release command. |
+| [`v0.3.0 release-prep notes`](release-notes/v0.3.0.md) | Stage 2 real Codex pilot evidence-chain release notes and non-claims. | It does not create the v0.3.0 tag or GitHub Release. |
+| [`v0.3.0 release readiness artifact`](../artifacts/v0.3/release/v0.3.0-release-readiness.json) | Machine-readable readiness state for the v0.3.0 release-prep PR. | Tag and GitHub Release require separate explicit human approval after merge. |
 
 ## OpenSpec Specs
 

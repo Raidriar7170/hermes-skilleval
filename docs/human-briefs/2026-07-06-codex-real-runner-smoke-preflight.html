@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Codex real-runner smoke/preflight</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 32px; line-height: 1.55; color: #17202a; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 17px; margin-top: 24px; }
+    code { background: #f2f4f7; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #b45309; padding: 10px 14px; background: #fff7ed; }
+    .ok { border-left-color: #2563eb; background: #eff6ff; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+  <h1>Hermes SkillEval Codex Real-runner Smoke/Preflight</h1>
+  <p class="status"><strong>结论：</strong>本阶段已进入真实 Codex runner smoke/preflight，并证明了 runner preflight、isolated <code>HOME</code>/<code>CODEX_HOME</code> 与 clean skill inventory；但 isolated <code>CODEX_HOME</code> 没有可用认证，Codex 子进程以 401 Unauthorized 阻断。因此状态是 <code>BLOCKED_ISOLATED_CODEX_HOME_AUTH_401_AFTER_PREFLIGHT</code>，不是 Stage 2 执行成功。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li><code>status_is_smoke_preflight_only=true</code></li>
+    <li><code>stage2_pilot_run=false</code></li>
+    <li><code>matrix_4x3x1_run=false</code></li>
+    <li><code>pilot_plan_frozen=false</code></li>
+    <li><code>execution_readiness=false</code></li>
+    <li><code>can_be_used_as_real_stage2_input_package_now=false</code></li>
+  </ul>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>新增 OpenSpec change：<code>openspec/changes/codex-real-runner-smoke-preflight/</code>。</li>
+    <li>新增 smoke/preflight artifact：<code>artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/codex-real-runner-smoke-preflight.json</code>。</li>
+    <li>新增 isolated runtime hash manifest：<code>artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-smoke-preflight-20260706T065459Z/isolated-runtime-manifest.json</code>。</li>
+    <li>没有修改 Stage 2 task manifests、public prompts、oracle/verifier evidence、routed predictions、scorer/matrix/evidence-gate semantics 或 router defaults。</li>
+  </ul>
+
+  <h2>关键证据</h2>
+  <ul>
+    <li>Codex CLI：<code>/Users/raidriar/.local/bin/codex</code>，版本 <code>codex-cli 0.142.5</code>。</li>
+    <li><code>codex --version</code> stdout sha256：<code>42a8599802ad6039277e232cba7eadecc3cec1c19d8600bf5dddff85ff30fca9</code>。</li>
+    <li><code>codex exec --help</code> stdout sha256：<code>71e55de96e5126b214ad5abd775ca42b692b771bf332bd5f0b5d384964a212e0</code>（为通过 <code>git diff --check</code> 去除了三处尾随空格；原始 hash 已记录在 JSON artifact）。</li>
+    <li>Runner stdout sha256：<code>edeb8c3a4b7e52bd0d5d2c233ef480d6782f7af7030d5399515e77a7f9ca5c1f</code>。</li>
+    <li>Runner stderr sha256：<code>eb2ef761a038df8b0f0305677200bbf4a0464cc644666938eca8a31a83157843</code>。</li>
+    <li>Smoke/preflight artifact sha256：<code>763ec6e88eb54c7563445e0521f1d63e11b85b11e172e8e05da2882411ec8ee3</code>。</li>
+    <li>Isolated runtime manifest sha256：<code>fbd8399bf658949022484d622c6285948eccf2fa26c84b5a8ca744ab38d7e3cd</code>。</li>
+  </ul>
+
+  <h2>Prerequisite truth surface</h2>
+  <ul>
+    <li>4/4 tasks qualified；4/4 verifier records passed。</li>
+    <li>Input package validator status：<code>PASS</code>。</li>
+    <li>Privacy provenance：<code>HUMAN_ACCEPTANCE_RECORDED</code>。</li>
+    <li>Static preflight permitted next action was <code>OPEN_EXPLICIT_CODEX_REAL_RUNNER_SMOKE_PREFLIGHT_PHASE</code>。</li>
+  </ul>
+
+  <h2>非动作</h2>
+  <ul>
+    <li>没有使用任何 Stage 2 task prompt，没有运行四个 selected tasks。</li>
+    <li>没有创建 Stage 2 task traces，没有运行 4x3x1 matrix。</li>
+    <li>没有冻结 pilot plan，没有 rerun evidence gate 或 oracle qualification。</li>
+    <li>没有 rewrite verifier outputs 或 routed predictions。</li>
+    <li>没有使用 LLM judge，没有把进程 exit code 当作 task success，没有写性能结论或推广 router。</li>
+  </ul>
+
+  <h2>验证命令</h2>
+  <ul>
+    <li><code>JSON/JSONL parse checks</code>：5 个新 JSON artifact 和 1 个 oracle JSONL 通过解析。</li>
+    <li><code>provenance/readiness guard checks</code>、prohibited true-flag scan、execution marker / trace scan：通过；新 artifact 目录中 trace-like 文件数为 0。</li>
+    <li><code>PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q</code>：本阶段本地验证 at the time 为 <code>664 passed</code>。</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>：<code>25 passed, 0 failed</code>。</li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>：<code>Release reproducibility PASS</code>。</li>
+    <li><code>git diff --check</code>：通过，无 whitespace error。</li>
+  </ul>
+
+  <h2>剩余风险</h2>
+  <p class="status">真实 runner wiring 和 isolation 已记录，但 isolated <code>CODEX_HOME</code> 的认证未解决。不能把本次 smoke/preflight blocker 解读为 Stage 2 runner 可执行或 pilot 可冻结。</p>
+
+  <h2>建议下一步</h2>
+  <p class="status ok">单独开一个更小阶段解决 isolated Codex authentication 的 smoke/preflight blocker；只有在 smoke/preflight 不再被认证阻断后，才请求单独的 pilot-freeze PR approval。真实 Codex 12-run execution 仍需要另一次明确授权。</p>
+</body>
+</html>

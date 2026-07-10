@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Stage 2 input package human privacy acceptance</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 32px; line-height: 1.55; color: #17202a; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 17px; margin-top: 24px; }
+    code { background: #f2f4f7; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #166534; padding: 10px 14px; background: #f0fdf4; }
+    .warn { border-left-color: #b45309; background: #fff7ed; }
+    ul { padding-left: 22px; }
+  </style>
+</head>
+<body>
+  <h1>Hermes SkillEval Stage 2 Input Package Privacy Acceptance</h1>
+  <p class="status"><strong>结论：</strong>PR #15 记录的 <code>PRIVACY_ACCEPTANCE_PROVENANCE_MISSING</code> 已由 human reviewer / project owner 的明确选择 A 解决；该接受仅适用于 already-qualified、non-execution Stage 2 input package 的 no-redaction privacy decision。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li><code>HUMAN_ACCEPTANCE_RECORDED</code></li>
+    <li><code>ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE</code></li>
+    <li><code>can_be_used_as_real_stage2_input_package_now=false</code></li>
+    <li><code>execution_readiness=false</code></li>
+  </ul>
+
+  <h2>本阶段变化</h2>
+  <ul>
+    <li>新增 <code>privacy-review.human-accepted-non-execution.json</code>，记录原话 <code>“合并了我选择A，明确接受”</code> 及 referenced artifact hashes。</li>
+    <li>更新 <code>stage2-real-pilot-input-package-candidate.json</code> 与 <code>human-approval-readiness.json</code> 的 current privacy provenance/status fields。</li>
+    <li>保留 PR #15 的 blocker/provenance audit artifact 作为历史证据，不改写 oracle qualification、verifier output、routed predictions、task manifests 或 prompts。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.human-accepted-non-execution.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/human-approval-readiness.json</code></li>
+  </ul>
+
+  <h2>验证结果</h2>
+  <ul>
+    <li>JSON/JSONL parse checks: PASS.</li>
+    <li>Recursive embedded SHA-256/size reference checks: PASS, 57/57 refs checked.</li>
+    <li>Privacy provenance/readiness guards: PASS.</li>
+    <li>Prohibited true-flag scan and execution marker / trace scan: PASS.</li>
+    <li><code>PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q</code>: PASS, original validation result 664 passed.</li>
+    <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code>: PASS, 23 passed.</li>
+    <li><code>PYTHONPATH=src python -m hermes_skilleval.cli release-check</code>: PASS.</li>
+    <li><code>git diff --check</code>: PASS.</li>
+  </ul>
+
+  <h2>剩余边界</h2>
+  <p class="status warn">Issue #11 只能在本 PR merge 且验证干净后关闭。本阶段不批准 Stage 2 execution、Codex run、pilot plan freeze、trace creation、evidence-gate rerun、qualification rerun 或任何 performance claim。</p>
+</body>
+</html>

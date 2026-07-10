@@ -32,18 +32,37 @@ The remote training script uses train-like positive pairs with
 `ContrastiveLoss` at margin `1.5`. Held-out `test` rows remain reserved for
 evaluation and regression judging.
 
-## Remote Training
+## Training Output Root
 
-GPU training outputs must stay under:
+The trainer selects one output root in this order: explicit CLI
+`--output-root`, `output_root` from the JSON config, then the backward-compatible
+default `/mnt/data/minghongsun`. A relative selected root resolves from the
+trainer process working directory, not from the config file's directory.
+Relative `output_dir` values resolve beneath the selected root; absolute values
+are accepted only when they remain contained by that root after normalization
+and existing-symlink resolution.
 
-`/mnt/data/minghongsun/hermes-skilleval-phase14`
-
-The remote-ready script is:
+The committed historical config records the A100 path
+`/mnt/data/minghongsun/hermes-skilleval-phase14`. With that config, the default
+remote command remains:
 
 ```bash
 python scripts/train_embedding_router.py \
   --config docs/demo/phase14-finetuned-embedding-router/train-config.json
 ```
+
+For a local config whose `output_dir` is relative, for example
+`models/minilm-skill-router`, an explicit local-root override is:
+
+```bash
+python scripts/train_embedding_router.py \
+  --config /path/to/train-config.local.json \
+  --output-root "$PWD/.hermes-training"
+```
+
+An override does not relocate an absolute `output_dir`; if that directory is
+outside the selected root, the trainer exits before dependency imports or
+output writes.
 
 The script requires `sentence-transformers` and `torch` on the training machine.
 It writes the model to the configured output directory and does not copy the
