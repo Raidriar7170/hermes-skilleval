@@ -139,6 +139,7 @@ def _qualify_router_training_data_v2(
     task_sources = preflight_task_source(Path(tasks_path), repo_root)
     skills_index_entry = Path(skills_index_path).absolute()
     skills_index = skills_index_entry.resolve(strict=True)
+    _reject_blind_path(skills_index, "skills index")
     skills_index_logical = _logical_path(skills_index, repo_root, "skills index")
     tasks_root = Path(tasks_path).resolve(strict=True)
     tasks_root_logical = _logical_path(tasks_root, repo_root, "task source")
@@ -602,6 +603,7 @@ def _validated_output_target(output_dir: Path, repo_root: Path) -> Path:
     if output_dir.exists() or output_dir.is_symlink():
         raise ValueError(f"output target already exists: {output_dir}")
     target = output_dir.resolve(strict=False)
+    _reject_blind_path(target, "output target")
     parent = target.parent
     if not parent.exists() or not parent.is_dir():
         raise ValueError(

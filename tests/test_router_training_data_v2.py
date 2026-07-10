@@ -655,3 +655,89 @@ def test_private_qualification_helper_requires_explicit_canonical_choice():
     ).parameters["enforce_canonical"]
 
     assert parameter.default is inspect.Parameter.empty
+
+
+@pytest.mark.parametrize("via_symlink", [False, True])
+def test_blind_skills_index_is_rejected_before_read_hash_or_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    via_symlink: bool,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    blind_dir = root / "benchmarks/  BLIND-MIGRATION-TASKS  "
+    blind_dir.mkdir(parents=True)
+    blind_skills = blind_dir / "skills.json"
+    skills.rename(blind_skills)
+    skills_entry = root / "skills-link.json" if via_symlink else blind_skills
+    if via_symlink:
+        skills_entry.symlink_to(blind_skills)
+    output = root / "pack"
+    original_read_bytes = Path.read_bytes
+
+    def guarded_read_bytes(path: Path) -> bytes:
+        if path.resolve(strict=False) == blind_skills.resolve(strict=True):
+            raise AssertionError("blind skills index must not be read or hashed")
+        return original_read_bytes(path)
+
+    def forbidden_skill_loader(_: Path) -> object:
+        raise AssertionError("blind skills index must not be loaded")
+
+    monkeypatch.setattr(Path, "read_bytes", guarded_read_bytes)
+    monkeypatch.setattr(qualification, "load_skill_index", forbidden_skill_loader)
+    with pytest.raises(ValueError, match="blind"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills_entry,
+            output_dir=output,
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not output.exists()
+    assert not list(root.glob(".pack.tmp-*"))
+
+
+@pytest.mark.parametrize(
+    "blind_segment",
+    ["blind-migration-tasks", "  BLIND-MIGRATION-TASKS  "],
+)
+def test_resolved_output_inside_blind_tree_is_rejected_before_staging(
+    tmp_path: Path,
+    blind_segment: str,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    blind_parent = root / "benchmarks" / blind_segment
+    blind_parent.mkdir(parents=True)
+    output = blind_parent / "pack"
+
+    with pytest.raises(ValueError, match="blind"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not output.exists()
+    assert not list(blind_parent.glob(".pack.tmp-*"))
+
+
+def test_output_symlink_ancestor_redirected_into_blind_tree_is_rejected(
+    tmp_path: Path,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    blind_parent = root / "benchmarks/blind-migration-tasks"
+    blind_parent.mkdir(parents=True)
+    redirect = root / "output-redirect"
+    redirect.symlink_to(blind_parent, target_is_directory=True)
+    output = redirect / "pack"
+
+    with pytest.raises(ValueError, match="blind"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=output,
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not (blind_parent / "pack").exists()
+    assert not list(blind_parent.glob(".pack.tmp-*"))
