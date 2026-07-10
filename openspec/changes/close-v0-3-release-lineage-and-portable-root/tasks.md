@@ -39,9 +39,9 @@
 - [x] 5.4 Start a read-only Reviewer over the complete diff including the Human Brief; require `Must Fix`, `Should Fix`, `Nice to Have`, `Re-plan Needed`, and `Final Verdict` sections.
 - [x] 5.5 If `Re-plan Needed = No`, return only in-scope Must Fix items to the Worker and repeat focused/full verification plus Reviewer coverage of any resulting diff; if `Re-plan Needed = Yes`, stop and revise the plan before further edits.
 - [x] 5.6 Sync current public full-suite surfaces to the fresh `698` result with test-first assertions while preserving `668` only as the historical count from the `v0.3.0` release validation; rerun the affected public-surface tests and full suite.
-- [ ] 5.7 Run a final read-only Reviewer over the count-sync diff and repeat completion verification after any required fix.
+- [x] 5.7 Run a final read-only Reviewer over the count-sync diff and repeat completion verification after any required fix.
 
 ## 6. Stop at the Publication Gate
 
-- [ ] 6.1 Report changed files, bridge parent/tag identities, validation results, protected-evidence status, remaining risks, and Reviewer verdict for user inspection.
-- [ ] 6.2 Stop for explicit user confirmation without pushing, opening or merging a PR, changing tags, publishing a release, deploying, training, benchmarking, or archiving unrelated OpenSpec changes.
+- [x] 6.1 Report changed files, bridge parent/tag identities, validation results, protected-evidence status, remaining risks, and Reviewer verdict for user inspection.
+- [x] 6.2 Stop for explicit user confirmation without pushing, opening or merging a PR, changing tags, publishing a release, deploying, training, benchmarking, or archiving unrelated OpenSpec changes.
