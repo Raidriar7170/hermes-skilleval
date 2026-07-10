@@ -31,10 +31,10 @@
 - [x] 5.1 Run focused tests and the full `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q` suite.
 - [x] 5.2 Run scoped Ruff checks/format checks, `OPENSPEC_TELEMETRY=0 openspec validate --all --strict`, the release reproducibility gate, JSON/JSONL/hash/determinism checks, and `git diff --check`.
 - [x] 5.3 Compare protected Phase 14/15/16/17/18 blob identities with apply base `aec4a09e7a60a5a1eb534b4198078acc24ff5cd5` and scan changed paths/output text for blind-source, training, checkpoint, A100/GPU, and unsupported performance claims.
-- [ ] 5.4 Start a read-only Reviewer over the complete diff and require `Must Fix`, `Should Fix`, `Nice to Have`, `Re-plan Needed`, and `Final Verdict`.
-- [ ] 5.5 If `Re-plan Needed = No`, return only in-scope Must Fix items to the Worker and rerun focused/full verification; if `Re-plan Needed = Yes`, stop and revise the OpenSpec artifacts before further edits.
+- [x] 5.4 Start a read-only Reviewer over the complete diff and require `Must Fix`, `Should Fix`, `Nice to Have`, `Re-plan Needed`, and `Final Verdict`.
+- [x] 5.5 If `Re-plan Needed = No`, return only in-scope Must Fix items to the Worker and rerun focused/full verification; if `Re-plan Needed = Yes`, stop and revise the OpenSpec artifacts before further edits.
 
 ## 6. Stop at the Local Publication Gate
 
-- [ ] 6.1 Report changed files, candidate/qualified/reserved counts, exact blocker fields, validation results, protected-evidence status, Reviewer verdict, and remaining risks.
-- [ ] 6.2 Stop for explicit user confirmation without training, A100/GPU execution, checkpoint creation, blind evaluation, threshold calibration, router promotion, push, PR creation, merge, release, or OpenSpec archive.
+- [x] 6.1 Report changed files, candidate/qualified/reserved counts, exact blocker fields, validation results, protected-evidence status, Reviewer verdict, and remaining risks.
+- [x] 6.2 Stop for explicit user confirmation without training, A100/GPU execution, checkpoint creation, blind evaluation, threshold calibration, router promotion, push, PR creation, merge, release, or OpenSpec archive.
