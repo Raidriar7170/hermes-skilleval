@@ -36,10 +36,10 @@
 - [x] 5.1 Run focused path/config/trainer/manifest tests and the full `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q` suite.
 - [x] 5.2 Run `OPENSPEC_TELEMETRY=0 openspec validate --all --strict`, the release reproducibility gate plus its explicit Phase 17/18 evidence diff check, version/truth-surface scans, ancestry/tag assertions, the closed inherited-whitespace exception checks/evidence, and exception-free `git diff --check <bridge> HEAD`.
 - [x] 5.3 Generate `docs/human-briefs/2026-07-10-close-v0-3-release-lineage-and-portable-root.html` from the final diffs and validation evidence, including the large-bridge boundary and honest non-claims.
-- [ ] 5.4 Start a read-only Reviewer over the complete diff including the Human Brief; require `Must Fix`, `Should Fix`, `Nice to Have`, `Re-plan Needed`, and `Final Verdict` sections.
-- [ ] 5.5 If `Re-plan Needed = No`, return only in-scope Must Fix items to the Worker and repeat focused/full verification plus Reviewer coverage of any resulting diff; if `Re-plan Needed = Yes`, stop and revise the plan before further edits.
+- [x] 5.4 Start a read-only Reviewer over the complete diff including the Human Brief; require `Must Fix`, `Should Fix`, `Nice to Have`, `Re-plan Needed`, and `Final Verdict` sections.
+- [x] 5.5 If `Re-plan Needed = No`, return only in-scope Must Fix items to the Worker and repeat focused/full verification plus Reviewer coverage of any resulting diff; if `Re-plan Needed = Yes`, stop and revise the plan before further edits.
 
 ## 6. Stop at the Publication Gate
 
-- [ ] 6.1 Report changed files, bridge parent/tag identities, validation results, protected-evidence status, remaining risks, and Reviewer verdict for user inspection.
-- [ ] 6.2 Stop for explicit user confirmation without pushing, opening or merging a PR, changing tags, publishing a release, deploying, training, benchmarking, or archiving unrelated OpenSpec changes.
+- [x] 6.1 Report changed files, bridge parent/tag identities, validation results, protected-evidence status, remaining risks, and Reviewer verdict for user inspection.
+- [x] 6.2 Stop for explicit user confirmation without pushing, opening or merging a PR, changing tags, publishing a release, deploying, training, benchmarking, or archiving unrelated OpenSpec changes.
