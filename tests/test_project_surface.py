@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_FULL_SUITE_COUNT = "668"
+CURRENT_FULL_SUITE_COUNT = "698"
 README = ROOT / "README.md"
 RESUME = ROOT / "docs" / "resume.md"
 INTERVIEW_OVERVIEW = ROOT / "docs" / "interview-project-overview.html"
@@ -301,7 +301,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert "多类路由策略" in first_screen
     assert "错误的 negative skill" in first_screen
     assert "继续保留 `baseline-minilm`" in first_screen
-    assert "`v0.3.0` 已发布，当前测试面为 `668` 个 pytest cases" in first_screen
+    assert "`v0.3.0` 已发布，当前测试面为 `698` 个 pytest cases" in first_screen
     assert "`REVIEW_REQUIRED / KEEP_BASELINE`" in first_screen
     assert "`live_agent.overlap_status`" in first_screen
     assert "这不是 benchmark PASS、性能提升结论或 router promotion" in first_screen
@@ -332,7 +332,7 @@ def test_readme_presents_post_release_developer_tool_front_door():
     assert limitations < architecture
     assert "actions/workflows/validate.yml/badge.svg" in readme
     assert "badge/release-v0.3.0" in readme
-    assert "badge/tests-668%20passed" in readme
+    assert "badge/tests-698%20passed" in readme
     assert "badge/action-reusable%20repo%20Action" in readme
     assert "badge/A100-validated" not in first_screen
     assert "run filtering" in readme
