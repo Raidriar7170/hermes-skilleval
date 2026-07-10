@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Stage 2 real Codex evidence-gate formal review</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #17202a; line-height: 1.5; }
+    main { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; }
+    code { background: #eef2f6; padding: 2px 5px; border-radius: 4px; }
+    .status { border-left: 4px solid #b42318; padding: 12px 16px; background: #fff5f5; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .card { border: 1px solid #d6dde5; border-radius: 8px; padding: 12px; background: #ffffff; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 real Codex evidence-gate formal review</h1>
+  <p class="status"><strong>结论：</strong>正式 evidence gate review 仍为 <code>INVALID_EVIDENCE</code>，router promotion 保持 <code>KEEP_BASELINE</code>，原因是 external matrix 的 frozen <code>data_root</code> 在当前 merged base 中无法验证。</p>
+
+  <section class="grid">
+    <div class="card"><strong>Gate status</strong><br><code>INVALID_EVIDENCE</code></div>
+    <div class="card"><strong>Blocking failures</strong><br><code>1</code></div>
+    <div class="card"><strong>Router decision</strong><br><code>KEEP_BASELINE</code></div>
+    <div class="card"><strong>Stage 2 adapter</strong><br><code>available</code></div>
+  </section>
+
+  <h2>本阶段做了什么</h2>
+  <ul>
+    <li>基于 PR #27 合并后的 base 运行正式 <code>v0.3-evidence-gate</code> review。</li>
+    <li>输入包括 external matrix plan/report、Stage 2 frozen plan、full Stage 2 real Codex execution artifact。</li>
+    <li>记录 fail-closed review artifact 和 Markdown gate 输出。</li>
+  </ul>
+
+  <h2>关键 blocker</h2>
+  <ul>
+    <li><code>external.input_hashes</code> 为 blocking FAIL。</li>
+    <li>external validation 显示缺少 relevance 文件和 easy/hard skill shard。</li>
+    <li>这不是 Stage 2 schema adapter 失败；adapter 已能消费 full Stage 2 execution artifact。</li>
+  </ul>
+
+  <h2>明确没有发生</h2>
+  <ul>
+    <li>没有重跑 Codex。</li>
+    <li>没有重跑 Stage 2 12-run。</li>
+    <li>没有创建新 task traces。</li>
+    <li>没有 performance claim。</li>
+    <li>没有 router promotion。</li>
+  </ul>
+
+  <h2>关键文件</h2>
+  <ul>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-formal-review-20260708T063543Z/evidence-gate.formal-review.json</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-formal-review-20260708T063543Z/evidence-gate.formal-review.md</code></li>
+    <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-formal-review-20260708T063543Z/stage2-real-codex-evidence-gate-formal-review.json</code></li>
+  </ul>
+
+  <h2>推荐下一步</h2>
+  <p>单独开一个很小的 external matrix data-root provenance/materialization repair PR，让 evidence gate 能重新验证 frozen external inputs；在该 PR 前不做 performance claim 或 router promotion。</p>
+</main>
+</body>
+</html>

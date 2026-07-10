@@ -1,0 +1,20 @@
+Docker runtime start blocker observed during PR #13 zero-dependency qualification retry.
+
+Observed sequence:
+- `docker context ls`, `docker info`, and `docker image inspect` returned successfully.
+- Four zero-dependency task images built with `docker build --pull=false --network none`.
+- `docker run --rm --network none hermes-pr13-zero-bike-rebalance:20260702T113533Z python3 --version` created a container but did not start it.
+- `docker create --name hermes-pr13-smoke-bike --network none ... python3 --version` returned a container id, but `docker start hermes-pr13-smoke-bike` remained blocked and the container stayed `Created`.
+- `docker run --rm hermes-pr13-zero-bike-rebalance:20260702T113533Z python3 --version` also stayed `Created`.
+- `docker run --rm python:3.12-slim python3 --version` also stayed `Created`.
+
+Docker state evidence:
+- Containers remained in `Created` with `State.Running=false`, `ExitCode=0`, empty `State.Error`, `StartedAt=0001-01-01T00:00:00Z`, and `FinishedAt=0001-01-01T00:00:00Z`.
+- `docker events` recorded image create/tag and container create/destroy events, but no corresponding start event for the smoke containers before cleanup.
+
+Qualification decision:
+- Oracle/verifier qualification did not execute.
+- No deterministic verifier output was produced.
+- No `verifier_passed=true` record was produced.
+- Process exit code was not used as success.
+- No Stage 2, Codex run, pilot-plan freeze, trace creation, evidence-gate rerun, fake evidence, LLM judge, routed-prediction hand-writing, or oracle-label-derived prediction occurred.

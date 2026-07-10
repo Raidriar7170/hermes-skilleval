@@ -1,0 +1,68 @@
+{
+  "approved_tasks": [
+    {
+      "status": "BLOCKED_DOCKER_RUNTIME_START",
+      "task_id": "bike-rebalance",
+      "task_manifest_sha256": "bc5bdbd0dd634edd8acebe4f2dd8cf28f3ad07aaee267e9332953edd5f3bd993",
+      "verifier_passed": false
+    },
+    {
+      "status": "BLOCKED_DOCKER_RUNTIME_START",
+      "task_id": "dialogue-parser",
+      "task_manifest_sha256": "e575fb60e2c1974a2d0e42a966ec3a035a466d23f6f3a2e8a7d8f293d5554450",
+      "verifier_passed": false
+    },
+    {
+      "status": "BLOCKED_DOCKER_RUNTIME_START",
+      "task_id": "offer-letter-generator",
+      "task_manifest_sha256": "0a96958a8dc97a12e753076211b0f4e867184ae5ca88b21b3891675e0fbd32d2",
+      "verifier_passed": false
+    },
+    {
+      "status": "BLOCKED_DOCKER_RUNTIME_START",
+      "task_id": "powerlifting-coef-calc",
+      "task_manifest_sha256": "0ee5139bb24b1fe678f9a7c193acefede1e5ede3e5b618b4a1c8702a26a43403",
+      "verifier_passed": false
+    }
+  ],
+  "branch": "ops/stage2-input-package-candidate",
+  "created_at": "2026-07-02T12:02:21.445715Z",
+  "input_package_validator_status": "NOT_RERUN_DOCKER_RUNTIME_START_BLOCKED",
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "performance_claims": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "privacy_status": "REVIEW_REQUIRED",
+  "qualification_executed": false,
+  "records": {
+    "name": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+    "path": "oracle_qualification.blocked-docker-runtime-start.jsonl",
+    "sha256": "7ed1f1a6c8f100966fd2f330f6eeeb6c3e4719f99294000cd84efd31c6d21838",
+    "size_bytes": 18695
+  },
+  "required_human_action": "Fix/restart Docker Desktop container runtime so `docker run --rm python:3.12-slim python3 --version` reaches Started and exits normally, then rerun only oracle/verifier qualification. Do not run Stage 2, Codex, traces, evidence gate, or freeze a pilot plan.",
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "schema_version": "v0.3.stage2-oracle-qualification-blocked-report.v1",
+  "status": "BLOCKED_DOCKER_RUNTIME_START",
+  "summary": "Zero-dependency images built, but Docker runtime could not start containers. Qualification did not execute; verifier_passed remains 0/4.",
+  "verifier_passed_count": 0,
+  "verifier_total_count": 4,
+  "zero_dependency_manifest": {
+    "name": "manifest.json",
+    "path": "zero-dependency-qualification-20260702T113533Z/manifest.json",
+    "sha256": "4b8de75e62567e9cfd25d3cd4b7987e24f5dec67baab7d6aa918bdcb974f778b",
+    "size_bytes": 24795
+  }
+}

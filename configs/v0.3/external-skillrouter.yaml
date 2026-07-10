@@ -1,0 +1,77 @@
+# Hermes SkillEval v0.3 external SkillRouter placeholder config.
+# This file is a template only. It does not prove that a run has happened.
+
+schema_version: v0.3.external-skillrouter.placeholder
+seed: 20260625
+status: FILL_BEFORE_RUN
+
+benchmark:
+  id: skillrouter
+  data_root: "${SKILLROUTER_DATA_ROOT:-FILL_BEFORE_RUN}"
+  upstream_repo: zhengyanzhao1997/SkillRouter
+  upstream_ref: FILL_BEFORE_RUN
+  license_note: FILL_BEFORE_RUN
+  tiers:
+    - easy
+    - hard
+  skip_task_types:
+    - generic_only
+
+routers:
+  - id: baseline-minilm
+    role: baseline
+    checkpoint: FILL_BEFORE_RUN
+    threshold: FILL_BEFORE_RUN
+    top_k: 50
+    text_builder: FILL_BEFORE_RUN
+  - id: finetuned-embedding
+    role: diagnostic_candidate
+    checkpoint: FILL_BEFORE_RUN
+    threshold: FILL_BEFORE_RUN
+    top_k: 50
+    text_builder: FILL_BEFORE_RUN
+
+field_views:
+  - name_only
+  - metadata
+  - full_body
+
+official_protocol:
+  retrieval_top_k: 50
+  rerank_top_k: 20
+  metrics:
+    - ndcg_at_1
+    - ndcg_at_3
+    - ndcg_at_10
+    - hit_at_1
+    - precision_at_3
+    - mrr_at_10
+    - recall_at_10
+    - recall_at_20
+    - recall_at_50
+    - full_coverage_at_3
+    - full_coverage_at_5
+    - full_coverage_at_10
+
+candidate_pools:
+  official_full_pool: true
+  hermes_stress_sizes:
+    - 1000
+    - 10000
+    - full
+  sampling_seed: 20260625
+
+scored_set_policy:
+  usage: evaluation_only
+  forbid_training: true
+  forbid_threshold_tuning: true
+  forbid_variant_selection: true
+  forbid_hard_negative_mining: true
+
+outputs:
+  run_id: FILL_BEFORE_RUN
+  artifact_root: "artifacts/v0.3/{run_id}"
+  official_metrics: "metrics/official.json"
+  hermes_diagnostics: "metrics/hermes-diagnostics.json"
+  leakage_report: "leakage/report.json"
+  manifest: "manifest.json"

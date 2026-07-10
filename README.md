@@ -70,6 +70,14 @@ pytest -q
 Expected: the example gate returns `ALLOW_MERGE`, and the v0.3.0 release
 validation records `668 passed` / `668 pytest cases`.
 
+## v0.3.0 release status
+
+`v0.3.0` adds Stage 2 real Codex pilot evidence-chain support and records a
+real 4x3x1 Codex pilot closeout. Final gate posture is
+`REVIEW_REQUIRED / KEEP_BASELINE` with `blocking_failure_count=0` and
+`live_agent.overlap_status` remaining as a review caveat. No performance claim
+or router promotion is made. `KEEP_BASELINE` is not a performance conclusion.
+
 For full CLI usage, see [`docs/usage.md`](docs/usage.md). For reviewer
 navigation across release, diagnostic, external validation, CI, OpenSpec, and
 Human Brief evidence, see [`docs/evidence-map.md`](docs/evidence-map.md).
@@ -152,11 +160,11 @@ dashboard remaining useful for earlier routing inspection.
 |---|---|---|
 | Phase 16 blind validation | `REVIEW_REQUIRED`; two regressions and worse negative-hit behavior | [`docs`](docs/phase16.md), [`comparison.md`](docs/demo/phase16-blind-validation/comparison.md) |
 | Phase 17 release selector | `KEEP_BASELINE`; `baseline-minilm` remains default | [`docs`](docs/phase17.md), [`release-decision.json`](docs/demo/phase17-calibrated-release-selector/release-decision.json) |
-| Phase 18 reproducibility pack | `PASS`; release-check reproduces the default-router decision | [`docs`](docs/phase18.md), [`release-manifest.json`](docs/demo/phase18-ci-release-reproducibility/release-manifest.json) |
+| Phase 18 reproducibility pack | release-check reproduces the default-router decision | [`docs`](docs/phase18.md), [`release-manifest.json`](docs/demo/phase18-ci-release-reproducibility/release-manifest.json) |
 | v0.2.0 historical pre-publish review | `NEEDS_REVIEW`, `Published: false`, and required human confirmation | [`release-decision.md`](docs/demo/v0.2.0-release-decision/release-decision.md), [`final checklist`](docs/demo/v0.2.0-final-approval/final-approval.md) |
 | v0.2.0 post-release evidence | post-release facts after human GO: Published `true`; tag and GitHub Release created; Marketplace published `false` | [`post-release.md`](docs/demo/v0.2.0-post-release/post-release.md), [`post-release.json`](docs/demo/v0.2.0-post-release/post-release.json) |
 | v0.2.1 patch release notes | post-release onboarding cleanup packaged as a conservative patch release | [`release notes`](docs/release-notes/v0.2.1.md), [`Human Brief`](docs/human-briefs/2026-06-05-post-release-onboarding-cleanup.html) |
-| v0.3.0 release | Stage 2 real Codex pilot evidence-chain release; final posture `REVIEW_REQUIRED / KEEP_BASELINE` with `blocking_failure_count=0` | [`GitHub Release`](https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.3.0), [`release prep PR`](https://github.com/Raidriar7170/hermes-skilleval/pull/31) |
+| v0.3.0 release | Stage 2 real Codex pilot evidence-chain release; final posture `REVIEW_REQUIRED / KEEP_BASELINE` with `blocking_failure_count=0` | [`GitHub Release`](https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.3.0), [`release prep PR`](https://github.com/Raidriar7170/hermes-skilleval/pull/31), [`release notes`](docs/release-notes/v0.3.0.md), [`closeout`](artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-closeout-20260708T080414Z/stage2-real-codex-evidence-gate-closeout.json) |
 
 v0.2.0 post-release status: Published: `true`; tag and GitHub Release created `true`;
 Marketplace published `false`.

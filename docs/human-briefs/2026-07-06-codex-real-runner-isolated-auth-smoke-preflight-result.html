@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex isolated auth smoke/preflight result</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2937; background: #f8fafc; }
+    main { max-width: 960px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    ul { padding-left: 20px; }
+    .status { background: #f9fafb; border-left: 4px solid #64748b; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Codex isolated auth smoke/preflight result</h1>
+  <p class="status"><strong>结论：</strong>本阶段只 materialized isolated <code>CODEX_HOME</code> 所需的 allowlisted <code>auth.json</code>，并完成最小 non-task Codex smoke/preflight。状态为 <code>ISOLATED_AUTH_SMOKE_PREFLIGHT_REACHED_MODEL</code>；这不是 Stage 2 pilot 成功，也不是 task success。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li>原 blocker：<code>BLOCKED_ISOLATED_CODEX_HOME_AUTH_401_AFTER_PREFLIGHT</code>。</li>
+    <li>本阶段结果：<code>ISOLATED_AUTH_SMOKE_PREFLIGHT_REACHED_MODEL</code>。</li>
+    <li><code>execution_readiness=false</code>。</li>
+    <li><code>can_be_used_as_real_stage2_input_package_now=false</code>。</li>
+  </ul>
+
+  <h2>本阶段改动</h2>
+  <ul>
+    <li>新增 evidence artifact：<code>artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-isolated-auth-smoke-preflight-20260706T093453Z/codex-real-runner-isolated-auth-smoke-preflight.json</code>。</li>
+    <li>新增 isolated runtime manifest：<code>artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-isolated-auth-smoke-preflight-20260706T093453Z/isolated-auth-runtime-manifest.json</code>。</li>
+    <li>只复制 <code>auth.json</code> 到 isolated <code>CODEX_HOME</code>；没有复制 <code>config.toml</code>、skills、plugins、prompts、rules、sessions 或日志。</li>
+    <li>secret-bearing auth 文件内容和 auth 文件 hash 均未提交。</li>
+  </ul>
+
+  <h2>关键哈希</h2>
+  <ul>
+    <li>artifact sha256：<code>881d47b6a6b667c90a1caf98adae5688f43438006e6c8b218a9ed47afd89f1b7</code></li>
+    <li>runtime manifest sha256：<code>035ae24ea677be7b0857ff641d19405a450d81b08e4bf1432aa8f690993b0a76</code></li>
+    <li>runner stdout sha256：<code>9c8308342fa69617a3fa786fc438baa66cbd1623bf09198c9ca722b4f0ec8e67</code></li>
+    <li>runner stderr sha256：<code>1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721</code></li>
+  </ul>
+
+  <h2>未发生事项</h2>
+  <ul>
+    <li>没有使用 Stage 2 task prompt，没有运行 selected tasks。</li>
+    <li>没有创建 task traces，没有运行 4x3x1 matrix。</li>
+    <li>没有冻结 pilot plan，没有 rerun evidence gate 或 oracle qualification。</li>
+    <li>没有重写 verifier/oracle evidence 或 routed predictions。</li>
+    <li>没有写 performance claim，没有 promote router，没有 real Codex 12-run execution。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>先 review 本 smoke/preflight evidence。若接受该证据，下一步只能请求单独的 pilot-freeze PR approval；真实 Codex 12-run execution 仍需要另一次明确授权。</p>
+</main>
+</body>
+</html>

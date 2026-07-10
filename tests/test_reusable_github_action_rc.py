@@ -108,7 +108,7 @@ def test_github_action_example_contains_public_safe_external_fixture():
     assert EXAMPLE_WORKFLOW.is_file()
     workflow = EXAMPLE_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "Raidriar7170/hermes-skilleval@v0.2.1" in workflow
+    assert "Raidriar7170/hermes-skilleval@v0.3.0" in workflow
     assert "skill-path: examples/github-action/skills" in workflow
     assert "benchmark-path: examples/github-action/benchmark" in workflow
     assert "upload-artifacts: 'true'" in workflow
@@ -277,7 +277,7 @@ def test_reusable_action_docs_and_briefs_are_bounded():
 
     for phrase in [
         "Reusable GitHub Action",
-        "Raidriar7170/hermes-skilleval@v0.2.1",
+        "Raidriar7170/hermes-skilleval@v0.3.0",
         "skilleval github-action-gate",
         "This is a reusable repository Action, not a Marketplace-published Action, not a GitHub API PR comment bot, not a SaaS dashboard, and not a runtime MCP router.",
         "not GitHub API PR comments",

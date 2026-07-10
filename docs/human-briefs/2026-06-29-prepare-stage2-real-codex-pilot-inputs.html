@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage 2 Real Codex Pilot Inputs Prep</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #17202a;
+      background: #f7f8fa;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 40px 24px 56px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #eceff3;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .status {
+      display: inline-block;
+      margin: 10px 0 22px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      color: #7a3f00;
+      background: #fff1d6;
+      font-weight: 600;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .item {
+      background: #ffffff;
+      border: 1px solid #d9dee7;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Stage 2 Real Codex Pilot 输入准备</h1>
+    <div class="status">结论：仍然阻塞，未执行 Pilot</div>
+
+    <p>
+      本阶段只做窄口准备：把真实证据模式的失败边界补齐，并写出缺失输入报告。
+      当前没有可用的非 fixture 4 任务 SkillsBench 数据根、确定性 verifier 集成、
+      oracle qualification 和 routed predictions，因此不能冻结计划，也不能运行 Stage 2。
+    </p>
+
+    <h2>本阶段改动</h2>
+    <div class="grid">
+      <div class="item">新增 real evidence mode：拒绝 fixture-only 数据、FakeAgentRunner、FakeVerifier。</div>
+      <div class="item">计划文件记录 task、prompt、verifier、verifier artifacts、oracle、routing 和全局 registry 哈希。</div>
+      <div class="item"><code>skillsbench-matrix</code> 暴露 <code>--runner codex-cli</code> 与 <code>--evidence-mode real</code>。</div>
+      <div class="item">新增缺失输入报告，明确后续需要补齐哪些真实前提。</div>
+    </div>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/live_agent_skillsbench.py</code></li>
+      <li><code>src/hermes_skilleval/cli.py</code></li>
+      <li><code>tests/test_skillsbench_live_matrix.py</code></li>
+      <li><code>artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-pilot-prep-missing-inputs-20260629T053333Z/</code></li>
+    </ul>
+
+    <h2>验证</h2>
+    <p>
+      初始 RED：focused SkillsBench 测试新增 4 个失败；实现后 focused
+      SkillsBench 测试通过。最终完整验证命令以本分支最终总结为准。
+    </p>
+
+    <h2>剩余阻塞</h2>
+    <ul>
+      <li>缺少真实或明确批准的 4 任务数据根。</li>
+      <li>缺少 4 个任务的确定性 verifier code/config/input artifacts。</li>
+      <li>缺少不可伪造的 oracle qualification。</li>
+      <li>缺少基于全局 skill registry 的 routed predictions。</li>
+      <li>缺少可与 CodexCliRunner 配套的确定性 verifier integration。</li>
+    </ul>
+
+    <h2>不能外宣的内容</h2>
+    <p>
+      不能声称 Stage 2 已运行、Codex pilot 已通过、性能有提升、或 fixture/fake
+      证据可代表真实 live-agent evidence。
+    </p>
+  </main>
+</body>
+</html>

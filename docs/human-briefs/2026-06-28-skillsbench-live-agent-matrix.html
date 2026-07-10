@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>PR-6 SkillsBench Live-Agent Matrix Brief</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2933; }
+    main { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 26px; }
+    code { background: #eef2f7; padding: 2px 5px; border-radius: 4px; }
+    .summary { font-size: 17px; font-weight: 600; }
+    .muted { color: #52606d; }
+    li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>PR-6 SkillsBench Live-Agent Matrix</h1>
+    <p class="summary">本阶段新增 SkillsBench-shaped adapter、任务冻结计划和三条件 live-agent matrix 基础设施；不运行 full live benchmark，不训练或推广 router。</p>
+
+    <h2>状态</h2>
+    <p>OpenSpec change：<code>skillsbench-live-agent-matrix</code>。当前实现使用 tiny fixture 和 fake runner/verifier 验证基础设施合同。</p>
+
+    <h2>本阶段变化</h2>
+    <ul>
+      <li>新增 <code>SkillsBenchAdapter</code>，验证 deterministic verifier、无私有凭据、受控网络、oracle skill 定义和 provenance。</li>
+      <li>新增 pilot/frozen plan writer，记录输入 SHA-256/size、oracle qualification、global skill registry、matrix run entries 和 overlap scaffold。</li>
+      <li>三条件 <code>no-skill</code> / <code>routed-skill</code> / <code>oracle-skill</code> 复用 PR-4 runtime，保证同一 task 的 prompt hash 一致且每次 run 使用 fresh workspace。</li>
+      <li>matrix report 记录 trace path、skill use evidence、process exit、timeout、verifier result；task success 只来自 verifier。</li>
+      <li>新增 <code>skillsbench-validate</code>、<code>skillsbench-plan</code>、<code>skillsbench-matrix</code> CLI smoke。</li>
+    </ul>
+
+    <h2>关键文件</h2>
+    <ul>
+      <li><code>src/hermes_skilleval/live_agent_skillsbench.py</code></li>
+      <li><code>tests/test_skillsbench_live_matrix.py</code></li>
+      <li><code>tests/fixtures/live_agent/skillsbench_tiny/</code></li>
+      <li><code>openspec/changes/skillsbench-live-agent-matrix/</code></li>
+    </ul>
+
+    <h2>验证</h2>
+    <p class="muted">最终验证结果以 PR 描述和命令输出为准；本 brief 只做人工审阅索引。</p>
+    <ul>
+      <li><code>python -m pytest -q tests/test_skillsbench_live_matrix.py</code></li>
+      <li><code>python -m pytest -q</code></li>
+      <li><code>OPENSPEC_TELEMETRY=0 openspec validate --all --strict</code></li>
+      <li><code>release-check</code>、<code>git diff --check</code>、v0.3 YAML parse、CRLF/new-file check</li>
+    </ul>
+
+    <h2>边界与限制</h2>
+    <ul>
+      <li>没有接入真实 SkillsBench full benchmark，没有运行真实 live-agent 评测矩阵。</li>
+      <li>没有修改 Phase 10 replay、SkillRouter external matrix/scorer 或 release gate。</li>
+      <li>没有训练 router、调阈值、挖 hard negatives、计算 Hermes Negative Hit Rate 或推广 router。</li>
+      <li>当前证据是基础设施和 tiny fixture path，不应表述为最终 benchmark 结果。</li>
+    </ul>
+  </main>
+</body>
+</html>

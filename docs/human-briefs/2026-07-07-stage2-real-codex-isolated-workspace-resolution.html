@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage 2 real Codex isolated workspace resolution</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2937; background: #f8fafc; }
+    main { max-width: 960px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    ul { padding-left: 20px; }
+    .status { background: #f9fafb; border-left: 4px solid #64748b; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Stage 2 real Codex isolated workspace resolution</h1>
+  <p class="status"><strong>结论：</strong>本阶段只修复真实 live-agent matrix 的 workspace isolation wiring：real evidence mode 默认使用外部 runtime workspace root，并在显式 workspace root 的父目录链出现 <code>.agents/skills</code> 时 fail-closed。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li>PR #23 记录了 <code>BLOCKED_WORKSPACE_PARENT_SKILL_LEAKAGE_BEFORE_CODEX_EXEC</code> blocker。</li>
+    <li>本阶段不重新执行 Stage 2，不运行 4x3x1 matrix，不调用真实 Codex 12 runs。</li>
+    <li>冻结计划、任务、prompt、verifier、router、scorer 和 evidence-gate semantics 未修改。</li>
+  </ul>
+
+  <h2>本阶段改动</h2>
+  <ul>
+    <li><code>run_skillsbench_matrix(..., evidence_mode="real")</code> 在没有显式 <code>workspace_root</code> 时，默认使用 <code>HERMES_SKILLEVAL_REAL_WORKSPACE_ROOT</code> 或系统临时目录下的外部 workspace root。</li>
+    <li>显式 <code>workspace_root</code> 会先扫描自身和父目录链；如果发现可见 <code>.agents/skills</code>，会在 runner 前 fail-closed。</li>
+    <li><code>preflight</code> event 现在会被 <code>execute_live_agent</code> 保留，供 real runner preflight validator 检查。</li>
+  </ul>
+
+  <h2>验证重点</h2>
+  <ul>
+    <li>新增测试覆盖默认 external runtime workspace root。</li>
+    <li>新增测试覆盖 unsafe parent-chain skill leakage fail-closed。</li>
+    <li>验证仍要求 verifier output 是 task success 的唯一来源；process exit code 和 LLM judge 不作为成功来源。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>Review 并合并本小 PR 后，再单独请求继续 Stage 2 real Codex 12-run execution；届时应先确认 workspace root 在外部 runtime 目录，且父目录链没有用户级 skill leakage。</p>
+</main>
+</body>
+</html>

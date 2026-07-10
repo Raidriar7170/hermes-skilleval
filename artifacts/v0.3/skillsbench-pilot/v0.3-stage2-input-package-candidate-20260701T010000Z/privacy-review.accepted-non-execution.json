@@ -1,0 +1,192 @@
+{
+  "binary_review": {
+    "inspected_files": [
+      {
+        "accepted_public_upstream_task_data": false,
+        "api_key_or_token_or_password_found": false,
+        "email_found": false,
+        "font_metadata_numeric_false_positive_count": 8,
+        "inspected_surfaces": [
+          "zip member metadata",
+          "docProps XML",
+          "word XML",
+          "relationship XML",
+          "regex text scan"
+        ],
+        "name": "offer_letter_template.docx",
+        "path": "candidate-data/environment-snapshots/offer-letter-generator/offer_letter_template.docx",
+        "private_key_material_found": false,
+        "real_phone_contact_found": false,
+        "sensitive_regex_match_count": 0
+      },
+      {
+        "accepted_public_upstream_task_data": true,
+        "accepted_public_upstream_task_data_note": "Spreadsheet contains public upstream competition-record style names and meet metadata accepted as task data; raw names are not repeated in this decision artifact.",
+        "api_key_or_token_or_password_found": false,
+        "email_found": false,
+        "inspected_surfaces": [
+          "zip member metadata",
+          "docProps XML",
+          "workbook XML",
+          "worksheet XML",
+          "sharedStrings XML",
+          "relationship XML",
+          "regex text scan"
+        ],
+        "name": "openipf_cleaned.xlsx",
+        "path": "candidate-data/environment-snapshots/powerlifting-coef-calc/openipf_cleaned.xlsx",
+        "private_key_material_found": false,
+        "real_phone_contact_found": false,
+        "sensitive_regex_match_count": 0,
+        "shared_string_entries_inspected": 181
+      },
+      {
+        "accepted_public_upstream_task_data": true,
+        "accepted_public_upstream_task_data_note": "Spreadsheet contains public upstream competition-record style names and meet metadata accepted as task data; raw names are not repeated in this decision artifact.",
+        "api_key_or_token_or_password_found": false,
+        "email_found": false,
+        "inspected_surfaces": [
+          "zip member metadata",
+          "docProps XML",
+          "workbook XML",
+          "worksheet XML",
+          "sharedStrings XML",
+          "relationship XML",
+          "regex text scan"
+        ],
+        "name": "cleaned_with_coefficients.xlsx",
+        "path": "candidate-data/verifier-artifacts/powerlifting-coef-calc/cleaned_with_coefficients.xlsx",
+        "private_key_material_found": false,
+        "real_phone_contact_found": false,
+        "sensitive_regex_match_count": 0,
+        "shared_string_entries_inspected": 186
+      }
+    ],
+    "status": "NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "summary": "Binary-file reinspection found no email, private key, API-key/token/password, or real phone contact in the inspected docx/xlsx archive text surfaces. DOCX phone-like regex hits were limited to font PANOSE numeric metadata and counted as false positives."
+  },
+  "created_at": "2026-07-04T01:22:40+08:00",
+  "decision_scope": {
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "decision": "Repo-local privacy review classified the 28 scan findings as no-redaction-required for the non-execution package, but no explicit human privacy acceptance was found in PR #13 or Issue #11 during the provenance audit.",
+    "does_not_authorize_codex_run": true,
+    "does_not_authorize_evidence_gate_rerun": true,
+    "does_not_authorize_live_agent_traces": true,
+    "does_not_authorize_pilot_planning": true,
+    "does_not_authorize_stage2_execution": true,
+    "execution_readiness": false,
+    "package_scope": "PR #13 Stage 2 input-package candidate evidence review only",
+    "public_upstream_benchmark_scope": true,
+    "redaction_required": false,
+    "explicit_human_privacy_acceptance_found": false,
+    "privacy_acceptance_provenance_status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING"
+  },
+  "finding_count": 28,
+  "finding_resolution_counts": {
+    "dialogue_parser_private_key_marker_false_positive_narrative_label_text": 14,
+    "phone_like_scanner_false_positive_numeric_constants": 7,
+    "powerlifting_public_upstream_author_contact_citation_accepted": 3,
+    "public_upstream_author_metadata_accepted_from_task_manifests": 4,
+    "redaction_required": 0,
+    "total_resolved": 28
+  },
+  "finding_resolutions": [
+    {
+      "count": 4,
+      "decision": "ACCEPTED_PUBLIC_UPSTREAM_METADATA",
+      "paths": [
+        "candidate-data/task-manifests/bike-rebalance.task.md",
+        "candidate-data/task-manifests/dialogue-parser.task.md",
+        "candidate-data/task-manifests/offer-letter-generator.task.md",
+        "candidate-data/task-manifests/powerlifting-coef-calc.task.md"
+      ],
+      "resolution": "Public upstream author metadata from task manifests is accepted under public-upstream benchmark scope."
+    },
+    {
+      "count": 14,
+      "decision": "SCANNER_FALSE_POSITIVE",
+      "paths": [
+        "candidate-data/environment-snapshots/dialogue-parser/script.txt",
+        "candidate-data/oracle-artifacts/dialogue-parser/dialogue.json",
+        "candidate-data/oracle-artifacts/dialogue-parser/script.txt"
+      ],
+      "resolution": "dialogue-parser private_key_marker hits are narrative labels/text such as Secret, not private key material."
+    },
+    {
+      "count": 3,
+      "decision": "ACCEPTED_PUBLIC_UPSTREAM_METADATA",
+      "paths": [
+        "candidate-data/environment-snapshots/powerlifting-coef-calc/skills/powerlifting/SKILL.md",
+        "candidate-data/skill-sources/skillsbench__powerlifting/SKILL.md",
+        "candidate-data/skills.jsonl"
+      ],
+      "resolution": "Powerlifting author/contact citation occurrences are public upstream skill text citations and are accepted under public-upstream benchmark scope."
+    },
+    {
+      "count": 7,
+      "decision": "SCANNER_FALSE_POSITIVE",
+      "paths": [
+        "candidate-data/environment-snapshots/powerlifting-coef-calc/skills/powerlifting/SKILL.md",
+        "candidate-data/skill-sources/skillsbench__powerlifting/SKILL.md",
+        "candidate-data/skills.jsonl"
+      ],
+      "resolution": "Phone-like scanner hits are software, math, and geospatial numeric constants, not real phone contact data."
+    }
+  ],
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "performance_claims": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "remaining_execution_blockers": [
+    "no Codex real-runner preflight was run",
+    "no Stage 2 pilot plan was frozen",
+    "no Stage 2 pilot execution was authorized or run",
+    "no live-agent traces were created",
+    "no evidence-gate rerun was performed",
+    "execution_readiness remains false",
+    "can_be_used_as_real_stage2_input_package_now remains false",
+    "privacy acceptance provenance missing"
+  ],
+  "reviewed_scan": {
+    "finding_count": 28,
+    "name": "privacy-scan.review-required.json",
+    "path": "privacy-scan.review-required.json",
+    "sha256": "faa3767dc3701a22c34b319cdad6d2246b700bd0e4bd3c78dfe361fc2fb3c827",
+    "size_bytes": 8818,
+    "status": "REVIEW_REQUIRED"
+  },
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "schema_version": "v0.3.stage2-input-package-privacy-review-decision.v1",
+  "selected_task_ids": [
+    "bike-rebalance",
+    "dialogue-parser",
+    "offer-letter-generator",
+    "powerlifting-coef-calc"
+  ],
+  "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+  "acceptance_provenance": {
+    "status": "PRIVACY_ACCEPTANCE_PROVENANCE_MISSING",
+    "audited_at": "2026-07-04T13:21:09+08:00",
+    "explicit_human_privacy_acceptance_found": false,
+    "audited_sources": [
+      "GitHub PR #13 body/comments/merge metadata",
+      "GitHub Issue #11 body/comments",
+      "repo-local privacy-review.accepted-non-execution.json",
+      "repo-local privacy-scan.review-required.json"
+    ],
+    "finding": "The repository contains a Codex-authored privacy review artifact, but no separate human-authored acceptance wording was found.",
+    "required_human_action": "Provide an explicit human privacy acceptance or redaction decision before treating privacy as accepted for PR #13 evidence closeout."
+  }
+}

@@ -1,0 +1,60 @@
+# Hermes SkillEval v0.3 evidence and promotion gate placeholder config.
+# Fill before a real v0.3 decision run. Do not treat this as approval.
+
+schema_version: v0.3.release-gate.placeholder
+seed: 20260625
+status: FILL_BEFORE_RUN
+
+benchmark_validity_gate:
+  allowed_statuses:
+    - VALID_EVIDENCE
+    - INVALID_EVIDENCE
+    - REVIEW_REQUIRED
+  required_checks:
+    - preregistration_present
+    - manifest_present
+    - external_data_hashes_present
+    - official_metrics_separate_from_hermes_diagnostics
+    - no_scored_set_training_or_tuning
+    - leakage_report_present_or_unavailable_with_reason
+    - live_agent_verifier_records_complete_if_live_agent_claimed
+    - raw_traces_not_committed
+    - skipped_tasks_have_reasons
+
+router_promotion_gate:
+  allowed_decisions:
+    - KEEP_BASELINE
+    - PROMOTE_CANDIDATE
+    - REVIEW_REQUIRED
+  baseline_router: baseline-minilm
+  candidate_router: finetuned-embedding
+  require_valid_evidence_before_promotion: true
+  promotion_requires:
+    - no_preregistered_regression
+    - no_routed_skill_worse_than_no_skill_without_review
+    - oracle_gap_reported
+    - route_to_execution_transfer_reported
+    - cost_timeout_failure_taxonomy_reported
+    - human_review_for_conflicting_evidence
+  guardrails:
+    external:
+      hard_hit_at_1_max_regression: 0.02
+      hard_full_coverage_at_10_max_regression: 0.02
+      overall_mrr_at_10_max_regression: 0.01
+      require_no_material_ci_regression: true
+    internal:
+      recall_at_5_max_regression: 0.005
+      negative_hit_rate_max_increase: 0.0
+      negative_accepted_rate_max_increase: 0.0
+      block_on_new_critical_negative: true
+    live_agent:
+      routed_pass_rate_max_regression: 0.0
+      timeout_rate_max_increase: 0.0
+      require_no_new_task_regression: true
+      require_oracle_gap_not_worse: true
+
+decision_boundaries:
+  keep_evidence_status_separate_from_promotion_decision: true
+  phase10_replay_counts_as_live_agent_evidence: false
+  deterministic_verifier_is_primary_live_agent_judge: true
+  skillrouter_scored_set_is_evaluation_only: true

@@ -23,6 +23,7 @@ HTML artifacts.
 | v0.2.0 historical decision | Pre-publish human release review package | `docs/demo/v0.2.0-release-decision/release-decision.md` |
 | v0.2.0 historical final approval | Pre-publish human approval checklist | `docs/demo/v0.2.0-final-approval/final-approval.md` |
 | v0.2.0 post-release | Current GitHub tag and GitHub Release record | `docs/demo/v0.2.0-post-release/post-release.md` |
+| v0.3.0 release-prep | Stage 2 real Codex pilot evidence-chain closeout | `docs/release-notes/v0.3.0.md` |
 
 ## Reviewer Entry Points
 
@@ -46,6 +47,9 @@ HTML artifacts.
 - v0.2.0 post-release evidence: `docs/demo/v0.2.0-post-release/post-release.md`
 - v0.2.1 patch release notes: `docs/release-notes/v0.2.1.md`
 - v0.2.1 post-release evidence: `docs/demo/v0.2.1-post-release/post-release.md`
+- v0.3.0 release-prep notes: `docs/release-notes/v0.3.0.md`
+- v0.3.0 release readiness artifact: `artifacts/v0.3/release/v0.3.0-release-readiness.json`
+- v0.3.0 evidence-gate closeout: `artifacts/v0.3/skillsbench-pilot/v0.3-stage2-real-codex-evidence-gate-closeout-20260708T080414Z/stage2-real-codex-evidence-gate-closeout.json`
 - Provenance: `docs/demo/phase15-held-out-generalization/provenance.md`
 - Release check: `docs/demo/phase17-calibrated-release-selector/release-check-summary.json`
 
@@ -94,6 +98,16 @@ Release facts: Published: `true`, Tag created: `true`, GitHub Release created:
 `true`, Marketplace published: `false`, release URL
 `https://github.com/Raidriar7170/hermes-skilleval/releases/tag/v0.2.1`, and
 target commit `c667c4d00bddff05c2b5feb357a76182cef2134e`.
+
+The v0.3.0 release-prep package records the Stage 2 real Codex pilot
+evidence-chain release framing. The real 4x3x1 Codex pilot evidence chain was
+executed, validated, adapted, reviewed, and closed out. The final closeout
+posture is `REVIEW_REQUIRED / KEEP_BASELINE`, `blocking_failure_count=0`, with
+`live_agent.overlap_status` remaining as a review caveat. The raw PR #25
+verifier facts are 12 completed runs with verifier output, 6 passed and 6
+failed. These are raw verifier facts only, not performance claims. The v0.3.0
+release-prep package does not claim benchmark PASS, does not promote the
+router, and does not create a tag or GitHub Release.
 
 ## Boundaries
 

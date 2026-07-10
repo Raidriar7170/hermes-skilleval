@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex isolated auth smoke/preflight proposal</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; line-height: 1.55; color: #1f2937; background: #f8fafc; }
+    main { max-width: 920px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 28px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    ul { padding-left: 20px; }
+    .status { background: #f9fafb; border-left: 4px solid #64748b; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Codex isolated auth smoke/preflight proposal</h1>
+  <p class="status"><strong>结论：</strong>本阶段已开启独立分支和 OpenSpec proposal，用于后续解决 PR #18 的 isolated <code>CODEX_HOME</code> auth 401 blocker；当前还没有运行 Codex，也没有修认证。</p>
+
+  <h2>当前状态</h2>
+  <ul>
+    <li>分支：<code>ops/codex-real-runner-isolated-auth-smoke-preflight</code>。</li>
+    <li>状态：proposal ready for review。</li>
+    <li>基线：PR #19 merge 后的 <code>codex/v0.3-pr0-protocol</code>。</li>
+  </ul>
+
+  <h2>本阶段改动</h2>
+  <ul>
+    <li>新增 OpenSpec change：<code>openspec/changes/codex-real-runner-isolated-auth-smoke-preflight/</code>。</li>
+    <li>定义 isolated auth materialization、auth provenance、non-task smoke/preflight、non-execution 边界。</li>
+    <li>保留 <code>execution_readiness=false</code> 和 <code>can_be_used_as_real_stage2_input_package_now=false</code> 作为默认真值。</li>
+  </ul>
+
+  <h2>未发生事项</h2>
+  <ul>
+    <li>没有运行新的 Codex runner 命令。</li>
+    <li>没有复制或修改认证材料。</li>
+    <li>没有运行 Stage 2 pilot、4x3x1 matrix、evidence gate 或 oracle qualification。</li>
+    <li>没有冻结 pilot plan，没有创建 task traces，没有写 performance claim。</li>
+  </ul>
+
+  <h2>建议下一步</h2>
+  <p>先 review/确认该 proposal；确认后再进入 apply 阶段，执行最小 isolated-auth non-task smoke/preflight。</p>
+</main>
+</body>
+</html>

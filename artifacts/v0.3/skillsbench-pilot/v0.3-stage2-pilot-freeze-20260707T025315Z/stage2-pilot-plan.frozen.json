@@ -1,0 +1,459 @@
+{
+  "artifact_refs": {
+    "codex_real_runner_isolated_auth_smoke_preflight": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-codex-real-runner-isolated-auth-smoke-preflight-20260706T093453Z/codex-real-runner-isolated-auth-smoke-preflight.json",
+      "sha256": "881d47b6a6b667c90a1caf98adae5688f43438006e6c8b218a9ed47afd89f1b7",
+      "size_bytes": 9288
+    },
+    "codex_real_runner_smoke_preflight_spec": {
+      "path": "openspec/specs/codex-real-runner-smoke-preflight/spec.md",
+      "sha256": "c013a91554a916504e727777d8722adaa5780444afc3f9a535196c50f4a71d40",
+      "size_bytes": 6250
+    },
+    "input_package_validator_passed": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/input-package-validator.passed.json",
+      "sha256": "de087717fe4fcd36344f1d1b5788898ebff3b512f42c2a1d39686bbc09e843cc",
+      "size_bytes": 5062
+    },
+    "oracle_qualification_jsonl": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.jsonl",
+      "sha256": "5a8bdded8528f39f4515dddbe60d8b353dd1e0a53889cf206aecd6b25b844a27",
+      "size_bytes": 39229
+    },
+    "oracle_qualification_report": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle-qualification.report.json",
+      "sha256": "89e0c75d0bcdd88b360cb09b85e876a2a89f9eb86155b4cc55cf30242d54d21e",
+      "size_bytes": 6857
+    },
+    "privacy_review_human_accepted_non_execution": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/privacy-review.human-accepted-non-execution.json",
+      "sha256": "b1d4a08ac99ad32242def96b92817003e87642cf951cae80042526c820fcb4ff",
+      "size_bytes": 5116
+    },
+    "routed_predictions_strict": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.json",
+      "sha256": "28c4d20f0e535aa8c6a2b1f8603a99df385dffae8794be1abe86c0669feb9ea1",
+      "size_bytes": 4487
+    },
+    "routed_predictions_strict_manifest": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.manifest.json",
+      "sha256": "084a8ec222756bc5cc0fc6affbab6a419429ff08a7f80d9b33b5442533a96304",
+      "size_bytes": 15449
+    },
+    "router_config_approved_non_execution": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/router-config.approved-non-execution.json",
+      "sha256": "7227fe9e4642a7f3e5a193008b86a74036091063c0976b3bd0b6d2b1e71fd1ca",
+      "size_bytes": 1618
+    },
+    "stage2_real_pilot_input_package": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package.json",
+      "sha256": "235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739",
+      "size_bytes": 180520
+    },
+    "stage2_real_pilot_input_package_candidate": {
+      "path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/stage2-real-pilot-input-package-candidate.json",
+      "sha256": "1f7e3515d462a611866bbd3e296ee6581dc075af519dce496606c6e0ee601c41",
+      "size_bytes": 26925
+    }
+  },
+  "created_at_utc": "2026-07-07T02:54:23Z",
+  "evidence_expectations_for_future_execution": {
+    "aggregate_required_outputs": [
+      "12 run records",
+      "run-order conformance check",
+      "trace manifest",
+      "verifier summary",
+      "post-run non-action boundary report"
+    ],
+    "per_run_forbidden_success_sources": [
+      "process exit code",
+      "LLM judge",
+      "manual inspection without verifier output"
+    ],
+    "per_run_required_outputs": [
+      "runner stdout/stderr hashes",
+      "Codex invocation metadata",
+      "isolated HOME/CODEX_HOME evidence",
+      "task trace artifact",
+      "deterministic verifier output",
+      "verifier reward/ctrf hashes",
+      "task success/failure derived only from verifier output"
+    ],
+    "post_execution_review_required_before_claims": [
+      "evidence gate review",
+      "performance claim review",
+      "router promotion review if ever proposed"
+    ]
+  },
+  "future_execution_contract": {
+    "future_execution_must_not_modify_task_manifests_or_public_prompts": true,
+    "future_execution_must_not_rerun_evidence_gate_until_after_execution_artifacts_exist_and_separate_review_approves_it": true,
+    "future_execution_must_not_rerun_oracle_qualification_without_new_approval": true,
+    "future_execution_must_reference_this_frozen_plan_path_and_sha256": true,
+    "future_execution_must_use_exact_frozen_run_order": true,
+    "future_execution_must_use_existing_qualified_input_package_artifacts": true,
+    "future_execution_must_use_isolated_home_and_codex_home": true,
+    "future_execution_must_write_task_traces_under_a_new_execution_artifact_directory": true,
+    "llm_judge_is_not_task_success": true,
+    "performance_claim_rule": "No performance claim may be made from this pilot without later evidence-gate review and separate supporting evidence.",
+    "process_exit_code_is_not_task_success": true,
+    "task_success_source": "deterministic verifier output only",
+    "this_artifact_does_not_authorize_execution": true
+  },
+  "pilot_shape": {
+    "condition_count": 3,
+    "conditions": [
+      {
+        "condition_id": "no-skill",
+        "description": "Baseline live-agent condition with no task-specific routed or oracle skill injection.",
+        "display_name": "baseline"
+      },
+      {
+        "condition_id": "routed-skill",
+        "description": "Approved strict routed prediction condition using the frozen routed_predictions.strict.json artifact.",
+        "display_name": "routed"
+      },
+      {
+        "condition_id": "oracle-skill",
+        "description": "Oracle skill condition using already-qualified deterministic oracle/verifier artifacts.",
+        "display_name": "oracle"
+      }
+    ],
+    "run_order": "task-major; tasks in frozen task list order; conditions in no-skill, routed-skill, oracle-skill order",
+    "run_order_sha256": "86a7f74febf47ce31601b3238d2785267fbc84bb0b4dc1021680f33897af25fb",
+    "runs": [
+      {
+        "condition_display_name": "baseline",
+        "condition_id": "no-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-01-bike-rebalance-no-skill-trial-01",
+        "run_index": 1,
+        "task_id": "bike-rebalance",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "routed",
+        "condition_id": "routed-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-02-bike-rebalance-routed-skill-trial-01",
+        "run_index": 2,
+        "task_id": "bike-rebalance",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "oracle",
+        "condition_id": "oracle-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-03-bike-rebalance-oracle-skill-trial-01",
+        "run_index": 3,
+        "task_id": "bike-rebalance",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "baseline",
+        "condition_id": "no-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-04-dialogue-parser-no-skill-trial-01",
+        "run_index": 4,
+        "task_id": "dialogue-parser",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "routed",
+        "condition_id": "routed-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-05-dialogue-parser-routed-skill-trial-01",
+        "run_index": 5,
+        "task_id": "dialogue-parser",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "oracle",
+        "condition_id": "oracle-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-06-dialogue-parser-oracle-skill-trial-01",
+        "run_index": 6,
+        "task_id": "dialogue-parser",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "baseline",
+        "condition_id": "no-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-07-offer-letter-generator-no-skill-trial-01",
+        "run_index": 7,
+        "task_id": "offer-letter-generator",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "routed",
+        "condition_id": "routed-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-08-offer-letter-generator-routed-skill-trial-01",
+        "run_index": 8,
+        "task_id": "offer-letter-generator",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "oracle",
+        "condition_id": "oracle-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-09-offer-letter-generator-oracle-skill-trial-01",
+        "run_index": 9,
+        "task_id": "offer-letter-generator",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "baseline",
+        "condition_id": "no-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-10-powerlifting-coef-calc-no-skill-trial-01",
+        "run_index": 10,
+        "task_id": "powerlifting-coef-calc",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "routed",
+        "condition_id": "routed-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-11-powerlifting-coef-calc-routed-skill-trial-01",
+        "run_index": 11,
+        "task_id": "powerlifting-coef-calc",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      },
+      {
+        "condition_display_name": "oracle",
+        "condition_id": "oracle-skill",
+        "future_execution_allowed_by_this_artifact": false,
+        "future_execution_requires_separate_explicit_human_approval": true,
+        "future_expected_success_source": "deterministic verifier output only",
+        "llm_judge_is_task_success": false,
+        "process_exit_code_is_task_success": false,
+        "run_id": "stage2-freeze-12-powerlifting-coef-calc-oracle-skill-trial-01",
+        "run_index": 12,
+        "task_id": "powerlifting-coef-calc",
+        "trial_count_for_task_condition": 1,
+        "trial_index": 1
+      }
+    ],
+    "task_count": 4,
+    "tasks": [
+      "bike-rebalance",
+      "dialogue-parser",
+      "offer-letter-generator",
+      "powerlifting-coef-calc"
+    ],
+    "total_planned_runs": 12,
+    "trials_per_task_condition": 1
+  },
+  "prerequisite_verification": {
+    "input_package_pilot_shape": {
+      "conditions": [
+        "no-skill",
+        "routed-skill",
+        "oracle-skill"
+      ],
+      "task_count": 4,
+      "total_runs": 12,
+      "trials_per_condition": 1
+    },
+    "input_package_schema_version": "v0.3.stage2-real-pilot-input-package.v1",
+    "input_package_status": "READY_FOR_REVIEW_NOT_EXECUTED",
+    "isolated_auth_smoke_preflight_non_actions": {
+      "evidence_gate_rerun": false,
+      "matrix_4x3x1_run": false,
+      "oracle_qualification_rerun": false,
+      "performance_claim_made": false,
+      "pilot_plan_frozen": false,
+      "real_codex_12_run_execution": false,
+      "routed_predictions_changed": false,
+      "router_promoted": false,
+      "stage2_pilot_run": false,
+      "stage2_task_prompts_used": false,
+      "stage2_task_traces_created": false,
+      "task_success_claimed": false,
+      "verifier_outputs_rewritten": false
+    },
+    "isolated_auth_smoke_preflight_status": "ISOLATED_AUTH_SMOKE_PREFLIGHT_REACHED_MODEL",
+    "oracle_qualification_status": "QUALIFIED_NO_NETWORK_VERIFIER_PASSED",
+    "oracle_qualified_count": 4,
+    "oracle_records_by_task": {
+      "bike-rebalance": {
+        "llm_judge_used": false,
+        "process_exit_code_used_as_success": false,
+        "skill_hash": "f70aac743bd018e706c2b33552211a8266f80b801cec67f41e50efd24f0b2064",
+        "status": "QUALIFIED",
+        "task_hash": "6822af752d79590028ddec2a9c07106acae085b9672a98c6736f4428ed95bdeb",
+        "task_manifest_sha256": "bc5bdbd0dd634edd8acebe4f2dd8cf28f3ad07aaee267e9332953edd5f3bd993",
+        "verifier_hash": "156ee6afba0a07430aead6abcf89d1552c0839d7559823555c1e2687a20dc3ab",
+        "verifier_passed": true
+      },
+      "dialogue-parser": {
+        "llm_judge_used": false,
+        "process_exit_code_used_as_success": false,
+        "skill_hash": "ab45d2962c32b9730aa82562401a31a0525c5380af36e3847d80308993f3fd64",
+        "status": "QUALIFIED",
+        "task_hash": "1920b4ccd5a69ce9d8616a21b135ea19fa4eb0bf272df2737546a0a5f17a64f8",
+        "task_manifest_sha256": "e575fb60e2c1974a2d0e42a966ec3a035a466d23f6f3a2e8a7d8f293d5554450",
+        "verifier_hash": "790728fc04002047db12473b3ba0ab32b4f19952ed88761f3e9e80bdfa42e24e",
+        "verifier_passed": true
+      },
+      "offer-letter-generator": {
+        "llm_judge_used": false,
+        "process_exit_code_used_as_success": false,
+        "skill_hash": "7f098e32ab3af92b01765efccea4bee3f61e5498f32c3416a9b316ef5500d13e",
+        "status": "QUALIFIED",
+        "task_hash": "a9d27dc58cfd8ddcdc3b01c3237ae3c8d4132d6699dd7f5ae5d96a8198b81855",
+        "task_manifest_sha256": "0a96958a8dc97a12e753076211b0f4e867184ae5ca88b21b3891675e0fbd32d2",
+        "verifier_hash": "aa9688558b3f1d6e59a3fc6f48d1ac6408049b8ec79e2fe08e9460cb0cd5ad39",
+        "verifier_passed": true
+      },
+      "powerlifting-coef-calc": {
+        "llm_judge_used": false,
+        "process_exit_code_used_as_success": false,
+        "skill_hash": "de725d57bafc1d9ed3bc183521aa7f1dee4c291a92856421242b3b8dcb4cecbb",
+        "status": "QUALIFIED",
+        "task_hash": "9058390592f4da07a60446406ef9caaab69beeb7fc2ba336b6714af52f66a267",
+        "task_manifest_sha256": "0ee5139bb24b1fe678f9a7c193acefede1e5ede3e5b618b4a1c8702a26a43403",
+        "verifier_hash": "e7adf23b73a208bb42b351d7e8e2dfd483e1efcb781c0c3cc8d04fd502dd8ea9",
+        "verifier_passed": true
+      }
+    },
+    "oracle_task_count": 4,
+    "oracle_verifier_passed_count": 4,
+    "privacy_provenance_status": "HUMAN_ACCEPTANCE_RECORDED",
+    "privacy_status": "HUMAN_ACCEPTED_NO_REDACTION_REQUIRED_FOR_NON_EXECUTION_PACKAGE",
+    "routed_config_id": "stage2-keyword-controlled-local-snapshot-approved-non-execution",
+    "routed_manifest_non_actions": {
+      "codex_cli_run": false,
+      "evidence_gate_rerun": false,
+      "live_agent_traces_created": false,
+      "oracle_labels_read": false,
+      "pilot_plan_frozen": false,
+      "stage2_pilot_run": false
+    },
+    "routed_predictions": {
+      "bike-rebalance": [
+        "skillsbench/logistics-rules-to-optimization"
+      ],
+      "dialogue-parser": [
+        "skillsbench/xlsx"
+      ],
+      "offer-letter-generator": [
+        "skillsbench/docx"
+      ],
+      "powerlifting-coef-calc": [
+        "skillsbench/powerlifting"
+      ]
+    },
+    "routed_predictions_task_ids": [
+      "bike-rebalance",
+      "dialogue-parser",
+      "offer-letter-generator",
+      "powerlifting-coef-calc"
+    ],
+    "routed_router_id": "keyword",
+    "routed_top_k": 1,
+    "router_config_approval_scope": "NON_EXECUTION_QUALIFICATION_ONLY",
+    "router_config_does_not_authorize_frozen_pilot_plan": true,
+    "router_config_does_not_authorize_stage2_execution": true,
+    "validator_readiness_decision": {
+      "can_be_used_as_real_stage2_input_package_now": false,
+      "reasons": [
+        "PR #10 input-package validator reran successfully against oracle_qualification.jsonl and strict routed predictions.",
+        "The output package is reviewable and non-executed; it does not freeze a pilot plan or authorize Stage 2.",
+        "Privacy/sensitive-data scan remains REVIEW_REQUIRED.",
+        "No Codex run, Stage 2 pilot, frozen plan, traces, or evidence-gate rerun occurred."
+      ],
+      "stage2_input_package_status": "READY_FOR_REVIEW_NOT_EXECUTED",
+      "validator_passed": true
+    },
+    "validator_status": "PASS"
+  },
+  "schema_version": "v0.3.stage2-pilot-plan-freeze.v1",
+  "source": {
+    "base_branch": "codex/v0.3-pr0-protocol",
+    "base_head": "7c47afb6ee226ac36ace17842e1abb37928d546f",
+    "branch": "ops/stage2-pilot-freeze-plan",
+    "freeze_scope": "review-only Stage 2 4x3x1 pilot plan freeze; no execution authorization",
+    "human_authorization": "explicit approval to enter Stage 2 pilot freeze PR phase only"
+  },
+  "status": {
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "codex_cli_run_in_this_phase": false,
+    "evidence_gate_rerun": false,
+    "execution_readiness": false,
+    "matrix_4x3x1_run": false,
+    "oracle_qualification_rerun": false,
+    "performance_claim_made": false,
+    "pilot_plan_frozen": true,
+    "pilot_plan_frozen_true_scope": "allowed only inside this frozen-plan artifact to record review/freeze state",
+    "previous_pilot_plan_frozen": false,
+    "ready_for_separate_execution_approval_request": true,
+    "real_codex_12_run_execution": false,
+    "real_codex_12_run_execution_requires_separate_explicit_human_approval_after_merge": true,
+    "routed_predictions_changed": false,
+    "router_promoted": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "stage2_task_traces_created": false,
+    "task_manifests_or_public_prompts_changed": false,
+    "task_traces_created": false,
+    "verifier_outputs_rewritten": false
+  }
+}

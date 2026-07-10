@@ -1,0 +1,118 @@
+{
+  "checks": {
+    "deterministic_verifier_record_count": 4,
+    "global_skill_registry_hash": "8990c0bffbecdc8028a5abd46c97fa51daaafcb883916b5b1629a25daf6268ac",
+    "label_source": "router_generated",
+    "llm_judge_accepted": false,
+    "oracle_labels_read": false,
+    "oracle_qualification_record_count": 4,
+    "package_status": "READY_FOR_REVIEW_NOT_EXECUTED",
+    "process_exit_code_success_source": false,
+    "routed_prediction_record_count": 4,
+    "router_config_id": "stage2-keyword-controlled-local-snapshot-approved-non-execution",
+    "router_id": "keyword",
+    "router_top_k": 1,
+    "schema_version": "v0.3.stage2-real-pilot-input-package.v1",
+    "selected_task_count": 4
+  },
+  "created_at": "2026-07-03T04:54:20.874539Z",
+  "historical_blocked_artifacts_preserved": [
+    "input-package-validator.blocked.json",
+    "oracle_qualification.required-not-run.jsonl",
+    "oracle_qualification.blocked-docker-daemon.jsonl",
+    "oracle_qualification.blocked-apt-source-unreachable.jsonl",
+    "oracle_qualification.blocked-docker-runtime-start.jsonl"
+  ],
+  "inputs": {
+    "candidate_data_manifest": {
+      "name": "manifest.json",
+      "path": "candidate-data/manifest.json",
+      "sha256": "d054fa5ed79ba23c1304d821768818328e79170929b3d41cbee4dae31cc49a81",
+      "size_bytes": 2386
+    },
+    "oracle_qualification": {
+      "name": "oracle_qualification.jsonl",
+      "path": "oracle_qualification.jsonl",
+      "sha256": "5a8bdded8528f39f4515dddbe60d8b353dd1e0a53889cf206aecd6b25b844a27",
+      "size_bytes": 39229
+    },
+    "routed_predictions_strict": {
+      "name": "routed_predictions.strict.json",
+      "path": "routed_predictions.strict.json",
+      "sha256": "28c4d20f0e535aa8c6a2b1f8603a99df385dffae8794be1abe86c0669feb9ea1",
+      "size_bytes": 4487
+    },
+    "router_config_approved": {
+      "name": "router-config.approved-non-execution.json",
+      "path": "router-config.approved-non-execution.json",
+      "sha256": "7227fe9e4642a7f3e5a193008b86a74036091063c0976b3bd0b6d2b1e71fd1ca",
+      "size_bytes": 1618
+    },
+    "skills": {
+      "name": "skills.jsonl",
+      "path": "candidate-data/skills.jsonl",
+      "sha256": "4be46ecba8279438b0b924d2817ab3c536059ee8a68cf3186bd200dc0d6db6f7",
+      "size_bytes": 82177
+    },
+    "tasks": {
+      "name": "tasks.jsonl",
+      "path": "candidate-data/tasks.jsonl",
+      "sha256": "6a144ae356ebe84b0a662da37d8f374540f26f8e4eb0cdde5f463600d32bca21",
+      "size_bytes": 18639
+    }
+  },
+  "invocation": {
+    "data_root": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/candidate-data",
+    "license_note": "Apache-2.0 upstream repository; controlled-local-snapshot candidate selection pending human approval",
+    "oracle_qualification_path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/oracle_qualification.jsonl",
+    "routed_predictions_path": "artifacts/v0.3/skillsbench-pilot/v0.3-stage2-input-package-candidate-20260701T010000Z/routed_predictions.strict.json",
+    "router_top_k": 1,
+    "selected_task_ids": [
+      "bike-rebalance",
+      "dialogue-parser",
+      "offer-letter-generator",
+      "powerlifting-coef-calc"
+    ],
+    "upstream_ref": "bf3793e9ec20e9682e6f18dbf4de3c69163dc9c7"
+  },
+  "non_actions": {
+    "codex_cli_run": false,
+    "evidence_gate_rerun": false,
+    "fake_runner_or_verifier_used_as_real_evidence": false,
+    "fixture_data_used_as_real_evidence": false,
+    "live_agent_traces_created": false,
+    "llm_judge_used": false,
+    "manual_routed_predictions_written": false,
+    "oracle_label_derived_predictions": false,
+    "performance_claims": false,
+    "pilot_plan_frozen": false,
+    "process_exit_code_used_as_success": false,
+    "scorer_matrix_or_evidence_gate_semantics_modified": false,
+    "stage2_pilot_run": false,
+    "training_or_tuning_or_new_router_variant": false
+  },
+  "output_package": {
+    "name": "stage2-real-pilot-input-package.json",
+    "path": "stage2-real-pilot-input-package.json",
+    "sha256": "235a48830bc25f324f071582a42ed42a3074342d3b6f6f914d0ea99fb26a8739",
+    "size_bytes": 180520
+  },
+  "phase": "Phase C3",
+  "readiness_decision": {
+    "can_be_used_as_real_stage2_input_package_now": false,
+    "reasons": [
+      "PR #10 input-package validator reran successfully against oracle_qualification.jsonl and strict routed predictions.",
+      "The output package is reviewable and non-executed; it does not freeze a pilot plan or authorize Stage 2.",
+      "Privacy/sensitive-data scan remains REVIEW_REQUIRED.",
+      "No Codex run, Stage 2 pilot, frozen plan, traces, or evidence-gate rerun occurred."
+    ],
+    "stage2_input_package_status": "READY_FOR_REVIEW_NOT_EXECUTED",
+    "validator_passed": true
+  },
+  "rerun": true,
+  "run_id": "v0.3-stage2-input-package-candidate-20260701T010000Z",
+  "schema_version": "v0.3.stage2-input-package-validator-result.v1",
+  "status": "PASS",
+  "validator": "build_stage2_real_pilot_input_package",
+  "validator_source": "PR #10 real pilot input-package validator"
+}
