@@ -6,10 +6,10 @@ data. Its current decision is `REVIEW_REQUIRED` / `KEEP_BASELINE`, and
 
 ## What is authoritative
 
-- [Proposal](../../../openspec/changes/build-router-training-data-v2-qualification-pack/proposal.md)
-- [Design](../../../openspec/changes/build-router-training-data-v2-qualification-pack/design.md)
-- [Specification](../../../openspec/changes/build-router-training-data-v2-qualification-pack/specs/router-training-data-v2-qualification-pack/spec.md)
-- [Tasks](../../../openspec/changes/build-router-training-data-v2-qualification-pack/tasks.md)
+- [Proposal](../../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/proposal.md)
+- [Design](../../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/design.md)
+- [Specification](../../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/specs/router-training-data-v2-qualification-pack/spec.md)
+- [Tasks](../../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/tasks.md)
 - [Candidate matrix](candidate-pairs.jsonl)
 - [Qualification report](qualification-report.json)
 - [Provenance manifest](manifest.json)
@@ -79,11 +79,21 @@ Expected committed SHA-256 values:
 - `qualification-report.json`: `7a5b61ec9245cb6ffbdb514899c637005652382cd6db4a19b7fafcff5c6d62d7`
 - `manifest.json`: `b1f8fb98b9eac2f21bed137506eec63d678053d03205ce0248b843fc3e5a80ab`
 
+## Lifecycle truth
+
+The OpenSpec change `build-router-training-data-v2-qualification-pack` is
+archived (`OPENSPEC_ARCHIVED`). The archive branch
+`ops/archive-build-router-training-data-v2-qualification-pack` has been pushed
+(`BRANCH_PUSHED`). No PR has been opened for this branch (`NO_PR`), and this
+branch has not been merged to `main` (`NO_MAIN_MERGE`).
+
 ## Boundaries and non-claims
 
-This phase did not train or fine-tune a router, read or hash blind prompt
-content, run an A100/GPU job, create a checkpoint, calibrate a threshold, select
-or promote a model, rerun blind evaluation, establish a benchmark improvement,
-merge, release, publish, or archive the change. Candidate volume is not
-qualified-pair volume, and this pack does not authorize training or a public
-performance claim.
+This phase did not train or fine-tune a router (`NO_TRAINING`), read or hash
+blind prompt content, run an A100/GPU job (`NO_A100_GPU_JOB`), create a
+checkpoint (`NO_CHECKPOINT`), calibrate a threshold, select or promote a model,
+or rerun blind evaluation (`NO_BLIND_RERUN`). It did not establish a
+benchmark improvement or change `KEEP_BASELINE`. This archive/truth-surface
+change created no new tag, release, or deploy (`NO_TAG`, `NO_RELEASE`,
+`NO_DEPLOY`). Candidate volume is not qualified-pair volume, and this pack does
+not authorize training or a public performance claim.

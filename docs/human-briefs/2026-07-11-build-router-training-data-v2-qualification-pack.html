@@ -152,9 +152,9 @@
           <p>0 个 pair 被接受用于训练；仓库中没有生成 <code>training-pairs.jsonl</code>。</p>
         </article>
         <article class="card status ok">
-          <span class="label">Local apply</span>
-          <span class="value">实现与验证完成</span>
-          <p>仍未 push、建 PR、merge、release 或 archive。</p>
+          <span class="label">Lifecycle</span>
+          <span class="value">OpenSpec 已 archive，branch 已 push</span>
+          <p><code>OPENSPEC_ARCHIVED</code>：change <code>build-router-training-data-v2-qualification-pack</code> 已 archive；<code>BRANCH_PUSHED</code>：archive branch <code>ops/archive-build-router-training-data-v2-qualification-pack</code> 已 push。<code>NO_PR</code> / <code>NO_MAIN_MERGE</code>：该 branch 尚未创建 GitHub PR；该 branch 尚未 merge main。</p>
         </article>
       </div>
     </section>
@@ -191,10 +191,10 @@
         </article>
         <article class="card">
           <h3>Fail-closed 输入边界</h3>
-          <p>在读取 prompt 前检查 real path、symlink、<code>blind-*</code> directory/metadata；publication 前再次验证输入 hash 与 symlink target 未变。</p>
+          <p>在读取 prompt 前检查 real path、symlink、<code>blind-*</code> directory/metadata；产物落盘前再次验证输入 hash 与 symlink target 未变。</p>
         </article>
         <article class="card">
-          <h3>安全 publication</h3>
+          <h3>安全产物落盘</h3>
           <p>拒绝现存或 Phase 14–18 protected output，先写安全 sibling staging，再检查竞争 target 并原子 rename。</p>
         </article>
         <article class="card">
@@ -224,10 +224,10 @@
       <div class="grid">
         <article class="card">
           <h3>OpenSpec</h3>
-          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/proposal.md">proposal.md</a></p>
-          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/design.md">design.md</a></p>
-          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/specs/router-training-data-v2-qualification-pack/spec.md">delta spec</a></p>
-          <p><a href="../../openspec/changes/build-router-training-data-v2-qualification-pack/tasks.md">tasks.md</a></p>
+          <p><a href="../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/proposal.md">proposal.md</a></p>
+          <p><a href="../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/design.md">design.md</a></p>
+          <p><a href="../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/specs/router-training-data-v2-qualification-pack/spec.md">delta spec</a></p>
+          <p><a href="../../openspec/changes/archive/2026-07-11-build-router-training-data-v2-qualification-pack/tasks.md">tasks.md</a></p>
         </article>
         <article class="card">
           <h3>Machine evidence</h3>
@@ -253,20 +253,20 @@
     </section>
 
     <section aria-labelledby="verification-title">
-      <h2 id="verification-title">最终 HEAD 的新鲜验证</h2>
+      <h2 id="verification-title">本轮已建立的验证证据</h2>
       <div class="table-wrap">
         <table>
           <thead><tr><th scope="col">Gate</th><th scope="col">结果</th><th scope="col">证据</th></tr></thead>
           <tbody>
-            <tr><th scope="row">Focused qualification / artifact / CLI</th><td class="result">PASS</td><td><code>84 passed</code></td></tr>
-            <tr><th scope="row">Full pytest</th><td class="result">PASS</td><td><code>739 passed</code></td></tr>
-            <tr><th scope="row">Scoped Ruff</th><td class="result">PASS</td><td>check 通过；3 个新增文件 format clean。</td></tr>
+            <tr><th scope="row">Focused artifact / truth suite</th><td class="result">PASS</td><td><code>12 passed</code></td></tr>
+            <tr><th scope="row">Full pytest</th><td class="result">PASS</td><td><code>747 passed</code></td></tr>
+            <tr><th scope="row">Scoped Ruff</th><td class="result">PASS</td><td><code>tests/test_router_training_data_v2_artifacts.py</code>：check 与 format --check 通过。</td></tr>
             <tr><th scope="row">Strict OpenSpec</th><td class="result">PASS</td><td><code>28 passed, 0 failed</code></td></tr>
             <tr><th scope="row">Release reproducibility</th><td class="result">PASS</td><td>现有 Phase 18 release gate 仍为 PASS，执行后工作树 clean。</td></tr>
             <tr><th scope="row">Deterministic regeneration</th><td class="result">PASS</td><td>全新 absent target 的 3 个机器产物逐字节一致。</td></tr>
             <tr><th scope="row">Manifest hashes</th><td class="result">PASS</td><td>25 个 inputs 与 2 个 hashed outputs 全部重算一致。</td></tr>
             <tr><th scope="row">Protected / blind boundaries</th><td class="result">PASS</td><td>Phase 14–18 与 <code>benchmarks/blind-migration-tasks</code> 相对 apply base 零变更。</td></tr>
-            <tr><th scope="row">Read-only review</th><td class="result">PASS</td><td>完整 diff 复审为 <code>Must Fix=None</code>、<code>Should Fix=None</code>、<code>Re-plan Needed=No</code>、<code>Final Verdict=Pass</code>。</td></tr>
+            <tr><th scope="row">Review process</th><td class="blocked">PENDING RE-REVIEW</td><td>初审为 <code>Pass with fixes</code>；<code>3 项 Must Fix 已在本地处理</code>；<code>Re-plan Needed=No</code>。final re-review 在本文更新后执行，最终结果以本地任务报告为准。</td></tr>
           </tbody>
         </table>
       </div>
@@ -276,15 +276,19 @@
       <h2 id="limits-title">明确没有发生什么</h2>
       <ul>
         <li>没有读取或哈希 blind prompt 内容，也没有使用 Phase 16 做 negative mining、calibration 或 model selection。</li>
-        <li>没有训练或 fine-tune router，没有 A100/GPU job、checkpoint、threshold tuning 或 benchmark rerun。</li>
+        <li><code>NO_TRAINING</code> / <code>NO_A100_GPU_JOB</code> / <code>NO_CHECKPOINT</code>：没有训练或 fine-tune router，没有 A100/GPU job、checkpoint 或 threshold tuning。</li>
+        <li><code>NO_BLIND_RERUN</code>：没有重跑 blind benchmark。</li>
         <li>没有声明模型提升、Negative Hit Rate 改善、SOTA 或 public performance gain。</li>
-        <li>没有 push、PR、merge、tag、release、deploy 或 OpenSpec archive。</li>
+        <li><code>OPENSPEC_ARCHIVED</code>：change <code>build-router-training-data-v2-qualification-pack</code> 已 archive；<code>BRANCH_PUSHED</code>：archive branch <code>ops/archive-build-router-training-data-v2-qualification-pack</code> 已 push。</li>
+        <li><code>NO_PR</code> / <code>NO_MAIN_MERGE</code>：该 branch 尚未创建 GitHub PR；该 branch 尚未 merge main。</li>
+        <li><code>NO_TAG</code> / <code>NO_RELEASE</code> / <code>NO_DEPLOY</code>：本次 archive/truth-surface change 未创建新的 tag、release 或 deploy。</li>
+        <li><code>KEEP_BASELINE</code> 决策未改变。</li>
       </ul>
     </section>
 
     <section aria-labelledby="next-title">
       <h2 id="next-title">推荐下一步</h2>
-      <p class="callout ok"><strong>先停在本地 publication gate：</strong>审阅本 pack 与完整 diff，再单独选择是否 merge/push。若继续算法阶段，应新开一个很小的 OpenSpec change，只补目标域人工接受 pairs、真实 reject examples、family metadata 与独立 calibration split；在这些 gate 关闭前不启动训练。</p>
+      <p class="callout ok"><strong>先审阅本地 corrective diff：</strong>审阅通过后，再单独决定是否提交并更新现有远端 branch，或创建 PR；本阶段不 merge main。若继续算法阶段，应新开一个很小的 OpenSpec change，只补目标域人工接受 pairs、真实 reject examples、family metadata 与独立 calibration split；在这些 gate 关闭前不启动训练。</p>
     </section>
   </main>
 
