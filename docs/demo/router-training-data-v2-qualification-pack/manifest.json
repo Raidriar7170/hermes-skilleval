@@ -1,6 +1,6 @@
 {
   "artifact_type": "router-training-data-v2-qualification-manifest",
-  "artifact_version": 1,
+  "artifact_version": 2,
   "counts": {
     "accepted_train_pair_count": 0,
     "cross_category_easy_negative_count": 144,
@@ -145,16 +145,31 @@
   },
   "outputs": [
     {
-      "bytes": 381018,
+      "bytes": 373610,
       "path": "candidate-pairs.jsonl",
-      "sha256": "fbfc626d0b5fa98f3eb505042a3bf002d697ec0ca9ea1328edec6fd637cb82c3"
+      "sha256": "e70006f3124f496a7e0005a081db06527391167bd380574b08c7991bcf2c6475"
     },
     {
-      "bytes": 1538,
+      "bytes": 1954,
       "path": "qualification-report.json",
-      "sha256": "7a5b61ec9245cb6ffbdb514899c637005652382cd6db4a19b7fafcff5c6d62d7"
+      "sha256": "d36afe875f2ada4e38ac3b707ced5bbb27c89262aad403793b7ee68058dd2395"
     }
   ],
-  "policy_id": "router-training-data-v2-qualification-v1",
-  "schema_version": "router-training-data-v2-manifest-v1"
+  "policy_id": "router-training-data-v2-qualification-v2",
+  "query_contract": {
+    "alternate_query_fields": [],
+    "forbidden_primary_query_inputs": [
+      "task_id",
+      "category",
+      "difficulty",
+      "robustness_tags"
+    ],
+    "hash_algorithm": "sha256",
+    "hash_field": "prompt_text_sha256",
+    "normalization": "loader_normalized",
+    "primary_query_field": "query_text",
+    "query_text_policy": "prompt_only",
+    "source_field": "task.prompt"
+  },
+  "schema_version": "router-training-data-v2-manifest-v2"
 }

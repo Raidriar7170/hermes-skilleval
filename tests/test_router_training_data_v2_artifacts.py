@@ -12,20 +12,34 @@ from hermes_skilleval.router_training_data_v2 import (
     BLOCKER_CODES,
     qualify_router_training_data_v2,
 )
+from hermes_skilleval.task_loader import load_tasks
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PACK = ROOT / "docs/demo/router-training-data-v2-qualification-pack"
 TASKS = ROOT / "benchmarks/migration-tasks"
 SKILLS = ROOT / "docs/demo/phase9-real-skill-library-migration/skills.json"
-HUMAN_BRIEF = (
+HISTORICAL_V1_BRIEF = (
     ROOT
     / "docs/human-briefs/2026-07-11-build-router-training-data-v2-qualification-pack.html"
 )
+HUMAN_BRIEF = HISTORICAL_V1_BRIEF
+PROPOSAL_BRIEF = (
+    ROOT
+    / "docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only.html"
+)
+APPLY_BRIEF = (
+    ROOT
+    / "docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html"
+)
+PROPOSAL_BRIEF_SHA256 = (
+    "8aad6d45b991e0cc0c4581d233207b042ee35bb4527ed84f9193644661803778"
+)
+ACTIVE_CHANGE_PATH = "openspec/changes/make-router-training-data-v2-primary-prompt-only"
 LEGACY_ACTIVE_CHANGE_PATH = (
     "openspec/changes/build-router-training-data-v2-qualification-pack"
 )
-EXPECTED_PACK_SHA256 = {
+V1_BASELINE_PACK_SHA256 = {
     "candidate-pairs.jsonl": (
         "fbfc626d0b5fa98f3eb505042a3bf002d697ec0ca9ea1328edec6fd637cb82c3"
     ),
@@ -34,6 +48,17 @@ EXPECTED_PACK_SHA256 = {
     ),
     "manifest.json": (
         "b1f8fb98b9eac2f21bed137506eec63d678053d03205ce0248b843fc3e5a80ab"
+    ),
+}
+CURRENT_V2_PACK_SHA256 = {
+    "candidate-pairs.jsonl": (
+        "e70006f3124f496a7e0005a081db06527391167bd380574b08c7991bcf2c6475"
+    ),
+    "qualification-report.json": (
+        "d36afe875f2ada4e38ac3b707ced5bbb27c89262aad403793b7ee68058dd2395"
+    ),
+    "manifest.json": (
+        "883e7d8a35622b89a243a373304bd5e9e570275649bd22d01e9a8799c674daaf"
     ),
 }
 
@@ -52,6 +77,21 @@ EXPECTED_COUNTS = {
     "train_policy_candidate_count": 32,
     "train_positive_skill_coverage_count": 11,
 }
+EXPECTED_QUERY_CONTRACT = {
+    "alternate_query_fields": [],
+    "forbidden_primary_query_inputs": [
+        "task_id",
+        "category",
+        "difficulty",
+        "robustness_tags",
+    ],
+    "hash_algorithm": "sha256",
+    "hash_field": "prompt_text_sha256",
+    "normalization": "loader_normalized",
+    "primary_query_field": "query_text",
+    "query_text_policy": "prompt_only",
+    "source_field": "task.prompt",
+}
 ROW_FIELDS = {
     "accepted_for_training",
     "candidate_type",
@@ -60,6 +100,7 @@ ROW_FIELDS = {
     "pair_id",
     "prompt_text_sha256",
     "query_text",
+    "query_text_policy",
     "schema_version",
     "skill_id",
     "skill_text",
@@ -223,10 +264,6 @@ def test_committed_pack_parses_and_preserves_exact_blocked_contract():
     manifest = json.loads((PACK / "manifest.json").read_text(encoding="utf-8"))
 
     assert len(rows) == 192
-    assert all(set(row) == ROW_FIELDS for row in rows)
-    assert {row["schema_version"] for row in rows} == {
-        "router-training-data-v2-candidate-v1"
-    }
     assert [row["pair_id"] for row in rows] == sorted(row["pair_id"] for row in rows)
     assert len({row["pair_id"] for row in rows}) == 192
     assert Counter(row["candidate_type"] for row in rows) == {
@@ -242,19 +279,68 @@ def test_committed_pack_parses_and_preserves_exact_blocked_contract():
         if row["source_split"] == "test"
     )
 
-    assert report["schema_version"] == (
-        "router-training-data-v2-qualification-report-v1"
-    )
-    assert report["policy_id"] == "router-training-data-v2-qualification-v1"
     assert report["qualification_status"] == "REVIEW_REQUIRED"
     assert report["router_decision"] == "KEEP_BASELINE"
     assert report["can_start_training"] is False
     assert report["blocker_codes"] == BLOCKER_CODES
     assert report["counts"] == EXPECTED_COUNTS
-    assert manifest["schema_version"] == "router-training-data-v2-manifest-v1"
-    assert manifest["policy_id"] == "router-training-data-v2-qualification-v1"
     assert manifest["counts"] == EXPECTED_COUNTS
     assert not (PACK / "training-pairs.jsonl").exists()
+    assert not (PACK / "training-pairs-v2.jsonl").exists()
+
+
+def test_committed_candidate_queries_equal_loaded_prompts_and_hashes():
+    task_by_id = {task.id: task for task in load_tasks(TASKS)}
+
+    for row in _rows():
+        query_text = row["query_text"]
+        assert isinstance(query_text, str)
+        expected_prompt = task_by_id[str(row["task_id"])].prompt
+        assert query_text.encode("utf-8") == expected_prompt.encode("utf-8")
+        assert (
+            hashlib.sha256(query_text.encode("utf-8")).hexdigest()
+            == row["prompt_text_sha256"]
+        )
+
+
+def test_committed_candidate_rows_use_exact_v2_prompt_only_contract():
+    rows = _rows()
+
+    assert all(set(row) == ROW_FIELDS for row in rows)
+    assert {row["schema_version"] for row in rows} == {
+        "router-training-data-v2-candidate-v2"
+    }
+    assert {row["query_text_policy"] for row in rows} == {"prompt_only"}
+    assert all(
+        {key for key in row if key.endswith("query_text")} == {"query_text"}
+        for row in rows
+    )
+
+
+def test_committed_report_and_manifest_use_exact_v2_query_contract():
+    report = json.loads(
+        (PACK / "qualification-report.json").read_text(encoding="utf-8")
+    )
+    manifest = json.loads((PACK / "manifest.json").read_text(encoding="utf-8"))
+
+    assert {
+        "manifest_artifact_version": manifest.get("artifact_version"),
+        "manifest_policy_id": manifest.get("policy_id"),
+        "manifest_query_contract": manifest.get("query_contract"),
+        "manifest_schema_version": manifest.get("schema_version"),
+        "report_policy_id": report.get("policy_id"),
+        "report_query_contract": report.get("query_contract"),
+        "report_schema_version": report.get("schema_version"),
+    } == {
+        "manifest_artifact_version": 2,
+        "manifest_policy_id": "router-training-data-v2-qualification-v2",
+        "manifest_query_contract": EXPECTED_QUERY_CONTRACT,
+        "manifest_schema_version": "router-training-data-v2-manifest-v2",
+        "report_policy_id": "router-training-data-v2-qualification-v2",
+        "report_query_contract": EXPECTED_QUERY_CONTRACT,
+        "report_schema_version": ("router-training-data-v2-qualification-report-v2"),
+    }
+    assert report["query_contract"] == manifest["query_contract"]
 
 
 def test_manifest_binds_every_repository_relative_input_and_output_hash():
@@ -311,12 +397,13 @@ def test_committed_pack_regenerates_byte_identically_into_fresh_target(tmp_path:
     ):
         assert (regenerated / name).read_bytes() == (PACK / name).read_bytes()
     assert not (regenerated / "training-pairs.jsonl").exists()
+    assert not (regenerated / "training-pairs-v2.jsonl").exists()
 
 
 def test_committed_machine_artifact_hashes_are_frozen():
     assert {
-        name: _sha256(PACK / name) for name in EXPECTED_PACK_SHA256
-    } == EXPECTED_PACK_SHA256
+        name: _sha256(PACK / name) for name in CURRENT_V2_PACK_SHA256
+    } == CURRENT_V2_PACK_SHA256
 
 
 def test_qualification_readme_local_links_resolve_within_repository():
@@ -330,6 +417,167 @@ def test_qualification_readme_local_links_resolve_within_repository():
         if target is not None:
             assert target.exists(), f"missing README link target: {href} -> {target}"
     assert LEGACY_ACTIVE_CHANGE_PATH not in readme
+
+
+def test_proposal_brief_remains_unchanged_and_proposal_only():
+    assert _sha256(PROPOSAL_BRIEF) == PROPOSAL_BRIEF_SHA256
+    html = PROPOSAL_BRIEF.read_text(encoding="utf-8")
+    parser = _HTMLLinksAndText()
+    parser.feed(html)
+    visible_text = _visible_html_text(html)
+
+    assert "PROPOSED" in visible_text
+    assert "APPLY_NOT_STARTED" in visible_text
+    assert "APPLY_COMPLETE_LOCAL" not in visible_text
+    assert "USER_REVIEW_REQUIRED" not in visible_text
+    assert parser.hrefs
+    for href in parser.hrefs:
+        target = _local_link_target(PROPOSAL_BRIEF, href)
+        if target is not None:
+            assert target.exists(), (
+                f"missing proposal brief link target: {href} -> {target}"
+            )
+
+
+def test_readme_is_current_prompt_only_v2_truth_surface():
+    readme = (PACK / "README.md").read_text(encoding="utf-8")
+    normalized_readme = " ".join(readme.split())
+
+    for truth in (
+        ACTIVE_CHANGE_PATH,
+        'query_text_policy="prompt_only"',
+        "query_text == loader-normalized task.prompt",
+        "router-training-data-v2-candidate-v2",
+        "router-training-data-v2-qualification-v2",
+        "router-training-data-v2-qualification-report-v2",
+        "router-training-data-v2-manifest-v2",
+        "artifact_version=2",
+        "USER_REVIEW_REQUIRED",
+        "active and unarchived",
+        "HEAD `e822d9c489ca39180b556000dc3e361552d6c75e` is the proposal commit",
+        "The current apply diff is uncommitted",
+        "validation-only reproducibility replay",
+        "replayed the frozen release selector",
+        "committed/frozen Phase 16 aggregate artifacts",
+        "fresh temporary Phase 17/18 outputs",
+        "did not read blind prompts or rerun blind evaluation",
+        "did not use new data or tuning to make a new router choice",
+        "did not promote or adopt a candidate router and did not change the router decision",
+        "reproduced result remained `KEEP_BASELINE`",
+        *CURRENT_V2_PACK_SHA256.values(),
+    ):
+        assert truth in normalized_readme
+    for historical_hash in V1_BASELINE_PACK_SHA256.values():
+        assert historical_hash not in readme
+    for stale_or_false_claim in (
+        "select or promote a model",
+        "did not select a model",
+        "29/32",
+        "Reviewer",
+    ):
+        assert stale_or_false_claim not in normalized_readme
+
+
+def test_historical_v1_brief_is_visibly_historical_and_links_current_v2():
+    html = HISTORICAL_V1_BRIEF.read_text(encoding="utf-8")
+    parser = _HTMLLinksAndText()
+    parser.feed(html)
+    visible_text = _visible_html_text(html)
+
+    for historical_truth in (
+        "HISTORICAL_V1_SNAPSHOT",
+        "v1 contract",
+        "v1 hashes",
+        "v1 validation counts",
+        "current v2 apply brief",
+        *V1_BASELINE_PACK_SHA256.values(),
+    ):
+        assert historical_truth in visible_text
+    assert any(href.endswith(APPLY_BRIEF.name) for href in parser.hrefs)
+    for artifact_name in CURRENT_V2_PACK_SHA256:
+        assert any(href.endswith(artifact_name) for href in parser.hrefs)
+
+
+def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
+    assert APPLY_BRIEF.exists()
+    html = APPLY_BRIEF.read_text(encoding="utf-8")
+    parser = _HTMLLinksAndText()
+    parser.feed(html)
+    visible_text = _visible_html_text(html)
+
+    for truth in (
+        "APPLY_COMPLETE_LOCAL",
+        "USER_REVIEW_REQUIRED",
+        "prompt_only",
+        "query_text == loader-normalized task.prompt",
+        "router-training-data-v2-candidate-v2",
+        "router-training-data-v2-qualification-v2",
+        "router-training-data-v2-qualification-report-v2",
+        "router-training-data-v2-manifest-v2",
+        "artifact_version=2",
+        "Matrix candidates 192",
+        "Positives 16",
+        "Same-category negative candidates 32",
+        "Cross-category easy negatives 144",
+        "Reserved source-test rows 64",
+        "Train-policy candidates 32",
+        "Accepted training pairs 0",
+        "Train-positive target-skill coverage 11/16",
+        "Reviewed reject/no-skill examples 0",
+        "REVIEW_REQUIRED",
+        "KEEP_BASELINE",
+        "can_start_training=false",
+        "NO_TRAINING",
+        "NO_A100_GPU_JOB",
+        "NO_CHECKPOINT",
+        "NO_BLIND_RERUN",
+        "NO_PERFORMANCE_CLAIM",
+        "NO_COMMIT",
+        "NO_PUSH",
+        "NO_PR",
+        "NO_MERGE",
+        "NO_ARCHIVE",
+        "NO_RELEASE",
+        "不是第二事实源",
+        "active/unarchived",
+        "HEAD e822d9c489ca39180b556000dc3e361552d6c75e is the proposal commit",
+        "current apply diff is uncommitted",
+        "NO_COMMIT applies to the current apply diff",
+        "No push, PR, merge, or archive occurred for the current apply diff",
+        "validation-only reproducibility replay",
+        "replayed the frozen release selector",
+        "committed/frozen Phase 16 aggregate artifacts",
+        "fresh temporary Phase 17/18 outputs",
+        "did not read blind prompts or rerun blind evaluation",
+        "did not use new data or tuning to make a new router choice",
+        "did not promote or adopt a candidate router and did not change the router decision",
+        "reproduced result remained KEEP_BASELINE",
+        "Focused builder / artifact / CLI 64 passed",
+        "Blind / protected preflight 16 passed, 28 deselected",
+        "Full pytest 762 passed",
+        "Scoped Ruff PASS",
+        "Strict OpenSpec 29 passed, 0 failed",
+        "Release reproducibility PASS / KEEP_BASELINE",
+        "782f7d3e756e3bf19dc33a930095b8a83f76ccd847644842444ba57e8fc1a390",
+        *BLOCKER_CODES,
+        *CURRENT_V2_PACK_SHA256.values(),
+    ):
+        assert truth in visible_text
+    assert parser.hrefs
+    for href in parser.hrefs:
+        target = _local_link_target(APPLY_BRIEF, href)
+        if target is not None:
+            assert target.exists(), (
+                f"missing apply brief link target: {href} -> {target}"
+            )
+    for stale_or_false_claim in (
+        "Reviewer",
+        "29/32",
+        "apply progress",
+        "PENDING FINAL",
+        "没有训练、GPU/A100 job、checkpoint、阈值校准、模型选择",
+    ):
+        assert stale_or_false_claim not in visible_text
 
 
 def test_human_brief_local_links_resolve_within_repository():
@@ -376,19 +624,20 @@ def test_human_brief_has_coherent_post_archive_lifecycle_truth():
         assert re.search(stale_pattern, visible_text, flags=re.IGNORECASE) is None
 
 
-def test_lifecycle_truth_is_scoped_to_current_archive_branch_and_change():
+def test_lifecycle_truth_separates_active_apply_from_historical_v1_change():
     branch = "ops/archive-build-router-training-data-v2-qualification-pack"
     readme = (PACK / "README.md").read_text(encoding="utf-8")
     normalized_readme = " ".join(readme.split())
     visible_brief = _visible_html_text(HUMAN_BRIEF.read_text(encoding="utf-8"))
 
-    assert f"archive branch `{branch}` has been pushed" in normalized_readme
-    assert "No PR has been opened for this branch" in normalized_readme
-    assert "this branch has not been merged to `main`" in normalized_readme
-    assert (
-        "This archive/truth-surface change created no new tag, release, or deploy"
-        in normalized_readme
+    assert ACTIVE_CHANGE_PATH in readme
+    assert "APPLY_COMPLETE_LOCAL" in normalized_readme
+    assert "USER_REVIEW_REQUIRED" in normalized_readme
+    assert "The current apply diff is uncommitted" in normalized_readme
+    assert "has not been pushed, opened as a PR, merged, or archived" in (
+        normalized_readme
     )
+    assert "`NO_COMMIT` applies to the current apply diff" in normalized_readme
     assert branch in visible_brief
     assert "该 branch 尚未创建 GitHub PR" in visible_brief
     assert "该 branch 尚未 merge main" in visible_brief

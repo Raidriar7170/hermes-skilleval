@@ -8,6 +8,7 @@ import tempfile
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 import yaml
@@ -17,10 +18,27 @@ from hermes_skilleval.skill_index import load_skill_index
 from hermes_skilleval.task_loader import load_tasks
 
 
-POLICY_ID = "router-training-data-v2-qualification-v1"
-CANDIDATE_SCHEMA_VERSION = "router-training-data-v2-candidate-v1"
-REPORT_SCHEMA_VERSION = "router-training-data-v2-qualification-report-v1"
-MANIFEST_SCHEMA_VERSION = "router-training-data-v2-manifest-v1"
+POLICY_ID = "router-training-data-v2-qualification-v2"
+CANDIDATE_SCHEMA_VERSION = "router-training-data-v2-candidate-v2"
+REPORT_SCHEMA_VERSION = "router-training-data-v2-qualification-report-v2"
+MANIFEST_SCHEMA_VERSION = "router-training-data-v2-manifest-v2"
+QUERY_CONTRACT = MappingProxyType(
+    {
+        "alternate_query_fields": (),
+        "forbidden_primary_query_inputs": (
+            "task_id",
+            "category",
+            "difficulty",
+            "robustness_tags",
+        ),
+        "hash_algorithm": "sha256",
+        "hash_field": "prompt_text_sha256",
+        "normalization": "loader_normalized",
+        "primary_query_field": "query_text",
+        "query_text_policy": "prompt_only",
+        "source_field": "task.prompt",
+    }
+)
 BLOCKER_CODES = sorted(
     [
         "INDEPENDENT_CALIBRATION_SPLIT_MISSING",
@@ -109,7 +127,7 @@ def qualify_router_training_data_v2(
     output_dir: Path | str,
     repository_root: Path | str | None = None,
 ) -> dict[str, Any]:
-    """Build the frozen canonical diagnostic v1 qualification pack."""
+    """Build the frozen canonical diagnostic v2 qualification pack."""
 
     return _qualify_router_training_data_v2(
         tasks_path=tasks_path,
@@ -286,7 +304,8 @@ def _build_candidate_matrix(
     for task in sorted(tasks, key=lambda item: item.id):
         gold_category = _gold_category(task, skill_by_id)
         source = source_by_id[task.id]
-        prompt_hash = _sha256(task.prompt.encode("utf-8"))
+        query_text = task.prompt
+        prompt_hash = _sha256(query_text.encode("utf-8"))
         for skill in sorted(skills, key=lambda item: item.id):
             if skill.id in task.gold_skills:
                 candidate_type = "positive"
@@ -315,7 +334,8 @@ def _build_candidate_matrix(
                     "label": label,
                     "pair_id": f"{task.id}/{skill.id}",
                     "prompt_text_sha256": prompt_hash,
-                    "query_text": _task_text(task),
+                    "query_text": query_text,
+                    "query_text_policy": "prompt_only",
                     "schema_version": CANDIDATE_SCHEMA_VERSION,
                     "skill_id": skill.id,
                     "skill_text": _skill_text(skill),
@@ -390,6 +410,7 @@ def _build_qualification_report(
         "counts": counts,
         "policy_id": POLICY_ID,
         "qualification_status": "REVIEW_REQUIRED",
+        "query_contract": _query_contract_payload(),
         "router_decision": "KEEP_BASELINE",
         "schema_version": REPORT_SCHEMA_VERSION,
     }
@@ -447,18 +468,18 @@ def _validate_canonical_snapshot(
 ) -> None:
     if tasks_root_logical != CANONICAL_TASK_ROOT:
         raise ValueError(
-            f"router-training-data-v2 v1 requires canonical task root: "
+            f"router-training-data-v2 v2 requires canonical task root: "
             f"{CANONICAL_TASK_ROOT}"
         )
     if skills_index_logical != CANONICAL_SKILLS_INDEX:
         raise ValueError(
-            "router-training-data-v2 v1 requires canonical skills index: "
+            "router-training-data-v2 v2 requires canonical skills index: "
             f"{CANONICAL_SKILLS_INDEX}"
         )
     actual_snapshot = _snapshot_aggregate_sha256(input_snapshot)
     if actual_snapshot != CANONICAL_INPUT_SNAPSHOT_SHA256:
         raise ValueError(
-            "router-training-data-v2 v1 canonical input snapshot mismatch: "
+            "router-training-data-v2 v2 canonical input snapshot mismatch: "
             f"expected {CANONICAL_INPUT_SNAPSHOT_SHA256}, got {actual_snapshot}"
         )
 
@@ -469,10 +490,10 @@ def _validate_canonical_ids(
 ) -> None:
     task_ids = {task.id for task in tasks}
     if task_ids != CANONICAL_TASK_IDS:
-        raise ValueError("router-training-data-v2 v1 canonical task IDs mismatch")
+        raise ValueError("router-training-data-v2 v2 canonical task IDs mismatch")
     skill_ids = {skill.id for skill in skills}
     if skill_ids != CANONICAL_SKILL_IDS:
-        raise ValueError("router-training-data-v2 v1 canonical skill IDs mismatch")
+        raise ValueError("router-training-data-v2 v2 canonical skill IDs mismatch")
 
 
 def _assert_input_snapshot_unchanged(
@@ -511,7 +532,7 @@ def _build_manifest(
     )
     return {
         "artifact_type": "router-training-data-v2-qualification-manifest",
-        "artifact_version": 1,
+        "artifact_version": 2,
         "counts": report["counts"],
         "inputs": {
             "files": input_files,
@@ -545,6 +566,7 @@ def _build_manifest(
             for name, payload in sorted(output_bytes.items())
         ],
         "policy_id": POLICY_ID,
+        "query_contract": _query_contract_payload(),
         "schema_version": MANIFEST_SCHEMA_VERSION,
     }
 
@@ -695,18 +717,6 @@ def _overlaps(left: Path, right: Path) -> bool:
     return left == right or left.is_relative_to(right) or right.is_relative_to(left)
 
 
-def _task_text(task: BenchmarkTask) -> str:
-    return " ".join(
-        [
-            task.id.replace("-", " "),
-            task.category,
-            task.difficulty,
-            task.prompt,
-            " ".join(task.robustness_tags),
-        ]
-    )
-
-
 def _skill_text(skill: Skill) -> str:
     return " ".join(
         [
@@ -718,6 +728,13 @@ def _skill_text(skill: Skill) -> str:
             skill.body,
         ]
     )
+
+
+def _query_contract_payload() -> dict[str, Any]:
+    return {
+        key: list(value) if isinstance(value, tuple) else value
+        for key, value in QUERY_CONTRACT.items()
+    }
 
 
 def _jsonl_bytes(rows: list[dict[str, Any]]) -> bytes:

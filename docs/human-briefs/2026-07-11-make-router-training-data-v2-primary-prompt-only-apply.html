@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router Training Data V2 Prompt-only Apply · Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #596578;
+      --line: #d8dfeb;
+      --panel: #f5f8fc;
+      --blue: #2457a7;
+      --blue-soft: #eaf1ff;
+      --amber: #8a5300;
+      --amber-soft: #fff5df;
+      --green: #17643a;
+      --green-soft: #eaf8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--blue); }
+    code {
+      padding: 0.1rem 0.34rem;
+      border-radius: 0.3rem;
+      background: #edf1f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9em;
+      overflow-wrap: anywhere;
+    }
+    header, main, footer {
+      width: min(1040px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+    header { padding: 3rem 0 1.3rem; }
+    h1 { margin: 0 0 0.75rem; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; }
+    h2 { margin: 0 0 0.8rem; font-size: 1.35rem; }
+    h3 { margin: 0 0 0.38rem; font-size: 1rem; }
+    p { margin: 0.42rem 0; }
+    ul, ol { margin: 0.5rem 0; padding-left: 1.35rem; }
+    li + li { margin-top: 0.3rem; }
+    section { margin: 1.2rem 0 2rem; }
+    .eyebrow { color: var(--blue); font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; }
+    .conclusion { padding: 1rem 1.15rem; border-left: 5px solid var(--amber); background: var(--amber-soft); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; }
+    .card { padding: 1rem; border: 1px solid var(--line); border-radius: 0.75rem; background: var(--panel); }
+    .card.ok { border-top: 4px solid var(--green); }
+    .card.review { border-top: 4px solid var(--amber); }
+    .label { display: block; color: var(--muted); font-size: 0.78rem; font-weight: 760; letter-spacing: 0.06em; text-transform: uppercase; }
+    .value { display: block; margin: 0.15rem 0; font-weight: 780; }
+    .callout { padding: 0.9rem 1rem; border: 1px solid #c7d7f2; border-radius: 0.7rem; background: var(--blue-soft); }
+    .warning { border-color: #ead09b; background: var(--amber-soft); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+    th, td { padding: 0.62rem 0.68rem; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: var(--panel); }
+    .pass { color: var(--green); font-weight: 760; }
+    .hash { font-size: 0.82rem; overflow-wrap: anywhere; }
+    footer { margin-top: 2rem; padding: 1.3rem 0 3rem; border-top: 1px solid var(--line); color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Human Brief · Apply snapshot · 2026-07-11</p>
+    <h1>Router Training Data V2：Primary Prompt-only Apply</h1>
+    <p class="conclusion"><strong>一句话结论：</strong>本地 apply 已把唯一 primary query 收紧为 prompt-only v2、确定性替换三个 canonical 机器产物并通过完整本地验证；资格结论仍是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>，当前状态稳定为 <code>USER_REVIEW_REQUIRED</code>，不进入训练或集成。</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="status-title">
+      <h2 id="status-title">当前状态</h2>
+      <div class="grid">
+        <article class="card ok">
+          <span class="label">Local apply</span>
+          <span class="value"><code>APPLY_COMPLETE_LOCAL</code></span>
+          <p>源码、focused tests、canonical v2 artifacts 与 truth surfaces 已在隔离 worktree 更新。</p>
+        </article>
+        <article class="card review">
+          <span class="label">Human gate</span>
+          <span class="value"><code>USER_REVIEW_REQUIRED</code></span>
+          <p>HEAD <code>e822d9c489ca39180b556000dc3e361552d6c75e</code> is the proposal commit；current apply diff is uncommitted。</p>
+        </article>
+        <article class="card review">
+          <span class="label">Lifecycle</span>
+          <span class="value">active/unarchived</span>
+          <p><code>NO_COMMIT</code> applies to the current apply diff. No push, PR, merge, or archive occurred for the current apply diff.</p>
+        </article>
+        <article class="card review">
+          <span class="label">Qualification</span>
+          <span class="value"><code>REVIEW_REQUIRED</code> · <code>KEEP_BASELINE</code></span>
+          <p><code>can_start_training=false</code>，0 accepted pairs。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">本阶段改变的机器契约</h2>
+      <p class="callout"><code>query_text == loader-normalized task.prompt</code>；每行设置 <code>query_text_policy="prompt_only"</code>，并以同一 UTF-8 字节计算 <code>prompt_text_sha256</code>。Task ID、category、difficulty、robustness tags 仅保留结构用途，不进入 primary query，也不输出 alternate/composite/legacy query。</p>
+      <ul>
+        <li>Candidate：<code>router-training-data-v2-candidate-v2</code></li>
+        <li>Policy：<code>router-training-data-v2-qualification-v2</code></li>
+        <li>Report：<code>router-training-data-v2-qualification-report-v2</code></li>
+        <li>Manifest：<code>router-training-data-v2-manifest-v2</code>，<code>artifact_version=2</code></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="truth-title">
+      <h2 id="truth-title">未改变的 qualification truth</h2>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><th scope="row">Matrix candidates</th><td>192</td><td>12 non-blind tasks × 16 canonical skills。</td></tr>
+            <tr><th scope="row">Positives</th><td>16</td><td>Gold-skill candidates。</td></tr>
+            <tr><th scope="row">Same-category negative candidates</th><td>32</td><td>仍未人工审核。</td></tr>
+            <tr><th scope="row">Cross-category easy negatives</th><td>144</td><td>不计入 accepted threshold。</td></tr>
+            <tr><th scope="row">Reserved source-test rows</th><td>64</td><td>不回流训练。</td></tr>
+            <tr><th scope="row">Train-policy candidates</th><td>32</td><td>Candidate 不等于 accepted。</td></tr>
+            <tr><th scope="row">Accepted training pairs</th><td>0</td><td>没有 human acceptance evidence。</td></tr>
+            <tr><th scope="row">Train-positive target-skill coverage</th><td>11/16</td><td>仍有 coverage gap。</td></tr>
+            <tr><th scope="row">Reviewed reject/no-skill examples</th><td>0</td><td>没有真实审核 reject evidence。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="blockers-title">
+      <h2 id="blockers-title">仍在的 8 个 blockers</h2>
+      <ol>
+        <li><code>INDEPENDENT_CALIBRATION_SPLIT_MISSING</code></li>
+        <li><code>MANUAL_ACCEPTANCE_MISSING</code></li>
+        <li><code>PAIR_COUNT_BELOW_MINIMUM</code></li>
+        <li><code>REJECT_EXAMPLES_MISSING</code></li>
+        <li><code>SAME_CATEGORY_NEGATIVES_UNREVIEWED</code></li>
+        <li><code>TARGET_POSITIVE_COVERAGE_INCOMPLETE</code></li>
+        <li><code>TASK_FAMILY_METADATA_MISSING</code></li>
+        <li><code>TASK_FAMILY_SPLIT_NOT_INDEPENDENT</code></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="hash-title">
+      <h2 id="hash-title">Current v2 artifact hashes</h2>
+      <div class="grid">
+        <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl">candidate-pairs.jsonl</a></h3><p class="hash"><code>e70006f3124f496a7e0005a081db06527391167bd380574b08c7991bcf2c6475</code></p></article>
+        <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/qualification-report.json">qualification-report.json</a></h3><p class="hash"><code>d36afe875f2ada4e38ac3b707ced5bbb27c89262aad403793b7ee68058dd2395</code></p></article>
+        <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/manifest.json">manifest.json</a></h3><p class="hash"><code>883e7d8a35622b89a243a373304bd5e9e570275649bd22d01e9a8799c674daaf</code></p></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="evidence-title">
+      <h2 id="evidence-title">Fresh evidence</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Gate</th><th scope="col">结果</th><th scope="col">证据</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Three fresh CLI targets</th><td class="pass">PASS</td><td>三次 absent-target regeneration；三个产物逐字节与 SHA-256 一致。</td></tr>
+            <tr><th scope="row">Fresh contract validation</th><td class="pass">PASS</td><td>192 rows；25 repository-relative input hashes；2 bound output hashes；无 trainer-ready files。</td></tr>
+            <tr><th scope="row">Hash migration</th><td class="pass">PASS</td><td>三个 v2 hashes 均不同于显式保留的 v1 baseline hashes。</td></tr>
+            <tr><th scope="row">Documentation TDD RED</th><td class="pass">EXPECTED RED</td><td><code>3 failed, 1 passed</code>，分别命中 stale README、未标历史 brief、缺失 apply brief。</td></tr>
+            <tr><th scope="row">Focused builder / artifact / CLI</th><td class="pass">64 passed</td><td>Prompt/hash、metadata invariance、schemas、determinism、docs/links 与 real CLI。</td></tr>
+            <tr><th scope="row">Blind / protected preflight</th><td class="pass">16 passed, 28 deselected</td><td>在 load/read/hash/staging 之前 fail closed；未打开 committed blind prompt。</td></tr>
+            <tr><th scope="row">Full pytest</th><td class="pass">762 passed</td><td>Fresh repository-wide run。</td></tr>
+            <tr><th scope="row">Scoped Ruff</th><td class="pass">PASS</td><td>3 个 changed Python files 的 check 与 format-check；<code>git diff --check</code> clean。</td></tr>
+            <tr><th scope="row">Strict OpenSpec</th><td class="pass">29 passed, 0 failed</td><td>Named change valid；active/unarchived。</td></tr>
+            <tr><th scope="row">Release reproducibility</th><td class="pass">PASS / KEEP_BASELINE</td><td>Validation-only replay；临时 Phase 17/18 outputs；未改写 committed release evidence。</td></tr>
+            <tr><th scope="row">Protected Git identities</th><td class="pass">PASS</td><td class="hash"><code>782f7d3e756e3bf19dc33a930095b8a83f76ccd847644842444ba57e8fc1a390</code>；Phase 14–18 与 blind tree zero diff。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="replay-title">
+      <h2 id="replay-title">Release reproducibility replay truth</h2>
+      <p>Task 7.4 was a <strong>validation-only reproducibility replay</strong>. It replayed the frozen release selector using committed/frozen Phase 16 aggregate artifacts and wrote fresh temporary Phase 17/18 outputs.</p>
+      <p>It did not read blind prompts or rerun blind evaluation. It did not use new data or tuning to make a new router choice.</p>
+      <p>It did not promote or adopt a candidate router and did not change the router decision; the reproduced result remained <code>KEEP_BASELINE</code>.</p>
+    </section>
+
+    <section aria-labelledby="sources-title">
+      <h2 id="sources-title">Authoritative sources</h2>
+      <ul>
+        <li><a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/proposal.md">Proposal</a> · <a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/design.md">Design</a> · <a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/specs/router-training-data-v2-qualification-pack/spec.md">Delta Spec</a> · <a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/tasks.md">Tasks</a></li>
+        <li><a href="../demo/router-training-data-v2-qualification-pack/README.md">Current pack README</a></li>
+        <li><a href="../../src/hermes_skilleval/router_training_data_v2.py">Builder source</a> · <a href="../../tests/test_router_training_data_v2.py">Unit tests</a> · <a href="../../tests/test_router_training_data_v2_artifacts.py">Artifact/truth tests</a></li>
+        <li><a href="2026-07-11-build-router-training-data-v2-qualification-pack.html">HISTORICAL_V1_SNAPSHOT brief</a></li>
+      </ul>
+      <p class="callout"><strong>权威性：</strong>本页只是中文导航与审阅 aid，<strong>不是第二事实源</strong>。OpenSpec、源码、测试、JSON/JSONL 与 fresh command output 始终优先。</p>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">明确没有发生</h2>
+      <p class="callout warning"><code>NO_TRAINING</code> · <code>NO_A100_GPU_JOB</code> · <code>NO_CHECKPOINT</code> · <code>NO_BLIND_RERUN</code> · <code>NO_PERFORMANCE_CLAIM</code> · <code>NO_COMMIT</code> · <code>NO_PUSH</code> · <code>NO_PR</code> · <code>NO_MERGE</code> · <code>NO_ARCHIVE</code> · <code>NO_TAG</code> · <code>NO_RELEASE</code> · <code>NO_DEPLOY</code></p>
+      <p>没有读取或哈希 blind prompt working-tree content；没有训练、GPU/A100 job 或 checkpoint。上面的 validation-only replay 没有使用新数据或调参形成新选择，没有 promotion、采纳 candidate 或改变 router decision，也没有产生 benchmark gain。</p>
+    </section>
+
+    <section aria-labelledby="next-title">
+      <h2 id="next-title">Recommended next step</h2>
+      <p>由用户审阅当前 uncommitted apply diff，再单独决定是否进入 commit/PR 生命周期。当前 change 保持 active/unarchived。</p>
+    </section>
+  </main>
+
+  <footer>
+    Generated from the active OpenSpec artifacts, current v2 machine artifacts, focused tests, and fresh local validation evidence. This brief is review-only.
+  </footer>
+</body>
+</html>

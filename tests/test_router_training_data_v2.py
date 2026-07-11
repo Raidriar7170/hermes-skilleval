@@ -5,6 +5,7 @@ import inspect
 import json
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 import yaml
@@ -15,6 +16,7 @@ from hermes_skilleval.router_training_data_v2 import (
     BLOCKER_CODES,
     qualify_router_training_data_v2,
 )
+from hermes_skilleval.task_loader import load_tasks
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +24,37 @@ CANONICAL_TASKS = REPO_ROOT / "benchmarks/migration-tasks"
 CANONICAL_SKILLS = (
     REPO_ROOT / "docs/demo/phase9-real-skill-library-migration/skills.json"
 )
+EXPECTED_QUERY_CONTRACT = {
+    "alternate_query_fields": [],
+    "forbidden_primary_query_inputs": [
+        "task_id",
+        "category",
+        "difficulty",
+        "robustness_tags",
+    ],
+    "hash_algorithm": "sha256",
+    "hash_field": "prompt_text_sha256",
+    "normalization": "loader_normalized",
+    "primary_query_field": "query_text",
+    "query_text_policy": "prompt_only",
+    "source_field": "task.prompt",
+}
+EXPECTED_ROW_FIELDS = {
+    "accepted_for_training",
+    "candidate_type",
+    "disposition",
+    "label",
+    "pair_id",
+    "prompt_text_sha256",
+    "query_text",
+    "query_text_policy",
+    "schema_version",
+    "skill_id",
+    "skill_text",
+    "source",
+    "source_split",
+    "task_id",
+}
 
 
 def _skill(skill_id: str, category: str) -> dict[str, object]:
@@ -97,7 +130,7 @@ def _copy_canonical_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
     return root, tasks, skills
 
 
-def test_v1_blockers_are_exact_and_sorted():
+def test_blockers_are_exact_and_sorted():
     assert BLOCKER_CODES == sorted(
         [
             "INDEPENDENT_CALIBRATION_SPLIT_MISSING",
@@ -242,6 +275,148 @@ def test_input_identity_and_category_validation_fails_closed(
     assert not (root / "pack").exists()
 
 
+def test_candidate_query_equals_loader_normalized_prompt_and_hash(tmp_path: Path):
+    output = tmp_path / "pack"
+    qualify_router_training_data_v2(
+        tasks_path=CANONICAL_TASKS,
+        skills_index_path=CANONICAL_SKILLS,
+        output_dir=output,
+        repository_root=REPO_ROOT,
+    )
+    rows = _read_jsonl(output / "candidate-pairs.jsonl")
+    task_by_id = {task.id: task for task in load_tasks(CANONICAL_TASKS)}
+
+    for row in rows:
+        query_text = row["query_text"]
+        assert isinstance(query_text, str)
+        expected_prompt = task_by_id[str(row["task_id"])].prompt
+        assert query_text.encode("utf-8") == expected_prompt.encode("utf-8")
+        assert (
+            hashlib.sha256(query_text.encode("utf-8")).hexdigest()
+            == row["prompt_text_sha256"]
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "changed_value"),
+    [
+        ("id", "renamed-task"),
+        ("category", "changed-category"),
+        ("difficulty", "hard"),
+        ("robustness_tags", ["changed-tag", "second-tag"]),
+    ],
+)
+def test_candidate_query_is_invariant_to_structured_task_metadata(
+    tmp_path: Path,
+    field: str,
+    changed_value: object,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    before = root / "before"
+    qualification._qualify_router_training_data_v2(
+        tasks_path=tasks,
+        skills_index_path=skills,
+        output_dir=before,
+        repository_root=root,
+        enforce_canonical=False,
+    )
+
+    metadata = tasks / "task-one/task.yaml"
+    payload = yaml.safe_load(metadata.read_text(encoding="utf-8"))
+    payload[field] = changed_value
+    metadata.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    after = root / "after"
+    qualification._qualify_router_training_data_v2(
+        tasks_path=tasks,
+        skills_index_path=skills,
+        output_dir=after,
+        repository_root=root,
+        enforce_canonical=False,
+    )
+
+    def query_bindings(path: Path) -> list[tuple[object, bytes, object]]:
+        return [
+            (
+                row["skill_id"],
+                str(row["query_text"]).encode("utf-8"),
+                row["prompt_text_sha256"],
+            )
+            for row in _read_jsonl(path / "candidate-pairs.jsonl")
+        ]
+
+    assert query_bindings(before) == query_bindings(after)
+    assert {binding[1] for binding in query_bindings(after)} == {
+        b"A normalized prompt."
+    }
+
+
+def test_candidate_v2_schema_policy_and_exact_field_set(tmp_path: Path):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    output = root / "pack"
+    qualification._qualify_router_training_data_v2(
+        tasks_path=tasks,
+        skills_index_path=skills,
+        output_dir=output,
+        repository_root=root,
+        enforce_canonical=False,
+    )
+    rows = _read_jsonl(output / "candidate-pairs.jsonl")
+
+    assert all(set(row) == EXPECTED_ROW_FIELDS for row in rows)
+    assert {row["schema_version"] for row in rows} == {
+        "router-training-data-v2-candidate-v2"
+    }
+    assert {row["query_text_policy"] for row in rows} == {"prompt_only"}
+    assert all(
+        {key for key in row if key.endswith("query_text")} == {"query_text"}
+        for row in rows
+    )
+
+
+def test_query_contract_definition_is_runtime_immutable():
+    assert hasattr(qualification, "QUERY_CONTRACT")
+    contract = qualification.QUERY_CONTRACT
+
+    assert isinstance(contract, MappingProxyType)
+    assert dict(contract) == {
+        key: tuple(value) if isinstance(value, list) else value
+        for key, value in EXPECTED_QUERY_CONTRACT.items()
+    }
+
+
+def test_report_and_manifest_use_exact_v2_query_contract(tmp_path: Path):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    output = root / "pack"
+    qualification._qualify_router_training_data_v2(
+        tasks_path=tasks,
+        skills_index_path=skills,
+        output_dir=output,
+        repository_root=root,
+        enforce_canonical=False,
+    )
+    report = json.loads((output / "qualification-report.json").read_text())
+    manifest = json.loads((output / "manifest.json").read_text())
+
+    assert {
+        "manifest_artifact_version": manifest.get("artifact_version"),
+        "manifest_policy_id": manifest.get("policy_id"),
+        "manifest_query_contract": manifest.get("query_contract"),
+        "manifest_schema_version": manifest.get("schema_version"),
+        "report_policy_id": report.get("policy_id"),
+        "report_query_contract": report.get("query_contract"),
+        "report_schema_version": report.get("schema_version"),
+    } == {
+        "manifest_artifact_version": 2,
+        "manifest_policy_id": "router-training-data-v2-qualification-v2",
+        "manifest_query_contract": EXPECTED_QUERY_CONTRACT,
+        "manifest_schema_version": "router-training-data-v2-manifest-v2",
+        "report_policy_id": "router-training-data-v2-qualification-v2",
+        "report_query_contract": EXPECTED_QUERY_CONTRACT,
+        "report_schema_version": ("router-training-data-v2-qualification-report-v2"),
+    }
+    assert report["query_contract"] == manifest["query_contract"]
+
+
 def test_canonical_matrix_schema_counts_dispositions_and_report(tmp_path: Path):
     output = tmp_path / "pack"
     result = qualify_router_training_data_v2(
@@ -257,23 +432,9 @@ def test_canonical_matrix_schema_counts_dispositions_and_report(tmp_path: Path):
     assert len(rows) == 192
     assert [row["pair_id"] for row in rows] == sorted(row["pair_id"] for row in rows)
     assert len({row["pair_id"] for row in rows}) == 192
-    assert set(rows[0]) == {
-        "accepted_for_training",
-        "candidate_type",
-        "disposition",
-        "label",
-        "pair_id",
-        "prompt_text_sha256",
-        "query_text",
-        "schema_version",
-        "skill_id",
-        "skill_text",
-        "source",
-        "source_split",
-        "task_id",
-    }
+    assert set(rows[0]) == EXPECTED_ROW_FIELDS
     assert {row["schema_version"] for row in rows} == {
-        "router-training-data-v2-candidate-v1"
+        "router-training-data-v2-candidate-v2"
     }
     assert sum(row["candidate_type"] == "positive" for row in rows) == 16
     assert (
@@ -321,6 +482,7 @@ def test_canonical_matrix_schema_counts_dispositions_and_report(tmp_path: Path):
         "train_positive_skill_coverage_count": 11,
     }
     assert not (output / "training-pairs.jsonl").exists()
+    assert not (output / "training-pairs-v2.jsonl").exists()
 
 
 def test_manifest_is_portable_hash_bound_and_regeneration_is_byte_identical(
@@ -340,7 +502,12 @@ def test_manifest_is_portable_hash_bound_and_regeneration_is_byte_identical(
         assert (first / name).read_bytes() == (second / name).read_bytes()
 
     manifest = json.loads((first / "manifest.json").read_text(encoding="utf-8"))
-    assert manifest["policy_id"] == "router-training-data-v2-qualification-v1"
+    report = json.loads((first / "qualification-report.json").read_text())
+    assert manifest["schema_version"] == "router-training-data-v2-manifest-v2"
+    assert manifest["artifact_version"] == 2
+    assert manifest["policy_id"] == "router-training-data-v2-qualification-v2"
+    assert manifest["query_contract"] == EXPECTED_QUERY_CONTRACT
+    assert report["query_contract"] == manifest["query_contract"]
     assert str(REPO_ROOT) not in (first / "manifest.json").read_text(encoding="utf-8")
     assert manifest["inputs"]["task_root"] == "benchmarks/migration-tasks"
     assert manifest["inputs"]["skills_index"]["path"] == (
@@ -352,6 +519,9 @@ def test_manifest_is_portable_hash_bound_and_regeneration_is_byte_identical(
     for record in manifest["outputs"]:
         path = first / record["path"]
         assert hashlib.sha256(path.read_bytes()).hexdigest() == record["sha256"]
+    for output in (first, second):
+        assert not (output / "training-pairs.jsonl").exists()
+        assert not (output / "training-pairs-v2.jsonl").exists()
 
 
 def test_existing_protected_and_symlink_redirected_outputs_are_rejected(tmp_path: Path):
@@ -406,7 +576,7 @@ def test_atomic_failure_cleans_temporary_sibling(
     assert not list(root.glob(".pack.tmp-*"))
 
 
-def test_public_v1_rejects_byte_identical_inputs_from_alternate_logical_task_root(
+def test_public_v2_rejects_byte_identical_inputs_from_alternate_logical_task_root(
     tmp_path: Path,
 ):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
@@ -425,7 +595,7 @@ def test_public_v1_rejects_byte_identical_inputs_from_alternate_logical_task_roo
     assert not output.exists()
 
 
-def test_public_v1_rejects_superset_skill_index_snapshot(
+def test_public_v2_rejects_superset_skill_index_snapshot(
     tmp_path: Path,
 ):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
@@ -446,7 +616,7 @@ def test_public_v1_rejects_superset_skill_index_snapshot(
     assert not output.exists()
 
 
-def test_public_v1_rejects_changed_canonical_task_snapshot(tmp_path: Path):
+def test_public_v2_rejects_changed_canonical_task_snapshot(tmp_path: Path):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
     prompt = tasks / "browser-form-regression/prompt.md"
     prompt.write_bytes(prompt.read_bytes() + b"\nchanged\n")
@@ -462,7 +632,7 @@ def test_public_v1_rejects_changed_canonical_task_snapshot(tmp_path: Path):
     assert not output.exists()
 
 
-def test_public_v1_is_portable_across_byte_identical_clone(tmp_path: Path):
+def test_public_v2_is_portable_across_byte_identical_clone(tmp_path: Path):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
     output = root / "pack"
 
