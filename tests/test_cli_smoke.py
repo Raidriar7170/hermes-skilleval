@@ -1656,6 +1656,29 @@ def test_cli_export_embedding_training_data_writes_pairs(tmp_path):
     assert (output_dir / "training-summary.json").exists()
 
 
+def test_cli_qualify_router_training_data_v2_writes_blocked_pack(tmp_path, capsys):
+    output_dir = tmp_path / "qualification-pack"
+
+    result = main(
+        [
+            "qualify-router-training-data-v2",
+            "--tasks",
+            "benchmarks/migration-tasks",
+            "--skills-index",
+            "docs/demo/phase9-real-skill-library-migration/skills.json",
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+
+    assert result == 0
+    assert (output_dir / "candidate-pairs.jsonl").exists()
+    assert (output_dir / "qualification-report.json").exists()
+    assert (output_dir / "manifest.json").exists()
+    assert not (output_dir / "training-pairs.jsonl").exists()
+    assert "REVIEW_REQUIRED" in capsys.readouterr().out
+
+
 def test_cli_judge_finetuned_embedding_writes_summary(tmp_path):
     baseline = tmp_path / "baseline.jsonl"
     candidate = tmp_path / "candidate.jsonl"

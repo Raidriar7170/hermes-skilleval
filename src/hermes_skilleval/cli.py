@@ -82,6 +82,7 @@ from hermes_skilleval.release_selector import (
     write_release_decision,
 )
 from hermes_skilleval.report import write_markdown_report
+from hermes_skilleval.router_training_data_v2 import qualify_router_training_data_v2
 from hermes_skilleval.routers.base import SkillRouter
 from hermes_skilleval.routers.cross_encoder import (
     CrossEncoderReranker,
@@ -672,6 +673,15 @@ def _build_parser() -> argparse.ArgumentParser:
     export_training_parser.add_argument("--skills-index", required=True)
     export_training_parser.add_argument("--output-dir", required=True)
     export_training_parser.set_defaults(handler=_run_export_embedding_training_data)
+
+    qualify_training_parser = subparsers.add_parser(
+        "qualify-router-training-data-v2",
+        help="write a fail-closed router-training-data-v2 qualification pack",
+    )
+    qualify_training_parser.add_argument("--tasks", required=True)
+    qualify_training_parser.add_argument("--skills-index", required=True)
+    qualify_training_parser.add_argument("--output-dir", required=True)
+    qualify_training_parser.set_defaults(handler=_run_qualify_router_training_data_v2)
 
     judge_finetuned_parser = subparsers.add_parser(
         "judge-finetuned-embedding",
@@ -1599,6 +1609,20 @@ def _run_export_embedding_training_data(args: argparse.Namespace) -> None:
         summary_path=output_dir / "training-summary.json",
     )
     print(f"Wrote {summary['pair_count']} embedding training pairs to {output_dir}")
+
+
+def _run_qualify_router_training_data_v2(args: argparse.Namespace) -> None:
+    report = qualify_router_training_data_v2(
+        tasks_path=args.tasks,
+        skills_index_path=args.skills_index,
+        output_dir=args.output_dir,
+    )
+    print(
+        "Wrote router-training-data-v2 qualification pack to "
+        f"{args.output_dir}: {report['qualification_status']}, "
+        f"router={report['router_decision']}, "
+        f"can_start_training={str(report['can_start_training']).lower()}"
+    )
 
 
 def _run_judge_finetuned_embedding(args: argparse.Namespace) -> None:
