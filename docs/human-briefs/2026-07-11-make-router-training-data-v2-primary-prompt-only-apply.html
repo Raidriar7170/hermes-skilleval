@@ -67,9 +67,9 @@
 </head>
 <body>
   <header>
-    <p class="eyebrow"><code>HISTORICAL_V2_SNAPSHOT</code> · 2026-07-11</p>
-    <h1>Router Training Data V2：Primary Prompt-only Apply（历史 v2）</h1>
-    <p class="conclusion"><strong>一句话结论：</strong>这是 historical v2 evidence，不是当前 v3 证据。本地 apply 当时把唯一 primary query 收紧为 prompt-only v2、确定性替换三个 canonical 机器产物并通过当时记录的本地验证；资格结论是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>，不进入训练或集成。</p>
+    <p class="eyebrow">Human Brief · <code>HISTORICAL_V2_SNAPSHOT</code> · Apply snapshot · 2026-07-11</p>
+    <h1>Router Training Data V2：Primary Prompt-only Apply</h1>
+    <p class="conclusion"><strong>一句话结论：</strong>本页是 2026-07-11 prompt-only v2 本地 apply 的历史快照；资格结论仍是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>。truth-surface 修复时 branch 已 push、PR #35 已打开，OpenSpec 仍 active/unarchived，尚未 merge 或 archive，也未进入训练。</p>
   </header>
 
   <main>
@@ -77,19 +77,19 @@
       <h2 id="status-title">当前状态</h2>
       <div class="grid">
         <article class="card ok">
-          <span class="label">Local apply</span>
-          <span class="value"><code>APPLY_COMPLETE_LOCAL</code></span>
-          <p>源码、focused tests、canonical v2 artifacts 与 truth surfaces 已在隔离 worktree 更新。</p>
+          <span class="label">Historical apply snapshot</span>
+          <span class="value"><code>HISTORICAL_V2_SNAPSHOT</code></span>
+          <p><code>APPLY_COMPLETE_LOCAL</code> 与本页命令结果均为 <code>POINT_IN_TIME_LOCAL_EVIDENCE</code>。原始 apply 事件当时处于 <code>NO_COMMIT_DURING_APPLY</code> / <code>NO_PUSH_DURING_APPLY</code> / <code>NO_PR_DURING_APPLY</code>；这些 marker 只描述该历史时点。</p>
         </article>
         <article class="card review">
-          <span class="label">Human gate</span>
-          <span class="value"><code>USER_REVIEW_REQUIRED</code></span>
-          <p>该 v2 apply 后来形成本地 commit <code>f996690700a79ab4c065ed8523340d2fd387f6b9</code>，committed locally。</p>
+          <span class="label">Evidence scope</span>
+          <span class="value"><code>RECORDED_LOCAL_VALIDATION_NOT_CURRENT_CI</code></span>
+          <p>下方测试数与命令结果只描述当时的本地验证，不冒充当前 PR head 的 GitHub Actions。</p>
         </article>
         <article class="card review">
           <span class="label">Lifecycle</span>
-          <span class="value">active/unarchived</span>
-          <p>该 commit 保持 unpushed、unmerged、unarchived；remote CI unavailable。这里的 lifecycle 修正只是 truth maintenance，不是新证据或新进展。</p>
+          <span class="value"><code>BRANCH_PUSHED</code> · <code>PR_35_OPEN</code></span>
+          <p><a href="https://github.com/Raidriar7170/hermes-skilleval/pull/35">GitHub PR #35</a> is the live integration-state surface；<code>OPENSPEC_ACTIVE_UNARCHIVED</code>（active/unarchived），且处于 <code>NO_MERGE_AT_SNAPSHOT</code> / <code>NO_ARCHIVE</code>。</p>
         </article>
         <article class="card review">
           <span class="label">Qualification</span>
@@ -154,7 +154,8 @@
     </section>
 
     <section aria-labelledby="evidence-title">
-      <h2 id="evidence-title">Fresh evidence</h2>
+      <h2 id="evidence-title">Recorded local evidence (historical)</h2>
+      <p class="callout"><code>RECORDED_LOCAL_VALIDATION_NOT_CURRENT_CI</code>：以下为 2026-07-11 apply 时记录的本地证据，不代表当前 PR head 的远端 CI 状态。</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th scope="col">Gate</th><th scope="col">结果</th><th scope="col">证据</th></tr></thead>
@@ -196,18 +197,18 @@
 
     <section aria-labelledby="limits-title">
       <h2 id="limits-title">明确没有发生</h2>
-      <p class="callout warning"><code>NO_TRAINING</code> · <code>NO_A100_GPU_JOB</code> · <code>NO_CHECKPOINT</code> · <code>NO_BLIND_RERUN</code> · <code>NO_PERFORMANCE_CLAIM</code> · <code>NO_PUSH</code> · <code>NO_PR</code> · <code>NO_MERGE</code> · <code>NO_ARCHIVE</code> · <code>NO_TAG</code> · <code>NO_RELEASE</code> · <code>NO_DEPLOY</code></p>
+      <p class="callout warning"><code>NO_TRAINING</code> · <code>NO_A100_GPU_JOB</code> · <code>NO_CHECKPOINT</code> · <code>NO_BLIND_RERUN</code> · <code>NO_PERFORMANCE_CLAIM</code> · <code>NO_MERGE_AT_SNAPSHOT</code> · <code>NO_ARCHIVE</code> · <code>NO_TAG</code> · <code>NO_RELEASE</code> · <code>NO_DEPLOY</code></p>
       <p>没有读取或哈希 blind prompt working-tree content；没有训练、GPU/A100 job 或 checkpoint。上面的 validation-only replay 没有使用新数据或调参形成新选择，没有 promotion、采纳 candidate 或改变 router decision，也没有产生 benchmark gain。</p>
     </section>
 
     <section aria-labelledby="next-title">
-      <h2 id="next-title">Recommended next step</h2>
-      <p>历史 v2 snapshot 保持只读解释；当前审阅请转到 <a href="2026-07-12-harden-router-v2-pretraining-contracts.html">current v3 brief</a>。该 v2 change 的本地 commit 仍是 active/unarchived，且没有 push、PR、merge、archive 或 remote CI。</p>
+      <h2 id="next-title">Live integration pointer</h2>
+      <p>历史 v2 snapshot 保持只读解释；当前 v3 审阅请转到 <a href="2026-07-12-harden-router-v2-pretraining-contracts.html">current v3 brief</a>。以 <a href="https://github.com/Raidriar7170/hermes-skilleval/pull/35">GitHub PR #35</a> 为 v2 实时集成状态；truth-surface 修复时 branch 已 push、PR 已 open，change 保持 active/unarchived，且尚未 merge 或 archive。</p>
     </section>
   </main>
 
   <footer>
-    Historical v2 review-only snapshot. Its OpenSpec, v2 hashes, tests, and recorded local command output remain the authoritative historical evidence; this page is not current v3 evidence.
+    Historical point-in-time v2 review-only snapshot. Its OpenSpec, v2 hashes, tests, and recorded local command output remain the authoritative historical evidence; this page is neither current v3 evidence nor current CI evidence.
   </footer>
 </body>
 </html>

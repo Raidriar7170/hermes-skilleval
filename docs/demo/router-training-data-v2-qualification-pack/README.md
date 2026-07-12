@@ -25,6 +25,7 @@ and `can_start_training=false`.
 - [Training-input gate tests](../../../tests/test_training_input.py)
 - [Current v3 Human Brief](../../../docs/human-briefs/2026-07-12-harden-router-v2-pretraining-contracts.html)
 - [Historical v2 apply brief](../../../docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html)
+- [Historical v1 brief](../../../docs/human-briefs/2026-07-11-build-router-training-data-v2-qualification-pack.html)
 
 OpenSpec defines the lifecycle and contracts. Source, tests, and the JSON/JSONL
 artifacts are the authoritative implementation and evidence. This README is a
