@@ -16,7 +16,9 @@ WORD_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
 class KeywordRouter(SkillRouter):
     name = "keyword"
 
-    def route(self, task: BenchmarkTask, skills: list[Skill], top_k: int) -> RouteResult:
+    def route(
+        self, task: BenchmarkTask, skills: list[Skill], top_k: int
+    ) -> RouteResult:
         if not isinstance(top_k, int) or top_k <= 0:
             raise ValueError("top_k must be positive")
         if not skills:
