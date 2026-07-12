@@ -101,18 +101,31 @@ The system SHALL write a deterministic `router-training-data-v2-manifest-v3` man
 - **THEN** the committed Phase 14, 15, 16, 17, and 18 evidence trees and every blind evidence tree have zero modification
 - **AND** no blind-v2 data, blind mining, blind rerun, or replacement evidence is created
 
+### Requirement: Reviewed data requires an authenticated source snapshot
+Before any future accepted rows may authorize real training, a separately authenticated source-snapshot manifest SHALL bind the canonical candidate source independently of the acceptance package. The manifest MUST bind `candidate_artifact_sha256`; each `source_record_id` to the corresponding original candidate row through `source_record_exact_bytes_sha256`; `task_snapshot_sha256`; `skill_snapshot_sha256`; the bytes shown to the reviewer through `reviewed_source_exact_bytes_sha256`; and both `source_snapshot_id` and `package_id`. The authentication root MUST be independent of the accepted-row producer and MUST bind snapshot/package identity. A fixed dataset/path or a self-computed hash is insufficient because a producer that can change both source bytes and their locally computed digest has not established canonical source authenticity. This requirement is design-only in this closeout: it MUST NOT change the current v3 machine artifacts, create reviewed rows, or authorize training.
+
+#### Scenario: Future accepted row is traced to independently authenticated bytes
+- **WHEN** a later reviewed-data package proposes an accepted row for a `source_record_id`
+- **THEN** the authenticated source-snapshot manifest binds the candidate artifact, exact original row bytes, task snapshot, skill snapshot, exact reviewer-visible source bytes, source snapshot identity, and package identity
+- **AND** matching a fixed dataset/path or a hash generated only by the accepted-row producer is insufficient
+
+#### Scenario: Current closeout records the prerequisite without implementing it
+- **WHEN** this pushed-truth and pre-training-design closeout is validated
+- **THEN** no authenticated source-snapshot manifest, accepted-row package, schema version, artifact version, or qualification decision is generated or changed
+- **AND** `REVIEW_REQUIRED`, `KEEP_BASELINE`, and `can_start_training=false` remain authoritative
+
 ### Requirement: Human-facing documentation does not replace evidence
-The pack README and Chinese Human Briefs SHALL link to the current OpenSpec artifacts, JSON/JSONL outputs, tests, and validation evidence as authoritative sources. They MUST state the shared prompt-only v3 contract, current readiness, remaining blockers, and excluded claims without presenting the candidate matrix as accepted training data. The current README and Human Brief lifecycle wording MUST identify existing local commit `f996690700a79ab4c065ed8523340d2fd387f6b9` instead of describing that completed prompt-only apply as a proposal HEAD or uncommitted diff. This wording correction MUST be described only as truth-surface repair and MUST NOT be presented as new evidence, human acceptance, training readiness, remote CI, lifecycle progress, or a change to qualification counts or decisions. The README regeneration command MUST write to a fresh temporary target and compare bytes/hashes with the committed pack instead of attempting to overwrite it. Human-facing documents MUST state that they are review/navigation aids rather than a second source of truth.
+The pack README and Chinese Human Briefs SHALL link to the current OpenSpec artifacts, JSON/JSONL outputs, tests, and validation evidence as authoritative sources. They MUST state the shared prompt-only v3 contract, current readiness, remaining blockers, and excluded claims without presenting the candidate matrix as accepted training data. The current README and current v3 Human Brief MUST identify `REVIEWED_IMPLEMENTATION_COMMIT_PUSHED` at commit `51b59851255ef7cb85011912a413aa57c7dac0fb` on branch `agent/harden-router-v2-pretraining-contracts`, with `BRANCH_PUSHED`, `ACTIVE_UNARCHIVED`, `NO_PR`, `NO_MERGE`, and `REMOTE_PR_CI_PENDING / NO_PR`. They MUST explain that a feature-branch push does not trigger the existing PR-only/push-main workflow and that local validation is not remote CI. They MUST NOT use stale live-state markers such as `LOCAL_WORKING_DIFF`, `UNCOMMITTED`, `UNPUSHED`, or `REMOTE_CI_UNAVAILABLE`, and MUST NOT encode a fixed pytest count as a success criterion. This wording correction is truth-surface repair, not new evidence, human acceptance, training readiness, PR integration, archive completion, or a change to qualification counts or decisions. The README regeneration command MUST write to a fresh temporary target and compare bytes/hashes with the committed pack instead of attempting to overwrite it. Human-facing documents MUST state that they are review/navigation aids rather than a second source of truth.
 
 #### Scenario: Reviewer opens the current v3 brief
 - **WHEN** the v3 contract apply is summarized for human review
 - **THEN** the brief shows the shared formatter, v3 schemas and hashes, `REVIEW_REQUIRED`, `KEEP_BASELINE`, and `can_start_training=false`
-- **AND** it states that no reviewed data, trainer-ready package, model training, blind rerun, A100/GPU job, checkpoint, benchmark gain, push, PR, merge, archive, tag, or release occurred
+- **AND** it states that the implementation baseline was pushed but no reviewed data, trainer-ready package, model training, blind-v2 run, A100/GPU job, checkpoint, benchmark gain, PR, merge, archive, tag, release, or deploy occurred
 
 #### Scenario: Stale lifecycle wording is repaired
-- **WHEN** the current pack README or Human Brief describes the prompt-only work as a proposal HEAD or uncommitted apply diff
-- **THEN** only that lifecycle truth is corrected to the existing local commit `f996690700a79ab4c065ed8523340d2fd387f6b9`
-- **AND** the correction does not claim push, remote CI, review acceptance, training readiness, new evidence, or lifecycle advancement
+- **WHEN** the current pack README or current v3 Human Brief describes the implementation as local, uncommitted, unpushed, or remote-CI-unavailable because the branch is unpushed
+- **THEN** that live lifecycle truth is corrected to pushed baseline commit `51b59851255ef7cb85011912a413aa57c7dac0fb`, active/unarchived OpenSpec, no PR, no merge, and PR-scoped remote CI pending because no PR exists
+- **AND** the correction does not claim remote-CI success, review acceptance, training readiness, new evidence, PR integration, or archive completion
 
 #### Scenario: Historical evidence remains authoritative and immutable
 - **WHEN** documentation links to Phase 14–18 or blind evidence for historical context

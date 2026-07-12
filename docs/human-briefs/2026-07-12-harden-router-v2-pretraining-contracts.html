@@ -77,7 +77,7 @@
   <header>
     <p class="eyebrow">Human Brief · 2026-07-12 · Local review</p>
     <h1>Router Training Data V2 v3：预训练契约收紧</h1>
-    <p class="conclusion"><strong>一句话结论：</strong>共享 prompt-only formatter、v3 qualification artifacts 与 sealed fail-closed trainer gate 已形成当前本地实现面；canonical pack 仍是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>，不能训练。</p>
+    <p class="conclusion"><strong>一句话结论：</strong>共享 prompt-only formatter、v3 qualification artifacts 与 sealed fail-closed trainer gate 已形成 pushed implementation baseline；canonical pack 仍是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>，不能训练。</p>
   </header>
 
   <main>
@@ -85,15 +85,15 @@
       <h2 id="status-title">当前状态</h2>
       <div class="grid">
         <article class="card warn"><span class="label">Qualification</span><span class="value"><code>REVIEW_REQUIRED</code> · <code>KEEP_BASELINE</code></span><p><code>can_start_training=false</code>，8 blockers，0 accepted pairs。</p></article>
-        <article class="card warn"><span class="label">Lifecycle</span><span class="value"><code>LOCAL_WORKING_DIFF</code></span><p>branch <code>agent/harden-router-v2-pretraining-contracts</code>；base HEAD <code>f996690700a79ab4c065ed8523340d2fd387f6b9</code>。</p></article>
-        <article class="card stop"><span class="label">Integration</span><span class="value"><code>UNCOMMITTED</code> · <code>UNPUSHED</code></span><p><code>NO_PR</code> · <code>NO_MERGE</code> · <code>ACTIVE_UNARCHIVED</code>。</p></article>
-        <article class="card stop"><span class="label">Remote</span><span class="value"><code>REMOTE_CI_UNAVAILABLE</code></span><p>branch 未 push；本地命令结果不能写成 remote CI。</p></article>
+        <article class="card warn"><span class="label">Lifecycle</span><span class="value"><code>REVIEWED_IMPLEMENTATION_COMMIT_PUSHED</code></span><p>commit <code>51b59851255ef7cb85011912a413aa57c7dac0fb</code> on branch <code>agent/harden-router-v2-pretraining-contracts</code>；<code>BRANCH_PUSHED</code>。</p></article>
+        <article class="card stop"><span class="label">Integration</span><span class="value"><code>NO_PR</code> · <code>NO_MERGE</code></span><p>OpenSpec change 仍为 <code>ACTIVE_UNARCHIVED</code>。</p></article>
+        <article class="card stop"><span class="label">Remote</span><span class="value"><code>REMOTE_PR_CI_PENDING</code> / <code>NO_PR</code></span><p>feature-branch push does not trigger the existing PR-only/push-main workflow；当前没有 PR-triggered GitHub Actions 结果。local validation is not remote CI.</p></article>
       </div>
     </section>
 
     <section aria-labelledby="progress-title">
       <h2 id="progress-title">什么算实现，什么只算证据</h2>
-      <p class="callout"><strong>shared formatter + v3 artifacts + sealed fail-closed trainer 是实现进展</strong>；<strong>test/brief counts 只是证据，不是进展</strong>。此前 <code>940 passed, 1 failed</code> 是当时的文档更新前基线，不是最终 full-suite 结论；本页不声称最终全套已通过。</p>
+      <p class="callout"><strong>shared formatter + v3 artifacts + sealed fail-closed trainer 是实现进展</strong>；<strong>test/brief counts 只是证据，不是进展</strong>。成功标准是契约行为、blocked truth 与可复现验证成立，不是某个固定 pytest 数量。</p>
     </section>
 
     <section aria-labelledby="contract-title">
@@ -183,7 +183,7 @@ git diff --exit-code -- benchmarks/blind-migration-tasks \
   docs/demo/phase16-blind-validation \
   docs/demo/phase17-calibrated-release-selector \
   docs/demo/phase18-ci-release-reproducibility</pre>
-      <p>这些是 local validation commands；<code>REMOTE_CI_UNAVAILABLE</code>，因此没有 remote CI 结果可宣称。</p>
+      <p>这些是 local validation commands；<code>REMOTE_PR_CI_PENDING</code> / <code>NO_PR</code>。feature-branch push does not trigger the existing PR-only/push-main workflow；local validation is not remote CI.</p>
     </section>
 
     <section aria-labelledby="next-title">
@@ -194,7 +194,7 @@ git diff --exit-code -- benchmarks/blind-migration-tasks \
   </main>
 
   <footer>
-    Generated as a concise Chinese review/navigation aid from the active OpenSpec, current local diff, v3 machine artifacts, and focused tests. It does not advance lifecycle or replace authoritative evidence.
+    Generated as a concise Chinese review/navigation aid from the active OpenSpec, pushed implementation baseline, v3 machine artifacts, and local validation. It does not replace authoritative evidence.
   </footer>
 </body>
 </html>

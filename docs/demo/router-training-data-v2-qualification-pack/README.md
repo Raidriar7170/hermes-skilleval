@@ -161,15 +161,20 @@ artifact, nor a real training-input manifest is generated.
 ## Lifecycle truth and non-claims
 
 The active OpenSpec change is `openspec/changes/harden-router-v2-pretraining-contracts`.
-Current state is `LOCAL_WORKING_DIFF` on branch
-`agent/harden-router-v2-pretraining-contracts`, with base HEAD
-`f996690700a79ab4c065ed8523340d2fd387f6b9`. The current v3 diff is uncommitted,
-unpushed, has no PR, is unmerged, and the change is active and unarchived. Because
-the branch is unpushed, remote CI is unavailable; local checks are not remote CI.
+The reviewed implementation baseline is
+`REVIEWED_IMPLEMENTATION_COMMIT_PUSHED` at commit
+`51b59851255ef7cb85011912a413aa57c7dac0fb` on
+`agent/harden-router-v2-pretraining-contracts`; the branch state is
+`BRANCH_PUSHED`. The change remains `ACTIVE_UNARCHIVED`, with `NO_PR` and
+`NO_MERGE`. Its remote-validation state is `REMOTE_PR_CI_PENDING / NO_PR`:
+feature-branch push does not trigger the existing PR-only/push-main workflow,
+so no PR-triggered GitHub Actions result exists. local validation is not remote CI.
 
 This change did not train or fine-tune a router, read or hash blind prompt content,
 run an A100/GPU job, create or load a model, create a checkpoint, run blind-v2, or
 establish a benchmark improvement. It did not merge, archive, tag, release, or
-deploy this v3 working diff. Phase 14–18 and blind evidence remain unchanged.
-Candidate volume is not qualified-pair volume, and this pack does not authorize
-training or a public performance claim.
+deploy the pushed implementation baseline. The explicit boundaries are
+`NO_TRAINING`, `NO_A100_GPU_JOB`, `NO_MODEL`, `NO_CHECKPOINT`, `NO_BLIND_V2`,
+`NO_PERFORMANCE_CLAIM`, `NO_TAG`, `NO_RELEASE`, and `NO_DEPLOY`. Phase 14–18
+and blind evidence remain unchanged. Candidate volume is not qualified-pair
+volume, and this pack does not authorize training or a public performance claim.

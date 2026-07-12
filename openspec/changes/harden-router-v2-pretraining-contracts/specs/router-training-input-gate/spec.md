@@ -176,6 +176,8 @@ Complete package validation SHALL run in a standard-library-only bootstrap befor
 ### Requirement: Downstream training consumes only the accepted prompt-only handoff
 After whole-package validation succeeds, the gate SHALL produce exactly one immutable handoff that preserves accepted-row file order and contains every accepted row exactly once. The example and handoff constructors MUST require one unexported validation seal held only inside the loader/verifier closure, MUST store that seal in frozen slots, and MUST reject an ordinary constructor call without the closure token. The same closure SHALL hold a separate secret used to compute a canonical keyed fingerprint for every example's four exposed fields and for the handoff package ID plus every complete example in file order. Each object MUST store its fingerprint in a frozen slot, but the fingerprint secret MUST NOT be stored in an instance. The seal, fingerprint secret, and authorized builder MUST NOT exist as module-global objects. The module SHALL expose an internal verifier that shares the closure seal and fingerprint secret. The downstream training function MUST invoke that verifier as its first operation, before grouping, framework import, model/GPU access, or output handling. Verification MUST reject a wrong handoff type, a missing or forged handoff seal, a non-tuple collection, a wrong example type, any missing or forged example seal, any example fingerprint mismatch, or any handoff fingerprint mismatch caused by package-ID, field, membership, order, or collection replacement.
 
+The closure-held seal and HMAC fingerprint SHALL be described as an internal fail-closed integrity/misuse guard against accidental calls, ordinary construction, low-level object forgery, and unverified code paths. It is not a cryptographic security boundary against arbitrary malicious same-process Python, introspection, monkey-patching, runtime memory inspection, or replacement of trusted verifier code. This bounded threat model does not weaken the existing gate: exact package validation, whole-input rejection, seal/fingerprint checks, and pre-framework/pre-output ordering remain mandatory.
+
 Only after seal verification succeeds MAY the downstream trainer group examples, and it MUST group only by `supervision_label` (`POSITIVE` or `HARD_NEGATIVE`). For every example it MUST derive the task-side model input only as `router_query_text(query_text)` and MAY use `skill_text` only as the separate skill-side model input. It MUST NOT read, reconstruct, or infer a raw `label`, category, candidate type, source path, source dataset, source split, or other source metadata as a model input, grouping key, weight, gate, or target. It MUST NOT reopen the source artifact or qualification pack after handoff.
 
 #### Scenario: Valid rows are grouped for the trainer
@@ -204,10 +206,30 @@ Only after seal verification succeeds MAY the downstream trainer group examples,
 - **THEN** the downstream verifier detects a secret-keyed content fingerprint mismatch as its first operation
 - **AND** no framework import, model/GPU access, grouping, or output side effect occurs
 
+#### Scenario: Threat-model wording is reviewed
+- **WHEN** the closure-held seal and HMAC fingerprint are documented or reviewed
+- **THEN** they are identified as an internal fail-closed integrity/misuse guard and not a cryptographic security boundary against arbitrary malicious same-process Python, introspection, or monkey-patching
+- **AND** the clarification does not weaken the existing gate or remove any current validation, rejection, fingerprint, or pre-side-effect requirement
+
+### Requirement: Real-training batching must prevent same-skill false negatives
+Before any future real training run, the trainer contract MUST address the MultipleNegativesRankingLoss same-skill false negative created when multiple prompt positives for one skill appear in one random batch. It SHALL use either a deterministic skill_id-unique batch sampler with at most one example per skill_id per batch, or an explicit multi-positive objective such as a supervised contrastive/listwise objective that treats all same-skill positives correctly. Focused tests MUST prove that no same-skill positive is used as an in-batch negative. The current sealed handoff does not expose skill_id, so a later contract MUST either add verified fingerprint-bound skill identity to the handoff or construct the sampler before the metadata-reducing handoff without reopening source artifacts. This is a design-only prerequisite in this closeout; it MUST NOT change the current handoff, sampler, loss, runtime code, or machine artifacts.
+
+#### Scenario: Future batch contains multiple prompts for one skill
+- **WHEN** reviewed training data contains two or more positive prompts for the same skill
+- **THEN** the deterministic skill_id-unique batch sampler places at most one example per skill_id per batch, or the explicit multi-positive objective treats every same-skill item as a positive
+- **AND** a focused test proves that no same-skill false negative is created
+
+#### Scenario: Current sealed handoff remains unchanged
+- **WHEN** this pushed-truth and pre-training-design closeout is applied
+- **THEN** the fact that the sealed handoff does not expose skill_id is recorded as a future contract-design point
+- **AND** no sampler, loss, handoff field, schema, artifact, or real training input is changed
+
 ### Requirement: New trainer artifacts use exact Router Training Data V2 v3 lineage
 Every train config generated for this gate SHALL set `schema_version="router-training-data-v2-train-config-v3"`, integer `artifact_version=3`, `policy_id="router-training-data-v2-training-admission-v3"`, and `artifact_type="router-training-data-v2-train-config"`; it MUST NOT contain `phase`. Every train-run summary written by this trainer SHALL set `schema_version="router-training-data-v2-train-run-summary-v3"`, integer `artifact_version=3`, the same admission policy, and `artifact_type="router-training-data-v2-train-run-summary"`; it MUST NOT contain `phase` or identify itself as Phase 14.
 
 Every model manifest written by this trainer SHALL set `schema_version="router-training-data-v2-model-manifest-v3"`, integer `artifact_version=3`, the same admission policy, and `artifact_type="router-training-data-v2-model-manifest"`; it MUST NOT contain `phase` or identify itself as Phase 15. The shared historical `model_manifest` defaults, APIs, and committed Phase 14–18 artifacts MUST remain unchanged. This trainer MAY call the shared inventory builder only after admission succeeds, but MUST replace historical identity in memory before writing its own manifest. Generated model-card title, prose, and example command SHALL use Router Training Data V2 v3 wording and a neutral v3 train-config path; they MUST NOT describe the new work or config as Phase 14.
+
+Before a future real checkpoint may be written, the train config, run summary, model manifest, and checkpoint metadata MUST bind the exact execution lineage through `training_input_manifest_sha256`, `accepted_pairs_sha256`, `qualification_report_sha256`, `train_config_sha256`, `git_commit`, `git_tree_oid`, `git_worktree_state="CLEAN"`, `base_model_id`, immutable `base_model_revision`, `seed`, `dependency_versions`, and `split_manifest_sha256`. Real training MUST run `git status --porcelain --untracked-files=all` before framework/model/output side effects and fails closed if any tracked or untracked path is reported. A dirty diff, patch file, or best-effort capture MUST NOT serve as a fallback. `training_input_package_id` alone is insufficient to reproduce or audit the exact input bytes, qualification decision, config, committed tree, base-model revision, environment, seed, and family-disjoint split. This closeout specifies the future fields and clean-tree prerequisite only; it MUST NOT implement the runtime check or create a real config, run summary, model manifest, checkpoint, new schema, or artifact version.
 
 #### Scenario: Config and run summary use new lineage
 - **WHEN** a v3 train config is built and a synthetic accepted handoff reaches the fake downstream training path
@@ -223,6 +245,21 @@ Every model manifest written by this trainer SHALL set `schema_version="router-t
 - **WHEN** a model card is rendered for the v3 train config
 - **THEN** its title, prose, and example command identify Router Training Data V2 v3 rather than Phase 14
 - **AND** it points to a neutral v3 train-config path rather than the historical Phase 14 config
+
+#### Scenario: Future real checkpoint has complete byte-level lineage
+- **WHEN** a separately authorized real training run is about to write a checkpoint
+- **THEN** its config, run summary, model manifest, and checkpoint metadata bind every required input, report, config, split, `git_commit`, `git_tree_oid`, `git_worktree_state="CLEAN"`, base-model, seed, and dependency identity field
+- **AND** a reusable `training_input_package_id` without those hashes and immutable identities is rejected as incomplete lineage
+
+#### Scenario: Real training sees a dirty or untracked worktree
+- **WHEN** `git status --porcelain --untracked-files=all` returns any non-empty output before a separately authorized real run
+- **THEN** training fails closed before framework/model/output side effects
+- **AND** no dirty diff, patch capture, ignored discrepancy, or other fallback may authorize the run
+
+#### Scenario: Current closeout does not fabricate training lineage
+- **WHEN** this design requirement is validated before reviewed data exists
+- **THEN** no real training config, run summary, model manifest, checkpoint metadata, model, or checkpoint is generated
+- **AND** the current trainer code and v3 machine artifacts remain unchanged
 
 ### Requirement: This change validates only a synthetic passing fixture
 This change MUST NOT create a real `router-training-data-v2-training-input-manifest-v3` package, real accepted-pair v3 artifact, reviewed positive set, reviewed hard-negative set, or production qualification report with `can_start_training=true`. Tests MAY construct a minimal temporary synthetic package, synthetic accepted rows, and a synthetic v3 qualification report with `can_start_training=true` and `blocker_codes=[]` solely to prove that the valid branch and immutable downstream handoff are reachable. Such fixtures MUST be clearly synthetic, MUST NOT reference protected Phase 14–18 or blind data, MUST group only by `supervision_label`, MUST use `router_query_text(query_text)` for task-side input, and MUST NOT be committed, published, or represented as trainer-ready project data.

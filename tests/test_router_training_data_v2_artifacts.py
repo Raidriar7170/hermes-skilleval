@@ -39,6 +39,16 @@ PROPOSAL_BRIEF_SHA256 = (
     "8aad6d45b991e0cc0c4581d233207b042ee35bb4527ed84f9193644661803778"
 )
 ACTIVE_CHANGE_PATH = "openspec/changes/harden-router-v2-pretraining-contracts"
+ACTIVE_CHANGE = ROOT / ACTIVE_CHANGE_PATH
+ACTIVE_PROPOSAL = ACTIVE_CHANGE / "proposal.md"
+ACTIVE_DESIGN = ACTIVE_CHANGE / "design.md"
+ACTIVE_TASKS = ACTIVE_CHANGE / "tasks.md"
+QUALIFICATION_SPEC = (
+    ACTIVE_CHANGE / "specs/router-training-data-v2-qualification-pack/spec.md"
+)
+TRAINING_INPUT_SPEC = ACTIVE_CHANGE / "specs/router-training-input-gate/spec.md"
+PUSHED_IMPLEMENTATION_COMMIT = "51b59851255ef7cb85011912a413aa57c7dac0fb"
+PUSHED_BRANCH = "agent/harden-router-v2-pretraining-contracts"
 HISTORICAL_V2_CHANGE_PATH = (
     "openspec/changes/make-router-training-data-v2-primary-prompt-only"
 )
@@ -735,14 +745,14 @@ def test_current_v3_brief_has_truth_boundaries_authoritative_links_and_next_step
         "REVIEW_REQUIRED",
         "KEEP_BASELINE",
         "can_start_training=false",
-        "LOCAL_WORKING_DIFF",
-        "f996690700a79ab4c065ed8523340d2fd387f6b9",
-        "UNCOMMITTED",
-        "UNPUSHED",
+        "REVIEWED_IMPLEMENTATION_COMMIT_PUSHED",
+        PUSHED_IMPLEMENTATION_COMMIT,
+        "BRANCH_PUSHED",
+        PUSHED_BRANCH,
         "NO_PR",
         "NO_MERGE",
         "ACTIVE_UNARCHIVED",
-        "REMOTE_CI_UNAVAILABLE",
+        "REMOTE_PR_CI_PENDING",
         "NO_TRAINING",
         "NO_A100_GPU_JOB",
         "NO_MODEL",
@@ -764,8 +774,6 @@ def test_current_v3_brief_has_truth_boundaries_authoritative_links_and_next_step
         "shared formatter + v3 artifacts + sealed fail-closed trainer 是实现进展",
         "test/brief counts 只是证据，不是进展",
         "review/navigation aid，不是第二事实源",
-        "940 passed, 1 failed",
-        "文档更新前基线，不是最终 full-suite 结论",
         *BLOCKER_CODES,
         *CURRENT_V3_PACK_SHA256.values(),
     ):
@@ -812,8 +820,136 @@ def test_current_v3_brief_has_truth_boundaries_authoritative_links_and_next_step
         "blind-v2 completed",
         "benchmark improved",
         "Phase 19",
+        "940 passed, 1 failed",
     ):
         assert overclaim not in visible_text
+
+    assert re.search(r"\b\d+ passed(?:, \d+ failed)?\b", visible_text) is None
+
+
+def test_current_v3_truth_surfaces_close_the_pushed_active_no_pr_lifecycle():
+    readme = " ".join((PACK / "README.md").read_text(encoding="utf-8").split())
+    brief = _visible_html_text(CURRENT_V3_BRIEF.read_text(encoding="utf-8"))
+
+    required_lifecycle = (
+        "REVIEWED_IMPLEMENTATION_COMMIT_PUSHED",
+        PUSHED_IMPLEMENTATION_COMMIT,
+        "BRANCH_PUSHED",
+        PUSHED_BRANCH,
+        "ACTIVE_UNARCHIVED",
+        "NO_PR",
+        "NO_MERGE",
+        "REMOTE_PR_CI_PENDING",
+        "NO_TRAINING",
+        "NO_CHECKPOINT",
+        "NO_BLIND_V2",
+        "NO_TAG",
+        "NO_RELEASE",
+        "NO_DEPLOY",
+    )
+    for surface in (readme, brief):
+        for marker in required_lifecycle:
+            assert marker in surface
+        assert (
+            "feature-branch push does not trigger the existing PR-only/push-main workflow"
+            in surface
+        )
+        assert "local validation is not remote CI" in surface
+
+    forbidden_live_wording = (
+        "LOCAL_WORKING_DIFF",
+        "UNCOMMITTED",
+        "UNPUSHED",
+        "REMOTE_CI_UNAVAILABLE",
+        "branch 未 push",
+        "branch is unpushed",
+        "because branch is unpushed",
+    )
+    for surface in (readme, brief):
+        lowered_surface = surface.lower()
+        for stale in forbidden_live_wording:
+            assert stale.lower() not in lowered_surface
+
+
+def test_active_openspec_records_source_lineage_mnrl_and_bounded_seal_design():
+    proposal = " ".join(ACTIVE_PROPOSAL.read_text(encoding="utf-8").split())
+    design = " ".join(ACTIVE_DESIGN.read_text(encoding="utf-8").split())
+    qualification_spec = " ".join(
+        QUALIFICATION_SPEC.read_text(encoding="utf-8").split()
+    )
+    training_input_spec = " ".join(
+        TRAINING_INPUT_SPEC.read_text(encoding="utf-8").split()
+    )
+    tasks = " ".join(ACTIVE_TASKS.read_text(encoding="utf-8").split())
+
+    for marker in (
+        "REVIEWED_IMPLEMENTATION_COMMIT_PUSHED",
+        PUSHED_IMPLEMENTATION_COMMIT,
+        "BRANCH_PUSHED",
+        "ACTIVE_UNARCHIVED",
+        "NO_PR",
+        "NO_MERGE",
+        "REMOTE_PR_CI_PENDING",
+    ):
+        assert marker in proposal
+
+    for marker in (
+        "authenticated source-snapshot manifest",
+        "candidate_artifact_sha256",
+        "source_record_id",
+        "source_record_exact_bytes_sha256",
+        "task_snapshot_sha256",
+        "skill_snapshot_sha256",
+        "reviewed_source_exact_bytes_sha256",
+        "source_snapshot_id",
+        "package_id",
+        "fixed dataset/path or a self-computed hash is insufficient",
+    ):
+        assert marker in design
+        assert marker in qualification_spec
+
+    for marker in (
+        "training_input_manifest_sha256",
+        "accepted_pairs_sha256",
+        "qualification_report_sha256",
+        "train_config_sha256",
+        "git_commit",
+        "git_tree_oid",
+        'git_worktree_state="CLEAN"',
+        "git status --porcelain --untracked-files=all",
+        "fails closed",
+        "base_model_id",
+        "base_model_revision",
+        "seed",
+        "dependency_versions",
+        "split_manifest_sha256",
+    ):
+        assert marker in design
+        assert marker in training_input_spec
+
+    for marker in (
+        "same-skill false negative",
+        "deterministic skill_id-unique batch sampler",
+        "at most one example per skill_id per batch",
+        "explicit multi-positive objective",
+        "sealed handoff does not expose skill_id",
+    ):
+        assert marker in design
+        assert marker in training_input_spec
+
+    for marker in (
+        "internal fail-closed integrity/misuse guard",
+        "not a cryptographic security boundary",
+        "arbitrary malicious same-process Python",
+        "introspection",
+        "monkey-patching",
+        "does not weaken the existing gate",
+    ):
+        assert marker in design
+        assert marker in training_input_spec
+
+    assert "Sections 1–7 are the historical execution record" in tasks
+    assert PUSHED_IMPLEMENTATION_COMMIT in tasks
 
 
 def test_human_brief_local_links_resolve_within_repository():
@@ -867,11 +1003,13 @@ def test_lifecycle_truth_separates_active_apply_from_historical_v1_change():
     visible_brief = _visible_html_text(HUMAN_BRIEF.read_text(encoding="utf-8"))
 
     assert ACTIVE_CHANGE_PATH in readme
-    assert "LOCAL_WORKING_DIFF" in normalized_readme
-    assert "base HEAD `f996690700a79ab4c065ed8523340d2fd387f6b9`" in normalized_readme
-    assert "uncommitted, unpushed, has no PR, is unmerged" in normalized_readme
-    assert "active and unarchived" in normalized_readme
-    assert "remote CI is unavailable" in normalized_readme
+    assert "REVIEWED_IMPLEMENTATION_COMMIT_PUSHED" in normalized_readme
+    assert PUSHED_IMPLEMENTATION_COMMIT in normalized_readme
+    assert "BRANCH_PUSHED" in normalized_readme
+    assert "ACTIVE_UNARCHIVED" in normalized_readme
+    assert "NO_PR" in normalized_readme
+    assert "NO_MERGE" in normalized_readme
+    assert "REMOTE_PR_CI_PENDING / NO_PR" in normalized_readme
     assert branch in visible_brief
     assert "该 branch 尚未创建 GitHub PR" in visible_brief
     assert "该 branch 尚未 merge main" in visible_brief
