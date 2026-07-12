@@ -14,7 +14,7 @@ and `can_start_training=false`.
 - [Qualification report](qualification-report.json)
 - [Provenance manifest](manifest.json)
 - [Artifact-contract tests](../../../tests/test_router_training_data_v2_artifacts.py)
-- [Current v2 apply brief](../../../docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html)
+- [Historical v2 apply snapshot for the current v2 contract](../../../docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html)
 - [Historical v1 brief](../../../docs/human-briefs/2026-07-11-build-router-training-data-v2-qualification-pack.html)
 
 The OpenSpec artifacts define the lifecycle and policy. The JSON/JSONL files and
@@ -103,12 +103,18 @@ Expected committed SHA-256 values:
 ## Lifecycle truth
 
 The active OpenSpec change is
-`make-router-training-data-v2-primary-prompt-only`. Its local apply surface is
-complete for user review (`APPLY_COMPLETE_LOCAL` / `USER_REVIEW_REQUIRED`) and
-the change remains active and unarchived. HEAD
-`e822d9c489ca39180b556000dc3e361552d6c75e` is the proposal commit. The current
-apply diff is uncommitted and has not been pushed, opened as a PR, merged, or
-archived.
+`make-router-training-data-v2-primary-prompt-only`. Its completed local apply is
+recorded as a `HISTORICAL_V2_APPLY_SNAPSHOT` (`APPLY_COMPLETE_LOCAL`): the apply
+and validation details are point-in-time local evidence, not current CI
+evidence. During that original apply event, its diff had not yet been committed,
+pushed, or opened as a PR (`NO_COMMIT_DURING_APPLY`, `NO_PUSH_DURING_APPLY`,
+`NO_PR_DURING_APPLY`); those scoped markers describe only that historical event.
+At the later truth-surface repair checkpoint, the branch was committed and
+pushed (`BRANCH_PUSHED`) and GitHub PR #35 was open (`PR_35_OPEN`).
+[GitHub PR #35](https://github.com/Raidriar7170/hermes-skilleval/pull/35) is the
+live integration-state surface. The OpenSpec change remains active and
+unarchived; PR #35 had not been merged and the change had not been archived at
+that checkpoint (`NO_MERGE_AT_SNAPSHOT` / `NO_ARCHIVE`).
 
 ## Release reproducibility replay truth
 
@@ -126,8 +132,8 @@ blind prompt content, run an A100/GPU job (`NO_A100_GPU_JOB`), create a
 checkpoint (`NO_CHECKPOINT`), or rerun blind evaluation (`NO_BLIND_RERUN`). The
 validation replay above used no new training data, calibration, or threshold
 tuning and established no benchmark improvement or model improvement
-(`NO_PERFORMANCE_CLAIM`). `NO_COMMIT` applies to the current apply diff; that
-diff also has no push, PR, merge, archive, tag, release, or deploy (`NO_PUSH`,
-`NO_PR`, `NO_MERGE`, `NO_ARCHIVE`, `NO_TAG`, `NO_RELEASE`, `NO_DEPLOY`).
-Candidate volume is not qualified-pair volume, and this pack does not authorize
-training or a public performance claim.
+(`NO_PERFORMANCE_CLAIM`). At the truth-surface repair checkpoint, PR #35 had no
+merge and the OpenSpec change had no archive; no tag, release, or deploy had
+occurred (`NO_MERGE_AT_SNAPSHOT`, `NO_ARCHIVE`, `NO_TAG`, `NO_RELEASE`,
+`NO_DEPLOY`). Candidate volume is not qualified-pair volume, and this pack does
+not authorize training or a public performance claim.

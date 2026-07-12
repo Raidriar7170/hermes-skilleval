@@ -452,10 +452,19 @@ def test_readme_is_current_prompt_only_v2_truth_surface():
         "router-training-data-v2-qualification-report-v2",
         "router-training-data-v2-manifest-v2",
         "artifact_version=2",
-        "USER_REVIEW_REQUIRED",
+        "HISTORICAL_V2_APPLY_SNAPSHOT",
+        "point-in-time local evidence",
+        "not current CI evidence",
+        "NO_COMMIT_DURING_APPLY",
+        "NO_PUSH_DURING_APPLY",
+        "NO_PR_DURING_APPLY",
+        "BRANCH_PUSHED",
+        "PR_35_OPEN",
+        "NO_MERGE_AT_SNAPSHOT",
+        "NO_ARCHIVE",
         "active and unarchived",
-        "HEAD `e822d9c489ca39180b556000dc3e361552d6c75e` is the proposal commit",
-        "The current apply diff is uncommitted",
+        "[Historical v2 apply snapshot for the current v2 contract]",
+        "[GitHub PR #35](https://github.com/Raidriar7170/hermes-skilleval/pull/35)",
         "validation-only reproducibility replay",
         "replayed the frozen release selector",
         "committed/frozen Phase 16 aggregate artifacts",
@@ -470,12 +479,18 @@ def test_readme_is_current_prompt_only_v2_truth_surface():
     for historical_hash in V1_BASELINE_PACK_SHA256.values():
         assert historical_hash not in readme
     for stale_or_false_claim in (
+        "USER_REVIEW_REQUIRED",
+        "e822d9c489ca39180b556000dc3e361552d6c75e",
+        "The current apply diff is uncommitted",
+        "has not been pushed, opened as a PR",
         "select or promote a model",
         "did not select a model",
         "29/32",
         "Reviewer",
     ):
         assert stale_or_false_claim not in normalized_readme
+    for unscoped_stale_marker in ("NO_COMMIT", "NO_PUSH", "NO_PR"):
+        assert re.search(rf"\b{unscoped_stale_marker}\b", normalized_readme) is None
 
 
 def test_historical_v1_brief_is_visibly_historical_and_links_current_v2():
@@ -489,7 +504,7 @@ def test_historical_v1_brief_is_visibly_historical_and_links_current_v2():
         "v1 contract",
         "v1 hashes",
         "v1 validation counts",
-        "current v2 apply brief",
+        "historical v2 apply snapshot for the current v2 contract",
         *V1_BASELINE_PACK_SHA256.values(),
     ):
         assert historical_truth in visible_text
@@ -498,7 +513,7 @@ def test_historical_v1_brief_is_visibly_historical_and_links_current_v2():
         assert any(href.endswith(artifact_name) for href in parser.hrefs)
 
 
-def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
+def test_apply_brief_is_historical_v2_snapshot_with_live_pr_link():
     assert APPLY_BRIEF.exists()
     html = APPLY_BRIEF.read_text(encoding="utf-8")
     parser = _HTMLLinksAndText()
@@ -506,8 +521,17 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
     visible_text = _visible_html_text(html)
 
     for truth in (
+        "HISTORICAL_V2_SNAPSHOT",
         "APPLY_COMPLETE_LOCAL",
-        "USER_REVIEW_REQUIRED",
+        "POINT_IN_TIME_LOCAL_EVIDENCE",
+        "RECORDED_LOCAL_VALIDATION_NOT_CURRENT_CI",
+        "NO_COMMIT_DURING_APPLY",
+        "NO_PUSH_DURING_APPLY",
+        "NO_PR_DURING_APPLY",
+        "BRANCH_PUSHED",
+        "PR_35_OPEN",
+        "OPENSPEC_ACTIVE_UNARCHIVED",
+        "NO_MERGE_AT_SNAPSHOT",
         "prompt_only",
         "query_text == loader-normalized task.prompt",
         "router-training-data-v2-candidate-v2",
@@ -532,18 +556,13 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
         "NO_CHECKPOINT",
         "NO_BLIND_RERUN",
         "NO_PERFORMANCE_CLAIM",
-        "NO_COMMIT",
-        "NO_PUSH",
-        "NO_PR",
-        "NO_MERGE",
         "NO_ARCHIVE",
+        "NO_TAG",
         "NO_RELEASE",
+        "NO_DEPLOY",
         "不是第二事实源",
         "active/unarchived",
-        "HEAD e822d9c489ca39180b556000dc3e361552d6c75e is the proposal commit",
-        "current apply diff is uncommitted",
-        "NO_COMMIT applies to the current apply diff",
-        "No push, PR, merge, or archive occurred for the current apply diff",
+        "GitHub PR #35",
         "validation-only reproducibility replay",
         "replayed the frozen release selector",
         "committed/frozen Phase 16 aggregate artifacts",
@@ -564,6 +583,7 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
     ):
         assert truth in visible_text
     assert parser.hrefs
+    assert "https://github.com/Raidriar7170/hermes-skilleval/pull/35" in parser.hrefs
     for href in parser.hrefs:
         target = _local_link_target(APPLY_BRIEF, href)
         if target is not None:
@@ -571,6 +591,12 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
                 f"missing apply brief link target: {href} -> {target}"
             )
     for stale_or_false_claim in (
+        "USER_REVIEW_REQUIRED",
+        "e822d9c489ca39180b556000dc3e361552d6c75e",
+        "current apply diff is uncommitted",
+        "NO_COMMIT applies to the current apply diff",
+        "No push, PR, merge, or archive occurred for the current apply diff",
+        "由用户审阅当前 uncommitted apply diff",
         "Reviewer",
         "29/32",
         "apply progress",
@@ -578,6 +604,8 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
         "没有训练、GPU/A100 job、checkpoint、阈值校准、模型选择",
     ):
         assert stale_or_false_claim not in visible_text
+    for unscoped_stale_marker in ("NO_COMMIT", "NO_PUSH", "NO_PR"):
+        assert re.search(rf"\b{unscoped_stale_marker}\b", visible_text) is None
 
 
 def test_human_brief_local_links_resolve_within_repository():
@@ -624,20 +652,23 @@ def test_human_brief_has_coherent_post_archive_lifecycle_truth():
         assert re.search(stale_pattern, visible_text, flags=re.IGNORECASE) is None
 
 
-def test_lifecycle_truth_separates_active_apply_from_historical_v1_change():
+def test_lifecycle_truth_separates_historical_snapshots_from_live_pr():
     branch = "ops/archive-build-router-training-data-v2-qualification-pack"
     readme = (PACK / "README.md").read_text(encoding="utf-8")
     normalized_readme = " ".join(readme.split())
     visible_brief = _visible_html_text(HUMAN_BRIEF.read_text(encoding="utf-8"))
 
     assert ACTIVE_CHANGE_PATH in readme
+    assert "HISTORICAL_V2_APPLY_SNAPSHOT" in normalized_readme
     assert "APPLY_COMPLETE_LOCAL" in normalized_readme
-    assert "USER_REVIEW_REQUIRED" in normalized_readme
-    assert "The current apply diff is uncommitted" in normalized_readme
-    assert "has not been pushed, opened as a PR, merged, or archived" in (
-        normalized_readme
-    )
-    assert "`NO_COMMIT` applies to the current apply diff" in normalized_readme
+    assert "NO_COMMIT_DURING_APPLY" in normalized_readme
+    assert "NO_PUSH_DURING_APPLY" in normalized_readme
+    assert "NO_PR_DURING_APPLY" in normalized_readme
+    assert "BRANCH_PUSHED" in normalized_readme
+    assert "PR_35_OPEN" in normalized_readme
+    assert "NO_MERGE_AT_SNAPSHOT" in normalized_readme
+    assert "NO_ARCHIVE" in normalized_readme
+    assert "https://github.com/Raidriar7170/hermes-skilleval/pull/35" in readme
     assert branch in visible_brief
     assert "该 branch 尚未创建 GitHub PR" in visible_brief
     assert "该 branch 尚未 merge main" in visible_brief
