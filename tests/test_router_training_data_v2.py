@@ -6,6 +6,7 @@ import json
 import shutil
 from pathlib import Path
 from types import MappingProxyType
+from typing import Any, cast
 
 import pytest
 import yaml
@@ -31,7 +32,10 @@ EXPECTED_QUERY_CONTRACT = {
         "category",
         "difficulty",
         "robustness_tags",
+        "split",
+        "family",
     ],
+    "formatter": "router_query_text(prompt: str)",
     "hash_algorithm": "sha256",
     "hash_field": "prompt_text_sha256",
     "normalization": "loader_normalized",
@@ -41,10 +45,12 @@ EXPECTED_QUERY_CONTRACT = {
 }
 EXPECTED_ROW_FIELDS = {
     "accepted_for_training",
+    "artifact_version",
     "candidate_type",
     "disposition",
     "label",
     "pair_id",
+    "policy_id",
     "prompt_text_sha256",
     "query_text",
     "query_text_policy",
@@ -55,6 +61,64 @@ EXPECTED_ROW_FIELDS = {
     "source_split",
     "task_id",
 }
+EXPECTED_DIVERSITY_DIAGNOSTICS = {
+    "family_independent_count": None,
+    "family_metadata_status": "UNAVAILABLE",
+    "per_skill_unique_train_positive_prompt_count": {
+        "accessibility-tree-inspection": 0,
+        "apply-patch-discipline": 1,
+        "browser-smoke-testing": 1,
+        "evidence-backed-final": 1,
+        "form-interaction-flow": 1,
+        "mcp-tool-routing": 0,
+        "plan-mode": 1,
+        "slash-command-workflow": 1,
+        "subagent-worker-protocol": 1,
+        "systematic-debugging": 1,
+        "task-tool-delegation": 0,
+        "test-driven-development": 1,
+        "using-git-worktrees": 0,
+        "verification-before-completion": 1,
+        "visual-regression-review": 1,
+        "workspace-git-hygiene": 0,
+    },
+    "train_policy_unique_prompt_count": 8,
+    "unique_prompt_count": 12,
+    "unique_task_family_count": None,
+}
+
+
+def _independent_diversity_diagnostics(
+    rows: list[dict[str, object]],
+    skill_ids: set[str],
+) -> dict[str, object]:
+    train_policy_rows = [
+        row
+        for row in rows
+        if row["source_split"] == "dev"
+        and row["candidate_type"] in {"positive", "same_category_negative_candidate"}
+    ]
+    return {
+        "family_independent_count": None,
+        "family_metadata_status": "UNAVAILABLE",
+        "per_skill_unique_train_positive_prompt_count": {
+            skill_id: len(
+                {
+                    str(row["query_text"])
+                    for row in rows
+                    if row["source_split"] == "dev"
+                    and row["candidate_type"] == "positive"
+                    and row["skill_id"] == skill_id
+                }
+            )
+            for skill_id in sorted(skill_ids)
+        },
+        "train_policy_unique_prompt_count": len(
+            {str(row["query_text"]) for row in train_policy_rows}
+        ),
+        "unique_prompt_count": len({str(row["query_text"]) for row in rows}),
+        "unique_task_family_count": None,
+    }
 
 
 def _skill(skill_id: str, category: str) -> dict[str, object]:
@@ -350,7 +414,7 @@ def test_candidate_query_is_invariant_to_structured_task_metadata(
     }
 
 
-def test_candidate_v2_schema_policy_and_exact_field_set(tmp_path: Path):
+def test_candidate_v3_schema_policy_and_exact_field_set(tmp_path: Path):
     root, tasks, skills = _fixture_repo(tmp_path)
     output = root / "pack"
     qualification._qualify_router_training_data_v2(
@@ -364,7 +428,11 @@ def test_candidate_v2_schema_policy_and_exact_field_set(tmp_path: Path):
 
     assert all(set(row) == EXPECTED_ROW_FIELDS for row in rows)
     assert {row["schema_version"] for row in rows} == {
-        "router-training-data-v2-candidate-v2"
+        "router-training-data-v2-candidate-v3"
+    }
+    assert {row["artifact_version"] for row in rows} == {3}
+    assert {row["policy_id"] for row in rows} == {
+        "router-training-data-v2-qualification-v3"
     }
     assert {row["query_text_policy"] for row in rows} == {"prompt_only"}
     assert all(
@@ -384,7 +452,7 @@ def test_query_contract_definition_is_runtime_immutable():
     }
 
 
-def test_report_and_manifest_use_exact_v2_query_contract(tmp_path: Path):
+def test_report_and_manifest_use_exact_v3_query_contract(tmp_path: Path):
     root, tasks, skills = _fixture_repo(tmp_path)
     output = root / "pack"
     qualification._qualify_router_training_data_v2(
@@ -406,15 +474,236 @@ def test_report_and_manifest_use_exact_v2_query_contract(tmp_path: Path):
         "report_query_contract": report.get("query_contract"),
         "report_schema_version": report.get("schema_version"),
     } == {
-        "manifest_artifact_version": 2,
-        "manifest_policy_id": "router-training-data-v2-qualification-v2",
+        "manifest_artifact_version": 3,
+        "manifest_policy_id": "router-training-data-v2-qualification-v3",
         "manifest_query_contract": EXPECTED_QUERY_CONTRACT,
-        "manifest_schema_version": "router-training-data-v2-manifest-v2",
-        "report_policy_id": "router-training-data-v2-qualification-v2",
+        "manifest_schema_version": "router-training-data-v2-manifest-v3",
+        "report_policy_id": "router-training-data-v2-qualification-v3",
         "report_query_contract": EXPECTED_QUERY_CONTRACT,
-        "report_schema_version": ("router-training-data-v2-qualification-report-v2"),
+        "report_schema_version": ("router-training-data-v2-qualification-report-v3"),
     }
     assert report["query_contract"] == manifest["query_contract"]
+
+
+@pytest.mark.parametrize("mixed_artifact", ["candidate", "report", "manifest"])
+def test_mixed_v1_v2_v3_artifacts_are_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mixed_artifact: str,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    if mixed_artifact == "candidate":
+        original: Any = qualification._build_candidate_matrix
+
+        def mixed_candidates(*args: Any, **kwargs: Any) -> Any:
+            rows = original(*args, **kwargs)
+            rows[0]["schema_version"] = "router-training-data-v2-candidate-v2"
+            rows[0]["artifact_version"] = 2
+            return rows
+
+        monkeypatch.setattr(qualification, "_build_candidate_matrix", mixed_candidates)
+    elif mixed_artifact == "report":
+        original = qualification._build_qualification_report
+
+        def mixed_report(*args: Any, **kwargs: Any) -> Any:
+            report = original(*args, **kwargs)
+            report["schema_version"] = "router-training-data-v2-qualification-report-v1"
+            report["artifact_version"] = 1
+            return report
+
+        monkeypatch.setattr(qualification, "_build_qualification_report", mixed_report)
+    else:
+        original = qualification._build_manifest
+
+        def mixed_manifest(*args: Any, **kwargs: Any) -> Any:
+            manifest = original(*args, **kwargs)
+            manifest["schema_version"] = "router-training-data-v2-manifest-v2"
+            manifest["artifact_version"] = 2
+            return manifest
+
+        monkeypatch.setattr(qualification, "_build_manifest", mixed_manifest)
+
+    with pytest.raises(ValueError, match="mixed v1/v2/v3"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not (root / "pack").exists()
+
+
+def test_jointly_stale_report_and_manifest_counts_are_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    original_report: Any = qualification._build_qualification_report
+    original_manifest: Any = qualification._build_manifest
+
+    def stale_report(*args: Any, **kwargs: Any) -> Any:
+        report = original_report(*args, **kwargs)
+        report["counts"] = {**report["counts"], "matrix_candidate_count": 999}
+        return report
+
+    def stale_manifest(*args: Any, **kwargs: Any) -> Any:
+        manifest = original_manifest(*args, **kwargs)
+        manifest["counts"] = {**manifest["counts"], "matrix_candidate_count": 999}
+        return manifest
+
+    monkeypatch.setattr(qualification, "_build_qualification_report", stale_report)
+    monkeypatch.setattr(qualification, "_build_manifest", stale_manifest)
+
+    with pytest.raises(
+        ValueError, match="qualification counts do not match tasks, skills, and rows"
+    ):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not (root / "pack").exists()
+
+
+def test_corrupted_candidate_prompt_hash_is_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    original: Any = qualification._build_candidate_matrix
+
+    def corrupted_hash(*args: Any, **kwargs: Any) -> Any:
+        rows = original(*args, **kwargs)
+        rows[0]["prompt_text_sha256"] = "0" * 64
+        return rows
+
+    monkeypatch.setattr(qualification, "_build_candidate_matrix", corrupted_hash)
+
+    with pytest.raises(
+        ValueError, match="candidate query contract does not match rows"
+    ):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not (root / "pack").exists()
+
+
+def test_jointly_stale_manifest_output_records_are_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    original: Any = qualification._build_manifest
+
+    def stale_outputs(*args: Any, **kwargs: Any) -> Any:
+        manifest = original(*args, **kwargs)
+        for record in manifest["outputs"]:
+            stale_payload = f"stale:{record['path']}".encode()
+            record["bytes"] = len(stale_payload)
+            record["sha256"] = hashlib.sha256(stale_payload).hexdigest()
+        return manifest
+
+    monkeypatch.setattr(qualification, "_build_manifest", stale_outputs)
+
+    with pytest.raises(
+        ValueError, match="manifest outputs do not match candidate and report bytes"
+    ):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not (root / "pack").exists()
+
+
+@pytest.mark.parametrize(
+    "legacy_policy_id",
+    [
+        "router-training-data-v2-qualification-v1",
+        "router-training-data-v2-qualification-v2",
+    ],
+)
+def test_v3_schemas_with_legacy_policy_id_are_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    legacy_policy_id: str,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    original_candidates: Any = qualification._build_candidate_matrix
+    original_report: Any = qualification._build_qualification_report
+    original_manifest: Any = qualification._build_manifest
+
+    def legacy_candidates(*args: Any, **kwargs: Any) -> Any:
+        rows = original_candidates(*args, **kwargs)
+        for row in rows:
+            row["policy_id"] = legacy_policy_id
+        return rows
+
+    def legacy_report(*args: Any, **kwargs: Any) -> Any:
+        report = original_report(*args, **kwargs)
+        report["policy_id"] = legacy_policy_id
+        return report
+
+    def legacy_manifest(*args: Any, **kwargs: Any) -> Any:
+        manifest = original_manifest(*args, **kwargs)
+        manifest["policy_id"] = legacy_policy_id
+        return manifest
+
+    monkeypatch.setattr(qualification, "_build_candidate_matrix", legacy_candidates)
+    monkeypatch.setattr(qualification, "_build_qualification_report", legacy_report)
+    monkeypatch.setattr(qualification, "_build_manifest", legacy_manifest)
+
+    with pytest.raises(ValueError, match="mixed v1/v2/v3 qualification policies"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not (root / "pack").exists()
+
+
+def test_jointly_stale_report_and_manifest_query_contract_is_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    root, tasks, skills = _fixture_repo(tmp_path)
+    original_report: Any = qualification._build_qualification_report
+    original_manifest: Any = qualification._build_manifest
+    stale_contract = {**EXPECTED_QUERY_CONTRACT, "query_text_policy": "legacy"}
+
+    def stale_report(*args: Any, **kwargs: Any) -> Any:
+        report = original_report(*args, **kwargs)
+        report["query_contract"] = stale_contract
+        return report
+
+    def stale_manifest(*args: Any, **kwargs: Any) -> Any:
+        manifest = original_manifest(*args, **kwargs)
+        manifest["query_contract"] = stale_contract
+        return manifest
+
+    monkeypatch.setattr(qualification, "_build_qualification_report", stale_report)
+    monkeypatch.setattr(qualification, "_build_manifest", stale_manifest)
+
+    with pytest.raises(ValueError, match="mixed v1/v2/v3 query contracts"):
+        qualification._qualify_router_training_data_v2(
+            tasks_path=tasks,
+            skills_index_path=skills,
+            output_dir=root / "pack",
+            repository_root=root,
+            enforce_canonical=False,
+        )
+    assert not (root / "pack").exists()
 
 
 def test_canonical_matrix_schema_counts_dispositions_and_report(tmp_path: Path):
@@ -430,11 +719,17 @@ def test_canonical_matrix_schema_counts_dispositions_and_report(tmp_path: Path):
 
     assert result == report
     assert len(rows) == 192
-    assert [row["pair_id"] for row in rows] == sorted(row["pair_id"] for row in rows)
+    assert [str(row["pair_id"]) for row in rows] == sorted(
+        str(row["pair_id"]) for row in rows
+    )
     assert len({row["pair_id"] for row in rows}) == 192
     assert set(rows[0]) == EXPECTED_ROW_FIELDS
     assert {row["schema_version"] for row in rows} == {
-        "router-training-data-v2-candidate-v2"
+        "router-training-data-v2-candidate-v3"
+    }
+    assert {row["artifact_version"] for row in rows} == {3}
+    assert {row["policy_id"] for row in rows} == {
+        "router-training-data-v2-qualification-v3"
     }
     assert sum(row["candidate_type"] == "positive" for row in rows) == 16
     assert (
@@ -465,6 +760,7 @@ def test_canonical_matrix_schema_counts_dispositions_and_report(tmp_path: Path):
     assert report["qualification_status"] == "REVIEW_REQUIRED"
     assert report["router_decision"] == "KEEP_BASELINE"
     assert report["can_start_training"] is False
+    assert report["artifact_version"] == 3
     assert report["blocker_codes"] == BLOCKER_CODES
     assert report["counts"] == {
         "accepted_train_pair_count": 0,
@@ -481,6 +777,13 @@ def test_canonical_matrix_schema_counts_dispositions_and_report(tmp_path: Path):
         "train_policy_candidate_count": 32,
         "train_positive_skill_coverage_count": 11,
     }
+    independently_recomputed = _independent_diversity_diagnostics(
+        rows,
+        {str(row["skill_id"]) for row in rows},
+    )
+    assert independently_recomputed == EXPECTED_DIVERSITY_DIAGNOSTICS
+    assert report["diversity_diagnostics"] == independently_recomputed
+    assert all("family" not in row for row in rows)
     assert not (output / "training-pairs.jsonl").exists()
     assert not (output / "training-pairs-v2.jsonl").exists()
 
@@ -490,7 +793,8 @@ def test_manifest_is_portable_hash_bound_and_regeneration_is_byte_identical(
 ):
     first = tmp_path / "first"
     second = tmp_path / "second"
-    for output in (first, second):
+    third = tmp_path / "third"
+    for output in (first, second, third):
         qualify_router_training_data_v2(
             tasks_path=CANONICAL_TASKS,
             skills_index_path=CANONICAL_SKILLS,
@@ -500,14 +804,25 @@ def test_manifest_is_portable_hash_bound_and_regeneration_is_byte_identical(
 
     for name in ("candidate-pairs.jsonl", "qualification-report.json", "manifest.json"):
         assert (first / name).read_bytes() == (second / name).read_bytes()
+        assert (first / name).read_bytes() == (third / name).read_bytes()
 
     manifest = json.loads((first / "manifest.json").read_text(encoding="utf-8"))
     report = json.loads((first / "qualification-report.json").read_text())
-    assert manifest["schema_version"] == "router-training-data-v2-manifest-v2"
-    assert manifest["artifact_version"] == 2
-    assert manifest["policy_id"] == "router-training-data-v2-qualification-v2"
+    assert manifest["schema_version"] == "router-training-data-v2-manifest-v3"
+    assert manifest["artifact_version"] == 3
+    assert manifest["policy_id"] == "router-training-data-v2-qualification-v3"
     assert manifest["query_contract"] == EXPECTED_QUERY_CONTRACT
     assert report["query_contract"] == manifest["query_contract"]
+    expected_per_skill = cast(
+        dict[str, int],
+        EXPECTED_DIVERSITY_DIAGNOSTICS["per_skill_unique_train_positive_prompt_count"],
+    )
+    independently_recomputed = _independent_diversity_diagnostics(
+        _read_jsonl(first / "candidate-pairs.jsonl"),
+        set(expected_per_skill),
+    )
+    assert report["diversity_diagnostics"] == independently_recomputed
+    assert manifest["diversity_diagnostics"] == independently_recomputed
     assert str(REPO_ROOT) not in (first / "manifest.json").read_text(encoding="utf-8")
     assert manifest["inputs"]["task_root"] == "benchmarks/migration-tasks"
     assert manifest["inputs"]["skills_index"]["path"] == (
@@ -522,6 +837,8 @@ def test_manifest_is_portable_hash_bound_and_regeneration_is_byte_identical(
     for output in (first, second):
         assert not (output / "training-pairs.jsonl").exists()
         assert not (output / "training-pairs-v2.jsonl").exists()
+        assert not (output / "accepted-pairs-v3.jsonl").exists()
+        assert not (output / "training-input-manifest-v3.json").exists()
 
 
 def test_existing_protected_and_symlink_redirected_outputs_are_rejected(tmp_path: Path):
@@ -576,7 +893,7 @@ def test_atomic_failure_cleans_temporary_sibling(
     assert not list(root.glob(".pack.tmp-*"))
 
 
-def test_public_v2_rejects_byte_identical_inputs_from_alternate_logical_task_root(
+def test_public_v3_rejects_byte_identical_inputs_from_alternate_logical_task_root(
     tmp_path: Path,
 ):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
@@ -595,7 +912,7 @@ def test_public_v2_rejects_byte_identical_inputs_from_alternate_logical_task_roo
     assert not output.exists()
 
 
-def test_public_v2_rejects_superset_skill_index_snapshot(
+def test_public_v3_rejects_superset_skill_index_snapshot(
     tmp_path: Path,
 ):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
@@ -616,7 +933,7 @@ def test_public_v2_rejects_superset_skill_index_snapshot(
     assert not output.exists()
 
 
-def test_public_v2_rejects_changed_canonical_task_snapshot(tmp_path: Path):
+def test_public_v3_rejects_changed_canonical_task_snapshot(tmp_path: Path):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
     prompt = tasks / "browser-form-regression/prompt.md"
     prompt.write_bytes(prompt.read_bytes() + b"\nchanged\n")
@@ -632,7 +949,7 @@ def test_public_v2_rejects_changed_canonical_task_snapshot(tmp_path: Path):
     assert not output.exists()
 
 
-def test_public_v2_is_portable_across_byte_identical_clone(tmp_path: Path):
+def test_public_v3_is_portable_across_byte_identical_clone(tmp_path: Path):
     root, tasks, skills = _copy_canonical_inputs(tmp_path)
     output = root / "pack"
 
@@ -673,7 +990,7 @@ def test_whitespace_padded_blind_identity_stops_before_loader_and_prompt_read(
 
     original_read_text = Path.read_text
 
-    def guarded_read_text(path: Path, *args: object, **kwargs: object) -> str:
+    def guarded_read_text(path: Path, *args: Any, **kwargs: Any) -> str:
         if path.name == "prompt.md":
             raise AssertionError("prompt content must not be read")
         return original_read_text(path, *args, **kwargs)
@@ -725,9 +1042,9 @@ def test_input_mutation_after_snapshot_fails_before_publication(
 ):
     root, tasks, skills = _fixture_repo(tmp_path)
     output = root / "pack"
-    original_build = qualification._build_candidate_matrix
+    original_build: Any = qualification._build_candidate_matrix
 
-    def mutate_after_build(*args: object, **kwargs: object) -> list[dict[str, object]]:
+    def mutate_after_build(*args: Any, **kwargs: Any) -> list[dict[str, object]]:
         rows = original_build(*args, **kwargs)
         metadata = tasks / "task-one/task.yaml"
         metadata.write_bytes(metadata.read_bytes() + b"\n")

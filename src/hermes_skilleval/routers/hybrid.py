@@ -4,6 +4,7 @@ import re
 import time
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
+from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.routers.keyword import KeywordRouter
 
 
@@ -14,10 +15,9 @@ class HybridRouter(KeywordRouter):
         started = time.perf_counter()
         result = super().route(task, skills, top_k)
         scores = dict(result.scores)
+        query_text = router_query_text(task.prompt)
         for skill in skills:
-            if skill.category == task.category:
-                scores[skill.id] += 1.0
-            if _prompt_mentions_skill_id(task.prompt, skill.id):
+            if _prompt_mentions_skill_id(query_text, skill.id):
                 scores[skill.id] += 2.0
 
         ranked = sorted(skills, key=lambda skill: (-scores[skill.id], skill.id))

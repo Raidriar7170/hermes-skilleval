@@ -7,7 +7,7 @@ from hermes_skilleval.routers.verification import (
 )
 
 
-def test_verification_score_prefers_matching_category_and_prompt_terms():
+def test_verification_score_prefers_matching_prompt_terms():
     task = _task(
         "coding-debugging-001",
         "coding",

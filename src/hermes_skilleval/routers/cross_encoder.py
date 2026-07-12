@@ -6,12 +6,12 @@ from collections.abc import Iterable
 from typing import Protocol
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
+from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.routers.base import SkillRouter
 from hermes_skilleval.routers.embedding import EmbeddingDependencyError, EmbeddingRouter
 from hermes_skilleval.routers.verification import (
     select_candidates,
     skill_text,
-    task_text,
 )
 
 
@@ -127,7 +127,7 @@ class CrossEncoderReranker(SkillRouter):
             candidate_ids = [skill.id for skill in skills[:candidate_k]]
 
         candidates = [skill_by_id[skill_id] for skill_id in candidate_ids]
-        query_text = task_text(task)
+        query_text = router_query_text(task.prompt)
         pair_scores = self.model.score_pairs(
             (query_text, skill_text(skill)) for skill in candidates
         )

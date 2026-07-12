@@ -4,13 +4,14 @@ import types
 import pytest
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
+from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.routers.base import SkillRouter
 from hermes_skilleval.routers.cross_encoder import (
     CrossEncoderReranker,
     SentenceTransformerCrossEncoderModel,
     StaticCrossEncoderModel,
 )
-from hermes_skilleval.routers.verification import skill_text, task_text
+from hermes_skilleval.routers.verification import skill_text
 
 
 class StubRouter(SkillRouter):
@@ -63,9 +64,9 @@ def test_cross_encoder_reranks_embedding_candidates():
     )
     model = StaticCrossEncoderModel(
         {
-            (task_text(task), skill_text(skills[0])): 4.0,
-            (task_text(task), skill_text(skills[1])): 2.0,
-            (task_text(task), skill_text(skills[2])): -1.0,
+            (router_query_text(task.prompt), skill_text(skills[0])): 4.0,
+            (router_query_text(task.prompt), skill_text(skills[1])): 2.0,
+            (router_query_text(task.prompt), skill_text(skills[2])): -1.0,
         }
     )
 
@@ -143,8 +144,8 @@ def test_cross_encoder_calibrated_acceptance_requires_top_margin():
     )
     model = StaticCrossEncoderModel(
         {
-            (task_text(task), skill_text(skills[0])): 5.0,
-            (task_text(task), skill_text(skills[1])): 4.6,
+            (router_query_text(task.prompt), skill_text(skills[0])): 5.0,
+            (router_query_text(task.prompt), skill_text(skills[1])): 4.6,
         }
     )
 
@@ -172,8 +173,8 @@ def test_cross_encoder_calibrated_acceptance_keeps_high_margin_candidates():
     )
     model = StaticCrossEncoderModel(
         {
-            (task_text(task), skill_text(skills[0])): 5.0,
-            (task_text(task), skill_text(skills[1])): 2.0,
+            (router_query_text(task.prompt), skill_text(skills[0])): 5.0,
+            (router_query_text(task.prompt), skill_text(skills[1])): 2.0,
         }
     )
 

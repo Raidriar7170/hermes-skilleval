@@ -150,7 +150,7 @@ def test_selective_gated_router_filters_low_confidence_cross_category_candidates
     result = VerificationGatedRouter(
         base_router=base_router,
         selective=True,
-        min_confidence=0.5,
+        min_confidence=0.02,
     ).route(task, skills, top_k=5)
 
     assert result.selected_skill_ids == [
@@ -190,7 +190,7 @@ def test_contrastive_selective_filters_same_category_weak_evidence():
     result = VerificationGatedRouter(
         base_router=base_router,
         selective=True,
-        min_confidence=0.5,
+        min_confidence=0.005,
         contrastive_selective=True,
         contrastive_margin=3.0,
         min_evidence=2.0,
@@ -229,7 +229,7 @@ def test_contrastive_selective_keeps_same_category_candidate_with_strong_evidenc
     result = VerificationGatedRouter(
         base_router=base_router,
         selective=True,
-        min_confidence=0.5,
+        min_confidence=0.005,
         contrastive_selective=True,
         contrastive_margin=6.0,
         min_evidence=2.0,

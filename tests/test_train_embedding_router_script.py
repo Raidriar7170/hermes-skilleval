@@ -1,11 +1,26 @@
 import builtins
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 import types
 from pathlib import Path
 
 import pytest
+
+from hermes_skilleval.router_query import router_query_text
+from hermes_skilleval.training_input import (
+    TrainingInputError,
+    TrainingInputHandoff,
+    ValidatedTrainingExample,
+    load_training_input,
+)
+from training_input_test_support import (
+    make_accepted_row,
+    sha256_bytes,
+    write_synthetic_training_package,
+)
 
 
 SCRIPT_PATH = Path("scripts/train_embedding_router.py")
@@ -14,7 +29,6 @@ SCRIPT_PATH = Path("scripts/train_embedding_router.py")
 def test_train_script_cli_output_root_overrides_config_root(monkeypatch, tmp_path):
     module = _load_train_script()
     _install_fake_training_modules(monkeypatch)
-    monkeypatch.setattr(module, "write_model_manifest", lambda **kwargs: {})
     config_root = tmp_path / "config-root"
     cli_root = tmp_path / "cli-root"
     config = _write_minimal_training_config(
@@ -46,7 +60,6 @@ def test_train_script_uses_relative_config_root_from_process_cwd(
 ):
     module = _load_train_script()
     _install_fake_training_modules(monkeypatch)
-    monkeypatch.setattr(module, "write_model_manifest", lambda **kwargs: {})
     config_dir = tmp_path / "config-dir"
     config_dir.mkdir()
     config = _write_minimal_training_config(
@@ -72,7 +85,6 @@ def test_train_script_defaults_output_root_to_a100_user_root(monkeypatch, tmp_pa
     module = _load_train_script()
     _install_fake_training_modules(monkeypatch)
     monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
-    monkeypatch.setattr(module, "write_model_manifest", lambda **kwargs: {})
     config = _write_minimal_training_config(
         tmp_path,
         output_dir="phase14/models/minilm",
@@ -109,6 +121,16 @@ def test_train_script_records_selected_root_in_manifest_and_summary(
     canonical_output = (canonical_root / "models" / "minilm").resolve(strict=False)
     summary = json.loads((canonical_output / "train-run-summary.json").read_text())
     manifest = json.loads((canonical_output / "model-manifest.json").read_text())
+    assert summary["schema_version"] == "router-training-data-v2-train-run-summary-v3"
+    assert summary["artifact_version"] == 3
+    assert summary["policy_id"] == "router-training-data-v2-training-admission-v3"
+    assert summary["artifact_type"] == "router-training-data-v2-train-run-summary"
+    assert "phase" not in summary
+    assert manifest["schema_version"] == "router-training-data-v2-model-manifest-v3"
+    assert manifest["artifact_version"] == 3
+    assert manifest["policy_id"] == "router-training-data-v2-training-admission-v3"
+    assert manifest["artifact_type"] == "router-training-data-v2-model-manifest"
+    assert "phase" not in manifest
     assert summary["output_root"] == str(canonical_root)
     assert summary["output_dir"] == str(canonical_output)
     assert manifest["model_dir"] == summary["output_dir"]
@@ -241,38 +263,32 @@ def test_train_script_runs_manual_training_loop_with_fake_dependencies(
     _install_fake_training_modules(monkeypatch)
     monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
 
-    training_pairs = tmp_path / "training-pairs.jsonl"
-    training_pairs.write_text(
-        "\n".join(
-            [
-                json.dumps(
-                    {
-                        "query_text": "open dashboard",
-                        "skill_text": "browser smoke testing",
-                        "label": 1,
-                        "split": "dev",
-                    }
-                ),
-                json.dumps(
-                    {
-                        "query_text": "validate before claiming",
-                        "skill_text": "verification before completion",
-                        "label": 1,
-                        "split": "train",
-                    }
-                ),
-                json.dumps(
-                    {
-                        "query_text": "open dashboard",
-                        "skill_text": "systematic debugging",
-                        "label": 0,
-                        "split": "dev",
-                    }
-                ),
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
+    training_input_manifest = write_synthetic_training_package(
+        tmp_path / "training-input-package",
+        rows=[
+            make_accepted_row(
+                1,
+                overrides={
+                    "query_text": "open dashboard",
+                    "skill_text": "browser smoke testing",
+                },
+            ),
+            make_accepted_row(
+                2,
+                overrides={
+                    "query_text": "validate before claiming",
+                    "skill_text": "verification before completion",
+                },
+            ),
+            make_accepted_row(
+                3,
+                supervision_label="HARD_NEGATIVE",
+                overrides={
+                    "query_text": "open dashboard",
+                    "skill_text": "systematic debugging",
+                },
+            ),
+        ],
     )
     config = tmp_path / "train-config.json"
     config.write_text(
@@ -285,7 +301,7 @@ def test_train_script_runs_manual_training_loop_with_fake_dependencies(
                 "learning_rate": 2e-5,
                 "output_dir": "/mnt/data/minghongsun/phase14/models/minilm",
                 "seed": 7170,
-                "training_pairs": str(training_pairs),
+                "training_input_manifest": str(training_input_manifest),
             }
         ),
         encoding="utf-8",
@@ -322,18 +338,8 @@ def test_train_script_rejects_nonpositive_batch_size(monkeypatch, tmp_path: Path
     _install_fake_training_modules(monkeypatch)
     monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
 
-    training_pairs = tmp_path / "training-pairs.jsonl"
-    training_pairs.write_text(
-        json.dumps(
-            {
-                "query_text": "open dashboard",
-                "skill_text": "browser smoke testing",
-                "label": 1,
-                "split": "dev",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
+    training_input_manifest = write_synthetic_training_package(
+        tmp_path / "training-input-package"
     )
     config = tmp_path / "train-config.json"
     config.write_text(
@@ -345,7 +351,7 @@ def test_train_script_rejects_nonpositive_batch_size(monkeypatch, tmp_path: Path
                 "learning_rate": 2e-5,
                 "output_dir": "/mnt/data/minghongsun/phase14/models/minilm",
                 "seed": 7170,
-                "training_pairs": str(training_pairs),
+                "training_input_manifest": str(training_input_manifest),
             }
         ),
         encoding="utf-8",
@@ -363,18 +369,8 @@ def test_train_script_rejects_output_dir_traversal(monkeypatch, tmp_path: Path):
     _install_fake_training_modules(monkeypatch)
     monkeypatch.setattr(module, "Path", _mapping_path_factory(tmp_path))
 
-    training_pairs = tmp_path / "training-pairs.jsonl"
-    training_pairs.write_text(
-        json.dumps(
-            {
-                "query_text": "open dashboard",
-                "skill_text": "browser smoke testing",
-                "label": 1,
-                "split": "dev",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
+    training_input_manifest = write_synthetic_training_package(
+        tmp_path / "training-input-package"
     )
     config = tmp_path / "train-config.json"
     config.write_text(
@@ -386,7 +382,7 @@ def test_train_script_rejects_output_dir_traversal(monkeypatch, tmp_path: Path):
                 "learning_rate": 2e-5,
                 "output_dir": "/mnt/data/minghongsun/../leak/model",
                 "seed": 7170,
-                "training_pairs": str(training_pairs),
+                "training_input_manifest": str(training_input_manifest),
             }
         ),
         encoding="utf-8",
@@ -401,6 +397,365 @@ def test_train_script_rejects_output_dir_traversal(monkeypatch, tmp_path: Path):
         module.main()
 
     assert not (tmp_path / "leak" / "model").exists()
+
+
+def test_train_script_rejects_legacy_pairs_before_framework_or_output(
+    monkeypatch, tmp_path: Path
+):
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+    module = _load_train_script()
+    legacy_pairs = tmp_path / "diagnostic-pairs.jsonl"
+    legacy_pairs.write_text(
+        json.dumps(
+            {
+                "query_text": "diagnostic only",
+                "skill_text": "not accepted",
+                "label": 1,
+                "accepted_for_training": False,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output_root = tmp_path / "output-root"
+    config = tmp_path / "legacy-config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "unused",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "model",
+                "output_root": str(output_root),
+                "seed": 7170,
+                "training_pairs": str(legacy_pairs),
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
+
+    with pytest.raises(SystemExit, match="training_input_manifest.*required"):
+        module.main()
+
+    assert dependency_imports == []
+    assert not output_root.exists()
+
+
+@pytest.mark.parametrize("invalid_layer", ["manifest", "path", "report", "row"])
+def test_train_script_all_gate_layers_fail_before_framework_or_output(
+    monkeypatch, tmp_path: Path, invalid_layer: str
+):
+    package = tmp_path / f"invalid-{invalid_layer}"
+    if invalid_layer == "manifest":
+        manifest = write_synthetic_training_package(
+            package, manifest_overrides={"bypass": True}
+        )
+    elif invalid_layer == "path":
+        manifest = write_synthetic_training_package(
+            package,
+            accepted_pairs_overrides={"path": "../accepted-pairs.jsonl"},
+        )
+    elif invalid_layer == "report":
+        manifest = write_synthetic_training_package(
+            package, report_overrides={"can_start_training": False}
+        )
+    else:
+        invalid_row = make_accepted_row()
+        invalid_row["label"] = 1
+        manifest = write_synthetic_training_package(package, rows=[invalid_row])
+
+    output_root = tmp_path / f"output-{invalid_layer}"
+    config = tmp_path / f"config-{invalid_layer}.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "unused",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "model",
+                "output_root": str(output_root),
+                "seed": 7170,
+                "training_input_manifest": str(manifest),
+            }
+        ),
+        encoding="utf-8",
+    )
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+    module = _load_train_script()
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
+
+    with pytest.raises(SystemExit, match="TRAINING_INPUT_INVALID"):
+        module.main()
+
+    assert dependency_imports == []
+    assert not output_root.exists()
+
+
+def test_train_script_rejects_current_canonical_blocked_report_before_side_effects(
+    monkeypatch, tmp_path: Path
+):
+    module = _load_train_script()
+    package = tmp_path / "blocked-package"
+    manifest = write_synthetic_training_package(package)
+    canonical_report = Path(
+        "docs/demo/router-training-data-v2-qualification-pack/qualification-report.json"
+    ).read_bytes()
+    canonical_payload = json.loads(canonical_report)
+    assert canonical_payload["can_start_training"] is False
+    assert len(canonical_payload["blocker_codes"]) == 8
+    assert canonical_payload["counts"]["accepted_train_pair_count"] == 0
+    (package / "qualification-report.json").write_bytes(canonical_report)
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["qualification_report"]["sha256"] = sha256_bytes(canonical_report)
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+    output_root = tmp_path / "output-root"
+    config = tmp_path / "blocked-config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "unused",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "model",
+                "output_root": str(output_root),
+                "seed": 7170,
+                "training_input_manifest": str(manifest),
+            }
+        ),
+        encoding="utf-8",
+    )
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
+
+    with pytest.raises(SystemExit, match="can_start_training must be true"):
+        module.main()
+
+    assert dependency_imports == []
+    assert not output_root.exists()
+
+
+def test_train_script_crosses_validated_handoff_boundary_once_without_framework(
+    monkeypatch, tmp_path: Path
+):
+    module = _load_train_script()
+    rows = [
+        make_accepted_row(1),
+        make_accepted_row(2, supervision_label="HARD_NEGATIVE"),
+    ]
+    manifest = write_synthetic_training_package(
+        tmp_path / "synthetic-package", rows=rows
+    )
+    output_root = tmp_path / "output-root"
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "unused",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "model",
+                "output_root": str(output_root),
+                "seed": 7170,
+                "training_input_manifest": str(manifest),
+            }
+        ),
+        encoding="utf-8",
+    )
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+    captured = []
+
+    def fake_downstream(*, config, handoff, output_root, output_dir):
+        captured.append(handoff)
+        grouped = {
+            label: [
+                (router_query_text(example.query_text), example.skill_text)
+                for example in handoff.examples
+                if example.supervision_label == label
+            ]
+            for label in ("POSITIVE", "HARD_NEGATIVE")
+        }
+        assert grouped["POSITIVE"] == [(rows[0]["query_text"], rows[0]["skill_text"])]
+        assert grouped["HARD_NEGATIVE"] == [
+            (rows[1]["query_text"], rows[1]["skill_text"])
+        ]
+        return 0
+
+    monkeypatch.setattr(module, "_run_validated_training", fake_downstream)
+    monkeypatch.setattr(
+        sys, "argv", ["train_embedding_router.py", "--config", str(config)]
+    )
+
+    assert module.main() == 0
+
+    assert len(captured) == 1
+    assert isinstance(captured[0].examples, tuple)
+    assert dependency_imports == []
+    assert not output_root.exists()
+
+
+def test_training_handoff_constructors_reject_arbitrary_seals_before_side_effects(
+    monkeypatch, tmp_path: Path
+):
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+    output_root = tmp_path / "forged-output"
+
+    with pytest.raises(TrainingInputError, match="validation seal"):
+        ValidatedTrainingExample(
+            accepted_record_id="forged",
+            query_text="forged prompt",
+            skill_text="forged skill",
+            supervision_label="POSITIVE",
+            _validation_seal=object(),
+            _content_fingerprint="0" * 64,
+        )
+    with pytest.raises(TrainingInputError, match="validation seal"):
+        TrainingInputHandoff(
+            package_id="forged-package",
+            examples=(),
+            _validation_seal=object(),
+            _content_fingerprint="0" * 64,
+        )
+
+    assert dependency_imports == []
+    assert not output_root.exists()
+
+
+def test_object_new_forged_handoff_is_rejected_as_first_downstream_operation(
+    monkeypatch, tmp_path: Path
+):
+    module = _load_train_script()
+    forged_example = object.__new__(ValidatedTrainingExample)
+    object.__setattr__(forged_example, "accepted_record_id", "forged")
+    object.__setattr__(forged_example, "query_text", "forged prompt")
+    object.__setattr__(forged_example, "skill_text", "forged skill")
+    object.__setattr__(forged_example, "supervision_label", "POSITIVE")
+    forged_handoff = object.__new__(TrainingInputHandoff)
+    object.__setattr__(forged_handoff, "package_id", "forged-package")
+    object.__setattr__(forged_handoff, "examples", (forged_example,))
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+    output_root = tmp_path / "forged-output"
+
+    with pytest.raises(TrainingInputError, match="validation seal"):
+        module._run_validated_training(
+            config={
+                "base_model": "unused",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "seed": 7170,
+            },
+            handoff=forged_handoff,
+            output_root=str(output_root),
+            output_dir=str(output_root / "model"),
+        )
+
+    assert dependency_imports == []
+    assert not output_root.exists()
+
+
+@pytest.mark.parametrize("mutation", ["example_field", "examples", "package_id"])
+def test_low_level_mutation_of_genuine_handoff_fails_fingerprint_before_side_effects(
+    monkeypatch, tmp_path: Path, mutation: str
+):
+    module = _load_train_script()
+    manifest = write_synthetic_training_package(tmp_path / f"genuine-{mutation}")
+    handoff = load_training_input(manifest)
+    if mutation == "example_field":
+        object.__setattr__(handoff.examples[0], "query_text", "tampered prompt")
+    elif mutation == "examples":
+        object.__setattr__(handoff, "examples", ())
+    else:
+        object.__setattr__(handoff, "package_id", "tampered-package")
+    dependency_imports = _guard_training_dependency_imports(monkeypatch)
+    output_root = tmp_path / f"tampered-output-{mutation}"
+
+    with pytest.raises(TrainingInputError, match="content fingerprint"):
+        module._run_validated_training(
+            config={
+                "base_model": "unused",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "seed": 7170,
+            },
+            handoff=handoff,
+            output_root=str(output_root),
+            output_dir=str(output_root / "model"),
+        )
+
+    assert dependency_imports == []
+    assert not output_root.exists()
+
+
+@pytest.mark.parametrize("invalid_layer", ["manifest", "row"])
+def test_invalid_package_subprocess_never_imports_shadow_frameworks_or_writes_output(
+    tmp_path: Path, invalid_layer: str
+):
+    package = tmp_path / f"subprocess-{invalid_layer}"
+    if invalid_layer == "manifest":
+        manifest = write_synthetic_training_package(
+            package, manifest_overrides={"bypass": True}
+        )
+    else:
+        row = make_accepted_row()
+        row["label"] = 1
+        manifest = write_synthetic_training_package(package, rows=[row])
+    output_root = tmp_path / f"subprocess-output-{invalid_layer}"
+    config = tmp_path / f"subprocess-config-{invalid_layer}.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_model": "unused",
+                "batch_size": 1,
+                "epochs": 1,
+                "learning_rate": 2e-5,
+                "output_dir": "model",
+                "output_root": str(output_root),
+                "seed": 7170,
+                "training_input_manifest": str(manifest),
+            }
+        ),
+        encoding="utf-8",
+    )
+    import_sentinel = tmp_path / f"framework-imported-{invalid_layer}"
+    shadow_root = tmp_path / f"shadow-{invalid_layer}"
+    sentence_transformers = shadow_root / "sentence_transformers"
+    sentence_transformers.mkdir(parents=True)
+    shadow_body = (
+        "from pathlib import Path\n"
+        f"Path({str(import_sentinel)!r}).write_text('imported', encoding='utf-8')\n"
+    )
+    (shadow_root / "torch.py").write_text(shadow_body, encoding="utf-8")
+    (sentence_transformers / "__init__.py").write_text(shadow_body, encoding="utf-8")
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        [str(shadow_root), str(Path.cwd() / "src"), env.get("PYTHONPATH", "")]
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT_PATH.resolve()), "--config", str(config)],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "TRAINING_INPUT_INVALID" in result.stderr
+    assert not import_sentinel.exists()
+    assert not output_root.exists()
 
 
 def _load_train_script():
@@ -418,18 +773,8 @@ def _write_minimal_training_config(
     output_dir: str,
     output_root: object | None = None,
 ) -> Path:
-    training_pairs = directory / "training-pairs.jsonl"
-    training_pairs.write_text(
-        json.dumps(
-            {
-                "query_text": "open dashboard",
-                "skill_text": "browser smoke testing",
-                "label": 1,
-                "split": "dev",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
+    training_input_manifest = write_synthetic_training_package(
+        directory / "training-input-package"
     )
     payload = {
         "base_model": "sentence-transformers/all-MiniLM-L6-v2",
@@ -438,7 +783,7 @@ def _write_minimal_training_config(
         "learning_rate": 2e-5,
         "output_dir": output_dir,
         "seed": 7170,
-        "training_pairs": str(training_pairs),
+        "training_input_manifest": str(training_input_manifest),
     }
     if output_root is not None:
         payload["output_root"] = output_root

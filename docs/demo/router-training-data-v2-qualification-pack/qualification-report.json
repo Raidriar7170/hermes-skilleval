@@ -1,5 +1,6 @@
 {
   "artifact_type": "router-training-data-v2-qualification-report",
+  "artifact_version": 3,
   "blocker_codes": [
     "INDEPENDENT_CALIBRATION_SPLIT_MISSING",
     "MANUAL_ACCEPTANCE_MISSING",
@@ -36,7 +37,32 @@
     "train_policy_candidate_count": 32,
     "train_positive_skill_coverage_count": 11
   },
-  "policy_id": "router-training-data-v2-qualification-v2",
+  "diversity_diagnostics": {
+    "family_independent_count": null,
+    "family_metadata_status": "UNAVAILABLE",
+    "per_skill_unique_train_positive_prompt_count": {
+      "accessibility-tree-inspection": 0,
+      "apply-patch-discipline": 1,
+      "browser-smoke-testing": 1,
+      "evidence-backed-final": 1,
+      "form-interaction-flow": 1,
+      "mcp-tool-routing": 0,
+      "plan-mode": 1,
+      "slash-command-workflow": 1,
+      "subagent-worker-protocol": 1,
+      "systematic-debugging": 1,
+      "task-tool-delegation": 0,
+      "test-driven-development": 1,
+      "using-git-worktrees": 0,
+      "verification-before-completion": 1,
+      "visual-regression-review": 1,
+      "workspace-git-hygiene": 0
+    },
+    "train_policy_unique_prompt_count": 8,
+    "unique_prompt_count": 12,
+    "unique_task_family_count": null
+  },
+  "policy_id": "router-training-data-v2-qualification-v3",
   "qualification_status": "REVIEW_REQUIRED",
   "query_contract": {
     "alternate_query_fields": [],
@@ -44,8 +70,11 @@
       "task_id",
       "category",
       "difficulty",
-      "robustness_tags"
+      "robustness_tags",
+      "split",
+      "family"
     ],
+    "formatter": "router_query_text(prompt: str)",
     "hash_algorithm": "sha256",
     "hash_field": "prompt_text_sha256",
     "normalization": "loader_normalized",
@@ -54,5 +83,5 @@
     "source_field": "task.prompt"
   },
   "router_decision": "KEEP_BASELINE",
-  "schema_version": "router-training-data-v2-qualification-report-v2"
+  "schema_version": "router-training-data-v2-qualification-report-v3"
 }

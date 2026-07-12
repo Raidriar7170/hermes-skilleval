@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Router Training Data V2 Prompt-only Apply · Human Brief</title>
+  <title>Historical Router Training Data V2 Prompt-only Apply · Human Brief</title>
   <style>
     :root {
       color-scheme: light;
@@ -67,9 +67,9 @@
 </head>
 <body>
   <header>
-    <p class="eyebrow">Human Brief · Apply snapshot · 2026-07-11</p>
-    <h1>Router Training Data V2：Primary Prompt-only Apply</h1>
-    <p class="conclusion"><strong>一句话结论：</strong>本地 apply 已把唯一 primary query 收紧为 prompt-only v2、确定性替换三个 canonical 机器产物并通过完整本地验证；资格结论仍是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>，当前状态稳定为 <code>USER_REVIEW_REQUIRED</code>，不进入训练或集成。</p>
+    <p class="eyebrow"><code>HISTORICAL_V2_SNAPSHOT</code> · 2026-07-11</p>
+    <h1>Router Training Data V2：Primary Prompt-only Apply（历史 v2）</h1>
+    <p class="conclusion"><strong>一句话结论：</strong>这是 historical v2 evidence，不是当前 v3 证据。本地 apply 当时把唯一 primary query 收紧为 prompt-only v2、确定性替换三个 canonical 机器产物并通过当时记录的本地验证；资格结论是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>，不进入训练或集成。</p>
   </header>
 
   <main>
@@ -84,12 +84,12 @@
         <article class="card review">
           <span class="label">Human gate</span>
           <span class="value"><code>USER_REVIEW_REQUIRED</code></span>
-          <p>HEAD <code>e822d9c489ca39180b556000dc3e361552d6c75e</code> is the proposal commit；current apply diff is uncommitted。</p>
+          <p>该 v2 apply 后来形成本地 commit <code>f996690700a79ab4c065ed8523340d2fd387f6b9</code>，committed locally。</p>
         </article>
         <article class="card review">
           <span class="label">Lifecycle</span>
           <span class="value">active/unarchived</span>
-          <p><code>NO_COMMIT</code> applies to the current apply diff. No push, PR, merge, or archive occurred for the current apply diff.</p>
+          <p>该 commit 保持 unpushed、unmerged、unarchived；remote CI unavailable。这里的 lifecycle 修正只是 truth maintenance，不是新证据或新进展。</p>
         </article>
         <article class="card review">
           <span class="label">Qualification</span>
@@ -144,7 +144,8 @@
     </section>
 
     <section aria-labelledby="hash-title">
-      <h2 id="hash-title">Current v2 artifact hashes</h2>
+      <h2 id="hash-title">Historical v2 artifact hashes</h2>
+      <p class="callout">以下 hash 保留 historical v2 evidence；文件链接现在指向同一 canonical 路径下的 current canonical v3 artifacts，不应把旧 hash 误读为当前产物 hash。</p>
       <div class="grid">
         <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl">candidate-pairs.jsonl</a></h3><p class="hash"><code>e70006f3124f496a7e0005a081db06527391167bd380574b08c7991bcf2c6475</code></p></article>
         <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/qualification-report.json">qualification-report.json</a></h3><p class="hash"><code>d36afe875f2ada4e38ac3b707ced5bbb27c89262aad403793b7ee68058dd2395</code></p></article>
@@ -185,7 +186,8 @@
       <h2 id="sources-title">Authoritative sources</h2>
       <ul>
         <li><a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/proposal.md">Proposal</a> · <a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/design.md">Design</a> · <a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/specs/router-training-data-v2-qualification-pack/spec.md">Delta Spec</a> · <a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/tasks.md">Tasks</a></li>
-        <li><a href="../demo/router-training-data-v2-qualification-pack/README.md">Current pack README</a></li>
+        <li><a href="2026-07-12-harden-router-v2-pretraining-contracts.html">current v3 brief</a> · <a href="../demo/router-training-data-v2-qualification-pack/README.md">Current v3 pack README</a></li>
+        <li>current canonical v3 artifacts：<a href="../demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl">candidate-pairs.jsonl</a> · <a href="../demo/router-training-data-v2-qualification-pack/qualification-report.json">qualification-report.json</a> · <a href="../demo/router-training-data-v2-qualification-pack/manifest.json">manifest.json</a></li>
         <li><a href="../../src/hermes_skilleval/router_training_data_v2.py">Builder source</a> · <a href="../../tests/test_router_training_data_v2.py">Unit tests</a> · <a href="../../tests/test_router_training_data_v2_artifacts.py">Artifact/truth tests</a></li>
         <li><a href="2026-07-11-build-router-training-data-v2-qualification-pack.html">HISTORICAL_V1_SNAPSHOT brief</a></li>
       </ul>
@@ -194,18 +196,18 @@
 
     <section aria-labelledby="limits-title">
       <h2 id="limits-title">明确没有发生</h2>
-      <p class="callout warning"><code>NO_TRAINING</code> · <code>NO_A100_GPU_JOB</code> · <code>NO_CHECKPOINT</code> · <code>NO_BLIND_RERUN</code> · <code>NO_PERFORMANCE_CLAIM</code> · <code>NO_COMMIT</code> · <code>NO_PUSH</code> · <code>NO_PR</code> · <code>NO_MERGE</code> · <code>NO_ARCHIVE</code> · <code>NO_TAG</code> · <code>NO_RELEASE</code> · <code>NO_DEPLOY</code></p>
+      <p class="callout warning"><code>NO_TRAINING</code> · <code>NO_A100_GPU_JOB</code> · <code>NO_CHECKPOINT</code> · <code>NO_BLIND_RERUN</code> · <code>NO_PERFORMANCE_CLAIM</code> · <code>NO_PUSH</code> · <code>NO_PR</code> · <code>NO_MERGE</code> · <code>NO_ARCHIVE</code> · <code>NO_TAG</code> · <code>NO_RELEASE</code> · <code>NO_DEPLOY</code></p>
       <p>没有读取或哈希 blind prompt working-tree content；没有训练、GPU/A100 job 或 checkpoint。上面的 validation-only replay 没有使用新数据或调参形成新选择，没有 promotion、采纳 candidate 或改变 router decision，也没有产生 benchmark gain。</p>
     </section>
 
     <section aria-labelledby="next-title">
       <h2 id="next-title">Recommended next step</h2>
-      <p>由用户审阅当前 uncommitted apply diff，再单独决定是否进入 commit/PR 生命周期。当前 change 保持 active/unarchived。</p>
+      <p>历史 v2 snapshot 保持只读解释；当前审阅请转到 <a href="2026-07-12-harden-router-v2-pretraining-contracts.html">current v3 brief</a>。该 v2 change 的本地 commit 仍是 active/unarchived，且没有 push、PR、merge、archive 或 remote CI。</p>
     </section>
   </main>
 
   <footer>
-    Generated from the active OpenSpec artifacts, current v2 machine artifacts, focused tests, and fresh local validation evidence. This brief is review-only.
+    Historical v2 review-only snapshot. Its OpenSpec, v2 hashes, tests, and recorded local command output remain the authoritative historical evidence; this page is not current v3 evidence.
   </footer>
 </body>
 </html>

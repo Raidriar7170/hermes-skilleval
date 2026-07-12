@@ -32,10 +32,16 @@ APPLY_BRIEF = (
     ROOT
     / "docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html"
 )
+CURRENT_V3_BRIEF = (
+    ROOT / "docs/human-briefs/2026-07-12-harden-router-v2-pretraining-contracts.html"
+)
 PROPOSAL_BRIEF_SHA256 = (
     "8aad6d45b991e0cc0c4581d233207b042ee35bb4527ed84f9193644661803778"
 )
-ACTIVE_CHANGE_PATH = "openspec/changes/make-router-training-data-v2-primary-prompt-only"
+ACTIVE_CHANGE_PATH = "openspec/changes/harden-router-v2-pretraining-contracts"
+HISTORICAL_V2_CHANGE_PATH = (
+    "openspec/changes/make-router-training-data-v2-primary-prompt-only"
+)
 LEGACY_ACTIVE_CHANGE_PATH = (
     "openspec/changes/build-router-training-data-v2-qualification-pack"
 )
@@ -61,6 +67,17 @@ CURRENT_V2_PACK_SHA256 = {
         "883e7d8a35622b89a243a373304bd5e9e570275649bd22d01e9a8799c674daaf"
     ),
 }
+CURRENT_V3_PACK_SHA256 = {
+    "candidate-pairs.jsonl": (
+        "fff59d8ddc199a4579dcf831fa806fa0b2ef761465a7bde7acd77dc967f41b45"
+    ),
+    "qualification-report.json": (
+        "edb1b1111e24c8866bda6edca776129d4952ef38d23c017c753586dd6ef77e3b"
+    ),
+    "manifest.json": (
+        "da97accd98e3af5113a962423ff79a8235f4388b4e2fd2d0ff7aeb3931f6c449"
+    ),
+}
 
 EXPECTED_COUNTS = {
     "accepted_train_pair_count": 0,
@@ -84,7 +101,10 @@ EXPECTED_QUERY_CONTRACT = {
         "category",
         "difficulty",
         "robustness_tags",
+        "split",
+        "family",
     ],
+    "formatter": "router_query_text(prompt: str)",
     "hash_algorithm": "sha256",
     "hash_field": "prompt_text_sha256",
     "normalization": "loader_normalized",
@@ -94,10 +114,12 @@ EXPECTED_QUERY_CONTRACT = {
 }
 ROW_FIELDS = {
     "accepted_for_training",
+    "artifact_version",
     "candidate_type",
     "disposition",
     "label",
     "pair_id",
+    "policy_id",
     "prompt_text_sha256",
     "query_text",
     "query_text_policy",
@@ -108,6 +130,31 @@ ROW_FIELDS = {
     "source_split",
     "task_id",
 }
+EXPECTED_DIVERSITY_DIAGNOSTICS = {
+    "family_independent_count": None,
+    "family_metadata_status": "UNAVAILABLE",
+    "per_skill_unique_train_positive_prompt_count": {
+        "accessibility-tree-inspection": 0,
+        "apply-patch-discipline": 1,
+        "browser-smoke-testing": 1,
+        "evidence-backed-final": 1,
+        "form-interaction-flow": 1,
+        "mcp-tool-routing": 0,
+        "plan-mode": 1,
+        "slash-command-workflow": 1,
+        "subagent-worker-protocol": 1,
+        "systematic-debugging": 1,
+        "task-tool-delegation": 0,
+        "test-driven-development": 1,
+        "using-git-worktrees": 0,
+        "verification-before-completion": 1,
+        "visual-regression-review": 1,
+        "workspace-git-hygiene": 0,
+    },
+    "train_policy_unique_prompt_count": 8,
+    "unique_prompt_count": 12,
+    "unique_task_family_count": None,
+}
 
 
 def _sha256(path: Path) -> str:
@@ -116,6 +163,39 @@ def _sha256(path: Path) -> str:
 
 def _rows(path: Path = PACK / "candidate-pairs.jsonl") -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+
+def _independent_diversity_diagnostics(
+    rows: list[dict[str, object]],
+) -> dict[str, object]:
+    skill_ids = {str(row["skill_id"]) for row in rows}
+    train_policy_rows = [
+        row
+        for row in rows
+        if row["source_split"] == "dev"
+        and row["candidate_type"] in {"positive", "same_category_negative_candidate"}
+    ]
+    return {
+        "family_independent_count": None,
+        "family_metadata_status": "UNAVAILABLE",
+        "per_skill_unique_train_positive_prompt_count": {
+            skill_id: len(
+                {
+                    str(row["query_text"])
+                    for row in rows
+                    if row["source_split"] == "dev"
+                    and row["candidate_type"] == "positive"
+                    and row["skill_id"] == skill_id
+                }
+            )
+            for skill_id in sorted(skill_ids)
+        },
+        "train_policy_unique_prompt_count": len(
+            {str(row["query_text"]) for row in train_policy_rows}
+        ),
+        "unique_prompt_count": len({str(row["query_text"]) for row in rows}),
+        "unique_task_family_count": None,
+    }
 
 
 class _HTMLLinksAndText(HTMLParser):
@@ -282,9 +362,15 @@ def test_committed_pack_parses_and_preserves_exact_blocked_contract():
     assert report["qualification_status"] == "REVIEW_REQUIRED"
     assert report["router_decision"] == "KEEP_BASELINE"
     assert report["can_start_training"] is False
+    assert report["artifact_version"] == 3
     assert report["blocker_codes"] == BLOCKER_CODES
     assert report["counts"] == EXPECTED_COUNTS
     assert manifest["counts"] == EXPECTED_COUNTS
+    independently_recomputed = _independent_diversity_diagnostics(rows)
+    assert independently_recomputed == EXPECTED_DIVERSITY_DIAGNOSTICS
+    assert report["diversity_diagnostics"] == independently_recomputed
+    assert manifest["diversity_diagnostics"] == independently_recomputed
+    assert all("family" not in row for row in rows)
     assert not (PACK / "training-pairs.jsonl").exists()
     assert not (PACK / "training-pairs-v2.jsonl").exists()
 
@@ -303,12 +389,16 @@ def test_committed_candidate_queries_equal_loaded_prompts_and_hashes():
         )
 
 
-def test_committed_candidate_rows_use_exact_v2_prompt_only_contract():
+def test_committed_candidate_rows_use_exact_v3_prompt_only_contract():
     rows = _rows()
 
     assert all(set(row) == ROW_FIELDS for row in rows)
     assert {row["schema_version"] for row in rows} == {
-        "router-training-data-v2-candidate-v2"
+        "router-training-data-v2-candidate-v3"
+    }
+    assert {row["artifact_version"] for row in rows} == {3}
+    assert {row["policy_id"] for row in rows} == {
+        "router-training-data-v2-qualification-v3"
     }
     assert {row["query_text_policy"] for row in rows} == {"prompt_only"}
     assert all(
@@ -317,7 +407,7 @@ def test_committed_candidate_rows_use_exact_v2_prompt_only_contract():
     )
 
 
-def test_committed_report_and_manifest_use_exact_v2_query_contract():
+def test_committed_report_and_manifest_use_exact_v3_query_contract():
     report = json.loads(
         (PACK / "qualification-report.json").read_text(encoding="utf-8")
     )
@@ -332,13 +422,13 @@ def test_committed_report_and_manifest_use_exact_v2_query_contract():
         "report_query_contract": report.get("query_contract"),
         "report_schema_version": report.get("schema_version"),
     } == {
-        "manifest_artifact_version": 2,
-        "manifest_policy_id": "router-training-data-v2-qualification-v2",
+        "manifest_artifact_version": 3,
+        "manifest_policy_id": "router-training-data-v2-qualification-v3",
         "manifest_query_contract": EXPECTED_QUERY_CONTRACT,
-        "manifest_schema_version": "router-training-data-v2-manifest-v2",
-        "report_policy_id": "router-training-data-v2-qualification-v2",
+        "manifest_schema_version": "router-training-data-v2-manifest-v3",
+        "report_policy_id": "router-training-data-v2-qualification-v3",
         "report_query_contract": EXPECTED_QUERY_CONTRACT,
-        "report_schema_version": ("router-training-data-v2-qualification-report-v2"),
+        "report_schema_version": ("router-training-data-v2-qualification-report-v3"),
     }
     assert report["query_contract"] == manifest["query_contract"]
 
@@ -398,12 +488,17 @@ def test_committed_pack_regenerates_byte_identically_into_fresh_target(tmp_path:
         assert (regenerated / name).read_bytes() == (PACK / name).read_bytes()
     assert not (regenerated / "training-pairs.jsonl").exists()
     assert not (regenerated / "training-pairs-v2.jsonl").exists()
+    assert not (regenerated / "accepted-pairs-v3.jsonl").exists()
+    assert not (regenerated / "training-input-manifest-v3.json").exists()
 
 
-def test_committed_machine_artifact_hashes_are_frozen():
-    assert {
-        name: _sha256(PACK / name) for name in CURRENT_V2_PACK_SHA256
-    } == CURRENT_V2_PACK_SHA256
+def test_committed_v3_machine_artifact_hashes_replace_v2_snapshot():
+    actual = {name: _sha256(PACK / name) for name in CURRENT_V3_PACK_SHA256}
+
+    assert actual == CURRENT_V3_PACK_SHA256
+    assert all(
+        actual[name] != v2_hash for name, v2_hash in CURRENT_V2_PACK_SHA256.items()
+    )
 
 
 def test_qualification_readme_local_links_resolve_within_repository():
@@ -439,41 +534,61 @@ def test_proposal_brief_remains_unchanged_and_proposal_only():
             )
 
 
-def test_readme_is_current_prompt_only_v2_truth_surface():
+def test_readme_is_current_prompt_only_v3_truth_surface():
     readme = (PACK / "README.md").read_text(encoding="utf-8")
     normalized_readme = " ".join(readme.split())
 
     for truth in (
         ACTIVE_CHANGE_PATH,
+        "current deterministic prompt-only v3 diagnostic qualification snapshot",
+        "router_query_text(prompt: str)",
         'query_text_policy="prompt_only"',
         "query_text == loader-normalized task.prompt",
-        "router-training-data-v2-candidate-v2",
-        "router-training-data-v2-qualification-v2",
-        "router-training-data-v2-qualification-report-v2",
-        "router-training-data-v2-manifest-v2",
-        "artifact_version=2",
-        "USER_REVIEW_REQUIRED",
-        "active and unarchived",
-        "HEAD `e822d9c489ca39180b556000dc3e361552d6c75e` is the proposal commit",
-        "The current apply diff is uncommitted",
-        "validation-only reproducibility replay",
-        "replayed the frozen release selector",
-        "committed/frozen Phase 16 aggregate artifacts",
-        "fresh temporary Phase 17/18 outputs",
-        "did not read blind prompts or rerun blind evaluation",
-        "did not use new data or tuning to make a new router choice",
-        "did not promote or adopt a candidate router and did not change the router decision",
-        "reproduced result remained `KEEP_BASELINE`",
-        *CURRENT_V2_PACK_SHA256.values(),
+        "router-training-data-v2-candidate-v3",
+        "router-training-data-v2-qualification-v3",
+        "router-training-data-v2-qualification-report-v3",
+        "router-training-data-v2-manifest-v3",
+        "artifact_version=3",
+        "Matrix candidates: 192",
+        "Positives: 16",
+        "Same-category negative candidates requiring review: 32",
+        "Cross-category easy negatives: 144",
+        "Reserved source-test rows: 64",
+        "Train-policy candidates: 32",
+        "Accepted training pairs: 0",
+        "Train-positive target-skill coverage: 11/16",
+        "Reviewed reject/no-skill examples: 0",
+        "Unique prompts: 12",
+        "Train-policy unique prompts: 8",
+        "Unique task family count: `null`",
+        "Family-independent count: `null`",
+        "Family metadata status: `UNAVAILABLE`",
+        "Candidate rows are diagnostic candidates, not qualified training data",
+        "Only formally reviewed positives and human-reviewed hard negatives can pass",
+        "ACCEPTED_POSITIVE",
+        "ACCEPTED_HARD_NEGATIVE",
+        "The current canonical pack is rejected by the v3 trainer gate",
+        "review/navigation aid, not a second source of truth",
+        *BLOCKER_CODES,
+        *CURRENT_V3_PACK_SHA256.values(),
     ):
         assert truth in normalized_readme
-    for historical_hash in V1_BASELINE_PACK_SHA256.values():
+    expected_per_skill = EXPECTED_DIVERSITY_DIAGNOSTICS[
+        "per_skill_unique_train_positive_prompt_count"
+    ]
+    assert isinstance(expected_per_skill, dict)
+    for skill_id, count in expected_per_skill.items():
+        assert f"`{skill_id}`: `{count}`" in readme
+    for historical_hash in (
+        *V1_BASELINE_PACK_SHA256.values(),
+        *CURRENT_V2_PACK_SHA256.values(),
+    ):
         assert historical_hash not in readme
     for stale_or_false_claim in (
-        "select or promote a model",
-        "did not select a model",
-        "29/32",
-        "Reviewer",
+        "current deterministic prompt-only v2",
+        "router-training-data-v2-candidate-v2",
+        "This is accepted training data",
+        "remote CI passed",
     ):
         assert stale_or_false_claim not in normalized_readme
 
@@ -498,7 +613,7 @@ def test_historical_v1_brief_is_visibly_historical_and_links_current_v2():
         assert any(href.endswith(artifact_name) for href in parser.hrefs)
 
 
-def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
+def test_apply_brief_is_historical_v2_snapshot_with_repaired_lifecycle_and_links():
     assert APPLY_BRIEF.exists()
     html = APPLY_BRIEF.read_text(encoding="utf-8")
     parser = _HTMLLinksAndText()
@@ -506,6 +621,8 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
     visible_text = _visible_html_text(html)
 
     for truth in (
+        "HISTORICAL_V2_SNAPSHOT",
+        "historical v2 evidence",
         "APPLY_COMPLETE_LOCAL",
         "USER_REVIEW_REQUIRED",
         "prompt_only",
@@ -532,7 +649,6 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
         "NO_CHECKPOINT",
         "NO_BLIND_RERUN",
         "NO_PERFORMANCE_CLAIM",
-        "NO_COMMIT",
         "NO_PUSH",
         "NO_PR",
         "NO_MERGE",
@@ -540,10 +656,14 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
         "NO_RELEASE",
         "不是第二事实源",
         "active/unarchived",
-        "HEAD e822d9c489ca39180b556000dc3e361552d6c75e is the proposal commit",
-        "current apply diff is uncommitted",
-        "NO_COMMIT applies to the current apply diff",
-        "No push, PR, merge, or archive occurred for the current apply diff",
+        "f996690700a79ab4c065ed8523340d2fd387f6b9",
+        "committed locally",
+        "unpushed",
+        "unmerged",
+        "unarchived",
+        "remote CI unavailable",
+        "current v3 brief",
+        "current canonical v3 artifacts",
         "validation-only reproducibility replay",
         "replayed the frozen release selector",
         "committed/frozen Phase 16 aggregate artifacts",
@@ -563,6 +683,9 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
         *CURRENT_V2_PACK_SHA256.values(),
     ):
         assert truth in visible_text
+    assert any(href.endswith(CURRENT_V3_BRIEF.name) for href in parser.hrefs)
+    for artifact_name in CURRENT_V3_PACK_SHA256:
+        assert any(href.endswith(artifact_name) for href in parser.hrefs)
     assert parser.hrefs
     for href in parser.hrefs:
         target = _local_link_target(APPLY_BRIEF, href)
@@ -571,13 +694,126 @@ def test_apply_brief_has_current_v2_truth_boundaries_and_real_links():
                 f"missing apply brief link target: {href} -> {target}"
             )
     for stale_or_false_claim in (
-        "Reviewer",
-        "29/32",
-        "apply progress",
-        "PENDING FINAL",
-        "没有训练、GPU/A100 job、checkpoint、阈值校准、模型选择",
+        "HEAD e822d9c489ca39180b556000dc3e361552d6c75e is the proposal commit",
+        "current apply diff is uncommitted",
+        "NO_COMMIT applies to the current apply diff",
+        "Current v3 artifact hashes",
     ):
         assert stale_or_false_claim not in visible_text
+
+
+def test_current_v3_brief_has_truth_boundaries_authoritative_links_and_next_step():
+    assert CURRENT_V3_BRIEF.exists()
+    html = CURRENT_V3_BRIEF.read_text(encoding="utf-8")
+    parser = _HTMLLinksAndText()
+    parser.feed(html)
+    visible_text = _visible_html_text(html)
+
+    for truth in (
+        "Router Training Data V2 v3",
+        "router_query_text(prompt: str)",
+        "router-training-data-v2-candidate-v3",
+        "router-training-data-v2-qualification-v3",
+        "router-training-data-v2-qualification-report-v3",
+        "router-training-data-v2-manifest-v3",
+        "router-training-data-v2-training-input-manifest-v3",
+        "router-training-data-v2-training-admission-v3",
+        "192 diagnostic rows",
+        "16 positives",
+        "32 unreviewed same-category negatives",
+        "144 easy negatives",
+        "64 reserved rows",
+        "32 train-policy candidates",
+        "0 accepted pairs",
+        "11/16 skill coverage",
+        "0 reject examples",
+        "unique_prompt_count=12",
+        "train_policy_unique_prompt_count=8",
+        "unique_task_family_count=null",
+        "family_independent_count=null",
+        "family_metadata_status=UNAVAILABLE",
+        "REVIEW_REQUIRED",
+        "KEEP_BASELINE",
+        "can_start_training=false",
+        "LOCAL_WORKING_DIFF",
+        "f996690700a79ab4c065ed8523340d2fd387f6b9",
+        "UNCOMMITTED",
+        "UNPUSHED",
+        "NO_PR",
+        "NO_MERGE",
+        "ACTIVE_UNARCHIVED",
+        "REMOTE_CI_UNAVAILABLE",
+        "NO_TRAINING",
+        "NO_A100_GPU_JOB",
+        "NO_MODEL",
+        "NO_CHECKPOINT",
+        "NO_BLIND_V2",
+        "NO_PERFORMANCE_CLAIM",
+        "NO_TAG",
+        "NO_RELEASE",
+        "NO_DEPLOY",
+        "PHASE14_18_AND_BLIND_UNCHANGED",
+        "source_hash / acceptance_hash",
+        "只证明内容与接受决策的完整性，不证明 source authenticity",
+        "independent source snapshot",
+        "human review",
+        "independent calibration",
+        "reviewed-data → one small training matrix → frozen family-disjoint blind-v2",
+        "insufficient data or no stable blind gain",
+        "冻结 Hermes，并将后续时间转向 Voice2Task",
+        "shared formatter + v3 artifacts + sealed fail-closed trainer 是实现进展",
+        "test/brief counts 只是证据，不是进展",
+        "review/navigation aid，不是第二事实源",
+        "940 passed, 1 failed",
+        "文档更新前基线，不是最终 full-suite 结论",
+        *BLOCKER_CODES,
+        *CURRENT_V3_PACK_SHA256.values(),
+    ):
+        assert truth in visible_text
+
+    expected_per_skill = EXPECTED_DIVERSITY_DIAGNOSTICS[
+        "per_skill_unique_train_positive_prompt_count"
+    ]
+    assert isinstance(expected_per_skill, dict)
+    for skill_id, count in expected_per_skill.items():
+        assert f"{skill_id} {count}" in visible_text
+
+    required_link_suffixes = (
+        "proposal.md",
+        "design.md",
+        "specs/router-query-contract/spec.md",
+        "specs/router-training-data-v2-qualification-pack/spec.md",
+        "specs/router-training-input-gate/spec.md",
+        "tasks.md",
+        "src/hermes_skilleval/router_query.py",
+        "src/hermes_skilleval/router_training_data_v2.py",
+        "src/hermes_skilleval/training_input.py",
+        "scripts/train_embedding_router.py",
+        "tests/test_router_query_contract.py",
+        "tests/test_router_training_data_v2_artifacts.py",
+        "tests/test_training_input.py",
+        "candidate-pairs.jsonl",
+        "qualification-report.json",
+        "manifest.json",
+    )
+    for suffix in required_link_suffixes:
+        assert any(href.endswith(suffix) for href in parser.hrefs), suffix
+    for href in parser.hrefs:
+        target = _local_link_target(CURRENT_V3_BRIEF, href)
+        if target is not None:
+            assert target.exists(), (
+                f"missing current v3 brief link target: {href} -> {target}"
+            )
+
+    for overclaim in (
+        "FINAL_FULL_SUITE_PASS",
+        "remote CI passed",
+        "training completed",
+        "blind-v2 completed",
+        "benchmark improved",
+        "Phase 19",
+    ):
+        assert overclaim not in visible_text
 
 
 def test_human_brief_local_links_resolve_within_repository():
@@ -631,13 +867,11 @@ def test_lifecycle_truth_separates_active_apply_from_historical_v1_change():
     visible_brief = _visible_html_text(HUMAN_BRIEF.read_text(encoding="utf-8"))
 
     assert ACTIVE_CHANGE_PATH in readme
-    assert "APPLY_COMPLETE_LOCAL" in normalized_readme
-    assert "USER_REVIEW_REQUIRED" in normalized_readme
-    assert "The current apply diff is uncommitted" in normalized_readme
-    assert "has not been pushed, opened as a PR, merged, or archived" in (
-        normalized_readme
-    )
-    assert "`NO_COMMIT` applies to the current apply diff" in normalized_readme
+    assert "LOCAL_WORKING_DIFF" in normalized_readme
+    assert "base HEAD `f996690700a79ab4c065ed8523340d2fd387f6b9`" in normalized_readme
+    assert "uncommitted, unpushed, has no PR, is unmerged" in normalized_readme
+    assert "active and unarchived" in normalized_readme
+    assert "remote CI is unavailable" in normalized_readme
     assert branch in visible_brief
     assert "该 branch 尚未创建 GitHub PR" in visible_brief
     assert "该 branch 尚未 merge main" in visible_brief

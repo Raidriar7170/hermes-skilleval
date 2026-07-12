@@ -6,6 +6,7 @@ import time
 from collections import Counter
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
+from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.routers.base import SkillRouter
 
 
@@ -21,7 +22,7 @@ class KeywordRouter(SkillRouter):
         if not skills:
             raise ValueError("skill index is empty")
         started = time.perf_counter()
-        query_terms = _terms(f"{task.category} {task.prompt}")
+        query_terms = _terms(router_query_text(task.prompt))
         scores = {skill.id: _score(query_terms, skill) for skill in skills}
         ranked = sorted(skills, key=lambda skill: (-scores[skill.id], skill.id))
         selected = [skill.id for skill in ranked[:top_k]]
