@@ -60,7 +60,4 @@ def _score(query_terms: Counter[str], skill: Skill) -> float:
         query_terms[term] * (1.0 + math.log1p(skill_terms[term]))
         for term in sorted(overlap)
     )
-    category_boost = (
-        0.5 if skill.category and skill.category.lower() in query_terms else 0.0
-    )
-    return weighted_overlap + category_boost
+    return weighted_overlap

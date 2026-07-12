@@ -17,6 +17,7 @@ from training_input_test_support import (
     canonical_hash,
     make_accepted_row,
     rehash_row,
+    sha256_bytes,
     write_synthetic_training_package,
 )
 
@@ -27,6 +28,80 @@ def _read_json(path: Path) -> dict:
 
 def _write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def test_manifest_rejects_duplicate_json_keys_at_any_object_depth(tmp_path):
+    top_level_manifest = write_synthetic_training_package(tmp_path / "top-level")
+    top_level_text = top_level_manifest.read_text(encoding="utf-8").replace(
+        '"package_id": "synthetic-training-input-test-only"',
+        '"package_id": "shadow-package", '
+        '"package_id": "synthetic-training-input-test-only"',
+        1,
+    )
+    top_level_manifest.write_text(top_level_text, encoding="utf-8")
+
+    with pytest.raises(
+        TrainingInputError,
+        match=r"manifest.*duplicate JSON key.*package_id",
+    ):
+        load_training_input(top_level_manifest)
+
+    nested_manifest = write_synthetic_training_package(tmp_path / "nested")
+    nested_text = nested_manifest.read_text(encoding="utf-8").replace(
+        '"sha256": "',
+        '"sha256": "shadow", "sha256": "',
+        1,
+    )
+    nested_manifest.write_text(nested_text, encoding="utf-8")
+
+    with pytest.raises(
+        TrainingInputError,
+        match=r"manifest.*duplicate JSON key.*sha256",
+    ):
+        load_training_input(nested_manifest)
+
+
+def test_qualification_report_rejects_duplicate_json_key_with_valid_binding(tmp_path):
+    manifest = write_synthetic_training_package(tmp_path / "package")
+    report_path = manifest.parent / "qualification-report.json"
+    report_bytes = report_path.read_bytes().replace(
+        b'"can_start_training": true',
+        b'"can_start_training": false, "can_start_training": true',
+        1,
+    )
+    report_path.write_bytes(report_bytes)
+    manifest_payload = _read_json(manifest)
+    manifest_payload["qualification_report"]["sha256"] = sha256_bytes(report_bytes)
+    _write_json(manifest, manifest_payload)
+
+    with pytest.raises(
+        TrainingInputError,
+        match=r"qualification report.*duplicate JSON key.*can_start_training",
+    ):
+        load_training_input(manifest)
+
+
+def test_accepted_row_rejects_duplicate_json_key_with_valid_binding(tmp_path):
+    row = make_accepted_row()
+    row_bytes = (json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n").encode(
+        "utf-8"
+    )
+    duplicate_row_bytes = row_bytes.replace(
+        b'"accepted_for_training": true',
+        b'"accepted_for_training": false, "accepted_for_training": true',
+        1,
+    )
+    manifest = write_synthetic_training_package(
+        tmp_path / "package",
+        rows=[row],
+        raw_pairs=duplicate_row_bytes,
+    )
+
+    with pytest.raises(
+        TrainingInputError,
+        match=r"accepted row.*duplicate JSON key.*accepted_for_training",
+    ):
+        load_training_input(manifest)
 
 
 def test_load_training_input_returns_one_frozen_ordered_minimal_handoff(tmp_path):

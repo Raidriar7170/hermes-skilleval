@@ -103,6 +103,25 @@ class TrainingInputError(ValueError):
     """Raised when a training-input package fails the exact v3 admission gate."""
 
 
+class _DuplicateJSONKeyError(ValueError):
+    def __init__(self, key: str) -> None:
+        self.key = key
+        super().__init__(key)
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    parsed: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in parsed:
+            raise _DuplicateJSONKeyError(key)
+        parsed[key] = value
+    return parsed
+
+
+def _loads_unique_json(data: bytes) -> Any:
+    return json.loads(data, object_pairs_hook=_reject_duplicate_json_keys)
+
+
 def _load_training_input_values(
     manifest_path: str | Path,
 ) -> tuple[str, tuple[_ValidatedExampleValues, ...]]:
@@ -231,7 +250,12 @@ def _parse_accepted_rows(lines: list[bytes], path: Path) -> list[dict[str, Any]]
         if not raw_line.strip():
             _fail(line_label, "accepted row must not be blank")
         try:
-            parsed = json.loads(raw_line)
+            parsed = _loads_unique_json(raw_line)
+        except _DuplicateJSONKeyError as exc:
+            _fail(
+                f"accepted row {line_label}",
+                f"duplicate JSON key: {exc.key}",
+            )
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             _fail(line_label, f"accepted row is not valid UTF-8 JSON: {exc}")
         if not isinstance(parsed, dict):
@@ -349,7 +373,9 @@ def _read_json_object(path: Path, label: str) -> dict[str, Any]:
 
 def _parse_json_object_bytes(data: bytes, path: Path, label: str) -> dict[str, Any]:
     try:
-        parsed = json.loads(data)
+        parsed = _loads_unique_json(data)
+    except _DuplicateJSONKeyError as exc:
+        _fail(str(path), f"{label} contains duplicate JSON key: {exc.key}")
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         _fail(str(path), f"{label} is not valid UTF-8 JSON: {exc}")
     if not isinstance(parsed, dict):

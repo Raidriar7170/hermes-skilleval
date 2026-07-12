@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import math
+from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
@@ -17,7 +19,7 @@ from hermes_skilleval.routers.cross_encoder import CrossEncoderReranker
 from hermes_skilleval.routers.embedding import EmbeddingRouter, HashingEmbeddingModel
 from hermes_skilleval.routers.gated import VerificationGatedRouter
 from hermes_skilleval.routers.hybrid import HybridRouter
-from hermes_skilleval.routers.keyword import KeywordRouter
+from hermes_skilleval.routers.keyword import KeywordRouter, _score
 from hermes_skilleval.routers.verification import skill_text
 from hermes_skilleval.skill_index import save_skill_index
 
@@ -65,6 +67,21 @@ def test_router_query_text_rejects_empty_or_metadata_capable_inputs():
     for invalid in invalid_inputs:
         with pytest.raises((TypeError, ValueError)):
             router_query_text(invalid)  # type: ignore[arg-type]
+
+
+def test_keyword_category_term_receives_only_ordinary_lexical_overlap_weight():
+    skill = Skill(
+        id="candidate",
+        name="Candidate",
+        path="/skills/candidate/SKILL.md",
+        category="routing",
+        description="Select a candidate.",
+        body="Choose from prompt evidence.",
+        trigger_terms=[],
+        token_count_estimate=8,
+    )
+
+    assert _score(Counter({"routing": 1}), skill) == pytest.approx(1.0 + math.log1p(1))
 
 
 @pytest.mark.parametrize("metadata_field", METADATA_FIELDS)
