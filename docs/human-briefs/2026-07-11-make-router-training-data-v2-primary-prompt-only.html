@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router Training Data V2 Prompt-only Proposal · Human Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5a6679;
+      --line: #d8dfeb;
+      --panel: #f5f8fc;
+      --blue: #2457a7;
+      --blue-soft: #eaf1ff;
+      --amber: #8a5300;
+      --amber-soft: #fff5df;
+      --green: #17643a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--blue); }
+    code {
+      padding: 0.1rem 0.34rem;
+      border-radius: 0.3rem;
+      background: #edf1f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9em;
+      overflow-wrap: anywhere;
+    }
+    header, main, footer {
+      width: min(1040px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+    header { padding: 3rem 0 1.25rem; }
+    h1 {
+      max-width: 900px;
+      margin: 0 0 0.75rem;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+    }
+    h2 { margin: 0 0 0.8rem; font-size: 1.35rem; }
+    h3 { margin: 0 0 0.38rem; font-size: 1rem; }
+    p { margin: 0.42rem 0; }
+    ul, ol { margin: 0.5rem 0; padding-left: 1.35rem; }
+    li + li { margin-top: 0.3rem; }
+    section { margin: 1.2rem 0 2rem; }
+    .eyebrow {
+      margin: 0 0 0.45rem;
+      color: var(--blue);
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .conclusion {
+      max-width: 960px;
+      padding: 1rem 1.15rem;
+      border-left: 5px solid var(--amber);
+      background: var(--amber-soft);
+      font-size: 1.06rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.85rem;
+    }
+    .card {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      background: var(--panel);
+    }
+    .card.status { border-top: 4px solid var(--amber); }
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 760;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .value { display: block; margin: 0.15rem 0; font-weight: 780; }
+    .callout {
+      padding: 0.9rem 1rem;
+      border: 1px solid #c7d7f2;
+      border-radius: 0.7rem;
+      background: var(--blue-soft);
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+    th, td {
+      padding: 0.65rem 0.7rem;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--panel); }
+    .pass { color: var(--green); font-weight: 760; }
+    footer {
+      margin-top: 2rem;
+      padding: 1.3rem 0 3rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Human Brief · Proposal snapshot · 2026-07-11</p>
+    <h1>Router Training Data V2：Primary Prompt-only Contract</h1>
+    <p class="conclusion"><strong>一句话结论：</strong>OpenSpec 方案已完成并可进入 apply，但实现尚未开始；下一步只把 primary <code>query_text</code> 改成 loader-normalized prompt，并以 v2 机器契约消除 benchmark metadata 泄漏风险，不进入训练或资格提升。</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="status-title">
+      <h2 id="status-title">当前状态</h2>
+      <div class="grid">
+        <article class="card status">
+          <span class="label">OpenSpec lifecycle</span>
+          <span class="value"><code>PROPOSED</code></span>
+          <p>Proposal、Design、Delta Spec、Tasks 均已生成；change 尚未 archive。</p>
+        </article>
+        <article class="card status">
+          <span class="label">Implementation</span>
+          <span class="value"><code>APPLY_NOT_STARTED</code></span>
+          <p>本 proposal 未修改 source、tests 或三个 canonical 机器产物。</p>
+        </article>
+        <article class="card status">
+          <span class="label">Qualification truth</span>
+          <span class="value"><code>REVIEW_REQUIRED</code> · <code>KEEP_BASELINE</code></span>
+          <p><code>can_start_training=false</code>；本阶段不改变 router promotion decision。</p>
+        </article>
+        <article class="card status">
+          <span class="label">Branch lineage</span>
+          <span class="value">Local stacked proposal</span>
+          <p>分支基于本地 truth-fix <code>4f995c2</code>；该基线尚未集成到 <code>main</code>。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">批准的 v2 query contract</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>唯一 primary query</h3>
+          <p><code>query_text == task.prompt</code>（loader normalization 后逐字节相等），且 <code>sha256(query_text) == prompt_text_sha256</code>。</p>
+        </article>
+        <article class="card">
+          <h3>显式版本边界</h3>
+          <p>Candidate/report/manifest/policy 全部升级为 v2；row 增加 <code>query_text_policy="prompt_only"</code>。</p>
+        </article>
+        <article class="card">
+          <h3>禁止双 query</h3>
+          <p>不输出 legacy、alternate、metadata-enriched 或 composite query，避免 consumer 继续选择泄漏表示。</p>
+        </article>
+        <article class="card">
+          <h3>Metadata 只保留结构用途</h3>
+          <p>ID、category、difficulty、robustness tags 仅用于 validation/classification/split/provenance；category 仍可分类同/跨类别候选。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="truth-title">
+      <h2 id="truth-title">apply 后也必须原样保持的 qualification truth</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">约束</th><th scope="col">固定值</th><th scope="col">含义</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Candidate matrix</th><td>12 × 16 = 192</td><td>不是 192 条合格训练数据。</td></tr>
+            <tr><th scope="row">Candidate types</th><td>16 / 32 / 144</td><td>positive / 未审核同类别 negative candidates / 跨类别 easy negatives。</td></tr>
+            <tr><th scope="row">Split / policy</th><td>64 reserved；32 train-policy</td><td>source-test 不回流；policy candidate 也不等于 accepted。</td></tr>
+            <tr><th scope="row">Readiness evidence</th><td>0 accepted；11/16 coverage；0 rejects</td><td>八个 blocker 原样保留，训练继续 fail-closed。</td></tr>
+            <tr><th scope="row">Decision</th><td><code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>false</code></td><td>不产生 promotion 或性能结论。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="apply-title">
+      <h2 id="apply-title">已规划的 apply 边界</h2>
+      <ol>
+        <li>TDD 先验证 prompt/hash equality、metadata invariance、exact v2 fields、no dual query，并取得预期 RED。</li>
+        <li>只修改 qualification builder 的 query 与 v2 contract surfaces，取得 focused GREEN。</li>
+        <li>在 fresh absent targets 两次再生成；三个产物必须字节级确定，且三个 v2 hash 都必须不同于 v1。</li>
+        <li>更新 current README/tests，新增独立 apply brief，并把旧 v1 brief 明确标成 <code>HISTORICAL_V1_SNAPSHOT</code>。</li>
+        <li>执行 full tests、Ruff、strict OpenSpec、release gate、protected-path/blob guards 和只读 Reviewer，然后停下等待用户审阅。</li>
+      </ol>
+      <p class="callout">不会在这个 change 中人工审核 32 条候选、补 accepted/coverage/reject/family/calibration 数据、生成 trainer-ready pairs、修改训练/runtime router、运行 MiniLM/cross-encoder/A100/GPU、创建 checkpoint、读取或重跑 blind benchmark、修改 Phase 14–18、commit、push、开 PR、merge、archive、tag、release 或 deploy。</p>
+    </section>
+
+    <section aria-labelledby="evidence-title">
+      <h2 id="evidence-title">Authoritative artifacts 与 proposal 验证</h2>
+      <ul>
+        <li><a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/proposal.md">Proposal</a></li>
+        <li><a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/design.md">Design</a></li>
+        <li><a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/specs/router-training-data-v2-qualification-pack/spec.md">Delta Specification</a></li>
+        <li><a href="../../openspec/changes/make-router-training-data-v2-primary-prompt-only/tasks.md">Tasks</a></li>
+        <li><a href="../../openspec/specs/router-training-data-v2-qualification-pack/spec.md">Current main specification (v1 before apply)</a></li>
+        <li><a href="../demo/router-training-data-v2-qualification-pack/README.md">Current qualification pack README (v1 before apply)</a></li>
+        <li><a href="2026-07-11-build-router-training-data-v2-qualification-pack.html">Existing qualification/archive brief</a></li>
+      </ul>
+      <div class="grid">
+        <article class="card">
+          <span class="label">Change validation</span>
+          <span class="value pass">PASS</span>
+          <p><code>openspec validate make-router-training-data-v2-primary-prompt-only --strict</code></p>
+        </article>
+        <article class="card">
+          <span class="label">Repository OpenSpec</span>
+          <span class="value pass">29 passed · 0 failed</span>
+          <p><code>openspec validate --all --strict</code></p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="next-title">
+      <h2 id="next-title">建议下一步</h2>
+      <p>先审阅 OpenSpec artifacts；确认后再单独执行 <code>openspec-apply-change</code>。Apply 必须保持上述 scope guards，并在本地实现与验证后停在用户确认门。</p>
+    </section>
+  </main>
+
+  <footer>
+    本页是 <code>PROPOSED</code> 时点的中文导航与审阅摘要，不是第二事实源，也不证明 apply 已发生。OpenSpec、源码、测试和 JSON/JSONL 机器证据始终优先。
+  </footer>
+</body>
+</html>
