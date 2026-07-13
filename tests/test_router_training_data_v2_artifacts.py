@@ -609,6 +609,8 @@ def test_readme_is_current_prompt_only_v3_truth_surface():
         "Reviewer",
     ):
         assert stale_or_false_claim not in normalized_readme
+
+
 def test_historical_v1_brief_is_visibly_historical_and_links_current_v3():
     html = HISTORICAL_V1_BRIEF.read_text(encoding="utf-8")
     parser = _HTMLLinksAndText()
