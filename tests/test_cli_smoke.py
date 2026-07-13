@@ -813,7 +813,7 @@ def test_cli_eval_gated_router_supports_selective_confidence_filter(tmp_path):
                 "gated",
                 "--selective",
                 "--min-confidence",
-                "0.5",
+                "0.1",
                 "--gated-pool-size",
                 "3",
                 "--top-k",
@@ -1585,7 +1585,7 @@ def test_cli_simulate_skill_patches_writes_artifacts(tmp_path):
     assert (output_dir / "regression-report.md").exists()
 
 
-def test_cli_export_embedding_training_data_writes_pairs(tmp_path):
+def test_cli_export_embedding_training_data_writes_diagnostic_only_v3(tmp_path, capsys):
     tasks = tmp_path / "tasks"
     task_dir = tasks / "task-001"
     task_dir.mkdir(parents=True)
@@ -1652,8 +1652,19 @@ def test_cli_export_embedding_training_data_writes_pairs(tmp_path):
     )
 
     assert result == 0
-    assert (output_dir / "training-pairs.jsonl").exists()
-    assert (output_dir / "training-summary.json").exists()
+    pairs_path = output_dir / "diagnostic-pairs.jsonl"
+    summary_path = output_dir / "diagnostic-summary.json"
+    assert pairs_path.exists()
+    assert summary_path.exists()
+    assert not (output_dir / "training-pairs.jsonl").exists()
+    assert not (output_dir / "training-input-manifest.json").exists()
+    rows = [json.loads(line) for line in pairs_path.read_text().splitlines()]
+    assert all(row["accepted_for_training"] is False for row in rows)
+    assert all(row["query_text_policy"] == "prompt_only" for row in rows)
+    assert json.loads(summary_path.read_text())["can_start_training"] is False
+    stdout = capsys.readouterr().out
+    assert "DIAGNOSTIC_ONLY" in stdout
+    assert "can_start_training=false" in stdout
 
 
 def test_cli_qualify_router_training_data_v2_writes_blocked_pack(tmp_path, capsys):

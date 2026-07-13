@@ -14,14 +14,15 @@ from typing import Any
 import yaml
 
 from hermes_skilleval.models import BenchmarkTask, Skill
+from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.skill_index import load_skill_index
 from hermes_skilleval.task_loader import load_tasks
 
 
-POLICY_ID = "router-training-data-v2-qualification-v2"
-CANDIDATE_SCHEMA_VERSION = "router-training-data-v2-candidate-v2"
-REPORT_SCHEMA_VERSION = "router-training-data-v2-qualification-report-v2"
-MANIFEST_SCHEMA_VERSION = "router-training-data-v2-manifest-v2"
+POLICY_ID = "router-training-data-v2-qualification-v3"
+CANDIDATE_SCHEMA_VERSION = "router-training-data-v2-candidate-v3"
+REPORT_SCHEMA_VERSION = "router-training-data-v2-qualification-report-v3"
+MANIFEST_SCHEMA_VERSION = "router-training-data-v2-manifest-v3"
 QUERY_CONTRACT = MappingProxyType(
     {
         "alternate_query_fields": (),
@@ -30,7 +31,10 @@ QUERY_CONTRACT = MappingProxyType(
             "category",
             "difficulty",
             "robustness_tags",
+            "split",
+            "family",
         ),
+        "formatter": "router_query_text(prompt: str)",
         "hash_algorithm": "sha256",
         "hash_field": "prompt_text_sha256",
         "normalization": "loader_normalized",
@@ -127,7 +131,7 @@ def qualify_router_training_data_v2(
     output_dir: Path | str,
     repository_root: Path | str | None = None,
 ) -> dict[str, Any]:
-    """Build the frozen canonical diagnostic v2 qualification pack."""
+    """Build the frozen canonical diagnostic v3 qualification pack."""
 
     return _qualify_router_training_data_v2(
         tasks_path=tasks_path,
@@ -195,11 +199,22 @@ def _qualify_router_training_data_v2(
         tasks_root=tasks_root,
         skills_index_logical=skills_index_logical,
         input_snapshot=input_snapshot,
-        report=report,
+        tasks=tasks,
+        skills=skills,
+        rows=rows,
         output_bytes={
             "candidate-pairs.jsonl": candidate_bytes,
             "qualification-report.json": report_bytes,
         },
+    )
+    _validate_v3_artifact_set(
+        tasks=tasks,
+        skills=skills,
+        rows=rows,
+        report=report,
+        manifest=manifest,
+        candidate_bytes=candidate_bytes,
+        report_bytes=report_bytes,
     )
     files = {
         "candidate-pairs.jsonl": candidate_bytes,
@@ -304,7 +319,7 @@ def _build_candidate_matrix(
     for task in sorted(tasks, key=lambda item: item.id):
         gold_category = _gold_category(task, skill_by_id)
         source = source_by_id[task.id]
-        query_text = task.prompt
+        query_text = router_query_text(task.prompt)
         prompt_hash = _sha256(query_text.encode("utf-8"))
         for skill in sorted(skills, key=lambda item: item.id):
             if skill.id in task.gold_skills:
@@ -329,10 +344,12 @@ def _build_candidate_matrix(
             rows.append(
                 {
                     "accepted_for_training": False,
+                    "artifact_version": 3,
                     "candidate_type": candidate_type,
                     "disposition": disposition,
                     "label": label,
                     "pair_id": f"{task.id}/{skill.id}",
+                    "policy_id": POLICY_ID,
                     "prompt_text_sha256": prompt_hash,
                     "query_text": query_text,
                     "query_text_policy": "prompt_only",
@@ -356,6 +373,39 @@ def _build_qualification_report(
     skills: list[Skill],
     rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    counts = _build_counts(tasks, skills, rows)
+    train_positive_skill_coverage_count = counts["train_positive_skill_coverage_count"]
+    return {
+        "artifact_version": 3,
+        "artifact_type": "router-training-data-v2-qualification-report",
+        "blocker_codes": BLOCKER_CODES,
+        "can_start_training": False,
+        "checks": {
+            "accepted_pair_count_100_to_200": False,
+            "human_acceptance_bound_to_hashes": False,
+            "independent_nonempty_train_calibration_test": False,
+            "reviewed_same_category_negatives": False,
+            "reviewed_true_reject_examples": False,
+            "target_positive_coverage_complete": train_positive_skill_coverage_count
+            == len(skills),
+            "task_family_metadata_complete": False,
+            "task_family_splits_independent": False,
+        },
+        "counts": counts,
+        "diversity_diagnostics": _build_diversity_diagnostics(skills, rows),
+        "policy_id": POLICY_ID,
+        "qualification_status": "REVIEW_REQUIRED",
+        "query_contract": _query_contract_payload(),
+        "router_decision": "KEEP_BASELINE",
+        "schema_version": REPORT_SCHEMA_VERSION,
+    }
+
+
+def _build_counts(
+    tasks: list[BenchmarkTask],
+    skills: list[Skill],
+    rows: list[dict[str, Any]],
+) -> dict[str, int]:
     train_policy = [
         row
         for row in rows
@@ -368,7 +418,7 @@ def _build_qualification_report(
         for row in rows
         if row["source_split"] == "dev" and row["candidate_type"] == "positive"
     }
-    counts = {
+    return {
         "accepted_train_pair_count": 0,
         "cross_category_easy_negative_count": sum(
             row["candidate_type"] == "cross_category_easy_negative" for row in rows
@@ -392,27 +442,38 @@ def _build_qualification_report(
         "train_policy_candidate_count": len(train_policy),
         "train_positive_skill_coverage_count": len(train_positive_skills),
     }
+
+
+def _build_diversity_diagnostics(
+    skills: list[Skill],
+    rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    train_policy_rows = [
+        row
+        for row in rows
+        if row["source_split"] == "dev"
+        and row["candidate_type"] in {"positive", "same_category_negative_candidate"}
+    ]
     return {
-        "artifact_type": "router-training-data-v2-qualification-report",
-        "blocker_codes": BLOCKER_CODES,
-        "can_start_training": False,
-        "checks": {
-            "accepted_pair_count_100_to_200": False,
-            "human_acceptance_bound_to_hashes": False,
-            "independent_nonempty_train_calibration_test": False,
-            "reviewed_same_category_negatives": False,
-            "reviewed_true_reject_examples": False,
-            "target_positive_coverage_complete": len(train_positive_skills)
-            == len(skills),
-            "task_family_metadata_complete": False,
-            "task_family_splits_independent": False,
+        "family_independent_count": None,
+        "family_metadata_status": "UNAVAILABLE",
+        "per_skill_unique_train_positive_prompt_count": {
+            skill.id: len(
+                {
+                    str(row["query_text"])
+                    for row in rows
+                    if row["source_split"] == "dev"
+                    and row["candidate_type"] == "positive"
+                    and row["skill_id"] == skill.id
+                }
+            )
+            for skill in sorted(skills, key=lambda item: item.id)
         },
-        "counts": counts,
-        "policy_id": POLICY_ID,
-        "qualification_status": "REVIEW_REQUIRED",
-        "query_contract": _query_contract_payload(),
-        "router_decision": "KEEP_BASELINE",
-        "schema_version": REPORT_SCHEMA_VERSION,
+        "train_policy_unique_prompt_count": len(
+            {str(row["query_text"]) for row in train_policy_rows}
+        ),
+        "unique_prompt_count": len({str(row["query_text"]) for row in rows}),
+        "unique_task_family_count": None,
     }
 
 
@@ -468,18 +529,18 @@ def _validate_canonical_snapshot(
 ) -> None:
     if tasks_root_logical != CANONICAL_TASK_ROOT:
         raise ValueError(
-            f"router-training-data-v2 v2 requires canonical task root: "
+            f"router-training-data-v2 v3 requires canonical task root: "
             f"{CANONICAL_TASK_ROOT}"
         )
     if skills_index_logical != CANONICAL_SKILLS_INDEX:
         raise ValueError(
-            "router-training-data-v2 v2 requires canonical skills index: "
+            "router-training-data-v2 v3 requires canonical skills index: "
             f"{CANONICAL_SKILLS_INDEX}"
         )
     actual_snapshot = _snapshot_aggregate_sha256(input_snapshot)
     if actual_snapshot != CANONICAL_INPUT_SNAPSHOT_SHA256:
         raise ValueError(
-            "router-training-data-v2 v2 canonical input snapshot mismatch: "
+            "router-training-data-v2 v3 canonical input snapshot mismatch: "
             f"expected {CANONICAL_INPUT_SNAPSHOT_SHA256}, got {actual_snapshot}"
         )
 
@@ -490,10 +551,10 @@ def _validate_canonical_ids(
 ) -> None:
     task_ids = {task.id for task in tasks}
     if task_ids != CANONICAL_TASK_IDS:
-        raise ValueError("router-training-data-v2 v2 canonical task IDs mismatch")
+        raise ValueError("router-training-data-v2 v3 canonical task IDs mismatch")
     skill_ids = {skill.id for skill in skills}
     if skill_ids != CANONICAL_SKILL_IDS:
-        raise ValueError("router-training-data-v2 v2 canonical skill IDs mismatch")
+        raise ValueError("router-training-data-v2 v3 canonical skill IDs mismatch")
 
 
 def _assert_input_snapshot_unchanged(
@@ -523,7 +584,9 @@ def _build_manifest(
     tasks_root: Path,
     skills_index_logical: str,
     input_snapshot: tuple[InputFileSnapshot, ...],
-    report: dict[str, Any],
+    tasks: list[BenchmarkTask],
+    skills: list[Skill],
+    rows: list[dict[str, Any]],
     output_bytes: dict[str, bytes],
 ) -> dict[str, Any]:
     input_files = _snapshot_records(input_snapshot)
@@ -532,8 +595,9 @@ def _build_manifest(
     )
     return {
         "artifact_type": "router-training-data-v2-qualification-manifest",
-        "artifact_version": 2,
-        "counts": report["counts"],
+        "artifact_version": 3,
+        "counts": _build_counts(tasks, skills, rows),
+        "diversity_diagnostics": _build_diversity_diagnostics(skills, rows),
         "inputs": {
             "files": input_files,
             "skills_index": {
@@ -569,6 +633,98 @@ def _build_manifest(
         "query_contract": _query_contract_payload(),
         "schema_version": MANIFEST_SCHEMA_VERSION,
     }
+
+
+def _validate_v3_artifact_set(
+    *,
+    tasks: list[BenchmarkTask],
+    skills: list[Skill],
+    rows: list[dict[str, Any]],
+    report: dict[str, Any],
+    manifest: dict[str, Any],
+    candidate_bytes: bytes,
+    report_bytes: bytes,
+) -> None:
+    candidate_versions = {
+        (row.get("schema_version"), row.get("artifact_version")) for row in rows
+    }
+    expected_versions = {
+        "candidate": (CANDIDATE_SCHEMA_VERSION, 3),
+        "report": (REPORT_SCHEMA_VERSION, 3),
+        "manifest": (MANIFEST_SCHEMA_VERSION, 3),
+    }
+    actual_versions = {
+        "candidate": next(iter(candidate_versions))
+        if len(candidate_versions) == 1
+        else None,
+        "report": (report.get("schema_version"), report.get("artifact_version")),
+        "manifest": (
+            manifest.get("schema_version"),
+            manifest.get("artifact_version"),
+        ),
+    }
+    if actual_versions != expected_versions:
+        raise ValueError("mixed v1/v2/v3 qualification artifacts are forbidden")
+    candidate_policies = {row.get("policy_id") for row in rows}
+    if (
+        candidate_policies != {POLICY_ID}
+        or report.get("policy_id") != POLICY_ID
+        or manifest.get("policy_id") != POLICY_ID
+    ):
+        raise ValueError("mixed v1/v2/v3 qualification policies are forbidden")
+    for row in rows:
+        query_text = row.get("query_text")
+        query_fields = {
+            key
+            for key in row
+            if "query" in key.casefold() and key != "query_text_policy"
+        }
+        alternate_or_composite_text_fields = {
+            key
+            for key in row
+            if key.casefold().startswith(("alternate_", "composite_"))
+            and key.casefold().endswith("_text")
+        }
+        if (
+            not isinstance(query_text, str)
+            or row.get("query_text_policy") != "prompt_only"
+            or row.get("prompt_text_sha256") != _sha256(query_text.encode("utf-8"))
+            or query_fields != {"query_text"}
+            or alternate_or_composite_text_fields
+        ):
+            raise ValueError("candidate query contract does not match rows")
+    expected_query_contract = _query_contract_payload()
+    if (
+        report.get("query_contract") != expected_query_contract
+        or manifest.get("query_contract") != expected_query_contract
+    ):
+        raise ValueError("mixed v1/v2/v3 query contracts are forbidden")
+    expected_counts = _build_counts(tasks, skills, rows)
+    if (
+        report.get("counts") != expected_counts
+        or manifest.get("counts") != expected_counts
+    ):
+        raise ValueError("qualification counts do not match tasks, skills, and rows")
+    expected_diversity = _build_diversity_diagnostics(skills, rows)
+    if (
+        report.get("diversity_diagnostics") != expected_diversity
+        or manifest.get("diversity_diagnostics") != expected_diversity
+    ):
+        raise ValueError("qualification diversity diagnostics do not match rows")
+    output_bytes = {
+        "candidate-pairs.jsonl": candidate_bytes,
+        "qualification-report.json": report_bytes,
+    }
+    expected_outputs = [
+        {
+            "bytes": len(payload),
+            "path": name,
+            "sha256": _sha256(payload),
+        }
+        for name, payload in sorted(output_bytes.items())
+    ]
+    if manifest.get("outputs") != expected_outputs:
+        raise ValueError("manifest outputs do not match candidate and report bytes")
 
 
 def _validate_loaded_inputs(

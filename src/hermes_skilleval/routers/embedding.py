@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Protocol
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
+from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.routers.base import SkillRouter
 
 
@@ -86,7 +87,7 @@ class EmbeddingRouter(SkillRouter):
             raise ValueError("skill index is empty")
 
         started = time.perf_counter()
-        query = self.model.encode_batch([_task_text(task)])[0]
+        query = self.model.encode_batch([router_query_text(task.prompt)])[0]
         skill_vectors = self._skill_vectors(skills)
         scores = {skill.id: _cosine(query, skill_vectors[skill.id]) for skill in skills}
         ranked = sorted(skills, key=lambda skill: (-scores[skill.id], skill.id))
@@ -147,10 +148,6 @@ class EmbeddingCache:
         if not isinstance(loaded, dict):
             raise ValueError(f"embedding cache must contain an object: {self.path}")
         return loaded
-
-
-def _task_text(task: BenchmarkTask) -> str:
-    return " ".join([task.id.replace("-", " "), task.category, task.prompt])
 
 
 def _skill_text(skill: Skill) -> str:

@@ -6,6 +6,7 @@ import time
 from collections import Counter
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
+from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.routers.base import SkillRouter
 
 
@@ -15,13 +16,15 @@ WORD_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
 class KeywordRouter(SkillRouter):
     name = "keyword"
 
-    def route(self, task: BenchmarkTask, skills: list[Skill], top_k: int) -> RouteResult:
+    def route(
+        self, task: BenchmarkTask, skills: list[Skill], top_k: int
+    ) -> RouteResult:
         if not isinstance(top_k, int) or top_k <= 0:
             raise ValueError("top_k must be positive")
         if not skills:
             raise ValueError("skill index is empty")
         started = time.perf_counter()
-        query_terms = _terms(f"{task.category} {task.prompt}")
+        query_terms = _terms(router_query_text(task.prompt))
         scores = {skill.id: _score(query_terms, skill) for skill in skills}
         ranked = sorted(skills, key=lambda skill: (-scores[skill.id], skill.id))
         selected = [skill.id for skill in ranked[:top_k]]
@@ -59,7 +62,4 @@ def _score(query_terms: Counter[str], skill: Skill) -> float:
         query_terms[term] * (1.0 + math.log1p(skill_terms[term]))
         for term in sorted(overlap)
     )
-    category_boost = (
-        0.5 if skill.category and skill.category.lower() in query_terms else 0.0
-    )
-    return weighted_overlap + category_boost
+    return weighted_overlap

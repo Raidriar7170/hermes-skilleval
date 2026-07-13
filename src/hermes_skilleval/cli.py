@@ -31,8 +31,8 @@ from hermes_skilleval.diagnostics import (
     write_scan_artifact,
 )
 from hermes_skilleval.embedding_training import (
-    export_embedding_training_pairs,
-    write_training_pairs,
+    export_embedding_diagnostics,
+    write_embedding_diagnostics,
 )
 from hermes_skilleval.external.skillrouter import write_external_validation
 from hermes_skilleval.external.skillrouter_matrix import (
@@ -667,7 +667,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     export_training_parser = subparsers.add_parser(
         "export-embedding-training-data",
-        help="export task-skill pairs for supervised embedding-router training",
+        help="export prompt-only embedding diagnostics (never trainer-ready)",
     )
     export_training_parser.add_argument("--tasks", required=True)
     export_training_parser.add_argument("--skills-index", required=True)
@@ -1596,19 +1596,22 @@ def _run_simulate_skill_patches(args: argparse.Namespace) -> None:
 def _run_export_embedding_training_data(args: argparse.Namespace) -> None:
     tasks = load_tasks(args.tasks)
     skills = load_skill_index(args.skills_index)
-    pairs, summary = export_embedding_training_pairs(
+    pairs, summary = export_embedding_diagnostics(
         tasks=tasks,
         skills=skills,
         input_paths={"tasks": args.tasks, "skills_index": args.skills_index},
     )
     output_dir = ensure_dir(args.output_dir)
-    write_training_pairs(
+    write_embedding_diagnostics(
         pairs,
         summary,
-        pairs_path=output_dir / "training-pairs.jsonl",
-        summary_path=output_dir / "training-summary.json",
+        pairs_path=output_dir / "diagnostic-pairs.jsonl",
+        summary_path=output_dir / "diagnostic-summary.json",
     )
-    print(f"Wrote {summary['pair_count']} embedding training pairs to {output_dir}")
+    print(
+        f"Wrote {summary['pair_count']} embedding diagnostic candidates to "
+        f"{output_dir}: DIAGNOSTIC_ONLY, can_start_training=false"
+    )
 
 
 def _run_qualify_router_training_data_v2(args: argparse.Namespace) -> None:

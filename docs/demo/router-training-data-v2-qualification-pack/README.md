@@ -1,57 +1,74 @@
 # Router Training Data V2 Qualification Pack
 
-This is the current deterministic prompt-only v2 diagnostic qualification
-snapshot, not accepted training data. Its decision remains `REVIEW_REQUIRED` / `KEEP_BASELINE`,
+This is the current deterministic prompt-only v3 diagnostic qualification snapshot,
+not accepted training data. Its decision remains `REVIEW_REQUIRED` / `KEEP_BASELINE`,
 and `can_start_training=false`.
 
 ## What is authoritative
 
-- [Active proposal](../../../openspec/changes/make-router-training-data-v2-primary-prompt-only/proposal.md)
-- [Active design](../../../openspec/changes/make-router-training-data-v2-primary-prompt-only/design.md)
-- [Active delta specification](../../../openspec/changes/make-router-training-data-v2-primary-prompt-only/specs/router-training-data-v2-qualification-pack/spec.md)
-- [Active tasks](../../../openspec/changes/make-router-training-data-v2-primary-prompt-only/tasks.md)
+- [Current proposal](../../../openspec/changes/harden-router-v2-pretraining-contracts/proposal.md)
+- [Current design](../../../openspec/changes/harden-router-v2-pretraining-contracts/design.md)
+- [Router query contract](../../../openspec/changes/harden-router-v2-pretraining-contracts/specs/router-query-contract/spec.md)
+- [Qualification-pack contract](../../../openspec/changes/harden-router-v2-pretraining-contracts/specs/router-training-data-v2-qualification-pack/spec.md)
+- [Training-input gate contract](../../../openspec/changes/harden-router-v2-pretraining-contracts/specs/router-training-input-gate/spec.md)
+- [Current tasks](../../../openspec/changes/harden-router-v2-pretraining-contracts/tasks.md)
 - [Candidate matrix](candidate-pairs.jsonl)
 - [Qualification report](qualification-report.json)
 - [Provenance manifest](manifest.json)
-- [Artifact-contract tests](../../../tests/test_router_training_data_v2_artifacts.py)
-- [Historical v2 apply snapshot for the current v2 contract](../../../docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html)
+- [Shared query source](../../../src/hermes_skilleval/router_query.py)
+- [Qualification builder source](../../../src/hermes_skilleval/router_training_data_v2.py)
+- [Training-input gate source](../../../src/hermes_skilleval/training_input.py)
+- [Trainer bootstrap](../../../scripts/train_embedding_router.py)
+- [Query-contract tests](../../../tests/test_router_query_contract.py)
+- [Qualification builder tests](../../../tests/test_router_training_data_v2.py)
+- [Artifact and documentation tests](../../../tests/test_router_training_data_v2_artifacts.py)
+- [Training-input gate tests](../../../tests/test_training_input.py)
+- [Current v3 Human Brief](../../../docs/human-briefs/2026-07-12-harden-router-v2-pretraining-contracts.html)
+- [Historical v2 apply brief](../../../docs/human-briefs/2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html)
 - [Historical v1 brief](../../../docs/human-briefs/2026-07-11-build-router-training-data-v2-qualification-pack.html)
 
-The OpenSpec artifacts define the lifecycle and policy. The JSON/JSONL files and
-tests are the machine-readable evidence. This README is only a navigation and
-regeneration aid.
+OpenSpec defines the lifecycle and contracts. Source, tests, and the JSON/JSONL
+artifacts are the authoritative implementation and evidence. This README is a
+review/navigation aid, not a second source of truth.
 
-## Prompt-only v2 contract
+## Prompt-only v3 contract
 
-The only primary query is the loaded prompt:
+The only task-side formatter is `router_query_text(prompt: str)`, and the only
+primary query is the loaded prompt:
 
 `query_text == loader-normalized task.prompt`
 
 Every candidate row sets `query_text_policy="prompt_only"`, and
 `sha256(query_text.encode("utf-8")) == prompt_text_sha256`. Task ID, category,
-difficulty, and robustness tags remain structured validation, classification,
-split, or provenance inputs; they are not serialized into the primary query.
-There is no legacy, alternate, composite, or second query representation.
+difficulty, robustness tags, split, and family remain structured validation,
+classification, split, or provenance fields only. They are not serialized into
+the task query or used as a scoring, ranking, gating, tie-break, or acceptance
+feature. There is no legacy, alternate, composite, or second task query.
 
 Current identifiers are:
 
-- candidate: `router-training-data-v2-candidate-v2`
-- policy: `router-training-data-v2-qualification-v2`
-- report: `router-training-data-v2-qualification-report-v2`
-- manifest: `router-training-data-v2-manifest-v2`, `artifact_version=2`
+- candidate: `router-training-data-v2-candidate-v3`, `artifact_version=3`
+- policy: `router-training-data-v2-qualification-v3`
+- report: `router-training-data-v2-qualification-report-v3`, `artifact_version=3`
+- manifest: `router-training-data-v2-manifest-v3`, `artifact_version=3`
 
-## Current result
+## Current qualification truth
 
 - Source pairs: 28
 - Matrix candidates: 192
 - Positives: 16
 - Same-category negative candidates requiring review: 32
 - Cross-category easy negatives: 144
+- Reserved source-test rows: 64
 - Train-policy candidates: 32
 - Accepted training pairs: 0
-- Reserved source-test rows: 64
 - Train-positive target-skill coverage: 11/16
 - Reviewed reject/no-skill examples: 0
+
+`candidate-pairs.jsonl` is a closed 12-task by 16-skill diagnostic matrix.
+Candidate rows are diagnostic candidates, not qualified training data. Every row
+has `accepted_for_training=false`; reserved source-test rows do not flow back into
+training, and cross-category easy negatives do not count toward accepted volume.
 
 The eight blocking codes are:
 
@@ -64,19 +81,58 @@ The eight blocking codes are:
 7. `TASK_FAMILY_METADATA_MISSING`
 8. `TASK_FAMILY_SPLIT_NOT_INDEPENDENT`
 
-`candidate-pairs.jsonl` is a closed 12-task by 16-skill diagnostic matrix. Every
-row has `accepted_for_training=false`; source-test rows remain reserved, and
-neither `training-pairs.jsonl` nor `training-pairs-v2.jsonl` exists.
+## Diversity diagnostics
+
+- Unique prompts: 12
+- Train-policy unique prompts: 8
+- Unique task family count: `null`
+- Family-independent count: `null`
+- Family metadata status: `UNAVAILABLE`
+
+Missing task-family metadata is not inferred. Unique train-positive prompt counts
+are recorded for all 16 canonical skills:
+
+- `accessibility-tree-inspection`: `0`
+- `apply-patch-discipline`: `1`
+- `browser-smoke-testing`: `1`
+- `evidence-backed-final`: `1`
+- `form-interaction-flow`: `1`
+- `mcp-tool-routing`: `0`
+- `plan-mode`: `1`
+- `slash-command-workflow`: `1`
+- `subagent-worker-protocol`: `1`
+- `systematic-debugging`: `1`
+- `task-tool-delegation`: `0`
+- `test-driven-development`: `1`
+- `using-git-worktrees`: `0`
+- `verification-before-completion`: `1`
+- `visual-regression-review`: `1`
+- `workspace-git-hygiene`: `0`
+
+## Trainer admission gate
+
+The trainer accepts only an exact
+`router-training-data-v2-training-input-manifest-v3` package under policy
+`router-training-data-v2-training-admission-v3`. Only formally reviewed positives
+and human-reviewed hard negatives can pass: respectively `ACCEPTED_POSITIVE` and
+`ACCEPTED_HARD_NEGATIVE`, with exact evidence, hashes, provenance, and a bound
+training-ready v3 qualification report. The current canonical pack is rejected by
+the v3 trainer gate because it has eight blockers, zero accepted pairs, and
+`can_start_training=false`. No compatibility inference or partial consumption is
+allowed.
+
+`source_hash` and `acceptance_hash` protect content and acceptance-decision
+integrity; they do not establish source authenticity. Independent source-snapshot
+binding, human review, and independent calibration remain prerequisites.
 
 ## Reproduce without overwriting the committed pack
 
-Run from the repository root. The CLI requires an absent target, so this command
-creates a temporary directory and writes into its fresh, absent `pack` child.
-It then compares all generated machine-readable artifacts byte-for-byte and by
-SHA-256 with the committed snapshot.
+Run from the repository root. The CLI requires an absent output target. This writes
+to a fresh temporary child, then compares all three generated artifacts against the
+canonical snapshot; it never passes the canonical pack as `--output-dir`.
 
 ```bash
-TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/hermes-router-v2.XXXXXX")"
+TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/hermes-router-v3.XXXXXX")"
 OUT="$TMP_ROOT/pack"
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
@@ -94,46 +150,32 @@ for name in candidate-pairs.jsonl qualification-report.json manifest.json; do
 done
 ```
 
-Expected committed SHA-256 values:
+Expected canonical SHA-256 values:
 
-- `candidate-pairs.jsonl`: `e70006f3124f496a7e0005a081db06527391167bd380574b08c7991bcf2c6475`
-- `qualification-report.json`: `d36afe875f2ada4e38ac3b707ced5bbb27c89262aad403793b7ee68058dd2395`
-- `manifest.json`: `883e7d8a35622b89a243a373304bd5e9e570275649bd22d01e9a8799c674daaf`
+- `candidate-pairs.jsonl`: `fff59d8ddc199a4579dcf831fa806fa0b2ef761465a7bde7acd77dc967f41b45`
+- `qualification-report.json`: `edb1b1111e24c8866bda6edca776129d4952ef38d23c017c753586dd6ef77e3b`
+- `manifest.json`: `da97accd98e3af5113a962423ff79a8235f4388b4e2fd2d0ff7aeb3931f6c449`
 
-## Lifecycle truth
+Neither `training-pairs.jsonl`, `training-pairs-v2.jsonl`, an accepted-pair v3
+artifact, nor a real training-input manifest is generated.
 
-The active OpenSpec change is
-`make-router-training-data-v2-primary-prompt-only`. Its completed local apply is
-recorded as a `HISTORICAL_V2_APPLY_SNAPSHOT` (`APPLY_COMPLETE_LOCAL`): the apply
-and validation details are point-in-time local evidence, not current CI
-evidence. During that original apply event, its diff had not yet been committed,
-pushed, or opened as a PR (`NO_COMMIT_DURING_APPLY`, `NO_PUSH_DURING_APPLY`,
-`NO_PR_DURING_APPLY`); those scoped markers describe only that historical event.
-At the later truth-surface repair checkpoint, the branch was committed and
-pushed (`BRANCH_PUSHED`) and GitHub PR #35 was open (`PR_35_OPEN`).
-[GitHub PR #35](https://github.com/Raidriar7170/hermes-skilleval/pull/35) is the
-live integration-state surface. The OpenSpec change remains active and
-unarchived; PR #35 had not been merged and the change had not been archived at
-that checkpoint (`NO_MERGE_AT_SNAPSHOT` / `NO_ARCHIVE`).
+## Lifecycle truth and non-claims
 
-## Release reproducibility replay truth
+The active OpenSpec change is `openspec/changes/harden-router-v2-pretraining-contracts`.
+The reviewed implementation baseline is
+`REVIEWED_IMPLEMENTATION_COMMIT_PUSHED` at commit
+`51b59851255ef7cb85011912a413aa57c7dac0fb` on
+`agent/harden-router-v2-pretraining-contracts`; the branch state is
+`BRANCH_PUSHED`. The change remains `ACTIVE_UNARCHIVED`, with `NO_PR` and
+`NO_MERGE`. Its remote-validation state is `REMOTE_PR_CI_PENDING / NO_PR`:
+feature-branch push does not trigger the existing PR-only/push-main workflow,
+so no PR-triggered GitHub Actions result exists. local validation is not remote CI.
 
-Task 7.4 performed a validation-only reproducibility replay. It replayed the
-frozen release selector using committed/frozen Phase 16 aggregate artifacts and
-wrote fresh temporary Phase 17/18 outputs. It did not read blind prompts or rerun
-blind evaluation. It did not use new data or tuning to make a new router choice.
-It did not promote or adopt a candidate router and did not change the router
-decision; the reproduced result remained `KEEP_BASELINE`.
-
-## Boundaries and non-claims
-
-This apply did not train or fine-tune a router (`NO_TRAINING`), read or hash
-blind prompt content, run an A100/GPU job (`NO_A100_GPU_JOB`), create a
-checkpoint (`NO_CHECKPOINT`), or rerun blind evaluation (`NO_BLIND_RERUN`). The
-validation replay above used no new training data, calibration, or threshold
-tuning and established no benchmark improvement or model improvement
-(`NO_PERFORMANCE_CLAIM`). At the truth-surface repair checkpoint, PR #35 had no
-merge and the OpenSpec change had no archive; no tag, release, or deploy had
-occurred (`NO_MERGE_AT_SNAPSHOT`, `NO_ARCHIVE`, `NO_TAG`, `NO_RELEASE`,
-`NO_DEPLOY`). Candidate volume is not qualified-pair volume, and this pack does
-not authorize training or a public performance claim.
+This change did not train or fine-tune a router, read or hash blind prompt content,
+run an A100/GPU job, create or load a model, create a checkpoint, run blind-v2, or
+establish a benchmark improvement. It did not merge, archive, tag, release, or
+deploy the pushed implementation baseline. The explicit boundaries are
+`NO_TRAINING`, `NO_A100_GPU_JOB`, `NO_MODEL`, `NO_CHECKPOINT`, `NO_BLIND_V2`,
+`NO_PERFORMANCE_CLAIM`, `NO_TAG`, `NO_RELEASE`, and `NO_DEPLOY`. Phase 14–18
+and blind evidence remain unchanged. Candidate volume is not qualified-pair
+volume, and this pack does not authorize training or a public performance claim.

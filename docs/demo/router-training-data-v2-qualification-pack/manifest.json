@@ -1,6 +1,6 @@
 {
   "artifact_type": "router-training-data-v2-qualification-manifest",
-  "artifact_version": 2,
+  "artifact_version": 3,
   "counts": {
     "accepted_train_pair_count": 0,
     "cross_category_easy_negative_count": 144,
@@ -15,6 +15,31 @@
     "task_count": 12,
     "train_policy_candidate_count": 32,
     "train_positive_skill_coverage_count": 11
+  },
+  "diversity_diagnostics": {
+    "family_independent_count": null,
+    "family_metadata_status": "UNAVAILABLE",
+    "per_skill_unique_train_positive_prompt_count": {
+      "accessibility-tree-inspection": 0,
+      "apply-patch-discipline": 1,
+      "browser-smoke-testing": 1,
+      "evidence-backed-final": 1,
+      "form-interaction-flow": 1,
+      "mcp-tool-routing": 0,
+      "plan-mode": 1,
+      "slash-command-workflow": 1,
+      "subagent-worker-protocol": 1,
+      "systematic-debugging": 1,
+      "task-tool-delegation": 0,
+      "test-driven-development": 1,
+      "using-git-worktrees": 0,
+      "verification-before-completion": 1,
+      "visual-regression-review": 1,
+      "workspace-git-hygiene": 0
+    },
+    "train_policy_unique_prompt_count": 8,
+    "unique_prompt_count": 12,
+    "unique_task_family_count": null
   },
   "inputs": {
     "files": [
@@ -145,25 +170,28 @@
   },
   "outputs": [
     {
-      "bytes": 373610,
+      "bytes": 388202,
       "path": "candidate-pairs.jsonl",
-      "sha256": "e70006f3124f496a7e0005a081db06527391167bd380574b08c7991bcf2c6475"
+      "sha256": "fff59d8ddc199a4579dcf831fa806fa0b2ef761465a7bde7acd77dc967f41b45"
     },
     {
-      "bytes": 1954,
+      "bytes": 2899,
       "path": "qualification-report.json",
-      "sha256": "d36afe875f2ada4e38ac3b707ced5bbb27c89262aad403793b7ee68058dd2395"
+      "sha256": "edb1b1111e24c8866bda6edca776129d4952ef38d23c017c753586dd6ef77e3b"
     }
   ],
-  "policy_id": "router-training-data-v2-qualification-v2",
+  "policy_id": "router-training-data-v2-qualification-v3",
   "query_contract": {
     "alternate_query_fields": [],
     "forbidden_primary_query_inputs": [
       "task_id",
       "category",
       "difficulty",
-      "robustness_tags"
+      "robustness_tags",
+      "split",
+      "family"
     ],
+    "formatter": "router_query_text(prompt: str)",
     "hash_algorithm": "sha256",
     "hash_field": "prompt_text_sha256",
     "normalization": "loader_normalized",
@@ -171,5 +199,5 @@
     "query_text_policy": "prompt_only",
     "source_field": "task.prompt"
   },
-  "schema_version": "router-training-data-v2-manifest-v2"
+  "schema_version": "router-training-data-v2-manifest-v3"
 }

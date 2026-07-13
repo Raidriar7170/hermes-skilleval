@@ -62,13 +62,11 @@ def test_hybrid_router_prompt_skill_id_boost_is_case_insensitive():
 
 
 def test_hybrid_router_latency_includes_reranking_work(monkeypatch):
-    class SlowCategorySkill:
-        id = "slow-skill"
-
+    class SlowSkillId:
         @property
-        def category(self):
+        def id(self):
             time.sleep(0.002)
-            return "coding"
+            return "slow-skill"
 
     task = BenchmarkTask(
         id="latency",
@@ -79,7 +77,7 @@ def test_hybrid_router_latency_includes_reranking_work(monkeypatch):
         negative_skills=[],
         verifier="skill_selection",
     )
-    skills = [SlowCategorySkill()]
+    skills = [SlowSkillId()]
 
     def fast_keyword_route(self, task, skills, top_k):
         return RouteResult(

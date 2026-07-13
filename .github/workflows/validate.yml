@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,10 +27,48 @@ jobs:
           python-version: "3.11"
 
       - name: Install package with dev dependencies
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev]" ruff==0.15.13 mypy==1.11.2
 
       - name: Install OpenSpec CLI
         run: npm install -g @fission-ai/openspec@1.3.1
+
+      - name: Collect exact-head comparison metadata
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          PUSH_HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          HEAD_SHA="$(git rev-parse HEAD)"
+          EXPECTED_HEAD_SHA="${PR_HEAD_SHA:-$PUSH_HEAD_SHA}"
+          if [ "$HEAD_SHA" != "$EXPECTED_HEAD_SHA" ]; then
+            echo "checked-out HEAD $HEAD_SHA does not match event head $EXPECTED_HEAD_SHA" >&2
+            exit 1
+          fi
+
+          if [ -n "$PR_BASE_SHA" ]; then
+            BASE_SHA="$PR_BASE_SHA"
+          elif [ -n "$PUSH_BEFORE_SHA" ] && [ "$PUSH_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$PUSH_BEFORE_SHA"
+          elif git rev-parse HEAD^ >/dev/null 2>&1; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          else
+            BASE_SHA="$(git hash-object -t tree /dev/null)"
+          fi
+
+          if ! git cat-file -e "$BASE_SHA^{tree}" 2>/dev/null; then
+            echo "comparison base $BASE_SHA is unavailable" >&2
+            exit 1
+          fi
+
+          GITHUB_SHA="$HEAD_SHA"
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-files.txt"
+          printf 'INTEGRATION_BASE_SHA=%s\n' "$BASE_SHA" >> "$GITHUB_ENV"
+          printf 'INTEGRATION_HEAD_SHA=%s\n' "$HEAD_SHA" >> "$GITHUB_ENV"
+          printf '%s\n' "$BASE_SHA" > "$RUNNER_TEMP/integration-base-sha.txt"
+          printf '%s\n' "$HEAD_SHA" > "$RUNNER_TEMP/integration-head-sha.txt"
 
       - name: Run lightweight test suite
         id: pytest
@@ -253,26 +292,179 @@ jobs:
             --output "$RUNNER_TEMP/external-skill-library-validation-drift.json" \
             --markdown-output "$RUNNER_TEMP/external-skill-library-validation-drift.md"
 
-      - name: Collect changed files
-        if: always()
-        env:
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PUSH_BEFORE_SHA: ${{ github.event.before }}
+      - name: Run exact-head integration gates
+        id: integration_gates
+        continue-on-error: true
         run: |
-          if [ -n "$PR_BASE_SHA" ]; then
-            BASE_SHA="$PR_BASE_SHA"
-          elif [ -n "$PUSH_BEFORE_SHA" ] && [ "$PUSH_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
-            BASE_SHA="$PUSH_BEFORE_SHA"
-          elif git rev-parse HEAD^ >/dev/null 2>&1; then
-            BASE_SHA="$(git rev-parse HEAD^)"
-          else
-            BASE_SHA=""
+          set -euo pipefail
+          BASE_SHA="${INTEGRATION_BASE_SHA:?missing comparison base SHA}"
+          HEAD_SHA="${INTEGRATION_HEAD_SHA:?missing exact head SHA}"
+
+          if [ "$(git rev-parse HEAD)" != "$HEAD_SHA" ]; then
+            echo "integration gates are not running against the recorded exact head" >&2
+            exit 1
           fi
 
-          if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
-            git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-files.txt"
-          else
-            git ls-files > "$RUNNER_TEMP/changed-files.txt"
+          BASE_ROOT="$RUNNER_TEMP/integration-base"
+          rm -rf "$BASE_ROOT"
+          mkdir -p "$BASE_ROOT"
+          git archive "$BASE_SHA" | tar -x -C "$BASE_ROOT"
+
+          CHANGED_PYTHON_FILES=()
+          while IFS= read -r path; do
+            if [[ "$path" == *.py ]] && [ -f "$path" ]; then
+              CHANGED_PYTHON_FILES+=("$path")
+            fi
+          done < "$RUNNER_TEMP/changed-files.txt"
+          if [ "${#CHANGED_PYTHON_FILES[@]}" -gt 0 ]; then
+            ruff check "${CHANGED_PYTHON_FILES[@]}"
+          fi
+
+          capture_findings() {
+            local root="$1"
+            local output="$2"
+            local rc
+            shift 2
+            set +e
+            (cd "$root" && "$@") > "$output" 2>&1
+            rc=$?
+            set -e
+            if [ "$rc" -gt 1 ]; then
+              cat "$output"
+              return "$rc"
+            fi
+          }
+
+          reject_new_signatures() {
+            local label="$1"
+            local base="$2"
+            local head="$3"
+            local new="$4"
+            local base_count
+            local head_count
+            comm -13 "$base" "$head" > "$new"
+            if [ -s "$new" ]; then
+              echo "exact head introduces new $label findings:" >&2
+              cat "$new" >&2
+              return 1
+            fi
+            base_count="$(wc -l < "$base" | tr -d ' ')"
+            head_count="$(wc -l < "$head" | tr -d ' ')"
+            if [ "$head_count" -gt "$base_count" ]; then
+              echo "$label finding count increased: $base_count -> $head_count" >&2
+              return 1
+            fi
+            echo "$label non-regression: $base_count -> $head_count"
+          }
+
+          capture_findings \
+            "$BASE_ROOT" \
+            "$RUNNER_TEMP/base-ruff-format.log" \
+            ruff format --check .
+          capture_findings \
+            "$PWD" \
+            "$RUNNER_TEMP/head-ruff-format.log" \
+            ruff format --check .
+          for side in base head; do
+            sed -n 's/^Would reformat: //p' \
+              "$RUNNER_TEMP/$side-ruff-format.log" | \
+              LC_ALL=C sort -u > "$RUNNER_TEMP/$side-ruff-format-signatures.txt"
+          done
+          reject_new_signatures \
+            "Ruff format" \
+            "$RUNNER_TEMP/base-ruff-format-signatures.txt" \
+            "$RUNNER_TEMP/head-ruff-format-signatures.txt" \
+            "$RUNNER_TEMP/new-ruff-format-signatures.txt"
+
+          capture_findings \
+            "$BASE_ROOT" \
+            "$RUNNER_TEMP/base-ruff.log" \
+            ruff check . --output-format=concise
+          capture_findings \
+            "$PWD" \
+            "$RUNNER_TEMP/head-ruff.log" \
+            ruff check . --output-format=concise
+          for side in base head; do
+            sed -E -n \
+              '/:[0-9]+:[0-9]+: [A-Z][A-Z0-9]+ / { s#^\./##; s#:[0-9]+:[0-9]+:#:#; p; }' \
+              "$RUNNER_TEMP/$side-ruff.log" | \
+              LC_ALL=C sort > "$RUNNER_TEMP/$side-ruff-signatures.txt"
+          done
+          reject_new_signatures \
+            Ruff \
+            "$RUNNER_TEMP/base-ruff-signatures.txt" \
+            "$RUNNER_TEMP/head-ruff-signatures.txt" \
+            "$RUNNER_TEMP/new-ruff-signatures.txt"
+
+          capture_findings \
+            "$BASE_ROOT" \
+            "$RUNNER_TEMP/base-mypy.log" \
+            env MYPY_CACHE_DIR="$RUNNER_TEMP/base-mypy-cache" mypy src tests
+          capture_findings \
+            "$PWD" \
+            "$RUNNER_TEMP/head-mypy.log" \
+            env MYPY_CACHE_DIR="$RUNNER_TEMP/head-mypy-cache" mypy src tests
+          for side in base head; do
+            sed -E -n \
+              '/: error: / { s#^\./##; s#:[0-9]+(:[0-9]+)?: error:#: error:#; p; }' \
+              "$RUNNER_TEMP/$side-mypy.log" | \
+              LC_ALL=C sort > "$RUNNER_TEMP/$side-mypy-signatures.txt"
+          done
+          reject_new_signatures \
+            mypy \
+            "$RUNNER_TEMP/base-mypy-signatures.txt" \
+            "$RUNNER_TEMP/head-mypy-signatures.txt" \
+            "$RUNNER_TEMP/new-mypy-signatures.txt"
+
+          MYPY_CACHE_DIR="$RUNNER_TEMP/focused-mypy-cache" mypy \
+            --check-untyped-defs \
+            --follow-imports=silent \
+            src/hermes_skilleval/router_query.py \
+            src/hermes_skilleval/training_input.py \
+            tests/test_router_query_contract.py \
+            tests/test_training_input.py \
+            tests/training_input_test_support.py
+
+          git diff --check "$BASE_SHA" "$HEAD_SHA"
+
+          if [ -d openspec/changes/harden-router-v2-pretraining-contracts ]; then
+            OPENSPEC_TELEMETRY=0 openspec validate \
+              harden-router-v2-pretraining-contracts \
+              --strict
+          fi
+
+          QUALIFICATION_ROOT="$RUNNER_TEMP/router-training-data-v2-qualification"
+          rm -rf "$QUALIFICATION_ROOT"
+          PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m hermes_skilleval.cli \
+            qualify-router-training-data-v2 \
+            --tasks benchmarks/migration-tasks \
+            --skills-index docs/demo/phase9-real-skill-library-migration/skills.json \
+            --output-dir "$QUALIFICATION_ROOT"
+          for name in candidate-pairs.jsonl qualification-report.json manifest.json; do
+            cmp \
+              "docs/demo/router-training-data-v2-qualification-pack/$name" \
+              "$QUALIFICATION_ROOT/$name"
+            sha256sum \
+              "docs/demo/router-training-data-v2-qualification-pack/$name" \
+              "$QUALIFICATION_ROOT/$name"
+          done
+
+          if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+            benchmarks/blind-migration-tasks \
+            docs/demo/phase14-finetuned-embedding-router \
+            docs/demo/phase15-held-out-generalization \
+            docs/demo/phase16-blind-validation \
+            docs/demo/phase17-calibrated-release-selector \
+            docs/demo/phase18-ci-release-reproducibility; then
+            echo "protected blind or Phase 14-18 evidence changed" >&2
+            git diff --stat "$BASE_SHA" "$HEAD_SHA" -- \
+              benchmarks/blind-migration-tasks \
+              docs/demo/phase14-finetuned-embedding-router \
+              docs/demo/phase15-held-out-generalization \
+              docs/demo/phase16-blind-validation \
+              docs/demo/phase17-calibrated-release-selector \
+              docs/demo/phase18-ci-release-reproducibility >&2
+            exit 1
           fi
 
       - name: Write PR-facing CI summary
@@ -287,6 +479,7 @@ jobs:
             --check diagnostic-gate=${{ steps.diagnostic_gate.outcome }} \
             --check diagnostic-drift=${{ steps.diagnostic_drift.outcome }} \
             --check external-pack=${{ steps.external_pack.outcome }} \
+            --check integration-gates=${{ steps.integration_gates.outcome }} \
             --changed-files "$RUNNER_TEMP/changed-files.txt" \
             --release-check docs/demo/phase18-ci-release-reproducibility/release-check-summary.json \
             --diagnostic-gate "$RUNNER_TEMP/diagnostic-ci-gate-report.json" \

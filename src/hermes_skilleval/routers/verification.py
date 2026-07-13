@@ -5,18 +5,19 @@ import re
 from collections import Counter
 
 from hermes_skilleval.models import BenchmarkTask, Skill
+from hermes_skilleval.router_query import router_query_text
 
 
 WORD_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
 
 
 def verification_score(task: BenchmarkTask, skill: Skill, base_score: float) -> float:
-    query_terms = terms(f"{task.category} {task.prompt}")
+    query_text = router_query_text(task.prompt)
+    query_terms = terms(query_text)
     skill_terms = terms(skill_text(skill))
     lexical_score = weighted_overlap(query_terms, skill_terms)
-    category_score = 100.0 if same_category(task, skill) else 0.0
-    exact_id_score = 3.0 if prompt_mentions_skill_id(task.prompt, skill.id) else 0.0
-    return category_score + exact_id_score + lexical_score + base_score
+    exact_id_score = 3.0 if prompt_mentions_skill_id(query_text, skill.id) else 0.0
+    return exact_id_score + lexical_score + base_score
 
 
 def select_candidates(
@@ -34,12 +35,12 @@ def select_candidates(
     for skill in ranked_candidates:
         if confidence(scores[skill.id]) < min_confidence:
             continue
-        if contrastive_selective and accepted and same_category(task, skill):
+        if contrastive_selective and accepted:
             evidence = prompt_evidence_score(task, skill)
             same_category_evidence = [
                 accepted_evidence[accepted_skill.id]
                 for accepted_skill in accepted
-                if same_category(task, accepted_skill)
+                if same_skill_category(skill, accepted_skill)
             ]
             if same_category_evidence:
                 best_evidence = max(same_category_evidence)
@@ -53,19 +54,16 @@ def select_candidates(
 
 
 def prompt_evidence_score(task: BenchmarkTask, skill: Skill) -> float:
-    query_terms = terms(task.prompt)
+    query_text = router_query_text(task.prompt)
+    query_terms = terms(query_text)
     skill_terms = terms(skill_text(skill))
     lexical_score = weighted_overlap(query_terms, skill_terms)
-    exact_id_score = 3.0 if prompt_mentions_skill_id(task.prompt, skill.id) else 0.0
+    exact_id_score = 3.0 if prompt_mentions_skill_id(query_text, skill.id) else 0.0
     return lexical_score + exact_id_score
 
 
 def confidence(score: float) -> float:
     return max(0.0, min(1.0, score / 100.0))
-
-
-def task_text(task: BenchmarkTask) -> str:
-    return " ".join([task.id.replace("-", " "), task.category, task.prompt])
 
 
 def skill_text(skill: Skill) -> str:
@@ -98,8 +96,9 @@ def weighted_overlap(
     )
 
 
-def same_category(task: BenchmarkTask, skill: Skill) -> bool:
-    return (skill.category or "").casefold() == task.category.casefold()
+def same_skill_category(left: Skill, right: Skill) -> bool:
+    # Candidate-side grouping only; task metadata must never enter this comparison.
+    return (left.category or "").casefold() == (right.category or "").casefold()
 
 
 def prompt_mentions_skill_id(prompt: str, skill_id: str) -> bool:

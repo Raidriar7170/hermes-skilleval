@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router Training Data V2 v3 · Pretraining Contracts</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #182033;
+      --muted: #5f6878;
+      --line: #d9dfeb;
+      --panel: #f6f8fc;
+      --blue: #1f5ba8;
+      --blue-soft: #edf4ff;
+      --amber: #8a5600;
+      --amber-soft: #fff4dc;
+      --red: #9b2c2c;
+      --red-soft: #fff0f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font: 16px/1.58 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--blue); }
+    code {
+      padding: 0.1rem 0.32rem;
+      border-radius: 0.28rem;
+      background: #edf1f7;
+      font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace;
+      overflow-wrap: anywhere;
+    }
+    header, main, footer {
+      width: min(1040px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+    header { padding: 2.6rem 0 1rem; }
+    h1 { margin: 0.35rem 0 0.8rem; font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.12; }
+    h2 { margin: 0 0 0.75rem; font-size: 1.35rem; }
+    h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+    p { margin: 0.45rem 0; }
+    ul, ol { margin: 0.55rem 0; padding-left: 1.35rem; }
+    li + li { margin-top: 0.28rem; }
+    section { margin: 1.15rem 0 1.8rem; }
+    pre {
+      overflow-x: auto;
+      padding: 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      background: #131b2b;
+      color: #eef3ff;
+      font-size: 0.82rem;
+    }
+    .eyebrow { color: var(--blue); font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; }
+    .conclusion { padding: 1rem 1.1rem; border-left: 5px solid var(--amber); background: var(--amber-soft); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 0.75rem; }
+    .card { padding: 0.9rem; border: 1px solid var(--line); border-radius: 0.7rem; background: var(--panel); }
+    .card.warn { border-top: 4px solid var(--amber); }
+    .card.stop { border-top: 4px solid var(--red); }
+    .label { display: block; color: var(--muted); font-size: 0.76rem; font-weight: 760; letter-spacing: 0.06em; text-transform: uppercase; }
+    .value { display: block; margin-top: 0.18rem; font-weight: 780; }
+    .callout { padding: 0.85rem 1rem; border: 1px solid #c7d8f2; border-radius: 0.65rem; background: var(--blue-soft); }
+    .warning { border-color: #e7c781; background: var(--amber-soft); }
+    .stop { border-color: #e7b4b4; background: var(--red-soft); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.91rem; }
+    th, td { padding: 0.55rem 0.62rem; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: var(--panel); }
+    .hash { font-size: 0.8rem; overflow-wrap: anywhere; }
+    footer { margin-top: 1.6rem; padding: 1.2rem 0 2.8rem; border-top: 1px solid var(--line); color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Human Brief · 2026-07-12 · Local review</p>
+    <h1>Router Training Data V2 v3：预训练契约收紧</h1>
+    <p class="conclusion"><strong>一句话结论：</strong>共享 prompt-only formatter、v3 qualification artifacts 与 sealed fail-closed trainer gate 已形成 pushed implementation baseline；canonical pack 仍是 <code>REVIEW_REQUIRED</code> / <code>KEEP_BASELINE</code> / <code>can_start_training=false</code>，不能训练。</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="status-title">
+      <h2 id="status-title">当前状态</h2>
+      <div class="grid">
+        <article class="card warn"><span class="label">Qualification</span><span class="value"><code>REVIEW_REQUIRED</code> · <code>KEEP_BASELINE</code></span><p><code>can_start_training=false</code>，8 blockers，0 accepted pairs。</p></article>
+        <article class="card warn"><span class="label">Lifecycle</span><span class="value"><code>REVIEWED_IMPLEMENTATION_COMMIT_PUSHED</code></span><p>commit <code>51b59851255ef7cb85011912a413aa57c7dac0fb</code> on branch <code>agent/harden-router-v2-pretraining-contracts</code>；<code>BRANCH_PUSHED</code>。</p></article>
+        <article class="card stop"><span class="label">Integration</span><span class="value"><code>NO_PR</code> · <code>NO_MERGE</code></span><p>OpenSpec change 仍为 <code>ACTIVE_UNARCHIVED</code>。</p></article>
+        <article class="card stop"><span class="label">Remote</span><span class="value"><code>REMOTE_PR_CI_PENDING</code> / <code>NO_PR</code></span><p>feature-branch push does not trigger the existing PR-only/push-main workflow；当前没有 PR-triggered GitHub Actions 结果。local validation is not remote CI.</p></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="progress-title">
+      <h2 id="progress-title">什么算实现，什么只算证据</h2>
+      <p class="callout"><strong>shared formatter + v3 artifacts + sealed fail-closed trainer 是实现进展</strong>；<strong>test/brief counts 只是证据，不是进展</strong>。成功标准是契约行为、blocked truth 与可复现验证成立，不是某个固定 pytest 数量。</p>
+    </section>
+
+    <section aria-labelledby="contract-title">
+      <h2 id="contract-title">当前 v3 契约</h2>
+      <p><code>router_query_text(prompt: str)</code> 只接受一个非空 loader-normalized prompt，并逐字节原样返回；task ID、category、difficulty、robustness tags、split、family 不进入 task-side query、score、rank、gate 或 tie-break。</p>
+      <ul>
+        <li>Candidate：<code>router-training-data-v2-candidate-v3</code></li>
+        <li>Qualification policy：<code>router-training-data-v2-qualification-v3</code></li>
+        <li>Report：<code>router-training-data-v2-qualification-report-v3</code></li>
+        <li>Manifest：<code>router-training-data-v2-manifest-v3</code></li>
+        <li>Trainer package：<code>router-training-data-v2-training-input-manifest-v3</code></li>
+        <li>Trainer admission：<code>router-training-data-v2-training-admission-v3</code></li>
+      </ul>
+      <p class="callout warning">Trainer 只接受带正式 reviewer evidence 的 <code>ACCEPTED_POSITIVE</code> 与 <code>ACCEPTED_HARD_NEGATIVE</code>，并在 framework/model/output side effects 前整包拒绝任何不合格输入。当前 canonical report 有 8 blockers、0 accepted pairs、<code>can_start_training=false</code>，因此必定被 gate 拒绝。</p>
+    </section>
+
+    <section aria-labelledby="numbers-title">
+      <h2 id="numbers-title">Canonical qualification truth</h2>
+      <p><strong>192 diagnostic rows</strong> · <strong>16 positives</strong> · <strong>32 unreviewed same-category negatives</strong> · <strong>144 easy negatives</strong></p>
+      <p><strong>64 reserved rows</strong> · <strong>32 train-policy candidates</strong> · <strong>0 accepted pairs</strong> · <strong>11/16 skill coverage</strong> · <strong>0 reject examples</strong></p>
+      <p><code>unique_prompt_count=12</code> · <code>train_policy_unique_prompt_count=8</code> · <code>unique_task_family_count=null</code> · <code>family_independent_count=null</code> · <code>family_metadata_status=UNAVAILABLE</code></p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Skill</th><th>Unique dev positive prompts</th><th>Skill</th><th>Unique dev positive prompts</th></tr></thead>
+          <tbody>
+            <tr><td>accessibility-tree-inspection</td><td>0</td><td>apply-patch-discipline</td><td>1</td></tr>
+            <tr><td>browser-smoke-testing</td><td>1</td><td>evidence-backed-final</td><td>1</td></tr>
+            <tr><td>form-interaction-flow</td><td>1</td><td>mcp-tool-routing</td><td>0</td></tr>
+            <tr><td>plan-mode</td><td>1</td><td>slash-command-workflow</td><td>1</td></tr>
+            <tr><td>subagent-worker-protocol</td><td>1</td><td>systematic-debugging</td><td>1</td></tr>
+            <tr><td>task-tool-delegation</td><td>0</td><td>test-driven-development</td><td>1</td></tr>
+            <tr><td>using-git-worktrees</td><td>0</td><td>verification-before-completion</td><td>1</td></tr>
+            <tr><td>visual-regression-review</td><td>1</td><td>workspace-git-hygiene</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol>
+        <li><code>INDEPENDENT_CALIBRATION_SPLIT_MISSING</code></li>
+        <li><code>MANUAL_ACCEPTANCE_MISSING</code></li>
+        <li><code>PAIR_COUNT_BELOW_MINIMUM</code></li>
+        <li><code>REJECT_EXAMPLES_MISSING</code></li>
+        <li><code>SAME_CATEGORY_NEGATIVES_UNREVIEWED</code></li>
+        <li><code>TARGET_POSITIVE_COVERAGE_INCOMPLETE</code></li>
+        <li><code>TASK_FAMILY_METADATA_MISSING</code></li>
+        <li><code>TASK_FAMILY_SPLIT_NOT_INDEPENDENT</code></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="hash-title">
+      <h2 id="hash-title">Current v3 artifact hashes</h2>
+      <div class="grid">
+        <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl">candidate-pairs.jsonl</a></h3><p class="hash"><code>fff59d8ddc199a4579dcf831fa806fa0b2ef761465a7bde7acd77dc967f41b45</code></p></article>
+        <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/qualification-report.json">qualification-report.json</a></h3><p class="hash"><code>edb1b1111e24c8866bda6edca776129d4952ef38d23c017c753586dd6ef77e3b</code></p></article>
+        <article class="card"><h3><a href="../demo/router-training-data-v2-qualification-pack/manifest.json">manifest.json</a></h3><p class="hash"><code>da97accd98e3af5113a962423ff79a8235f4388b4e2fd2d0ff7aeb3931f6c449</code></p></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">限制与明确非声明</h2>
+      <p class="callout warning"><code>source_hash / acceptance_hash</code> 只证明内容与接受决策的完整性，不证明 source authenticity。仍缺 independent source snapshot、human review 与 independent calibration；hash 不能替代这些前置条件。</p>
+      <p class="callout stop"><code>NO_TRAINING</code> · <code>NO_A100_GPU_JOB</code> · <code>NO_MODEL</code> · <code>NO_CHECKPOINT</code> · <code>NO_BLIND_V2</code> · <code>NO_PERFORMANCE_CLAIM</code> · <code>NO_TAG</code> · <code>NO_RELEASE</code> · <code>NO_DEPLOY</code> · <code>PHASE14_18_AND_BLIND_UNCHANGED</code></p>
+      <p>没有 reviewed-data package、真实训练输入、model/checkpoint、blind-v2 运行或稳定增益证据；旧 Phase 14–18 与 blind trees 未改动。</p>
+    </section>
+
+    <section aria-labelledby="sources-title">
+      <h2 id="sources-title">权威入口</h2>
+      <ul>
+        <li>OpenSpec：<a href="../../openspec/changes/harden-router-v2-pretraining-contracts/proposal.md">Proposal</a> · <a href="../../openspec/changes/harden-router-v2-pretraining-contracts/design.md">Design</a> · <a href="../../openspec/changes/harden-router-v2-pretraining-contracts/specs/router-query-contract/spec.md">Query Spec</a> · <a href="../../openspec/changes/harden-router-v2-pretraining-contracts/specs/router-training-data-v2-qualification-pack/spec.md">Qualification Spec</a> · <a href="../../openspec/changes/harden-router-v2-pretraining-contracts/specs/router-training-input-gate/spec.md">Trainer Gate Spec</a> · <a href="../../openspec/changes/harden-router-v2-pretraining-contracts/tasks.md">Tasks</a></li>
+        <li>Code：<a href="../../src/hermes_skilleval/router_query.py">router_query.py</a> · <a href="../../src/hermes_skilleval/router_training_data_v2.py">router_training_data_v2.py</a> · <a href="../../src/hermes_skilleval/training_input.py">training_input.py</a> · <a href="../../scripts/train_embedding_router.py">train_embedding_router.py</a></li>
+        <li>Tests：<a href="../../tests/test_router_query_contract.py">query contract</a> · <a href="../../tests/test_router_training_data_v2_artifacts.py">artifacts/docs</a> · <a href="../../tests/test_training_input.py">trainer gate</a></li>
+        <li>Artifacts：<a href="../demo/router-training-data-v2-qualification-pack/README.md">README</a> · <a href="../demo/router-training-data-v2-qualification-pack/candidate-pairs.jsonl">candidate JSONL</a> · <a href="../demo/router-training-data-v2-qualification-pack/qualification-report.json">report JSON</a> · <a href="../demo/router-training-data-v2-qualification-pack/manifest.json">manifest JSON</a></li>
+        <li>History：<a href="2026-07-11-make-router-training-data-v2-primary-prompt-only-apply.html">HISTORICAL_V2_SNAPSHOT</a></li>
+      </ul>
+      <p class="callout"><strong>权威性：</strong>本页是 review/navigation aid，不是第二事实源。OpenSpec、code、tests、JSON/JSONL 与真实命令输出优先。</p>
+    </section>
+
+    <section aria-labelledby="commands-title">
+      <h2 id="commands-title">本地复核命令</h2>
+      <pre>PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q \
+  tests/test_router_training_data_v2_artifacts.py
+OPENSPEC_TELEMETRY=0 openspec validate \
+  harden-router-v2-pretraining-contracts --strict
+git diff --check
+git diff --exit-code -- benchmarks/blind-migration-tasks \
+  docs/demo/phase14-finetuned-embedding-router \
+  docs/demo/phase15-held-out-generalization \
+  docs/demo/phase16-blind-validation \
+  docs/demo/phase17-calibrated-release-selector \
+  docs/demo/phase18-ci-release-reproducibility</pre>
+      <p>这些是 local validation commands；<code>REMOTE_PR_CI_PENDING</code> / <code>NO_PR</code>。feature-branch push does not trigger the existing PR-only/push-main workflow；local validation is not remote CI.</p>
+    </section>
+
+    <section aria-labelledby="next-title">
+      <h2 id="next-title">建议下一步与硬停止</h2>
+      <p><strong>reviewed-data → one small training matrix → frozen family-disjoint blind-v2</strong>。每一步都必须单独授权、冻结输入并保留 family-disjoint 边界。</p>
+      <p class="callout stop">若 <strong>insufficient data or no stable blind gain</strong>，继续 <code>KEEP_BASELINE</code>，冻结 Hermes，并将后续时间转向 Voice2Task；不得用候选量、局部测试数或 Human Brief 替代稳定 blind evidence。</p>
+    </section>
+  </main>
+
+  <footer>
+    Generated as a concise Chinese review/navigation aid from the active OpenSpec, pushed implementation baseline, v3 machine artifacts, and local validation. It does not replace authoritative evidence.
+  </footer>
+</body>
+</html>
