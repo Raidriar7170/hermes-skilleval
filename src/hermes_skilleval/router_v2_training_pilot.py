@@ -164,6 +164,7 @@ _MINING_MANIFEST_FIELDS = {
     "skill_bindings",
     "skill_bindings_sha256",
     "row_count",
+    "mining_jsonl_sha256",
     "rows_sha256",
 }
 
@@ -462,6 +463,7 @@ def mine_confusions(
         "skill_bindings": skill_bindings,
         "skill_bindings_sha256": skill_bindings_sha256,
         "row_count": len(mined),
+        "mining_jsonl_sha256": _canonical_jsonl_sha256(mined),
         "rows_sha256": canonical_sha256(mined),
     }
     return mined, manifest
@@ -677,6 +679,8 @@ def validate_mining_bundle(
             raise ValueError("mining row SHA-256 mismatch")
     if manifest.get("rows_sha256") != canonical_sha256(rows):
         raise ValueError("mining rows SHA-256 mismatch")
+    if manifest.get("mining_jsonl_sha256") != _canonical_jsonl_sha256(rows):
+        raise ValueError("mining JSONL SHA-256 mismatch")
     return {"validation_status": "PASS"}
 
 
