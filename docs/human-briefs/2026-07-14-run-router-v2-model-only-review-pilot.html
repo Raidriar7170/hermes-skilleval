@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router V2 v4 模型审核试点｜验证简报</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, "PingFang SC", sans-serif; }
+    body { margin: 0; background: #f4f6f8; color: #17202a; }
+    main { max-width: 920px; margin: 0 auto; padding: 48px 24px 72px; }
+    header, section { background: white; border: 1px solid #dfe5eb; border-radius: 14px; padding: 24px; margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin-top: 0; font-size: 20px; }
+    p, li { line-height: 1.7; }
+    .eyebrow { color: #44546a; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+    .status { display: inline-block; margin-top: 12px; padding: 7px 12px; border-radius: 999px; background: #fff4d6; color: #6b4c00; font-weight: 700; }
+    .warning { border-left: 5px solid #d97706; }
+    code, pre { font-family: "SFMono-Regular", Consolas, monospace; }
+    pre { overflow-x: auto; background: #111827; color: #e5e7eb; border-radius: 10px; padding: 18px; line-height: 1.45; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; border-bottom: 1px solid #e5e7eb; padding: 10px 8px; vertical-align: top; }
+    th { color: #44546a; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">L2 validated pilot boundary · 2026-07-14</div>
+      <h1>Router V2 v4 模型审核试点</h1>
+      <p>本页是 <code>run-router-v2-model-only-review-pilot</code> 的派生简报。权威来源仍是 OpenSpec proposal、design、spec 与 tasks。</p>
+      <div class="status">双模型 pass 与模型裁决已验证；无准入效力</div>
+    </header>
+
+    <section class="warning">
+      <h2>真实性边界</h2>
+      <p>本阶段完成的是 Codex 模型审核试点：两个隔离模型 pass 各覆盖 192 行，随后由模型裁决覆盖同一批 192 行。该结果不是人工审核，也不存在独立人工复核。</p>
+      <p>现有人工准入路径保持不变：<code>human_reviewer_count=0</code>，<code>review-decisions.csv</code> 不存在，<code>human_review_status=REVIEW_REQUIRED</code>，<code>router_decision=KEEP_BASELINE</code>。</p>
+    </section>
+
+    <section>
+      <h2>已完成与未完成</h2>
+      <table>
+        <thead><tr><th>范围</th><th>当前事实</th></tr></thead>
+        <tbody>
+          <tr><td>冻结源</td><td>固定到 192 行快照与 commit A；不修改 <code>data/router-v2-v4/</code></td></tr>
+          <tr><td>契约</td><td>定义双 pass、模型裁决、逐行哈希、canonical JSON 与严格 validator</td></tr>
+          <tr><td>模型审核</td><td>pass 1、pass 2 与 adjudication 均为 192 行；validator 返回 <code>validation_status=PASS</code></td></tr>
+          <tr><td>模型一致性</td><td>一致 180 行（93.75%），不一致 12 行（6.25%），裁决后 <code>MODEL_UNCERTAIN</code> 为 0 行</td></tr>
+          <tr><td>下游动作</td><td>qualification、training input、preflight、训练、发布、promotion 均未授权且不执行</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>固定结果字段</h2>
+      <pre>{
+  "review_mode": "MODEL_ONLY_PILOT",
+  "human_reviewer_count": 0,
+  "model_review_pass_count": 2,
+  "model_adjudication_enabled": true,
+  "independent_human_review": false,
+  "model_correlation_risk": true,
+  "release_eligible": false,
+  "router_decision": "KEEP_BASELINE",
+  "human_review_status": "REVIEW_REQUIRED",
+  "admission_effect": "NONE",
+  "can_start_preflight": false,
+  "can_start_training": false
+}</pre>
+      <p>上述字段同时出现在 manifest、两份 pass 的每一行、每一条 adjudication 记录与 summary 中。模型一致不代表独立性，<code>model_correlation_risk=true</code> 始终保留。</p>
+    </section>
+
+    <section>
+      <h2>意见分布</h2>
+      <table>
+        <thead><tr><th>意见</th><th>Pass 1</th><th>Pass 2</th><th>模型裁决</th></tr></thead>
+        <tbody>
+          <tr><td><code>POSITIVE_ROLE_SUPPORTED</code></td><td>96</td><td>96</td><td>96</td></tr>
+          <tr><td><code>HARD_NEGATIVE_ROLE_SUPPORTED</code></td><td>29</td><td>39</td><td>35</td></tr>
+          <tr><td><code>HARD_NEGATIVE_ROLE_DISPUTED</code></td><td>35</td><td>25</td><td>29</td></tr>
+          <tr><td><code>NO_SKILL_ROLE_SUPPORTED</code></td><td>32</td><td>32</td><td>32</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>可审计绑定</h2>
+      <table>
+        <tbody>
+          <tr><td>Pass 1 SHA-256</td><td><code>222afc8aaa3f9dd558519a21a0ebe30e90cc9b94e95a84d9f79f3c68d215bc7b</code></td></tr>
+          <tr><td>Pass 2 SHA-256</td><td><code>849b6ff35884f2a34dc3aa890df11b8d3c08627f61412edb0d96769b862ecbb8</code></td></tr>
+          <tr><td>Adjudication SHA-256</td><td><code>4b5ef89a47e9e821b20f06bb4539ab4ac5f4ccb3fc05c36b1887158489591ff2</code></td></tr>
+          <tr><td>Manifest SHA-256</td><td><code>7b570cbeb1f3db4d9eb7a14fb58f2e3c154ee6149c82a3dc114a27527fcaed3f</code></td></tr>
+          <tr><td>Summary SHA-256</td><td><code>c1a6de6cfa494cd4a709d76e1f6e3f70cbb4887b3c97dd2a3e33c1521b91ae26</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>最终只读复核</h2>
+      <table>
+        <tbody>
+          <tr><td>Must Fix</td><td>None；复核过程中发现的 Must Fix 已全部关闭</td></tr>
+          <tr><td>Re-plan</td><td>No</td></tr>
+          <tr><td>Final Verdict</td><td>Pass with fixes</td></tr>
+        </tbody>
+      </table>
+      <p>两个非阻塞 Should Fix 被明确留待未来独立阶段，本阶段不扩张：</p>
+      <ul>
+        <li><code>summary.json</code> 已进行语义验证并单独计算 SHA-256，但未绑定到 <code>pilot-manifest.json</code>。</li>
+        <li>实际 evidence 的 rationale 均非空且逐行具体，但 validator 尚未设置最大长度上限。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>新鲜验证证据</h2>
+      <table>
+        <thead><tr><th>检查</th><th>结果</th></tr></thead>
+        <tbody>
+          <tr><td>完整 pytest</td><td>1028 passed in 41.24s</td></tr>
+          <tr><td>Changed-file Ruff</td><td>check PASS；3 files already formatted</td></tr>
+          <tr><td>Focused mypy</td><td>PASS</td></tr>
+          <tr><td>OpenSpec 全量严格校验</td><td>32 passed，0 failed</td></tr>
+          <tr><td>真实 pilot validator</td><td>PASS；一致 180，不一致 12，不确定 0</td></tr>
+          <tr><td>Diff 与 protected paths</td><td>PASS；冻结源与既有 human-only change 未改动</td></tr>
+        </tbody>
+      </table>
+      <p>全仓 Ruff check 退出码为 1，原因是两个既有且与本阶段无关的 F401：<code>src/hermes_skilleval/external/skillrouter_prediction_export.py:3</code> 的 <code>gzip</code>，以及 <code>tests/test_codex_cli_runner.py:4</code> 的 <code>sys</code>。本阶段未修改这两个文件。</p>
+    </section>
+
+    <section>
+      <h2>最终边界</h2>
+      <p>本试点的 contract、双模型 pass、模型裁决、真实 artifact 验证与只读复核已经收口。结果仍只有内部实验前置诊断意义，不会解除人工审核 blocker，也不会启动 qualification、training input、preflight、训练、发布或 promotion。</p>
+    </section>
+  </main>
+</body>
+</html>
