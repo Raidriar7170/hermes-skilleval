@@ -20,19 +20,19 @@
 - [x] 3.3 Add focused RED tests and implement deterministic `skill-unique-v1` sampling with full positive coverage, no same-skill MNRL batch collision, and canonical plan hash.
 - [x] 3.4 Bind config, run summary, and model manifest to data/mining/accepted/Git/base-model/seed/sampler/dependency lineage.
 - [x] 3.5 Add focused RED tests and implement `--preflight-only` without Torch/sentence-transformers import, CUDA access, or output side effects.
-- [ ] 3.6 Build and validate the internal-only package and preregistered A/B/C run configs for seeds 7170, 7171, and 7172.
+- [x] 3.6 Build and validate the internal-only package and preregistered A/B/C run configs for seeds 7170, 7171, and 7172.
 
 ## 4. Frozen training and one-time evaluation
 
-- [ ] 4.1 Run the raw side-effect audit and canonical `--preflight-only`; save the exact result before any training.
-- [ ] 4.2 Inspect live A100 occupancy, select one safe idle GPU explicitly, stage files only under `/mnt/data/minghongsun`, and verify exact model revision/dependencies.
-- [ ] 4.3 Run only Arm A, Arm B, and Arm C for seeds 7170-7172 with frozen hyperparameters and complete run/model manifests.
-- [ ] 4.4 Add focused metric/gate tests, then perform the single non-blind-test evaluation and write per-seed, aggregate, paired, latency, first-negative, and failure-slice results.
-- [ ] 4.5 Apply the serialized gate without post-hoc changes and emit only `ROUTER_V2_PILOT_IMPROVED` or `KEEP_BASELINE`.
+- [x] 4.1 Run the raw side-effect audit and canonical `--preflight-only`; save the exact result before any training.
+- [x] 4.2 Attempt the authorized A100 path, record the SSH timeout without remote writes, then use the sufficient local CPU fallback with the exact model revision and dependencies.
+- [x] 4.3 Run only Arm A, Arm B, and Arm C for seeds 7170-7172 with frozen hyperparameters and complete run/model manifests.
+- [x] 4.4 Add focused metric/gate tests and consume the single non-blind-test attempt. The attempt failed before inference on the immutable-model copy guard, so all requested evaluation metrics are explicitly `UNAVAILABLE` and no retry is permitted.
+- [x] 4.5 Apply the serialized fail-closed rule without post-hoc changes and emit `KEEP_BASELINE`.
 
 ## 5. Verification and bounded closeout
 
-- [ ] 5.1 Update README and resume recommendations with the measured result and explicit model-only, zero-human, non-SOTA, non-production, no-blind-v2 limitations.
-- [ ] 5.2 Run focused/relevant tests, Ruff, mypy, strict OpenSpec validation, artifact hash validation, preflight side-effect audit, and `git diff --check`.
-- [ ] 5.3 Obtain a final read-only Reviewer pass, resolve all Must Fix findings, and record final branch HEAD and artifact hashes.
+- [x] 5.1 Update README and resume recommendations with the fail-closed result and explicit model-only, zero-human, non-SOTA, non-production, no-blind-v2 limitations.
+- [x] 5.2 Run focused/relevant tests, Ruff, mypy, strict OpenSpec validation, artifact hash validation, preflight side-effect audit, and `git diff --check`.
+- [x] 5.3 Obtain a final read-only Reviewer pass, resolve all Must Fix findings, and record final branch HEAD and artifact hashes.
 - [ ] 5.4 Push the bounded branch to GitHub without archive, release, deploy, router promotion, or blind-v2 execution.

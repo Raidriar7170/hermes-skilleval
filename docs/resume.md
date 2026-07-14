@@ -8,6 +8,13 @@ metrics, blind-validation evidence, and a conservative default-router decision.
 
 ## Resume Bullets
 
+- Recommended conservative Router V2 bullet: built a preregistered
+  `MODEL_ONLY_PILOT` training/evaluation pipeline across three arms and three
+  seeds; preserved a fail-closed `KEEP_BASELINE` decision when the single
+  held-out evaluation attempt stopped before inference on an immutable-model
+  copy guard. `human_reviewer_count=0`; no SOTA, production, release, or
+  blind-v2 claim.
+
 - Built `Hermes SkillEval`, a 419-test Python CLI harness for benchmarking
   Hermes-style agent skill routing over an 80-task / 45-skill self-built corpus,
   with Markdown skill indexing, keyword/hybrid/embedding/gated/cross-encoder

@@ -359,6 +359,16 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Project Summary / 项目总结
 
+### Router V2 internal training pilot (MODEL_ONLY_PILOT)
+
+The frozen pilot completed the A/B/C training matrix for seeds 7170-7172, but
+its single preregistered non-blind evaluation attempt failed before inference
+when the private-copy guard rejected symbolic links in the exact local MiniLM
+snapshot. Metrics are therefore `UNAVAILABLE`; the attempt was not rerun, the
+decision is `KEEP_BASELINE`, and blind-v2 was not run. This is model-only
+evidence with `human_reviewer_count=0`, not a SOTA, production, release, or
+router-promotion claim.
+
 > **For recruiters and hiring managers:**
 >
 > Hermes SkillEval demonstrates end-to-end agent evaluation engineering:
