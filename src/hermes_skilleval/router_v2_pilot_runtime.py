@@ -382,7 +382,7 @@ def _build_skill_unique_plan(
     handoff: dict[str, Any], *, seed: int, epochs: int
 ) -> dict[str, Any]:
     validate_sealed_handoff(handoff)
-    if seed not in ALLOWED_SEEDS or epochs != 3:
+    if type(seed) is not int or seed not in ALLOWED_SEEDS or epochs != 3:
         raise ValueError("sampler seed or epoch count is not frozen")
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for example in handoff["examples"]:
@@ -440,6 +440,7 @@ def validate_skill_unique_plan(
         raise ValueError("sampler plan schema or SHA-256 mismatch")
     if (
         plan.get("sampler_version") != SAMPLER_VERSION
+        or type(plan.get("seed")) is not int
         or plan.get("seed") not in ALLOWED_SEEDS
         or plan.get("epochs") != 3
         or plan.get("batch_size") != 16
@@ -857,7 +858,12 @@ def build_frozen_config(
             "MultipleNegativesRankingLoss+ContrastiveLoss",
         ),
     }
-    if arm not in modes or seed not in ALLOWED_SEEDS or plan["seed"] != seed:
+    if (
+        arm not in modes
+        or type(seed) is not int
+        or seed not in ALLOWED_SEEDS
+        or plan["seed"] != seed
+    ):
         raise ValueError("arm or seed is not preregistered")
     if HEX40.fullmatch(training_code_git_commit) is None:
         raise ValueError("training code Git commit is invalid")
@@ -925,7 +931,8 @@ def validate_frozen_config(
     ):
         raise ValueError("frozen arm contract mismatch")
     if (
-        config.get("seed") not in ALLOWED_SEEDS
+        type(config.get("seed")) is not int
+        or config.get("seed") not in ALLOWED_SEEDS
         or not _exact(config.get("seed"), plan["seed"])
         or not _exact(config.get("epochs"), 3)
         or not _exact(config.get("batch_size"), 16)
