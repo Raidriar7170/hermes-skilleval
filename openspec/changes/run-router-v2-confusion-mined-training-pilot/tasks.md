@@ -15,7 +15,7 @@
 
 ## 3. Internal package and minimal training implementation
 
-- [ ] 3.1 Add focused RED tests and minimal package builder/validator for exactly 64 positives, 48-64 admitted hard negatives, exact exclusions, lineage, and model-only truth.
+- [x] 3.1 Add focused RED tests and minimal package builder/validator for exactly 64 positives, 48-64 admitted hard negatives, exact exclusions, lineage, and model-only truth.
 - [ ] 3.2 Add `skill_id` to validated examples, sealed examples, example fingerprints, sealed handoff, and handoff fingerprint without weakening the existing human-only loader.
 - [ ] 3.3 Add focused RED tests and implement deterministic `skill-unique-v1` sampling with full positive coverage, no same-skill MNRL batch collision, and canonical plan hash.
 - [ ] 3.4 Bind config, run summary, and model manifest to data/mining/accepted/Git/base-model/seed/sampler/dependency lineage.
