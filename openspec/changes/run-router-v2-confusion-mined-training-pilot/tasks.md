@@ -7,8 +7,8 @@
 
 ## 2. New train and held-out candidate adjudication
 
-- [ ] 2.1 Generate the first unseen top-confuser train candidate for each prompt not already represented by an eligible supported row.
-- [ ] 2.2 Generate deterministic taxonomy/lexical non-blind-test candidate labels without loading baseline scores and mark them `HELD_OUT_EVAL_ONLY`.
+- [x] 2.1 Generate the first unseen top-confuser train candidate for each prompt not already represented by an eligible supported row.
+- [x] 2.2 Generate deterministic taxonomy/lexical non-blind-test candidate labels without loading baseline scores and mark them `HELD_OUT_EVAL_ONLY`.
 - [ ] 2.3 Execute isolated `MODEL_PASS_1` and `MODEL_PASS_2` over the combined new-candidate set, then execute one bound model adjudication.
 - [ ] 2.4 Select baseline-hard supported train negatives deterministically; if fewer than 48 survive, add only the next unseen baseline confusers and repeat the same two-pass/adjudication contract for those new rows.
 - [ ] 2.5 Freeze 48-64 admitted train hard negatives and supported held-out-only labels with hashes and per-skill distribution, or stop fail-closed if the training threshold is not met.
