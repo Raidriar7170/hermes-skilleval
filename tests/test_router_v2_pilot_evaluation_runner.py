@@ -592,7 +592,7 @@ def test_runner_rejects_binding_drift_model_snapshot_and_forbidden_path(
 def test_offline_wrapper_coerces_array_and_cli_direct_help(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    calls = {}
+    calls: dict[str, Any] = {}
 
     class FakeArray:
         def tolist(self) -> list[list[float]]:
