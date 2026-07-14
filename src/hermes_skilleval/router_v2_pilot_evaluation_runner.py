@@ -374,6 +374,14 @@ def _write_noreplace(path: Path, payload: bytes) -> None:
         os.close(fd)
 
 
+def _fsync_directory(path: Path) -> None:
+    directory_fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+
+
 def _start_attempt(evaluation_root: Path, request: dict[str, Any]) -> Path:
     started = evaluation_root / "attempt-1.started.json"
     terminal = evaluation_root / "attempt-1.terminal.json"
@@ -393,10 +401,25 @@ def _start_attempt(evaluation_root: Path, request: dict[str, Any]) -> Path:
         "status": "STARTED",
         **TRUTH_FIELDS,
     }
+    marker_written = False
     try:
         _write_noreplace(started, _canonical_bytes(marker))
+        marker_written = True
+        _fsync_directory(evaluation_root)
     except FileExistsError as exc:
         raise ValueError("evaluation attempt already exists") from exc
+    except BaseException as exc:
+        if marker_written:
+            try:
+                _write_terminal(
+                    evaluation_root,
+                    request,
+                    status="FAILED",
+                    error=exc,
+                )
+            except BaseException:
+                pass
+        raise
     return staging
 
 
@@ -429,6 +452,31 @@ def _write_terminal(
     _write_noreplace(
         evaluation_root / "attempt-1.terminal.json", _canonical_bytes(terminal)
     )
+    _fsync_directory(evaluation_root)
+
+
+def _write_recovery_required(
+    evaluation_root: Path,
+    *,
+    plan_sha256: str | None,
+    summary_sha256: str | None,
+    artifacts_manifest_sha256: str | None,
+    error: BaseException,
+) -> None:
+    recovery = {
+        "schema_version": "router-v2-evaluation-recovery-required-v1",
+        "status": "ARTIFACTS_PUBLISHED_TERMINAL_WRITE_FAILED",
+        "plan_sha256": plan_sha256,
+        "summary_sha256": summary_sha256,
+        "artifacts_manifest_sha256": artifacts_manifest_sha256,
+        "error_type": type(error).__name__,
+        **TRUTH_FIELDS,
+    }
+    _write_noreplace(
+        evaluation_root / "attempt-1.recovery-required.json",
+        _canonical_bytes(recovery),
+    )
+    _fsync_directory(evaluation_root)
 
 
 def _read_verified(
@@ -977,6 +1025,7 @@ def _run_request_once(
                         )
                     )
         _require(len(route_rows) == 144, "route output count must be 144")
+        shutil.rmtree(staging / "model-inputs")
         per_seed = [
             build_per_seed_result(
                 plan=plan,
@@ -1035,25 +1084,34 @@ def _run_request_once(
                 artifacts_manifest_sha256=artifacts_manifest_sha256,
             )
         except BaseException as terminal_error:
-            recovery = {
-                "schema_version": "router-v2-evaluation-recovery-required-v1",
-                "status": "ARTIFACTS_PUBLISHED_TERMINAL_WRITE_FAILED",
-                "plan_sha256": plan_sha256,
-                "summary_sha256": summary["summary_sha256"],
-                "artifacts_manifest_sha256": artifacts_manifest_sha256,
-                "error_type": type(terminal_error).__name__,
-                **TRUTH_FIELDS,
-            }
-            _write_noreplace(
-                evaluation_root / "attempt-1.recovery-required.json",
-                _canonical_bytes(recovery),
+            _write_recovery_required(
+                evaluation_root,
+                plan_sha256=plan_sha256,
+                summary_sha256=summary["summary_sha256"],
+                artifacts_manifest_sha256=artifacts_manifest_sha256,
+                error=terminal_error,
             )
             raise
         return summary
     except BaseException as exc:
-        if staging.exists() and not published:
-            shutil.rmtree(staging)
-        if not published:
+        published = published or (evaluation_root / "artifacts").is_dir()
+        if published:
+            try:
+                _write_recovery_required(
+                    evaluation_root,
+                    plan_sha256=plan_sha256,
+                    summary_sha256=summary.get("summary_sha256") if summary else None,
+                    artifacts_manifest_sha256=artifacts_manifest_sha256,
+                    error=exc,
+                )
+            except FileExistsError:
+                pass
+        else:
+            if staging.exists():
+                try:
+                    shutil.rmtree(staging)
+                except OSError:
+                    pass
             try:
                 _write_terminal(
                     evaluation_root,

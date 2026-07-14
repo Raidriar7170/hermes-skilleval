@@ -490,6 +490,15 @@ def test_runner_accepts_real_shapes_marks_before_32_reads_and_publishes(
         in (execution_root / "evaluation/attempt-1.terminal.json").read_text()
     )
     assert len((output / "route-results.jsonl").read_text().splitlines()) == 144
+    assert {path.name for path in output.iterdir()} == {
+        "final-evaluation-plan.json",
+        "route-results.jsonl",
+        "per-seed.json",
+        "aggregate.json",
+        "paired.json",
+        "failure-slices.json",
+        "evaluation-summary.json",
+    }
     assert len(read_paths) == 4
     assert len(encoders) == 9 and all(encoder.skill_calls == 1 for encoder in encoders)
     with pytest.raises(ValueError, match="already"):
