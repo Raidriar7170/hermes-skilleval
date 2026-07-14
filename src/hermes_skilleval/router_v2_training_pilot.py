@@ -23,6 +23,21 @@ SOURCE_MANIFEST_SHA256 = (
     "330f13d58833450293374f91e253dadf452b5a7d5233a4aa025984e09b0ed511"
 )
 RATIONALE_MAX_CHARS = 500
+REVIEW_MODEL_PROVIDER = "OpenAI"
+REVIEW_MODEL_ID = "GPT-5"
+REVIEW_MODEL_SNAPSHOT = "UNAVAILABLE"
+REVIEW_PROMPT_ID = "router-v2-confusion-role-review-prompt-v1"
+REVIEW_PROMPT_SHA256 = (
+    "24f685eedcf4202784bf31c5d35b9e931da332a78151f2283ee55aa68d87aba7"
+)
+ADJUDICATION_PROMPT_ID = "router-v2-confusion-role-adjudication-prompt-v1"
+ADJUDICATION_PROMPT_SHA256 = (
+    "e61c818d8028d7c78ffede2185f62c728ca782a6286dd9490fb52f6b1a71e613"
+)
+REVIEW_RUBRIC_ID = "router-v2-confusion-role-rubric-v1"
+REVIEW_RUBRIC_SHA256 = (
+    "63e629c820394b66be9eea6509e39986d73e7ccac0ef101e760c5fbadae5ed07"
+)
 
 TRUTH_FIELDS: dict[str, object] = {
     "review_mode": "MODEL_ONLY_PILOT",
@@ -103,6 +118,13 @@ _PASS_FIELDS = set(TRUTH_FIELDS) | {
     "pass_id",
     "pass_run_id",
     "pass_isolation",
+    "model_provider",
+    "model_id",
+    "model_snapshot",
+    "review_prompt_id",
+    "review_prompt_sha256",
+    "rubric_id",
+    "rubric_sha256",
     "model_opinion",
     "rationale",
     "row_sha256",
@@ -112,6 +134,13 @@ _ADJUDICATION_FIELDS = set(TRUTH_FIELDS) | {
     "candidate_id",
     "candidate_sha256",
     "usage",
+    "adjudicator_model_provider",
+    "adjudicator_model_id",
+    "adjudicator_model_snapshot",
+    "adjudication_prompt_id",
+    "adjudication_prompt_sha256",
+    "rubric_id",
+    "rubric_sha256",
     "pass_1_row_sha256",
     "pass_2_row_sha256",
     "pass_1_model_opinion",
@@ -860,6 +889,29 @@ def _validate_review_row(
     _validate_truth(row)
     if row.get("usage") not in _ALLOWED_USAGES:
         raise ValueError("review row usage is invalid")
+    if expected_schema == _PASS_SCHEMA:
+        expected_provenance = {
+            "model_provider": REVIEW_MODEL_PROVIDER,
+            "model_id": REVIEW_MODEL_ID,
+            "model_snapshot": REVIEW_MODEL_SNAPSHOT,
+            "review_prompt_id": REVIEW_PROMPT_ID,
+            "review_prompt_sha256": REVIEW_PROMPT_SHA256,
+            "rubric_id": REVIEW_RUBRIC_ID,
+            "rubric_sha256": REVIEW_RUBRIC_SHA256,
+        }
+    else:
+        expected_provenance = {
+            "adjudicator_model_provider": REVIEW_MODEL_PROVIDER,
+            "adjudicator_model_id": REVIEW_MODEL_ID,
+            "adjudicator_model_snapshot": REVIEW_MODEL_SNAPSHOT,
+            "adjudication_prompt_id": ADJUDICATION_PROMPT_ID,
+            "adjudication_prompt_sha256": ADJUDICATION_PROMPT_SHA256,
+            "rubric_id": REVIEW_RUBRIC_ID,
+            "rubric_sha256": REVIEW_RUBRIC_SHA256,
+        }
+    for field, expected in expected_provenance.items():
+        if row.get(field) != expected:
+            raise ValueError(f"review provenance field {field} mismatch")
     candidate_id = row.get("candidate_id")
     candidate_sha = row.get("candidate_sha256")
     if not isinstance(candidate_id, str) or not candidate_id:
@@ -925,12 +977,10 @@ def validate_new_candidate_review(
         [row["candidate_id"] for row in rows]
         for rows in (pass_1, pass_2, adjudications)
     ]
-    if any(identities != sorted(identities) for identities in identity_lists):
-        raise ValueError("review rows must use canonical candidate order")
     if any(len(set(identities)) != count for identities in identity_lists):
         raise ValueError("review rows contain duplicate candidate identities")
     if not identity_lists[0] == identity_lists[1] == identity_lists[2]:
-        raise ValueError("candidate identity mismatch")
+        raise ValueError("review rows must use identical canonical candidate order")
 
     run_1 = {row.get("pass_run_id") for row in pass_1}
     run_2 = {row.get("pass_run_id") for row in pass_2}
