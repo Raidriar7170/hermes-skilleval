@@ -1,8 +1,8 @@
 ## 1. Deterministic mining and review contracts
 
-- [ ] 1.1 Add focused RED tests for train-only source access, exact MiniLM revision, full 16-score output, eight-decimal ordering, rank/margin eligibility, hashes, and forbidden split rejection.
+- [x] 1.1 Add focused RED tests for train-only source access, exact MiniLM revision, full 16-score output, eight-decimal ordering, rank/margin eligibility, hashes, and forbidden split rejection.
 - [ ] 1.2 Implement the minimal miner and validator; generate the first CPU-only mining artifact for all 64 train positives and verify its model/source hashes.
-- [ ] 1.3 Add focused RED tests and minimal canonical schemas for variable-size new-candidate pass 1, pass 2, adjudication, bounded rationale, and exact truth fields.
+- [x] 1.3 Add focused RED tests and minimal canonical schemas for variable-size new-candidate pass 1, pass 2, adjudication, bounded rationale, and exact truth fields.
 - [ ] 1.4 Filter the 35 PR #37 supported negatives through the frozen rank/margin rule; permanently exclude the 29 disputed rows and report the retained count.
 
 ## 2. New train and held-out candidate adjudication
