@@ -53,7 +53,11 @@ DEPENDENCY_KEYS = {
     "torch",
     "transformers",
 }
-AUTHORIZED_OUTPUT_ROOT = Path("/mnt/data/minghongsun")
+AUTHORIZED_OUTPUT_ROOT = (
+    Path("/mnt/data/minghongsun")
+    if sys.platform.startswith("linux")
+    else Path.home() / ".cache/hermes-skilleval/router-v2-pilot"
+)
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 TRUTH_FIELDS: dict[str, object] = {
