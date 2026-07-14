@@ -344,8 +344,10 @@ def _evaluation_root(execution_root: Path) -> Path:
         "execution root must be a 0700 directory",
     )
     target = root / "evaluation"
+    created = False
     try:
         target.mkdir(mode=0o700)
+        created = True
     except FileExistsError:
         _require(
             target.is_dir() and not target.is_symlink(),
@@ -355,6 +357,8 @@ def _evaluation_root(execution_root: Path) -> Path:
             stat.S_IMODE(target.stat().st_mode) == 0o700,
             "evaluation root must be mode 0700",
         )
+    if created:
+        _fsync_directory(root)
     return target
 
 
@@ -465,7 +469,7 @@ def _write_recovery_required(
 ) -> None:
     recovery = {
         "schema_version": "router-v2-evaluation-recovery-required-v1",
-        "status": "ARTIFACTS_PUBLISHED_TERMINAL_WRITE_FAILED",
+        "status": "ARTIFACTS_PUBLISHED_RECOVERY_REQUIRED",
         "plan_sha256": plan_sha256,
         "summary_sha256": summary_sha256,
         "artifacts_manifest_sha256": artifacts_manifest_sha256,
@@ -1066,6 +1070,7 @@ def _run_request_once(
         for name, payload in outputs.items():
             _write_artifact(staging / name, payload)
         artifacts_manifest_sha256 = contract_sha256(snapshot_model_files(staging))
+        _fsync_directory(staging)
         directory_fd = os.open(evaluation_root, os.O_RDONLY | os.O_DIRECTORY)
         try:
             os.fsync(directory_fd)
