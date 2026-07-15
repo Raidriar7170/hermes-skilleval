@@ -141,6 +141,14 @@ comparison.
 - **WHEN** blind-v2, old blind results, post-hoc tuning, best-seed selection, or a new architecture is used
 - **THEN** evaluation validation fails and the decision remains `KEEP_BASELINE`
 
+#### Scenario: A future pilot materializes the exact base snapshot
+- **WHEN** Arm A model files are Hugging Face snapshot symlinks that resolve to direct regular files under the same model cache's sibling `blobs/` directory and each copied byte stream matches its expected size and SHA-256
+- **THEN** the runner materializes private ordinary files before model construction while Arms B and C still reject every symlink
+
+#### Scenario: Base snapshot materialization is unsafe or drifts
+- **WHEN** a snapshot link is dangling, looping, escaping, nested, non-regular, replaced, or has unexpected size or SHA-256
+- **THEN** the runner fails before model construction and does not weaken the one-attempt boundary
+
 ### Requirement: Public wording remains conservative
 README and resume recommendations SHALL explicitly state
 `MODEL_ONLY_PILOT`, `human_reviewer_count=0`, non-SOTA, non-production, and

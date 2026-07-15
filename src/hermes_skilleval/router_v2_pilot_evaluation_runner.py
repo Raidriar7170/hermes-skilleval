@@ -10,7 +10,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from decimal import Decimal
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Protocol, cast
 
 from hermes_skilleval.router_v2_pilot_evaluation import (
@@ -791,6 +791,9 @@ def _verify_training_artifacts(
         row["_validated_model_file_manifest"] = _validate_model_snapshot(
             artifact=row, config=config, manifest=manifest
         )
+        row["_validated_model_topology"] = _capture_model_topology(
+            Path(row["model_path"]), row["_validated_model_file_manifest"]
+        )
         output.append(
             {
                 "arm": row["arm"],
@@ -916,25 +919,371 @@ def _copy_model_inputs(
     for arm in ARMS:
         for seed in SEEDS:
             artifact = by_key[(arm, seed)]
-            source = Path(artifact["model_path"]).resolve(strict=True)
+            source = _absolute_model_path(Path(artifact["model_path"]))
             manifest_rows = artifact["_validated_model_file_manifest"]
+            topology = artifact["_validated_model_topology"]
             target = staging / "model-inputs" / f"arm-{arm}-seed-{seed}"
             target.mkdir(parents=True, mode=0o700)
-            for row in manifest_rows:
-                source_file = source / row["path"]
+            try:
+                for row in manifest_rows:
+                    relative = _model_relative(row["path"])
+                    target_file = target.joinpath(*relative.parts)
+                    target_file.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+                    _materialize_model_file(
+                        arm=arm,
+                        snapshot_root=source,
+                        relative=relative,
+                        target_file=target_file,
+                        expected=row,
+                        expected_root_topology=topology["root"],
+                        expected_row_topology=topology["rows"][row["path"]],
+                    )
                 _require(
-                    source_file.is_file() and not source_file.is_symlink(),
-                    "model copy source mismatch",
+                    snapshot_model_files(target) == manifest_rows,
+                    "private model copy verification mismatch",
                 )
-                target_file = target / row["path"]
-                target_file.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-                shutil.copyfile(source_file, target_file)
-            _require(
-                snapshot_model_files(target) == manifest_rows,
-                "private model copy verification mismatch",
-            )
+            except Exception:
+                shutil.rmtree(target)
+                raise
             copied[(arm, seed)] = {**artifact, "model_path": str(target)}
     return copied
+
+
+def _stable_stat(metadata: os.stat_result) -> tuple[int, int, int, int, int, int]:
+    return (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_mode,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    )
+
+
+def _topology_stat(metadata: os.stat_result) -> tuple[int, int, int]:
+    return metadata.st_dev, metadata.st_ino, metadata.st_mode
+
+
+def _model_relative(path: str) -> PurePosixPath:
+    relative = PurePosixPath(path)
+    _require(
+        not relative.is_absolute()
+        and relative.as_posix() == path
+        and bool(relative.parts)
+        and all(part not in {"", ".", ".."} for part in relative.parts),
+        "model copy path mismatch",
+    )
+    return relative
+
+
+def _absolute_model_path(path: Path) -> Path:
+    return Path(os.path.abspath(path))
+
+
+def _capture_model_topology(
+    model_path: Path,
+    manifest_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    root = _absolute_model_path(model_path)
+    root_stat = root.lstat()
+    _require(
+        stat.S_ISDIR(root_stat.st_mode) and not stat.S_ISLNK(root_stat.st_mode),
+        "model snapshot root topology mismatch",
+    )
+    rows = {}
+    for row in manifest_rows:
+        relative = _model_relative(row["path"])
+        current = root
+        parents = []
+        for part in relative.parts[:-1]:
+            current /= part
+            parent_stat = current.lstat()
+            _require(
+                stat.S_ISDIR(parent_stat.st_mode)
+                and not stat.S_ISLNK(parent_stat.st_mode),
+                "model snapshot parent topology mismatch",
+            )
+            parents.append((part, _topology_stat(parent_stat)))
+        final = current / relative.parts[-1]
+        final_stat = final.lstat()
+        _require(
+            stat.S_ISREG(final_stat.st_mode) or stat.S_ISLNK(final_stat.st_mode),
+            "model snapshot final topology mismatch",
+        )
+        is_link = stat.S_ISLNK(final_stat.st_mode)
+        resolved = final.resolve(strict=True) if is_link else None
+        rows[row["path"]] = {
+            "parents": tuple(parents),
+            "final": _topology_stat(final_stat),
+            "link_text": os.readlink(final) if is_link else None,
+            "model_root": (
+                _topology_stat(resolved.parent.parent.lstat())
+                if resolved is not None
+                else None
+            ),
+            "blob_dir": (
+                _topology_stat(resolved.parent.lstat())
+                if resolved is not None
+                else None
+            ),
+            "blob": (
+                _topology_stat(resolved.lstat()) if resolved is not None else None
+            ),
+        }
+    return {"root": _topology_stat(root_stat), "rows": rows}
+
+
+def _directory_flags() -> int:
+    _require(
+        all(hasattr(os, name) for name in ("O_DIRECTORY", "O_NOFOLLOW")),
+        "secure directory open is unavailable",
+    )
+    return os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+
+
+def _file_flags() -> int:
+    _require(hasattr(os, "O_NOFOLLOW"), "secure no-follow open is unavailable")
+    return os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
+
+
+def _close_all(descriptors: list[int]) -> None:
+    close_error: OSError | None = None
+    for descriptor in reversed(descriptors):
+        try:
+            os.close(descriptor)
+        except OSError as exc:
+            if close_error is None:
+                close_error = exc
+    if close_error is not None:
+        raise close_error
+
+
+def _materialize_model_file(
+    *,
+    arm: str,
+    snapshot_root: Path,
+    relative: PurePosixPath,
+    target_file: Path,
+    expected: dict[str, Any],
+    expected_root_topology: tuple[int, int, int],
+    expected_row_topology: dict[str, Any],
+) -> None:
+    descriptors: list[int] = []
+    entry_guards: list[tuple[int, str, tuple[int, int, int, int, int, int], str]] = []
+    path_guards: list[tuple[Path, tuple[int, int, int, int, int, int], str]] = []
+    target_created = False
+    try:
+        root_before = snapshot_root.lstat()
+        _require(
+            _topology_stat(root_before) == expected_root_topology
+            and stat.S_ISDIR(root_before.st_mode),
+            "model snapshot root topology replaced",
+        )
+        root_fd = os.open(snapshot_root, _directory_flags())
+        descriptors.append(root_fd)
+        root_opened = os.fstat(root_fd)
+        _require(
+            _stable_stat(root_opened) == _stable_stat(root_before),
+            "model snapshot root replaced",
+        )
+        path_guards.append(
+            (snapshot_root, _stable_stat(root_opened), "model snapshot root replaced")
+        )
+        current_fd = root_fd
+        parent_path = snapshot_root
+        expected_parents = expected_row_topology["parents"]
+        _require(
+            len(expected_parents) == len(relative.parts) - 1,
+            "model copy parent topology mismatch",
+        )
+        for part, (expected_name, expected_topology) in zip(
+            relative.parts[:-1], expected_parents, strict=True
+        ):
+            _require(part == expected_name, "model copy parent topology mismatch")
+            parent_before = os.stat(
+                part,
+                dir_fd=current_fd,
+                follow_symlinks=False,
+            )
+            _require(
+                _topology_stat(parent_before) == expected_topology
+                and stat.S_ISDIR(parent_before.st_mode),
+                "model copy parent topology replaced",
+            )
+            parent_fd = os.open(part, _directory_flags(), dir_fd=current_fd)
+            descriptors.append(parent_fd)
+            parent_opened = os.fstat(parent_fd)
+            _require(
+                _stable_stat(parent_opened) == _stable_stat(parent_before),
+                "model copy parent replaced",
+            )
+            entry_guards.append(
+                (
+                    current_fd,
+                    part,
+                    _stable_stat(parent_opened),
+                    "model copy parent replaced",
+                )
+            )
+            current_fd = parent_fd
+            parent_path /= part
+
+        final_name = relative.parts[-1]
+        final_before = os.stat(
+            final_name,
+            dir_fd=current_fd,
+            follow_symlinks=False,
+        )
+        _require(
+            _topology_stat(final_before) == expected_row_topology["final"],
+            "model copy final topology replaced",
+        )
+        entry_guards.append(
+            (
+                current_fd,
+                final_name,
+                _stable_stat(final_before),
+                "model copy final source replaced",
+            )
+        )
+        if stat.S_ISLNK(final_before.st_mode):
+            _require(arm == "A", "trained model snapshot symlink is forbidden")
+            _require(
+                snapshot_root.parent.name == "snapshots"
+                and snapshot_root.parent.parent.name.startswith("models--"),
+                "base model snapshot cache layout mismatch",
+            )
+            link_text = os.readlink(final_name, dir_fd=current_fd)
+            _require(
+                link_text == expected_row_topology["link_text"],
+                "base model snapshot symlink source replaced",
+            )
+            model_root = snapshot_root.parent.parent
+            blobs = model_root / "blobs"
+            source_parent = parent_path
+            target = Path(os.path.abspath(os.path.join(source_parent, link_text)))
+            _require(
+                target.parent == blobs and target.name not in {"", ".", ".."},
+                "base model snapshot symlink target mismatch",
+            )
+            model_root_before = model_root.lstat()
+            _require(
+                _topology_stat(model_root_before) == expected_row_topology["model_root"]
+                and stat.S_ISDIR(model_root_before.st_mode),
+                "base model snapshot model root replaced",
+            )
+            model_root_fd = os.open(model_root, _directory_flags())
+            descriptors.append(model_root_fd)
+            model_root_opened = os.fstat(model_root_fd)
+            _require(
+                _stable_stat(model_root_opened) == _stable_stat(model_root_before),
+                "base model snapshot model root replaced",
+            )
+            path_guards.append(
+                (
+                    model_root,
+                    _stable_stat(model_root_opened),
+                    "base model snapshot model root replaced",
+                )
+            )
+            blobs_before = os.stat("blobs", dir_fd=model_root_fd, follow_symlinks=False)
+            _require(
+                _topology_stat(blobs_before) == expected_row_topology["blob_dir"]
+                and stat.S_ISDIR(blobs_before.st_mode),
+                "base model snapshot blobs directory replaced",
+            )
+            blobs_fd = os.open("blobs", _directory_flags(), dir_fd=model_root_fd)
+            descriptors.append(blobs_fd)
+            blobs_opened = os.fstat(blobs_fd)
+            _require(
+                _stable_stat(blobs_opened) == _stable_stat(blobs_before),
+                "base model snapshot blobs directory replaced",
+            )
+            entry_guards.append(
+                (
+                    model_root_fd,
+                    "blobs",
+                    _stable_stat(blobs_opened),
+                    "base model snapshot blobs directory replaced",
+                )
+            )
+            blob_before = os.stat(
+                target.name,
+                dir_fd=blobs_fd,
+                follow_symlinks=False,
+            )
+            _require(
+                _topology_stat(blob_before) == expected_row_topology["blob"]
+                and stat.S_ISREG(blob_before.st_mode),
+                "base model snapshot symlink target replaced",
+            )
+            source_fd = os.open(target.name, _file_flags(), dir_fd=blobs_fd)
+            descriptors.append(source_fd)
+            source_opened = os.fstat(source_fd)
+            _require(
+                _stable_stat(source_opened) == _stable_stat(blob_before),
+                "base model snapshot symlink target replaced",
+            )
+            entry_guards.append(
+                (
+                    blobs_fd,
+                    target.name,
+                    _stable_stat(source_opened),
+                    "base model snapshot symlink target replaced",
+                )
+            )
+        else:
+            _require(
+                stat.S_ISREG(final_before.st_mode),
+                "model copy source must be a regular file",
+            )
+            source_fd = os.open(final_name, _file_flags(), dir_fd=current_fd)
+            descriptors.append(source_fd)
+            source_opened = os.fstat(source_fd)
+            _require(
+                _stable_stat(source_opened) == _stable_stat(final_before),
+                "model copy source replaced",
+            )
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        target_fd = os.open(target_file, flags, 0o600)
+        descriptors.append(target_fd)
+        target_created = True
+        digest = hashlib.sha256()
+        size = 0
+        while True:
+            chunk = os.read(source_fd, 1024 * 1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+            size += len(chunk)
+            view = memoryview(chunk)
+            while view:
+                written = os.write(target_fd, view)
+                _require(written > 0, "private model copy write mismatch")
+                view = view[written:]
+        for path, initial, message in path_guards:
+            _require(
+                _stable_stat(path.lstat()) == initial,
+                message,
+            )
+        for parent_fd, name, initial, message in entry_guards:
+            _require(
+                _stable_stat(os.stat(name, dir_fd=parent_fd, follow_symlinks=False))
+                == initial,
+                message,
+            )
+        _require(
+            size == expected["size"] and digest.hexdigest() == expected["sha256"],
+            "model copy content mismatch during private model copy verification",
+        )
+    except Exception:
+        if target_created:
+            target_file.unlink(missing_ok=True)
+        raise
+    finally:
+        _close_all(descriptors)
 
 
 def _write_artifact(path: Path, payload: bytes) -> None:

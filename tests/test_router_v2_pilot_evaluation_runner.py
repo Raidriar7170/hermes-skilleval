@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import os
 import subprocess
 import sys
 import types
@@ -415,6 +416,9 @@ def _test_overrides(
             if row["arm"] == "A"
             else manifest["model_file_manifest"]
         )
+        row["_validated_model_topology"] = _capture_test_model_topology(
+            Path(row["model_path"]), row["_validated_model_file_manifest"]
+        )
         artifacts.append(
             {
                 "arm": row["arm"],
@@ -445,6 +449,471 @@ def _test_overrides(
         resolve_output_root=lambda value: Path(value),
         prevalidated_context=context,
     )
+
+
+def _capture_test_model_topology(
+    model_path: Path, manifest_rows: list[dict[str, Any]]
+) -> dict[str, Any]:
+    def identity(metadata: os.stat_result) -> tuple[int, int, int]:
+        return metadata.st_dev, metadata.st_ino, metadata.st_mode
+
+    root = model_path.resolve(strict=True)
+    rows = {}
+    for row in manifest_rows:
+        relative = Path(row["path"])
+        current = root
+        parents = []
+        for part in relative.parts[:-1]:
+            current /= part
+            parents.append((part, identity(current.lstat())))
+        final = current / relative.parts[-1]
+        is_link = final.is_symlink()
+        resolved = final.resolve(strict=True) if is_link else None
+        rows[row["path"]] = {
+            "parents": tuple(parents),
+            "final": identity(final.lstat()),
+            "link_text": os.readlink(final) if is_link else None,
+            "model_root": (
+                identity(resolved.parent.parent.lstat())
+                if resolved is not None
+                else None
+            ),
+            "blob_dir": (
+                identity(resolved.parent.lstat()) if resolved is not None else None
+            ),
+            "blob": identity(resolved.lstat()) if resolved is not None else None,
+        }
+    return {"root": identity(root.lstat()), "rows": rows}
+
+
+def _arm_artifact(
+    request: dict[str, Any], arm: str, seed: int = 7170
+) -> dict[str, Any]:
+    return next(
+        row
+        for row in request["training_artifacts"]
+        if row["arm"] == arm and row["seed"] == seed
+    )
+
+
+def _replace_base_model_with_hf_snapshot(
+    request: dict[str, Any],
+    cache_parent: Path,
+    *,
+    snapshot_relative_path: str = "weights.bin",
+    blob_relative_path: str = "opaque-blob-name",
+    target_outside_cache: bool = False,
+) -> tuple[Path, Path]:
+    artifact = _arm_artifact(request, "A")
+    payload = (Path(artifact["model_path"]) / "weights.bin").read_bytes()
+    model_root = cache_parent / "models--sentence-transformers--all-MiniLM-L6-v2"
+    blob = (
+        cache_parent / "outside-blob"
+        if target_outside_cache
+        else model_root / "blobs" / blob_relative_path
+    )
+    blob.parent.mkdir(parents=True, exist_ok=True)
+    blob.write_bytes(payload)
+    snapshot = model_root / "snapshots" / "exact-revision"
+    snapshot.mkdir(parents=True)
+    link = snapshot / snapshot_relative_path
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(os.path.relpath(blob, start=link.parent))
+    artifact["model_path"] = str(snapshot)
+    return snapshot, blob
+
+
+def _copy_then_mark_factory_called(
+    staging: Path,
+    request: dict[str, Any],
+    factory_calls: list[str],
+) -> dict[tuple[str, int], dict[str, Any]]:
+    copied = runner._copy_model_inputs(staging, request)
+    factory_calls.append("called")
+    return copied
+
+
+def _copy_target(staging: Path, arm: str = "A", seed: int = 7170) -> Path:
+    return staging / "model-inputs" / f"arm-{arm}-seed-{seed}"
+
+
+def test_copy_model_inputs_materializes_valid_hf_blob_symlink(tmp_path: Path) -> None:
+    request = _fixture(tmp_path / "fixture")
+    snapshot, blob = _replace_base_model_with_hf_snapshot(
+        request, tmp_path / "hf-cache"
+    )
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+
+    copied = runner._copy_model_inputs(tmp_path / "staging", request)
+
+    target = Path(copied[("A", 7170)]["model_path"]) / "weights.bin"
+    assert snapshot.joinpath("weights.bin").is_symlink()
+    assert target.read_bytes() == blob.read_bytes()
+    assert target.is_file() and not target.is_symlink()
+    assert factory_calls == []
+
+
+def test_copy_model_inputs_materializes_valid_nested_hf_blob_symlink(
+    tmp_path: Path,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    _, blob = _replace_base_model_with_hf_snapshot(
+        request,
+        tmp_path / "hf-cache",
+        snapshot_relative_path="1_Pooling/config.json",
+    )
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+
+    copied = runner._copy_model_inputs(tmp_path / "staging", request)
+
+    target = Path(copied[("A", 7170)]["model_path"]) / "1_Pooling" / "config.json"
+    assert target.read_bytes() == blob.read_bytes()
+    assert target.is_file() and not target.is_symlink()
+    assert factory_calls == []
+
+
+def test_copy_model_inputs_rejects_nested_blob_target_without_residue(
+    tmp_path: Path,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    _replace_base_model_with_hf_snapshot(
+        request,
+        tmp_path / "hf-cache",
+        blob_relative_path="nested/opaque-blob-name",
+    )
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="base model snapshot symlink target"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging).exists()
+
+
+@pytest.mark.parametrize("target_kind", ["directory", "fifo"])
+def test_copy_model_inputs_rejects_non_regular_blob_target_without_residue(
+    tmp_path: Path,
+    target_kind: str,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    _, blob = _replace_base_model_with_hf_snapshot(request, tmp_path / "hf-cache")
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    blob.unlink()
+    if target_kind == "directory":
+        blob.mkdir()
+    else:
+        os.mkfifo(blob)
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="base model snapshot symlink target"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging).exists()
+
+
+@pytest.mark.parametrize("replacement", ["parent", "link", "blob"])
+def test_copy_model_inputs_rejects_post_validation_replacement(
+    tmp_path: Path,
+    replacement: str,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    snapshot, blob = _replace_base_model_with_hf_snapshot(
+        request,
+        tmp_path / "hf-cache",
+        snapshot_relative_path="1_Pooling/config.json",
+    )
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    link = snapshot / "1_Pooling" / "config.json"
+    if replacement == "parent":
+        parent = link.parent
+        moved = tmp_path / "moved-pooling"
+        parent.rename(moved)
+        parent.symlink_to(moved, target_is_directory=True)
+    elif replacement == "link":
+        link.unlink()
+        link.symlink_to(os.path.relpath(blob, start=link.parent))
+    else:
+        new_blob = blob.with_name("replacement-blob")
+        new_blob.write_bytes(blob.read_bytes())
+        os.replace(new_blob, blob)
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="replaced|parent|topology"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging).exists()
+
+
+def test_copy_model_inputs_rejects_trained_nested_parent_symlink(
+    tmp_path: Path,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    artifact = _arm_artifact(request, "B")
+    model_root = Path(artifact["model_path"])
+    payload = (model_root / "weights.bin").read_bytes()
+    (model_root / "weights.bin").unlink()
+    nested = model_root / "nested"
+    nested.mkdir()
+    (nested / "weights.bin").write_bytes(payload)
+    manifest_path = Path(artifact["model_manifest_path"])
+    manifest = json.loads(manifest_path.read_text())
+    manifest["model_file_manifest"] = [
+        {"path": "nested/weights.bin", "sha256": _sha(payload), "size": len(payload)}
+    ]
+    manifest_path.write_bytes(_json_bytes(manifest))
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    moved = tmp_path / "moved-trained-parent"
+    nested.rename(moved)
+    nested.symlink_to(moved, target_is_directory=True)
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="parent|symlink|topology"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging, arm="B").exists()
+
+
+def test_copy_model_inputs_rejects_post_validation_trained_root_symlink(
+    tmp_path: Path,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    artifact = _arm_artifact(request, "B")
+    model_root = Path(artifact["model_path"])
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    moved = tmp_path / "moved-trained-model-root"
+    model_root.rename(moved)
+    model_root.symlink_to(moved, target_is_directory=True)
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="root|symlink|topology|replaced"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging, arm="B").exists()
+
+
+@pytest.mark.parametrize("replaced_entry", ["model_root", "blobs"])
+def test_copy_model_inputs_rejects_post_validation_hf_cache_root_replacement(
+    tmp_path: Path,
+    replaced_entry: str,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    snapshot, _ = _replace_base_model_with_hf_snapshot(
+        request,
+        tmp_path / "hf-cache",
+        snapshot_relative_path="1_Pooling/config.json",
+    )
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    model_root = snapshot.parent.parent
+    if replaced_entry == "model_root":
+        moved = tmp_path / "models--sentence-transformers--all-MiniLM-L6-v2-moved"
+        model_root.rename(moved)
+        model_root.symlink_to(moved, target_is_directory=True)
+    else:
+        blobs = model_root / "blobs"
+        moved = model_root / "moved-blobs"
+        blobs.rename(moved)
+        blobs.symlink_to(moved.name, target_is_directory=True)
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="root|blobs|topology|replaced"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging).exists()
+
+
+@pytest.mark.parametrize("injected_operation", ["open", "fstat", "stat", "readlink"])
+def test_copy_model_inputs_closes_all_fds_after_injected_exception(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    injected_operation: str,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    _replace_base_model_with_hf_snapshot(
+        request,
+        tmp_path / "hf-cache",
+        snapshot_relative_path="1_Pooling/config.json",
+    )
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    real_open = os.open
+    real_close = os.close
+    real_fstat = os.fstat
+    real_stat = os.stat
+    real_readlink = os.readlink
+    opened: set[int] = set()
+    closed: set[int] = set()
+    injected = False
+
+    def tracked_open(*args: Any, **kwargs: Any) -> int:
+        nonlocal injected
+        if injected_operation == "open" and opened and not injected:
+            injected = True
+            raise OSError("injected open failure")
+        descriptor = real_open(*args, **kwargs)
+        opened.add(descriptor)
+        return descriptor
+
+    def tracked_close(descriptor: int) -> None:
+        closed.add(descriptor)
+        real_close(descriptor)
+
+    def injected_fstat(*args: Any, **kwargs: Any) -> os.stat_result:
+        nonlocal injected
+        if injected_operation == "fstat" and opened and not injected:
+            injected = True
+            raise OSError("injected fstat failure")
+        return real_fstat(*args, **kwargs)
+
+    def injected_stat(*args: Any, **kwargs: Any) -> os.stat_result:
+        nonlocal injected
+        if injected_operation == "stat" and opened and not injected:
+            injected = True
+            raise OSError("injected stat failure")
+        return real_stat(*args, **kwargs)
+
+    def injected_readlink(*args: Any, **kwargs: Any) -> str:
+        nonlocal injected
+        if injected_operation == "readlink" and opened and not injected:
+            injected = True
+            raise OSError("injected readlink failure")
+        return real_readlink(*args, **kwargs)
+
+    monkeypatch.setattr(runner.os, "open", tracked_open)
+    monkeypatch.setattr(runner.os, "close", tracked_close)
+    monkeypatch.setattr(runner.os, "fstat", injected_fstat)
+    monkeypatch.setattr(runner.os, "stat", injected_stat)
+    monkeypatch.setattr(runner.os, "readlink", injected_readlink)
+    staging = tmp_path / "staging"
+
+    with pytest.raises((OSError, ValueError), match="injected"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert injected is True
+    assert opened == closed
+    assert factory_calls == []
+    assert not _copy_target(staging).exists()
+
+
+def test_copy_model_inputs_rejects_hf_symlink_escape_before_factory(
+    tmp_path: Path,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    _replace_base_model_with_hf_snapshot(
+        request,
+        tmp_path / "hf-cache",
+        target_outside_cache=True,
+    )
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="base model snapshot symlink target"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging).exists()
+
+
+@pytest.mark.parametrize("replacement", [b"MODEL-A-7170", b"different-size"])
+def test_copy_model_inputs_rejects_hf_blob_hash_or_size_change_before_factory(
+    tmp_path: Path,
+    replacement: bytes,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    _, blob = _replace_base_model_with_hf_snapshot(request, tmp_path / "hf-cache")
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    blob.write_bytes(replacement)
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="model copy content mismatch"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging).exists()
+
+
+def test_copy_model_inputs_rejects_trained_arm_symlink_before_factory(
+    tmp_path: Path,
+) -> None:
+    request = _fixture(tmp_path / "fixture")
+    artifact = _arm_artifact(request, "B")
+    weights = Path(artifact["model_path"]) / "weights.bin"
+    external = tmp_path / "trained-model-blob"
+    external.write_bytes(weights.read_bytes())
+    weights.unlink()
+    weights.symlink_to(external)
+    factory_calls: list[str] = []
+    _test_overrides(
+        request,
+        tmp_path / "execution",
+        model_factory=lambda *_: factory_calls.append("called"),
+    )
+    staging = tmp_path / "staging"
+
+    with pytest.raises(ValueError, match="trained model snapshot symlink"):
+        _copy_then_mark_factory_called(staging, request, factory_calls)
+
+    assert factory_calls == []
+    assert not _copy_target(staging, arm="B").exists()
 
 
 def test_runner_accepts_real_shapes_marks_before_32_reads_and_publishes(

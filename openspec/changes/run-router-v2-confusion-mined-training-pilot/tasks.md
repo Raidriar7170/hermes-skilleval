@@ -36,3 +36,7 @@
 - [x] 5.2 Run focused/relevant tests, Ruff, mypy, strict OpenSpec validation, artifact hash validation, preflight side-effect audit, and `git diff --check`.
 - [x] 5.3 Obtain a final read-only Reviewer pass, resolve all Must Fix findings, and record final branch HEAD and artifact hashes.
 - [x] 5.4 Push the bounded branch to GitHub without archive, release, deploy, router promotion, or blind-v2 execution.
+
+## 6. Future-pilot infrastructure repair
+
+- [x] 6.1 Add a synthetic Hugging Face cache symlink regression and safely materialize only Arm A snapshot links for a future pilot ID; preserve the consumed attempt, frozen evidence, and trained-arm no-symlink rule.

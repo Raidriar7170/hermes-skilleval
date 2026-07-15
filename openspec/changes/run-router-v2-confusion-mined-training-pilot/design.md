@@ -152,6 +152,15 @@ three-seed mean and each paired seed where stated:
 Any failure yields `KEEP_BASELINE`. Gates are serialized before held-out
 evaluation and cannot be changed after results are read.
 
+The single evaluation attempt for this pilot ID is already consumed and SHALL
+NOT be retried. A bounded infrastructure repair may make a future pilot ID able
+to materialize Arm A from the exact Hugging Face cache layout: only snapshot
+file symlinks that resolve to direct regular files under the same model cache's
+`blobs/` sibling are allowed, and copied bytes must still match the frozen file
+manifest. Arms B and C continue to reject symlinks. This repair does not read
+held-out inputs, call a model, create attempt 2, or alter the frozen failed
+attempt evidence.
+
 ## Risks / Trade-offs
 
 - Two passes can share correlated model errors: every artifact states
