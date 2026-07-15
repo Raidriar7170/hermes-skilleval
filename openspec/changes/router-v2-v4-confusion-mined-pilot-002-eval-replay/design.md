@@ -81,6 +81,29 @@ NDCG@5 delta `>=-0.01`; NHR@5 mean delta `<=-0.05` and each seed `<=0.00`; p95
 latency ratio `<=1.20`, each where preregistered. Any failed gate yields
 `KEEP_BASELINE`; only all-pass yields `ROUTER_V2_PILOT_IMPROVED`.
 
+### Post-attempt truth repair is additive and immutable
+
+On 2026-07-15 the user explicitly ratified pilot-002 and the existing Human
+Brief and existing test scope in PR #38, and authorized only a post-attempt
+retention/evidence repair. This scope ratification is not a human review,
+leaves `human_reviewer_count=0`, and records `new_tests_authorized=false`. The canonical pilot manifest
+is not rewritten even though it omits `model_review_pass_count`,
+`model_adjudication_enabled`, `independent_human_review`, and
+`model_correlation_risk`. A pilot-root `truth-erratum.json` instead binds the
+frozen manifest, started marker, terminal, summary, attempt token, artifact-row
+commitment, and route file. It records the complete model-only truth block and
+seals itself with `contract_sha256` over the canonical object excluding only
+its own hash field.
+
+The isolated local `route-results.jsonl` is retained byte-for-byte in the
+repository evidence namespace rather than regenerated. A separate
+`artifacts-audit-manifest.json`, outside the frozen `artifacts/` directory,
+records the seven `snapshot_model_files` rows and proves that recomputing
+`contract_sha256(rows)` matches the terminal's existing artifact commitment.
+Placing the audit manifest outside `artifacts/` avoids changing the committed
+seven-row set. This repair does not create an attempt, read held-out inputs,
+perform inference, train, mine, run blind-v2, or create pilot-003.
+
 ## Risks / Trade-offs
 
 - [The 16-positive and 9-negative sample is small] → Report raw counts beside
@@ -103,6 +126,10 @@ latency ratio `<=1.20`, each where preregistered. Any failed gate yields
    scripts.
 4. Copy small canonical evidence into the repository, update docs and Human
    Brief, verify, and open a PR.
+5. If the immutable manifest truth gap is discovered post-attempt, retain the
+   original bytes, add the self-sealed erratum and exact route artifact audit,
+   then stop for a new read-only review. Commit, push, and post-repair
+   exact-head CI require separate authorization.
 
 Rollback before step 3 removes only the new change and unused output namespace.
 After step 3 the attempt is immutable; rollback keeps `KEEP_BASELINE` and does

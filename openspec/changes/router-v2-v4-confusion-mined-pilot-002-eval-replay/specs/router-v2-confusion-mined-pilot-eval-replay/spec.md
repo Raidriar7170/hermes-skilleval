@@ -95,3 +95,36 @@ blind-v2 not run`.
 #### Scenario: Documentation overclaims
 - **WHEN** wording implies human validation, SOTA, production readiness, release, router promotion, or blind-v2 generalization
 - **THEN** documentation validation fails
+
+### Requirement: Post-attempt truth repair preserves immutable evidence
+The system SHALL leave the canonical pilot manifest, started marker, terminal,
+summary, and attempt count unchanged when a required truth-field omission is
+discovered after the single attempt. It SHALL add a self-sealed erratum that
+binds those frozen files, the attempt token, route artifact, artifact-row hash,
+and the complete model-only truth block. The user's 2026-07-15 ratification of
+pilot-002 and PR #38's existing Human Brief and existing test scope SHALL
+authorize retention/evidence repair only, SHALL NOT count as human review, and
+SHALL record `new_tests_authorized=false`.
+
+#### Scenario: The incomplete manifest is retained with an erratum
+- **WHEN** the frozen pilot manifest lacks the four required model-only truth fields
+- **THEN** `manifest_truth_block_complete=false` and `pilot_manifest_contract_conforming=false`, the original manifest remains unchanged, and the erratum supplies the complete truth block with a verified excluding-self hash
+
+#### Scenario: Evidence repair expands into execution
+- **WHEN** repair attempts to rerun evaluation, read held-out inputs, invoke inference or training, mine data, run blind-v2, or create pilot-003
+- **THEN** the repair fails closed and the single-attempt ledger and `KEEP_BASELINE` release decision remain authoritative
+
+### Requirement: Retained route rows remain exactly reproducible
+The system SHALL retain the exact 144-row `route-results.jsonl` byte stream and
+SHALL inventory all seven evaluation artifacts using the existing
+`snapshot_model_files` ordering and `contract_sha256` rule. The audit manifest
+SHALL remain outside the frozen `artifacts/` directory and SHALL bind the
+terminal file SHA-256 and attempt token.
+
+#### Scenario: Route evidence matches the frozen terminal commitment
+- **WHEN** the retained route file has 144 rows, 227843 bytes, SHA-256 `1bc4f54e140676a4f4a8c7a8d240a6dd6aa5bf6ed1554cd47b56ab54faea2cab`, and the seven artifact rows hash to `d1937aa4836ef5259c64bf6aff33e8bd5526f5c36a57a877716d3667978ac123`
+- **THEN** the audit manifest records matching expected and recomputed commitments without regenerating any artifact
+
+#### Scenario: Retained bytes or artifact inventory drift
+- **WHEN** the route row count, byte size, file SHA-256, any artifact row, terminal binding, or attempt token differs
+- **THEN** evidence repair validation fails without modifying frozen evidence or rerunning evaluation

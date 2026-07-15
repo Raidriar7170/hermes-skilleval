@@ -46,11 +46,17 @@
   "pilot_001_metrics_observed": false,
   "review_mode": "MODEL_ONLY_PILOT",
   "human_reviewer_count": 0,
+  "model_review_pass_count": 2,
+  "model_adjudication_enabled": true,
+  "independent_human_review": false,
+  "model_correlation_risk": true,
   "blind_v2_run": false,
   "production_ready": false,
   "release_eligible": false,
   "router_decision": "KEEP_BASELINE"
 }</pre>
+      <p>冻结的 canonical <code>pilot-manifest.json</code> 本身缺少上述四个 model-only truth 字段，因此 <code>manifest_truth_block_complete=false</code>、<code>pilot_manifest_contract_conforming=false</code>。本轮使用自封存 <code>truth-erratum.json</code> 补全，不修改原 manifest，也不改写 attempt 历史。</p>
+      <p>用户于 2026-07-15 明确追认 pilot-002，以及 PR #38 中既有 Human Brief 与既有测试范围；该 ratification 仅授权 retention/evidence-repair，不计作 human review，<code>human_reviewer_count</code> 仍为 <code>0</code>，且当前 <code>new_tests_authorized=false</code>。</p>
     </section>
 
     <section>
@@ -108,9 +114,15 @@
           <tr><td>Evaluation code commit</td><td><code>756a6c5b165b4ab6251266d46befc934ef1544f4</code></td></tr>
           <tr><td>Attempt token SHA-256</td><td><code>8ad3bd8011b64ab15dea4025550754119d0f41853535ef7f98ee2b2cba93a489</code></td></tr>
           <tr><td>Pilot manifest file SHA-256</td><td><code>5888842a9a60a7c94dff56ba505e070b4af418535dd828ab62809e4bbb04b2d7</code></td></tr>
+          <tr><td>Pilot manifest semantic SHA-256</td><td><code>c0e8911af7114f6750a105661798b9b8a694a69889ea76f459a03270176cc988</code></td></tr>
           <tr><td>Evaluation plan semantic SHA-256</td><td><code>ed8aaa5f3bf29ec30efe863059f077c00ff100cdd9169bdb0b8b7ff980fa2523</code></td></tr>
           <tr><td>Evaluation summary semantic SHA-256</td><td><code>433d0a92b6548eef8634b43c0856129db3513777444249fd7e03cf901cfdcd13</code></td></tr>
-          <tr><td>Attempt started / terminal file SHA-256</td><td><code>60d9d1d0...ec49</code> / <code>aa618c98...3777</code></td></tr>
+          <tr><td>Attempt started file SHA-256</td><td><code>60d9d1d0b11d0170e758d0828193d6a1c760479bdb3b249d33f542a8efd1ec49</code></td></tr>
+          <tr><td>Attempt terminal file SHA-256</td><td><code>aa618c98068c0c089522398b27483c35204b688dbf229294c80e9b3109fe3777</code></td></tr>
+          <tr><td>Route-results file SHA-256</td><td><code>1bc4f54e140676a4f4a8c7a8d240a6dd6aa5bf6ed1554cd47b56ab54faea2cab</code></td></tr>
+          <tr><td>Seven-row artifacts manifest SHA-256</td><td><code>d1937aa4836ef5259c64bf6aff33e8bd5526f5c36a57a877716d3667978ac123</code></td></tr>
+          <tr><td>Artifacts audit manifest file SHA-256</td><td><code>5497223cda7bbdd4b894cf863c45a11db3e28ff8d1eb4ad62bcfbc27687535a1</code></td></tr>
+          <tr><td>Truth erratum file / excluding-self SHA-256</td><td><code>2ac396a741938177d3107942d419b49b716cb4342dde638086661dd3e0dd76fc</code> / <code>dd8bda067c1e0cf9f9beee678b17d31263bc89d07e5bf68f4a1c4db3a60e0ed2</code></td></tr>
         </tbody>
       </table>
     </section>
@@ -119,18 +131,21 @@
       <h2>验证与最终动作</h2>
       <table>
         <tbody>
-          <tr><td>完整 pytest</td><td><code>1180 passed in 29.56s</code></td></tr>
-          <tr><td>Focused replay/smoke</td><td><code>47 passed in 1.35s</code></td></tr>
-          <tr><td>Ruff</td><td>changed Python files check PASS；5 files already formatted</td></tr>
-          <tr><td>Focused mypy</td><td>4 source files，0 issues</td></tr>
+          <tr><td>Historical pre-repair full pytest @ <code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code></td><td><code>1180 passed in 29.56s</code></td></tr>
+          <tr><td>Historical pre-repair focused replay/smoke @ <code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code></td><td><code>47 passed in 1.35s</code></td></tr>
+          <tr><td>Historical pre-repair Ruff @ <code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code></td><td>changed Python files check PASS；5 files already formatted</td></tr>
+          <tr><td>Historical pre-repair focused mypy @ <code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code></td><td>4 source files，0 issues</td></tr>
           <tr><td>OpenSpec strict</td><td>34 passed，0 failed</td></tr>
-          <tr><td>GitHub exact-head CI</td><td><code>29394177211</code> SUCCESS</td></tr>
-          <tr><td>Artifact/truth guards</td><td>canonical bytes、单 attempt、truth fields、pilot-001 marker hashes 全部 PASS</td></tr>
-          <tr><td>最终只读 Reviewer</td><td>Must Fix: None；Should Fix: None；Re-plan: No；Final Verdict: Pass</td></tr>
+          <tr><td>Parent commit CI</td><td><code>bbaa74567fa691422d69eab765f51cf9c3dfe72c</code> 的 run <code>29394177211</code> SUCCESS；不是 pre-repair exact head</td></tr>
+          <tr><td>Pre-repair exact-head CI</td><td><code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code> 的 run <code>29394367201</code> SUCCESS</td></tr>
+          <tr><td>Post-repair exact-head CI</td><td>UNAVAILABLE：当前 evidence-repair 是未 commit 的本地 diff</td></tr>
+          <tr><td>Evidence-repair local verification</td><td>既有 replay-focused tests <code>15 passed, 40 deselected</code>（排除 synthetic runner/model-load/evaluation；未新增测试，<code>new_tests_authorized=false</code>）；JSON/JSONL parse、route count/size/SHA、seven-row hash、erratum self-hash、truth block、frozen-file HEAD diff、<code>git diff --check</code> 全部 PASS；OpenSpec strict <code>34/34</code></td></tr>
+          <tr><td>2026-07-15 post-repair 最终只读 Reviewer</td><td>Must Fix: None；Should Fix: None；Re-plan Needed: No；Final Verdict: <code>Pass</code></td></tr>
         </tbody>
       </table>
-      <p>完整 pytest 的首次运行暴露 README 中 <code>non-SOTA</code> 会被旧 overclaim regex 当作肯定式命中，导致 Phase 18 release-check 改写并出现 9 个失败。将措辞改为 guard 支持的 <code>does not establish SOTA</code> 后，原 9 个测试为 <code>9 passed</code>，最终完整 suite 为 <code>1180 passed</code>；受保护 Phase 18 artifacts 与 HEAD 字节一致。</p>
-      <p>PR 已创建，完整 exact-head CI 已通过，当前按授权停止。禁止 pilot-003、第三轮模型审核、新 mining、blind-v2、release、archive、继续调参或 merge。</p>
+      <p>Historical pre-repair @ <code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code>：完整 pytest 的首次运行暴露 README 中 <code>non-SOTA</code> 会被旧 overclaim regex 当作肯定式命中，导致 Phase 18 release-check 改写并出现 9 个失败。将措辞改为 guard 支持的 <code>does not establish SOTA</code> 后，原 9 个测试为 <code>9 passed</code>，最终完整 suite 为 <code>1180 passed</code>；受保护 Phase 18 artifacts 与该 pre-repair HEAD 字节一致。</p>
+      <p>PR #38 已存在；本地验证与 2026-07-15 post-repair 最终只读复审均已完成。当前 evidence-repair 尚未 commit，因此没有 post-repair exact-head CI；commit、push 与新 exact-head CI 均保持 pending 且未获授权。</p>
+      <p>禁止重跑 evaluation、pilot-003、第三轮模型审核、新 mining、blind-v2、release、archive、继续调参或 merge。</p>
     </section>
   </main>
 </body>

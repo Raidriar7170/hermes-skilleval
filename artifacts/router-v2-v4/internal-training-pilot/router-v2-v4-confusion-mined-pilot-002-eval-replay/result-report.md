@@ -9,6 +9,26 @@ The router promotion decision remains `KEEP_BASELINE`: this is a
 `MODEL_ONLY_PILOT` with `human_reviewer_count=0`; it is non-SOTA,
 non-production, not release eligible, and blind-v2 was not run.
 
+## Post-attempt truth erratum
+
+The frozen canonical `pilot-manifest.json` omits four required model-only truth
+fields: `model_review_pass_count`, `model_adjudication_enabled`,
+`independent_human_review`, and `model_correlation_risk`. Therefore
+`manifest_truth_block_complete=false` and
+`pilot_manifest_contract_conforming=false`. The original manifest remains
+byte-for-byte unchanged; the self-sealed
+[`truth-erratum.json`](truth-erratum.json) supplies the complete truth block
+without rewriting attempt history or authorizing a rerun.
+
+The retained task-level ranking evidence is
+[`route-results.jsonl`](evaluation/attempt-1/artifacts/route-results.jsonl).
+The retained file contains no prompt text.
+Its seven-row artifact inventory and the terminal artifact commitment are
+reconciled by
+[`artifacts-audit-manifest.json`](evaluation/attempt-1/artifacts-audit-manifest.json).
+This is a post-attempt retention/evidence repair only: no evaluation,
+inference, training, mining, blind-v2, or pilot-003 action was performed.
+
 ## Raw-count headline
 
 - Arm A -> C Recall@1: `12/16 -> 16/16` for every seed.
@@ -78,13 +98,27 @@ The canonical category, skill, flag, and task-ID slices are retained in
   `8ad3bd8011b64ab15dea4025550754119d0f41853535ef7f98ee2b2cba93a489`
 - Canonical pilot manifest file SHA-256:
   `5888842a9a60a7c94dff56ba505e070b4af418535dd828ab62809e4bbb04b2d7`
+- Canonical pilot manifest semantic SHA-256:
+  `c0e8911af7114f6750a105661798b9b8a694a69889ea76f459a03270176cc988`
 - Evaluation summary semantic SHA-256:
   `433d0a92b6548eef8634b43c0856129db3513777444249fd7e03cf901cfdcd13`
 - Evaluation plan semantic SHA-256:
   `ed8aaa5f3bf29ec30efe863059f077c00ff100cdd9169bdb0b8b7ff980fa2523`
+- Route-results file SHA-256:
+  `1bc4f54e140676a4f4a8c7a8d240a6dd6aa5bf6ed1554cd47b56ab54faea2cab`
+- Seven-row artifacts manifest SHA-256:
+  `d1937aa4836ef5259c64bf6aff33e8bd5526f5c36a57a877716d3667978ac123`
+- Artifacts audit manifest file SHA-256:
+  `5497223cda7bbdd4b894cf863c45a11db3e28ff8d1eb4ad62bcfbc27687535a1`
+- Truth erratum file / excluding-self semantic SHA-256:
+  `2ac396a741938177d3107942d419b49b716cb4342dde638086661dd3e0dd76fc` /
+  `dd8bda067c1e0cf9f9beee678b17d31263bc89d07e5bf68f4a1c4db3a60e0ed2`
 - Pilot-001 metrics observed: `false`
 - Replacement reason: `INFRASTRUCTURE_FAILURE_BEFORE_INFERENCE`
 
-The committed JSON files are canonical copies from the isolated local `0700`
-evaluation namespace. Prompt-level `route-results.jsonl` remains local and is
-not part of this small public evidence pack.
+The retained route rows are now present in the repository evidence namespace
+and match the isolated local `0700` source byte-for-byte. The incomplete frozen
+pilot manifest is retained for provenance and supplemented, not silently
+corrected. The pilot evaluation conclusion remains
+`ROUTER_V2_PILOT_IMPROVED`, while the release/router decision remains
+`KEEP_BASELINE`.

@@ -19,3 +19,13 @@
 - [x] 3.3 Run focused and full tests, Ruff, mypy non-regression, strict OpenSpec validation, artifact/truth guards, smoke regression, and `git diff --check`.
 - [x] 3.4 Obtain the required read-only Reviewer verdict, resolve only in-scope Must Fix findings, and re-run affected verification.
 - [x] 3.5 Commit and push the bounded result, create the PR, wait for complete CI, and stop without merge, archive, release, deploy, tuning, or another pilot.
+
+## 4. Post-attempt evidence repair
+
+- [x] 4.1 Record the user's 2026-07-15 ratification of pilot-002 and PR #38's existing Human Brief and existing test scope without treating it as human review; preserve zero-human and `KEEP_BASELINE` truth and record `new_tests_authorized=false`.
+- [x] 4.2 Copy the exact existing 144-row route artifact byte-for-byte into repository evidence and add the seven-row audit manifest outside the frozen artifact set.
+- [x] 4.3 Add a self-sealed truth erratum that binds the unchanged pilot manifest, attempt ledger, summary, route artifact, and full model-only truth block without a rerun.
+- [x] 4.4 Correct the result report, existing Human Brief, proposal, design, spec, and task truth surfaces without changing `src/**`, `tests/**`, or frozen attempt files.
+- [x] 4.5 Run local JSON/hash/truth/OpenSpec/diff validation and confirm the frozen pilot manifest, started marker, terminal, and summary are unchanged from HEAD.
+- [x] 4.6 Obtain a final read-only Reviewer verdict for the post-attempt evidence-repair diff and resolve only in-scope Must Fix findings.
+- [ ] 4.7 After separate authorization, commit and push the repair and confirm post-repair exact-head CI; until then record the state as an uncommitted local diff with no post-repair exact-head CI.

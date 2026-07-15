@@ -25,6 +25,12 @@ only the frozen evaluation without retraining or changing any input or gate.
 - Update README, resume guidance, and the L2 Human Brief with raw counts and
   explicit `MODEL_ONLY_PILOT`, zero-human, non-SOTA, non-production, and
   blind-v2-not-run limitations.
+- Record that on 2026-07-15 the user explicitly ratified pilot-002 and the
+  existing Human Brief and existing test scope in PR #38, without counting the
+  ratification as human review and with `new_tests_authorized=false`. Retain the immutable pilot manifest and attempt
+  ledger, add a self-sealed truth erratum for its four missing model-only truth
+  fields, and retain the exact 144-row route artifact with a seven-row audit
+  manifest computed from the original artifact bytes.
 - Do not retrain, rebuild the run pack, mine data, perform another review,
   access blind-v2, create pilot-003, release, promote, deploy, merge, or
   archive.
@@ -48,3 +54,7 @@ None.
   commits only small evidence and documentation artifacts to the repository.
 - Preserves pilot-001 as consumed with `pilot_001_metrics_observed=false` and
   keeps `router_decision=KEEP_BASELINE` until the pilot-002 gate completes.
+- The post-attempt repair changes no runner, test, frozen manifest, attempt
+  marker, terminal, summary, metric, or decision. It adds retention and audit
+  evidence only; final review and any post-repair commit/push/CI remain separate
+  pending actions.
