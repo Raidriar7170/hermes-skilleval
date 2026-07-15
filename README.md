@@ -361,13 +361,19 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ### Router V2 internal training pilot (MODEL_ONLY_PILOT)
 
-The frozen pilot completed the A/B/C training matrix for seeds 7170-7172, but
-its single preregistered non-blind evaluation attempt failed before inference
-when the private-copy guard rejected symbolic links in the exact local MiniLM
-snapshot. Metrics are therefore `UNAVAILABLE`; the attempt was not rerun, the
-decision is `KEEP_BASELINE`, and blind-v2 was not run. This is model-only
-evidence with `human_reviewer_count=0`, not a SOTA, production, release, or
-router-promotion claim.
+Pilot-002 reused the exact frozen pilot-001 A/B/C snapshots for seeds
+7170-7172 and completed its one preregistered held-out evaluation attempt
+without retraining. Arm A -> C Recall@1 improved from `12/16` to `16/16`,
+Recall@5 stayed `16/16 -> 16/16`, Negative Hit Rate@1 changed `1/9 -> 0/9`,
+and Negative Hit Rate@5 changed by seed from `8/9` to `6/9`, `7/9`, and `5/9`
+(`24/27 -> 18/27` across the paired runs). All unchanged gates passed, so the
+pilot evaluation conclusion is `ROUTER_V2_PILOT_IMPROVED`; the router promotion
+decision remains `KEEP_BASELINE` because blind-v2 was not run. See the
+[pilot-002 result report](artifacts/router-v2-v4/internal-training-pilot/router-v2-v4-confusion-mined-pilot-002-eval-replay/result-report.md).
+
+This remains `MODEL_ONLY_PILOT` evidence with `human_reviewer_count=0`:
+it does not establish SOTA or production readiness, is not eligible for
+release, and is not a blind-v2 or router-promotion claim.
 
 > **For recruiters and hiring managers:**
 >

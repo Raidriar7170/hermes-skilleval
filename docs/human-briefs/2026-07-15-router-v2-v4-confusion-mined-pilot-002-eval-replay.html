@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router V2 pilot-002 held-out replay｜Human Brief</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, "PingFang SC", sans-serif; }
+    body { margin: 0; background: #f4f6f8; color: #17202a; }
+    main { max-width: 980px; margin: 0 auto; padding: 48px 24px 72px; }
+    header, section { background: white; border: 1px solid #dfe5eb; border-radius: 14px; padding: 24px; margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin-top: 0; font-size: 20px; }
+    p, li { line-height: 1.7; }
+    .eyebrow { color: #44546a; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+    .status { display: inline-block; margin-top: 12px; padding: 7px 12px; border-radius: 999px; background: #dcfce7; color: #166534; font-weight: 700; }
+    .warning { border-left: 5px solid #d97706; }
+    code, pre { font-family: "SFMono-Regular", Consolas, monospace; }
+    pre { overflow-x: auto; background: #111827; color: #e5e7eb; border-radius: 10px; padding: 18px; line-height: 1.45; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; border-bottom: 1px solid #e5e7eb; padding: 10px 8px; vertical-align: top; }
+    th { color: #44546a; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">L2 held-out evaluation boundary · 2026-07-15</div>
+      <h1>Router V2 pilot-002 evaluation replay</h1>
+      <p>本页是 <code>router-v2-v4-confusion-mined-pilot-002-eval-replay</code> 的派生审阅简报；OpenSpec 与 canonical JSON artifacts 仍是权威来源。</p>
+      <div class="status">全部预注册 gate 通过：ROUTER_V2_PILOT_IMPROVED</div>
+    </header>
+
+    <section class="warning">
+      <h2>真实性与使用边界</h2>
+      <p>这是 <code>MODEL_ONLY_PILOT</code>、<code>human_reviewer_count=0</code> 的 16 条 held-out positive / 9 条 supported negative label 结果。它不是公开 benchmark、SOTA、生产、发布或 blind-v2 证据。</p>
+      <p>pilot evaluation conclusion 是 <code>ROUTER_V2_PILOT_IMPROVED</code>；但 <code>blind_v2_run=false</code>、<code>production_ready=false</code>、<code>release_eligible=false</code>，因此 router promotion decision 仍为 <code>KEEP_BASELINE</code>。</p>
+    </section>
+
+    <section>
+      <h2>为什么允许 replay</h2>
+      <p>pilot-001 的唯一 attempt 在 inference 前因 Arm A Hugging Face snapshot symlink copy guard 失败，未观察任何 held-out metric。pilot-002 只替换 pilot ID、attempt token、evaluation code commit、output namespace 与 replacement reason；训练数据、mining、held-out labels、run pack、B/C checkpoints、Arm A revision、seeds、query order、metrics 与 gates 全部复用。</p>
+      <pre>{
+  "replacement_reason": "INFRASTRUCTURE_FAILURE_BEFORE_INFERENCE",
+  "reuses_frozen_training_artifacts_from_pilot_001": true,
+  "pilot_001_metrics_observed": false,
+  "review_mode": "MODEL_ONLY_PILOT",
+  "human_reviewer_count": 0,
+  "blind_v2_run": false,
+  "production_ready": false,
+  "release_eligible": false,
+  "router_decision": "KEEP_BASELINE"
+}</pre>
+    </section>
+
+    <section>
+      <h2>Raw-count-first 结果</h2>
+      <table>
+        <thead><tr><th>指标</th><th>Arm A</th><th>Arm C</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>Recall@1</td><td><code>12/16</code></td><td><code>16/16</code></td><td>三个 seed 相同</td></tr>
+          <tr><td>Recall@5</td><td><code>16/16</code></td><td><code>16/16</code></td><td>三个 seed 相同</td></tr>
+          <tr><td>Negative Hit@1</td><td><code>1/9</code></td><td><code>0/9</code></td><td>三个 seed 相同</td></tr>
+          <tr><td>Negative Hit@5</td><td><code>8/9</code> 每 seed</td><td><code>6/9, 7/9, 5/9</code></td><td>合计 <code>24/27 -&gt; 18/27</code></td></tr>
+          <tr><td>MRR</td><td><code>0.859375</code></td><td><code>1.000000</code></td><td>mean delta <code>+0.140625</code></td></tr>
+          <tr><td>NDCG@5</td><td><code>0.895217</code></td><td><code>1.000000</code></td><td>mean delta <code>+0.104783</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>每 seed latency 与 negative rank</h2>
+      <table>
+        <thead><tr><th>Seed</th><th>Arm A p50/p95 ms</th><th>Arm C p50/p95 ms</th><th>p95 ratio</th><th>A -&gt; C first-negative rank</th></tr></thead>
+        <tbody>
+          <tr><td>7170</td><td>5.457458 / 6.193209</td><td>4.484792 / 5.794833</td><td>0.935675</td><td>2.888889 -&gt; 5.111111</td></tr>
+          <tr><td>7171</td><td>5.572833 / 6.079083</td><td>4.486209 / 5.063375</td><td>0.832918</td><td>2.888889 -&gt; 4.444444</td></tr>
+          <tr><td>7172</td><td>4.463750 / 6.116042</td><td>4.425000 / 6.628875</td><td>1.083850</td><td>2.888889 -&gt; 4.666667</td></tr>
+        </tbody>
+      </table>
+      <p>Arm C 的 mean/sample std：p50 <code>4.465334 +/- 0.034937 ms</code>，p95 <code>5.829028 +/- 0.783310 ms</code>，first-negative rank <code>4.740741 +/- 0.339450</code>。</p>
+    </section>
+
+    <section>
+      <h2>未改动的 gate</h2>
+      <table>
+        <thead><tr><th>Gate</th><th>观察值</th><th>阈值</th><th>结果</th></tr></thead>
+        <tbody>
+          <tr><td>Recall@5 delta</td><td>mean/each seed = 0</td><td>&gt;= 0</td><td>PASS</td></tr>
+          <tr><td>MRR delta</td><td>mean/each seed = +0.140625</td><td>&gt;= -0.01</td><td>PASS</td></tr>
+          <tr><td>NDCG@5 delta</td><td>mean/each seed = +0.104783</td><td>&gt;= -0.01</td><td>PASS</td></tr>
+          <tr><td>NHR@5 delta</td><td>mean -0.222222；each -0.222222/-0.111111/-0.333333</td><td>mean &lt;= -0.05；each &lt;= 0</td><td>PASS</td></tr>
+          <tr><td>p95 latency ratio</td><td>mean 0.950814；each 0.935675/0.832918/1.083850</td><td>mean/each &lt;= 1.20</td><td>PASS</td></tr>
+        </tbody>
+      </table>
+      <p>没有改 threshold、挑最好 seed 或补跑；实际 evaluation attempt 数为 1。</p>
+    </section>
+
+    <section>
+      <h2>Failure slices</h2>
+      <p>Arm C 每个 seed 均有 7/16 条任务被至少一个诊断 flag 命中。Negative Hit@5 分别是 6、7、5 条；task-level latency ratio &gt; 1.20 分别是 1、0、2 条；negative moved earlier 分别是 0、1、1 条。三个 seed 均无 TOP1 miss、Gold miss@5、Negative Hit@1 或 Gold rank regression。</p>
+    </section>
+
+    <section>
+      <h2>可审计绑定</h2>
+      <table>
+        <tbody>
+          <tr><td>Evaluation code commit</td><td><code>756a6c5b165b4ab6251266d46befc934ef1544f4</code></td></tr>
+          <tr><td>Attempt token SHA-256</td><td><code>8ad3bd8011b64ab15dea4025550754119d0f41853535ef7f98ee2b2cba93a489</code></td></tr>
+          <tr><td>Pilot manifest file SHA-256</td><td><code>5888842a9a60a7c94dff56ba505e070b4af418535dd828ab62809e4bbb04b2d7</code></td></tr>
+          <tr><td>Evaluation plan semantic SHA-256</td><td><code>ed8aaa5f3bf29ec30efe863059f077c00ff100cdd9169bdb0b8b7ff980fa2523</code></td></tr>
+          <tr><td>Evaluation summary semantic SHA-256</td><td><code>433d0a92b6548eef8634b43c0856129db3513777444249fd7e03cf901cfdcd13</code></td></tr>
+          <tr><td>Attempt started / terminal file SHA-256</td><td><code>60d9d1d0...ec49</code> / <code>aa618c98...3777</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>验证与最终动作</h2>
+      <table>
+        <tbody>
+          <tr><td>完整 pytest</td><td><code>1178 passed in 31.51s</code></td></tr>
+          <tr><td>Focused replay/smoke</td><td><code>47 passed in 1.35s</code></td></tr>
+          <tr><td>Ruff</td><td>changed Python files check PASS；5 files already formatted</td></tr>
+          <tr><td>Focused mypy</td><td>4 source files，0 issues</td></tr>
+          <tr><td>OpenSpec strict</td><td>34 passed，0 failed</td></tr>
+          <tr><td>Artifact/truth guards</td><td>canonical bytes、单 attempt、truth fields、pilot-001 marker hashes 全部 PASS</td></tr>
+          <tr><td>最终只读 Reviewer</td><td>Must Fix: None；Should Fix: None；Re-plan: No；Final Verdict: Pass</td></tr>
+        </tbody>
+      </table>
+      <p>完整 pytest 的首次运行暴露 README 中 <code>non-SOTA</code> 会被旧 overclaim regex 当作肯定式命中，导致 Phase 18 release-check 改写并出现 9 个失败。将措辞改为 guard 支持的 <code>does not establish SOTA</code> 后，原 9 个测试为 <code>9 passed</code>，随后完整 suite 为 <code>1178 passed</code>；受保护 Phase 18 artifacts 与 HEAD 字节一致。</p>
+      <p>唯一后续动作是创建 PR 并等待完整 CI。禁止 pilot-003、第三轮模型审核、新 mining、blind-v2、release、archive、继续调参或 merge。</p>
+    </section>
+  </main>
+</body>
+</html>
