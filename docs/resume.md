@@ -8,6 +8,15 @@ metrics, blind-validation evidence, and a conservative default-router decision.
 
 ## Resume Bullets
 
+- Recommended conservative Router V2 bullet: built a preregistered three-arm,
+  three-seed `MODEL_ONLY_PILOT` evaluation replay over frozen checkpoints;
+  improved held-out Recall@1 from `12/16` to `16/16`, held Recall@5 at
+  `16/16`, reduced Negative Hit Rate@1 from `1/9` to `0/9`, and reduced
+  Negative Hit Rate@5 from `24/27` to `18/27` across paired seeds, with all
+  unchanged gates passing. `human_reviewer_count=0`; non-SOTA,
+  non-production, not release eligible, blind-v2 not run, and router promotion
+  remains `KEEP_BASELINE`.
+
 - Built `Hermes SkillEval`, a 419-test Python CLI harness for benchmarking
   Hermes-style agent skill routing over an 80-task / 45-skill self-built corpus,
   with Markdown skill indexing, keyword/hybrid/embedding/gated/cross-encoder
@@ -56,6 +65,9 @@ release gate refused to promote `finetuned-embedding` as the default.
   wording boundaries.
 
 ## Evidence Links
+
+- Router V2 pilot-002 held-out replay:
+  [`result-report.md`](../artifacts/router-v2-v4/internal-training-pilot/router-v2-v4-confusion-mined-pilot-002-eval-replay/result-report.md)
 
 - Phase 16 blind validation:
   [`docs/demo/phase16-blind-validation/comparison.md`](demo/phase16-blind-validation/comparison.md)
