@@ -40,3 +40,4 @@
 ## 6. Future-pilot infrastructure repair
 
 - [x] 6.1 Add a synthetic Hugging Face cache symlink regression and safely materialize only Arm A snapshot links for a future pilot ID; preserve the consumed attempt, frozen evidence, and trained-arm no-symlink rule.
+- [x] 6.2 Add and run a non-heldout real-model-load smoke over Arm A once and frozen Arm B/C seeds `7170`-`7172` once each; validate exact model manifests/files and fixed synthetic 384-dimensional finite embeddings under a cleaned `0700` temporary root without reading evaluation inputs, starting an attempt, or emitting metrics.

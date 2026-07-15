@@ -161,6 +161,15 @@ manifest. Arms B and C continue to reject symlinks. This repair does not read
 held-out inputs, call a model, create attempt 2, or alter the frozen failed
 attempt evidence.
 
+Before a future pilot ID is created, a dedicated non-heldout model-load smoke
+loads the shared Arm A snapshot once and the six frozen Arm B/C seed snapshots
+once each. It reads only the seven exact model manifests and model files,
+materializes Arm A under a one-shot `0700` temporary root, and encodes only two
+fixed synthetic strings. Every model must return exactly two finite 384-wide
+embeddings. The smoke deletes its temporary root on success or failure and
+emits only a canonical `PASS` fact; it does not derive evaluation inputs, start
+an attempt, create output artifacts, read held-out content, or report metrics.
+
 ## Risks / Trade-offs
 
 - Two passes can share correlated model errors: every artifact states

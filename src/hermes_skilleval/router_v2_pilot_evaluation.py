@@ -259,6 +259,62 @@ def _validate_task_bindings(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return output
 
 
+def preregistered_evaluation_contract() -> dict[str, Any]:
+    return {
+        "arm_order": list(ARMS),
+        "seed_order": list(SEEDS),
+        "task_order": "ascending_task_id",
+        "expected_task_count": 16,
+        "expected_supported_negative_count": 9,
+        "warmup_repeats": 1,
+        "timed_repeats": 1,
+        "ranking": {
+            "candidate_count": 16,
+            "score_decimals": 8,
+            "rounding": "ROUND_HALF_EVEN",
+            "tie_break": "skill_id",
+        },
+        "latency_percentiles": {
+            "method": "nearest_rank",
+            "percentiles": ["0.50", "0.95"],
+        },
+        "metric_fields": list(METRIC_FIELDS),
+        "metrics": {
+            "positive_denominator": 16,
+            "supported_negative_denominator": 9,
+            "aggregate_mean": "arithmetic",
+            "aggregate_std": "sample_n_minus_1",
+        },
+        "paired_metric_fields": list(PAIR_METRICS),
+        "failure_slices": ["ALL", "category", "gold_skill_id", "flag"],
+        "failure_flags": list(FAILURE_FLAGS),
+        "gate": {
+            "comparison_scope": "A_VS_C_ONLY",
+            "recall_at_5_mean_delta_min": "0.00000000",
+            "recall_at_5_each_seed_delta_min": "0.00000000",
+            "mrr_mean_delta_min": "-0.01000000",
+            "mrr_each_seed_delta_min": "-0.01000000",
+            "ndcg_at_5_mean_delta_min": "-0.01000000",
+            "ndcg_at_5_each_seed_delta_min": "-0.01000000",
+            "negative_hit_rate_at_5_mean_delta_max": "-0.05000000",
+            "negative_hit_rate_at_5_each_seed_delta_max": "0.00000000",
+            "latency_p95_mean_ratio_max": "1.20000000",
+            "latency_p95_each_seed_ratio_max": "1.20000000",
+        },
+        "input_policy": {
+            "source_scope": "FROZEN_NON_BLIND_POSITIVE_ONLY",
+            "heldout_usage": "HELD_OUT_EVAL_ONLY",
+            "calibration_allowed": False,
+            "blind_v2_allowed": False,
+            "old_blind_allowed": False,
+            "phase_16_allowed": False,
+            "post_hoc_tuning_allowed": False,
+            "best_seed_selection_allowed": False,
+            "repeated_attempt_allowed": False,
+        },
+    }
+
+
 def build_evaluation_plan_contract(
     *,
     run_pack_manifest_sha256: str,
@@ -295,59 +351,27 @@ def build_evaluation_plan_contract(
     )
     artifacts = _validate_training_artifacts(training_artifacts)
     bindings = _validate_task_bindings(expected_task_bindings)
+    contract = preregistered_evaluation_contract()
     plan = {
         "schema_version": "router-v2-final-evaluation-plan-v1",
         "attempt": 1,
-        "arms": list(ARMS),
-        "seeds": list(SEEDS),
-        "expected_task_count": 16,
-        "expected_supported_negative_count": 9,
+        "arms": contract["arm_order"],
+        "seeds": contract["seed_order"],
+        "expected_task_count": contract["expected_task_count"],
+        "expected_supported_negative_count": contract[
+            "expected_supported_negative_count"
+        ],
         "expected_task_bindings": bindings,
         "expected_task_bindings_sha256": contract_sha256(bindings),
-        "warmup_repeats": 1,
-        "timed_repeats": 1,
-        "ranking": {
-            "candidate_count": 16,
-            "score_decimals": 8,
-            "rounding": "ROUND_HALF_EVEN",
-            "tie_break": "skill_id",
-        },
-        "latency_percentiles": {
-            "method": "nearest_rank",
-            "percentiles": ["0.50", "0.95"],
-        },
-        "metrics": {
-            "positive_denominator": 16,
-            "supported_negative_denominator": 9,
-            "aggregate_mean": "arithmetic",
-            "aggregate_std": "sample_n_minus_1",
-        },
-        "failure_slices": ["ALL", "category", "gold_skill_id", "flag"],
-        "failure_flags": list(FAILURE_FLAGS),
-        "gate": {
-            "comparison_scope": "A_VS_C_ONLY",
-            "recall_at_5_mean_delta_min": "0.00000000",
-            "recall_at_5_each_seed_delta_min": "0.00000000",
-            "mrr_mean_delta_min": "-0.01000000",
-            "mrr_each_seed_delta_min": "-0.01000000",
-            "ndcg_at_5_mean_delta_min": "-0.01000000",
-            "ndcg_at_5_each_seed_delta_min": "-0.01000000",
-            "negative_hit_rate_at_5_mean_delta_max": "-0.05000000",
-            "negative_hit_rate_at_5_each_seed_delta_max": "0.00000000",
-            "latency_p95_mean_ratio_max": "1.20000000",
-            "latency_p95_each_seed_ratio_max": "1.20000000",
-        },
-        "input_policy": {
-            "source_scope": "FROZEN_NON_BLIND_POSITIVE_ONLY",
-            "heldout_usage": "HELD_OUT_EVAL_ONLY",
-            "calibration_allowed": False,
-            "blind_v2_allowed": False,
-            "old_blind_allowed": False,
-            "phase_16_allowed": False,
-            "post_hoc_tuning_allowed": False,
-            "best_seed_selection_allowed": False,
-            "repeated_attempt_allowed": False,
-        },
+        "warmup_repeats": contract["warmup_repeats"],
+        "timed_repeats": contract["timed_repeats"],
+        "ranking": contract["ranking"],
+        "latency_percentiles": contract["latency_percentiles"],
+        "metrics": contract["metrics"],
+        "failure_slices": contract["failure_slices"],
+        "failure_flags": contract["failure_flags"],
+        "gate": contract["gate"],
+        "input_policy": contract["input_policy"],
         "attempt_ledger": {
             "schema_version": "router-v2-evaluation-attempt-ledger-v1",
             "attempt_number": 1,

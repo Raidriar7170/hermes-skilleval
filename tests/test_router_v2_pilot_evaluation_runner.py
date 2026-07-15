@@ -7,6 +7,8 @@ import os
 import subprocess
 import sys
 import types
+from copy import deepcopy
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +17,7 @@ import pytest
 from hermes_skilleval.router_v2_internal_package import HELDOUT_ROW_FIELDS
 from hermes_skilleval.router_v2_pilot_candidates import _skill_text
 from hermes_skilleval.router_v2_pilot_evaluation import contract_sha256
+import hermes_skilleval.router_v2_pilot_evaluation as evaluation
 from hermes_skilleval.router_v2_pilot_evaluation_runner import (
     EvaluationTestOverrides,
     PilotAuthority,
@@ -99,7 +102,12 @@ def _skills() -> list[dict[str, Any]]:
     ]
 
 
-def _training_artifact(inputs: Path, arm: str, seed: int) -> dict[str, Any]:
+def _training_artifact(
+    inputs: Path,
+    arm: str,
+    seed: int,
+    frozen_hashes: dict[str, str] | None = None,
+) -> dict[str, Any]:
     prefix = inputs / "training" / f"{arm}-{seed}"
     model_path = prefix / "model"
     model_path.mkdir(parents=True)
@@ -108,11 +116,14 @@ def _training_artifact(inputs: Path, arm: str, seed: int) -> dict[str, Any]:
     snapshot = [
         {"path": "weights.bin", "sha256": model_sha, "size": len(model_payload)}
     ]
-    lineage = {
+    hashes = frozen_hashes or {
         "data_manifest_sha256": "1" * 64,
         "accepted_pairs_sha256": "2" * 64,
         "mining_rows_sha256": "3" * 64,
         "mining_manifest_sha256": "4" * 64,
+    }
+    lineage = {
+        **hashes,
         "package_code_git_commit": "5" * 40,
         "training_code_git_commit": "c" * 40,
         "base_model_id": "sentence-transformers/all-MiniLM-L6-v2",
@@ -337,8 +348,25 @@ def _fixture(tmp_path: Path) -> dict[str, Any]:
     labels_hash = _write(inputs / "heldout-labels.jsonl", b"".join(label_lines))
     run_pack_payload = _json_bytes({"schema_version": "synthetic-run-pack-v1"})
     run_pack_hash = _write(inputs / "run-pack-manifest.json", run_pack_payload)
+    frozen_payloads = {
+        "data_manifest_sha256": (runner.DATA_MANIFEST_PATH, b"synthetic-data"),
+        "accepted_pairs_sha256": (
+            runner.ACCEPTED_PAIRS_PATH,
+            b"synthetic-accepted",
+        ),
+        "mining_rows_sha256": (runner.MINING_ROWS_PATH, b"synthetic-mining-rows"),
+        "mining_manifest_sha256": (
+            runner.MINING_MANIFEST_PATH,
+            b"synthetic-mining-manifest",
+        ),
+    }
+    frozen_hashes = {}
+    for field, (relative, payload) in frozen_payloads.items():
+        frozen_hashes[field] = _write(tmp_path / relative, payload)
     training_artifacts = [
-        _training_artifact(inputs, arm, seed) for arm in ARMS for seed in SEEDS
+        _training_artifact(inputs, arm, seed, frozen_hashes)
+        for arm in ARMS
+        for seed in SEEDS
     ]
     return {
         "repository_root": str(tmp_path),
@@ -405,6 +433,7 @@ def _test_overrides(
         training_code_git_commit="c" * 40,
         evaluation_code_git_commit="d" * 40,
         execution_id=execution_root.name,
+        heldout_labels_path=request["heldout_labels_path"],
     )
     artifacts = []
     for row in request["training_artifacts"]:
@@ -437,7 +466,12 @@ def _test_overrides(
         execution_root=execution_root,
         base_model_path=Path(request["training_artifacts"][0]["model_path"]),
         request=request,
-        run_pack_documents={},
+        run_pack_documents={
+            f"config-arm-{row['arm']}-seed-{row['seed']}.json": Path(
+                row["config_path"]
+            ).read_bytes()
+            for row in request["training_artifacts"]
+        },
         training_artifacts=artifacts,
     )
     return EvaluationTestOverrides(
@@ -1102,3 +1136,727 @@ def test_offline_wrapper_coerces_array_and_cli_direct_help(
     )
     assert result.returncode == 0
     assert "--execution-root" in result.stdout
+
+
+def _model_load_smoke_fixture(tmp_path: Path) -> dict[str, Any]:
+    execution_root = tmp_path / "execution-2542397cb134"
+    execution_root.mkdir(mode=0o700)
+    cache_root = (
+        tmp_path / "hf-cache" / "models--sentence-transformers--all-MiniLM-L6-v2"
+    )
+    blob = cache_root / "blobs" / "opaque-model-blob"
+    blob.parent.mkdir(parents=True)
+    blob.write_bytes(b"synthetic-base-model")
+    base_model_path = (
+        cache_root / "snapshots" / "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+    )
+    base_model_path.mkdir(parents=True)
+    (base_model_path / "weights.bin").symlink_to(
+        os.path.relpath(blob, start=base_model_path)
+    )
+    base_rows = snapshot_model_files(base_model_path)
+    base_manifest_sha256 = contract_sha256(base_rows)
+    manifest_hashes: dict[tuple[str, int], str] = {}
+    for arm, seeds in (("A", (7170,)), ("B", SEEDS), ("C", SEEDS)):
+        for seed in seeds:
+            output = execution_root / f"arm-{arm}" / f"seed-{seed}"
+            output.mkdir(parents=True)
+            if arm == "A":
+                model_rows: list[dict[str, Any]] = []
+            else:
+                payload = f"synthetic-{arm}-{seed}".encode()
+                model_sha256 = _write(output / "weights.bin", payload)
+                model_rows = [
+                    {
+                        "path": "weights.bin",
+                        "sha256": model_sha256,
+                        "size": len(payload),
+                    }
+                ]
+            (output / "train-run-summary.json").write_text("{}\n")
+            manifest = _seal(
+                {
+                    "schema_version": "router-v2-pilot-model-manifest-v1",
+                    "arm": arm,
+                    "seed": seed,
+                    "base_model_revision": ("1110a243fdf4706b3f48f1d95db1a4f5529b4d41"),
+                    "base_model_file_manifest_sha256": base_manifest_sha256,
+                    "model_file_manifest": model_rows,
+                    "model_file_manifest_sha256": contract_sha256(model_rows),
+                    "output_dir": f"arm-{arm}/seed-{seed}",
+                },
+                "model_manifest_sha256",
+            )
+            manifest_path = output / "model-manifest.json"
+            manifest_hashes[(arm, seed)] = _write(manifest_path, _json_bytes(manifest))
+    temporary_parent = tmp_path / "temporary-parent"
+    temporary_parent.mkdir()
+    return {
+        "execution_root": execution_root,
+        "base_model_path": base_model_path,
+        "manifest_hashes": manifest_hashes,
+        "temporary_parent": temporary_parent,
+    }
+
+
+class _SmokeEncoder:
+    def __init__(
+        self,
+        *,
+        arm: str,
+        seed: int,
+        model_path: Path,
+        calls: list[dict[str, Any]],
+        invalid: str | None = None,
+    ) -> None:
+        self.arm = arm
+        self.seed = seed
+        self.model_path = model_path
+        self.calls = calls
+        self.invalid = invalid
+
+    def encode(
+        self, texts: list[str], *, normalize_embeddings: bool
+    ) -> list[list[float]]:
+        self.calls.append(
+            {
+                "arm": self.arm,
+                "seed": self.seed,
+                "model_path": self.model_path,
+                "texts": texts,
+                "normalize_embeddings": normalize_embeddings,
+            }
+        )
+        dimension = 383 if self.invalid == "dimension" else 384
+        rows = [[0.0] * dimension for _ in range(2)]
+        if self.invalid == "finite":
+            rows[0][0] = float("nan")
+        return rows
+
+
+def test_model_load_smoke_is_nonheldout_seven_model_canonical_pass(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _model_load_smoke_fixture(tmp_path)
+    execution_root = fixture["execution_root"]
+    before = sorted(
+        path.relative_to(execution_root).as_posix()
+        for path in execution_root.rglob("*")
+    )
+    read_paths: list[Path] = []
+    calls: list[dict[str, Any]] = []
+
+    def forbidden(*_: Any, **__: Any) -> None:
+        pytest.fail("evaluation authority/attempt/input derivation must not run")
+
+    def read_bytes(path: Path) -> bytes:
+        read_paths.append(path)
+        return path.read_bytes()
+
+    def factory(
+        arm: str,
+        seed: int,
+        artifact: dict[str, Any],
+        skills: list[dict[str, str]],
+    ) -> _SmokeEncoder:
+        assert skills == []
+        model_path = Path(artifact["model_path"])
+        if arm == "A":
+            temporary_root = model_path.parent
+            assert temporary_root.parent == fixture["temporary_parent"]
+            assert os.stat(temporary_root).st_mode & 0o777 == 0o700
+            assert model_path.name == "arm-A"
+            assert all(not path.is_symlink() for path in model_path.rglob("*"))
+        else:
+            assert model_path == execution_root / f"arm-{arm}" / f"seed-{seed}"
+        return _SmokeEncoder(
+            arm=arm,
+            seed=seed,
+            model_path=model_path,
+            calls=calls,
+        )
+
+    monkeypatch.setattr(runner, "run_evaluation_once", forbidden)
+    monkeypatch.setattr(runner, "_start_attempt", forbidden)
+    monkeypatch.setattr(runner, "_derive_inputs", forbidden)
+
+    result = runner._run_model_load_smoke(
+        execution_root=execution_root,
+        base_model_path=fixture["base_model_path"],
+        manifest_file_sha256=fixture["manifest_hashes"],
+        model_factory=factory,
+        read_bytes=read_bytes,
+        temporary_parent=fixture["temporary_parent"],
+    )
+
+    assert result == {
+        "schema_version": "router-v2-pilot-model-load-smoke-v1",
+        "smoke_status": "PASS",
+    }
+    assert [(call["arm"], call["seed"]) for call in calls] == [
+        ("A", 7170),
+        ("B", 7170),
+        ("B", 7171),
+        ("B", 7172),
+        ("C", 7170),
+        ("C", 7171),
+        ("C", 7172),
+    ]
+    assert all(
+        call["texts"]
+        == [
+            "synthetic router query for non-heldout model-load smoke",
+            "synthetic skill text for non-heldout model-load smoke",
+        ]
+        and call["normalize_embeddings"] is True
+        for call in calls
+    )
+    assert len(read_paths) == 7
+    assert all(path.name == "model-manifest.json" for path in read_paths)
+    assert sorted(fixture["temporary_parent"].iterdir()) == []
+    assert not (execution_root / "evaluation").exists()
+    assert before == sorted(
+        path.relative_to(execution_root).as_posix()
+        for path in execution_root.rglob("*")
+    )
+
+
+def test_model_load_smoke_rejects_manifest_file_hash_before_loading(
+    tmp_path: Path,
+) -> None:
+    fixture = _model_load_smoke_fixture(tmp_path)
+    manifest = fixture["execution_root"] / "arm-B/seed-7171/model-manifest.json"
+    manifest.write_bytes(manifest.read_bytes() + b" ")
+
+    with pytest.raises(ValueError, match="model manifest file SHA-256 mismatch"):
+        runner._run_model_load_smoke(
+            execution_root=fixture["execution_root"],
+            base_model_path=fixture["base_model_path"],
+            manifest_file_sha256=fixture["manifest_hashes"],
+            model_factory=lambda *_: pytest.fail("model must not load"),
+            temporary_parent=fixture["temporary_parent"],
+        )
+
+    assert sorted(fixture["temporary_parent"].iterdir()) == []
+    assert not (fixture["execution_root"] / "evaluation").exists()
+
+
+@pytest.mark.parametrize("invalid", ["dimension", "finite"])
+def test_model_load_smoke_rejects_invalid_embedding_and_cleans_temp(
+    tmp_path: Path,
+    invalid: str,
+) -> None:
+    fixture = _model_load_smoke_fixture(tmp_path)
+    calls: list[dict[str, Any]] = []
+
+    def factory(
+        arm: str,
+        seed: int,
+        artifact: dict[str, Any],
+        skills: list[dict[str, str]],
+    ) -> _SmokeEncoder:
+        del skills
+        return _SmokeEncoder(
+            arm=arm,
+            seed=seed,
+            model_path=Path(artifact["model_path"]),
+            calls=calls,
+            invalid=invalid if arm == "A" else None,
+        )
+
+    with pytest.raises(ValueError, match="dimension|finite"):
+        runner._run_model_load_smoke(
+            execution_root=fixture["execution_root"],
+            base_model_path=fixture["base_model_path"],
+            manifest_file_sha256=fixture["manifest_hashes"],
+            model_factory=factory,
+            temporary_parent=fixture["temporary_parent"],
+        )
+
+    assert len(calls) == 1
+    assert sorted(fixture["temporary_parent"].iterdir()) == []
+    assert not (fixture["execution_root"] / "evaluation").exists()
+
+
+def test_model_load_smoke_cli_is_dedicated_and_has_no_evaluation_entrypoints() -> None:
+    script = Path(__file__).parents[1] / "scripts/smoke_router_v2_pilot_models.py"
+    source = script.read_text()
+    assert "run_model_load_smoke" in source
+    for forbidden in (
+        "run_evaluation_once",
+        "_start_attempt",
+        "_derive_inputs",
+        "heldout",
+        "non-blind-test",
+    ):
+        assert forbidden not in source
+    result = subprocess.run(
+        [sys.executable, str(script), "--help"], capture_output=True, text=True
+    )
+    assert result.returncode == 0
+    assert "--execution-root" in result.stdout
+    assert "--base-model-path" in result.stdout
+
+
+def _replay_fixture(tmp_path: Path) -> dict[str, Any]:
+    request = _fixture(tmp_path / "repository")
+    training_root = tmp_path / "training-execution-test"
+    training_root.mkdir(mode=0o700)
+    evaluation_root = tmp_path / "evaluation-execution-test"
+    evaluation_root.mkdir(mode=0o700)
+    overrides = _test_overrides(
+        request,
+        training_root,
+        model_factory=lambda *_: pytest.fail("model must not load"),
+    )
+    context = overrides.prevalidated_context
+    assert context is not None
+    return {
+        "request": request,
+        "context": context,
+        "training_root": training_root,
+        "evaluation_root": evaluation_root,
+        "base_model_path": context.base_model_path,
+        "overrides": runner.ReplayTestOverrides(
+            context=context,
+            git_probe=lambda _: ("d" * 40, True),
+            resolve_output_root=lambda value: Path(value).resolve(strict=True),
+        ),
+    }
+
+
+def _tree_snapshot(root: Path) -> str:
+    rows = []
+    for path in (root, *sorted(root.rglob("*"))):
+        metadata = path.lstat()
+        relative = "." if path == root else path.relative_to(root).as_posix()
+        if path.is_symlink():
+            kind = "symlink"
+            content = os.readlink(path)
+        elif path.is_file():
+            kind = "file"
+            content = _sha(path.read_bytes())
+        else:
+            kind = "directory"
+            content = None
+        rows.append(
+            {
+                "path": relative,
+                "kind": kind,
+                "mode": metadata.st_mode & 0o7777,
+                "content": content,
+            }
+        )
+    return contract_sha256(rows)
+
+
+def test_replay_manifest_is_exact_canonical_and_pre_attempt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _replay_fixture(tmp_path)
+
+    def forbidden(*_: Any, **__: Any) -> None:
+        pytest.fail("evaluation/training input path must not run")
+
+    monkeypatch.setattr(runner, "run_evaluation_once", forbidden)
+    monkeypatch.setattr(runner, "_start_attempt", forbidden)
+    monkeypatch.setattr(runner, "_derive_inputs", forbidden)
+    manifest = runner.prepare_replay_manifest(
+        fixture["context"].repository_root,
+        fixture["training_root"],
+        fixture["evaluation_root"],
+        fixture["base_model_path"],
+        test_overrides=fixture["overrides"],
+    )
+
+    assert manifest["pilot_id"] == (
+        "router-v2-v4-confusion-mined-pilot-002-eval-replay"
+    )
+    assert manifest["replacement_reason"] == ("INFRASTRUCTURE_FAILURE_BEFORE_INFERENCE")
+    assert manifest["replacement_fields"] == [
+        "pilot_id",
+        "attempt_token_sha256",
+        "evaluation_code_git_commit",
+        "evaluation_output_namespace",
+        "replacement_reason",
+    ]
+    assert manifest["training_execution_id"] == "training-execution-test"
+    assert manifest["training_execution_root"] == str(fixture["training_root"])
+    assert manifest["evaluation_execution_id"] == "evaluation-execution-test"
+    assert manifest["evaluation_output_namespace"] == str(fixture["evaluation_root"])
+    assert (
+        manifest["training_execution_root"] != manifest["evaluation_output_namespace"]
+    )
+    assert manifest["attempt_token_sha256"] != "e" * 64
+    assert manifest["evaluation_code_git_commit"] == "d" * 40
+    assert manifest["seeds"] == [7170, 7171, 7172]
+    contract = manifest["evaluation_contract"]
+    assert contract["arm_order"] == ["A", "B", "C"]
+    assert contract["seed_order"] == [7170, 7171, 7172]
+    assert contract["task_order"] == "ascending_task_id"
+    assert contract["gate"]["comparison_scope"] == "A_VS_C_ONLY"
+    for field, expected in {
+        "reuses_frozen_training_artifacts_from_pilot_001": True,
+        "pilot_001_metrics_observed": False,
+        "review_mode": "MODEL_ONLY_PILOT",
+        "human_reviewer_count": 0,
+        "blind_v2_run": False,
+        "production_ready": False,
+        "release_eligible": False,
+        "router_decision": "KEEP_BASELINE",
+    }.items():
+        assert manifest[field] == expected
+    assert len(manifest["training_artifacts"]) == 9
+    manifest_path = fixture["evaluation_root"] / "pilot-manifest.json"
+    assert manifest_path.read_bytes() == _json_bytes(manifest)
+    assert {path.name for path in fixture["evaluation_root"].iterdir()} == {
+        "pilot-manifest.json"
+    }
+    assert (
+        runner.prepare_replay_manifest(
+            fixture["context"].repository_root,
+            fixture["training_root"],
+            fixture["evaluation_root"],
+            fixture["base_model_path"],
+            test_overrides=fixture["overrides"],
+        )
+        == manifest
+    )
+
+
+@pytest.mark.parametrize("drift", ["run-pack", "model-manifest", "model-file"])
+def test_replay_drift_fails_before_manifest_or_attempt(
+    tmp_path: Path,
+    drift: str,
+) -> None:
+    fixture = _replay_fixture(tmp_path)
+    request = fixture["request"]
+    if drift == "run-pack":
+        path = Path(request["run_pack_manifest_path"])
+    elif drift == "model-manifest":
+        path = Path(_arm_artifact(request, "B")["model_manifest_path"])
+    else:
+        path = Path(_arm_artifact(request, "C")["model_path"]) / "weights.bin"
+    path.write_bytes(path.read_bytes() + b"drift")
+
+    with pytest.raises(ValueError, match="SHA-256|snapshot|manifest"):
+        runner.prepare_replay_manifest(
+            fixture["context"].repository_root,
+            fixture["training_root"],
+            fixture["evaluation_root"],
+            fixture["base_model_path"],
+            test_overrides=fixture["overrides"],
+        )
+
+    assert sorted(fixture["evaluation_root"].iterdir()) == []
+    assert not (fixture["evaluation_root"] / "attempt-1.started.json").exists()
+
+
+def test_replay_preexisting_manifest_mismatch_fails_closed(tmp_path: Path) -> None:
+    fixture = _replay_fixture(tmp_path)
+    (fixture["evaluation_root"] / "pilot-manifest.json").write_text("{}\n")
+
+    with pytest.raises(ValueError, match="pilot manifest mismatch"):
+        runner.prepare_replay_manifest(
+            fixture["context"].repository_root,
+            fixture["training_root"],
+            fixture["evaluation_root"],
+            fixture["base_model_path"],
+            test_overrides=fixture["overrides"],
+        )
+
+    assert not (fixture["evaluation_root"] / "attempt-1.started.json").exists()
+
+
+def test_replay_manifest_uses_exact_shared_preregistered_contract(
+    tmp_path: Path,
+) -> None:
+    fixture = _replay_fixture(tmp_path)
+    manifest = runner.prepare_replay_manifest(
+        fixture["context"].repository_root,
+        fixture["training_root"],
+        fixture["evaluation_root"],
+        fixture["base_model_path"],
+        test_overrides=fixture["overrides"],
+    )
+
+    contract = evaluation.preregistered_evaluation_contract()
+    assert manifest["evaluation_contract"] == contract
+    assert contract["metric_fields"] == [
+        "recall_at_1",
+        "recall_at_5",
+        "mrr",
+        "ndcg_at_5",
+        "negative_hit_rate_at_1",
+        "negative_hit_rate_at_5",
+        "first_negative_rank_mean",
+        "latency_p50_ms",
+        "latency_p95_ms",
+    ]
+    assert contract["ranking"]["rounding"] == "ROUND_HALF_EVEN"
+    assert contract["ranking"]["tie_break"] == "skill_id"
+    assert contract["latency_percentiles"]["method"] == "nearest_rank"
+    assert contract["metrics"]["aggregate_mean"] == "arithmetic"
+    assert contract["metrics"]["aggregate_std"] == "sample_n_minus_1"
+    assert contract["failure_slices"] == ["ALL", "category", "gold_skill_id", "flag"]
+
+
+def test_replay_token_binds_models_base_and_evaluation_contract(tmp_path: Path) -> None:
+    fixture = _replay_fixture(tmp_path)
+    manifest = runner.prepare_replay_manifest(
+        fixture["context"].repository_root,
+        fixture["training_root"],
+        fixture["evaluation_root"],
+        fixture["base_model_path"],
+        test_overrides=fixture["overrides"],
+    )
+    config = json.loads(
+        Path(fixture["request"]["training_artifacts"][0]["config_path"]).read_text()
+    )
+    mutated_artifacts = deepcopy(manifest["training_artifacts"])
+    mutated_artifacts[0]["model_file_manifest"][0]["sha256"] = "f" * 64
+    mutated = runner._replay_manifest(
+        context=fixture["context"],
+        evaluation_root=fixture["evaluation_root"],
+        evaluation_code_git_commit="d" * 40,
+        training_artifacts=mutated_artifacts,
+        lineage_config=config,
+    )
+    assert mutated["attempt_token_sha256"] != manifest["attempt_token_sha256"]
+
+
+def test_replay_requires_test_only_authority(tmp_path: Path) -> None:
+    fixture = _replay_fixture(tmp_path)
+    production_context = replace(
+        fixture["context"],
+        authority=replace(fixture["context"].authority, test_only=False),
+    )
+    overrides = replace(fixture["overrides"], context=production_context)
+
+    with pytest.raises(ValueError, match="test authority"):
+        runner.prepare_replay_manifest(
+            production_context.repository_root,
+            fixture["training_root"],
+            fixture["evaluation_root"],
+            fixture["base_model_path"],
+            test_overrides=overrides,
+        )
+
+
+def test_replay_rejects_output_descendant_of_training_root(tmp_path: Path) -> None:
+    fixture = _replay_fixture(tmp_path)
+    nested = fixture["training_root"] / "pilot-002-output"
+    nested.mkdir(mode=0o700)
+    overrides = replace(
+        fixture["overrides"],
+        resolve_output_root=lambda value: Path(value).resolve(strict=True),
+    )
+
+    with pytest.raises(ValueError, match="sibling|ancestor|descendant"):
+        runner.prepare_replay_manifest(
+            fixture["context"].repository_root,
+            fixture["training_root"],
+            nested,
+            fixture["base_model_path"],
+            test_overrides=overrides,
+        )
+
+
+def test_replay_rejects_output_root_swap_before_manifest_write(tmp_path: Path) -> None:
+    fixture = _replay_fixture(tmp_path)
+    output = fixture["evaluation_root"]
+    moved = tmp_path / "moved-output"
+    outside = tmp_path / "outside-output"
+    outside.mkdir(mode=0o700)
+    swapped = False
+
+    def swapping_read(path: Path) -> bytes:
+        nonlocal swapped
+        if not swapped:
+            output.rename(moved)
+            output.symlink_to(outside, target_is_directory=True)
+            swapped = True
+        return path.read_bytes()
+
+    overrides = replace(fixture["overrides"], read_bytes=swapping_read)
+    with pytest.raises(ValueError, match="replaced|identity|symlink"):
+        runner.prepare_replay_manifest(
+            fixture["context"].repository_root,
+            fixture["training_root"],
+            output,
+            fixture["base_model_path"],
+            test_overrides=overrides,
+        )
+    assert not (outside / "pilot-manifest.json").exists()
+
+
+def test_replay_freshly_hashes_all_frozen_source_files(tmp_path: Path) -> None:
+    _replay_fixture(tmp_path)
+    bindings = {}
+    for name in (
+        "accepted_pairs",
+        "data_manifest",
+        "mining_rows",
+        "mining_manifest",
+        "heldout_labels",
+    ):
+        path = tmp_path / f"{name}.bin"
+        payload = name.encode()
+        path.write_bytes(payload)
+        bindings[name] = {"path": str(path), "sha256": _sha(payload)}
+
+    assert runner._validate_replay_frozen_files(bindings, Path.read_bytes) == bindings
+    Path(bindings["heldout_labels"]["path"]).write_bytes(b"drift")
+    with pytest.raises(ValueError, match="heldout_labels SHA-256"):
+        runner._validate_replay_frozen_files(bindings, Path.read_bytes)
+
+
+def test_replay_refresh_reloads_run_pack_and_training_artifacts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _replay_fixture(tmp_path)
+    calls: list[str] = []
+
+    def load(
+        request: dict[str, Any], read_bytes: Any
+    ) -> tuple[dict[str, bytes], dict[str, Any]]:
+        del request, read_bytes
+        calls.append("run-pack")
+        return {"fresh": b"current"}, {}
+
+    def verify(
+        request: dict[str, Any],
+        read_bytes: Any,
+        documents: dict[str, bytes],
+    ) -> list[dict[str, Any]]:
+        del request, read_bytes
+        assert documents == {"fresh": b"current"}
+        calls.append("artifacts")
+        return [{"fresh": True}]
+
+    monkeypatch.setattr(runner, "_load_run_pack", load)
+    monkeypatch.setattr(runner, "_verify_training_artifacts", verify)
+    refreshed = runner._refresh_replay_context(fixture["context"], Path.read_bytes)
+    assert calls == ["run-pack", "artifacts"]
+    assert refreshed.run_pack_documents == {"fresh": b"current"}
+    assert refreshed.training_artifacts == [{"fresh": True}]
+
+
+def test_replay_revalidation_uses_fresh_run_pack_config_bytes_without_second_read(
+    tmp_path: Path,
+) -> None:
+    fixture = _replay_fixture(tmp_path)
+    context = fixture["context"]
+    artifact = _arm_artifact(context.request, "A")
+    config_path = Path(artifact["config_path"])
+    config_payload = config_path.read_bytes()
+    artifact["config_file_sha256"] = None
+    context.run_pack_documents[
+        f"config-arm-{artifact['arm']}-seed-{artifact['seed']}.json"
+    ] = config_payload
+    config_reads = 0
+
+    def drifting_read(path: Path) -> bytes:
+        nonlocal config_reads
+        if path == config_path:
+            config_reads += 1
+            return config_payload + b" "
+        return path.read_bytes()
+
+    verified, config, _ = runner._revalidate_replay_artifacts(context, drifting_read)
+
+    assert config_reads == 0
+    assert config["config_sha256"] == json.loads(config_payload)["config_sha256"]
+    assert verified[0]["config_file_sha256"] == _sha(config_payload)
+
+
+def test_replay_root_swap_in_exact_pre_start_gap_cannot_target_training_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _replay_fixture(tmp_path)
+    output = fixture["evaluation_root"]
+    moved = tmp_path / "moved-evaluation-output"
+    training_evaluation = fixture["training_root"] / "evaluation"
+    training_evaluation.mkdir(mode=0o700)
+    original = runner._replay_attempt_context
+
+    def swap_after_final_revalidation(**kwargs: Any) -> Any:
+        context = original(**kwargs)
+        output.rename(moved)
+        output.symlink_to(fixture["training_root"], target_is_directory=True)
+        return context
+
+    monkeypatch.setattr(
+        runner, "_replay_attempt_context", swap_after_final_revalidation
+    )
+    monkeypatch.setattr(
+        runner,
+        "_derive_inputs",
+        lambda *_: (_ for _ in ()).throw(RuntimeError("stop after marker")),
+    )
+    overrides = replace(
+        fixture["overrides"],
+        model_factory=lambda _arm, _seed, _artifact, skills: FakeEncoder(skills),
+    )
+
+    with pytest.raises(ValueError, match="replaced|identity|symlink"):
+        runner.run_replay_evaluation_once(
+            fixture["context"].repository_root,
+            fixture["training_root"],
+            output,
+            fixture["base_model_path"],
+            test_overrides=overrides,
+        )
+
+    assert not (training_evaluation / "attempt-1.started.json").exists()
+    assert not (training_evaluation / "attempt-1.terminal.json").exists()
+
+
+def test_synthetic_replay_runner_uses_pilot002_token_and_preserves_training_root(
+    tmp_path: Path,
+) -> None:
+    fixture = _replay_fixture(tmp_path)
+    frozen = fixture["training_root"] / "frozen-evidence"
+    frozen.mkdir(mode=0o700)
+    (frozen / "pilot-001-evidence.json").write_bytes(b"frozen-pilot-001")
+    before = _tree_snapshot(fixture["training_root"])
+    ticks = iter(range(0, 10_000_000_000, 1_000_000))
+    overrides = replace(
+        fixture["overrides"],
+        model_factory=lambda _arm, _seed, _artifact, skills: FakeEncoder(skills),
+        clock_ns=lambda: next(ticks),
+    )
+    summary = runner.run_replay_evaluation_once(
+        fixture["context"].repository_root,
+        fixture["training_root"],
+        fixture["evaluation_root"],
+        fixture["base_model_path"],
+        test_overrides=overrides,
+    )
+    manifest = json.loads(
+        (fixture["evaluation_root"] / "pilot-manifest.json").read_text()
+    )
+    started = json.loads(
+        (fixture["evaluation_root"] / "evaluation/attempt-1.started.json").read_text()
+    )
+    assert started["attempt_token_sha256"] == manifest["attempt_token_sha256"]
+    assert summary["router_decision"] == "KEEP_BASELINE"
+    assert _tree_snapshot(fixture["training_root"]) == before
+
+
+def test_replay_cli_is_dedicated() -> None:
+    script = (
+        Path(__file__).parents[1] / "scripts/run_router_v2_pilot_evaluation_replay.py"
+    )
+    source = script.read_text()
+    assert "run_replay_evaluation_once" in source
+    result = subprocess.run(
+        [sys.executable, str(script), "--help"], capture_output=True, text=True
+    )
+    assert result.returncode == 0
+    assert "--training-execution-root" in result.stdout
+    assert "--evaluation-output-root" in result.stdout

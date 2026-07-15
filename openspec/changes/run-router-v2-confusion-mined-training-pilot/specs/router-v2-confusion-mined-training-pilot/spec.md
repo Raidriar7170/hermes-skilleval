@@ -149,6 +149,14 @@ comparison.
 - **WHEN** a snapshot link is dangling, looping, escaping, nested, non-regular, replaced, or has unexpected size or SHA-256
 - **THEN** the runner fails before model construction and does not weaken the one-attempt boundary
 
+#### Scenario: Future-pilot model-load smoke passes without evaluation access
+- **WHEN** the exact Arm A manifest and six frozen Arm B/C seed manifests and every model-file size/SHA match, Arm A is securely materialized under a one-shot `0700` temporary root, and each model encodes only the two fixed synthetic strings into two finite 384-wide embeddings
+- **THEN** the smoke loads exactly seven models, emits only its canonical `PASS` fact, deletes all temporary contents, and creates no evaluation attempt, output, or metric
+
+#### Scenario: Future-pilot model-load smoke fails closed
+- **WHEN** any exact manifest hash, model-file size/SHA, secure Arm A materialization, model load, embedding count, dimension, or finite-value check fails
+- **THEN** the smoke deletes all temporary contents, emits no `PASS`, and no new pilot attempt is consumed
+
 ### Requirement: Public wording remains conservative
 README and resume recommendations SHALL explicitly state
 `MODEL_ONLY_PILOT`, `human_reviewer_count=0`, non-SOTA, non-production, and
