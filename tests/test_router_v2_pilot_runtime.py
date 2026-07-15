@@ -34,6 +34,33 @@ DEPENDENCIES = {
 }
 
 
+def test_training_framework_imports_are_mypy_safe_without_optional_dependencies(
+    tmp_path: Path,
+) -> None:
+    source = Path(runtime.__file__).read_text(encoding="utf-8")
+    import_lines = [
+        line.strip()
+        for line in source.splitlines()
+        if line.strip().startswith("import torch")
+        or "from sentence_transformers import SentenceTransformer, losses" in line
+    ]
+    probe = tmp_path / "optional_training_import_probe.py"
+    probe.write_text(
+        "def load() -> None:\n" + "".join(f"    {line}\n" for line in import_lines),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-m", "mypy", "--no-site-packages", str(probe)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert len(import_lines) == 2
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def _copy_contract(tmp_path: Path) -> Path:
     root = tmp_path / "repo"
     for relative in (

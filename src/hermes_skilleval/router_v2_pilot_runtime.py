@@ -1480,8 +1480,8 @@ def execute_training_run(
             ):
                 raise ValueError("copied base model snapshot mismatch")
             try:
-                import torch
-                from sentence_transformers import SentenceTransformer, losses  # type: ignore[attr-defined]
+                import torch  # type: ignore[import-not-found]
+                from sentence_transformers import SentenceTransformer, losses  # type: ignore[attr-defined, import-not-found]
             except (ImportError, ModuleNotFoundError) as exc:
                 raise RuntimeError("training frameworks are unavailable") from exc
             seed = config["seed"]
