@@ -716,8 +716,9 @@ def test_copy_model_inputs_rejects_post_validation_replacement(
         parent.rename(moved)
         parent.symlink_to(moved, target_is_directory=True)
     elif replacement == "link":
-        link.unlink()
-        link.symlink_to(os.path.relpath(blob, start=link.parent))
+        replacement_link = link.with_name("replacement-config.json")
+        replacement_link.symlink_to(os.path.relpath(blob, start=link.parent))
+        os.replace(replacement_link, link)
     else:
         new_blob = blob.with_name("replacement-blob")
         new_blob.write_bytes(blob.read_bytes())

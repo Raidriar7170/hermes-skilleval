@@ -799,7 +799,8 @@ def test_executor_runs_frozen_b_and_c_and_arm_a_metadata_only(
         def __init__(self, path: str) -> None:
             model_input = Path(path)
             assert model_input.name == "base-model-input"
-            assert model_input.parent.name.startswith(".seed-")
+            resolved_model_input = model_input.resolve(strict=True)
+            assert resolved_model_input.parent.name.startswith(".seed-")
             assert latest_source_tamper is not None
             assert not (model_input / latest_source_tamper.name).exists()
             self.device = "cpu"
