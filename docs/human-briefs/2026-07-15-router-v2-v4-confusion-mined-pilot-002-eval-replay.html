@@ -119,17 +119,18 @@
       <h2>验证与最终动作</h2>
       <table>
         <tbody>
-          <tr><td>完整 pytest</td><td><code>1178 passed in 31.51s</code></td></tr>
+          <tr><td>完整 pytest</td><td><code>1180 passed in 29.56s</code></td></tr>
           <tr><td>Focused replay/smoke</td><td><code>47 passed in 1.35s</code></td></tr>
           <tr><td>Ruff</td><td>changed Python files check PASS；5 files already formatted</td></tr>
           <tr><td>Focused mypy</td><td>4 source files，0 issues</td></tr>
           <tr><td>OpenSpec strict</td><td>34 passed，0 failed</td></tr>
+          <tr><td>GitHub exact-head CI</td><td><code>29394177211</code> SUCCESS</td></tr>
           <tr><td>Artifact/truth guards</td><td>canonical bytes、单 attempt、truth fields、pilot-001 marker hashes 全部 PASS</td></tr>
           <tr><td>最终只读 Reviewer</td><td>Must Fix: None；Should Fix: None；Re-plan: No；Final Verdict: Pass</td></tr>
         </tbody>
       </table>
-      <p>完整 pytest 的首次运行暴露 README 中 <code>non-SOTA</code> 会被旧 overclaim regex 当作肯定式命中，导致 Phase 18 release-check 改写并出现 9 个失败。将措辞改为 guard 支持的 <code>does not establish SOTA</code> 后，原 9 个测试为 <code>9 passed</code>，随后完整 suite 为 <code>1178 passed</code>；受保护 Phase 18 artifacts 与 HEAD 字节一致。</p>
-      <p>唯一后续动作是创建 PR 并等待完整 CI。禁止 pilot-003、第三轮模型审核、新 mining、blind-v2、release、archive、继续调参或 merge。</p>
+      <p>完整 pytest 的首次运行暴露 README 中 <code>non-SOTA</code> 会被旧 overclaim regex 当作肯定式命中，导致 Phase 18 release-check 改写并出现 9 个失败。将措辞改为 guard 支持的 <code>does not establish SOTA</code> 后，原 9 个测试为 <code>9 passed</code>，最终完整 suite 为 <code>1180 passed</code>；受保护 Phase 18 artifacts 与 HEAD 字节一致。</p>
+      <p>PR 已创建，完整 exact-head CI 已通过，当前按授权停止。禁止 pilot-003、第三轮模型审核、新 mining、blind-v2、release、archive、继续调参或 merge。</p>
     </section>
   </main>
 </body>

@@ -18,4 +18,4 @@
 - [x] 3.2 Add the Chinese L2 Human Brief with conclusion, hashes, verification, risks, non-overclaim boundary, and PR-only next step.
 - [x] 3.3 Run focused and full tests, Ruff, mypy non-regression, strict OpenSpec validation, artifact/truth guards, smoke regression, and `git diff --check`.
 - [x] 3.4 Obtain the required read-only Reviewer verdict, resolve only in-scope Must Fix findings, and re-run affected verification.
-- [ ] 3.5 Commit and push the bounded result, create the PR, wait for complete CI, and stop without merge, archive, release, deploy, tuning, or another pilot.
+- [x] 3.5 Commit and push the bounded result, create the PR, wait for complete CI, and stop without merge, archive, release, deploy, tuning, or another pilot.
