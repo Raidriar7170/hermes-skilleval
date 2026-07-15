@@ -138,13 +138,13 @@
           <tr><td>OpenSpec strict</td><td>34 passed，0 failed</td></tr>
           <tr><td>Parent commit CI</td><td><code>bbaa74567fa691422d69eab765f51cf9c3dfe72c</code> 的 run <code>29394177211</code> SUCCESS；不是 pre-repair exact head</td></tr>
           <tr><td>Pre-repair exact-head CI</td><td><code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code> 的 run <code>29394367201</code> SUCCESS</td></tr>
-          <tr><td>Post-repair exact-head CI</td><td>UNAVAILABLE：当前 evidence-repair 是未 commit 的本地 diff</td></tr>
+          <tr><td>Post-repair exact-head CI</td><td>repair commit <code>203339027cf36cf3d4b7c85f9094048bd2211803</code> 的 GitHub Actions run <code>29400966875</code>（<code>Validate</code>）SUCCESS</td></tr>
           <tr><td>Evidence-repair local verification</td><td>既有 replay-focused tests <code>15 passed, 40 deselected</code>（排除 synthetic runner/model-load/evaluation；未新增测试，<code>new_tests_authorized=false</code>）；JSON/JSONL parse、route count/size/SHA、seven-row hash、erratum self-hash、truth block、frozen-file HEAD diff、<code>git diff --check</code> 全部 PASS；OpenSpec strict <code>34/34</code></td></tr>
           <tr><td>2026-07-15 post-repair 最终只读 Reviewer</td><td>Must Fix: None；Should Fix: None；Re-plan Needed: No；Final Verdict: <code>Pass</code></td></tr>
         </tbody>
       </table>
       <p>Historical pre-repair @ <code>0bfe1405c05acfdae5e73c849fe4e77033e20770</code>：完整 pytest 的首次运行暴露 README 中 <code>non-SOTA</code> 会被旧 overclaim regex 当作肯定式命中，导致 Phase 18 release-check 改写并出现 9 个失败。将措辞改为 guard 支持的 <code>does not establish SOTA</code> 后，原 9 个测试为 <code>9 passed</code>，最终完整 suite 为 <code>1180 passed</code>；受保护 Phase 18 artifacts 与该 pre-repair HEAD 字节一致。</p>
-      <p>PR #38 已存在；本地验证与 2026-07-15 post-repair 最终只读复审均已完成。当前 evidence-repair 尚未 commit，因此没有 post-repair exact-head CI；commit、push 与新 exact-head CI 均保持 pending 且未获授权。</p>
+      <p>PR #38 已存在；本地验证、2026-07-15 post-repair 最终只读复审、repair commit/push 及其 exact-head CI 均已完成。PR 仍保持 Draft，未转 Ready、未 merge。即将提交的 closeout metadata 自身仍需 live exact-head CI 确认，本页不预先声称该后续 CI 已通过。</p>
       <p>禁止重跑 evaluation、pilot-003、第三轮模型审核、新 mining、blind-v2、release、archive、继续调参或 merge。</p>
     </section>
   </main>

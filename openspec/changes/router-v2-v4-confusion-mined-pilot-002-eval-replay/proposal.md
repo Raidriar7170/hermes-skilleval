@@ -56,5 +56,7 @@ None.
   keeps `router_decision=KEEP_BASELINE` until the pilot-002 gate completes.
 - The post-attempt repair changes no runner, test, frozen manifest, attempt
   marker, terminal, summary, metric, or decision. It adds retention and audit
-  evidence only; final review and any post-repair commit/push/CI remain separate
-  pending actions.
+  evidence only. The final model read-only review completed, and the repair
+  commit, push, and exact-head CI completed after explicit authorization;
+  closeout still does not authorize Ready, merge, archive, release, deploy,
+  training, or blind-v2.
