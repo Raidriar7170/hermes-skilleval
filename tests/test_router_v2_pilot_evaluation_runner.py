@@ -56,6 +56,31 @@ def test_production_api_has_no_request_or_hash_authority_parameters() -> None:
     assert EvaluationTestOverrides.__dataclass_fields__["authority"]
 
 
+def test_optional_real_encoder_import_is_mypy_safe_without_optional_dependency(
+    tmp_path: Path,
+) -> None:
+    source = Path(runner.__file__).read_text(encoding="utf-8")
+    import_line = next(
+        line.strip()
+        for line in source.splitlines()
+        if "from sentence_transformers import SentenceTransformer" in line
+    )
+    probe = tmp_path / "optional_import_probe.py"
+    probe.write_text(
+        f"def load() -> None:\n    {import_line}\n",
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-m", "mypy", "--no-site-packages", str(probe)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_self_validated_training_documents_do_not_require_request_file_hash(
     tmp_path: Path,
 ) -> None:

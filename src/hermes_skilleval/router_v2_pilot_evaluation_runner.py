@@ -67,7 +67,7 @@ class EvaluationEncoder(Protocol):
 class _LocalSentenceTransformerEncoder:
     def __init__(self, model_path: str) -> None:
         try:
-            from sentence_transformers import SentenceTransformer
+            from sentence_transformers import SentenceTransformer  # type: ignore[import-not-found]
         except ImportError as exc:
             raise RuntimeError(
                 "sentence-transformers is required for real evaluation"
