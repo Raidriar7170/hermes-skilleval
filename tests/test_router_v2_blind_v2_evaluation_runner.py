@@ -1,0 +1,835 @@
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+import os
+import subprocess
+import sys
+from copy import deepcopy
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from hermes_skilleval import router_v2_blind_v2_evaluation_runner as runner
+
+
+PREFIX = "TEST_ONLY_DO_NOT_USE"
+
+
+def _skills() -> list[dict[str, Any]]:
+    return [
+        {
+            "id": f"test-skill-{index:02d}",
+            "name": f"Test Skill {index:02d}",
+            "category": "test-only",
+            "description": f"{PREFIX} DESCRIPTION {index:02d}",
+            "trigger_terms": [f"test-trigger-{index:02d}"],
+            "body": f"{PREFIX} BODY {index:02d}",
+        }
+        for index in range(16)
+    ]
+
+
+def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _write_human_pack(root: Path, *, publication_permission: bool = False) -> None:
+    root.mkdir()
+    authored = []
+    reviewed = []
+    for index in range(64):
+        gold_index = index // 4
+        has_negative = index % 4 < 3
+        prompt = f"{PREFIX} REQUEST {index:02d} UNIQUE TOKEN {index:04d}"
+        gold = f"test-skill-{gold_index:02d}"
+        negative = f"test-skill-{(gold_index + 1) % 16:02d}" if has_negative else ""
+        task_id = f"{PREFIX}_TASK_{index:02d}"
+        authored.append(
+            {
+                "task_id": task_id,
+                "prompt_text": prompt,
+                "semantic_family_id": f"{PREFIX}_FAMILY_{index:02d}",
+                "gold_skill_id": gold,
+                "negative_skill_id": negative,
+                "author_id": "human-author-1",
+                "author_reason": f"{PREFIX} AUTHOR REASON {index:02d}",
+                "language": "en",
+                "source_type": "HUMAN_AUTHORED",
+            }
+        )
+        reviewed.append(
+            {
+                "task_id": task_id,
+                "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+                "reviewer_id": "human-reviewer-1",
+                "review_decision": "ACCEPT",
+                "reviewed_gold_skill_id": gold,
+                "reviewed_negative_skill_id": negative,
+                "review_confidence": "HIGH",
+                "review_reason": f"{PREFIX} REVIEW REASON {index:02d}",
+            }
+        )
+    _write_csv(
+        root / "blind-v2-authored.csv",
+        list(authored[0]),
+        authored,
+    )
+    _write_csv(
+        root / "blind-v2-independent-review.csv",
+        list(reviewed[0]),
+        reviewed,
+    )
+    metadata = {
+        "author_ids": ["human-author-1"],
+        "reviewer_ids": ["human-reviewer-1"],
+        "human_author_count": 1,
+        "independent_human_reviewer_count": 1,
+        "authors_and_reviewers_are_different_people": True,
+        "review_date": "2026-07-16",
+        "reviewer_saw_model_rankings": False,
+        "reviewer_saw_pilot_002_task_level_results": False,
+        "reviewer_used_ai_assistance": False,
+        "reviewer_qualification": f"{PREFIX} HUMAN QUALIFICATION",
+        "dataset_license": "TEST_ONLY",
+        "publication_permission": publication_permission,
+        "prompts_may_be_public_after_evaluation": publication_permission,
+    }
+    (root / "reviewer-metadata.json").write_text(
+        json.dumps(metadata, ensure_ascii=False), encoding="utf-8"
+    )
+
+
+def test_validate_human_pack_is_static_exact_and_human_reviewed(tmp_path: Path) -> None:
+    pack = tmp_path / "human-pack"
+    _write_human_pack(pack)
+
+    result = runner.validate_human_pack(
+        pack,
+        repository_root=tmp_path / "repo",
+        canonical_skills=_skills(),
+        train_prompts=[f"{PREFIX} TRAIN REFERENCE"],
+        pilot_prompts=[f"{PREFIX} PILOT REFERENCE"],
+        train_family_ids={f"{PREFIX}_TRAIN_FAMILY"},
+        pilot_family_ids={f"{PREFIX}_PILOT_FAMILY"},
+        first_read_timestamp="2026-07-16T00:00:00Z",
+    )
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 64
+    assert result["negative_labeled_task_count"] == 48
+    assert result["family_count"] == 64
+    assert result["negative_target_coverage_count"] == 16
+    assert result["human_author_count"] == 1
+    assert result["independent_human_reviewer_count"] == 1
+    assert result["exact_review_agreement_count"] == 64
+    assert result["excluded_candidate_count"] == 0
+    assert result["model_scores_observed"] is False
+    assert all(row["prompt_text"].startswith(PREFIX) for row in result["tasks"])
+
+    assert not hasattr(runner, "score_human_pack_for_validation")
+
+
+def test_validate_human_pack_rejects_overlap_and_non_independent_review(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "human-pack"
+    _write_human_pack(pack)
+    prompt = f"{PREFIX} REQUEST 00 UNIQUE TOKEN 0000"
+
+    with pytest.raises(ValueError, match="train prompt overlap"):
+        runner.validate_human_pack(
+            pack,
+            repository_root=tmp_path / "repo",
+            canonical_skills=_skills(),
+            train_prompts=[prompt.lower()],
+            pilot_prompts=[],
+            train_family_ids=set(),
+            pilot_family_ids=set(),
+            first_read_timestamp="2026-07-16T00:00:00Z",
+        )
+
+    with pytest.raises(ValueError, match="Phase 16 prompt overlap"):
+        runner.validate_human_pack(
+            pack,
+            repository_root=tmp_path / "repo",
+            canonical_skills=_skills(),
+            train_prompts=[],
+            pilot_prompts=[],
+            train_family_ids=set(),
+            pilot_family_ids=set(),
+            phase16_prompts=[prompt.lower()],
+            first_read_timestamp="2026-07-16T00:00:00Z",
+        )
+
+    review_path = pack / "blind-v2-independent-review.csv"
+    rows = list(csv.DictReader(review_path.open(encoding="utf-8")))
+    rows[0]["reviewer_id"] = "human-author-1"
+    _write_csv(review_path, list(rows[0]), rows)
+    with pytest.raises(ValueError, match="author and reviewer must differ"):
+        runner.validate_human_pack(
+            pack,
+            repository_root=tmp_path / "repo",
+            canonical_skills=_skills(),
+            train_prompts=[],
+            pilot_prompts=[],
+            train_family_ids=set(),
+            pilot_family_ids=set(),
+            first_read_timestamp="2026-07-16T00:00:00Z",
+        )
+
+
+def test_dataset_freeze_is_deterministic_and_private_when_permission_is_false(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "human-pack"
+    _write_human_pack(pack, publication_permission=False)
+    validation = runner.validate_human_pack(
+        pack,
+        repository_root=tmp_path / "repo",
+        canonical_skills=_skills(),
+        train_prompts=[],
+        pilot_prompts=[],
+        train_family_ids=set(),
+        pilot_family_ids=set(),
+        first_read_timestamp="2026-07-16T00:00:00Z",
+    )
+
+    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+    assert first == second
+    assert set(first) == {
+        "blind-v2-tasks.jsonl",
+        "blind-v2-review-summary.json",
+        "blind-v2-manifest.json",
+    }
+    combined = b"".join(first.values())
+    assert f"{PREFIX} REQUEST".encode() not in combined
+    manifest = json.loads(first["blind-v2-manifest.json"])
+    assert manifest["task_count"] == 64
+    assert manifest["negative_labeled_task_count"] == 48
+    assert manifest["model_scores_observed"] is False
+    assert manifest["evaluation_started"] is False
+    assert manifest["retraining_after_data_access"] is False
+    assert manifest["gate_changed_after_data_access"] is False
+
+    recovered = runner.validate_frozen_dataset_documents(validation, first)
+    assert len(recovered) == 64
+    assert all(row["prompt_text"].startswith(PREFIX) for row in recovered)
+    assert all(
+        "prompt_text" not in json.loads(line)
+        for line in first["blind-v2-tasks.jsonl"].splitlines()
+    )
+
+
+def test_authoritative_lineage_binds_all_models_inputs_and_review_bytes(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "human-pack"
+    _write_human_pack(pack, publication_permission=False)
+    validation = runner.validate_human_pack(
+        pack,
+        repository_root=tmp_path / "repo",
+        canonical_skills=_skills(),
+        train_prompts=[],
+        pilot_prompts=[],
+        train_family_ids=set(),
+        pilot_family_ids=set(),
+        first_read_timestamp="2026-07-16T00:00:00Z",
+    )
+    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    repository = Path(__file__).resolve().parents[1]
+    bindings = runner.build_authoritative_lineage_bindings(
+        repository / runner.PREREGISTRATION_RELATIVE,
+        repository_root=repository,
+        pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+        frozen_documents=documents,
+    )
+
+    assert len(bindings["evaluation_models"]) == 6
+    assert {(row["arm"], row["seed"]) for row in bindings["evaluation_models"]} == {
+        (arm, seed) for arm in ("A", "C") for seed in (7170, 7171, 7172)
+    }
+    assert all(row["model_files"] for row in bindings["evaluation_models"])
+    assert (
+        bindings["blind_v2_dataset"]["source_file_sha256"]
+        == validation["source_file_sha256"]
+    )
+    assert bindings["human_review"]["exact_review_agreement_count"] == 64
+    assert "pilot_002_result_report" in bindings["frozen_inputs"]
+    assert len(bindings["old_phase16_prompt_files"]) == 16
+
+
+def test_preregistration_authority_rejects_gate_source_and_model_drift() -> None:
+    repository = Path(__file__).resolve().parents[1]
+    preregistration = repository / "artifacts/router-v2-blind-v2/preregistration.json"
+    pilot = repository / (
+        "artifacts/router-v2-v4/internal-training-pilot/"
+        "router-v2-v4-confusion-mined-pilot-002-eval-replay/pilot-manifest.json"
+    )
+
+    authority = runner.validate_preregistration_authority(
+        preregistration,
+        repository_root=repository,
+        pilot_manifest_path=pilot,
+        verify_model_files=False,
+    )
+    assert authority["status"] == "VALID"
+
+    original = json.loads(preregistration.read_text(encoding="utf-8"))
+
+    def write_tampered(value: dict[str, Any], name: str) -> Path:
+        value = deepcopy(value)
+        value.pop("preregistration_sha256", None)
+        value["preregistration_sha256"] = runner.canonical_sha256(value)
+        path = repository / f".{PREFIX}-{name}"
+        path.write_text(json.dumps(value), encoding="utf-8")
+        return path
+
+    gate = deepcopy(original)
+    gate["gate"]["mrr_mean_delta_min"] = "-0.02000000"
+    gate_path = write_tampered(gate, "gate.json")
+    try:
+        with pytest.raises(ValueError, match="gate binding"):
+            runner.validate_preregistration_authority(
+                gate_path,
+                repository_root=repository,
+                pilot_manifest_path=pilot,
+                verify_model_files=False,
+                canonical_path_required=False,
+            )
+    finally:
+        gate_path.unlink(missing_ok=True)
+
+    source = deepcopy(original)
+    source["evaluator"]["source_files"][0]["sha256"] = "0" * 64
+    source_path = write_tampered(source, "source.json")
+    try:
+        with pytest.raises(ValueError, match="evaluator source hash"):
+            runner.validate_preregistration_authority(
+                source_path,
+                repository_root=repository,
+                pilot_manifest_path=pilot,
+                verify_model_files=False,
+                canonical_path_required=False,
+            )
+    finally:
+        source_path.unlink(missing_ok=True)
+
+    missing_source = deepcopy(original)
+    missing_source["evaluator"]["source_files"] = missing_source["evaluator"][
+        "source_files"
+    ][:-1]
+    missing_source_path = write_tampered(missing_source, "missing-source.json")
+    try:
+        with pytest.raises(ValueError, match="evaluator source set"):
+            runner.validate_preregistration_authority(
+                missing_source_path,
+                repository_root=repository,
+                pilot_manifest_path=pilot,
+                verify_model_files=False,
+                canonical_path_required=False,
+            )
+    finally:
+        missing_source_path.unlink(missing_ok=True)
+
+    statistics = deepcopy(original)
+    statistics["statistics"]["bootstrap_seed"] = 7171
+    statistics_path = write_tampered(statistics, "statistics.json")
+    try:
+        with pytest.raises(ValueError, match="statistics binding"):
+            runner.validate_preregistration_authority(
+                statistics_path,
+                repository_root=repository,
+                pilot_manifest_path=pilot,
+                verify_model_files=False,
+                canonical_path_required=False,
+            )
+    finally:
+        statistics_path.unlink(missing_ok=True)
+
+    namespace = deepcopy(original)
+    namespace["evaluation_output_namespace"] = "artifacts/alternate"
+    namespace_path = write_tampered(namespace, "namespace.json")
+    try:
+        with pytest.raises(ValueError, match="canonical namespace binding"):
+            runner.validate_preregistration_authority(
+                namespace_path,
+                repository_root=repository,
+                pilot_manifest_path=pilot,
+                verify_model_files=False,
+                canonical_path_required=False,
+            )
+    finally:
+        namespace_path.unlink(missing_ok=True)
+
+    model = deepcopy(original)
+    model["base_model"]["model_id"] = "tampered/model"
+    model_path = write_tampered(model, "model.json")
+    try:
+        with pytest.raises(ValueError, match="base model binding"):
+            runner.validate_preregistration_authority(
+                model_path,
+                repository_root=repository,
+                pilot_manifest_path=pilot,
+                verify_model_files=False,
+                canonical_path_required=False,
+            )
+    finally:
+        model_path.unlink(missing_ok=True)
+
+
+def _model_entry(path: Path) -> tuple[list[dict[str, Any]], str]:
+    payload = path / "model.bin"
+    payload.parent.mkdir(parents=True)
+    payload.write_bytes(b"test-only-model-bytes")
+    rows = [
+        {
+            "path": "model.bin",
+            "sha256": hashlib.sha256(payload.read_bytes()).hexdigest(),
+            "size": payload.stat().st_size,
+        }
+    ]
+    return rows, hashlib.sha256(
+        json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+class _FakeEncoder:
+    def encode(
+        self, texts: list[str], *, normalize_embeddings: bool
+    ) -> list[list[float]]:
+        assert normalize_embeddings is True
+        return [[1.0, 0.0, 0.0] for _ in texts]
+
+
+def test_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
+    tmp_path: Path,
+) -> None:
+    base = tmp_path / "base"
+    base_rows, base_manifest_hash = _model_entry(base)
+    artifacts = []
+    for seed in (7170, 7171, 7172):
+        model = tmp_path / f"c-{seed}"
+        rows, manifest_hash = _model_entry(model)
+        manifest_path = tmp_path / f"c-{seed}-manifest.json"
+        manifest_path.write_text("{}", encoding="utf-8")
+        artifacts.append(
+            {
+                "arm": "C",
+                "seed": seed,
+                "model_path": str(model),
+                "model_file_manifest": rows,
+                "model_file_manifest_sha256": manifest_hash,
+                "model_manifest_path": str(manifest_path),
+                "model_manifest_file_sha256": hashlib.sha256(b"{}").hexdigest(),
+            }
+        )
+    pilot = {
+        "base_model": {
+            "id": "test-only/base",
+            "revision": "1" * 40,
+            "path": str(base),
+            "file_manifest_rows": base_rows,
+            "file_manifest_sha256": base_manifest_hash,
+        },
+        "training_artifacts": artifacts,
+    }
+    pilot_path = tmp_path / "pilot-manifest.json"
+    pilot_path.write_text(json.dumps(pilot), encoding="utf-8")
+    preregistration_path = tmp_path / "preregistration.json"
+    preregistration_path.write_text("{}", encoding="utf-8")
+    calls: list[tuple[str, int, Path]] = []
+    authority_calls: list[tuple[Path, Path, Path]] = []
+
+    def factory(arm: str, seed: int, model_path: Path) -> _FakeEncoder:
+        calls.append((arm, seed, model_path))
+        return _FakeEncoder()
+
+    def authority_validator(
+        preregistration: Path | str,
+        *,
+        repository_root: Path | str,
+        pilot_manifest_path: Path | str,
+        verify_model_files: bool,
+    ) -> dict[str, Any]:
+        assert verify_model_files is True
+        authority_calls.append(
+            (Path(preregistration), Path(repository_root), Path(pilot_manifest_path))
+        )
+        return {"status": "VALID"}
+
+    result = runner.run_model_load_smoke(
+        pilot_path,
+        preregistration_path=preregistration_path,
+        repository_root=tmp_path,
+        encoder_factory=factory,
+        authority_validator=authority_validator,
+    )
+
+    assert result["smoke_status"] == "PASS"
+    assert result["embedding_dimension"] == 3
+    assert [(arm, seed) for arm, seed, _ in calls] == [
+        ("A", 7170),
+        ("C", 7170),
+        ("C", 7171),
+        ("C", 7172),
+    ]
+    assert calls[0][2] != base
+    assert not calls[0][2].exists()
+    assert authority_calls == [(preregistration_path, tmp_path, pilot_path)]
+    assert runner.MODEL_LOAD_SMOKE_TEXTS == (
+        "synthetic blind-v2 model load query",
+        "synthetic blind-v2 skill description",
+    )
+
+
+def test_model_load_smoke_receipt_is_commit_bound_and_tamper_evident(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(runner, "SMOKE_RECEIPT_ROOT", tmp_path / "smoke-receipts")
+    smoke = {
+        "schema_version": "router-v2-blind-v2-model-load-smoke-v1",
+        "smoke_status": "PASS",
+        "models": [
+            {"arm": "A", "seed": 7170},
+            {"arm": "C", "seed": 7170},
+            {"arm": "C", "seed": 7171},
+            {"arm": "C", "seed": 7172},
+        ],
+        "embedding_dimension": 384,
+        "device": "cpu",
+        "synthetic_strings": list(runner.MODEL_LOAD_SMOKE_TEXTS),
+        "benchmark_metrics_computed": False,
+        "blind_v2_data_read": False,
+    }
+    receipt = runner.build_model_load_smoke_receipt(
+        smoke, commit_a="a" * 40, preregistration_sha256="b" * 64
+    )
+    path = runner.write_model_load_smoke_receipt(receipt)
+
+    assert receipt["schema_version"] == (
+        "router-v2-blind-v2-model-load-smoke-receipt-v1"
+    )
+    assert receipt["smoke"] == smoke
+    assert (
+        runner.validate_model_load_smoke_receipt(
+            commit_a="a" * 40, preregistration_sha256="b" * 64
+        )
+        == receipt
+    )
+    tampered = json.loads(path.read_text())
+    tampered["embedding_dimension"] = 1
+    path.write_text(json.dumps(tampered), encoding="utf-8")
+    with pytest.raises(ValueError, match="receipt hash mismatch"):
+        runner.validate_model_load_smoke_receipt(
+            commit_a="a" * 40, preregistration_sha256="b" * 64
+        )
+
+    drifted = {**receipt, "unexpected": True}
+    drifted.pop("receipt_sha256")
+    drifted["receipt_sha256"] = runner.canonical_sha256(drifted)
+    path.write_text(json.dumps(drifted), encoding="utf-8")
+    with pytest.raises(ValueError, match="receipt structure mismatch"):
+        runner.validate_model_load_smoke_receipt(
+            commit_a="a" * 40, preregistration_sha256="b" * 64
+        )
+
+
+def test_commit_b_must_be_direct_child_of_commit_a(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commit_a = "a" * 40
+    head = "b" * 40
+    sibling_parent = "c" * 40
+    expected_changed = "\n".join(
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    )
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "HEAD^"): sibling_parent,
+        ("rev-parse", f"{commit_a}^"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--count", f"{commit_a}..{head}"): "1",
+        ("diff", "--name-only", f"{commit_a}..{head}"): expected_changed,
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="direct child"):
+        runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
+
+
+class _FakeScorer:
+    def __init__(self, calls: list[str] | None = None) -> None:
+        self.calls = calls
+
+    def rank(self, query: str, skill_ids: list[str]) -> list[str]:
+        if self.calls is not None:
+            self.calls.append(query)
+        task_index = int(query.rsplit(" ", 1)[-1])
+        gold = f"test-skill-{task_index // 4:02d}"
+        return [gold, *[skill_id for skill_id in skill_ids if skill_id != gold]]
+
+
+class _FakeSentenceModel:
+    def __init__(self) -> None:
+        self.encoded: list[list[str]] = []
+
+    def encode(
+        self, texts: list[str], *, normalize_embeddings: bool
+    ) -> list[list[float]]:
+        self.encoded.append(texts)
+        return [[1.0, 0.0] for _ in texts]
+
+
+def test_real_scorer_consumes_already_canonical_query_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scorer = object.__new__(runner._SentenceTransformerScorer)
+    model = _FakeSentenceModel()
+    scorer._model = model
+    scorer._skill_ids = ["a", "b"]
+    scorer._skill_vectors = [[1.0, 0.0], [0.0, 1.0]]
+    monkeypatch.setattr(
+        runner,
+        "router_query_text",
+        lambda value: (_ for _ in ()).throw(AssertionError("query contract repeated")),
+    )
+
+    assert scorer.rank("already canonical", ["a", "b"]) == ["a", "b"]
+    assert model.encoded == [["already canonical"]]
+
+
+def test_real_scorer_quantizes_to_eight_decimals_before_tie_break() -> None:
+    scorer = object.__new__(runner._SentenceTransformerScorer)
+    model = _FakeSentenceModel()
+    scorer._model = model
+    scorer._skill_ids = ["b", "a"]
+    scorer._skill_vectors = [[0.123456784, 0.0], [0.123456783, 0.0]]
+
+    assert scorer.rank("already canonical", ["b", "a"]) == ["a", "b"]
+
+
+def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b() -> None:
+    tasks = [
+        {
+            "task_id": f"{PREFIX}_TASK_{index:02d}",
+            "prompt_text": f"{PREFIX} QUERY {index}",
+            "semantic_family_id": f"{PREFIX}_FAMILY_{index:02d}",
+            "gold_skill_id": f"test-skill-{index // 4:02d}",
+            "negative_skill_id": (
+                f"test-skill-{((index // 4) + 1) % 16:02d}" if index % 4 < 3 else None
+            ),
+        }
+        for index in range(64)
+    ]
+    bindings = [
+        {"arm": arm, "seed": seed, "model_path": f"/{PREFIX}/{arm}/{seed}"}
+        for seed in (7170, 7171, 7172)
+        for arm in ("A", "C")
+    ]
+
+    calls: list[str] = []
+    rows = runner.evaluate_routes(
+        tasks,
+        _skills(),
+        bindings,
+        scorer_factory=lambda arm, seed, path: _FakeScorer(calls),
+        clock_ns=iter(range(1, 769)).__next__,
+    )
+
+    assert len(rows) == 384
+    assert {(row["arm"], row["seed"]) for row in rows} == {
+        (arm, seed) for arm in ("A", "C") for seed in (7170, 7171, 7172)
+    }
+    assert all(row["gold_rank"] == 1 for row in rows)
+    assert all(row["latency_ns"] == 1 for row in rows)
+    assert len(calls) == 768
+    assert all(calls.count(f"{PREFIX} QUERY {index}") == 12 for index in range(64))
+
+    started = runner.build_attempt_started_document(
+        {
+            "commit_a": "a" * 40,
+            "commit_b": "b" * 40,
+            "attempt_token_sha256": "d" * 64,
+        }
+    )
+    terminal = runner.build_attempt_terminal_document(
+        len(runner.EVALUATION_OUTPUT_FILENAMES)
+    )
+    inputs = {
+        "preregistration.json": b"{}\n",
+        "blind-v2-manifest.json": b"{}\n",
+        "review-summary.json": b"{}\n",
+    }
+    documents = runner.build_evaluation_documents(
+        rows,
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        evaluator_commit="c" * 40,
+        attempt_token_sha256="d" * 64,
+        frozen_bindings={"evaluation_models": [{"arm": "A"}, {"arm": "C"}]},
+        input_artifacts=inputs,
+        attempt_artifacts={
+            "attempt-1.started.json": runner._canonical_json_bytes(started),
+            "attempt-1.terminal.json": runner._canonical_json_bytes(terminal),
+        },
+    )
+    assert set(documents) == set(runner.EVALUATION_OUTPUT_FILENAMES)
+    lineage = json.loads(documents["lineage-manifest.json"])
+    lineage_paths = {row["path"] for row in lineage["artifacts"]}
+    assert lineage_paths == (
+        set(runner.EVALUATION_OUTPUT_FILENAMES) - {"lineage-manifest.json"}
+        | {"attempt-1.started.json", "attempt-1.terminal.json"}
+    )
+    assert lineage["frozen_bindings"]["evaluation_models"] == [
+        {"arm": "A"},
+        {"arm": "C"},
+    ]
+
+
+def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) -> None:
+    repository = tmp_path / "repo"
+    output = repository / runner.FINAL_NAMESPACE_RELATIVE
+    output.parent.mkdir(parents=True)
+
+    with pytest.raises(ValueError, match="canonical namespace"):
+        runner.run_single_attempt(
+            repository / "alternate-final-namespace",
+            repository_root=repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=lambda: {},
+            protected_roots=[],
+        )
+
+    def fail() -> dict[str, bytes]:
+        raise RuntimeError("TEST_ONLY_INFRASTRUCTURE_FAILURE")
+
+    with pytest.raises(RuntimeError, match="TEST_ONLY_INFRASTRUCTURE_FAILURE"):
+        runner.run_single_attempt(
+            output,
+            repository_root=repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=fail,
+            protected_roots=[tmp_path / "training-root"],
+        )
+
+    assert (output / "attempt-1.started.json").is_file()
+    terminal = json.loads((output / "attempt-1.terminal.json").read_text())
+    assert terminal["status"] == "INFRASTRUCTURE_FAILURE"
+    assert terminal["research_conclusion"] == (
+        "BLIND_V2_INCONCLUSIVE_INFRASTRUCTURE_FAILURE"
+    )
+    with pytest.raises(FileExistsError):
+        runner.run_single_attempt(
+            output,
+            repository_root=repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=lambda: {},
+            protected_roots=[],
+        )
+
+    protected_repository = tmp_path / "protected-repo"
+    protected = protected_repository / runner.FINAL_NAMESPACE_RELATIVE
+    protected.parent.mkdir(parents=True)
+    with pytest.raises(ValueError, match="protected root"):
+        runner.run_single_attempt(
+            protected,
+            repository_root=protected_repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=lambda: {},
+            protected_roots=[protected_repository / "artifacts"],
+        )
+
+
+def test_final_cli_freezes_only_protocol_subcommands() -> None:
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = "src"
+    result = subprocess.run(
+        [sys.executable, "scripts/run_router_v2_blind_v2_final.py", "--help"],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+
+    assert result.returncode == 0
+    for subcommand in ("smoke", "pack-status", "freeze", "evaluate"):
+        assert subcommand in result.stdout
+    for forbidden in ("train", "mine", "tune", "attempt-2", "blind-v3"):
+        assert forbidden not in result.stdout
+
+    freeze = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_router_v2_blind_v2_final.py",
+            "freeze",
+            "--help",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    assert freeze.returncode == 0
+    for caller_controlled in (
+        "--pack-root",
+        "--skills",
+        "--train-reference",
+        "--pilot-reference",
+        "--commit-a",
+        "--output-dir",
+    ):
+        assert caller_controlled not in freeze.stdout
+
+    pack_status = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_router_v2_blind_v2_final.py",
+            "pack-status",
+            "--help",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    assert pack_status.returncode == 0
+    assert "--preregistration" in pack_status.stdout
+    assert "--template-output" not in pack_status.stdout
+
+    evaluate = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_router_v2_blind_v2_final.py",
+            "evaluate",
+            "--help",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    assert evaluate.returncode == 0
+    for caller_controlled in (
+        "--tasks",
+        "--skills",
+        "--commit-a",
+        "--commit-b",
+        "--evaluator-commit",
+        "--attempt-token-sha256",
+        "--output-root",
+    ):
+        assert caller_controlled not in evaluate.stdout
