@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -70,6 +71,17 @@ def _per_seed() -> list[dict[str, Any]]:
         for seed in SEEDS
         for arm in ("A", "C")
     ]
+
+
+def _lineage_for_bindings(frozen_bindings: dict[Any, Any]) -> dict[str, Any]:
+    return evaluation.build_lineage_manifest(
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        evaluator_commit="c" * 40,
+        attempt_token_sha256="d" * 64,
+        frozen_bindings=frozen_bindings,
+        artifacts={f"{PREFIX}_aggregate.json": b"{}\n"},
+    )
 
 
 def test_preregistered_contract_freezes_128_96_a_c_gate_and_non_actions() -> None:
@@ -965,36 +977,98 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
         {"x": {1}},
         {"x": b"bytes"},
         {"x": float("nan")},
+        {"x": float("inf")},
+        {"x": object()},
     ),
 )
 def test_lineage_rejects_non_json_frozen_bindings(
     invalid_bindings: dict[str, Any],
 ) -> None:
     with pytest.raises(ValueError, match="frozen bindings must be canonical JSON"):
-        evaluation.build_lineage_manifest(
-            commit_a="a" * 40,
-            commit_b="b" * 40,
-            evaluator_commit="c" * 40,
-            attempt_token_sha256="d" * 64,
-            frozen_bindings=invalid_bindings,
-            artifacts={f"{PREFIX}_aggregate.json": b"{}\n"},
-        )
+        _lineage_for_bindings(invalid_bindings)
+
+
+@pytest.mark.parametrize(
+    ("invalid_bindings", "message"),
+    (
+        ({"x": (1,)}, "unsupported value"),
+        ({1: "value"}, "keys must be strings"),
+        ({"x": 10**400}, "I-JSON safe integer"),
+        ({"x": Decimal("1")}, "unsupported value"),
+    ),
+)
+def test_lineage_rejects_values_outside_strict_json_contract(
+    invalid_bindings: dict[Any, Any],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        _lineage_for_bindings(invalid_bindings)
+
+
+@pytest.mark.parametrize("safe_integer", (-(2**53 - 1), 2**53 - 1))
+def test_lineage_accepts_i_json_safe_integer_boundaries(safe_integer: int) -> None:
+    lineage = _lineage_for_bindings({"value": safe_integer})
+
+    assert lineage["frozen_bindings"] == {"value": safe_integer}
+
+
+@pytest.mark.parametrize("unsafe_integer", (-(2**53), 2**53))
+def test_lineage_rejects_integers_outside_i_json_safe_range(
+    unsafe_integer: int,
+) -> None:
+    with pytest.raises(ValueError, match="I-JSON safe integer"):
+        _lineage_for_bindings({"value": unsafe_integer})
+
+
+def test_lineage_rejects_cyclic_frozen_bindings() -> None:
+    frozen_bindings: dict[str, Any] = {}
+    frozen_bindings["self"] = frozen_bindings
+
+    with pytest.raises(ValueError, match="cycle"):
+        _lineage_for_bindings(frozen_bindings)
+
+
+def test_lineage_rejects_excessive_frozen_binding_depth() -> None:
+    nested: Any = None
+    for _ in range(101):
+        nested = [nested]
+
+    with pytest.raises(ValueError, match="maximum nesting depth"):
+        _lineage_for_bindings({"nested": nested})
+
+
+def test_lineage_accepts_maximum_frozen_binding_depth() -> None:
+    nested: Any = None
+    for _ in range(100):
+        nested = [nested]
+
+    lineage = _lineage_for_bindings({"nested": nested})
+
+    assert lineage["frozen_bindings"] == {"nested": nested}
+
+
+def test_lineage_accepts_shared_non_cyclic_containers() -> None:
+    shared = ["value", True, None, 1, 1.25]
+    frozen_bindings = {"left": shared, "right": shared}
+
+    lineage = _lineage_for_bindings(frozen_bindings)
+
+    assert lineage["frozen_bindings"] == frozen_bindings
 
 
 def test_lineage_accepts_nested_json_frozen_bindings_without_changing_hash() -> None:
-    lineage = evaluation.build_lineage_manifest(
-        commit_a="a" * 40,
-        commit_b="b" * 40,
-        evaluator_commit="c" * 40,
-        attempt_token_sha256="d" * 64,
-        frozen_bindings={
+    lineage = _lineage_for_bindings(
+        {
             "nested": {
                 "values": ["value", True, None, 1, 1.25],
             }
-        },
-        artifacts={f"{PREFIX}_aggregate.json": b"{}\n"},
+        }
     )
 
+    assert (
+        lineage["lineage_sha256"]
+        == "8fde76e5ea568351e1184935488d3ab03b6e1ce587c769985bf03b3156475f8d"
+    )
     assert lineage["lineage_sha256"] == evaluation.canonical_sha256(
         {key: value for key, value in lineage.items() if key != "lineage_sha256"}
     )

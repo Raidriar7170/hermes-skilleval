@@ -42,6 +42,9 @@ TERMINAL_STATES = {
 _HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 _HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 _EIGHT_DECIMAL = re.compile(r"(?:0|[1-9][0-9]*)\.[0-9]{8}\Z")
+_I_JSON_SAFE_INTEGER_MAX = 2**53 - 1
+_MAX_FROZEN_BINDING_DEPTH = 100
+_FROZEN_BINDINGS_ERROR = "frozen bindings must be canonical JSON"
 _RATE_NAMES = (
     "recall_at_1",
     "recall_at_5",
@@ -129,6 +132,51 @@ def _number(value: Any, label: str) -> Decimal:
         raise ValueError(f"{label} must be numeric") from exc
     _require(result.is_finite(), f"{label} must be finite")
     return result
+
+
+def _validate_frozen_binding_value(
+    value: Any,
+    *,
+    depth: int,
+    active_container_ids: set[int],
+) -> None:
+    if value is None or type(value) is bool or type(value) is str:
+        return
+    if type(value) is int:
+        if not -_I_JSON_SAFE_INTEGER_MAX <= value <= _I_JSON_SAFE_INTEGER_MAX:
+            raise ValueError(
+                f"{_FROZEN_BINDINGS_ERROR}: integer exceeds I-JSON safe integer range"
+            )
+        return
+    if type(value) is float:
+        if not math.isfinite(value):
+            raise ValueError(f"{_FROZEN_BINDINGS_ERROR}: float must be finite")
+        return
+    if depth > _MAX_FROZEN_BINDING_DEPTH:
+        raise ValueError(f"{_FROZEN_BINDINGS_ERROR}: maximum nesting depth exceeded")
+    children: Iterable[Any]
+    if type(value) is dict:
+        mapping = cast(dict[Any, Any], value)
+        if not all(type(key) is str for key in mapping):
+            raise ValueError(f"{_FROZEN_BINDINGS_ERROR}: keys must be strings")
+        children = mapping.values()
+    elif type(value) is list:
+        children = cast(list[Any], value)
+    else:
+        raise ValueError(f"{_FROZEN_BINDINGS_ERROR}: unsupported value")
+    container_id = id(value)
+    if container_id in active_container_ids:
+        raise ValueError(f"{_FROZEN_BINDINGS_ERROR}: cycle detected")
+    active_container_ids.add(container_id)
+    try:
+        for child in children:
+            _validate_frozen_binding_value(
+                child,
+                depth=depth + 1,
+                active_container_ids=active_container_ids,
+            )
+    finally:
+        active_container_ids.remove(container_id)
 
 
 def preregistered_evaluation_contract() -> dict[str, Any]:
@@ -1153,10 +1201,15 @@ def build_lineage_manifest(
         "attempt token hash mismatch",
     )
     _require(type(frozen_bindings) is dict, "frozen bindings mismatch")
+    _validate_frozen_binding_value(
+        frozen_bindings,
+        depth=0,
+        active_container_ids=set(),
+    )
     try:
         canonical_sha256(frozen_bindings)
     except (TypeError, ValueError) as exc:
-        raise ValueError("frozen bindings must be canonical JSON") from exc
+        raise ValueError(_FROZEN_BINDINGS_ERROR) from exc
     _require(
         type(artifacts) is dict
         and all(
