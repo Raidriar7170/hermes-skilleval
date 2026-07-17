@@ -11,6 +11,7 @@ import tempfile
 import time
 import unicodedata
 from collections import Counter
+from copy import deepcopy
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Protocol, cast
@@ -78,7 +79,136 @@ EVALUATOR_SOURCE_PATHS = (
     "src/hermes_skilleval/router_v2_pilot_evaluation.py",
     "scripts/run_router_v2_blind_v2_final.py",
 )
-REQUIRED_PACK_FILES = (
+REQUIRED_AGENT_PACK_FILES = (
+    "blind-v2-generation.jsonl",
+    "blind-v2-review-a.jsonl",
+    "blind-v2-review-b.jsonl",
+    "blind-v2-contamination.jsonl",
+    "agent-run-metadata.json",
+)
+AGENT_CONFIGS = {
+    "generator": {
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "max",
+        "timeout_seconds": 1800,
+    },
+    "reviewer_a": {
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "ultra",
+        "timeout_seconds": 900,
+    },
+    "reviewer_b": {
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "max",
+        "timeout_seconds": 900,
+    },
+}
+SELECTION_SEED = 7170
+GENERATOR_SYSTEM_PROMPT = (
+    "You are the Generator for a preregistered Router V2 blind evaluation. "
+    "Create natural English user requests for exactly one primary canonical skill. "
+    "Do not mention skill IDs, skill names, gold labels, negative labels, benchmarks, "
+    "routers, training, pilot data, Phase 16, Arm A, Arm C, or model behavior. For a "
+    "negative-labeled candidate, choose one plausible but insufficient canonical "
+    "negative skill. Use only the supplied skill definitions and quota. Do not use "
+    "external memory or prior conversation. Return only JSON matching the supplied "
+    "schema."
+)
+REVIEWER_SYSTEM_PROMPT = (
+    "You are a role-isolated reviewer for one preregistered Router V2 blind candidate. "
+    "Use only the supplied task text, canonical skill definitions, and rubric. "
+    "Independently decide the single primary gold skill and one "
+    "plausible-but-insufficient negative skill or null. Reject ambiguity, unnatural "
+    "wording, label leakage, invalid negatives, and tasks with more than one equally "
+    "primary skill. Do not use external memory, prior conversation, quotas, other "
+    "reviews, generator labels, Router models, or model results. Return only JSON "
+    "matching the supplied schema."
+)
+GENERATOR_RULES = {
+    "language": "natural English",
+    "primary_skill": "exactly one primary canonical skill",
+    "label_leakage": "do not expose canonical labels in the request text",
+    "negative_skill": "one plausible but insufficient canonical skill or null",
+    "source_boundary": "use only the supplied canonical skill definitions and quota",
+}
+REVIEW_RUBRIC = {
+    "natural": "The request is natural English user wording.",
+    "single_primary_skill": "Exactly one canonical skill is clearly primary.",
+    "no_label_leakage": "The request does not expose skill or evaluation labels.",
+    "negative_confusable": (
+        "A non-null negative is plausible for the wording but insufficient to fulfill "
+        "the request; use null when no such negative exists."
+    ),
+}
+AGENT_REVIEW_DECISIONS = (
+    "ACCEPT",
+    "REJECT_AMBIGUOUS",
+    "REJECT_WRONG_GOLD",
+    "REJECT_WRONG_NEGATIVE",
+    "REJECT_NOT_CONFUSABLE",
+    "REJECT_UNNATURAL",
+    "REJECT_LABEL_LEAKAGE",
+)
+AGENT_REVIEW_CONFIDENCE = ("LOW", "MEDIUM", "HIGH")
+GENERATOR_RESPONSE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["candidates"],
+    "properties": {
+        "candidates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": [
+                    "candidate_index",
+                    "prompt_text",
+                    "semantic_family_id",
+                    "proposed_gold_skill_id",
+                    "proposed_negative_skill_id",
+                    "language",
+                    "rationale",
+                ],
+                "properties": {
+                    "candidate_index": {"type": "integer", "minimum": 0},
+                    "prompt_text": {"type": "string", "minLength": 1},
+                    "semantic_family_id": {"type": "string", "minLength": 1},
+                    "proposed_gold_skill_id": {"type": "string", "minLength": 1},
+                    "proposed_negative_skill_id": {"type": ["string", "null"]},
+                    "language": {"const": "en"},
+                    "rationale": {"type": "string", "minLength": 1},
+                },
+            },
+        }
+    },
+}
+REVIEWER_RESPONSE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "decision",
+        "reviewed_gold_skill_id",
+        "reviewed_negative_skill_id",
+        "natural",
+        "single_primary_skill",
+        "no_label_leakage",
+        "negative_confusable",
+        "confidence",
+        "reason",
+    ],
+    "properties": {
+        "decision": {"enum": list(AGENT_REVIEW_DECISIONS)},
+        "reviewed_gold_skill_id": {"type": "string", "minLength": 1},
+        "reviewed_negative_skill_id": {"type": ["string", "null"]},
+        "natural": {"type": "boolean"},
+        "single_primary_skill": {"type": "boolean"},
+        "no_label_leakage": {"type": "boolean"},
+        "negative_confusable": {"type": ["boolean", "null"]},
+        "confidence": {"enum": list(AGENT_REVIEW_CONFIDENCE)},
+        "reason": {"type": "string", "minLength": 1},
+    },
+}
+LEGACY_REQUIRED_HUMAN_PACK_FILES = (
     "blind-v2-authored.csv",
     "blind-v2-independent-review.csv",
     "reviewer-metadata.json",
@@ -148,6 +278,478 @@ AuthorityValidator = Callable[..., dict[str, Any]]
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
+
+
+def _exact_object_fields(
+    value: Any, expected: set[str] | frozenset[str], label: str
+) -> dict[str, Any]:
+    _require(type(value) is dict, f"{label} must be an object")
+    _require(set(value) == expected, f"{label} fields mismatch")
+    return cast(dict[str, Any], value)
+
+
+def _nonempty_string(value: Any, label: str) -> str:
+    _require(type(value) is str and bool(value.strip()), f"{label} must be non-empty")
+    return cast(str, value)
+
+
+def _canonical_skill_ids(canonical_skills: Any) -> set[str]:
+    _require(type(canonical_skills) is list, "canonical skills must be a list")
+    ids: list[str] = []
+    for index, skill in enumerate(canonical_skills):
+        _require(type(skill) is dict, f"canonical skill {index} must be an object")
+        skill_id = _nonempty_string(
+            cast(dict[str, Any], skill).get("id"),
+            f"canonical skill {index} id",
+        )
+        ids.append(skill_id)
+    _require(bool(ids), "canonical skills must not be empty")
+    _require(len(ids) == len(set(ids)), "canonical skill ids must be unique")
+    return set(ids)
+
+
+def _request_sha256(request: dict[str, Any]) -> str:
+    payload = {key: value for key, value in request.items() if key != "request_sha256"}
+    try:
+        return canonical_sha256(payload)
+    except (RecursionError, TypeError, ValueError) as exc:
+        raise ValueError("request payload must be canonical JSON") from exc
+
+
+def opaque_candidate_id(
+    round_number: int, skill_id: str, index: int, response_sha256: str
+) -> str:
+    _require(
+        type(round_number) is int and round_number > 0,
+        "round number must be a positive integer",
+    )
+    _nonempty_string(skill_id, "skill id")
+    _require(type(index) is int and index >= 0, "candidate index must be an integer")
+    _nonempty_string(response_sha256, "response SHA-256")
+    raw = f"{round_number}:{skill_id}:{index}:{response_sha256}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:24]
+
+
+def selection_key(candidate_id: str) -> str:
+    _nonempty_string(candidate_id, "candidate id")
+    return hashlib.sha256(f"{SELECTION_SEED}:{candidate_id}".encode()).hexdigest()
+
+
+def review_schedule_key(role: str, candidate_id: str) -> str:
+    _require(
+        type(role) is str and role in {"reviewer_a", "reviewer_b"},
+        "reviewer role mismatch",
+    )
+    _nonempty_string(candidate_id, "candidate id")
+    prefix = {"reviewer_a": "review-a:7170", "reviewer_b": "review-b:7171"}[role]
+    return hashlib.sha256(f"{prefix}:{candidate_id}".encode()).hexdigest()
+
+
+def build_generator_request(
+    canonical_skills: list[dict[str, Any]],
+    *,
+    gold_skill_id: str,
+    negative_quota: int,
+    positive_only_quota: int,
+    round_number: int = 1,
+) -> dict[str, Any]:
+    canonical_ids = _canonical_skill_ids(canonical_skills)
+    _nonempty_string(gold_skill_id, "generator gold skill")
+    _require(gold_skill_id in canonical_ids, "generator gold skill must be canonical")
+    for label, value in (
+        ("negative quota", negative_quota),
+        ("positive-only quota", positive_only_quota),
+    ):
+        _require(type(value) is int and value >= 0, f"{label} must be an integer")
+    _require(
+        negative_quota + positive_only_quota > 0,
+        "generator quota must request at least one candidate",
+    )
+    _require(
+        type(round_number) is int and round_number > 0,
+        "round number must be a positive integer",
+    )
+    config = AGENT_CONFIGS["generator"]
+    payload = {
+        "schema_version": "router-v2-blind-v2-generation-request-v1",
+        "role": "generator",
+        "model": config["model"],
+        "reasoning_effort": config["reasoning_effort"],
+        "timeout_seconds": config["timeout_seconds"],
+        "system_prompt": GENERATOR_SYSTEM_PROMPT,
+        "response_schema": deepcopy(GENERATOR_RESPONSE_SCHEMA),
+        "input": {
+            "canonical_skills": deepcopy(canonical_skills),
+            "rules": deepcopy(GENERATOR_RULES),
+            "quota": {
+                "gold_skill_id": gold_skill_id,
+                "negative_quota": negative_quota,
+                "positive_only_quota": positive_only_quota,
+                "round_number": round_number,
+            },
+        },
+    }
+    request = {**payload, "request_sha256": canonical_sha256(payload)}
+    return validate_agent_request(request)
+
+
+def build_reviewer_request(
+    candidate: dict[str, Any],
+    canonical_skills: list[dict[str, Any]],
+    *,
+    role: str,
+) -> dict[str, Any]:
+    _require(
+        type(role) is str and role in {"reviewer_a", "reviewer_b"},
+        "reviewer role mismatch",
+    )
+    _canonical_skill_ids(canonical_skills)
+    _require(type(candidate) is dict, "candidate must be an object")
+    candidate_id = _nonempty_string(candidate.get("candidate_id"), "candidate id")
+    prompt_text = _nonempty_string(candidate.get("prompt_text"), "prompt text")
+    config = AGENT_CONFIGS[role]
+    payload = {
+        "schema_version": "router-v2-blind-v2-review-request-v1",
+        "role": role,
+        "model": config["model"],
+        "reasoning_effort": config["reasoning_effort"],
+        "timeout_seconds": config["timeout_seconds"],
+        "system_prompt": REVIEWER_SYSTEM_PROMPT,
+        "response_schema": deepcopy(REVIEWER_RESPONSE_SCHEMA),
+        "input": {
+            "task_id": candidate_id,
+            "prompt_text": prompt_text,
+            "canonical_skills": deepcopy(canonical_skills),
+            "rubric": deepcopy(REVIEW_RUBRIC),
+        },
+    }
+    request = {**payload, "request_sha256": canonical_sha256(payload)}
+    return validate_agent_request(request)
+
+
+def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
+    request = _exact_object_fields(
+        request,
+        {
+            "schema_version",
+            "role",
+            "model",
+            "reasoning_effort",
+            "timeout_seconds",
+            "system_prompt",
+            "response_schema",
+            "input",
+            "request_sha256",
+        },
+        "request",
+    )
+    _require(
+        type(request["request_sha256"]) is str
+        and request["request_sha256"] == _request_sha256(request),
+        "request hash mismatch",
+    )
+    role = request["role"]
+    _require(
+        type(role) is str and role in AGENT_CONFIGS,
+        "agent role mismatch",
+    )
+    config = AGENT_CONFIGS[cast(str, role)]
+    _require(request["model"] == config["model"], "request model mismatch")
+    _require(
+        request["reasoning_effort"] == config["reasoning_effort"],
+        "request reasoning effort mismatch",
+    )
+    _require(
+        type(request["timeout_seconds"]) is int
+        and request["timeout_seconds"] == config["timeout_seconds"],
+        "request timeout mismatch",
+    )
+    request_input = _exact_object_fields(
+        request["input"],
+        (
+            {"canonical_skills", "rules", "quota"}
+            if role == "generator"
+            else {"task_id", "prompt_text", "canonical_skills", "rubric"}
+        ),
+        "generator input" if role == "generator" else "reviewer input",
+    )
+    canonical_ids = _canonical_skill_ids(request_input["canonical_skills"])
+    if role == "generator":
+        _require(
+            request["schema_version"] == "router-v2-blind-v2-generation-request-v1",
+            "generator request schema mismatch",
+        )
+        _require(
+            request["system_prompt"] == GENERATOR_SYSTEM_PROMPT,
+            "generator system prompt mismatch",
+        )
+        _require(
+            request["response_schema"] == GENERATOR_RESPONSE_SCHEMA,
+            "generator response schema mismatch",
+        )
+        _require(request_input["rules"] == GENERATOR_RULES, "generator rules mismatch")
+        quota = _exact_object_fields(
+            request_input["quota"],
+            {
+                "gold_skill_id",
+                "negative_quota",
+                "positive_only_quota",
+                "round_number",
+            },
+            "generator quota",
+        )
+        _nonempty_string(quota["gold_skill_id"], "generator gold skill")
+        _require(
+            quota["gold_skill_id"] in canonical_ids,
+            "generator gold skill must be canonical",
+        )
+        for label in ("negative_quota", "positive_only_quota"):
+            _require(
+                type(quota[label]) is int and quota[label] >= 0,
+                f"generator {label} must be an integer",
+            )
+        _require(
+            quota["negative_quota"] + quota["positive_only_quota"] > 0,
+            "generator quota must request at least one candidate",
+        )
+        _require(
+            type(quota["round_number"]) is int and quota["round_number"] > 0,
+            "generator round number must be a positive integer",
+        )
+    else:
+        _require(
+            request["schema_version"] == "router-v2-blind-v2-review-request-v1",
+            "reviewer request schema mismatch",
+        )
+        _require(
+            request["system_prompt"] == REVIEWER_SYSTEM_PROMPT,
+            "reviewer system prompt mismatch",
+        )
+        _require(
+            request["response_schema"] == REVIEWER_RESPONSE_SCHEMA,
+            "reviewer response schema mismatch",
+        )
+        _require(request_input["rubric"] == REVIEW_RUBRIC, "review rubric mismatch")
+        _nonempty_string(request_input["task_id"], "reviewer task id")
+        _nonempty_string(request_input["prompt_text"], "reviewer prompt text")
+    return request
+
+
+def _validate_generator_response(
+    response: Any, request: dict[str, Any]
+) -> dict[str, Any]:
+    response = _exact_object_fields(response, {"candidates"}, "generator response")
+    candidates = response["candidates"]
+    _require(type(candidates) is list, "generator candidates must be a list")
+    quota = cast(dict[str, Any], cast(dict[str, Any], request["input"])["quota"])
+    expected_count = quota["negative_quota"] + quota["positive_only_quota"]
+    _require(len(candidates) == expected_count, "generator candidate count mismatch")
+    canonical_ids = _canonical_skill_ids(
+        cast(dict[str, Any], request["input"])["canonical_skills"]
+    )
+    indexes: list[int] = []
+    negative_count = 0
+    fields = {
+        "candidate_index",
+        "prompt_text",
+        "semantic_family_id",
+        "proposed_gold_skill_id",
+        "proposed_negative_skill_id",
+        "language",
+        "rationale",
+    }
+    for raw_candidate in candidates:
+        candidate = _exact_object_fields(raw_candidate, fields, "generator candidate")
+        index = candidate["candidate_index"]
+        _require(
+            type(index) is int and index >= 0,
+            "generator candidate index must be an integer",
+        )
+        indexes.append(cast(int, index))
+        _nonempty_string(candidate["prompt_text"], "generator prompt text")
+        _nonempty_string(
+            candidate["semantic_family_id"], "generator semantic family id"
+        )
+        gold = candidate["proposed_gold_skill_id"]
+        _require(
+            type(gold) is str
+            and gold in canonical_ids
+            and gold == quota["gold_skill_id"],
+            "generator proposed gold skill mismatch",
+        )
+        negative = candidate["proposed_negative_skill_id"]
+        _require(
+            negative is None or (type(negative) is str and negative in canonical_ids),
+            "generator proposed negative skill mismatch",
+        )
+        _require(negative != gold, "generator negative skill must differ from gold")
+        negative_count += negative is not None
+        _require(candidate["language"] == "en", "generator language mismatch")
+        _nonempty_string(candidate["rationale"], "generator rationale")
+    _require(
+        set(indexes) == set(range(expected_count))
+        and len(indexes) == len(set(indexes)),
+        "generator candidate indexes mismatch",
+    )
+    _require(
+        negative_count == quota["negative_quota"],
+        "generator negative quota mismatch",
+    )
+    return response
+
+
+def _validate_reviewer_response(
+    response: Any, request: dict[str, Any]
+) -> dict[str, Any]:
+    fields = {
+        "decision",
+        "reviewed_gold_skill_id",
+        "reviewed_negative_skill_id",
+        "natural",
+        "single_primary_skill",
+        "no_label_leakage",
+        "negative_confusable",
+        "confidence",
+        "reason",
+    }
+    response = _exact_object_fields(response, fields, "reviewer response")
+    _require(
+        type(response["decision"]) is str
+        and response["decision"] in AGENT_REVIEW_DECISIONS,
+        "reviewer decision mismatch",
+    )
+    canonical_ids = _canonical_skill_ids(
+        cast(dict[str, Any], request["input"])["canonical_skills"]
+    )
+    gold = response["reviewed_gold_skill_id"]
+    _require(
+        type(gold) is str and gold in canonical_ids,
+        "reviewed gold skill must be canonical",
+    )
+    negative = response["reviewed_negative_skill_id"]
+    _require(
+        negative is None or (type(negative) is str and negative in canonical_ids),
+        "reviewed negative skill must be canonical or null",
+    )
+    _require(negative != gold, "reviewed negative skill must differ from gold")
+    for field in ("natural", "single_primary_skill", "no_label_leakage"):
+        _require(type(response[field]) is bool, f"reviewer {field} must be boolean")
+    _require(
+        (negative is None and response["negative_confusable"] is None)
+        or (negative is not None and response["negative_confusable"] is True),
+        "reviewer negative confusability mismatch",
+    )
+    _require(
+        type(response["confidence"]) is str
+        and response["confidence"] in AGENT_REVIEW_CONFIDENCE,
+        "reviewer confidence mismatch",
+    )
+    _nonempty_string(response["reason"], "reviewer reason")
+    return response
+
+
+def validate_agent_response(
+    response: dict[str, Any], *, request: dict[str, Any]
+) -> dict[str, Any]:
+    request = validate_agent_request(request)
+    if request["role"] == "generator":
+        return _validate_generator_response(response, request)
+    return _validate_reviewer_response(response, request)
+
+
+def validate_agent_invocation_envelope(
+    envelope: dict[str, Any],
+    *,
+    request: dict[str, Any],
+    seen_session_ids: set[str] | None = None,
+) -> dict[str, Any]:
+    request = validate_agent_request(request)
+    _require(type(envelope) is dict, "agent invocation envelope must be an object")
+    identity_fields = {"session_id", "thread_id"}.intersection(envelope)
+    _require(
+        len(identity_fields) == 1,
+        "exactly one session/thread id is required",
+    )
+    expected_fields = {
+        "role",
+        "fork_context",
+        "history_message_count",
+        "imported_memory_count",
+        "requested_model",
+        "returned_model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "transport_retry_count",
+        "request_sha256",
+        "response",
+        *identity_fields,
+    }
+    envelope = _exact_object_fields(
+        envelope, expected_fields, "agent invocation envelope"
+    )
+    identity = _nonempty_string(
+        envelope[next(iter(identity_fields))], "session/thread id"
+    )
+    if seen_session_ids is not None:
+        _require(type(seen_session_ids) is set, "seen session ids must be a set")
+        _require(identity not in seen_session_ids, "session/thread id must be unique")
+    role = cast(str, request["role"])
+    config = AGENT_CONFIGS[role]
+    _require(envelope["role"] == role, "agent invocation role mismatch")
+    _require(envelope["fork_context"] is False, "fork context must be false")
+    _require(
+        type(envelope["history_message_count"]) is int
+        and envelope["history_message_count"] == 0,
+        "history message count must be integer zero",
+    )
+    _require(
+        type(envelope["imported_memory_count"]) is int
+        and envelope["imported_memory_count"] == 0,
+        "imported memory count must be integer zero",
+    )
+    _require(
+        envelope["requested_model"] == config["model"],
+        "requested model mismatch",
+    )
+    _require(
+        envelope["returned_model"] == config["model"],
+        "returned model mismatch",
+    )
+    _require(
+        envelope["reasoning_effort"] == config["reasoning_effort"],
+        "reasoning effort mismatch",
+    )
+    _require(
+        type(envelope["timeout_seconds"]) is int
+        and envelope["timeout_seconds"] == config["timeout_seconds"],
+        "timeout mismatch",
+    )
+    retry_count = envelope["transport_retry_count"]
+    _require(
+        type(retry_count) is int and retry_count in {0, 1},
+        "transport retry count must be integer zero or one",
+    )
+    _require(
+        envelope["request_sha256"] == request["request_sha256"],
+        "request SHA-256 mismatch",
+    )
+    response = validate_agent_response(envelope["response"], request=request)
+    if seen_session_ids is not None:
+        seen_session_ids.add(identity)
+    return response
+
+
+def validate_agent_response_envelope(
+    envelope: dict[str, Any],
+    *,
+    request: dict[str, Any],
+    seen_session_ids: set[str] | None = None,
+) -> dict[str, Any]:
+    return validate_agent_invocation_envelope(
+        envelope,
+        request=request,
+        seen_session_ids=seen_session_ids,
+    )
 
 
 def _canonical_json_bytes(value: Any) -> bytes:
@@ -321,20 +923,22 @@ def validate_human_pack(
 ) -> dict[str, Any]:
     pack_root = Path(root)
     _outside_repository(pack_root, Path(repository_root))
-    for filename in REQUIRED_PACK_FILES:
+    for filename in LEGACY_REQUIRED_HUMAN_PACK_FILES:
         _require(
             (pack_root / filename).is_file(),
             f"missing required human pack file: {filename}",
         )
 
     authored_bytes, authored_rows = _read_csv(
-        pack_root / REQUIRED_PACK_FILES[0], AUTHORED_FIELDS
+        pack_root / LEGACY_REQUIRED_HUMAN_PACK_FILES[0], AUTHORED_FIELDS
     )
     review_bytes, review_rows = _read_csv(
-        pack_root / REQUIRED_PACK_FILES[1], REVIEW_FIELDS
+        pack_root / LEGACY_REQUIRED_HUMAN_PACK_FILES[1], REVIEW_FIELDS
     )
-    metadata_bytes = (pack_root / REQUIRED_PACK_FILES[2]).read_bytes()
-    metadata = _json_no_duplicate_keys(metadata_bytes, REQUIRED_PACK_FILES[2])
+    metadata_bytes = (pack_root / LEGACY_REQUIRED_HUMAN_PACK_FILES[2]).read_bytes()
+    metadata = _json_no_duplicate_keys(
+        metadata_bytes, LEGACY_REQUIRED_HUMAN_PACK_FILES[2]
+    )
 
     _require(
         len(canonical_skills) == 16, "canonical skill index must contain 16 skills"
@@ -570,9 +1174,9 @@ def validate_human_pack(
 
     accepted.sort(key=lambda row: row["task_id"])
     source_hashes = {
-        REQUIRED_PACK_FILES[0]: _sha256_bytes(authored_bytes),
-        REQUIRED_PACK_FILES[1]: _sha256_bytes(review_bytes),
-        REQUIRED_PACK_FILES[2]: _sha256_bytes(metadata_bytes),
+        LEGACY_REQUIRED_HUMAN_PACK_FILES[0]: _sha256_bytes(authored_bytes),
+        LEGACY_REQUIRED_HUMAN_PACK_FILES[1]: _sha256_bytes(review_bytes),
+        LEGACY_REQUIRED_HUMAN_PACK_FILES[2]: _sha256_bytes(metadata_bytes),
     }
     return {
         "schema_version": "router-v2-blind-v2-human-pack-validation-v1",
@@ -1838,7 +2442,7 @@ def human_pack_root_from_environment(repository_root: Path | str) -> Path | None
     root = Path(value)
     _require(root.is_absolute(), "HERMES_BLIND_V2_ROOT must be absolute")
     if not root.exists() or any(
-        not (root / name).is_file() for name in REQUIRED_PACK_FILES
+        not (root / name).is_file() for name in LEGACY_REQUIRED_HUMAN_PACK_FILES
     ):
         return None
     _outside_repository(root, Path(repository_root))

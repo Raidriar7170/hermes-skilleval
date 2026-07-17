@@ -32,6 +32,444 @@ def _skills() -> list[dict[str, Any]]:
     ]
 
 
+def _agent_contract_generator_request() -> dict[str, Any]:
+    return runner.build_generator_request(
+        _skills(),
+        gold_skill_id="test-skill-00",
+        negative_quota=2,
+        positive_only_quota=1,
+        round_number=1,
+    )
+
+
+def _agent_contract_generator_response() -> dict[str, Any]:
+    return {
+        "candidates": [
+            {
+                "candidate_index": index,
+                "prompt_text": f"{PREFIX} AGENT REQUEST {index}",
+                "semantic_family_id": f"{PREFIX}_AGENT_FAMILY_{index}",
+                "proposed_gold_skill_id": "test-skill-00",
+                "proposed_negative_skill_id": ("test-skill-01" if index < 2 else None),
+                "language": "en",
+                "rationale": f"{PREFIX} AGENT RATIONALE {index}",
+            }
+            for index in range(3)
+        ]
+    }
+
+
+def _agent_contract_reviewer_request(
+    role: str = "reviewer_a",
+) -> dict[str, Any]:
+    return runner.build_reviewer_request(
+        {
+            "candidate_id": "opaque-001",
+            "prompt_text": f"{PREFIX} REVIEW REQUEST",
+            "proposed_gold_skill_id": "test-skill-00",
+            "proposed_negative_skill_id": "test-skill-01",
+            "rationale": f"{PREFIX} HIDDEN RATIONALE",
+        },
+        _skills(),
+        role=role,
+    )
+
+
+def _agent_contract_reviewer_response() -> dict[str, Any]:
+    return {
+        "decision": "ACCEPT",
+        "reviewed_gold_skill_id": "test-skill-00",
+        "reviewed_negative_skill_id": "test-skill-01",
+        "natural": True,
+        "single_primary_skill": True,
+        "no_label_leakage": True,
+        "negative_confusable": True,
+        "confidence": "HIGH",
+        "reason": f"{PREFIX} REVIEW REASON",
+    }
+
+
+def _agent_contract_envelope(
+    request: dict[str, Any],
+    response: dict[str, Any],
+    *,
+    session_id: str = "fresh-session-001",
+) -> dict[str, Any]:
+    config = runner.AGENT_CONFIGS[request["role"]]
+    return {
+        "role": request["role"],
+        "session_id": session_id,
+        "fork_context": False,
+        "history_message_count": 0,
+        "imported_memory_count": 0,
+        "requested_model": config["model"],
+        "returned_model": config["model"],
+        "reasoning_effort": config["reasoning_effort"],
+        "timeout_seconds": config["timeout_seconds"],
+        "transport_retry_count": 0,
+        "request_sha256": request["request_sha256"],
+        "response": response,
+    }
+
+
+def test_agent_contract_constants_schemas_and_schedule_keys_are_frozen() -> None:
+    assert runner.REQUIRED_AGENT_PACK_FILES == (
+        "blind-v2-generation.jsonl",
+        "blind-v2-review-a.jsonl",
+        "blind-v2-review-b.jsonl",
+        "blind-v2-contamination.jsonl",
+        "agent-run-metadata.json",
+    )
+    assert runner.AGENT_CONFIGS == {
+        "generator": {
+            "model": "gpt-5.6-sol",
+            "reasoning_effort": "max",
+            "timeout_seconds": 1800,
+        },
+        "reviewer_a": {
+            "model": "gpt-5.6-sol",
+            "reasoning_effort": "ultra",
+            "timeout_seconds": 900,
+        },
+        "reviewer_b": {
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "max",
+            "timeout_seconds": 900,
+        },
+    }
+    assert runner.SELECTION_SEED == 7170
+    assert runner.GENERATOR_SYSTEM_PROMPT == (
+        "You are the Generator for a preregistered Router V2 blind evaluation. "
+        "Create natural English user requests for exactly one primary canonical skill. "
+        "Do not mention skill IDs, skill names, gold labels, negative labels, "
+        "benchmarks, routers, training, pilot data, Phase 16, Arm A, Arm C, or model "
+        "behavior. For a negative-labeled candidate, choose one plausible but "
+        "insufficient canonical negative skill. Use only the supplied skill definitions "
+        "and quota. Do not use external memory or prior conversation. Return only JSON "
+        "matching the supplied schema."
+    )
+    assert runner.REVIEWER_SYSTEM_PROMPT == (
+        "You are a role-isolated reviewer for one preregistered Router V2 blind "
+        "candidate. Use only the supplied task text, canonical skill definitions, and "
+        "rubric. Independently decide the single primary gold skill and one "
+        "plausible-but-insufficient negative skill or null. Reject ambiguity, unnatural "
+        "wording, label leakage, invalid negatives, and tasks with more than one equally "
+        "primary skill. Do not use external memory, prior conversation, quotas, other "
+        "reviews, generator labels, Router models, or model results. Return only JSON "
+        "matching the supplied schema."
+    )
+
+    response_sha256 = "a" * 64
+    raw = f"1:test-skill-00:7:{response_sha256}"
+    candidate_id = hashlib.sha256(raw.encode()).hexdigest()[:24]
+    assert (
+        runner.opaque_candidate_id(1, "test-skill-00", 7, response_sha256)
+        == candidate_id
+    )
+    assert (
+        runner.selection_key(candidate_id)
+        == hashlib.sha256(f"7170:{candidate_id}".encode()).hexdigest()
+    )
+    assert (
+        runner.review_schedule_key("reviewer_a", candidate_id)
+        == hashlib.sha256(f"review-a:7170:{candidate_id}".encode()).hexdigest()
+    )
+    assert (
+        runner.review_schedule_key("reviewer_b", candidate_id)
+        == hashlib.sha256(f"review-b:7171:{candidate_id}".encode()).hexdigest()
+    )
+
+    generator_item = runner.GENERATOR_RESPONSE_SCHEMA["properties"]["candidates"][
+        "items"
+    ]
+    assert generator_item["additionalProperties"] is False
+    assert set(generator_item["required"]) == {
+        "candidate_index",
+        "prompt_text",
+        "semantic_family_id",
+        "proposed_gold_skill_id",
+        "proposed_negative_skill_id",
+        "language",
+        "rationale",
+    }
+    assert runner.REVIEWER_RESPONSE_SCHEMA["additionalProperties"] is False
+    assert set(runner.REVIEWER_RESPONSE_SCHEMA["required"]) == {
+        "decision",
+        "reviewed_gold_skill_id",
+        "reviewed_negative_skill_id",
+        "natural",
+        "single_primary_skill",
+        "no_label_leakage",
+        "negative_confusable",
+        "confidence",
+        "reason",
+    }
+
+
+def test_agent_contract_generator_request_is_sealed_and_hash_bound() -> None:
+    request = _agent_contract_generator_request()
+
+    assert set(request) == {
+        "schema_version",
+        "role",
+        "model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "system_prompt",
+        "response_schema",
+        "input",
+        "request_sha256",
+    }
+    assert request["role"] == "generator"
+    assert request["model"] == "gpt-5.6-sol"
+    assert request["reasoning_effort"] == "max"
+    assert request["timeout_seconds"] == 1800
+    assert request["system_prompt"] == runner.GENERATOR_SYSTEM_PROMPT
+    assert request["response_schema"] == runner.GENERATOR_RESPONSE_SCHEMA
+    assert set(request["input"]) == {"canonical_skills", "rules", "quota"}
+    assert request["input"]["rules"] == runner.GENERATOR_RULES
+    assert request["input"]["quota"] == {
+        "gold_skill_id": "test-skill-00",
+        "negative_quota": 2,
+        "positive_only_quota": 1,
+        "round_number": 1,
+    }
+    protected = json.dumps(request["input"], sort_keys=True).casefold()
+    for marker in (
+        "pilot-002",
+        "phase 16",
+        "arm a",
+        "arm c",
+        "review result",
+        "contamination output",
+        "model result",
+    ):
+        assert marker not in protected
+
+    unhashed = {key: value for key, value in request.items() if key != "request_sha256"}
+    assert request["request_sha256"] == runner.canonical_sha256(unhashed)
+    assert runner.validate_agent_request(request) == request
+
+
+@pytest.mark.parametrize("role", ("reviewer_a", "reviewer_b"))
+def test_agent_contract_reviewer_request_is_single_candidate_and_label_blind(
+    role: str,
+) -> None:
+    request = _agent_contract_reviewer_request(role)
+
+    assert request["role"] == role
+    assert set(request["input"]) == {
+        "task_id",
+        "prompt_text",
+        "canonical_skills",
+        "rubric",
+    }
+    assert request["input"]["task_id"] == "opaque-001"
+    assert request["input"]["rubric"] == runner.REVIEW_RUBRIC
+    encoded = json.dumps(request)
+    assert "proposed_gold_skill_id" not in encoded
+    assert "proposed_negative_skill_id" not in encoded
+    assert f"{PREFIX} HIDDEN RATIONALE" not in encoded
+    assert request["system_prompt"] == runner.REVIEWER_SYSTEM_PROMPT
+    config = runner.AGENT_CONFIGS[role]
+    assert request["model"] == config["model"]
+    assert request["reasoning_effort"] == config["reasoning_effort"]
+    assert request["timeout_seconds"] == config["timeout_seconds"]
+    assert runner.validate_agent_request(request) == request
+
+
+def test_agent_contract_request_validation_recomputes_hash_and_whitelists() -> None:
+    request = _agent_contract_generator_request()
+
+    tampered = deepcopy(request)
+    tampered["timeout_seconds"] = 900
+    with pytest.raises(ValueError, match="request hash mismatch"):
+        runner.validate_agent_request(tampered)
+
+    extra = deepcopy(request)
+    extra["unsupported_seed"] = 7170
+    unhashed = {key: value for key, value in extra.items() if key != "request_sha256"}
+    extra["request_sha256"] = runner.canonical_sha256(unhashed)
+    with pytest.raises(ValueError, match="request fields mismatch"):
+        runner.validate_agent_request(extra)
+
+    leaked = deepcopy(request)
+    leaked["input"]["review_results"] = [f"{PREFIX} SECRET"]
+    unhashed = {key: value for key, value in leaked.items() if key != "request_sha256"}
+    leaked["request_sha256"] = runner.canonical_sha256(unhashed)
+    with pytest.raises(ValueError, match="generator input fields mismatch"):
+        runner.validate_agent_request(leaked)
+
+
+def test_agent_contract_generator_response_and_envelope_validate() -> None:
+    request = _agent_contract_generator_request()
+    response = _agent_contract_generator_response()
+    envelope = _agent_contract_envelope(request, response)
+    seen: set[str] = set()
+
+    assert runner.validate_agent_response(response, request=request) == response
+    assert (
+        runner.validate_agent_invocation_envelope(
+            envelope, request=request, seen_session_ids=seen
+        )
+        == response
+    )
+    assert seen == {"fresh-session-001"}
+
+    with pytest.raises(ValueError, match="session.*unique"):
+        runner.validate_agent_invocation_envelope(
+            envelope, request=request, seen_session_ids=seen
+        )
+
+    invalid_seen: set[str] = set()
+    invalid = deepcopy(envelope)
+    invalid["session_id"] = "fresh-session-invalid"
+    invalid["response"]["candidates"].pop()
+    with pytest.raises(ValueError, match="candidate count"):
+        runner.validate_agent_invocation_envelope(
+            invalid, request=request, seen_session_ids=invalid_seen
+        )
+    assert invalid_seen == set()
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    (
+        ("role", "reviewer_a"),
+        ("fork_context", 0),
+        ("history_message_count", False),
+        ("history_message_count", 0.0),
+        ("imported_memory_count", False),
+        ("imported_memory_count", 0.0),
+        ("requested_model", "gpt-5.6-luna"),
+        ("returned_model", "gpt-5.6-luna"),
+        ("reasoning_effort", "ultra"),
+        ("timeout_seconds", 1800.0),
+        ("transport_retry_count", False),
+        ("transport_retry_count", 1.0),
+        ("transport_retry_count", 2),
+        ("request_sha256", "0" * 64),
+    ),
+)
+def test_agent_contract_invocation_envelope_rejects_config_and_type_drift(
+    field: str, invalid: Any
+) -> None:
+    request = _agent_contract_generator_request()
+    envelope = _agent_contract_envelope(request, _agent_contract_generator_response())
+    envelope[field] = invalid
+
+    with pytest.raises(ValueError):
+        runner.validate_agent_invocation_envelope(envelope, request=request)
+
+
+def test_agent_contract_invocation_envelope_requires_one_nonempty_identity() -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+
+    empty = _agent_contract_envelope(request, response, session_id=" ")
+    with pytest.raises(ValueError, match="session.*non-empty"):
+        runner.validate_agent_response_envelope(empty, request=request)
+
+    both = _agent_contract_envelope(request, response)
+    both["thread_id"] = "fresh-thread-001"
+    with pytest.raises(ValueError, match="exactly one"):
+        runner.validate_agent_response_envelope(both, request=request)
+
+    unsupported = _agent_contract_envelope(request, response)
+    unsupported["temperature"] = 0
+    with pytest.raises(ValueError, match="envelope fields mismatch"):
+        runner.validate_agent_response_envelope(unsupported, request=request)
+
+    thread_only = _agent_contract_envelope(request, response)
+    thread_only["thread_id"] = thread_only.pop("session_id")
+    assert (
+        runner.validate_agent_response_envelope(thread_only, request=request)
+        == response
+    )
+
+
+@pytest.mark.parametrize(
+    ("case", "invalid"),
+    (
+        ("candidate_index", True),
+        ("candidate_index", 0.0),
+        ("prompt_text", False),
+        ("semantic_family_id", ""),
+        ("proposed_gold_skill_id", "missing-skill"),
+        ("proposed_negative_skill_id", "test-skill-00"),
+        ("language", "zh"),
+        ("rationale", 1),
+    ),
+)
+def test_agent_contract_generator_response_rejects_field_and_type_drift(
+    case: str, invalid: Any
+) -> None:
+    request = _agent_contract_generator_request()
+    response = _agent_contract_generator_response()
+    response["candidates"][0][case] = invalid
+
+    with pytest.raises(ValueError):
+        runner.validate_agent_response(response, request=request)
+
+
+def test_agent_contract_generator_response_rejects_schema_and_quota_drift() -> None:
+    request = _agent_contract_generator_request()
+
+    extra = _agent_contract_generator_response()
+    extra["candidates"][0]["unexpected"] = True
+    with pytest.raises(ValueError, match="candidate fields mismatch"):
+        runner.validate_agent_response(extra, request=request)
+
+    duplicate = _agent_contract_generator_response()
+    duplicate["candidates"][1]["candidate_index"] = 0
+    with pytest.raises(ValueError, match="candidate indexes"):
+        runner.validate_agent_response(duplicate, request=request)
+
+    short = _agent_contract_generator_response()
+    short["candidates"].pop()
+    with pytest.raises(ValueError, match="candidate count"):
+        runner.validate_agent_response(short, request=request)
+
+    wrong_stratum = _agent_contract_generator_response()
+    wrong_stratum["candidates"][2]["proposed_negative_skill_id"] = "test-skill-01"
+    with pytest.raises(ValueError, match="negative quota"):
+        runner.validate_agent_response(wrong_stratum, request=request)
+
+
+def test_agent_contract_reviewer_response_validates_labels_and_strict_types() -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    assert runner.validate_agent_response(response, request=request) == response
+
+    positive_only = deepcopy(response)
+    positive_only["reviewed_negative_skill_id"] = None
+    positive_only["negative_confusable"] = None
+    assert (
+        runner.validate_agent_response(positive_only, request=request) == positive_only
+    )
+
+    invalid_values = (
+        ("decision", "MAYBE"),
+        ("reviewed_gold_skill_id", "missing-skill"),
+        ("reviewed_negative_skill_id", "test-skill-00"),
+        ("natural", 1),
+        ("single_primary_skill", 1),
+        ("no_label_leakage", 1),
+        ("negative_confusable", 1),
+        ("confidence", "VERY_HIGH"),
+        ("reason", ""),
+    )
+    for field, invalid in invalid_values:
+        drifted = deepcopy(response)
+        drifted[field] = invalid
+        with pytest.raises(ValueError):
+            runner.validate_agent_response(drifted, request=request)
+
+    extra = {**response, "rationale": f"{PREFIX} LEAK"}
+    with pytest.raises(ValueError, match="reviewer response fields mismatch"):
+        runner.validate_agent_response(extra, request=request)
+
+
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
