@@ -356,13 +356,14 @@ def build_per_seed_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
 def _validate_rate_contract(
     result: dict[str, Any], name: str, denominator: int, expected_count: int
 ) -> None:
-    rate = result.get(name)
-    _require(type(rate) is dict, f"{name} contract mismatch")
-    count = rate.get("count")
-    _require(
-        type(count) is int and count == expected_count,
-        f"{name} count mismatch",
-    )
+    rate_value = result.get(name)
+    if type(rate_value) is not dict:
+        raise ValueError(f"{name} contract mismatch")
+    rate = cast(dict[str, Any], rate_value)
+    count_value = rate.get("count")
+    if type(count_value) is not int or count_value != expected_count:
+        raise ValueError(f"{name} count mismatch")
+    count = cast(int, count_value)
     _require(
         type(rate.get("denominator")) is int and rate.get("denominator") == denominator,
         f"{name} denominator mismatch",
@@ -391,21 +392,24 @@ def _validate_per_seed_result_contract(
         and result["tempting_negative_count"] == TEMPTING_NEGATIVE_COUNT,
         "per-seed tempting negative count mismatch",
     )
-    tasks = result.get("tasks")
-    _require(
-        type(tasks) is list and len(tasks) == POSITIVE_TASK_COUNT,
-        f"per-seed tasks must contain {POSITIVE_TASK_COUNT} rows",
-    )
-    _require(
-        all(type(task) is dict for task in tasks), "per-seed tasks must be objects"
-    )
-    task_ids = [task.get("task_id") for task in tasks]
-    _require(
-        all(type(task_id) is str and task_id for task_id in task_ids)
-        and task_ids == sorted(task_ids)
-        and len(set(task_ids)) == POSITIVE_TASK_COUNT,
-        "per-seed task ids mismatch",
-    )
+    tasks_value = result.get("tasks")
+    if type(tasks_value) is not list:
+        raise ValueError(f"per-seed tasks must contain {POSITIVE_TASK_COUNT} rows")
+    raw_tasks = cast(list[Any], tasks_value)
+    if len(raw_tasks) != POSITIVE_TASK_COUNT:
+        raise ValueError(f"per-seed tasks must contain {POSITIVE_TASK_COUNT} rows")
+    if not all(type(task) is dict for task in raw_tasks):
+        raise ValueError("per-seed tasks must be objects")
+    tasks = cast(list[dict[str, Any]], raw_tasks)
+    for field in ("tempting_negative_skill_id", "tempting_negative_rank"):
+        if not all(field in task for task in tasks):
+            raise ValueError(f"per-seed task missing {field}")
+    task_id_values = [task.get("task_id") for task in tasks]
+    if not all(type(task_id) is str and task_id for task_id in task_id_values):
+        raise ValueError("per-seed task ids mismatch")
+    task_ids = cast(list[str], task_id_values)
+    if task_ids != sorted(task_ids) or len(set(task_ids)) != POSITIVE_TASK_COUNT:
+        raise ValueError("per-seed task ids mismatch")
     families = [task.get("semantic_family_id") for task in tasks]
     _require(
         all(type(family) is str and family for family in families)
@@ -473,15 +477,16 @@ def _validate_per_seed_result_contract(
                 and 1 <= negative_rank <= CANONICAL_SKILL_COUNT,
                 "per-seed tempting negative rank mismatch",
             )
-        _require(
-            type(latency_ms) is str,
-            "per-seed task latency must be a canonical eight-decimal string",
-        )
-        latency = _number(latency_ms, "per-seed task latency")
+        if type(latency_ms) is not str:
+            raise ValueError(
+                "per-seed task latency must be a canonical eight-decimal string"
+            )
+        latency_text = cast(str, latency_ms)
+        latency = _number(latency_text, "per-seed task latency")
         _require(latency >= 0, "per-seed task latency must be non-negative")
         _require(
-            _EIGHT_DECIMAL.fullmatch(latency_ms) is not None
-            and latency_ms == quantize8(latency),
+            _EIGHT_DECIMAL.fullmatch(latency_text) is not None
+            and latency_text == quantize8(latency),
             "per-seed task latency must be a canonical eight-decimal string",
         )
         latency_ns = latency * Decimal(1_000_000)

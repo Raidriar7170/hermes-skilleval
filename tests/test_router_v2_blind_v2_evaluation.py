@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from typing import Any
 
@@ -508,7 +509,38 @@ def test_per_seed_grid_rejects_invalid_task_latency(latency_ms: Any) -> None:
         evaluation.build_aggregate_results(per_seed)
 
 
-def test_gate_rejects_tampered_metric_and_stale_latency_bypass() -> None:
+@pytest.mark.parametrize(
+    "missing_key",
+    ("tempting_negative_skill_id", "tempting_negative_rank"),
+)
+def test_per_seed_grid_rejects_missing_negative_task_fields(
+    missing_key: str,
+) -> None:
+    per_seed = deepcopy(_per_seed())
+    del per_seed[0]["tasks"][6][missing_key]
+
+    with pytest.raises(ValueError, match=rf"per-seed task missing {missing_key}"):
+        evaluation.build_aggregate_results(per_seed)
+
+
+def test_json_round_trip_preserves_zero_and_one_nanosecond_latencies() -> None:
+    per_seed: list[dict[str, Any]] = []
+    for seed in SEEDS:
+        for arm in ("A", "C"):
+            rows = _route_rows(arm, seed)
+            for index, row in enumerate(rows):
+                row["latency_ns"] = index % 2
+            per_seed.append(evaluation.build_per_seed_result(rows))
+
+    round_tripped = json.loads(json.dumps(per_seed))
+    aggregate = evaluation.build_aggregate_results(round_tripped)
+
+    assert round_tripped[0]["tasks"][0]["latency_ms"] == "0.00000000"
+    assert round_tripped[0]["tasks"][1]["latency_ms"] == "0.00000100"
+    assert aggregate["schema_version"] == "router-v2-agent-blind-v2-aggregate-v1"
+
+
+def test_gate_rejects_tampered_metric_bypass() -> None:
     honest: list[dict[str, Any]] = []
     for seed in SEEDS:
         for arm in ("A", "C"):
@@ -525,10 +557,20 @@ def test_gate_rejects_tampered_metric_and_stale_latency_bypass() -> None:
             continue
         result["mrr"] = "1.00000000"
         result["ndcg_at_5"] = "1.00000000"
+
+    with pytest.raises(ValueError, match="mrr mismatch"):
+        evaluation.apply_preregistered_gate(tampered)
+
+
+def test_gate_rejects_stale_latency_summary() -> None:
+    tampered = deepcopy(_per_seed())
+    for result in tampered:
+        if result["arm"] != "C":
+            continue
         for task in result["tasks"]:
             task["latency_ms"] = "99.00000000"
 
-    with pytest.raises(ValueError, match="mrr mismatch"):
+    with pytest.raises(ValueError, match="latency_p50_ms mismatch"):
         evaluation.apply_preregistered_gate(tampered)
 
 
