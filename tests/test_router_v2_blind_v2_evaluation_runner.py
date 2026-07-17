@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 from copy import deepcopy
-from decimal import Decimal
+from decimal import ROUND_DOWN, ROUND_HALF_EVEN, Decimal, localcontext
 from pathlib import Path
 from typing import Any, Callable, cast
 
@@ -279,6 +279,40 @@ def test_task4_contamination_constants_and_decimal_jaccard_are_frozen() -> None:
     assert runner._jaccard({"a", "b", "c", "d"}, {"a", "b", "c", "e"}) == Decimal("0.6")
 
 
+def test_task4_selection_authority_is_immutable() -> None:
+    with pytest.raises(TypeError):
+        cast(dict[str, Any], runner.SELECTION_AUTHORITY)["selection_seed"] = 7171
+
+    document = runner._selection_authority_document()
+    document["selection_seed"] = 7171
+    assert runner.SELECTION_AUTHORITY["selection_seed"] == 7170
+
+
+def test_task4_selection_ignores_compatibility_seed_alias(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    candidate_id = "a" * 24
+    expected_key = hashlib.sha256(f"7170:{candidate_id}".encode()).hexdigest()
+
+    monkeypatch.setattr(runner, "SELECTION_SEED", 7171)
+
+    assert runner.selection_key(candidate_id) == expected_key
+    scan = runner._scan_contamination(
+        [],
+        protected_prompts={scope: [] for scope in runner.CONTAMINATION_SCOPES},
+        protected_family_ids={scope: set() for scope in runner.CONTAMINATION_SCOPES},
+        semantic_similarity=lambda _left, _right: 0,
+    )
+    assert scan["scanner_config"]["selection_seed"] == 7170
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+    assert result["status"] == "VALID"
+    assert result["selection_audit"]["selection_authority"] == (
+        TASK4_SELECTION_AUTHORITY
+    )
+
+
 def test_task4_protected_authority_inputs_are_explicitly_required() -> None:
     parameters = inspect.signature(runner.validate_agent_pack).parameters
 
@@ -374,6 +408,68 @@ def test_task4_semantic_evidence_canonicalizes_float_decimal_and_negative_zero()
     assert negative_zero_scan["rows"] == zero_scan["rows"]
 
 
+def test_task4_decimal_context_cannot_change_jaccard_or_scanner_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidate_prompt = "decimal context candidate prompt with unique long tokens"
+    protected_prompt = "decimal context protected prompt with distinct long tokens"
+    shared = {f"shared-{index}" for index in range(79)}
+    union = shared | {f"extra-{index}" for index in range(20)}
+    monkeypatch.setattr(
+        runner,
+        "_token_5grams",
+        lambda text: (
+            shared
+            if text == candidate_prompt
+            else union
+            if text == protected_prompt
+            else {f"token:{text}"}
+        ),
+    )
+    monkeypatch.setattr(
+        runner,
+        "_character_5grams",
+        lambda text: {f"character:{text}"},
+    )
+    candidate = _task4_scan_candidate(
+        "1" * 24, candidate_prompt, "decimal-context-family"
+    )
+
+    def run_with_context(precision: int, rounding: str) -> tuple[Any, ...]:
+        with localcontext() as context:
+            context.prec = precision
+            context.rounding = rounding
+            value = runner._jaccard(shared, union)
+            scan = runner._scan_contamination(
+                [candidate],
+                protected_prompts={
+                    "train": [protected_prompt],
+                    "pilot-002": [],
+                    "phase16": [],
+                    "prior_candidate": [],
+                },
+                protected_family_ids={
+                    scope: set() for scope in runner.CONTAMINATION_SCOPES
+                },
+                semantic_similarity=lambda _left, _right: 0,
+            )
+            return (
+                value,
+                runner._canonical_decimal(Decimal("1.2300")),
+                scan["rows"],
+                runner.canonical_sha256(scan),
+            )
+
+    low_precision = run_with_context(2, ROUND_HALF_EVEN)
+    high_precision = run_with_context(28, ROUND_DOWN)
+
+    assert low_precision == high_precision
+    assert low_precision[0] < runner.TOKEN_5GRAM_JACCARD_MAX
+    assert low_precision[1] == "1.23"
+    assert low_precision[2][0]["scanner_decision"] == "PASS"
+    assert "token_5gram_jaccard:train" not in low_precision[2][0]["rejection_codes"]
+
+
 def test_task4_protected_authority_scope_and_prompt_order_are_canonical() -> None:
     candidate = _task4_scan_candidate(
         "d" * 24, "canonical authority candidate", "canonical-family"
@@ -411,6 +507,59 @@ def test_task4_protected_authority_scope_and_prompt_order_are_canonical() -> Non
     )
 
     assert forward == reverse
+
+
+def test_task4_contamination_uses_one_immutable_protected_authority_snapshot() -> None:
+    candidates = [
+        _task4_scan_candidate(
+            "e" * 24,
+            "first immutable snapshot candidate with unique long text",
+            "first-snapshot-family",
+        ),
+        _task4_scan_candidate(
+            "f" * 24,
+            "second immutable snapshot candidate with distinct long text",
+            "second-snapshot-family",
+        ),
+    ]
+    baseline_prompts = {
+        "train": ["baseline train protected reference with unique long text"],
+        "pilot-002": [],
+        "phase16": [],
+        "prior_candidate": [],
+    }
+    baseline_families: dict[str, set[str]] = {
+        scope: set() for scope in runner.CONTAMINATION_SCOPES
+    }
+    baseline = runner._scan_contamination(
+        candidates,
+        protected_prompts=deepcopy(baseline_prompts),
+        protected_family_ids=deepcopy(baseline_families),
+        semantic_similarity=lambda _left, _right: 0,
+    )
+    mutable_prompts = deepcopy(baseline_prompts)
+    mutable_families = deepcopy(baseline_families)
+    callback_count = 0
+
+    def mutate_original_authority(_left: str, _right: str) -> int:
+        nonlocal callback_count
+        callback_count += 1
+        if callback_count == 1:
+            mutable_prompts["pilot-002"].append(candidates[1]["prompt_text"])
+            mutable_families["phase16"].add(candidates[1]["semantic_family_id"])
+        return 0
+
+    mutated = runner._scan_contamination(
+        candidates,
+        protected_prompts=mutable_prompts,
+        protected_family_ids=mutable_families,
+        semantic_similarity=mutate_original_authority,
+    )
+
+    assert callback_count > 0
+    assert mutable_prompts != baseline_prompts
+    assert mutable_families != baseline_families
+    assert mutated == baseline
 
 
 def _task4_scan_candidate(
@@ -2484,12 +2633,41 @@ def test_task4_selection_is_hash_ordered_unique_and_canonical_twice(
     assert first["selection_audit"]["selected_candidate_ids"] == [
         row["candidate_id"] for row in tasks
     ]
-    assert first["contamination_audit"]["semantic_model_id"] == (
+    assert first["contamination_audit"]["required_semantic_model_id"] == (
         "sentence-transformers/all-mpnet-base-v2"
     )
-    assert first["contamination_audit"]["semantic_model_revision"] == (
+    assert first["contamination_audit"]["required_semantic_model_revision"] == (
         "e8c3b32edf5434bc2275fc9bab85f82640a19130"
     )
+    assert first["contamination_audit"]["semantic_scorer_runtime_verified"] is False
+    assert first["contamination_audit"]["semantic_scorer_receipt_sha256"] is None
+
+
+def test_task4_semantic_audit_freezes_required_contract_without_runtime_claim(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+    scan = runner._scan_contamination(
+        [],
+        protected_prompts={scope: [] for scope in runner.CONTAMINATION_SCOPES},
+        protected_family_ids={scope: set() for scope in runner.CONTAMINATION_SCOPES},
+        semantic_similarity=lambda _left, _right: 0,
+    )
+
+    for audit in (scan["scanner_config"], result["contamination_audit"]):
+        assert audit["required_semantic_model_id"] == (
+            "sentence-transformers/all-mpnet-base-v2"
+        )
+        assert audit["required_semantic_model_revision"] == (
+            "e8c3b32edf5434bc2275fc9bab85f82640a19130"
+        )
+        assert audit["semantic_scorer_runtime_verified"] is False
+        assert audit["semantic_scorer_receipt_sha256"] is None
+        assert "semantic_model_id" not in audit
+        assert "semantic_model_revision" not in audit
 
 
 def test_task4_selection_authority_drift_is_global_protocol_invalid(
@@ -2508,7 +2686,7 @@ def test_task4_selection_authority_drift_is_global_protocol_invalid(
     assert result["failure_stage"] == "selection_authority"
 
 
-def test_task4_deterministic_selection_error_is_fail_closed(
+def test_task4_deterministic_selection_internal_value_error_propagates(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     pack = tmp_path / "agent-pack"
@@ -2525,13 +2703,37 @@ def test_task4_deterministic_selection_error_is_fail_closed(
 
     monkeypatch.setattr(runner, "selection_key", fail_after_contamination_scan)
 
+    with pytest.raises(ValueError, match=f"{PREFIX} DETERMINISTIC SELECTION FAILURE"):
+        _validate_agent_pack(pack, tmp_path / "repo")
+
+
+def test_task4_deterministic_selection_protocol_violation_is_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validate_selection = runner._validate_deterministic_selection
+
+    def force_unique_violation(selected: list[dict[str, Any]], **kwargs: Any) -> None:
+        kwargs["selected_ids"] = set()
+        validate_selection(selected, **kwargs)
+
+    monkeypatch.setattr(
+        runner,
+        "_validate_deterministic_selection",
+        force_unique_violation,
+        raising=False,
+    )
+
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
     assert result["status"] == "INVALID"
     assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
     assert result["router_decision"] == "KEEP_BASELINE"
     assert result["failure_stage"] == "deterministic_selection"
-    assert result["failure_reason"] == (f"{PREFIX} DETERMINISTIC SELECTION FAILURE")
+    assert result["failure_reason"] == (
+        "selected task, prompt, normalized prompt, and family values must be unique"
+    )
 
 
 def test_task4_contamination_ledger_is_non_voting_and_hidden_from_reviewers(

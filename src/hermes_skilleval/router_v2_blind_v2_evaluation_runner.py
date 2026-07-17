@@ -12,9 +12,10 @@ import time
 import unicodedata
 from collections import Counter
 from copy import deepcopy
-from decimal import Decimal
+from decimal import ROUND_HALF_EVEN, Decimal, localcontext
 from pathlib import Path
-from typing import Any, Callable, Protocol, cast
+from types import MappingProxyType
+from typing import Any, Callable, Mapping, Protocol, cast
 
 from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.router_v2_blind_v2_evaluation import (
@@ -103,24 +104,33 @@ AGENT_CONFIGS = {
         "timeout_seconds": 900,
     },
 }
-SELECTION_SEED = 7170
 SEMANTIC_MODEL_ID = "sentence-transformers/all-mpnet-base-v2"
 SEMANTIC_MODEL_REVISION = "e8c3b32edf5434bc2275fc9bab85f82640a19130"
 TOKEN_5GRAM_JACCARD_MAX = Decimal("0.80")
 CHARACTER_5GRAM_JACCARD_MAX = Decimal("0.85")
 SEMANTIC_COSINE_MAX = Decimal("0.90")
 CONTAMINATION_SCOPES = ("train", "pilot-002", "phase16", "prior_candidate")
-SELECTION_AUTHORITY = {
-    "selection_seed": 7170,
-    "selection_order": "ascending_selection_key(candidate_id)_within_stratum",
-    "max_generation_rounds": 2,
-    "round_1_candidate_count": 256,
-    "round_1_negative_per_skill": 12,
-    "round_1_positive_only_per_skill": 4,
-    "round_2_deficit_multiplier": 2,
-    "final_negative_per_skill": 6,
-    "final_positive_only_per_skill": 2,
-}
+_SELECTION_AUTHORITY: Mapping[str, int | str] = MappingProxyType(
+    {
+        "selection_seed": 7170,
+        "selection_order": "ascending_selection_key(candidate_id)_within_stratum",
+        "max_generation_rounds": 2,
+        "round_1_candidate_count": 256,
+        "round_1_negative_per_skill": 12,
+        "round_1_positive_only_per_skill": 4,
+        "round_2_deficit_multiplier": 2,
+        "final_negative_per_skill": 6,
+        "final_positive_only_per_skill": 2,
+    }
+)
+SELECTION_AUTHORITY = _SELECTION_AUTHORITY
+SELECTION_SEED = cast(int, _SELECTION_AUTHORITY["selection_seed"])
+
+
+def _selection_authority_document() -> dict[str, int | str]:
+    return dict(_SELECTION_AUTHORITY)
+
+
 GENERATOR_SYSTEM_PROMPT = (
     "You are the Generator for a preregistered Router V2 blind evaluation. "
     "Create natural English user requests for exactly one primary canonical skill. "
@@ -383,6 +393,15 @@ def _require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+class _DeterministicSelectionProtocolViolation(Exception):
+    pass
+
+
+def _require_deterministic_selection(condition: bool, message: str) -> None:
+    if not condition:
+        raise _DeterministicSelectionProtocolViolation(message)
+
+
 def _exact_object_fields(
     value: Any, expected: set[str] | frozenset[str], label: str
 ) -> dict[str, Any]:
@@ -548,7 +567,8 @@ def opaque_candidate_id(
 
 def selection_key(candidate_id: str) -> str:
     candidate_id = _exact_lowercase_hex(candidate_id, length=24, label="candidate id")
-    return hashlib.sha256(f"{SELECTION_SEED}:{candidate_id}".encode()).hexdigest()
+    seed = cast(int, _SELECTION_AUTHORITY["selection_seed"])
+    return hashlib.sha256(f"{seed}:{candidate_id}".encode()).hexdigest()
 
 
 def review_schedule_key(role: str, candidate_id: str) -> str:
@@ -1015,9 +1035,13 @@ def _normalize(value: str) -> str:
 
 
 def _jaccard(left: set[str], right: set[str]) -> Decimal:
+    # Task 4.2 freezes two empty sets as full overlap.
     if not left and not right:
         return Decimal("1")
-    return Decimal(len(left & right)) / Decimal(len(left | right))
+    with localcontext() as context:
+        context.prec = 50
+        context.rounding = ROUND_HALF_EVEN
+        return Decimal(len(left & right)) / Decimal(len(left | right))
 
 
 def _token_5grams(value: str) -> set[str]:
@@ -1037,9 +1061,68 @@ def _character_5grams(value: str) -> set[str]:
 
 def _canonical_decimal(value: Decimal) -> str:
     _require(type(value) is Decimal and value.is_finite(), "decimal must be finite")
-    if value == 0:
+    rendered = format(value, "f")
+    if "." in rendered:
+        rendered = rendered.rstrip("0").rstrip(".")
+    if rendered in {"-0", ""}:
         return "0"
-    return format(value.normalize(), "f")
+    return rendered
+
+
+def _validate_deterministic_selection(
+    selected: list[dict[str, Any]],
+    *,
+    selected_ids: set[str],
+    selected_prompt_bytes: set[bytes],
+    selected_normalized_prompts: set[str],
+    selected_families: set[str],
+    selected_negative_rows: list[dict[str, Any]],
+    canonical_ids: set[str],
+) -> None:
+    _require_deterministic_selection(
+        type(selected) is list and all(type(row) is dict for row in selected),
+        "deterministic selection input must be a task list",
+    )
+    _require_deterministic_selection(
+        len(selected) == 128, "deterministic selection must produce 128 tasks"
+    )
+    _require_deterministic_selection(
+        len(selected_negative_rows) == 96,
+        "deterministic selection must produce 96 negative-labeled tasks",
+    )
+    _require_deterministic_selection(
+        len(selected_ids)
+        == len(selected_prompt_bytes)
+        == len(selected_normalized_prompts)
+        == len(selected_families)
+        == 128,
+        "selected task, prompt, normalized prompt, and family values must be unique",
+    )
+    _require_deterministic_selection(
+        all(row["proposed_gold_skill_id"] in canonical_ids for row in selected),
+        "selected gold skills must be canonical",
+    )
+    for skill_id in sorted(canonical_ids):
+        negative_count = sum(
+            row["proposed_gold_skill_id"] == skill_id
+            and row["proposed_negative_skill_id"] is not None
+            for row in selected
+        )
+        positive_only_count = sum(
+            row["proposed_gold_skill_id"] == skill_id
+            and row["proposed_negative_skill_id"] is None
+            for row in selected
+        )
+        _require_deterministic_selection(
+            negative_count
+            == cast(int, _SELECTION_AUTHORITY["final_negative_per_skill"]),
+            "deterministic negative stratum quota mismatch",
+        )
+        _require_deterministic_selection(
+            positive_only_count
+            == cast(int, _SELECTION_AUTHORITY["final_positive_only_per_skill"]),
+            "deterministic positive-only stratum quota mismatch",
+        )
 
 
 def _semantic_decimal(
@@ -1060,8 +1143,8 @@ def _semantic_decimal(
 
 
 def _protected_authority_summary(
-    protected_prompts: dict[str, list[str]],
-    protected_family_ids: dict[str, set[str]],
+    protected_prompts: dict[str, tuple[str, ...]],
+    protected_family_ids: dict[str, frozenset[str]],
 ) -> dict[str, dict[str, int | str]]:
     summary: dict[str, dict[str, int | str]] = {}
     for scope in CONTAMINATION_SCOPES:
@@ -1109,7 +1192,6 @@ def _scan_contamination(
     )
     _require(callable(semantic_similarity), "semantic similarity must be callable")
 
-    prompt_references: dict[str, list[dict[str, Any]]] = {}
     for scope in CONTAMINATION_SCOPES:
         prompts = protected_prompts[scope]
         family_ids = protected_family_ids[scope]
@@ -1122,6 +1204,15 @@ def _scan_contamination(
             and all(type(family_id) is str for family_id in family_ids),
             f"{scope} protected family ids must be a string set",
         )
+
+    protected_prompt_snapshot = {
+        scope: tuple(protected_prompts[scope]) for scope in CONTAMINATION_SCOPES
+    }
+    protected_family_snapshot = {
+        scope: frozenset(protected_family_ids[scope]) for scope in CONTAMINATION_SCOPES
+    }
+    prompt_references: dict[str, list[dict[str, Any]]] = {}
+    for scope in CONTAMINATION_SCOPES:
         prompt_references[scope] = [
             {
                 "prompt_text": prompt,
@@ -1131,11 +1222,14 @@ def _scan_contamination(
                 "token_5grams": _token_5grams(prompt),
                 "character_5grams": _character_5grams(prompt),
             }
-            for prompt in sorted(prompts, key=lambda value: value.encode("utf-8"))
+            for prompt in sorted(
+                protected_prompt_snapshot[scope],
+                key=lambda value: value.encode("utf-8"),
+            )
         ]
 
     protected_authority = _protected_authority_summary(
-        protected_prompts, protected_family_ids
+        protected_prompt_snapshot, protected_family_snapshot
     )
 
     projected: list[dict[str, Any]] = []
@@ -1184,13 +1278,15 @@ def _scan_contamination(
         )
 
     scanner_config = {
-        "semantic_model_id": SEMANTIC_MODEL_ID,
-        "semantic_model_revision": SEMANTIC_MODEL_REVISION,
+        "required_semantic_model_id": SEMANTIC_MODEL_ID,
+        "required_semantic_model_revision": SEMANTIC_MODEL_REVISION,
+        "semantic_scorer_runtime_verified": False,
+        "semantic_scorer_receipt_sha256": None,
         "token_5gram_jaccard_reject_at_or_above": str(TOKEN_5GRAM_JACCARD_MAX),
         "character_5gram_jaccard_reject_at_or_above": str(CHARACTER_5GRAM_JACCARD_MAX),
         "semantic_cosine_reject_at_or_above": str(SEMANTIC_COSINE_MAX),
         "normalization": "NFKC-casefold-collapse-whitespace",
-        "selection_seed": SELECTION_SEED,
+        "selection_seed": _SELECTION_AUTHORITY["selection_seed"],
         "protected_authority": protected_authority,
         "protected_authority_sha256": canonical_sha256(protected_authority),
     }
@@ -1223,7 +1319,7 @@ def _scan_contamination(
                 {
                     "code": f"token_5gram_jaccard:{scope}",
                     "reference_sha256": reference_hash,
-                    "value": str(token_jaccard),
+                    "value": _canonical_decimal(token_jaccard),
                 }
             )
         character_jaccard = _jaccard(
@@ -1235,7 +1331,7 @@ def _scan_contamination(
                 {
                     "code": f"character_5gram_jaccard:{scope}",
                     "reference_sha256": reference_hash,
-                    "value": str(character_jaccard),
+                    "value": _canonical_decimal(character_jaccard),
                 }
             )
         semantic_cosine = _semantic_decimal(
@@ -1267,7 +1363,7 @@ def _scan_contamination(
         candidate_id = cast(str, candidate["candidate_id"])
         events = events_by_id[candidate_id]
         for scope in CONTAMINATION_SCOPES:
-            if candidate["semantic_family_id"] in protected_family_ids[scope]:
+            if candidate["semantic_family_id"] in protected_family_snapshot[scope]:
                 family_hash = _sha256_bytes(
                     cast(str, candidate["semantic_family_id"]).encode("utf-8")
                 )
@@ -1929,14 +2025,15 @@ def validate_agent_pack(
         )
 
     try:
+        selection_authority_document = _selection_authority_document()
         metadata_selection_authority = _exact_object_fields(
             metadata["selection_authority"],
-            set(SELECTION_AUTHORITY),
+            set(selection_authority_document),
             "selection authority",
         )
         _require(
             _canonical_contract_json_equal(
-                metadata_selection_authority, SELECTION_AUTHORITY
+                metadata_selection_authority, selection_authority_document
             ),
             "selection authority drift",
         )
@@ -2140,7 +2237,8 @@ def validate_agent_pack(
             if candidate["generation_round"] == 2
         ]
         _require(
-            len(round_one_candidates) == SELECTION_AUTHORITY["round_1_candidate_count"],
+            len(round_one_candidates)
+            == _SELECTION_AUTHORITY["round_1_candidate_count"],
             "round 1 must contain exactly 256 candidates",
         )
         round_one_distribution = stratum_counts(round_one_candidates)
@@ -2149,8 +2247,8 @@ def validate_agent_pack(
             all(
                 counts
                 == {
-                    "negative": SELECTION_AUTHORITY["round_1_negative_per_skill"],
-                    "positive_only": SELECTION_AUTHORITY[
+                    "negative": _SELECTION_AUTHORITY["round_1_negative_per_skill"],
+                    "positive_only": _SELECTION_AUTHORITY[
                         "round_1_positive_only_per_skill"
                     ],
                 }
@@ -2403,12 +2501,12 @@ def validate_agent_pack(
             deficits = {
                 "negative": max(
                     0,
-                    cast(int, SELECTION_AUTHORITY["final_negative_per_skill"])
+                    cast(int, _SELECTION_AUTHORITY["final_negative_per_skill"])
                     - skill_counts["negative"],
                 ),
                 "positive_only": max(
                     0,
-                    cast(int, SELECTION_AUTHORITY["final_positive_only_per_skill"])
+                    cast(int, _SELECTION_AUTHORITY["final_positive_only_per_skill"])
                     - skill_counts["positive_only"],
                 ),
             }
@@ -2431,7 +2529,7 @@ def validate_agent_pack(
                 round_two_distribution[skill_id]
                 == {
                     stratum: deficit
-                    * cast(int, SELECTION_AUTHORITY["round_2_deficit_multiplier"])
+                    * cast(int, _SELECTION_AUTHORITY["round_2_deficit_multiplier"])
                     for stratum, deficit in deficits.items()
                 },
                 "round 2 candidate count must equal twice each post-pipeline deficit",
@@ -2452,8 +2550,14 @@ def validate_agent_pack(
     accepted.sort(key=lambda row: cast(str, row["candidate_id"]))
     final_deficits = deficit_document(accepted)
     contamination_audit = {
-        "semantic_model_id": SEMANTIC_MODEL_ID,
-        "semantic_model_revision": SEMANTIC_MODEL_REVISION,
+        "required_semantic_model_id": contamination_scan["scanner_config"][
+            "required_semantic_model_id"
+        ],
+        "required_semantic_model_revision": contamination_scan["scanner_config"][
+            "required_semantic_model_revision"
+        ],
+        "semantic_scorer_runtime_verified": False,
+        "semantic_scorer_receipt_sha256": None,
         "token_5gram_jaccard_reject_at_or_above": str(TOKEN_5GRAM_JACCARD_MAX),
         "character_5gram_jaccard_reject_at_or_above": str(CHARACTER_5GRAM_JACCARD_MAX),
         "semantic_cosine_reject_at_or_above": str(SEMANTIC_COSINE_MAX),
@@ -2472,6 +2576,7 @@ def validate_agent_pack(
     }
 
     def selection_audit(selected: list[dict[str, Any]]) -> dict[str, Any]:
+        authority_document = _selection_authority_document()
         selected_ids = [cast(str, row["candidate_id"]) for row in selected]
         selected_by_stratum = {
             skill_id: {
@@ -2486,8 +2591,8 @@ def validate_agent_pack(
             for skill_id in sorted(canonical_ids)
         }
         return {
-            "selection_authority": deepcopy(SELECTION_AUTHORITY),
-            "selection_authority_sha256": canonical_sha256(SELECTION_AUTHORITY),
+            "selection_authority": authority_document,
+            "selection_authority_sha256": canonical_sha256(authority_document),
             "accepted_pool_sha256": canonical_sha256(accepted),
             "round_1_candidate_count": len(round_one_candidates),
             "round_2_candidate_count": len(round_two_candidates),
@@ -2558,7 +2663,7 @@ def validate_agent_pack(
                     key=lambda row: selection_key(cast(str, row["candidate_id"])),
                 )
                 selected.extend(
-                    deepcopy(pool[: cast(int, SELECTION_AUTHORITY[quota_field])])
+                    deepcopy(pool[: cast(int, _SELECTION_AUTHORITY[quota_field])])
                 )
 
         selected_ids = {cast(str, row["candidate_id"]) for row in selected}
@@ -2577,18 +2682,14 @@ def validate_agent_pack(
         selected_negative_rows = [
             row for row in selected if row["proposed_negative_skill_id"] is not None
         ]
-        _require(len(selected) == 128, "deterministic selection must produce 128 tasks")
-        _require(
-            len(selected_negative_rows) == 96,
-            "deterministic selection must produce 96 negative-labeled tasks",
-        )
-        _require(
-            len(selected_ids)
-            == len(selected_prompt_bytes)
-            == len(selected_normalized_prompts)
-            == len(selected_families)
-            == 128,
-            "selected task, prompt, normalized prompt, and family values must be unique",
+        _validate_deterministic_selection(
+            selected,
+            selected_ids=selected_ids,
+            selected_prompt_bytes=selected_prompt_bytes,
+            selected_normalized_prompts=selected_normalized_prompts,
+            selected_families=selected_families,
+            selected_negative_rows=selected_negative_rows,
+            canonical_ids=canonical_ids,
         )
         gold_counts = Counter(row["proposed_gold_skill_id"] for row in selected)
         negative_counts = Counter(
@@ -2615,7 +2716,7 @@ def validate_agent_pack(
             "selection_audit": selection_audit(selected),
             "tasks": selected,
         }
-    except (KeyError, TypeError, ValueError) as exc:
+    except _DeterministicSelectionProtocolViolation as exc:
         return _agent_pack_protocol_invalid(
             failure_stage="deterministic_selection",
             failure_reason=str(exc),
