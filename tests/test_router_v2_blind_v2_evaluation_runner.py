@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
 import os
@@ -1063,173 +1062,492 @@ def test_agent_contract_reviewer_response_rejects_whitespace_strings(
         runner.validate_agent_response(response, request=request)
 
 
-def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
+def _jsonl_bytes(rows: list[dict[str, Any]]) -> bytes:
+    return b"".join(
+        (
+            json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            + "\n"
+        ).encode("utf-8")
+        for row in rows
+    )
 
 
-def _write_human_pack(root: Path, *, publication_permission: bool = False) -> None:
+def _pack_success_invocation(
+    request: dict[str, Any],
+    response: dict[str, Any],
+    *,
+    session_id: str,
+    transport_retry_count: int,
+) -> dict[str, Any]:
+    envelope = _agent_contract_envelope(request, response, session_id=session_id)
+    envelope["transport_retry_count"] = transport_retry_count
+    return {
+        "transport_failure": False,
+        "response_bytes_present": True,
+        "envelope": envelope,
+    }
+
+
+def _pack_transport_failure_invocation(
+    request: dict[str, Any], *, session_id: str
+) -> dict[str, Any]:
+    config = runner.AGENT_CONFIGS[request["role"]]
+    return {
+        "transport_failure": True,
+        "response_bytes_present": False,
+        "role": request["role"],
+        "session_id": session_id,
+        "fork_context": False,
+        "history_message_count": 0,
+        "imported_memory_count": 0,
+        "requested_model": config["model"],
+        "reasoning_effort": config["reasoning_effort"],
+        "timeout_seconds": config["timeout_seconds"],
+        "request_sha256": request["request_sha256"],
+    }
+
+
+def _write_agent_pack(
+    root: Path,
+    *,
+    rejected_candidate_count: int = 0,
+    transport_retry_role: str | None = None,
+) -> None:
     root.mkdir()
-    authored = []
-    reviewed = []
-    for index in range(64):
-        gold_index = index // 4
-        has_negative = index % 4 < 3
-        prompt = f"{PREFIX} REQUEST {index:02d} UNIQUE TOKEN {index:04d}"
+    generation_rows: list[dict[str, Any]] = []
+    review_rows: dict[str, list[dict[str, Any]]] = {
+        "reviewer_a": [],
+        "reviewer_b": [],
+    }
+    contamination_rows: list[dict[str, Any]] = []
+    role_session_ids: dict[str, list[str]] = {
+        "generator": [],
+        "reviewer_a": [],
+        "reviewer_b": [],
+    }
+    role_invocation_counts = dict.fromkeys(role_session_ids, 0)
+    candidate_ids: list[str] = []
+
+    for index in range(128 + rejected_candidate_count):
+        distribution_index = index % 128
+        gold_index = distribution_index // 8
+        has_negative = distribution_index % 8 < 6
+        prompt = f"{PREFIX} REQUEST {index:03d} UNIQUE {index:05d}"
         gold = f"test-skill-{gold_index:02d}"
-        negative = f"test-skill-{(gold_index + 1) % 16:02d}" if has_negative else ""
-        task_id = f"{PREFIX}_TASK_{index:02d}"
-        authored.append(
+        negative = f"test-skill-{(gold_index + 1) % 16:02d}" if has_negative else None
+        generation_request = runner.build_generator_request(
+            _skills(),
+            gold_skill_id=gold,
+            negative_quota=int(has_negative),
+            positive_only_quota=int(not has_negative),
+            round_number=1,
+        )
+        generated = {
+            "candidate_index": 0,
+            "prompt_text": prompt,
+            "semantic_family_id": f"{PREFIX}_FAMILY_{index:03d}",
+            "proposed_gold_skill_id": gold,
+            "proposed_negative_skill_id": negative,
+            "language": "en",
+            "rationale": f"{PREFIX} GENERATOR RATIONALE {index:03d}",
+        }
+        generation_response = {"candidates": [generated]}
+        candidate_id = runner.opaque_candidate_id(
+            1, gold, 0, runner.canonical_sha256(generation_response)
+        )
+        candidate_ids.append(candidate_id)
+        candidate = {
+            "candidate_id": candidate_id,
+            "generation_round": 1,
+            "prompt_text": prompt,
+            "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+            "semantic_family_id": generated["semantic_family_id"],
+            "proposed_gold_skill_id": gold,
+            "proposed_negative_skill_id": negative,
+            "language": "en",
+            "rationale": generated["rationale"],
+        }
+        generator_session = f"generator-{candidate_id}"
+        generator_invocations = [
+            _pack_success_invocation(
+                generation_request,
+                generation_response,
+                session_id=generator_session,
+                transport_retry_count=0,
+            )
+        ]
+        if transport_retry_role == "generator" and index == 0:
+            failure_session = f"generator-transport-failure-{candidate_id}"
+            generator_invocations.insert(
+                0,
+                _pack_transport_failure_invocation(
+                    generation_request, session_id=failure_session
+                ),
+            )
+            generator_invocations[1]["envelope"]["transport_retry_count"] = 1
+            role_session_ids["generator"].append(failure_session)
+        role_session_ids["generator"].append(generator_session)
+        role_invocation_counts["generator"] += len(generator_invocations)
+        generation_rows.append(
             {
-                "task_id": task_id,
-                "prompt_text": prompt,
-                "semantic_family_id": f"{PREFIX}_FAMILY_{index:02d}",
-                "gold_skill_id": gold,
-                "negative_skill_id": negative,
-                "author_id": "human-author-1",
-                "author_reason": f"{PREFIX} AUTHOR REASON {index:02d}",
-                "language": "en",
-                "source_type": "HUMAN_AUTHORED",
+                **candidate,
+                "request": generation_request,
+                "invocations": generator_invocations,
             }
         )
-        reviewed.append(
-            {
-                "task_id": task_id,
-                "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
-                "reviewer_id": "human-reviewer-1",
-                "review_decision": "ACCEPT",
+        contamination_rows.append({"candidate_id": candidate_id})
+
+        for role in ("reviewer_a", "reviewer_b"):
+            review_request = runner.build_reviewer_request(
+                candidate, _skills(), role=role
+            )
+            review_response = {
+                "decision": "ACCEPT",
                 "reviewed_gold_skill_id": gold,
                 "reviewed_negative_skill_id": negative,
-                "review_confidence": "HIGH",
-                "review_reason": f"{PREFIX} REVIEW REASON {index:02d}",
+                "natural": True,
+                "single_primary_skill": True,
+                "no_label_leakage": True,
+                "negative_confusable": True if negative is not None else None,
+                "confidence": ("LOW", "MEDIUM", "HIGH")[index % 3],
+                "reason": f"{PREFIX} {role.upper()} REASON {index:03d}",
             }
-        )
-    _write_csv(
-        root / "blind-v2-authored.csv",
-        list(authored[0]),
-        authored,
-    )
-    _write_csv(
-        root / "blind-v2-independent-review.csv",
-        list(reviewed[0]),
-        reviewed,
-    )
-    metadata = {
-        "author_ids": ["human-author-1"],
-        "reviewer_ids": ["human-reviewer-1"],
-        "human_author_count": 1,
-        "independent_human_reviewer_count": 1,
-        "authors_and_reviewers_are_different_people": True,
-        "review_date": "2026-07-16",
-        "reviewer_saw_model_rankings": False,
-        "reviewer_saw_pilot_002_task_level_results": False,
-        "reviewer_used_ai_assistance": False,
-        "reviewer_qualification": f"{PREFIX} HUMAN QUALIFICATION",
-        "dataset_license": "TEST_ONLY",
-        "publication_permission": publication_permission,
-        "prompts_may_be_public_after_evaluation": publication_permission,
+            if index >= 128 and role == "reviewer_a":
+                review_response["decision"] = "REJECT_AMBIGUOUS"
+                review_response["single_primary_skill"] = False
+            review_session = f"{role}-{candidate_id}"
+            review_invocations = [
+                _pack_success_invocation(
+                    review_request,
+                    review_response,
+                    session_id=review_session,
+                    transport_retry_count=0,
+                )
+            ]
+            if transport_retry_role == role and index == 0:
+                failure_session = f"{role}-transport-failure-{candidate_id}"
+                review_invocations.insert(
+                    0,
+                    _pack_transport_failure_invocation(
+                        review_request, session_id=failure_session
+                    ),
+                )
+                review_invocations[1]["envelope"]["transport_retry_count"] = 1
+                role_session_ids[role].append(failure_session)
+            role_session_ids[role].append(review_session)
+            role_invocation_counts[role] += len(review_invocations)
+            review_rows[role].append(
+                {
+                    "candidate_id": candidate_id,
+                    "request": review_request,
+                    "invocations": review_invocations,
+                }
+            )
+
+    payloads = {
+        "blind-v2-generation.jsonl": _jsonl_bytes(generation_rows),
+        "blind-v2-review-a.jsonl": _jsonl_bytes(review_rows["reviewer_a"]),
+        "blind-v2-review-b.jsonl": _jsonl_bytes(review_rows["reviewer_b"]),
+        "blind-v2-contamination.jsonl": _jsonl_bytes(contamination_rows),
     }
-    (root / "reviewer-metadata.json").write_text(
+    for filename, payload in payloads.items():
+        (root / filename).write_bytes(payload)
+
+    metadata = {
+        "schema_version": "router-v2-blind-v2-agent-run-metadata-v1",
+        "first_read_timestamp": "2026-07-16T00:00:00Z",
+        "roles": {
+            role: {
+                "config": deepcopy(runner.AGENT_CONFIGS[role]),
+                "request_count": len(generation_rows),
+                "invocation_count": role_invocation_counts[role],
+                "session_or_thread_ids": role_session_ids[role],
+                "fork_context": False,
+                "history_message_count": 0,
+                "imported_memory_count": 0,
+            }
+            for role in ("generator", "reviewer_a", "reviewer_b")
+        },
+        "review_schedule_sha256": {
+            role: runner.canonical_sha256(
+                sorted(
+                    candidate_ids,
+                    key=lambda value: runner.review_schedule_key(role, value),
+                )
+            )
+            for role in ("reviewer_a", "reviewer_b")
+        },
+        "source_file_sha256": {
+            filename: hashlib.sha256(payload).hexdigest()
+            for filename, payload in payloads.items()
+        },
+    }
+    (root / "agent-run-metadata.json").write_text(
         json.dumps(metadata, ensure_ascii=False), encoding="utf-8"
     )
 
 
-def test_validate_human_pack_is_static_exact_and_human_reviewed(tmp_path: Path) -> None:
-    pack = tmp_path / "human-pack"
-    _write_human_pack(pack)
+def _refresh_agent_pack_metadata(root: Path) -> None:
+    metadata_path = root / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["source_file_sha256"] = {
+        filename: hashlib.sha256((root / filename).read_bytes()).hexdigest()
+        for filename in runner.REQUIRED_AGENT_PACK_FILES[:-1]
+    }
+    metadata_path.write_text(json.dumps(metadata, ensure_ascii=False), encoding="utf-8")
 
-    result = runner.validate_human_pack(
+
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+
+def _rewrite_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.write_bytes(_jsonl_bytes(rows))
+    _refresh_agent_pack_metadata(path.parent)
+
+
+def _validate_agent_pack(pack: Path, repository_root: Path) -> dict[str, Any]:
+    return runner.validate_agent_pack(
         pack,
-        repository_root=tmp_path / "repo",
+        repository_root=repository_root,
         canonical_skills=_skills(),
         train_prompts=[f"{PREFIX} TRAIN REFERENCE"],
         pilot_prompts=[f"{PREFIX} PILOT REFERENCE"],
+        phase16_prompts=[f"{PREFIX} PHASE16 REFERENCE"],
         train_family_ids={f"{PREFIX}_TRAIN_FAMILY"},
         pilot_family_ids={f"{PREFIX}_PILOT_FAMILY"},
         first_read_timestamp="2026-07-16T00:00:00Z",
+        semantic_similarity=lambda _left, _right: 0.0,
     )
 
-    assert result["status"] == "VALID"
-    assert result["task_count"] == 64
-    assert result["negative_labeled_task_count"] == 48
-    assert result["family_count"] == 64
-    assert result["negative_target_coverage_count"] == 16
-    assert result["human_author_count"] == 1
-    assert result["independent_human_reviewer_count"] == 1
-    assert result["exact_review_agreement_count"] == 64
-    assert result["excluded_candidate_count"] == 0
-    assert result["model_scores_observed"] is False
-    assert all(row["prompt_text"].startswith(PREFIX) for row in result["tasks"])
 
-    assert not hasattr(runner, "score_human_pack_for_validation")
-
-
-def test_validate_human_pack_rejects_overlap_and_non_independent_review(
+def test_agent_pack_is_exact_unanimous_agent_review_without_human_fields(
     tmp_path: Path,
 ) -> None:
-    pack = tmp_path / "human-pack"
-    _write_human_pack(pack)
-    prompt = f"{PREFIX} REQUEST 00 UNIQUE TOKEN 0000"
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, rejected_candidate_count=1)
 
-    with pytest.raises(ValueError, match="train prompt overlap"):
-        runner.validate_human_pack(
-            pack,
-            repository_root=tmp_path / "repo",
-            canonical_skills=_skills(),
-            train_prompts=[prompt.lower()],
-            pilot_prompts=[],
-            train_family_ids=set(),
-            pilot_family_ids=set(),
-            first_read_timestamp="2026-07-16T00:00:00Z",
-        )
+    result = _validate_agent_pack(pack, tmp_path / "repo")
 
-    with pytest.raises(ValueError, match="Phase 16 prompt overlap"):
-        runner.validate_human_pack(
-            pack,
-            repository_root=tmp_path / "repo",
-            canonical_skills=_skills(),
-            train_prompts=[],
-            pilot_prompts=[],
-            train_family_ids=set(),
-            pilot_family_ids=set(),
-            phase16_prompts=[prompt.lower()],
-            first_read_timestamp="2026-07-16T00:00:00Z",
-        )
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 128
+    assert result["negative_labeled_task_count"] == 96
+    assert result["family_count"] == 128
+    assert result["negative_target_coverage_count"] == 16
+    assert result["exact_three_way_agreement_count"] == 128
+    assert result["excluded_candidate_count"] == 1
+    assert result["model_scores_observed"] is False
+    assert all(row["prompt_text"].startswith(PREFIX) for row in result["tasks"])
+    assert (
+        sum(row["proposed_negative_skill_id"] is None for row in result["tasks"]) == 32
+    )
+    assert (
+        result["agent_roles"]["reviewer_a"]["config"]
+        == runner.AGENT_CONFIGS["reviewer_a"]
+    )
+    assert (
+        result["agent_roles"]["reviewer_b"]["config"]
+        == runner.AGENT_CONFIGS["reviewer_b"]
+    )
 
-    review_path = pack / "blind-v2-independent-review.csv"
-    rows = list(csv.DictReader(review_path.open(encoding="utf-8")))
-    rows[0]["reviewer_id"] = "human-author-1"
-    _write_csv(review_path, list(rows[0]), rows)
-    with pytest.raises(ValueError, match="author and reviewer must differ"):
-        runner.validate_human_pack(
-            pack,
-            repository_root=tmp_path / "repo",
-            canonical_skills=_skills(),
-            train_prompts=[],
-            pilot_prompts=[],
-            train_family_ids=set(),
-            pilot_family_ids=set(),
-            first_read_timestamp="2026-07-16T00:00:00Z",
+    encoded = json.dumps(result, sort_keys=True)
+    for forbidden in (
+        "author_id",
+        "author_reason",
+        "reviewer_id",
+        "reviewer_ids",
+        "review_confidence",
+        "review_reason",
+        "reviewer_qualification",
+        "human_author_count",
+        "human_reviewer_count",
+        "independent_human_reviewer_count",
+        "ai_assistance_disclosure",
+        "dataset_license",
+        "publication_permission",
+        "prompts_may_be_public_after_evaluation",
+    ):
+        assert forbidden not in encoded
+    assert not hasattr(runner, "validate_human_pack")
+
+
+@pytest.mark.parametrize(
+    ("role", "updates"),
+    (
+        ("reviewer_a", {"reviewed_gold_skill_id": "test-skill-02"}),
+        (
+            "reviewer_b",
+            {"reviewed_negative_skill_id": None, "negative_confusable": None},
+        ),
+        (
+            "reviewer_a",
+            {"decision": "REJECT_AMBIGUOUS", "single_primary_skill": False},
+        ),
+        (
+            "reviewer_b",
+            {"decision": "REJECT_UNNATURAL", "natural": False},
+        ),
+        (
+            "reviewer_a",
+            {"decision": "REJECT_LABEL_LEAKAGE", "no_label_leakage": False},
+        ),
+        (
+            "reviewer_b",
+            {
+                "decision": "REJECT_NOT_CONFUSABLE",
+                "negative_confusable": False,
+            },
+        ),
+    ),
+)
+def test_unanimous_agent_pack_excludes_disagreement_without_global_invalid(
+    tmp_path: Path, role: str, updates: dict[str, Any]
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / f"blind-v2-review-{'a' if role == 'reviewer_a' else 'b'}.jsonl"
+    rows = _read_jsonl(path)
+    candidate_id = rows[0]["candidate_id"]
+    rows[0]["invocations"][-1]["envelope"]["response"].update(updates)
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 127
+    assert result["excluded_candidate_count"] == 1
+    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+    assert "research_conclusion" not in result
+
+
+@pytest.mark.parametrize(
+    "leaked_field",
+    ("proposed_gold_skill_id", "rationale", "generator_response"),
+)
+def test_agent_pack_reviewer_request_leak_is_global_protocol_invalid(
+    tmp_path: Path, leaked_field: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rows[0]["request"]["input"][leaked_field] = f"{PREFIX} LEAK"
+    _agent_contract_rehash_request(rows[0]["request"])
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["production_ready"] is False
+    assert result["release_authorized"] is False
+    assert result["default_router_unchanged"] is True
+    assert result["failure_stage"] == "reviewer_request"
+    assert result["tasks"] == []
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_agent_pack_allows_one_transport_retry_with_no_response_bytes(
+    tmp_path: Path, role: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role=role)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 128
+    assert result["transport_retry_count"] == 1
+    assert result["agent_roles"][role]["invocation_count"] == 129
+
+
+@pytest.mark.parametrize(
+    "invalid_retry",
+    (
+        "second_success",
+        "response_object_on_failure",
+        "request_hash_drift",
+        "config_drift",
+    ),
+)
+def test_agent_pack_rejects_non_transport_retry_candidate(
+    tmp_path: Path, invalid_retry: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    candidate_id = rows[0]["candidate_id"]
+    invocations = rows[0]["invocations"]
+    if invalid_retry == "second_success":
+        failure_session = invocations[0]["session_id"]
+        invocations[0] = deepcopy(invocations[1])
+        invocations[0]["envelope"]["session_id"] = failure_session
+    elif invalid_retry == "response_object_on_failure":
+        invocations[0]["response"] = {}
+    elif invalid_retry == "request_hash_drift":
+        invocations[0]["request_sha256"] = "0" * 64
+    else:
+        invocations[0]["requested_model"] = runner.AGENT_CONFIGS["reviewer_b"]["model"]
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 127
+    assert result["excluded_candidate_count"] == 1
+    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+
+
+@pytest.mark.parametrize("drift", ("reviewer_config", "duplicate_session"))
+def test_agent_pack_role_isolation_metadata_drift_is_protocol_invalid(
+    tmp_path: Path, drift: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    metadata_path = pack / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if drift == "reviewer_config":
+        metadata["roles"]["reviewer_b"]["config"] = deepcopy(
+            runner.AGENT_CONFIGS["reviewer_a"]
         )
+    else:
+        metadata["roles"]["reviewer_b"]["session_or_thread_ids"][0] = metadata["roles"][
+            "reviewer_a"
+        ]["session_or_thread_ids"][0]
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "agent_run_metadata"
+
+
+def test_agent_pack_requires_external_root_and_all_five_files(tmp_path: Path) -> None:
+    repository = tmp_path / "repo"
+    pack = repository / "agent-pack"
+    repository.mkdir()
+    _write_agent_pack(pack)
+
+    with pytest.raises(ValueError, match="outside the repository"):
+        _validate_agent_pack(pack, repository)
+
+    external = tmp_path / "external-agent-pack"
+    _write_agent_pack(external)
+    (external / "blind-v2-contamination.jsonl").unlink()
+    with pytest.raises(ValueError, match="missing required agent pack file"):
+        _validate_agent_pack(external, repository)
 
 
 def test_dataset_freeze_is_deterministic_and_private_when_permission_is_false(
     tmp_path: Path,
 ) -> None:
-    pack = tmp_path / "human-pack"
-    _write_human_pack(pack, publication_permission=False)
-    validation = runner.validate_human_pack(
-        pack,
-        repository_root=tmp_path / "repo",
-        canonical_skills=_skills(),
-        train_prompts=[],
-        pilot_prompts=[],
-        train_family_ids=set(),
-        pilot_family_ids=set(),
-        first_read_timestamp="2026-07-16T00:00:00Z",
-    )
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
 
     first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
     second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
@@ -1262,18 +1580,9 @@ def test_dataset_freeze_is_deterministic_and_private_when_permission_is_false(
 def test_authoritative_lineage_binds_all_models_inputs_and_review_bytes(
     tmp_path: Path,
 ) -> None:
-    pack = tmp_path / "human-pack"
-    _write_human_pack(pack, publication_permission=False)
-    validation = runner.validate_human_pack(
-        pack,
-        repository_root=tmp_path / "repo",
-        canonical_skills=_skills(),
-        train_prompts=[],
-        pilot_prompts=[],
-        train_family_ids=set(),
-        pilot_family_ids=set(),
-        first_read_timestamp="2026-07-16T00:00:00Z",
-    )
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
     documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
     repository = Path(__file__).resolve().parents[1]
     bindings = runner.build_authoritative_lineage_bindings(

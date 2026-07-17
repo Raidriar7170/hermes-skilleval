@@ -358,6 +358,7 @@ class RouteScorer(Protocol):
 EncoderFactory = Callable[[str, int, Path], EvaluationEncoder]
 ScorerFactory = Callable[[str, int, Path], RouteScorer]
 AuthorityValidator = Callable[..., dict[str, Any]]
+SemanticSimilarity = Callable[[str, str], float]
 
 
 def _require(condition: bool, message: str) -> None:
@@ -1123,14 +1124,623 @@ def _read_csv(
 def _outside_repository(root: Path, repository_root: Path) -> None:
     resolved = root.resolve(strict=True)
     repository = repository_root.resolve(strict=False)
-    _require(resolved.is_dir(), "human pack root must be a directory")
+    _require(resolved.is_dir(), "agent pack root must be a directory")
     _require(
         not resolved.is_relative_to(repository),
-        "human pack root must stay outside the repository",
+        "agent pack root must stay outside the repository",
     )
 
 
-def validate_human_pack(
+def _agent_pack_protocol_invalid(
+    *,
+    failure_stage: str,
+    failure_reason: str,
+    first_read_timestamp: str,
+    source_file_sha256: dict[str, str],
+) -> dict[str, Any]:
+    return {
+        "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
+        "status": "INVALID",
+        "failure_stage": failure_stage,
+        "failure_reason": failure_reason,
+        "research_conclusion": "AGENT_BLIND_V2_PROTOCOL_INVALID",
+        "router_decision": "KEEP_BASELINE",
+        "production_ready": False,
+        "release_authorized": False,
+        "default_router_unchanged": True,
+        "first_read_timestamp": first_read_timestamp,
+        "source_file_sha256": source_file_sha256,
+        "model_scores_observed": False,
+        "tasks": [],
+    }
+
+
+def _pack_invocation_identities(invocations: Any) -> list[str]:
+    if type(invocations) is not list:
+        return []
+    identities: list[str] = []
+    for invocation in invocations:
+        if type(invocation) is not dict:
+            continue
+        envelope = invocation.get("envelope")
+        identity_source = envelope if type(envelope) is dict else invocation
+        fields = {"session_id", "thread_id"}.intersection(identity_source)
+        if len(fields) != 1:
+            continue
+        identity = identity_source[next(iter(fields))]
+        if type(identity) is str and identity.strip():
+            identities.append(identity)
+    return identities
+
+
+def _validate_pack_invocations(
+    invocations: Any, *, request: dict[str, Any]
+) -> tuple[dict[str, Any] | None, int]:
+    if type(invocations) is not list or len(invocations) not in {1, 2}:
+        return None, 0
+    try:
+        retry_count = len(invocations) - 1
+        if retry_count:
+            failure = cast(dict[str, Any], invocations[0])
+            identity_fields = {"session_id", "thread_id"}.intersection(failure)
+            _require(
+                len(identity_fields) == 1,
+                "transport failure requires one session/thread id",
+            )
+            failure = _exact_object_fields(
+                failure,
+                {
+                    "transport_failure",
+                    "response_bytes_present",
+                    "role",
+                    "fork_context",
+                    "history_message_count",
+                    "imported_memory_count",
+                    "requested_model",
+                    "reasoning_effort",
+                    "timeout_seconds",
+                    "request_sha256",
+                    *identity_fields,
+                },
+                "transport failure invocation",
+            )
+            role = cast(str, request["role"])
+            config = AGENT_CONFIGS[role]
+            _require(failure["transport_failure"] is True, "retry must follow failure")
+            _require(
+                failure["response_bytes_present"] is False,
+                "transport failure must contain no response bytes",
+            )
+            _nonempty_string(
+                failure[next(iter(identity_fields))], "transport failure identity"
+            )
+            _require(failure["role"] == role, "transport failure role mismatch")
+            _require(failure["fork_context"] is False, "fork context must be false")
+            _require(
+                type(failure["history_message_count"]) is int
+                and failure["history_message_count"] == 0,
+                "history message count must be integer zero",
+            )
+            _require(
+                type(failure["imported_memory_count"]) is int
+                and failure["imported_memory_count"] == 0,
+                "imported memory count must be integer zero",
+            )
+            _require(
+                failure["requested_model"] == config["model"],
+                "transport failure model mismatch",
+            )
+            _require(
+                failure["reasoning_effort"] == config["reasoning_effort"],
+                "transport failure reasoning mismatch",
+            )
+            _require(
+                type(failure["timeout_seconds"]) is int
+                and failure["timeout_seconds"] == config["timeout_seconds"],
+                "transport failure timeout mismatch",
+            )
+            _require(
+                failure["request_sha256"] == request["request_sha256"],
+                "transport retry request hash mismatch",
+            )
+
+        success = _exact_object_fields(
+            invocations[-1],
+            {"transport_failure", "response_bytes_present", "envelope"},
+            "successful invocation",
+        )
+        _require(success["transport_failure"] is False, "success cannot be failure")
+        _require(
+            success["response_bytes_present"] is True,
+            "success must contain response bytes",
+        )
+        envelope = cast(dict[str, Any], success["envelope"])
+        _require(
+            type(envelope) is dict
+            and envelope.get("transport_retry_count") == retry_count,
+            "transport retry count must match invocation count",
+        )
+        response = validate_agent_invocation_envelope(envelope, request=request)
+        return response, retry_count
+    except (KeyError, TypeError, ValueError):
+        return None, 0
+
+
+def validate_agent_pack(
+    root: Path | str,
+    *,
+    repository_root: Path | str,
+    canonical_skills: list[dict[str, Any]],
+    train_prompts: list[str],
+    pilot_prompts: list[str],
+    phase16_prompts: list[str],
+    train_family_ids: set[str],
+    pilot_family_ids: set[str],
+    first_read_timestamp: str,
+    semantic_similarity: SemanticSimilarity,
+) -> dict[str, Any]:
+    """Validate sealed Agent ledgers without loading Arm A/C or scoring routes."""
+
+    projected_skills = _project_canonical_skills(canonical_skills)
+    canonical_ids = _canonical_skill_ids(projected_skills)
+    for label, prompts in (
+        ("train prompts", train_prompts),
+        ("pilot prompts", pilot_prompts),
+        ("Phase 16 prompts", phase16_prompts),
+    ):
+        _require(
+            type(prompts) is list and all(type(prompt) is str for prompt in prompts),
+            f"{label} must be a string list",
+        )
+    for label, family_ids in (
+        ("train family ids", train_family_ids),
+        ("pilot family ids", pilot_family_ids),
+    ):
+        _require(
+            type(family_ids) is set
+            and all(type(family_id) is str for family_id in family_ids),
+            f"{label} must be a string set",
+        )
+    _nonempty_string(first_read_timestamp, "first read timestamp")
+    _require(callable(semantic_similarity), "semantic similarity must be callable")
+
+    pack_root = Path(root)
+    _outside_repository(pack_root, Path(repository_root))
+    for filename in REQUIRED_AGENT_PACK_FILES:
+        _require(
+            (pack_root / filename).is_file(),
+            f"missing required agent pack file: {filename}",
+        )
+
+    payloads = {
+        filename: (pack_root / filename).read_bytes()
+        for filename in REQUIRED_AGENT_PACK_FILES
+    }
+    source_hashes = {
+        filename: _sha256_bytes(payload) for filename, payload in payloads.items()
+    }
+    try:
+        generation_rows = _jsonl_no_duplicate_keys(
+            payloads[REQUIRED_AGENT_PACK_FILES[0]], REQUIRED_AGENT_PACK_FILES[0]
+        )
+        review_rows_by_role = {
+            "reviewer_a": _jsonl_no_duplicate_keys(
+                payloads[REQUIRED_AGENT_PACK_FILES[1]],
+                REQUIRED_AGENT_PACK_FILES[1],
+            ),
+            "reviewer_b": _jsonl_no_duplicate_keys(
+                payloads[REQUIRED_AGENT_PACK_FILES[2]],
+                REQUIRED_AGENT_PACK_FILES[2],
+            ),
+        }
+        contamination_rows = _jsonl_no_duplicate_keys(
+            payloads[REQUIRED_AGENT_PACK_FILES[3]],
+            REQUIRED_AGENT_PACK_FILES[3],
+        )
+        metadata = _json_no_duplicate_keys(
+            payloads[REQUIRED_AGENT_PACK_FILES[4]],
+            REQUIRED_AGENT_PACK_FILES[4],
+        )
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="ledger_structure",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+
+    try:
+        metadata = _exact_object_fields(
+            metadata,
+            {
+                "schema_version",
+                "first_read_timestamp",
+                "roles",
+                "review_schedule_sha256",
+                "source_file_sha256",
+            },
+            "agent run metadata",
+        )
+        _require(
+            metadata["schema_version"] == "router-v2-blind-v2-agent-run-metadata-v1",
+            "agent run metadata schema mismatch",
+        )
+        _require(
+            metadata["first_read_timestamp"] == first_read_timestamp,
+            "first read timestamp mismatch",
+        )
+        metadata_source_hashes = _exact_object_fields(
+            metadata["source_file_sha256"],
+            set(REQUIRED_AGENT_PACK_FILES[:-1]),
+            "metadata source hashes",
+        )
+        for filename in REQUIRED_AGENT_PACK_FILES[:-1]:
+            _exact_lowercase_hex(
+                metadata_source_hashes[filename],
+                length=64,
+                label=f"{filename} source hash",
+            )
+            _require(
+                metadata_source_hashes[filename] == source_hashes[filename],
+                f"{filename} source hash mismatch",
+            )
+        metadata_roles = _exact_object_fields(
+            metadata["roles"], set(AGENT_CONFIGS), "metadata roles"
+        )
+        role_fields = {
+            "config",
+            "request_count",
+            "invocation_count",
+            "session_or_thread_ids",
+            "fork_context",
+            "history_message_count",
+            "imported_memory_count",
+        }
+        for role, config in AGENT_CONFIGS.items():
+            role_metadata = _exact_object_fields(
+                metadata_roles[role], role_fields, f"{role} metadata"
+            )
+            _require(role_metadata["config"] == config, f"{role} config mismatch")
+            for field in ("request_count", "invocation_count"):
+                _require(
+                    type(role_metadata[field]) is int and role_metadata[field] >= 0,
+                    f"{role} {field} must be a non-negative integer",
+                )
+            session_ids = role_metadata["session_or_thread_ids"]
+            _require(
+                type(session_ids) is list
+                and all(type(value) is str and value.strip() for value in session_ids)
+                and len(session_ids) == len(set(session_ids)),
+                f"{role} session/thread metadata mismatch",
+            )
+            _require(role_metadata["fork_context"] is False, "fork context mismatch")
+            _require(
+                type(role_metadata["history_message_count"]) is int
+                and role_metadata["history_message_count"] == 0,
+                "history metadata mismatch",
+            )
+            _require(
+                type(role_metadata["imported_memory_count"]) is int
+                and role_metadata["imported_memory_count"] == 0,
+                "memory metadata mismatch",
+            )
+        metadata_schedules = _exact_object_fields(
+            metadata["review_schedule_sha256"],
+            {"reviewer_a", "reviewer_b"},
+            "review schedules",
+        )
+        for role in ("reviewer_a", "reviewer_b"):
+            _exact_lowercase_hex(
+                metadata_schedules[role], length=64, label=f"{role} schedule hash"
+            )
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="agent_run_metadata",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+
+    generation_fields = {
+        "candidate_id",
+        "generation_round",
+        "prompt_text",
+        "prompt_text_sha256",
+        "semantic_family_id",
+        "proposed_gold_skill_id",
+        "proposed_negative_skill_id",
+        "language",
+        "rationale",
+        "request",
+        "invocations",
+    }
+    candidate_fields = generation_fields - {"request", "invocations"}
+    candidates: dict[str, dict[str, Any]] = {}
+    generation_responses: dict[str, dict[str, Any] | None] = {}
+    actual_sessions: dict[str, list[str]] = {
+        "generator": [],
+        "reviewer_a": [],
+        "reviewer_b": [],
+    }
+    actual_invocation_counts = dict.fromkeys(actual_sessions, 0)
+    valid_transport_retry_count = 0
+    try:
+        for raw_row in generation_rows:
+            row = _exact_object_fields(raw_row, generation_fields, "generation row")
+            candidate_id = _exact_lowercase_hex(
+                row["candidate_id"], length=24, label="candidate id"
+            )
+            _require(candidate_id not in candidates, "candidate ids must be unique")
+            _require(
+                type(row["generation_round"]) is int and row["generation_round"] > 0,
+                "generation round must be a positive integer",
+            )
+            prompt_text = _nonempty_string(row["prompt_text"], "candidate prompt")
+            prompt_hash = _exact_lowercase_hex(
+                row["prompt_text_sha256"], length=64, label="candidate prompt hash"
+            )
+            _require(
+                prompt_hash == _sha256_bytes(prompt_text.encode("utf-8")),
+                "candidate prompt hash mismatch",
+            )
+            _nonempty_string(row["semantic_family_id"], "semantic family id")
+            gold = row["proposed_gold_skill_id"]
+            negative = row["proposed_negative_skill_id"]
+            _require(gold in canonical_ids, "generator gold must be canonical")
+            _require(
+                negative is None or negative in canonical_ids,
+                "generator negative must be canonical or null",
+            )
+            _require(negative != gold, "generator negative must differ from gold")
+            _require(row["language"] == "en", "generator language mismatch")
+            _nonempty_string(row["rationale"], "generator rationale")
+            candidate = {field: deepcopy(row[field]) for field in candidate_fields}
+            candidates[candidate_id] = candidate
+
+            request = validate_agent_request(row["request"])
+            _require(request["role"] == "generator", "generation role mismatch")
+            quota = cast(dict[str, Any], request["input"])["quota"]
+            _require(quota["gold_skill_id"] == gold, "generation request gold mismatch")
+            _require(
+                quota["round_number"] == row["generation_round"],
+                "generation request round mismatch",
+            )
+            invocations = row["invocations"]
+            actual_sessions["generator"].extend(
+                _pack_invocation_identities(invocations)
+            )
+            if type(invocations) is list:
+                actual_invocation_counts["generator"] += len(invocations)
+            response, retry_count = _validate_pack_invocations(
+                invocations, request=request
+            )
+            if response is not None:
+                generated_rows = response["candidates"]
+                _require(
+                    len(generated_rows) == 1,
+                    "candidate ledger requires one generated candidate per row",
+                )
+                generated = generated_rows[0]
+                for field in (
+                    "prompt_text",
+                    "semantic_family_id",
+                    "proposed_gold_skill_id",
+                    "proposed_negative_skill_id",
+                    "language",
+                    "rationale",
+                ):
+                    _require(
+                        generated[field] == candidate[field],
+                        f"generated candidate {field} mismatch",
+                    )
+                expected_id = opaque_candidate_id(
+                    row["generation_round"],
+                    gold,
+                    generated["candidate_index"],
+                    canonical_sha256(response),
+                )
+                _require(candidate_id == expected_id, "candidate id binding mismatch")
+                valid_transport_retry_count += retry_count
+            generation_responses[candidate_id] = response
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="generation_ledger",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+
+    try:
+        contamination_ids = []
+        for raw_row in contamination_rows:
+            row = _exact_object_fields(raw_row, {"candidate_id"}, "contamination row")
+            contamination_ids.append(
+                _exact_lowercase_hex(
+                    row["candidate_id"], length=24, label="contamination candidate id"
+                )
+            )
+        _require(
+            len(contamination_ids) == len(set(contamination_ids))
+            and set(contamination_ids) == set(candidates),
+            "contamination ledger candidate binding mismatch",
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="contamination_ledger",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+
+    review_responses: dict[str, dict[str, dict[str, Any] | None]] = {
+        "reviewer_a": {},
+        "reviewer_b": {},
+    }
+    for role, role_rows in review_rows_by_role.items():
+        try:
+            for raw_row in role_rows:
+                row = _exact_object_fields(
+                    raw_row,
+                    {"candidate_id", "request", "invocations"},
+                    f"{role} row",
+                )
+                candidate_id = _exact_lowercase_hex(
+                    row["candidate_id"], length=24, label="review candidate id"
+                )
+                _require(
+                    candidate_id in candidates, "review references unknown candidate"
+                )
+                _require(
+                    candidate_id not in review_responses[role],
+                    "review candidate ids must be unique",
+                )
+                request = validate_agent_request(row["request"])
+                expected_request = build_reviewer_request(
+                    candidates[candidate_id], projected_skills, role=role
+                )
+                _require(
+                    _canonical_contract_json_equal(request, expected_request),
+                    "reviewer request must contain only sealed candidate input",
+                )
+                invocations = row["invocations"]
+                actual_sessions[role].extend(_pack_invocation_identities(invocations))
+                if type(invocations) is list:
+                    actual_invocation_counts[role] += len(invocations)
+                response, retry_count = _validate_pack_invocations(
+                    invocations, request=request
+                )
+                valid_transport_retry_count += retry_count
+                review_responses[role][candidate_id] = response
+            _require(
+                set(review_responses[role]) == set(candidates),
+                f"{role} must review every candidate",
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            return _agent_pack_protocol_invalid(
+                failure_stage="reviewer_request",
+                failure_reason=str(exc),
+                first_read_timestamp=first_read_timestamp,
+                source_file_sha256=source_hashes,
+            )
+
+    try:
+        request_counts = {
+            "generator": len(generation_rows),
+            "reviewer_a": len(review_rows_by_role["reviewer_a"]),
+            "reviewer_b": len(review_rows_by_role["reviewer_b"]),
+        }
+        all_actual_sessions = [
+            session
+            for role in ("generator", "reviewer_a", "reviewer_b")
+            for session in actual_sessions[role]
+        ]
+        _require(
+            len(all_actual_sessions) == len(set(all_actual_sessions)),
+            "session/thread ids must be globally unique",
+        )
+        all_metadata_sessions: list[str] = []
+        for role in ("generator", "reviewer_a", "reviewer_b"):
+            role_metadata = cast(dict[str, Any], metadata_roles[role])
+            _require(
+                role_metadata["request_count"] == request_counts[role],
+                f"{role} request count mismatch",
+            )
+            _require(
+                role_metadata["invocation_count"] == actual_invocation_counts[role],
+                f"{role} invocation count mismatch",
+            )
+            _require(
+                role_metadata["session_or_thread_ids"] == actual_sessions[role],
+                f"{role} session/thread binding mismatch",
+            )
+            all_metadata_sessions.extend(role_metadata["session_or_thread_ids"])
+        _require(
+            len(all_metadata_sessions) == len(set(all_metadata_sessions)),
+            "metadata session/thread ids must be globally unique",
+        )
+        for role in ("reviewer_a", "reviewer_b"):
+            expected_schedule = canonical_sha256(
+                sorted(candidates, key=lambda value: review_schedule_key(role, value))
+            )
+            _require(
+                metadata_schedules[role] == expected_schedule,
+                f"{role} schedule hash mismatch",
+            )
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="agent_run_metadata",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+
+    accepted: list[dict[str, Any]] = []
+    for candidate_id, candidate in candidates.items():
+        reviewer_a = review_responses["reviewer_a"][candidate_id]
+        reviewer_b = review_responses["reviewer_b"][candidate_id]
+        if (
+            generation_responses[candidate_id] is None
+            or reviewer_a is None
+            or reviewer_b is None
+        ):
+            continue
+        expected_labels = (
+            candidate["proposed_gold_skill_id"],
+            candidate["proposed_negative_skill_id"],
+        )
+        reviews = (reviewer_a, reviewer_b)
+        if not all(
+            review["decision"] == "ACCEPT"
+            and review["natural"] is True
+            and review["single_primary_skill"] is True
+            and review["no_label_leakage"] is True
+            and (
+                review["negative_confusable"] is True
+                if review["reviewed_negative_skill_id"] is not None
+                else review["negative_confusable"] is None
+            )
+            and (
+                review["reviewed_gold_skill_id"],
+                review["reviewed_negative_skill_id"],
+            )
+            == expected_labels
+            for review in reviews
+        ):
+            continue
+        accepted.append(deepcopy(candidate))
+
+    accepted.sort(key=lambda row: cast(str, row["candidate_id"]))
+    gold_counts = Counter(row["proposed_gold_skill_id"] for row in accepted)
+    negative_rows = [
+        row for row in accepted if row["proposed_negative_skill_id"] is not None
+    ]
+    negative_counts = Counter(
+        row["proposed_negative_skill_id"] for row in negative_rows
+    )
+    return {
+        "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
+        "status": "VALID",
+        "task_count": len(accepted),
+        "negative_labeled_task_count": len(negative_rows),
+        "family_count": len({row["semantic_family_id"] for row in accepted}),
+        "gold_distribution": dict(sorted(gold_counts.items())),
+        "negative_distribution": dict(
+            sorted((cast(str, key), value) for key, value in negative_counts.items())
+        ),
+        "negative_target_coverage_count": len(negative_counts),
+        "exact_three_way_agreement_count": len(accepted),
+        "excluded_candidate_count": len(candidates) - len(accepted),
+        "transport_retry_count": valid_transport_retry_count,
+        "agent_roles": deepcopy(metadata_roles),
+        "review_schedule_sha256": deepcopy(metadata_schedules),
+        "source_file_sha256": source_hashes,
+        "first_read_timestamp": first_read_timestamp,
+        "model_scores_observed": False,
+        "tasks": accepted,
+    }
+
+
+def _validate_legacy_human_pack(
     root: Path | str,
     *,
     repository_root: Path | str,
