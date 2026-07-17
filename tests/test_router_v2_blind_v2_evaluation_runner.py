@@ -4662,6 +4662,21 @@ def test_task5_freeze_requires_canonical_source_request_skill_authority(
         ]
     _rewrite_jsonl(path, rows)
     _task5_resync_validation_from_source_pack(validation, pack, role)
+    if role == "generator":
+        authority = validation["generation_authority"]
+        generator_record = validation["agent_run_records"]["generator"][0]
+        authority["source_ledger_sha256"] = validation["source_file_sha256"][
+            "blind-v2-generation.jsonl"
+        ]
+        authority["requests"][0]["invocation_id"] = generator_record["invocation_id"]
+        authority["requests"][0]["request_sha256"] = generator_record["request_sha256"]
+        authority["authority_sha256"] = _task5_test_canonical_sha256(
+            {
+                key: value
+                for key, value in authority.items()
+                if key != "authority_sha256"
+            }
+        )
 
     with pytest.raises(
         ValueError, match="Agent source ledger freeze authority mismatch"
@@ -4977,7 +4992,7 @@ def test_task5_freeze_rejects_forged_record_with_resynchronized_aggregates(
     )
     validation["transport_retry_count"] = len(validation["retry_records"])
 
-    with pytest.raises(ValueError, match="Agent run identity authority mismatch"):
+    with pytest.raises(ValueError, match="Agent run or retry evidence mismatch"):
         runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -6469,6 +6484,157 @@ def test_task5_evaluation_accepts_canonical_round_two_selection(
         ]
         == 4
     )
+    generation_requests = manifest["agent_construction"]["generation_authority"][
+        "requests"
+    ]
+    assert len(generation_requests) == 17
+    assert generation_requests[-1]["generation_round"] == 2
+    assert generation_requests[-1]["gold_skill_id"] == "test-skill-00"
+    assert generation_requests[-1]["negative_quota"] == 2
+    assert generation_requests[-1]["positive_only_quota"] == 2
+    assert generation_requests[-1]["candidate_count"] == 4
+
+
+def test_task5_commit_b_binds_sanitized_generation_round_authority(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    manifest = json.loads(documents["blind-v2-manifest.json"])
+    authority = manifest["agent_construction"]["generation_authority"]
+
+    assert authority["schema_version"] == "router-v2-generation-authority-v1"
+    assert (
+        authority["source_ledger_sha256"]
+        == manifest["source_file_sha256"]["blind-v2-generation.jsonl"]
+    )
+    assert len(authority["requests"]) == 16
+    assert authority["authority_sha256"] == _task5_test_canonical_sha256(
+        {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
+    for request in authority["requests"]:
+        assert request["generation_round"] == 1
+        assert request["negative_quota"] == 12
+        assert request["positive_only_quota"] == 4
+        assert request["response_outcome"] == "VALID_RESPONSE"
+        assert request["candidate_count"] == 16
+        assert [
+            candidate["candidate_index"] for candidate in request["candidates"]
+        ] == list(range(16))
+        for candidate in request["candidates"]:
+            expected_id = hashlib.sha256(
+                (
+                    f"1:{request['gold_skill_id']}:{candidate['candidate_index']}:"
+                    f"{request['response_sha256']}"
+                ).encode()
+            ).hexdigest()[:24]
+            assert candidate["candidate_id"] == expected_id
+            assert candidate["gold_skill_id"] == request["gold_skill_id"]
+            assert candidate["stratum"] == (
+                "negative"
+                if candidate["negative_skill_id"] is not None
+                else "positive_only"
+            )
+    encoded = _task5_test_canonical_json_bytes(authority)
+    for forbidden in (
+        b'"prompt_text"',
+        b'"rationale"',
+        b'"reason"',
+        b'"refusal"',
+        b'"response"',
+        b'"source_bytes_hex"',
+        b'"hidden_reasoning"',
+    ):
+        assert forbidden not in encoded
+
+
+def test_task5_evaluation_rejects_forged_round_two_without_generation_authority(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    selection = manifest["agent_construction"]["deterministic_selection"]
+    skill_id = "test-skill-00"
+    selection["round_1_post_pipeline_deficits"][skill_id] = {
+        "negative": 1,
+        "positive_only": 0,
+    }
+    selection["round_2_distribution"][skill_id] = {
+        "negative": 2,
+        "positive_only": 0,
+    }
+    selection["round_2_request_quota_distribution"][skill_id] = {
+        "negative": 2,
+        "positive_only": 0,
+    }
+    selection["round_2_candidate_count"] = 2
+    manifest["agent_construction"]["deterministic_selection_sha256"] = (
+        _task5_test_canonical_sha256(selection)
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(inputs),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid_value"),
+    (
+        ("prompts_committed", False),
+        ("prompts_committed", 1),
+        ("model_scores_observed", True),
+        ("model_scores_observed", 0),
+        ("evaluation_started", True),
+        ("evaluation_started", 0),
+        ("retraining_after_data_access", True),
+        ("retraining_after_data_access", 0),
+        ("gate_changed_after_data_access", True),
+        ("gate_changed_after_data_access", 0),
+    ),
+)
+def test_task5_evaluation_requires_exact_pre_scoring_manifest_state(
+    tmp_path: Path,
+    field: str,
+    invalid_value: object,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    manifest[field] = invalid_value
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(inputs),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
 
 
 def _task5_resync_committed_role_evidence(
@@ -6538,6 +6704,104 @@ def _task5_resync_committed_identity_authority(
             construction["agent_run_identity_authority"]["roles"]
         )
     )
+
+
+@pytest.mark.parametrize(
+    "mutation", ("candidate_id", "candidate_index", "quota", "response_sha256")
+)
+def test_task5_evaluation_rejects_resynchronized_generation_authority_mapping(
+    tmp_path: Path,
+    mutation: str,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    authority = manifest["agent_construction"]["generation_authority"]
+    request = authority["requests"][0]
+    candidate = request["candidates"][0]
+    if mutation == "candidate_id":
+        candidate["candidate_id"] = "0" * 24
+    elif mutation == "candidate_index":
+        candidate["candidate_index"] = 1
+    elif mutation == "quota":
+        request["negative_quota"] = 11
+    else:
+        request["response_sha256"] = "0" * 64
+    authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(inputs),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+def test_task5_freeze_rejects_invalid_generator_run_with_candidate_ids(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    record = validation["agent_run_records"]["generator"][0]
+    record["outcome"] = "SUBSTANTIVE_INVALID_RESPONSE"
+    record["attempts"][-1]["outcome"] = "SUBSTANTIVE_INVALID_RESPONSE"
+    authority = validation["generation_authority"]
+    authority["requests"][0]["response_outcome"] = "SUBSTANTIVE_INVALID_RESPONSE"
+    authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
+    _task5_resync_role_aggregates_from_records(validation, "generator")
+
+    with pytest.raises(ValueError, match="Agent run or retry evidence mismatch"):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_evaluation_rejects_invalid_generator_run_with_candidate_ids(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    construction = manifest["agent_construction"]
+    record = construction["sanitized_run_records"]["generator"][0]
+    record["outcome"] = "SUBSTANTIVE_INVALID_RESPONSE"
+    record["attempts"][-1]["outcome"] = "SUBSTANTIVE_INVALID_RESPONSE"
+    authority = construction["generation_authority"]
+    authority["requests"][0]["response_outcome"] = "SUBSTANTIVE_INVALID_RESPONSE"
+    authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
+    _task5_resync_committed_role_evidence(construction, "generator")
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(inputs),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
 
 
 @pytest.mark.parametrize(

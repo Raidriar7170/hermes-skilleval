@@ -2801,6 +2801,432 @@ def _complete_deficit_document(
     }
 
 
+_GENERATION_AUTHORITY_FIELDS = {
+    "schema_version",
+    "source_ledger_sha256",
+    "requests",
+    "authority_sha256",
+}
+_GENERATION_AUTHORITY_REQUEST_FIELDS = {
+    "invocation_id",
+    "request_sha256",
+    "generation_round",
+    "gold_skill_id",
+    "negative_quota",
+    "positive_only_quota",
+    "response_outcome",
+    "response_sha256",
+    "candidate_count",
+    "candidates",
+}
+_GENERATION_AUTHORITY_CANDIDATE_FIELDS = {
+    "candidate_index",
+    "candidate_id",
+    "gold_skill_id",
+    "negative_skill_id",
+    "stratum",
+}
+
+
+def _generation_authority_request_document(
+    *,
+    request: dict[str, Any],
+    response: dict[str, Any] | None,
+    run_record: dict[str, Any],
+) -> dict[str, Any]:
+    quota = cast(dict[str, Any], cast(dict[str, Any], request["input"])["quota"])
+    response_sha256 = run_record["response_sha256"]
+    candidates = []
+    if response is not None:
+        _require(
+            type(response_sha256) is str,
+            "valid generator response must bind response SHA-256",
+        )
+        for generated in cast(list[dict[str, Any]], response["candidates"]):
+            negative = generated["proposed_negative_skill_id"]
+            candidates.append(
+                {
+                    "candidate_index": generated["candidate_index"],
+                    "candidate_id": opaque_candidate_id(
+                        cast(int, quota["round_number"]),
+                        cast(str, quota["gold_skill_id"]),
+                        cast(int, generated["candidate_index"]),
+                        cast(str, response_sha256),
+                    ),
+                    "gold_skill_id": generated["proposed_gold_skill_id"],
+                    "negative_skill_id": negative,
+                    "stratum": (
+                        "negative" if negative is not None else "positive_only"
+                    ),
+                }
+            )
+    return {
+        "invocation_id": run_record["invocation_id"],
+        "request_sha256": run_record["request_sha256"],
+        "generation_round": quota["round_number"],
+        "gold_skill_id": quota["gold_skill_id"],
+        "negative_quota": quota["negative_quota"],
+        "positive_only_quota": quota["positive_only_quota"],
+        "response_outcome": run_record["outcome"],
+        "response_sha256": response_sha256,
+        "candidate_count": len(candidates),
+        "candidates": candidates,
+    }
+
+
+def _generation_authority_document(
+    requests: list[dict[str, Any]], *, source_ledger_sha256: str
+) -> dict[str, Any]:
+    document = {
+        "schema_version": "router-v2-generation-authority-v1",
+        "source_ledger_sha256": source_ledger_sha256,
+        "requests": deepcopy(requests),
+    }
+    return {**document, "authority_sha256": canonical_sha256(document)}
+
+
+def _validated_generation_authority(
+    value: Any,
+    *,
+    source_ledger_sha256: str,
+    canonical_ids: set[str],
+    candidate_outcomes: dict[str, Any],
+    generator_run_records: list[dict[str, Any]],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    authority = _exact_object_fields(
+        value, _GENERATION_AUTHORITY_FIELDS, "generation authority"
+    )
+    expected_source_hash = _exact_lowercase_hex(
+        source_ledger_sha256,
+        length=64,
+        label="generation source ledger SHA-256",
+    )
+    _require(
+        authority["schema_version"] == "router-v2-generation-authority-v1"
+        and authority["source_ledger_sha256"] == expected_source_hash,
+        "generation authority source mismatch",
+    )
+    unhashed = {
+        key: value for key, value in authority.items() if key != "authority_sha256"
+    }
+    _require(
+        authority["authority_sha256"] == canonical_sha256(unhashed),
+        "generation authority aggregate mismatch",
+    )
+    raw_requests = authority["requests"]
+    _require(
+        type(raw_requests) is list
+        and type(generator_run_records) is list
+        and len(raw_requests) == len(generator_run_records),
+        "generation authority request coverage mismatch",
+    )
+    _require(len(canonical_ids) == 16, "generation canonical skill count mismatch")
+
+    normalized_requests: list[dict[str, Any]] = []
+    all_candidates: list[dict[str, Any]] = []
+    request_keys: list[tuple[int, str]] = []
+    for raw_request, run_record in zip(
+        raw_requests, generator_run_records, strict=True
+    ):
+        request = _exact_object_fields(
+            raw_request,
+            _GENERATION_AUTHORITY_REQUEST_FIELDS,
+            "generation authority request",
+        )
+        invocation_id = _exact_lowercase_hex(
+            request["invocation_id"], length=24, label="generation invocation id"
+        )
+        request_sha256 = _exact_lowercase_hex(
+            request["request_sha256"],
+            length=64,
+            label="generation request SHA-256",
+        )
+        generation_round = request["generation_round"]
+        gold_skill_id = request["gold_skill_id"]
+        negative_quota = request["negative_quota"]
+        positive_only_quota = request["positive_only_quota"]
+        outcome = request["response_outcome"]
+        response_sha256 = request["response_sha256"]
+        raw_candidates = request["candidates"]
+        _require(
+            invocation_id == request_sha256[:24]
+            and type(generation_round) is int
+            and generation_round in {1, 2}
+            and type(gold_skill_id) is str
+            and gold_skill_id in canonical_ids
+            and type(negative_quota) is int
+            and negative_quota >= 0
+            and type(positive_only_quota) is int
+            and positive_only_quota >= 0
+            and negative_quota + positive_only_quota > 0
+            and outcome
+            in {
+                "VALID_RESPONSE",
+                "SUBSTANTIVE_INVALID_RESPONSE",
+                "TRANSPORT_FAILURE_NO_RESPONSE",
+            }
+            and type(raw_candidates) is list,
+            "generation authority request semantics mismatch",
+        )
+        request_key = (cast(int, generation_round), cast(str, gold_skill_id))
+        _require(
+            request_key not in request_keys,
+            "duplicate generation authority request",
+        )
+        request_keys.append(request_key)
+        _require(
+            run_record.get("invocation_id") == invocation_id
+            and run_record.get("request_sha256") == request_sha256
+            and run_record.get("response_sha256") == response_sha256
+            and run_record.get("outcome") == outcome,
+            "generation authority run binding mismatch",
+        )
+
+        normalized_candidates: list[dict[str, Any]] = []
+        for raw_candidate in raw_candidates:
+            candidate = _exact_object_fields(
+                raw_candidate,
+                _GENERATION_AUTHORITY_CANDIDATE_FIELDS,
+                "generation candidate authority",
+            )
+            candidate_index = candidate["candidate_index"]
+            candidate_id = _exact_lowercase_hex(
+                candidate["candidate_id"],
+                length=24,
+                label="generation candidate id",
+            )
+            negative_skill_id = candidate["negative_skill_id"]
+            _require(
+                type(candidate_index) is int
+                and candidate_index >= 0
+                and candidate["gold_skill_id"] == gold_skill_id
+                and (
+                    negative_skill_id is None
+                    or (
+                        type(negative_skill_id) is str
+                        and negative_skill_id in canonical_ids
+                        and negative_skill_id != gold_skill_id
+                    )
+                )
+                and candidate["stratum"]
+                == ("negative" if negative_skill_id is not None else "positive_only"),
+                "generation candidate authority mismatch",
+            )
+            _require(
+                type(response_sha256) is str
+                and candidate_id
+                == opaque_candidate_id(
+                    cast(int, generation_round),
+                    cast(str, gold_skill_id),
+                    cast(int, candidate_index),
+                    response_sha256,
+                ),
+                "generation candidate opaque identity mismatch",
+            )
+            normalized_candidate = deepcopy(candidate)
+            normalized_candidates.append(normalized_candidate)
+            all_candidates.append(
+                {
+                    **normalized_candidate,
+                    "generation_round": generation_round,
+                }
+            )
+
+        candidate_ids = [
+            cast(str, candidate["candidate_id"]) for candidate in normalized_candidates
+        ]
+        if outcome == "VALID_RESPONSE":
+            _exact_lowercase_hex(
+                response_sha256,
+                length=64,
+                label="generation response SHA-256",
+            )
+            expected_count = cast(int, negative_quota) + cast(int, positive_only_quota)
+            _require(
+                request["candidate_count"] == expected_count
+                and len(normalized_candidates) == expected_count
+                and [
+                    cast(int, candidate["candidate_index"])
+                    for candidate in normalized_candidates
+                ]
+                == list(range(expected_count))
+                and sum(
+                    candidate["stratum"] == "negative"
+                    for candidate in normalized_candidates
+                )
+                == negative_quota
+                and sum(
+                    candidate["stratum"] == "positive_only"
+                    for candidate in normalized_candidates
+                )
+                == positive_only_quota
+                and run_record.get("candidate_ids") == candidate_ids,
+                "valid generation response candidate authority mismatch",
+            )
+        else:
+            _require(
+                request["candidate_count"] == 0
+                and not normalized_candidates
+                and run_record.get("candidate_ids") == []
+                and (
+                    (
+                        outcome == "TRANSPORT_FAILURE_NO_RESPONSE"
+                        and response_sha256 is None
+                    )
+                    or (
+                        outcome == "SUBSTANTIVE_INVALID_RESPONSE"
+                        and _exact_lowercase_hex(
+                            response_sha256,
+                            length=64,
+                            label="invalid generation response SHA-256",
+                        )
+                        == response_sha256
+                    )
+                ),
+                "invalid generation response candidate authority mismatch",
+            )
+        normalized_requests.append(
+            {**deepcopy(request), "candidates": normalized_candidates}
+        )
+
+    all_candidate_ids = [
+        cast(str, candidate["candidate_id"]) for candidate in all_candidates
+    ]
+    _require(
+        len(all_candidate_ids) == len(set(all_candidate_ids))
+        and set(candidate_outcomes) == set(all_candidate_ids),
+        "generation candidate outcome coverage mismatch",
+    )
+    expected_round_one_keys = [(1, skill_id) for skill_id in sorted(canonical_ids)]
+    round_one_requests = [
+        request for request in normalized_requests if request["generation_round"] == 1
+    ]
+    round_two_requests = [
+        request for request in normalized_requests if request["generation_round"] == 2
+    ]
+    _require(
+        request_keys
+        == expected_round_one_keys
+        + [(2, request["gold_skill_id"]) for request in round_two_requests]
+        and [request["gold_skill_id"] for request in round_two_requests]
+        == sorted(request["gold_skill_id"] for request in round_two_requests)
+        and all(
+            request["response_outcome"] == "VALID_RESPONSE"
+            and request["negative_quota"]
+            == _SELECTION_AUTHORITY["round_1_negative_per_skill"]
+            and request["positive_only_quota"]
+            == _SELECTION_AUTHORITY["round_1_positive_only_per_skill"]
+            for request in round_one_requests
+        ),
+        "canonical generation request schedule mismatch",
+    )
+
+    def distribution(round_number: int) -> dict[str, dict[str, int]]:
+        counts = {
+            skill_id: {"negative": 0, "positive_only": 0}
+            for skill_id in sorted(canonical_ids)
+        }
+        for candidate in all_candidates:
+            if candidate["generation_round"] == round_number:
+                counts[cast(str, candidate["gold_skill_id"])][
+                    cast(str, candidate["stratum"])
+                ] += 1
+        return counts
+
+    def request_distribution(round_number: int) -> dict[str, dict[str, int]]:
+        counts = {
+            skill_id: {"negative": 0, "positive_only": 0}
+            for skill_id in sorted(canonical_ids)
+        }
+        for request in normalized_requests:
+            if request["generation_round"] == round_number:
+                counts[cast(str, request["gold_skill_id"])]["negative"] += cast(
+                    int, request["negative_quota"]
+                )
+                counts[cast(str, request["gold_skill_id"])]["positive_only"] += cast(
+                    int, request["positive_only_quota"]
+                )
+        return counts
+
+    round_one_distribution = distribution(1)
+    round_two_distribution = distribution(2)
+    round_one_request_distribution = request_distribution(1)
+    round_two_request_distribution = request_distribution(2)
+    _require(
+        sum(sum(counts.values()) for counts in round_one_distribution.values())
+        == _SELECTION_AUTHORITY["round_1_candidate_count"]
+        and round_one_distribution == round_one_request_distribution,
+        "canonical round-one generation authority mismatch",
+    )
+    accepted_outcomes = {"ELIGIBLE", "SELECTED", "NOT_SELECTED"}
+    round_one_eligible_counts = {
+        skill_id: {"negative": 0, "positive_only": 0}
+        for skill_id in sorted(canonical_ids)
+    }
+    for candidate in all_candidates:
+        if (
+            candidate["generation_round"] == 1
+            and candidate_outcomes[candidate["candidate_id"]] in accepted_outcomes
+        ):
+            round_one_eligible_counts[cast(str, candidate["gold_skill_id"])][
+                cast(str, candidate["stratum"])
+            ] += 1
+    deficits = {
+        skill_id: {
+            "negative": max(
+                0,
+                cast(int, _SELECTION_AUTHORITY["final_negative_per_skill"])
+                - counts["negative"],
+            ),
+            "positive_only": max(
+                0,
+                cast(int, _SELECTION_AUTHORITY["final_positive_only_per_skill"])
+                - counts["positive_only"],
+            ),
+        }
+        for skill_id, counts in round_one_eligible_counts.items()
+    }
+    expected_round_two_distribution = {
+        skill_id: {
+            stratum: cast(int, _SELECTION_AUTHORITY["round_2_deficit_multiplier"])
+            * deficit
+            for stratum, deficit in counts.items()
+        }
+        for skill_id, counts in deficits.items()
+    }
+    expected_round_two_skills = [
+        skill_id
+        for skill_id, counts in expected_round_two_distribution.items()
+        if any(counts.values())
+    ]
+    _require(
+        [request["gold_skill_id"] for request in round_two_requests]
+        == expected_round_two_skills
+        and round_two_distribution == expected_round_two_distribution
+        and round_two_request_distribution == expected_round_two_distribution,
+        "canonical round-two generation authority mismatch",
+    )
+    semantics = {
+        "observed_generation_rounds": {1} | ({2} if round_two_requests else set()),
+        "round_1_candidate_count": sum(
+            sum(counts.values()) for counts in round_one_distribution.values()
+        ),
+        "round_2_candidate_count": sum(
+            sum(counts.values()) for counts in round_two_distribution.values()
+        ),
+        "round_1_distribution": round_one_distribution,
+        "round_2_distribution": round_two_distribution,
+        "round_1_request_quota_distribution": round_one_request_distribution,
+        "round_2_request_quota_distribution": round_two_request_distribution,
+        "round_1_post_pipeline_deficits": deficits,
+    }
+    normalized = {
+        **deepcopy(authority),
+        "requests": normalized_requests,
+    }
+    return normalized, semantics
+
+
 _SELECTION_AUDIT_FIELDS = {
     "selection_authority",
     "selection_authority_sha256",
@@ -2821,6 +3247,7 @@ _SELECTION_AUDIT_FIELDS = {
 def _validated_selection_audit_semantics(
     value: Any,
     *,
+    generation_semantics: dict[str, Any],
     selected_rows: list[dict[str, Any]],
     canonical_ids: set[str],
     id_field: str,
@@ -2828,7 +3255,6 @@ def _validated_selection_audit_semantics(
     negative_field: str,
     require_complete_selection: bool,
     selection_audit_sha256: Any | None = None,
-    observed_generation_rounds: set[int] | None = None,
 ) -> dict[str, Any]:
     selection = _exact_object_fields(value, _SELECTION_AUDIT_FIELDS, "selection audit")
     _require(len(canonical_ids) == 16, "canonical selection skill count mismatch")
@@ -2845,19 +3271,16 @@ def _validated_selection_audit_semantics(
         label="accepted pool SHA-256",
     )
 
-    expected_round_one_distribution = {
-        skill_id: {
-            "negative": _SELECTION_AUTHORITY["round_1_negative_per_skill"],
-            "positive_only": _SELECTION_AUTHORITY["round_1_positive_only_per_skill"],
-        }
-        for skill_id in sorted_ids
-    }
     _require(
-        selection["round_1_candidate_count"]
+        generation_semantics["observed_generation_rounds"]
+        == ({1} | ({2} if generation_semantics["round_2_candidate_count"] else set()))
+        and selection["round_1_candidate_count"]
+        == generation_semantics["round_1_candidate_count"]
         == _SELECTION_AUTHORITY["round_1_candidate_count"]
-        and selection["round_1_distribution"] == expected_round_one_distribution
+        and selection["round_1_distribution"]
+        == generation_semantics["round_1_distribution"]
         and selection["round_1_request_quota_distribution"]
-        == expected_round_one_distribution,
+        == generation_semantics["round_1_request_quota_distribution"],
         "round-one selection audit mismatch",
     )
 
@@ -2879,6 +3302,11 @@ def _validated_selection_audit_semantics(
         )
         normalized_deficits[skill_id] = cast(dict[str, int], counts)
 
+    _require(
+        normalized_deficits == generation_semantics["round_1_post_pipeline_deficits"],
+        "round-one post-pipeline deficit authority mismatch",
+    )
+
     expected_round_two_distribution = {
         skill_id: {
             stratum: deficit
@@ -2891,19 +3319,19 @@ def _validated_selection_audit_semantics(
         sum(counts.values()) for counts in expected_round_two_distribution.values()
     )
     _require(
-        selection["round_2_distribution"] == expected_round_two_distribution
-        and selection["round_2_request_quota_distribution"]
+        generation_semantics["round_2_distribution"] == expected_round_two_distribution
+        and generation_semantics["round_2_request_quota_distribution"]
         == expected_round_two_distribution
+        and selection["round_2_distribution"]
+        == generation_semantics["round_2_distribution"]
+        and selection["round_2_request_quota_distribution"]
+        == generation_semantics["round_2_request_quota_distribution"]
         and type(selection["round_2_candidate_count"]) is int
-        and selection["round_2_candidate_count"] == round_two_count,
+        and selection["round_2_candidate_count"]
+        == generation_semantics["round_2_candidate_count"]
+        == round_two_count,
         "round-two selection audit mismatch",
     )
-    if observed_generation_rounds is not None:
-        expected_rounds = {1} | ({2} if round_two_count else set())
-        _require(
-            observed_generation_rounds == expected_rounds,
-            "generation round authority mismatch",
-        )
 
     selected_ids = [cast(str, row[id_field]) for row in selected_rows]
     selected_by_stratum = {
@@ -2958,10 +3386,7 @@ def _validated_selection_audit_semantics(
 def _selection_audit_document(
     *,
     accepted: list[dict[str, Any]],
-    round_one_candidates: list[dict[str, Any]],
-    round_two_candidates: list[dict[str, Any]],
-    quota_counts: Counter[tuple[int, str, str]],
-    round_one_accepted: list[dict[str, Any]],
+    generation_semantics: dict[str, Any],
     selected: list[dict[str, Any]],
     canonical_ids: set[str],
 ) -> dict[str, Any]:
@@ -2983,18 +3408,18 @@ def _selection_audit_document(
         "selection_authority": authority_document,
         "selection_authority_sha256": canonical_sha256(authority_document),
         "accepted_pool_sha256": canonical_sha256(accepted),
-        "round_1_candidate_count": len(round_one_candidates),
-        "round_2_candidate_count": len(round_two_candidates),
-        "round_1_distribution": _stratum_counts(round_one_candidates, canonical_ids),
-        "round_2_distribution": _stratum_counts(round_two_candidates, canonical_ids),
-        "round_1_request_quota_distribution": _request_quota_distribution(
-            quota_counts, 1, canonical_ids
+        "round_1_candidate_count": generation_semantics["round_1_candidate_count"],
+        "round_2_candidate_count": generation_semantics["round_2_candidate_count"],
+        "round_1_distribution": deepcopy(generation_semantics["round_1_distribution"]),
+        "round_2_distribution": deepcopy(generation_semantics["round_2_distribution"]),
+        "round_1_request_quota_distribution": deepcopy(
+            generation_semantics["round_1_request_quota_distribution"]
         ),
-        "round_2_request_quota_distribution": _request_quota_distribution(
-            quota_counts, 2, canonical_ids
+        "round_2_request_quota_distribution": deepcopy(
+            generation_semantics["round_2_request_quota_distribution"]
         ),
-        "round_1_post_pipeline_deficits": _complete_deficit_document(
-            round_one_accepted, canonical_ids
+        "round_1_post_pipeline_deficits": deepcopy(
+            generation_semantics["round_1_post_pipeline_deficits"]
         ),
         "selected_candidate_ids": selected_ids,
         "selected_candidate_ids_sha256": canonical_sha256(selected_ids),
@@ -3002,16 +3427,13 @@ def _selection_audit_document(
     }
     return _validated_selection_audit_semantics(
         document,
+        generation_semantics=generation_semantics,
         selected_rows=selected,
         canonical_ids=canonical_ids,
         id_field="candidate_id",
         gold_field="proposed_gold_skill_id",
         negative_field="proposed_negative_skill_id",
         require_complete_selection=bool(selected),
-        observed_generation_rounds={
-            cast(int, row["generation_round"])
-            for row in round_one_candidates + round_two_candidates
-        },
     )
 
 
@@ -3286,6 +3708,7 @@ def validate_agent_pack(
         "reviewer_a": [],
         "reviewer_b": [],
     }
+    generation_authority_requests: list[dict[str, Any]] = []
     retry_records: list[dict[str, Any]] = []
     try:
         for raw_row in generation_rows:
@@ -3335,6 +3758,13 @@ def validate_agent_pack(
                 retry_count=retry_count,
             )
             sanitized_run_records["generator"].append(run_record)
+            generation_authority_requests.append(
+                _generation_authority_request_document(
+                    request=request,
+                    response=response,
+                    run_record=run_record,
+                )
+            )
             retry_record = _transport_retry_record(run_record, role="generator")
             if retry_record is not None:
                 retry_records.append(retry_record)
@@ -3690,6 +4120,16 @@ def validate_agent_pack(
     pipeline_rejected_count = sum(
         outcome.startswith("REJECTED") for outcome in candidate_outcomes.values()
     )
+    generation_authority, generation_semantics = _validated_generation_authority(
+        _generation_authority_document(
+            generation_authority_requests,
+            source_ledger_sha256=source_hashes["blind-v2-generation.jsonl"],
+        ),
+        source_ledger_sha256=source_hashes["blind-v2-generation.jsonl"],
+        canonical_ids=canonical_ids,
+        candidate_outcomes=candidate_outcomes,
+        generator_run_records=sanitized_run_records["generator"],
+    )
     agent_run_identity_authority = _agent_run_identity_authority(
         sanitized_run_records,
         cast(dict[str, Any], metadata_roles),
@@ -3708,6 +4148,7 @@ def validate_agent_pack(
         ),
         "agent_roles": deepcopy(metadata_roles),
         "agent_run_records": deepcopy(sanitized_run_records),
+        "generation_authority": generation_authority,
         "agent_run_evidence": {
             role: _agent_role_run_evidence(role, sanitized_run_records[role])
             for role in AGENT_CONFIGS
@@ -3734,10 +4175,7 @@ def validate_agent_pack(
     if final_deficits:
         insufficient_selection_audit = _selection_audit_document(
             accepted=accepted,
-            round_one_candidates=round_one_candidates,
-            round_two_candidates=round_two_candidates,
-            quota_counts=generation_request_quota_counts,
-            round_one_accepted=round_one_accepted,
+            generation_semantics=generation_semantics,
             selected=[],
             canonical_ids=canonical_ids,
         )
@@ -3813,10 +4251,7 @@ def validate_agent_pack(
         )
         selected_selection_audit = _selection_audit_document(
             accepted=accepted,
-            round_one_candidates=round_one_candidates,
-            round_two_candidates=round_two_candidates,
-            quota_counts=generation_request_quota_counts,
-            round_one_accepted=round_one_accepted,
+            generation_semantics=generation_semantics,
             selected=selected,
             canonical_ids=canonical_ids,
         )
@@ -4359,6 +4794,19 @@ def _validated_agent_lineage_evidence(
                         and record["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE",
                         "empty run summary mismatch",
                     )
+                if role == "generator":
+                    _require(
+                        (record["outcome"] == "VALID_RESPONSE" and bool(candidate_ids))
+                        or (
+                            record["outcome"]
+                            in {
+                                "SUBSTANTIVE_INVALID_RESPONSE",
+                                "TRANSPORT_FAILURE_NO_RESPONSE",
+                            }
+                            and not candidate_ids
+                        ),
+                        "generator run outcome candidate binding mismatch",
+                    )
             except (KeyError, TypeError, ValueError) as exc:
                 raise ValueError("Agent run or retry evidence mismatch") from exc
             invocation_ids.add(invocation_id)
@@ -4432,9 +4880,23 @@ def _validated_agent_lineage_evidence(
 
 def _validated_dataset_freeze_tasks(
     validation: dict[str, Any],
+    *,
+    generator_run_records: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     message = "Agent dataset selection validation mismatch"
     try:
+        projected_skills = _project_canonical_skills(
+            validation["canonical_skills_authority"]
+        )
+        _, generation_semantics = _validated_generation_authority(
+            validation["generation_authority"],
+            source_ledger_sha256=validation["generation_authority"][
+                "source_ledger_sha256"
+            ],
+            canonical_ids=_canonical_skill_ids(projected_skills),
+            candidate_outcomes=validation["candidate_outcomes"],
+            generator_run_records=generator_run_records,
+        )
         raw_tasks = validation["tasks"]
         _require(
             type(raw_tasks) is list and len(raw_tasks) == POSITIVE_TASK_COUNT,
@@ -4646,6 +5108,7 @@ def _validated_dataset_freeze_tasks(
 
         selection = _validated_selection_audit_semantics(
             validation["selection_audit"],
+            generation_semantics=generation_semantics,
             selected_rows=selected,
             canonical_ids=set(gold_ids),
             id_field="candidate_id",
@@ -4671,7 +5134,9 @@ def _validated_dataset_freeze_tasks(
         raise ValueError(message) from exc
 
 
-def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
+def _validated_agent_source_ledger_evidence(
+    validation: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
     message = "Agent source ledger freeze authority mismatch"
     try:
         projected_skills = _project_canonical_skills(
@@ -4769,6 +5234,7 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
         source_records: dict[str, list[dict[str, Any]]] = {
             role: [] for role in AGENT_CONFIGS
         }
+        generation_authority_requests: list[dict[str, Any]] = []
         for raw_row in generation_rows:
             row, request, quota = _validated_generation_source_row(
                 raw_row,
@@ -4804,17 +5270,23 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
                 if response is None
                 else _derived_generator_candidates(response, request)
             )
-            source_records["generator"].append(
-                _sanitized_agent_run_record(
-                    role="generator",
-                    candidate_ids=[
-                        cast(str, candidate["candidate_id"])
-                        for candidate in derived_candidates
-                    ],
+            run_record = _sanitized_agent_run_record(
+                role="generator",
+                candidate_ids=[
+                    cast(str, candidate["candidate_id"])
+                    for candidate in derived_candidates
+                ],
+                request=request,
+                response=response,
+                invocations=row["invocations"],
+                retry_count=retry_count,
+            )
+            source_records["generator"].append(run_record)
+            generation_authority_requests.append(
+                _generation_authority_request_document(
                     request=request,
                     response=response,
-                    invocations=row["invocations"],
-                    retry_count=retry_count,
+                    run_record=run_record,
                 )
             )
             for candidate in derived_candidates:
@@ -5073,19 +5545,22 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
             }
         )
 
-        round_one_candidates = [
-            candidate
-            for candidate in candidates.values()
-            if candidate["generation_round"] == 1
-        ]
-        round_two_candidates = [
-            candidate
-            for candidate in candidates.values()
-            if candidate["generation_round"] == 2
-        ]
-        round_one_accepted = [
-            candidate for candidate in accepted if candidate["generation_round"] == 1
-        ]
+        source_generation_authority, generation_semantics = (
+            _validated_generation_authority(
+                _generation_authority_document(
+                    generation_authority_requests,
+                    source_ledger_sha256=source_hashes["blind-v2-generation.jsonl"],
+                ),
+                source_ledger_sha256=source_hashes["blind-v2-generation.jsonl"],
+                canonical_ids=canonical_ids,
+                candidate_outcomes=outcomes,
+                generator_run_records=source_records["generator"],
+            )
+        )
+        _require(
+            validation["generation_authority"] == source_generation_authority,
+            "source generation authority mismatch",
+        )
         selected_tasks = cast(list[dict[str, Any]], validation["tasks"])
         expected_selected_tasks = [
             task
@@ -5128,10 +5603,7 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
         }
         source_selection_audit = _selection_audit_document(
             accepted=accepted,
-            round_one_candidates=round_one_candidates,
-            round_two_candidates=round_two_candidates,
-            quota_counts=generation_request_quota_counts,
-            round_one_accepted=round_one_accepted,
+            generation_semantics=generation_semantics,
             selected=selected_tasks,
             canonical_ids=canonical_ids,
         )
@@ -5170,6 +5642,7 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
             == pipeline_rejected_count + not_selected_count,
             "source candidate outcome aggregate mismatch",
         )
+        return source_generation_authority, generation_semantics
     except (
         _AgentPackProtocolViolation,
         AttributeError,
@@ -5193,14 +5666,17 @@ def build_dataset_freeze_documents(
         length=40,
         label="Commit A",
     )
-    task_rows, deterministic_selection = _validated_dataset_freeze_tasks(validation)
     (
         sanitized_run_records,
         agent_run_evidence,
         retry_records,
         agent_run_identity_authority,
     ) = _validated_agent_lineage_evidence(validation)
-    _validated_agent_source_ledger_evidence(validation)
+    task_rows, deterministic_selection = _validated_dataset_freeze_tasks(
+        validation,
+        generator_run_records=sanitized_run_records["generator"],
+    )
+    generation_authority, _ = _validated_agent_source_ledger_evidence(validation)
     task_bytes = b"".join(_canonical_json_bytes(row) for row in task_rows)
 
     reviewer_ledgers = {
@@ -5259,6 +5735,7 @@ def build_dataset_freeze_documents(
         "selected_task_source_authority_sha256": canonical_sha256(
             selected_task_source_authority
         ),
+        "generation_authority": generation_authority,
         "generation_ledger": {
             "path": "blind-v2-generation.jsonl",
             "sha256": validation["source_file_sha256"]["blind-v2-generation.jsonl"],
@@ -6926,8 +7403,19 @@ def _validate_evaluation_agent_construction_authority(
             == "router-v2-agent-blind-v2-review-summary-v1",
             message,
         )
+        for field, expected_state in (
+            ("prompts_committed", True),
+            ("model_scores_observed", False),
+            ("evaluation_started", False),
+            ("retraining_after_data_access", False),
+            ("gate_changed_after_data_access", False),
+        ):
+            _require(
+                type(manifest[field]) is bool and manifest[field] is expected_state,
+                message,
+            )
         for document in (manifest, review_summary):
-            for field, expected in (
+            for field, expected_count in (
                 ("task_count", POSITIVE_TASK_COUNT),
                 ("negative_labeled_task_count", TEMPTING_NEGATIVE_COUNT),
                 ("family_count", POSITIVE_TASK_COUNT),
@@ -6935,7 +7423,8 @@ def _validate_evaluation_agent_construction_authority(
                 ("human_reviewer_count", 0),
             ):
                 _require(
-                    type(document.get(field)) is int and document[field] == expected,
+                    type(document.get(field)) is int
+                    and document[field] == expected_count,
                     message,
                 )
         exact_agreement_count = manifest.get("exact_three_way_agreement_count")
@@ -6961,6 +7450,7 @@ def _validate_evaluation_agent_construction_authority(
                 "construction_input_authority",
                 "selected_task_source_authority",
                 "selected_task_source_authority_sha256",
+                "generation_authority",
                 "generation_ledger",
                 "reviewer_ledgers",
                 "agent_run_metadata",
@@ -7217,6 +7707,27 @@ def _validate_evaluation_agent_construction_authority(
             message,
         )
 
+        raw_construction_input_authority = cast(
+            dict[str, Any], manifest_construction["construction_input_authority"]
+        )
+        raw_skill_projection = cast(
+            dict[str, Any],
+            raw_construction_input_authority["canonical_skill_projection"],
+        )
+        projected_skills = _project_canonical_skills(raw_skill_projection["rows"])
+        canonical_ids = _canonical_skill_ids(projected_skills)
+        generation_authority, generation_semantics = _validated_generation_authority(
+            manifest_construction["generation_authority"],
+            source_ledger_sha256=source_hashes["blind-v2-generation.jsonl"],
+            canonical_ids=canonical_ids,
+            candidate_outcomes=outcomes,
+            generator_run_records=validated_records["generator"],
+        )
+        _require(
+            manifest_construction["generation_authority"] == generation_authority,
+            message,
+        )
+
         generator_ids = {
             candidate_id
             for record in validated_records["generator"]
@@ -7304,18 +7815,11 @@ def _validate_evaluation_agent_construction_authority(
             source_file_sha256=source_hashes,
             candidate_outcomes=outcomes,
         )
-        raw_construction_input_authority = cast(
-            dict[str, Any], manifest_construction["construction_input_authority"]
-        )
-        raw_skill_projection = cast(
-            dict[str, Any],
-            raw_construction_input_authority["canonical_skill_projection"],
-        )
-        projected_skills = _project_canonical_skills(raw_skill_projection["rows"])
         deterministic_selection = _validated_selection_audit_semantics(
             deterministic_selection,
+            generation_semantics=generation_semantics,
             selected_rows=task_rows,
-            canonical_ids=_canonical_skill_ids(projected_skills),
+            canonical_ids=canonical_ids,
             id_field="task_id",
             gold_field="gold_skill_id",
             negative_field="negative_skill_id",
