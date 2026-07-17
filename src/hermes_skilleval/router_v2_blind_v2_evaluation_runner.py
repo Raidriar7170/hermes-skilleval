@@ -2285,8 +2285,17 @@ def _agent_pack_infrastructure_inconclusive(
 
 
 def _transport_retries_exhausted(run_record: dict[str, Any]) -> bool:
-    attempts = run_record["attempts"]
     return (
+        _validated_invocation_terminal_authority(run_record)
+        == "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE"
+    )
+
+
+def _validated_invocation_terminal_authority(
+    run_record: dict[str, Any],
+) -> str | None:
+    attempts = run_record["attempts"]
+    exhausted = (
         run_record["transport_retry_count"] == 1
         and len(attempts) == 2
         and all(
@@ -2294,6 +2303,18 @@ def _transport_retries_exhausted(run_record: dict[str, Any]) -> bool:
             for attempt in attempts
         )
     )
+    if not exhausted:
+        return None
+    _require(
+        run_record["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE"
+        and run_record["response_sha256"] is None
+        and run_record["returned_model"] is None
+        and run_record["candidate_ids"] == []
+        and len(run_record["session_or_thread_ids"]) == 2
+        and len(set(run_record["session_or_thread_ids"])) == 2,
+        "Agent invocation infrastructure terminal authority mismatch",
+    )
+    return "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE"
 
 
 def _pack_invocation_identities(invocations: Any) -> list[str]:
@@ -2792,6 +2813,61 @@ def _validate_pack_invocations(
         raise
     except (KeyError, TypeError, ValueError):
         return None, 0
+
+
+def _preflight_invocation_terminal_authority(
+    generation_rows: list[dict[str, Any]],
+    review_rows_by_role: dict[str, list[dict[str, Any]]],
+) -> tuple[str, dict[str, Any]] | None:
+    rows_by_role = {
+        "generator": generation_rows,
+        "reviewer_a": review_rows_by_role["reviewer_a"],
+        "reviewer_b": review_rows_by_role["reviewer_b"],
+    }
+    for role, rows in rows_by_role.items():
+        for raw_row in rows:
+            _pack_protocol_require(
+                type(raw_row) is dict, "ledger row must be an object"
+            )
+            row = cast(dict[str, Any], raw_row)
+            request = row.get("request")
+            _pack_protocol_require(
+                type(request) is dict,
+                "ledger request must be an object",
+            )
+            invocations = row.get("invocations")
+            if not (
+                type(invocations) is list
+                and len(invocations) == 2
+                and all(
+                    type(invocation) is dict and "envelope" not in invocation
+                    for invocation in invocations
+                )
+            ):
+                continue
+            response, retry_count = _validate_pack_invocations(
+                invocations,
+                request=cast(dict[str, Any], request),
+            )
+            _require(
+                response is None and retry_count == 1,
+                "Agent invocation infrastructure terminal authority mismatch",
+            )
+            run_record = _sanitized_agent_run_record(
+                role=role,
+                candidate_ids=[],
+                request=cast(dict[str, Any], request),
+                response=None,
+                invocations=invocations,
+                retry_count=retry_count,
+            )
+            _require(
+                _validated_invocation_terminal_authority(run_record)
+                == "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+                "Agent invocation infrastructure terminal authority mismatch",
+            )
+            return role, run_record
+    return None
 
 
 def _candidate_stratum(candidate: dict[str, Any]) -> str:
@@ -3805,6 +3881,39 @@ def validate_agent_pack(
             source_file_sha256=source_hashes,
         )
 
+    try:
+        invocation_terminal = _preflight_invocation_terminal_authority(
+            generation_rows,
+            review_rows_by_role,
+        )
+    except _AgentPackProtocolViolation as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="invocation_protocol",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="invocation_protocol",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+    if invocation_terminal is not None:
+        role, run_record = invocation_terminal
+        terminal_records: dict[str, list[dict[str, Any]]] = {
+            agent_role: [] for agent_role in AGENT_CONFIGS
+        }
+        terminal_records[role].append(run_record)
+        return _agent_pack_infrastructure_inconclusive(
+            failure_stage="agent_invocation_transport",
+            failure_reason=f"{role} transport retry exhausted without response",
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+            agent_run_records=terminal_records,
+        )
+
     candidates: dict[str, dict[str, Any]] = {}
     generation_request_quota_counts: Counter[tuple[int, str, str]] = Counter()
     generation_request_keys: list[tuple[int, str]] = []
@@ -4065,9 +4174,19 @@ def validate_agent_pack(
                 response, retry_count = _validate_pack_invocations(
                     invocations, request=request
                 )
+                terminal_candidate_ids = (
+                    []
+                    if response is None
+                    and retry_count == 1
+                    and all(
+                        type(invocation) is dict and "envelope" not in invocation
+                        for invocation in cast(list[Any], invocations)
+                    )
+                    else [candidate_id]
+                )
                 run_record = _sanitized_agent_run_record(
                     role=role,
-                    candidate_ids=[candidate_id],
+                    candidate_ids=terminal_candidate_ids,
                     request=request,
                     response=response,
                     invocations=invocations,
@@ -4934,18 +5053,21 @@ def _validated_agent_lineage_evidence(
                     )
             except (KeyError, TypeError, ValueError) as exc:
                 raise ValueError("Agent run or retry evidence mismatch") from exc
+            normalized_record = {
+                **deepcopy(record),
+                "invocation_id": invocation_id,
+                "candidate_ids": candidate_ids,
+                "request_sha256": request_sha256,
+                "response_sha256": response_sha256,
+                "attempts": attempts,
+            }
+            _require(
+                _validated_invocation_terminal_authority(normalized_record) is None,
+                "Agent invocation infrastructure terminal",
+            )
             invocation_ids.add(invocation_id)
             role_candidate_ids.update(candidate_ids)
-            records.append(
-                {
-                    **deepcopy(record),
-                    "invocation_id": invocation_id,
-                    "candidate_ids": candidate_ids,
-                    "request_sha256": request_sha256,
-                    "response_sha256": response_sha256,
-                    "attempts": attempts,
-                }
-            )
+            records.append(normalized_record)
         validated_records[role] = records
 
     expected_evidence = {
@@ -5319,6 +5441,14 @@ def _validated_agent_source_ledger_evidence(
         metadata = _json_no_duplicate_keys(
             payloads["agent-run-metadata.json"], "Agent run metadata"
         )
+        invocation_terminal = _preflight_invocation_terminal_authority(
+            generation_rows,
+            review_rows_by_role,
+        )
+        _require(
+            invocation_terminal is None,
+            "Agent source ledger contains an infrastructure terminal invocation",
+        )
         metadata = _exact_object_fields(
             metadata,
             {
@@ -5539,10 +5669,20 @@ def _validated_agent_source_ledger_evidence(
                 response, retry_count = _validate_pack_invocations(
                     row["invocations"], request=request
                 )
+                terminal_candidate_ids = (
+                    []
+                    if response is None
+                    and retry_count == 1
+                    and all(
+                        type(invocation) is dict and "envelope" not in invocation
+                        for invocation in cast(list[Any], row["invocations"])
+                    )
+                    else [candidate_id]
+                )
                 source_records[role].append(
                     _sanitized_agent_run_record(
                         role=role,
-                        candidate_ids=[candidate_id],
+                        candidate_ids=terminal_candidate_ids,
                         request=request,
                         response=response,
                         invocations=row["invocations"],
@@ -5777,6 +5917,67 @@ def _validated_agent_source_ledger_evidence(
         raise ValueError(message) from exc
 
 
+def _validate_source_invocation_terminality(validation: dict[str, Any]) -> None:
+    message = "Agent source ledger freeze authority mismatch"
+    try:
+        raw_payloads = _exact_object_fields(
+            validation["source_file_bytes"],
+            set(REQUIRED_AGENT_PACK_FILES),
+            "Agent source file bytes",
+        )
+        source_hashes = _exact_object_fields(
+            validation["source_file_sha256"],
+            set(REQUIRED_AGENT_PACK_FILES),
+            "Agent source file hashes",
+        )
+        payloads: dict[str, bytes] = {}
+        for filename in REQUIRED_AGENT_PACK_FILES:
+            payload_hex = raw_payloads[filename]
+            _require(
+                type(payload_hex) is str and bool(payload_hex),
+                f"{filename} source bytes mismatch",
+            )
+            payload = bytes.fromhex(payload_hex)
+            _require(
+                payload.hex() == payload_hex
+                and _sha256_bytes(payload)
+                == _exact_lowercase_hex(
+                    source_hashes[filename],
+                    length=64,
+                    label=f"{filename} source SHA-256",
+                ),
+                f"{filename} source bytes hash mismatch",
+            )
+            payloads[filename] = payload
+        generation_rows = _jsonl_no_duplicate_keys(
+            payloads["blind-v2-generation.jsonl"], "blind-v2 generation ledger"
+        )
+        review_rows_by_role = {
+            "reviewer_a": _jsonl_no_duplicate_keys(
+                payloads["blind-v2-review-a.jsonl"], "blind-v2 Reviewer A ledger"
+            ),
+            "reviewer_b": _jsonl_no_duplicate_keys(
+                payloads["blind-v2-review-b.jsonl"], "blind-v2 Reviewer B ledger"
+            ),
+        }
+        _require(
+            _preflight_invocation_terminal_authority(
+                generation_rows,
+                review_rows_by_role,
+            )
+            is None,
+            "Agent source ledger contains an infrastructure terminal invocation",
+        )
+    except (
+        _AgentPackProtocolViolation,
+        AttributeError,
+        KeyError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        raise ValueError(message) from exc
+
+
 def build_dataset_freeze_documents(
     validation: dict[str, Any], *, commit_a: str
 ) -> dict[str, bytes]:
@@ -5790,6 +5991,7 @@ def build_dataset_freeze_documents(
         length=40,
         label="Commit A",
     )
+    _validate_source_invocation_terminality(validation)
     (
         sanitized_run_records,
         agent_run_evidence,

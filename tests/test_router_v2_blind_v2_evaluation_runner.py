@@ -2334,7 +2334,11 @@ def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
             else:
                 candidate_ids = []
         else:
-            candidate_ids = [row["candidate_id"]]
+            candidate_ids = (
+                []
+                if final_attempt["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE"
+                else [row["candidate_id"]]
+            )
         records.append(
             {
                 "invocation_id": request_sha256[:24],
@@ -3792,8 +3796,15 @@ def test_task5_double_transport_failure_is_infrastructure_inconclusive(
     pack = tmp_path / "agent-pack"
     _write_agent_pack(pack)
     _task5_replace_first_run_with_double_transport_failure(pack, role)
+    semantic_calls: list[tuple[str, str]] = []
 
-    result = _validate_agent_pack(pack, tmp_path / "repo")
+    result = _validate_agent_pack(
+        pack,
+        tmp_path / "repo",
+        semantic_similarity=lambda left, right: (
+            semantic_calls.append((left, right)) or 0.0
+        ),
+    )
 
     assert result["status"] == "INCONCLUSIVE"
     assert result["failure_stage"] == "agent_invocation_transport"
@@ -3801,7 +3812,11 @@ def test_task5_double_transport_failure_is_infrastructure_inconclusive(
         "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE"
     )
     assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["production_ready"] is False
+    assert result["release_authorized"] is False
+    assert result["default_router_unchanged"] is True
     assert result["tasks"] == []
+    assert semantic_calls == []
     record = result["agent_run_records"][role][-1]
     assert record["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE"
     assert record["response_sha256"] is None
@@ -3813,14 +3828,26 @@ def test_task5_double_transport_failure_is_infrastructure_inconclusive(
         for attempt in record["attempts"]
     )
     assert len(record["session_or_thread_ids"]) == 2
+    assert len(set(record["session_or_thread_ids"])) == 2
+    assert record["candidate_ids"] == []
     assert len(result["retry_records"]) == 1
-    if role == "generator":
-        assert record["candidate_ids"] == []
-        assert "generation_authority" not in result
+    assert result["retry_records"][0] == {
+        "role": role,
+        "invocation_id": record["invocation_id"],
+        "candidate_ids": [],
+        "request_sha256": record["request_sha256"],
+        "response_sha256": None,
+        "failed_session_or_thread_id": record["session_or_thread_ids"][0],
+        "retry_session_or_thread_id": record["session_or_thread_ids"][1],
+        "failed_attempt_ordinal": 1,
+        "retry_attempt_ordinal": 2,
+        "retry_count": 1,
+    }
+    assert "generation_authority" not in result
 
 
-@pytest.mark.parametrize("role", ("generator", "reviewer_a"))
-def test_task5_double_transport_sanitized_lineage_is_internally_verifiable(
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_double_transport_sanitized_lineage_is_terminal_not_freezable(
     tmp_path: Path, role: str
 ) -> None:
     pack = tmp_path / "agent-pack"
@@ -3843,37 +3870,15 @@ def test_task5_double_transport_sanitized_lineage_is_internally_verifiable(
     record["response_sha256"] = None
     record["returned_model"] = None
     record["outcome"] = "TRANSPORT_FAILURE_NO_RESPONSE"
-    if role == "generator":
-        failed_candidate_ids = set(record["candidate_ids"])
-        record["candidate_ids"] = []
-        for reviewer_role in ("reviewer_a", "reviewer_b"):
-            validation["agent_run_records"][reviewer_role] = [
-                reviewer_record
-                for reviewer_record in validation["agent_run_records"][reviewer_role]
-                if failed_candidate_ids.isdisjoint(reviewer_record["candidate_ids"])
+    record["candidate_ids"] = []
+    if role in {"reviewer_a", "reviewer_b"}:
+        validation["review_schedule_sha256"][role] = _task5_test_canonical_sha256(
+            [
+                candidate_id
+                for reviewer_record in validation["agent_run_records"][role]
+                for candidate_id in reviewer_record["candidate_ids"]
             ]
-            reviewer_records = validation["agent_run_records"][reviewer_role]
-            reviewer_metadata = validation["agent_roles"][reviewer_role]
-            reviewer_metadata["request_count"] = len(reviewer_records)
-            reviewer_metadata["invocation_count"] = sum(
-                len(reviewer_record["session_or_thread_ids"])
-                for reviewer_record in reviewer_records
-            )
-            reviewer_metadata["session_or_thread_ids"] = [
-                identity
-                for reviewer_record in reviewer_records
-                for identity in reviewer_record["session_or_thread_ids"]
-            ]
-            validation["review_schedule_sha256"][reviewer_role] = (
-                _task5_test_canonical_sha256(
-                    [
-                        candidate_id
-                        for reviewer_record in reviewer_records
-                        for candidate_id in reviewer_record["candidate_ids"]
-                    ]
-                )
-            )
-            _task5_resync_role_aggregates_from_records(validation, reviewer_role)
+        )
     _task5_resync_role_aggregates_from_records(validation, role)
     validation["retry_records"] = _task5_fixture_retry_records(
         validation["agent_run_records"]
@@ -3883,17 +3888,8 @@ def test_task5_double_transport_sanitized_lineage_is_internally_verifiable(
         _task5_identity_authority_from_validation(validation)
     )
 
-    records, evidence, retries, identity = runner._validated_agent_lineage_evidence(
-        validation
-    )
-
-    validated_record = next(
-        item for item in records[role] if item["transport_retry_count"] == 1
-    )
-    assert validated_record == record
-    assert evidence[role] == validation["agent_run_evidence"][role]
-    assert retries == validation["retry_records"]
-    assert identity == validation["agent_run_identity_authority"]
+    with pytest.raises(ValueError, match="Agent invocation infrastructure terminal"):
+        runner._validated_agent_lineage_evidence(validation)
 
 
 def test_task5_third_transport_attempt_is_global_protocol_invalid(
@@ -4741,6 +4737,100 @@ def _task5_resync_validation_from_source_pack(
     validation["agent_run_identity_authority"] = (
         _task5_identity_authority_from_validation(validation)
     )
+
+
+def _task5_resync_candidate_outcome_aggregates(validation: dict[str, Any]) -> None:
+    outcomes = validation["candidate_outcomes"]
+    validation["pipeline_rejected_candidate_count"] = sum(
+        outcome.startswith("REJECTED") for outcome in outcomes.values()
+    )
+    validation["selection_not_selected_count"] = sum(
+        outcome == "NOT_SELECTED" for outcome in outcomes.values()
+    )
+    validation["exact_three_way_agreement_count"] = sum(
+        outcome in {"SELECTED", "NOT_SELECTED"} for outcome in outcomes.values()
+    )
+    validation["excluded_candidate_count"] = (
+        validation["pipeline_rejected_candidate_count"]
+        + validation["selection_not_selected_count"]
+    )
+    accepted_projection = sorted(
+        (
+            deepcopy(candidate)
+            for request in validation["generation_authority"]["requests"]
+            for candidate in request["candidates"]
+            if outcomes[candidate["candidate_id"]] in {"SELECTED", "NOT_SELECTED"}
+        ),
+        key=lambda candidate: candidate["candidate_id"],
+    )
+    validation["selection_audit"]["accepted_pool_sha256"] = (
+        _task5_test_canonical_sha256(accepted_projection)
+    )
+    validation["selection_audit_sha256"] = _task5_test_canonical_sha256(
+        validation["selection_audit"]
+    )
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_freeze_rejects_resynchronized_double_transport_source_terminal(
+    tmp_path: Path, role: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }[role]
+    path = pack / filename
+    rows = _read_jsonl(path)
+    row_index = 0
+    if role in {"reviewer_a", "reviewer_b"}:
+        row_index = next(
+            index
+            for index, row in enumerate(rows)
+            if validation["candidate_outcomes"][row["candidate_id"]] == "NOT_SELECTED"
+        )
+    previous_record = _task5_fixture_run_records(pack, role)[row_index]
+    request = rows[row_index]["request"]
+    rows[row_index]["invocations"] = [
+        _pack_transport_failure_invocation(
+            request, session_id=f"{role}-forged-double-transport-1"
+        ),
+        _pack_transport_failure_invocation(
+            request, session_id=f"{role}-forged-double-transport-2"
+        ),
+    ]
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, role)
+    _task5_resync_validation_from_source_pack(validation, pack, role)
+    if role in {"reviewer_a", "reviewer_b"}:
+        terminal_record = next(
+            record
+            for record in validation["agent_run_records"][role]
+            if record["transport_retry_count"] == 1
+        )
+        terminal_record["candidate_ids"] = list(previous_record["candidate_ids"])
+        _task5_resync_role_aggregates_from_records(validation, role)
+        validation["retry_records"] = _task5_fixture_retry_records(
+            validation["agent_run_records"]
+        )
+        validation["transport_retry_count"] = len(validation["retry_records"])
+        validation["agent_run_identity_authority"] = (
+            _task5_identity_authority_from_validation(validation)
+        )
+    for candidate_id in previous_record["candidate_ids"]:
+        validation["candidate_outcomes"][candidate_id] = "REJECTED_INVOCATION"
+    validation["candidate_outcomes"] = dict(
+        sorted(validation["candidate_outcomes"].items())
+    )
+    _task5_resync_candidate_outcome_aggregates(validation)
+
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 @pytest.mark.parametrize(
@@ -7206,6 +7296,130 @@ def _task5_resync_committed_identity_authority(
             construction["agent_run_identity_authority"]["roles"]
         )
     )
+
+
+def _task5_forge_committed_double_transport_terminal(
+    manifest: dict[str, Any], review_summary: dict[str, Any], role: str
+) -> None:
+    construction = manifest["agent_construction"]
+    records = construction["sanitized_run_records"][role]
+    record = records[0]
+    if role in {"reviewer_a", "reviewer_b"}:
+        record = next(
+            candidate_record
+            for candidate_record in records
+            if construction["candidate_outcomes"][candidate_record["candidate_ids"][0]]
+            == "NOT_SELECTED"
+        )
+    affected_candidate_ids = list(record["candidate_ids"])
+    sessions = [
+        f"{role}-{record['invocation_id']}-forged-transport-1",
+        f"{role}-{record['invocation_id']}-forged-transport-2",
+    ]
+    attempts = [
+        {
+            "attempt_ordinal": ordinal,
+            "session_or_thread_id": session_id,
+            "request_sha256": record["request_sha256"],
+            "requested_model": record["requested_model"],
+            "returned_model": None,
+            "reasoning_effort": record["reasoning_effort"],
+            "transport_failure": True,
+            "response_bytes_present": False,
+            "response_sha256": None,
+            "outcome": "TRANSPORT_FAILURE_NO_RESPONSE",
+        }
+        for ordinal, session_id in enumerate(sessions, start=1)
+    ]
+    record.update(
+        {
+            "candidate_ids": [],
+            "response_sha256": None,
+            "returned_model": None,
+            "session_or_thread_ids": sessions,
+            "transport_retry_count": 1,
+            "outcome": "TRANSPORT_FAILURE_NO_RESPONSE",
+            "attempts": attempts,
+        }
+    )
+    for candidate_id in affected_candidate_ids:
+        construction["candidate_outcomes"][candidate_id] = "REJECTED_INVOCATION"
+    construction["candidate_outcomes"] = dict(
+        sorted(construction["candidate_outcomes"].items())
+    )
+    construction["pipeline_rejected_candidate_count"] = sum(
+        outcome.startswith("REJECTED")
+        for outcome in construction["candidate_outcomes"].values()
+    )
+    construction["selection_not_selected_count"] = sum(
+        outcome == "NOT_SELECTED"
+        for outcome in construction["candidate_outcomes"].values()
+    )
+    construction["exact_three_way_agreement_count"] = sum(
+        outcome in {"SELECTED", "NOT_SELECTED"}
+        for outcome in construction["candidate_outcomes"].values()
+    )
+    construction["excluded_candidate_count"] = (
+        construction["pipeline_rejected_candidate_count"]
+        + construction["selection_not_selected_count"]
+    )
+    _task5_resync_committed_role_evidence(construction, role)
+    if role in {"reviewer_a", "reviewer_b"}:
+        construction["reviewer_ledgers"][role]["schedule_sha256"] = (
+            _task5_test_canonical_sha256(
+                [
+                    candidate_id
+                    for candidate_record in records
+                    for candidate_id in candidate_record["candidate_ids"]
+                ]
+            )
+        )
+    construction["retry_records"] = _task5_fixture_retry_records(
+        construction["sanitized_run_records"]
+    )
+    construction["transport_retry_count"] = len(construction["retry_records"])
+    _task5_resync_committed_identity_authority(manifest, role)
+
+    for document in (manifest, review_summary):
+        for field in (
+            "candidate_outcomes",
+            "pipeline_rejected_candidate_count",
+            "selection_not_selected_count",
+            "exact_three_way_agreement_count",
+            "excluded_candidate_count",
+        ):
+            document[field] = deepcopy(construction[field])
+    review_summary["agent_roles"] = deepcopy(construction["agent_roles"])
+    review_summary["reviewer_ledgers"] = deepcopy(construction["reviewer_ledgers"])
+    review_summary["retry_records"] = deepcopy(construction["retry_records"])
+    review_summary["transport_retry_count"] = construction["transport_retry_count"]
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_scoring_preflight_rejects_forged_double_transport_terminal_without_calls(
+    tmp_path: Path, role: str
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    _task5_forge_committed_double_transport_terminal(manifest, review_summary, role)
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+    factory_calls: list[tuple[str, int]] = []
+    rank_calls: list[str] = []
+
+    with pytest.raises(ValueError, match="pre-scoring authority mismatch"):
+        _task5_evaluate_routes_with_authority(
+            inputs,
+            frozen_bindings,
+            scorer_factory=lambda arm, seed, _path: (
+                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            ),
+        )
+
+    assert factory_calls == []
+    assert rank_calls == []
 
 
 @pytest.mark.parametrize(
