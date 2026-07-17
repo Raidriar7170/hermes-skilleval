@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 import pytest
@@ -42,6 +43,26 @@ def _all_routes() -> list[dict[str, Any]]:
     ]
 
 
+def _mixed_routes() -> list[dict[str, Any]]:
+    rows = _all_routes()
+    for row in rows:
+        index = int(str(row["task_id"]).rsplit("_", maxsplit=1)[1])
+        if index < 32:
+            row["gold_rank"] = 1 if row["arm"] == "A" else 2
+        elif index < 80:
+            row["gold_rank"] = 2 if row["arm"] == "A" else 1
+        else:
+            row["gold_rank"] = 1
+        if row["tempting_negative_skill_id"] is not None:
+            negative_ordinal = (index // 8) * 6 + (index % 8)
+            if negative_ordinal < 40:
+                row["tempting_negative_rank"] = 6 if row["arm"] == "A" else 5
+            else:
+                row["tempting_negative_rank"] = 5 if row["arm"] == "A" else 6
+        row["latency_ns"] = 10_000_000 if row["arm"] == "A" else 11_000_000
+    return rows
+
+
 def _per_seed() -> list[dict[str, Any]]:
     return [
         evaluation.build_per_seed_result(_route_rows(arm, seed))
@@ -64,6 +85,7 @@ def test_preregistered_contract_freezes_128_96_a_c_gate_and_non_actions() -> Non
     assert evaluation.SEEDS == (7170, 7171, 7172)
     assert evaluation.BOOTSTRAP_RESAMPLES == 10_000
     assert evaluation.BOOTSTRAP_SEED == 7170
+    assert evaluation.PER_SEED_SCHEMA_VERSION == "router-v2-agent-blind-v2-per-seed-v1"
     assert contract["schema_version"] == "router-v2-blind-v2-evaluation-contract-v1"
     assert contract["arms"] == ["A", "C"]
     assert contract["seeds"] == [7170, 7171, 7172]
@@ -190,6 +212,7 @@ def test_per_seed_metrics_are_raw_count_first_with_fixed_denominators() -> None:
     baseline = evaluation.build_per_seed_result(_route_rows("A", 7170))
     candidate = evaluation.build_per_seed_result(_route_rows("C", 7170))
 
+    assert baseline["schema_version"] == "router-v2-agent-blind-v2-per-seed-v1"
     assert baseline["arm"] == "A"
     assert baseline["positive_task_count"] == 128
     assert baseline["tempting_negative_count"] == 96
@@ -282,6 +305,76 @@ def test_per_seed_metrics_are_raw_count_first_with_fixed_denominators() -> None:
         evaluation.build_per_seed_result(wrong_skills)
 
 
+@pytest.mark.parametrize(
+    "builder",
+    (evaluation.build_aggregate_results, evaluation.apply_preregistered_gate),
+)
+def test_aggregate_and_gate_reject_stale_64_48_per_seed_results(
+    builder: Any,
+) -> None:
+    per_seed = _per_seed()
+    legacy = deepcopy(per_seed[0])
+    legacy.update(
+        schema_version="router-v2-blind-v2-per-seed-v1",
+        positive_task_count=64,
+        tempting_negative_count=48,
+        tasks=legacy["tasks"][:64],
+        recall_at_1={"count": 0, "denominator": 64, "rate": "0.00000000"},
+        recall_at_5={"count": 64, "denominator": 64, "rate": "1.00000000"},
+        negative_hit_at_1={
+            "count": 0,
+            "denominator": 48,
+            "rate": "0.00000000",
+        },
+        negative_hit_at_5={
+            "count": 48,
+            "denominator": 48,
+            "rate": "1.00000000",
+        },
+    )
+    per_seed[0] = legacy
+
+    with pytest.raises(ValueError, match="per-seed schema mismatch"):
+        builder(per_seed)
+
+
+def test_per_seed_grid_rejects_current_contract_drift_fail_closed() -> None:
+    wrong_positive_count = deepcopy(_per_seed())
+    wrong_positive_count[0]["positive_task_count"] = 64
+    with pytest.raises(ValueError, match="positive task count mismatch"):
+        evaluation.build_aggregate_results(wrong_positive_count)
+
+    wrong_negative_count = deepcopy(_per_seed())
+    wrong_negative_count[0]["tempting_negative_count"] = 48
+    with pytest.raises(ValueError, match="tempting negative count mismatch"):
+        evaluation.build_aggregate_results(wrong_negative_count)
+
+    wrong_denominator = deepcopy(_per_seed())
+    wrong_denominator[0]["recall_at_5"]["denominator"] = 64
+    with pytest.raises(ValueError, match="recall_at_5 denominator mismatch"):
+        evaluation.build_aggregate_results(wrong_denominator)
+
+    wrong_task_length = deepcopy(_per_seed())
+    wrong_task_length[0]["tasks"] = wrong_task_length[0]["tasks"][:-1]
+    with pytest.raises(ValueError, match="per-seed tasks must contain 128 rows"):
+        evaluation.build_aggregate_results(wrong_task_length)
+
+    wrong_task_negative_count = deepcopy(_per_seed())
+    wrong_task_negative_count[0]["tasks"][0].update(
+        tempting_negative_skill_id=None,
+        tempting_negative_rank=None,
+    )
+    with pytest.raises(ValueError, match="per-seed negative task count mismatch"):
+        evaluation.build_aggregate_results(wrong_task_negative_count)
+
+    inconsistent_identity = deepcopy(_per_seed())
+    inconsistent_identity[0]["tasks"][0]["semantic_family_id"] = (
+        f"{PREFIX}_FAMILY_INCONSISTENT"
+    )
+    with pytest.raises(ValueError, match="A/C seed task identity mismatch"):
+        evaluation.build_aggregate_results(inconsistent_identity)
+
+
 def test_aggregate_gate_and_conclusion_use_only_complete_a_c_seed_grid() -> None:
     per_seed = _per_seed()
 
@@ -340,6 +433,7 @@ def test_aggregate_gate_and_conclusion_use_only_complete_a_c_seed_grid() -> None
     assert gate["production_ready"] is False
     assert gate["release_authorized"] is False
     assert "release_eligible" not in gate
+    assert "router_promotion_requires_separate_human_decision" not in gate
 
     with pytest.raises(ValueError, match="A/C seed grid"):
         evaluation.build_aggregate_results(per_seed[:-1])
@@ -431,6 +525,61 @@ def test_paired_statistics_are_exact_deterministic_and_warn_non_independence() -
         assert float(interval["lower_95"]) <= float(interval["observed"])
         assert float(interval["observed"]) <= float(interval["upper_95"])
     assert first["repeated_seed_samples_independent"] is False
+
+
+def test_mixed_outcomes_protect_statistics_bootstrap_and_latency_gate() -> None:
+    routes = _mixed_routes()
+    paired = evaluation.build_paired_results(routes)
+    first = evaluation.build_statistics(routes)
+    second = evaluation.build_statistics(routes)
+    per_seed = [
+        evaluation.build_per_seed_result(
+            [row for row in routes if row["arm"] == arm and row["seed"] == seed]
+        )
+        for seed in SEEDS
+        for arm in ("A", "C")
+    ]
+    gate = evaluation.apply_preregistered_gate(per_seed)
+
+    assert first == second
+    assert paired["seeds"][0]["metrics"]["recall_at_1"] == {
+        "wins": 48,
+        "losses": 32,
+        "ties": 48,
+        "task_count": 128,
+    }
+    assert first["mcnemar"]["recall_at_1"]["per_seed"][0] == {
+        "seed": 7170,
+        "a_only_success": 32,
+        "c_only_success": 48,
+        "discordant_pairs": 80,
+        "exact_two_sided_p_value": "0.09291188",
+    }
+    assert first["mcnemar"]["negative_hit_at_5"]["per_seed"][0] == {
+        "seed": 7170,
+        "a_only_success": 40,
+        "c_only_success": 56,
+        "discordant_pairs": 96,
+        "exact_two_sided_p_value": "0.12534570",
+    }
+    assert first["bootstrap"]["mrr_delta"]["observed"] == "0.06250000"
+    assert first["bootstrap"]["ndcg_at_5_delta"]["observed"] == "0.04613378"
+    assert (
+        first["bootstrap"]["negative_hit_rate_at_5_delta"]["observed"] == "-0.16666667"
+    )
+    for metric in (
+        "mrr_delta",
+        "ndcg_at_5_delta",
+        "negative_hit_rate_at_5_delta",
+    ):
+        interval = first["bootstrap"][metric]
+        assert float(interval["lower_95"]) < float(interval["upper_95"])
+        assert float(interval["lower_95"]) <= float(interval["observed"])
+        assert float(interval["observed"]) <= float(interval["upper_95"])
+    assert gate["per_seed"][0]["latency_p95_ratio"] == "1.10000000"
+    assert gate["mean"]["latency_p95_ratio"] == "1.10000000"
+    assert gate["gate_passed"] is True
+    assert gate["research_conclusion"] == "AGENT_BLIND_V2_GATES_PASSED"
 
 
 def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:

@@ -25,6 +25,7 @@ SEMANTIC_FAMILY_COUNT = 128
 TASKS_PER_GOLD_SKILL = 8
 NEGATIVE_LABELED_PER_GOLD_SKILL = 6
 POSITIVE_ONLY_PER_GOLD_SKILL = 2
+PER_SEED_SCHEMA_VERSION = "router-v2-agent-blind-v2-per-seed-v1"
 ARMS = ("A", "C")
 SEEDS = (7170, 7171, 7172)
 BOOTSTRAP_RESAMPLES = 10_000
@@ -305,7 +306,7 @@ def build_per_seed_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
         for row in ordered
     ]
     return {
-        "schema_version": "router-v2-blind-v2-per-seed-v1",
+        "schema_version": PER_SEED_SCHEMA_VERSION,
         "arm": arm,
         "seed": seed,
         "positive_task_count": POSITIVE_TASK_COUNT,
@@ -336,6 +337,152 @@ def build_per_seed_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _validate_rate_contract(
+    result: dict[str, Any], name: str, denominator: int, expected_count: int
+) -> None:
+    rate = result.get(name)
+    _require(type(rate) is dict, f"{name} contract mismatch")
+    count = rate.get("count")
+    _require(
+        type(count) is int and count == expected_count,
+        f"{name} count mismatch",
+    )
+    _require(
+        rate.get("denominator") == denominator,
+        f"{name} denominator mismatch",
+    )
+    _require(
+        rate.get("rate") == _rate(count, denominator)["rate"],
+        f"{name} rate mismatch",
+    )
+
+
+def _validate_per_seed_result_contract(
+    result: dict[str, Any],
+) -> tuple[tuple[Any, ...], ...]:
+    _require(type(result) is dict, "per-seed result must be an object")
+    _require(
+        result.get("schema_version") == PER_SEED_SCHEMA_VERSION,
+        "per-seed schema mismatch",
+    )
+    _require(
+        type(result.get("positive_task_count")) is int
+        and result["positive_task_count"] == POSITIVE_TASK_COUNT,
+        "per-seed positive task count mismatch",
+    )
+    _require(
+        type(result.get("tempting_negative_count")) is int
+        and result["tempting_negative_count"] == TEMPTING_NEGATIVE_COUNT,
+        "per-seed tempting negative count mismatch",
+    )
+    tasks = result.get("tasks")
+    _require(
+        type(tasks) is list and len(tasks) == POSITIVE_TASK_COUNT,
+        f"per-seed tasks must contain {POSITIVE_TASK_COUNT} rows",
+    )
+    _require(
+        all(type(task) is dict for task in tasks), "per-seed tasks must be objects"
+    )
+    task_ids = [task.get("task_id") for task in tasks]
+    _require(
+        all(type(task_id) is str and task_id for task_id in task_ids)
+        and task_ids == sorted(task_ids)
+        and len(set(task_ids)) == POSITIVE_TASK_COUNT,
+        "per-seed task ids mismatch",
+    )
+    families = [task.get("semantic_family_id") for task in tasks]
+    _require(
+        all(type(family) is str and family for family in families)
+        and len(set(families)) == SEMANTIC_FAMILY_COUNT,
+        "per-seed semantic families mismatch",
+    )
+    gold_counts = Counter(task.get("gold_skill_id") for task in tasks)
+    _require(
+        all(type(gold) is str and gold for gold in gold_counts)
+        and len(gold_counts) == CANONICAL_SKILL_COUNT
+        and set(gold_counts.values()) == {TASKS_PER_GOLD_SKILL},
+        "per-seed gold skill distribution mismatch",
+    )
+    negative_tasks = [
+        task for task in tasks if task.get("tempting_negative_skill_id") is not None
+    ]
+    _require(
+        len(negative_tasks) == TEMPTING_NEGATIVE_COUNT,
+        "per-seed negative task count mismatch",
+    )
+    negative_counts = Counter(task.get("gold_skill_id") for task in negative_tasks)
+    positive_only_counts = Counter(
+        task.get("gold_skill_id")
+        for task in tasks
+        if task.get("tempting_negative_skill_id") is None
+    )
+    _require(
+        set(negative_counts) == set(gold_counts)
+        and set(negative_counts.values()) == {NEGATIVE_LABELED_PER_GOLD_SKILL}
+        and set(positive_only_counts) == set(gold_counts)
+        and set(positive_only_counts.values()) == {POSITIVE_ONLY_PER_GOLD_SKILL},
+        "per-seed gold skill label distribution mismatch",
+    )
+    for task in tasks:
+        gold_rank = task.get("gold_rank")
+        negative_id = task.get("tempting_negative_skill_id")
+        negative_rank = task.get("tempting_negative_rank")
+        _require(
+            type(gold_rank) is int and 1 <= gold_rank <= CANONICAL_SKILL_COUNT,
+            "per-seed gold rank mismatch",
+        )
+        if negative_id is None:
+            _require(
+                negative_rank is None,
+                "per-seed positive-only task has a negative rank",
+            )
+        else:
+            _require(
+                type(negative_id) is str and bool(negative_id),
+                "per-seed tempting negative id mismatch",
+            )
+            _require(
+                type(negative_rank) is int
+                and 1 <= negative_rank <= CANONICAL_SKILL_COUNT,
+                "per-seed tempting negative rank mismatch",
+            )
+    gold_ranks = [int(task["gold_rank"]) for task in tasks]
+    negative_ranks = [int(task["tempting_negative_rank"]) for task in negative_tasks]
+    _validate_rate_contract(
+        result,
+        "recall_at_1",
+        POSITIVE_TASK_COUNT,
+        sum(rank <= 1 for rank in gold_ranks),
+    )
+    _validate_rate_contract(
+        result,
+        "recall_at_5",
+        POSITIVE_TASK_COUNT,
+        sum(rank <= 5 for rank in gold_ranks),
+    )
+    _validate_rate_contract(
+        result,
+        "negative_hit_at_1",
+        TEMPTING_NEGATIVE_COUNT,
+        sum(rank <= 1 for rank in negative_ranks),
+    )
+    _validate_rate_contract(
+        result,
+        "negative_hit_at_5",
+        TEMPTING_NEGATIVE_COUNT,
+        sum(rank <= 5 for rank in negative_ranks),
+    )
+    return tuple(
+        (
+            task["task_id"],
+            task["gold_skill_id"],
+            task["tempting_negative_skill_id"],
+            task["semantic_family_id"],
+        )
+        for task in tasks
+    )
+
+
 def _per_seed_grid(
     results: list[dict[str, Any]],
 ) -> dict[tuple[str, int], dict[str, Any]]:
@@ -344,15 +491,24 @@ def _per_seed_grid(
         "A/C seed grid must contain six rows",
     )
     grid: dict[tuple[str, int], dict[str, Any]] = {}
+    identities: dict[tuple[str, int], tuple[tuple[Any, ...], ...]] = {}
     for result in results:
+        identity = _validate_per_seed_result_contract(result)
         key = (result.get("arm"), result.get("seed"))
         _require(key not in grid, "A/C seed grid contains duplicate")
         if key[0] not in ARMS or key[1] not in SEEDS:
             raise ValueError("A/C seed grid mismatch")
-        grid[(str(key[0]), int(key[1]))] = result
+        typed_key = (str(key[0]), int(key[1]))
+        grid[typed_key] = result
+        identities[typed_key] = identity
     _require(
         set(grid) == {(arm, seed) for seed in SEEDS for arm in ARMS},
         "A/C seed grid mismatch",
+    )
+    reference_identity = identities[(ARMS[0], SEEDS[0])]
+    _require(
+        all(identity == reference_identity for identity in identities.values()),
+        "A/C seed task identity mismatch",
     )
     return grid
 
@@ -521,7 +677,6 @@ def apply_preregistered_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
         "gate": dict(_GATE),
         "gate_passed": passed,
         **terminal_posture(conclusion),
-        "router_promotion_requires_separate_human_decision": True,
     }
 
 
