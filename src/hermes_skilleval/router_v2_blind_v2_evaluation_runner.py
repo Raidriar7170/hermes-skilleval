@@ -1188,12 +1188,66 @@ def _protected_authority_summary(
     return summary
 
 
+def _validated_semantic_model_authority(authority: Any) -> dict[str, Any]:
+    document = _exact_object_fields(
+        authority,
+        {"materialized_model_files", "materialized_model_files_sha256"},
+        "semantic model authority",
+    )
+    raw_files = document["materialized_model_files"]
+    _require(
+        type(raw_files) is list and bool(raw_files),
+        "semantic model files must be a non-empty list",
+    )
+    files: list[dict[str, str]] = []
+    paths: list[str] = []
+    for raw_file in raw_files:
+        row = _exact_object_fields(raw_file, {"path", "sha256"}, "semantic model file")
+        path = _nonempty_string(row["path"], "semantic model file path")
+        _require(
+            path == path.strip()
+            and path == unicodedata.normalize("NFC", path)
+            and not path.startswith("/")
+            and "\\" not in path
+            and all(part not in {"", ".", ".."} for part in path.split("/")),
+            "semantic model file path must be normalized relative POSIX",
+        )
+        path.encode("utf-8", errors="strict")
+        sha256 = _exact_lowercase_hex(
+            row["sha256"], length=64, label="semantic model file SHA-256"
+        )
+        paths.append(path)
+        files.append({"path": path, "sha256": sha256})
+    _require(
+        len(paths) == len(set(paths)),
+        "semantic model file paths must be unique",
+    )
+    _require(
+        paths == sorted(paths, key=lambda value: value.encode("utf-8")),
+        "semantic model files must be sorted by UTF-8 path",
+    )
+    aggregate = _exact_lowercase_hex(
+        document["materialized_model_files_sha256"],
+        length=64,
+        label="semantic model file aggregate SHA-256",
+    )
+    _require(
+        aggregate == canonical_sha256(files),
+        "semantic model file aggregate hash mismatch",
+    )
+    return {
+        "materialized_model_files": files,
+        "materialized_model_files_sha256": aggregate,
+    }
+
+
 def _scan_contamination(
     candidates: list[dict[str, Any]],
     *,
     protected_prompts: dict[str, list[str]],
     protected_family_ids: dict[str, set[str]],
     semantic_similarity: SemanticSimilarity,
+    semantic_model_authority: dict[str, Any],
 ) -> dict[str, Any]:
     """Build deterministic non-voting contamination evidence from prompt text."""
 
@@ -1209,6 +1263,7 @@ def _scan_contamination(
         "protected family scopes mismatch",
     )
     _require(callable(semantic_similarity), "semantic similarity must be callable")
+    model_authority = _validated_semantic_model_authority(semantic_model_authority)
 
     for scope in CONTAMINATION_SCOPES:
         prompts = protected_prompts[scope]
@@ -1298,6 +1353,7 @@ def _scan_contamination(
     scanner_config = {
         "required_semantic_model_id": SEMANTIC_MODEL_ID,
         "required_semantic_model_revision": SEMANTIC_MODEL_REVISION,
+        **model_authority,
         "semantic_scorer_runtime_verified": False,
         "semantic_scorer_receipt_sha256": None,
         "token_5gram_jaccard_reject_at_or_above": str(TOKEN_5GRAM_JACCARD_MAX),
@@ -1676,9 +1732,56 @@ def _transport_retry_record(
         "role": role,
         "candidate_id": run_record["candidate_id"],
         "request_sha256": run_record["request_sha256"],
+        "response_sha256": run_record["response_sha256"],
         "failed_session_or_thread_id": identities[0],
         "retry_session_or_thread_id": identities[1],
+        "failed_attempt_ordinal": 1,
+        "retry_attempt_ordinal": 2,
         "retry_count": 1,
+    }
+
+
+def _agent_role_run_evidence(
+    role: str, records: list[dict[str, Any]]
+) -> dict[str, Any]:
+    config = AGENT_CONFIGS[role]
+    prompt = GENERATOR_SYSTEM_PROMPT if role == "generator" else REVIEWER_SYSTEM_PROMPT
+    response_schema = (
+        GENERATOR_RESPONSE_SCHEMA if role == "generator" else REVIEWER_RESPONSE_SCHEMA
+    )
+    return {
+        "config": deepcopy(config),
+        "requested_models": [config["model"]],
+        "returned_models": sorted(
+            {
+                cast(str, record["returned_model"])
+                for record in records
+                if record["returned_model"] is not None
+            }
+        ),
+        "reasoning_effort": config["reasoning_effort"],
+        "system_prompt_sha256": _sha256_bytes(prompt.encode("utf-8")),
+        "response_schema_sha256": canonical_sha256(response_schema),
+        "request_count": len(records),
+        "invocation_count": sum(
+            len(cast(list[str], record["session_or_thread_ids"])) for record in records
+        ),
+        "session_or_thread_ids": [
+            identity
+            for record in records
+            for identity in cast(list[str], record["session_or_thread_ids"])
+        ],
+        "request_hashes_sha256": canonical_sha256(
+            [record["request_sha256"] for record in records]
+        ),
+        "response_hashes_sha256": canonical_sha256(
+            [
+                record["response_sha256"]
+                for record in records
+                if record["response_sha256"] is not None
+            ]
+        ),
+        "run_sha256": canonical_sha256(records),
     }
 
 
@@ -1896,6 +1999,7 @@ def validate_agent_pack(
     prior_candidate_family_ids: set[str],
     first_read_timestamp: str,
     semantic_similarity: SemanticSimilarity,
+    semantic_model_authority: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate sealed Agent ledgers without loading Arm A/C or scoring routes."""
 
@@ -2388,6 +2492,7 @@ def validate_agent_pack(
                 "prior_candidate": prior_candidate_family_ids,
             },
             semantic_similarity=semantic_similarity,
+            semantic_model_authority=semantic_model_authority,
         )
         _require(
             _canonical_contract_json_equal(
@@ -2644,6 +2749,12 @@ def validate_agent_pack(
         "required_semantic_model_revision": contamination_scan["scanner_config"][
             "required_semantic_model_revision"
         ],
+        "materialized_model_files": deepcopy(
+            contamination_scan["scanner_config"]["materialized_model_files"]
+        ),
+        "materialized_model_files_sha256": contamination_scan["scanner_config"][
+            "materialized_model_files_sha256"
+        ],
         "semantic_scorer_runtime_verified": False,
         "semantic_scorer_receipt_sha256": None,
         "token_5gram_jaccard_reject_at_or_above": str(TOKEN_5GRAM_JACCARD_MAX),
@@ -2702,48 +2813,6 @@ def validate_agent_pack(
         outcome.startswith("REJECTED") for outcome in candidate_outcomes.values()
     )
 
-    def agent_role_evidence(role: str) -> dict[str, Any]:
-        config = AGENT_CONFIGS[role]
-        records = sanitized_run_records[role]
-        prompt = (
-            GENERATOR_SYSTEM_PROMPT if role == "generator" else REVIEWER_SYSTEM_PROMPT
-        )
-        response_schema = (
-            GENERATOR_RESPONSE_SCHEMA
-            if role == "generator"
-            else REVIEWER_RESPONSE_SCHEMA
-        )
-        return {
-            "config": deepcopy(config),
-            "requested_models": [config["model"]],
-            "returned_models": sorted(
-                {
-                    cast(str, record["returned_model"])
-                    for record in records
-                    if record["returned_model"] is not None
-                }
-            ),
-            "reasoning_effort": config["reasoning_effort"],
-            "system_prompt_sha256": _sha256_bytes(prompt.encode("utf-8")),
-            "response_schema_sha256": canonical_sha256(response_schema),
-            "request_count": metadata_roles[role]["request_count"],
-            "invocation_count": metadata_roles[role]["invocation_count"],
-            "session_or_thread_ids": deepcopy(
-                metadata_roles[role]["session_or_thread_ids"]
-            ),
-            "request_hashes_sha256": canonical_sha256(
-                [record["request_sha256"] for record in records]
-            ),
-            "response_hashes_sha256": canonical_sha256(
-                [
-                    record["response_sha256"]
-                    for record in records
-                    if record["response_sha256"] is not None
-                ]
-            ),
-            "run_sha256": canonical_sha256(records),
-        }
-
     common_result = {
         "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
         "transport_retry_count": valid_transport_retry_count,
@@ -2752,8 +2821,10 @@ def validate_agent_pack(
             key=lambda row: (cast(str, row["role"]), cast(str, row["candidate_id"])),
         ),
         "agent_roles": deepcopy(metadata_roles),
+        "agent_run_records": deepcopy(sanitized_run_records),
         "agent_run_evidence": {
-            role: agent_role_evidence(role) for role in AGENT_CONFIGS
+            role: _agent_role_run_evidence(role, sanitized_run_records[role])
+            for role in AGENT_CONFIGS
         },
         "review_schedule_sha256": deepcopy(metadata_schedules),
         "source_file_sha256": source_hashes,
@@ -3174,6 +3245,106 @@ def _validate_legacy_human_pack(
     }
 
 
+def _validated_agent_lineage_evidence(
+    validation: dict[str, Any],
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    records_by_role = validation.get("agent_run_records")
+    _require(
+        type(records_by_role) is dict and set(records_by_role) == set(AGENT_CONFIGS),
+        "Agent run or retry evidence mismatch",
+    )
+    role_records = cast(dict[str, Any], records_by_role)
+    validated_records: dict[str, list[dict[str, Any]]] = {}
+    record_fields = {
+        "candidate_id",
+        "request_sha256",
+        "response_sha256",
+        "requested_model",
+        "returned_model",
+        "reasoning_effort",
+        "session_or_thread_ids",
+        "transport_retry_count",
+    }
+    for role, config in AGENT_CONFIGS.items():
+        raw_records = role_records[role]
+        _require(type(raw_records) is list, "Agent run or retry evidence mismatch")
+        records: list[dict[str, Any]] = []
+        candidate_ids: set[str] = set()
+        for raw_record in raw_records:
+            try:
+                record = _exact_object_fields(
+                    raw_record, record_fields, f"{role} sanitized run record"
+                )
+                candidate_id = _exact_lowercase_hex(
+                    record["candidate_id"], length=24, label="run candidate id"
+                )
+                request_sha256 = _exact_lowercase_hex(
+                    record["request_sha256"], length=64, label="run request hash"
+                )
+                response_sha256 = _exact_lowercase_hex(
+                    record["response_sha256"], length=64, label="run response hash"
+                )
+                identities = record["session_or_thread_ids"]
+                retry_count = record["transport_retry_count"]
+                _require(candidate_id not in candidate_ids, "duplicate run candidate")
+                _require(
+                    record["requested_model"] == config["model"]
+                    and record["returned_model"] == config["model"]
+                    and record["reasoning_effort"] == config["reasoning_effort"],
+                    "run Agent configuration mismatch",
+                )
+                _require(
+                    type(identities) is list
+                    and all(
+                        type(identity) is str
+                        and bool(identity)
+                        and identity.strip() == identity
+                        for identity in identities
+                    )
+                    and len(set(identities)) == len(identities),
+                    "run session binding mismatch",
+                )
+                _require(
+                    type(retry_count) is int
+                    and retry_count in {0, 1}
+                    and len(identities) == retry_count + 1,
+                    "run retry binding mismatch",
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("Agent run or retry evidence mismatch") from exc
+            candidate_ids.add(candidate_id)
+            records.append(
+                {
+                    **deepcopy(record),
+                    "candidate_id": candidate_id,
+                    "request_sha256": request_sha256,
+                    "response_sha256": response_sha256,
+                }
+            )
+        validated_records[role] = records
+
+    expected_evidence = {
+        role: _agent_role_run_evidence(role, validated_records[role])
+        for role in AGENT_CONFIGS
+    }
+    expected_retries = sorted(
+        [
+            retry
+            for role, records in validated_records.items()
+            for record in records
+            if (retry := _transport_retry_record(record, role=role)) is not None
+        ],
+        key=lambda row: (cast(str, row["role"]), cast(str, row["candidate_id"])),
+    )
+    _require(
+        validation.get("agent_run_evidence") == expected_evidence
+        and validation.get("retry_records") == expected_retries
+        and validation.get("transport_retry_count") == len(expected_retries),
+        "Agent run or retry evidence mismatch",
+    )
+    return expected_evidence, expected_retries
+
+
 def build_dataset_freeze_documents(
     validation: dict[str, Any], *, commit_a: str
 ) -> dict[str, bytes]:
@@ -3188,6 +3359,7 @@ def build_dataset_freeze_documents(
         and validation["family_count"] == POSITIVE_TASK_COUNT,
         "Agent dataset freeze counts mismatch",
     )
+    agent_run_evidence, retry_records = _validated_agent_lineage_evidence(validation)
     task_rows = [
         {
             "task_id": task["candidate_id"],
@@ -3235,9 +3407,9 @@ def build_dataset_freeze_documents(
             "path": "agent-run-metadata.json",
             "sha256": validation["source_file_sha256"]["agent-run-metadata.json"],
         },
-        "agent_roles": deepcopy(validation["agent_run_evidence"]),
+        "agent_roles": deepcopy(agent_run_evidence),
         "transport_retry_count": validation["transport_retry_count"],
-        "retry_records": deepcopy(validation["retry_records"]),
+        "retry_records": deepcopy(retry_records),
         "contamination": contamination,
         "deterministic_selection": deepcopy(validation["selection_audit"]),
     }
@@ -3254,10 +3426,10 @@ def build_dataset_freeze_documents(
             "exact_three_way_agreement_count"
         ],
         "excluded_candidate_count": validation["excluded_candidate_count"],
-        "agent_roles": deepcopy(validation["agent_run_evidence"]),
+        "agent_roles": deepcopy(agent_run_evidence),
         "reviewer_ledgers": reviewer_ledgers,
         "transport_retry_count": validation["transport_retry_count"],
-        "retry_records": deepcopy(validation["retry_records"]),
+        "retry_records": deepcopy(retry_records),
     }
     review_bytes = _canonical_json_bytes(review_summary)
     manifest = {

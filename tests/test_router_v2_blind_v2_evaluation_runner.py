@@ -37,6 +37,28 @@ TASK4_SELECTION_AUTHORITY = {
 }
 
 
+def _task5_scanner_model_authority(
+    files: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    materialized_files = deepcopy(
+        files
+        or [
+            {
+                "path": "1_Pooling/config.json",
+                "sha256": hashlib.sha256(b"test pooling config").hexdigest(),
+            },
+            {
+                "path": "model.safetensors",
+                "sha256": hashlib.sha256(b"test model weights").hexdigest(),
+            },
+        ]
+    )
+    return {
+        "materialized_model_files": materialized_files,
+        "materialized_model_files_sha256": runner.canonical_sha256(materialized_files),
+    }
+
+
 def _task4_protected_prompts() -> dict[str, list[str]]:
     return {
         "train": [f"{PREFIX} TRAIN REFERENCE"],
@@ -311,6 +333,7 @@ def test_task4_selection_ignores_compatibility_seed_alias(
         protected_prompts={scope: [] for scope in runner.CONTAMINATION_SCOPES},
         protected_family_ids={scope: set() for scope in runner.CONTAMINATION_SCOPES},
         semantic_similarity=lambda _left, _right: 0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
     assert scan["scanner_config"]["selection_seed"] == 7170
     result = _validate_agent_pack(pack, tmp_path / "repo")
@@ -391,24 +414,28 @@ def test_task4_semantic_evidence_canonicalizes_float_decimal_and_negative_zero()
         protected_prompts=protected_prompts,
         protected_family_ids=protected_family_ids,
         semantic_similarity=lambda _left, _right: 0.9,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
     decimal_scan = runner._scan_contamination(
         [candidate],
         protected_prompts=protected_prompts,
         protected_family_ids=protected_family_ids,
         semantic_similarity=lambda _left, _right: Decimal("0.90"),
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
     negative_zero_scan = runner._scan_contamination(
         [candidate],
         protected_prompts=protected_prompts,
         protected_family_ids=protected_family_ids,
         semantic_similarity=lambda _left, _right: -0.0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
     zero_scan = runner._scan_contamination(
         [candidate],
         protected_prompts=protected_prompts,
         protected_family_ids=protected_family_ids,
         semantic_similarity=lambda _left, _right: Decimal("0.00"),
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     assert float_scan["rows"] == decimal_scan["rows"]
@@ -459,6 +486,7 @@ def test_task4_decimal_context_cannot_change_jaccard_or_scanner_evidence(
                     scope: set() for scope in runner.CONTAMINATION_SCOPES
                 },
                 semantic_similarity=lambda _left, _right: 0,
+                semantic_model_authority=_task5_scanner_model_authority(),
             )
             return (
                 value,
@@ -530,12 +558,14 @@ def test_task4_protected_authority_scope_and_prompt_order_are_canonical() -> Non
         protected_prompts=forward_prompts,
         protected_family_ids=forward_families,
         semantic_similarity=lambda _left, _right: Decimal("0.90"),
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
     reverse = runner._scan_contamination(
         [candidate],
         protected_prompts=reverse_prompts,
         protected_family_ids=reverse_families,
         semantic_similarity=lambda _left, _right: Decimal("0.90"),
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     assert forward == reverse
@@ -568,6 +598,7 @@ def test_task4_contamination_uses_one_immutable_protected_authority_snapshot() -
         protected_prompts=deepcopy(baseline_prompts),
         protected_family_ids=deepcopy(baseline_families),
         semantic_similarity=lambda _left, _right: 0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
     mutable_prompts = deepcopy(baseline_prompts)
     mutable_families = deepcopy(baseline_families)
@@ -586,6 +617,7 @@ def test_task4_contamination_uses_one_immutable_protected_authority_snapshot() -
         protected_prompts=mutable_prompts,
         protected_family_ids=mutable_families,
         semantic_similarity=mutate_original_authority,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     assert callback_count > 0
@@ -645,6 +677,7 @@ def test_task4_contamination_scan_rejects_protected_exact_normalized_and_family(
             "prior_candidate": set(),
         },
         semantic_similarity=lambda _left, _right: 0.0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     by_id = {row["candidate_id"]: row for row in scan["rows"]}
@@ -730,6 +763,7 @@ def test_task4_contamination_threshold_equality_rejects_without_float_drift(
             "prior_candidate": set(),
         },
         semantic_similarity=semantic_similarity,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     assert expected_code in scan["rows"][0]["rejection_codes"]
@@ -770,6 +804,7 @@ def test_task4_current_candidate_conflict_uses_round_then_selection_key() -> Non
             "prior_candidate": set(),
         },
         semantic_similarity=lambda _left, _right: 0.0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     assert scan["clean_candidate_ids"] == [expected_same_round_winner]
@@ -812,6 +847,7 @@ def test_task4_current_candidate_loser_cannot_escape_protected_rejected_winner()
             "prior_candidate": set(),
         },
         semantic_similarity=lambda _left, _right: 0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     by_id = {row["candidate_id"]: row for row in scan["rows"]}
@@ -842,6 +878,7 @@ def test_task4_contamination_scan_rejects_every_protected_family_scope(
         protected_prompts={name: [] for name in runner.CONTAMINATION_SCOPES},
         protected_family_ids=protected_family_ids,
         semantic_similarity=lambda _left, _right: 0.0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     assert scan["rows"][0]["scanner_decision"] == "REJECT"
@@ -1956,6 +1993,7 @@ def _write_agent_pack(
         protected_prompts=protected_prompts,
         protected_family_ids=protected_family_ids,
         semantic_similarity=semantic_similarity,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
     contamination_rows.extend(scan["rows"])
     clean_candidate_ids = set(scan["clean_candidate_ids"])
@@ -2085,6 +2123,60 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
+def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }[role]
+    records: list[dict[str, Any]] = []
+    for row in _read_jsonl(root / filename):
+        invocations = row["invocations"]
+        success_envelope = invocations[-1]["envelope"]
+        records.append(
+            {
+                "candidate_id": row["candidate_id"],
+                "request_sha256": row["request"]["request_sha256"],
+                "response_sha256": runner.canonical_sha256(
+                    success_envelope["response"]
+                ),
+                "requested_model": success_envelope["requested_model"],
+                "returned_model": success_envelope["returned_model"],
+                "reasoning_effort": success_envelope["reasoning_effort"],
+                "session_or_thread_ids": [
+                    _pack_invocation_identity(invocation) for invocation in invocations
+                ],
+                "transport_retry_count": len(invocations) - 1,
+            }
+        )
+    return records
+
+
+def _task5_fixture_retry_records(
+    records_by_role: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    retries: list[dict[str, Any]] = []
+    for role, records in records_by_role.items():
+        for record in records:
+            if record["transport_retry_count"] == 0:
+                continue
+            identities = record["session_or_thread_ids"]
+            retries.append(
+                {
+                    "role": role,
+                    "candidate_id": record["candidate_id"],
+                    "request_sha256": record["request_sha256"],
+                    "response_sha256": record["response_sha256"],
+                    "failed_session_or_thread_id": identities[0],
+                    "retry_session_or_thread_id": identities[1],
+                    "failed_attempt_ordinal": 1,
+                    "retry_attempt_ordinal": 2,
+                    "retry_count": 1,
+                }
+            )
+    return sorted(retries, key=lambda row: (row["role"], row["candidate_id"]))
+
+
 def _rewrite_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.write_bytes(_jsonl_bytes(rows))
     _refresh_agent_pack_metadata(path.parent)
@@ -2121,6 +2213,7 @@ def _validate_agent_pack(
     protected_prompts: dict[str, list[str]] | None = None,
     protected_family_ids: dict[str, set[str]] | None = None,
     semantic_similarity: Callable[[str, str], int | float | Decimal] | None = None,
+    semantic_model_authority: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     protected_prompts = protected_prompts or _task4_protected_prompts()
     protected_family_ids = protected_family_ids or _task4_protected_family_ids()
@@ -2138,6 +2231,9 @@ def _validate_agent_pack(
         prior_candidate_family_ids=protected_family_ids["prior_candidate"],
         first_read_timestamp="2026-07-16T00:00:00Z",
         semantic_similarity=semantic_similarity or (lambda _left, _right: 0.0),
+        semantic_model_authority=(
+            semantic_model_authority or _task5_scanner_model_authority()
+        ),
     )
 
 
@@ -2687,6 +2783,7 @@ def test_task4_semantic_audit_freezes_required_contract_without_runtime_claim(
         protected_prompts={scope: [] for scope in runner.CONTAMINATION_SCOPES},
         protected_family_ids={scope: set() for scope in runner.CONTAMINATION_SCOPES},
         semantic_similarity=lambda _left, _right: 0,
+        semantic_model_authority=_task5_scanner_model_authority(),
     )
 
     for audit in (scan["scanner_config"], result["contamination_audit"]):
@@ -2700,6 +2797,97 @@ def test_task4_semantic_audit_freezes_required_contract_without_runtime_claim(
         assert audit["semantic_scorer_receipt_sha256"] is None
         assert "semantic_model_id" not in audit
         assert "semantic_model_revision" not in audit
+
+
+def test_task5_scanner_model_files_are_bound_from_validated_authority(
+    tmp_path: Path,
+) -> None:
+    authority = _task5_scanner_model_authority()
+    scan = runner._scan_contamination(
+        [],
+        protected_prompts={scope: [] for scope in runner.CONTAMINATION_SCOPES},
+        protected_family_ids={scope: set() for scope in runner.CONTAMINATION_SCOPES},
+        semantic_similarity=lambda _left, _right: 0,
+        semantic_model_authority=authority,
+    )
+    assert (
+        scan["scanner_config"]["materialized_model_files"]
+        == authority["materialized_model_files"]
+    )
+    assert (
+        scan["scanner_config"]["materialized_model_files_sha256"]
+        == authority["materialized_model_files_sha256"]
+    )
+
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(
+        pack,
+        tmp_path / "repo",
+        semantic_model_authority=authority,
+    )
+    audit = validation["contamination_audit"]
+    assert audit["materialized_model_files"] == authority["materialized_model_files"]
+    assert (
+        audit["materialized_model_files_sha256"]
+        == authority["materialized_model_files_sha256"]
+    )
+    assert len(audit["scanner_config_sha256"]) == 64
+    assert audit["semantic_scorer_runtime_verified"] is False
+    assert audit["semantic_scorer_receipt_sha256"] is None
+
+    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    manifest = json.loads(documents["blind-v2-manifest.json"])
+    frozen = manifest["agent_construction"]["contamination"]
+    assert frozen["materialized_model_files"] == authority["materialized_model_files"]
+    assert (
+        frozen["materialized_model_files_sha256"]
+        == authority["materialized_model_files_sha256"]
+    )
+    assert frozen["scanner_config_sha256"] == audit["scanner_config_sha256"]
+    assert frozen["semantic_scorer_runtime_verified"] is False
+    assert frozen["semantic_scorer_receipt_sha256"] is None
+
+
+@pytest.mark.parametrize(
+    ("case", "expected_message"),
+    (
+        ("duplicate_path", "paths must be unique"),
+        ("unsorted", "files must be sorted"),
+        ("noncanonical_path", "path must be normalized"),
+        ("invalid_hash", "file SHA-256"),
+        ("aggregate_mismatch", "aggregate hash mismatch"),
+    ),
+)
+def test_task5_scanner_model_authority_is_fail_closed(
+    case: str, expected_message: str
+) -> None:
+    files = deepcopy(_task5_scanner_model_authority()["materialized_model_files"])
+    if case == "duplicate_path":
+        files[1]["path"] = files[0]["path"]
+        authority = _task5_scanner_model_authority(files)
+    elif case == "unsorted":
+        authority = _task5_scanner_model_authority(list(reversed(files)))
+    elif case == "noncanonical_path":
+        files[1]["path"] = "weights/../model.safetensors"
+        authority = _task5_scanner_model_authority(files)
+    elif case == "invalid_hash":
+        files[1]["sha256"] = "f" * 63
+        authority = _task5_scanner_model_authority(files)
+    else:
+        authority = _task5_scanner_model_authority(files)
+        authority["materialized_model_files_sha256"] = "0" * 64
+
+    with pytest.raises(ValueError, match=expected_message):
+        runner._scan_contamination(
+            [],
+            protected_prompts={scope: [] for scope in runner.CONTAMINATION_SCOPES},
+            protected_family_ids={
+                scope: set() for scope in runner.CONTAMINATION_SCOPES
+            },
+            semantic_similarity=lambda _left, _right: 0,
+            semantic_model_authority=authority,
+        )
 
 
 def test_task4_selection_authority_drift_is_global_protocol_invalid(
@@ -3771,6 +3959,63 @@ def test_agent_pack_required_path_must_be_a_regular_file(tmp_path: Path) -> None
 
     with pytest.raises(ValueError):
         _validate_agent_pack(pack, repository)
+
+
+@pytest.mark.parametrize("retry_role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_run_hashes_and_retry_records_bind_exact_fixture_invocations(
+    tmp_path: Path,
+    retry_role: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role=retry_role)
+    expected_records = {
+        role: _task5_fixture_run_records(pack, role)
+        for role in ("generator", "reviewer_a", "reviewer_b")
+    }
+    expected_retries = _task5_fixture_retry_records(expected_records)
+
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    manifest = json.loads(documents["blind-v2-manifest.json"])
+    construction = manifest["agent_construction"]
+
+    for role, records in expected_records.items():
+        expected_request_hash = runner.canonical_sha256(
+            [record["request_sha256"] for record in records]
+        )
+        expected_response_hash = runner.canonical_sha256(
+            [record["response_sha256"] for record in records]
+        )
+        expected_run_hash = runner.canonical_sha256(records)
+        for evidence in (
+            validation["agent_run_evidence"][role],
+            construction["agent_roles"][role],
+        ):
+            assert evidence["request_hashes_sha256"] == expected_request_hash
+            assert evidence["response_hashes_sha256"] == expected_response_hash
+            assert evidence["run_sha256"] == expected_run_hash
+
+    assert validation["retry_records"] == expected_retries
+    assert construction["retry_records"] == expected_retries
+
+
+@pytest.mark.parametrize("mutation", ("constant_run_hash", "wrong_retry_session"))
+def test_task5_dataset_freeze_rejects_misbound_run_or_retry_evidence(
+    tmp_path: Path,
+    mutation: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    if mutation == "constant_run_hash":
+        validation["agent_run_evidence"]["generator"]["run_sha256"] = "0" * 64
+    else:
+        validation["retry_records"][0]["retry_session_or_thread_id"] = (
+            "wrong-retry-session"
+        )
+
+    with pytest.raises(ValueError, match="Agent run or retry evidence mismatch"):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_commit_b_freezes_agent_tasks_lineage_and_retry_evidence(
