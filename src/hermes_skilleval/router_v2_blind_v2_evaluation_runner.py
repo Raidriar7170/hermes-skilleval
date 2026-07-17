@@ -1786,6 +1786,92 @@ def _agent_role_run_evidence(
     }
 
 
+_AGENT_ROLE_LEDGER_PATHS = {
+    "generator": "blind-v2-generation.jsonl",
+    "reviewer_a": "blind-v2-review-a.jsonl",
+    "reviewer_b": "blind-v2-review-b.jsonl",
+}
+
+
+def _agent_run_identity_authority(
+    records_by_role: dict[str, list[dict[str, Any]]],
+    metadata_roles: dict[str, Any],
+    source_file_sha256: dict[str, Any],
+) -> dict[str, Any]:
+    roles: dict[str, dict[str, Any]] = {}
+    all_sessions: list[str] = []
+    for role, config in AGENT_CONFIGS.items():
+        records = records_by_role[role]
+        metadata = _exact_object_fields(
+            metadata_roles[role],
+            {
+                "config",
+                "request_count",
+                "invocation_count",
+                "session_or_thread_ids",
+                "fork_context",
+                "history_message_count",
+                "imported_memory_count",
+            },
+            f"{role} metadata",
+        )
+        candidate_ids = [cast(str, record["candidate_id"]) for record in records]
+        sessions = [
+            identity
+            for record in records
+            for identity in cast(list[str], record["session_or_thread_ids"])
+        ]
+        _require(metadata["config"] == config, f"{role} metadata config mismatch")
+        _require(
+            metadata["request_count"] == len(records),
+            f"{role} metadata request count mismatch",
+        )
+        _require(
+            metadata["invocation_count"] == len(sessions),
+            f"{role} metadata invocation count mismatch",
+        )
+        _require(
+            metadata["session_or_thread_ids"] == sessions,
+            f"{role} metadata session binding mismatch",
+        )
+        _require(
+            len(candidate_ids) == len(set(candidate_ids)),
+            f"{role} candidate identities must be unique",
+        )
+        all_sessions.extend(sessions)
+        ledger_path = _AGENT_ROLE_LEDGER_PATHS[role]
+        ledger_hash = _exact_lowercase_hex(
+            source_file_sha256[ledger_path],
+            length=64,
+            label=f"{role} ledger file SHA-256",
+        )
+        roles[role] = {
+            "ledger_path": ledger_path,
+            "ledger_file_sha256": ledger_hash,
+            "candidate_ids": candidate_ids,
+            "candidate_ids_sha256": canonical_sha256(candidate_ids),
+            "request_count": len(records),
+            "invocation_count": len(sessions),
+            "session_or_thread_ids": sessions,
+            "session_or_thread_ids_sha256": canonical_sha256(sessions),
+        }
+    _require(
+        len(all_sessions) == len(set(all_sessions)),
+        "Agent run sessions must be globally unique",
+    )
+    _require(
+        {record["candidate_id"] for record in records_by_role["reviewer_a"]}
+        == {record["candidate_id"] for record in records_by_role["reviewer_b"]},
+        "reviewer candidate identity sets mismatch",
+    )
+    _require(
+        {record["candidate_id"] for record in records_by_role["reviewer_a"]}
+        <= {record["candidate_id"] for record in records_by_role["generator"]},
+        "reviewer candidate identities must come from generation",
+    )
+    return {"roles": roles, "authority_sha256": canonical_sha256(roles)}
+
+
 class _AgentPackProtocolViolation(Exception):
     pass
 
@@ -1977,7 +2063,10 @@ def _validate_pack_invocations(
             envelope["transport_retry_count"] == retry_count,
             "transport retry count does not match allowed invocation combination",
         )
-        response = validate_agent_invocation_envelope(envelope, request=request)
+        try:
+            response = validate_agent_invocation_envelope(envelope, request=request)
+        except (KeyError, TypeError, ValueError):
+            return None, retry_count
         return response, retry_count
     except _AgentPackProtocolViolation:
         raise
@@ -2325,6 +2414,7 @@ def validate_agent_pack(
             retry_record = _transport_retry_record(run_record, role="generator")
             if retry_record is not None:
                 retry_records.append(retry_record)
+            valid_transport_retry_count += retry_count
             if response is not None:
                 generated_rows = response["candidates"]
                 _require(
@@ -2351,7 +2441,6 @@ def validate_agent_pack(
                     canonical_sha256(response),
                 )
                 _require(candidate_id == expected_id, "candidate id binding mismatch")
-                valid_transport_retry_count += retry_count
             generation_responses[candidate_id] = response
     except _AgentPackProtocolViolation as exc:
         return _agent_pack_protocol_invalid(
@@ -2813,6 +2902,11 @@ def validate_agent_pack(
     pipeline_rejected_count = sum(
         outcome.startswith("REJECTED") for outcome in candidate_outcomes.values()
     )
+    agent_run_identity_authority = _agent_run_identity_authority(
+        sanitized_run_records,
+        cast(dict[str, Any], metadata_roles),
+        source_hashes,
+    )
 
     common_result = {
         "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
@@ -2827,6 +2921,7 @@ def validate_agent_pack(
             role: _agent_role_run_evidence(role, sanitized_run_records[role])
             for role in AGENT_CONFIGS
         },
+        "agent_run_identity_authority": agent_run_identity_authority,
         "review_schedule_sha256": deepcopy(metadata_schedules),
         "source_file_sha256": source_hashes,
         "first_read_timestamp": first_read_timestamp,
@@ -2836,6 +2931,7 @@ def validate_agent_pack(
         "pipeline_rejected_candidate_count": pipeline_rejected_count,
     }
     if final_deficits:
+        insufficient_selection_audit = selection_audit([])
         return {
             **common_result,
             "status": "INSUFFICIENT",
@@ -2852,7 +2948,8 @@ def validate_agent_pack(
             "candidate_outcomes": dict(sorted(candidate_outcomes.items())),
             "deficits": final_deficits,
             "ledger_sha256": deepcopy(source_hashes),
-            "selection_audit": selection_audit([]),
+            "selection_audit": insufficient_selection_audit,
+            "selection_audit_sha256": canonical_sha256(insufficient_selection_audit),
             "tasks": [],
         }
 
@@ -2905,6 +3002,7 @@ def validate_agent_pack(
         negative_counts = Counter(
             row["proposed_negative_skill_id"] for row in selected_negative_rows
         )
+        selected_selection_audit = selection_audit(selected)
         return {
             **common_result,
             "status": "VALID",
@@ -2923,7 +3021,8 @@ def validate_agent_pack(
                 outcome == "NOT_SELECTED" for outcome in candidate_outcomes.values()
             ),
             "candidate_outcomes": dict(sorted(candidate_outcomes.items())),
-            "selection_audit": selection_audit(selected),
+            "selection_audit": selected_selection_audit,
+            "selection_audit_sha256": canonical_sha256(selected_selection_audit),
             "tasks": selected,
         }
     except _DeterministicSelectionProtocolViolation as exc:
@@ -3248,7 +3347,12 @@ def _validate_legacy_human_pack(
 
 def _validated_agent_lineage_evidence(
     validation: dict[str, Any],
-) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[
+    dict[str, list[dict[str, Any]]],
+    dict[str, dict[str, Any]],
+    list[dict[str, Any]],
+    dict[str, Any],
+]:
     records_by_role = validation.get("agent_run_records")
     _require(
         type(records_by_role) is dict and set(records_by_role) == set(AGENT_CONFIGS),
@@ -3351,42 +3455,394 @@ def _validated_agent_lineage_evidence(
         ],
         key=lambda row: (cast(str, row["role"]), cast(str, row["candidate_id"])),
     )
+    try:
+        metadata_roles = _exact_object_fields(
+            validation["agent_roles"], set(AGENT_CONFIGS), "Agent role metadata"
+        )
+        source_file_sha256 = _exact_object_fields(
+            validation["source_file_sha256"],
+            set(REQUIRED_AGENT_PACK_FILES),
+            "Agent source file hashes",
+        )
+        identity_authority = _agent_run_identity_authority(
+            validated_records, metadata_roles, source_file_sha256
+        )
+        review_schedules = _exact_object_fields(
+            validation["review_schedule_sha256"],
+            {"reviewer_a", "reviewer_b"},
+            "review schedule hashes",
+        )
+        for role in ("reviewer_a", "reviewer_b"):
+            schedule_candidate_ids = [
+                record["candidate_id"] for record in validated_records[role]
+            ]
+            _require(
+                review_schedules[role] == canonical_sha256(schedule_candidate_ids),
+                f"{role} schedule identity mismatch",
+            )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("Agent run identity authority mismatch") from exc
     _require(
         validation.get("agent_run_evidence") == expected_evidence
         and validation.get("retry_records") == expected_retries
         and validation.get("transport_retry_count") == len(expected_retries),
         "Agent run or retry evidence mismatch",
     )
-    return expected_evidence, expected_retries
+    _require(
+        validation.get("agent_run_identity_authority") == identity_authority,
+        "Agent run identity authority mismatch",
+    )
+    return validated_records, expected_evidence, expected_retries, identity_authority
+
+
+def _validated_dataset_freeze_tasks(
+    validation: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    message = "Agent dataset selection validation mismatch"
+    try:
+        raw_tasks = validation["tasks"]
+        _require(
+            type(raw_tasks) is list and len(raw_tasks) == POSITIVE_TASK_COUNT,
+            "selected task count mismatch",
+        )
+        candidate_fields = {
+            "candidate_id",
+            "generation_round",
+            "prompt_text",
+            "prompt_text_sha256",
+            "semantic_family_id",
+            "proposed_gold_skill_id",
+            "proposed_negative_skill_id",
+            "language",
+            "rationale",
+        }
+        selected: list[dict[str, Any]] = []
+        for raw_task in raw_tasks:
+            task = _exact_object_fields(
+                raw_task, candidate_fields, "selected Agent task"
+            )
+            candidate_id = _exact_lowercase_hex(
+                task["candidate_id"], length=24, label="selected candidate id"
+            )
+            _require(
+                type(task["generation_round"]) is int
+                and task["generation_round"] in {1, 2},
+                "selected generation round mismatch",
+            )
+            prompt_text = _nonempty_string(task["prompt_text"], "selected prompt")
+            prompt_bytes = prompt_text.encode("utf-8", errors="strict")
+            prompt_hash = _exact_lowercase_hex(
+                task["prompt_text_sha256"],
+                length=64,
+                label="selected prompt SHA-256",
+            )
+            _require(
+                prompt_hash == _sha256_bytes(prompt_bytes),
+                "selected prompt SHA-256 mismatch",
+            )
+            family_id = _nonempty_string(
+                task["semantic_family_id"], "selected semantic family"
+            )
+            gold = _nonempty_string(
+                task["proposed_gold_skill_id"], "selected gold skill"
+            )
+            negative = task["proposed_negative_skill_id"]
+            _require(
+                negative is None
+                or (
+                    type(negative) is str
+                    and bool(negative.strip())
+                    and negative != gold
+                ),
+                "selected negative skill mismatch",
+            )
+            _require(task["language"] == "en", "selected task language mismatch")
+            _nonempty_string(task["rationale"], "selected task rationale")
+            selected.append(
+                {
+                    **deepcopy(task),
+                    "candidate_id": candidate_id,
+                    "prompt_text": prompt_text,
+                    "prompt_text_sha256": prompt_hash,
+                    "semantic_family_id": family_id,
+                    "proposed_gold_skill_id": gold,
+                }
+            )
+
+        selected_ids = [cast(str, task["candidate_id"]) for task in selected]
+        selected_prompt_bytes = [
+            cast(str, task["prompt_text"]).encode("utf-8") for task in selected
+        ]
+        normalized_prompts = [
+            _normalize(cast(str, task["prompt_text"])) for task in selected
+        ]
+        family_ids = [cast(str, task["semantic_family_id"]) for task in selected]
+        _require(
+            len(set(selected_ids)) == POSITIVE_TASK_COUNT,
+            "selected candidate ids must be unique",
+        )
+        _require(
+            len(set(selected_prompt_bytes)) == POSITIVE_TASK_COUNT
+            and len(set(normalized_prompts)) == POSITIVE_TASK_COUNT,
+            "selected prompts must be unique",
+        )
+        _require(
+            len(set(family_ids)) == POSITIVE_TASK_COUNT,
+            "selected semantic families must be unique",
+        )
+
+        gold_counts = Counter(task["proposed_gold_skill_id"] for task in selected)
+        _require(
+            len(gold_counts) == 16 and set(gold_counts.values()) == {8},
+            "selected per-gold task distribution mismatch",
+        )
+        gold_ids = sorted(cast(str, gold) for gold in gold_counts)
+        selected_by_stratum = {
+            gold: {
+                "negative": [
+                    cast(str, task["candidate_id"])
+                    for task in selected
+                    if task["proposed_gold_skill_id"] == gold
+                    and task["proposed_negative_skill_id"] is not None
+                ],
+                "positive_only": [
+                    cast(str, task["candidate_id"])
+                    for task in selected
+                    if task["proposed_gold_skill_id"] == gold
+                    and task["proposed_negative_skill_id"] is None
+                ],
+            }
+            for gold in gold_ids
+        }
+        _require(
+            all(
+                len(strata["negative"]) == 6 and len(strata["positive_only"]) == 2
+                for strata in selected_by_stratum.values()
+            ),
+            "selected per-gold stratum distribution mismatch",
+        )
+        negative_tasks = [
+            task for task in selected if task["proposed_negative_skill_id"] is not None
+        ]
+        _require(
+            len(negative_tasks) == TEMPTING_NEGATIVE_COUNT,
+            "selected negative task count mismatch",
+        )
+        expected_order = [
+            task
+            for gold in gold_ids
+            for has_negative in (True, False)
+            for task in sorted(
+                (
+                    row
+                    for row in selected
+                    if row["proposed_gold_skill_id"] == gold
+                    and (row["proposed_negative_skill_id"] is not None) is has_negative
+                ),
+                key=lambda row: selection_key(cast(str, row["candidate_id"])),
+            )
+        ]
+        _require(
+            selected_ids
+            == [cast(str, task["candidate_id"]) for task in expected_order],
+            "selected candidate order mismatch",
+        )
+
+        expected_gold_distribution = dict(sorted(gold_counts.items()))
+        negative_counts = Counter(
+            cast(str, task["proposed_negative_skill_id"]) for task in negative_tasks
+        )
+        expected_negative_distribution = dict(sorted(negative_counts.items()))
+        _require(
+            type(validation["task_count"]) is int
+            and validation["task_count"] == POSITIVE_TASK_COUNT
+            and type(validation["negative_labeled_task_count"]) is int
+            and validation["negative_labeled_task_count"] == len(negative_tasks)
+            and type(validation["family_count"]) is int
+            and validation["family_count"] == len(set(family_ids)),
+            "selected task summary count mismatch",
+        )
+        _require(
+            validation["gold_distribution"] == expected_gold_distribution
+            and validation["negative_distribution"] == expected_negative_distribution
+            and validation["negative_target_coverage_count"] == len(negative_counts),
+            "selected task summary distribution mismatch",
+        )
+
+        candidate_outcomes = validation["candidate_outcomes"]
+        _require(
+            type(candidate_outcomes) is dict, "candidate outcomes must be an object"
+        )
+        _require(
+            all(
+                candidate_outcomes.get(candidate_id) == "SELECTED"
+                for candidate_id in selected_ids
+            ),
+            "selected candidates must have SELECTED outcomes",
+        )
+        _require(
+            validation["excluded_candidate_count"]
+            == len(candidate_outcomes) - POSITIVE_TASK_COUNT,
+            "excluded candidate count mismatch",
+        )
+        _require(
+            validation["selection_not_selected_count"]
+            == sum(
+                outcome == "NOT_SELECTED" for outcome in candidate_outcomes.values()
+            ),
+            "not-selected candidate count mismatch",
+        )
+        _require(
+            validation["pipeline_rejected_candidate_count"]
+            == sum(
+                type(outcome) is str and outcome.startswith("REJECTED")
+                for outcome in candidate_outcomes.values()
+            ),
+            "pipeline rejected candidate count mismatch",
+        )
+        _require(
+            validation["exact_three_way_agreement_count"]
+            == sum(
+                outcome in {"SELECTED", "NOT_SELECTED"}
+                for outcome in candidate_outcomes.values()
+            ),
+            "three-way agreement pool count mismatch",
+        )
+
+        selection = _exact_object_fields(
+            validation["selection_audit"],
+            {
+                "selection_authority",
+                "selection_authority_sha256",
+                "accepted_pool_sha256",
+                "round_1_candidate_count",
+                "round_2_candidate_count",
+                "round_1_distribution",
+                "round_2_distribution",
+                "round_1_request_quota_distribution",
+                "round_2_request_quota_distribution",
+                "round_1_post_pipeline_deficits",
+                "selected_candidate_ids",
+                "selected_candidate_ids_sha256",
+                "selected_by_stratum",
+            },
+            "selection audit",
+        )
+        selection_authority = _selection_authority_document()
+        _require(
+            selection["selection_authority"] == selection_authority
+            and selection["selection_authority_sha256"]
+            == canonical_sha256(selection_authority),
+            "selection authority mismatch",
+        )
+        _exact_lowercase_hex(
+            selection["accepted_pool_sha256"],
+            length=64,
+            label="accepted pool SHA-256",
+        )
+        expected_round_one_distribution = {
+            gold: {
+                "negative": _SELECTION_AUTHORITY["round_1_negative_per_skill"],
+                "positive_only": _SELECTION_AUTHORITY[
+                    "round_1_positive_only_per_skill"
+                ],
+            }
+            for gold in gold_ids
+        }
+        _require(
+            selection["round_1_candidate_count"]
+            == _SELECTION_AUTHORITY["round_1_candidate_count"]
+            and selection["round_1_distribution"] == expected_round_one_distribution
+            and selection["round_1_request_quota_distribution"]
+            == expected_round_one_distribution,
+            "round-one selection audit mismatch",
+        )
+        round_two_distribution = _exact_object_fields(
+            selection["round_2_distribution"], set(gold_ids), "round-two distribution"
+        )
+        round_two_count = 0
+        for gold in gold_ids:
+            counts = _exact_object_fields(
+                round_two_distribution[gold],
+                {"negative", "positive_only"},
+                f"{gold} round-two distribution",
+            )
+            _require(
+                all(type(value) is int and value >= 0 for value in counts.values()),
+                "round-two distribution count mismatch",
+            )
+            round_two_count += sum(cast(int, value) for value in counts.values())
+        _require(
+            type(selection["round_2_candidate_count"]) is int
+            and selection["round_2_candidate_count"] == round_two_count
+            and selection["round_2_request_quota_distribution"]
+            == round_two_distribution,
+            "round-two selection audit mismatch",
+        )
+        deficits = selection["round_1_post_pipeline_deficits"]
+        _require(type(deficits) is dict, "round-one deficits must be an object")
+        for gold, raw_counts in deficits.items():
+            _require(gold in gold_ids, "round-one deficit gold mismatch")
+            counts = _exact_object_fields(
+                raw_counts, {"negative", "positive_only"}, "round-one deficit"
+            )
+            _require(
+                all(type(value) is int and value >= 0 for value in counts.values()),
+                "round-one deficit count mismatch",
+            )
+        _require(
+            selection["selected_candidate_ids"] == selected_ids
+            and selection["selected_candidate_ids_sha256"]
+            == canonical_sha256(selected_ids)
+            and selection["selected_by_stratum"] == selected_by_stratum,
+            "selected identity audit mismatch",
+        )
+        selection_audit_sha256 = _exact_lowercase_hex(
+            validation["selection_audit_sha256"],
+            length=64,
+            label="selection audit SHA-256",
+        )
+        _require(
+            selection_audit_sha256 == canonical_sha256(selection),
+            "selection audit aggregate mismatch",
+        )
+        task_rows = [
+            {
+                "task_id": task["candidate_id"],
+                "prompt_text": task["prompt_text"],
+                "prompt_text_sha256": task["prompt_text_sha256"],
+                "semantic_family_id": task["semantic_family_id"],
+                "gold_skill_id": task["proposed_gold_skill_id"],
+                "negative_skill_id": task["proposed_negative_skill_id"],
+                "source_type": "AGENT_GENERATED",
+            }
+            for task in selected
+        ]
+        return task_rows, deepcopy(selection)
+    except (AttributeError, KeyError, TypeError, ValueError) as exc:
+        raise ValueError(message) from exc
 
 
 def build_dataset_freeze_documents(
     validation: dict[str, Any], *, commit_a: str
 ) -> dict[str, bytes]:
+    _require(
+        type(validation) is dict,
+        "Agent dataset freeze validation container mismatch",
+    )
     _require(validation.get("status") == "VALID", "validated Agent pack is required")
-    _require(
-        type(commit_a) is str and len(commit_a) == 40,
-        "Commit A must be a 40-character Git SHA",
+    commit_a = _exact_lowercase_hex(
+        commit_a,
+        length=40,
+        label="Commit A",
     )
-    _require(
-        validation["task_count"] == POSITIVE_TASK_COUNT
-        and validation["negative_labeled_task_count"] == TEMPTING_NEGATIVE_COUNT
-        and validation["family_count"] == POSITIVE_TASK_COUNT,
-        "Agent dataset freeze counts mismatch",
-    )
-    agent_run_evidence, retry_records = _validated_agent_lineage_evidence(validation)
-    task_rows = [
-        {
-            "task_id": task["candidate_id"],
-            "prompt_text": task["prompt_text"],
-            "prompt_text_sha256": task["prompt_text_sha256"],
-            "semantic_family_id": task["semantic_family_id"],
-            "gold_skill_id": task["proposed_gold_skill_id"],
-            "negative_skill_id": task["proposed_negative_skill_id"],
-            "source_type": "AGENT_GENERATED",
-        }
-        for task in validation["tasks"]
-    ]
+    task_rows, deterministic_selection = _validated_dataset_freeze_tasks(validation)
+    (
+        sanitized_run_records,
+        agent_run_evidence,
+        retry_records,
+        agent_run_identity_authority,
+    ) = _validated_agent_lineage_evidence(validation)
     task_bytes = b"".join(_canonical_json_bytes(row) for row in task_rows)
 
     reviewer_ledgers = {
@@ -3405,14 +3861,13 @@ def build_dataset_freeze_documents(
             "blind-v2-contamination.jsonl"
         ],
     }
+    selected_three_way_agreement_count = len(task_rows)
     agent_construction = {
         "review_mode": "ISOLATED_AGENT_REVIEW",
         "source_type": "AGENT_GENERATED",
         "human_author_count": 0,
         "human_reviewer_count": 0,
-        "exact_three_way_agreement_count": validation[
-            "exact_three_way_agreement_count"
-        ],
+        "exact_three_way_agreement_count": selected_three_way_agreement_count,
         "generation_ledger": {
             "path": "blind-v2-generation.jsonl",
             "sha256": validation["source_file_sha256"]["blind-v2-generation.jsonl"],
@@ -3422,11 +3877,14 @@ def build_dataset_freeze_documents(
             "path": "agent-run-metadata.json",
             "sha256": validation["source_file_sha256"]["agent-run-metadata.json"],
         },
+        "sanitized_run_records": deepcopy(sanitized_run_records),
+        "agent_run_identity_authority": deepcopy(agent_run_identity_authority),
         "agent_roles": deepcopy(agent_run_evidence),
         "transport_retry_count": validation["transport_retry_count"],
         "retry_records": deepcopy(retry_records),
         "contamination": contamination,
-        "deterministic_selection": deepcopy(validation["selection_audit"]),
+        "deterministic_selection": deterministic_selection,
+        "deterministic_selection_sha256": canonical_sha256(deterministic_selection),
     }
     review_summary = {
         "schema_version": "router-v2-agent-blind-v2-review-summary-v1",
@@ -3437,9 +3895,7 @@ def build_dataset_freeze_documents(
         "family_count": POSITIVE_TASK_COUNT,
         "human_author_count": 0,
         "human_reviewer_count": 0,
-        "exact_three_way_agreement_count": validation[
-            "exact_three_way_agreement_count"
-        ],
+        "exact_three_way_agreement_count": selected_three_way_agreement_count,
         "excluded_candidate_count": validation["excluded_candidate_count"],
         "agent_roles": deepcopy(agent_run_evidence),
         "reviewer_ledgers": reviewer_ledgers,
@@ -3458,9 +3914,7 @@ def build_dataset_freeze_documents(
         "family_count": POSITIVE_TASK_COUNT,
         "human_author_count": 0,
         "human_reviewer_count": 0,
-        "exact_three_way_agreement_count": validation[
-            "exact_three_way_agreement_count"
-        ],
+        "exact_three_way_agreement_count": selected_three_way_agreement_count,
         "excluded_candidate_count": validation["excluded_candidate_count"],
         "source_file_sha256": validation["source_file_sha256"],
         "per_row_prompt_sha256": [row["prompt_text_sha256"] for row in task_rows],
@@ -4459,20 +4913,39 @@ def _validate_evaluation_agent_construction_authority(
 ) -> None:
     message = "evaluation Agent construction lineage mismatch"
     try:
-        manifest = _json_no_duplicate_keys(
-            input_artifacts["blind-v2-manifest.json"], "blind-v2 manifest"
+        _require(type(frozen_bindings) is dict, message)
+        _require(type(input_artifacts) is dict, message)
+        manifest_bytes = input_artifacts["blind-v2-manifest.json"]
+        review_summary_bytes = input_artifacts["review-summary.json"]
+        dataset_binding = frozen_bindings.get("blind_v2_dataset")
+        _require(type(dataset_binding) is dict, message)
+        dataset_document = cast(dict[str, Any], dataset_binding)
+        manifest_file_sha256 = _exact_lowercase_hex(
+            dataset_document.get("manifest_file_sha256"),
+            length=64,
+            label="evaluation blind-v2 manifest file SHA-256",
         )
-        for field, expected in (
-            ("task_count", POSITIVE_TASK_COUNT),
-            ("negative_labeled_task_count", TEMPTING_NEGATIVE_COUNT),
-            ("family_count", POSITIVE_TASK_COUNT),
-            ("human_author_count", 0),
-            ("human_reviewer_count", 0),
-        ):
-            _require(
-                type(manifest.get(field)) is int and manifest[field] == expected,
-                message,
-            )
+        _require(
+            manifest_file_sha256 == _sha256_bytes(manifest_bytes),
+            message,
+        )
+        manifest = _json_no_duplicate_keys(manifest_bytes, "blind-v2 manifest")
+        review_summary = _json_no_duplicate_keys(
+            review_summary_bytes, "blind-v2 review summary"
+        )
+        for document in (manifest, review_summary):
+            for field, expected in (
+                ("task_count", POSITIVE_TASK_COUNT),
+                ("negative_labeled_task_count", TEMPTING_NEGATIVE_COUNT),
+                ("family_count", POSITIVE_TASK_COUNT),
+                ("human_author_count", 0),
+                ("human_reviewer_count", 0),
+                ("exact_three_way_agreement_count", POSITIVE_TASK_COUNT),
+            ):
+                _require(
+                    type(document.get(field)) is int and document[field] == expected,
+                    message,
+                )
         construction = manifest.get("agent_construction")
         _require(type(construction) is dict, message)
         manifest_construction = cast(dict[str, Any], construction)
@@ -4482,7 +4955,16 @@ def _validate_evaluation_agent_construction_authority(
             and type(manifest_construction.get("human_author_count")) is int
             and manifest_construction["human_author_count"] == 0
             and type(manifest_construction.get("human_reviewer_count")) is int
-            and manifest_construction["human_reviewer_count"] == 0,
+            and manifest_construction["human_reviewer_count"] == 0
+            and type(manifest_construction.get("exact_three_way_agreement_count"))
+            is int
+            and manifest_construction["exact_three_way_agreement_count"]
+            == POSITIVE_TASK_COUNT,
+            message,
+        )
+        _require(
+            review_summary.get("review_mode") == "ISOLATED_AGENT_REVIEW"
+            and review_summary.get("source_type") == "AGENT_GENERATED",
             message,
         )
 
@@ -4550,15 +5032,25 @@ def _validate_evaluation_agent_construction_authority(
                 label=f"evaluation {role} schedule",
             )
 
+        _require(
+            review_summary.get("agent_roles") == role_evidence
+            and review_summary.get("reviewer_ledgers") == ledger_evidence
+            and review_summary.get("transport_retry_count")
+            == manifest_construction.get("transport_retry_count")
+            and review_summary.get("retry_records")
+            == manifest_construction.get("retry_records"),
+            message,
+        )
+
         expected_binding = deepcopy(manifest_construction)
         expected_binding["review_summary_file_sha256"] = _sha256_bytes(
-            input_artifacts["review-summary.json"]
+            review_summary_bytes
         )
         _require(
             frozen_bindings.get("agent_construction") == expected_binding,
             message,
         )
-    except (KeyError, TypeError, ValueError) as exc:
+    except (AttributeError, KeyError, TypeError, ValueError) as exc:
         raise ValueError(message) from exc
 
 
@@ -4574,12 +5066,15 @@ def build_evaluation_documents(
     attempt_artifacts: dict[str, bytes],
 ) -> dict[str, bytes]:
     _require(
-        set(input_artifacts)
+        type(input_artifacts) is dict
+        and set(input_artifacts)
         == {"preregistration.json", "blind-v2-manifest.json", "review-summary.json"},
         "evaluation input artifact set mismatch",
     )
     _require(
-        set(attempt_artifacts) == {"attempt-1.started.json", "attempt-1.terminal.json"},
+        type(attempt_artifacts) is dict
+        and set(attempt_artifacts)
+        == {"attempt-1.started.json", "attempt-1.terminal.json"},
         "attempt artifact set mismatch",
     )
     _validate_evaluation_agent_construction_authority(frozen_bindings, input_artifacts)

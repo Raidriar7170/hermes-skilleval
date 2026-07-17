@@ -2134,6 +2134,19 @@ def _task5_test_canonical_sha256(value: Any) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _task5_test_canonical_json_bytes(value: Any) -> bytes:
+    return (
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+        + "\n"
+    ).encode("utf-8")
+
+
 def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
     filename = {
         "generator": "blind-v2-generation.jsonl",
@@ -4036,16 +4049,243 @@ def test_task5_run_hashes_and_retry_records_bind_exact_fixture_invocations(
             [record["response_sha256"] for record in records]
         )
         expected_run_hash = _task5_test_canonical_sha256(records)
-        for evidence in (
-            validation["agent_run_evidence"][role],
-            construction["agent_roles"][role],
-        ):
-            assert evidence["request_hashes_sha256"] == expected_request_hash
-            assert evidence["response_hashes_sha256"] == expected_response_hash
-            assert evidence["run_sha256"] == expected_run_hash
+        evidence = validation["agent_run_evidence"][role]
+        assert evidence["request_hashes_sha256"] == expected_request_hash
+        assert evidence["response_hashes_sha256"] == expected_response_hash
+        assert evidence["run_sha256"] == expected_run_hash
 
     assert validation["retry_records"] == expected_retries
     assert construction["retry_records"] == expected_retries
+
+
+def test_task5_commit_b_run_records_independently_recompute_committed_evidence(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_b")
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    assert {
+        name: hashlib.sha256(payload).hexdigest() for name, payload in first.items()
+    } == {name: hashlib.sha256(payload).hexdigest() for name, payload in second.items()}
+    manifest = json.loads(first["blind-v2-manifest.json"])
+    construction = manifest["agent_construction"]
+    committed_records = construction["sanitized_run_records"]
+
+    assert set(committed_records) == {"generator", "reviewer_a", "reviewer_b"}
+    record_fields = {
+        "candidate_id",
+        "request_sha256",
+        "response_sha256",
+        "requested_model",
+        "returned_model",
+        "reasoning_effort",
+        "session_or_thread_ids",
+        "transport_retry_count",
+    }
+    for role, records in committed_records.items():
+        assert records
+        assert all(set(record) == record_fields for record in records)
+        evidence = construction["agent_roles"][role]
+        assert evidence["request_hashes_sha256"] == _task5_test_canonical_sha256(
+            [record["request_sha256"] for record in records]
+        )
+        assert evidence["response_hashes_sha256"] == _task5_test_canonical_sha256(
+            [
+                record["response_sha256"]
+                for record in records
+                if record["response_sha256"] is not None
+            ]
+        )
+        assert evidence["run_sha256"] == _task5_test_canonical_sha256(records)
+
+    expected_retries = _task5_fixture_retry_records(committed_records)
+    assert construction["retry_records"] == expected_retries
+    assert construction["transport_retry_count"] == len(expected_retries) == 1
+    encoded = json.dumps(committed_records, ensure_ascii=False, sort_keys=True)
+    for forbidden in (
+        '"prompt_text":',
+        '"response":',
+        '"rationale":',
+        '"reason":',
+        '"refusal":',
+        f"{PREFIX} GENERATOR RATIONALE",
+        f"{PREFIX} REVIEWER_A REASON",
+        f"{PREFIX} REVIEWER_B REASON",
+    ):
+        assert forbidden not in encoded
+
+
+def _task5_resync_role_aggregates_from_records(
+    validation: dict[str, Any], role: str
+) -> None:
+    records = validation["agent_run_records"][role]
+    evidence = validation["agent_run_evidence"][role]
+    evidence["requested_models"] = sorted(
+        {record["requested_model"] for record in records}
+    )
+    evidence["returned_models"] = sorted(
+        {
+            record["returned_model"]
+            for record in records
+            if record["returned_model"] is not None
+        }
+    )
+    evidence["request_count"] = len(records)
+    evidence["invocation_count"] = sum(
+        len(record["session_or_thread_ids"]) for record in records
+    )
+    evidence["session_or_thread_ids"] = [
+        identity for record in records for identity in record["session_or_thread_ids"]
+    ]
+    evidence["request_hashes_sha256"] = _task5_test_canonical_sha256(
+        [record["request_sha256"] for record in records]
+    )
+    evidence["response_hashes_sha256"] = _task5_test_canonical_sha256(
+        [
+            record["response_sha256"]
+            for record in records
+            if record["response_sha256"] is not None
+        ]
+    )
+    evidence["run_sha256"] = _task5_test_canonical_sha256(records)
+
+
+def test_task5_agent_run_identity_authority_binds_ledger_metadata(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="generator")
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    authority = validation["agent_run_identity_authority"]
+    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    construction = json.loads(documents["blind-v2-manifest.json"])["agent_construction"]
+
+    assert construction["agent_run_identity_authority"] == authority
+    assert authority["authority_sha256"] == _task5_test_canonical_sha256(
+        authority["roles"]
+    )
+    ledger_paths = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }
+    for role, role_authority in authority["roles"].items():
+        records = validation["agent_run_records"][role]
+        metadata = validation["agent_roles"][role]
+        assert role_authority == {
+            "ledger_path": ledger_paths[role],
+            "ledger_file_sha256": validation["source_file_sha256"][ledger_paths[role]],
+            "candidate_ids": [record["candidate_id"] for record in records],
+            "candidate_ids_sha256": _task5_test_canonical_sha256(
+                [record["candidate_id"] for record in records]
+            ),
+            "request_count": metadata["request_count"],
+            "invocation_count": metadata["invocation_count"],
+            "session_or_thread_ids": metadata["session_or_thread_ids"],
+            "session_or_thread_ids_sha256": _task5_test_canonical_sha256(
+                metadata["session_or_thread_ids"]
+            ),
+        }
+
+
+def test_task5_freeze_rejects_forged_record_with_resynchronized_aggregates(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    existing_ids = {
+        record["candidate_id"]
+        for record in validation["agent_run_records"]["generator"]
+    }
+    forged_candidate_id = "f" * 24
+    assert forged_candidate_id not in existing_ids
+    validation["agent_run_records"]["generator"].append(
+        {
+            "candidate_id": forged_candidate_id,
+            "request_sha256": "e" * 64,
+            "response_sha256": None,
+            "requested_model": runner.AGENT_CONFIGS["generator"]["model"],
+            "returned_model": None,
+            "reasoning_effort": runner.AGENT_CONFIGS["generator"]["reasoning_effort"],
+            "session_or_thread_ids": ["forged-generator-session"],
+            "transport_retry_count": 0,
+        }
+    )
+    _task5_resync_role_aggregates_from_records(validation, "generator")
+    validation["retry_records"] = _task5_fixture_retry_records(
+        validation["agent_run_records"]
+    )
+    validation["transport_retry_count"] = len(validation["retry_records"])
+
+    with pytest.raises(ValueError, match="Agent run identity authority mismatch"):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        "duplicate_id",
+        "negative_count",
+        "family_drift",
+        "prompt_hash",
+        "selection_id",
+        "selection_hash",
+    ),
+)
+def test_task5_freeze_revalidates_selected_tasks_and_selection_audit(
+    tmp_path: Path,
+    mutation: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    tasks = validation["tasks"]
+    selection = validation["selection_audit"]
+    if mutation == "duplicate_id":
+        tasks[1]["candidate_id"] = tasks[0]["candidate_id"]
+    elif mutation == "negative_count":
+        negative = next(
+            task for task in tasks if task["proposed_negative_skill_id"] is not None
+        )
+        negative["proposed_negative_skill_id"] = None
+    elif mutation == "family_drift":
+        tasks[1]["semantic_family_id"] = tasks[0]["semantic_family_id"]
+    elif mutation == "prompt_hash":
+        tasks[0]["prompt_text_sha256"] = "0" * 64
+    elif mutation == "selection_id":
+        selection["selected_candidate_ids"][0] = "f" * 24
+    else:
+        selection["selected_candidate_ids_sha256"] = "0" * 64
+
+    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_freeze_requires_strict_commit_a_and_normalizes_bad_container(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    for commit_a in ("A" * 40, "g" * 40, "a" * 39):
+        with pytest.raises(
+            ValueError, match="Commit A must be exactly 40 lowercase hex characters"
+        ):
+            runner.build_dataset_freeze_documents(validation, commit_a=commit_a)
+    malformed_values: tuple[Any, ...] = (None, [])
+    for malformed in malformed_values:
+        with pytest.raises(
+            ValueError, match="Agent dataset freeze validation container mismatch"
+        ):
+            runner.build_dataset_freeze_documents(
+                cast(Any, malformed), commit_a="a" * 40
+            )
 
 
 @pytest.mark.parametrize(
@@ -4146,6 +4386,87 @@ def test_task5_substantive_invalid_candidate_lineage_still_freezes(
     assert b'"rationale"' not in combined
     assert b'"reason"' not in combined
     assert f"{PREFIX} REFUSAL".encode() not in combined
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
+    tmp_path: Path,
+    role: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role=role)
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }[role]
+    path = pack / filename
+    rows = _read_jsonl(path)
+    rejected = next(row for row in rows if len(row["invocations"]) == 2)
+    candidate_id = rejected["candidate_id"]
+    rejected["invocations"][-1]["envelope"]["response"] = {
+        "refusal": f"{PREFIX} FINAL REFUSAL"
+    }
+    assert len(rejected["invocations"]) == 2
+    _rewrite_jsonl(path, rows)
+
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    assert validation["status"] == "VALID"
+    assert validation["task_count"] == 128
+    assert validation["negative_labeled_task_count"] == 96
+    assert candidate_id not in {task["candidate_id"] for task in validation["tasks"]}
+    record = next(
+        item
+        for item in validation["agent_run_records"][role]
+        if item["candidate_id"] == candidate_id
+    )
+    identities = [
+        _pack_invocation_identity(invocation) for invocation in rejected["invocations"]
+    ]
+    assert record == {
+        "candidate_id": candidate_id,
+        "request_sha256": _task5_test_canonical_sha256(
+            {
+                key: value
+                for key, value in rejected["request"].items()
+                if key != "request_sha256"
+            }
+        ),
+        "response_sha256": None,
+        "requested_model": runner.AGENT_CONFIGS[role]["model"],
+        "returned_model": None,
+        "reasoning_effort": runner.AGENT_CONFIGS[role]["reasoning_effort"],
+        "session_or_thread_ids": identities,
+        "transport_retry_count": 1,
+    }
+    assert validation["transport_retry_count"] == 1
+    assert validation["retry_records"] == [
+        {
+            "role": role,
+            "candidate_id": candidate_id,
+            "request_sha256": record["request_sha256"],
+            "response_sha256": None,
+            "failed_session_or_thread_id": identities[0],
+            "retry_session_or_thread_id": identities[1],
+            "failed_attempt_ordinal": 1,
+            "retry_attempt_ordinal": 2,
+            "retry_count": 1,
+        }
+    ]
+
+    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    assert {
+        name: hashlib.sha256(payload).hexdigest() for name, payload in first.items()
+    } == {name: hashlib.sha256(payload).hexdigest() for name, payload in second.items()}
+    construction = json.loads(first["blind-v2-manifest.json"])["agent_construction"]
+    assert construction["retry_records"] == validation["retry_records"]
+    assert (
+        construction["sanitized_run_records"][role]
+        == validation["agent_run_records"][role]
+    )
+    combined = b"".join(first.values())
+    assert f"{PREFIX} FINAL REFUSAL".encode() not in combined
 
 
 def test_task5_commit_b_freezes_agent_tasks_lineage_and_retry_evidence(
@@ -4330,7 +4651,7 @@ def test_task5_authoritative_lineage_binds_agent_construction_without_human_revi
     construction = bindings["agent_construction"]
     assert construction["human_author_count"] == 0
     assert construction["human_reviewer_count"] == 0
-    assert construction["exact_three_way_agreement_count"] == 256
+    assert construction["exact_three_way_agreement_count"] == 128
     assert set(construction["reviewer_ledgers"]) == {"reviewer_a", "reviewer_b"}
     assert (
         construction["reviewer_ledgers"]["reviewer_a"]["sha256"]
@@ -4719,6 +5040,11 @@ def _task5_evaluation_authority(
             "review-summary.json": review_summary,
         },
         {
+            "blind_v2_dataset": {
+                "manifest_file_sha256": hashlib.sha256(
+                    frozen["blind-v2-manifest.json"]
+                ).hexdigest()
+            },
             "agent_construction": construction,
             "evaluation_models": [{"arm": "A"}, {"arm": "C"}],
         },
@@ -4804,6 +5130,108 @@ def test_task5_evaluation_claims_require_manifest_bound_agent_construction(
             frozen_bindings=frozen_bindings,
             input_artifacts=inputs,
             attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+def test_task5_evaluation_rejects_synchronized_manifest_tamper_with_stale_hash(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    manifest["agent_construction"]["deterministic_selection"][
+        "selected_candidate_ids_sha256"
+    ] = "0" * 64
+    inputs["blind-v2-manifest.json"] = _task5_test_canonical_json_bytes(manifest)
+    construction = deepcopy(manifest["agent_construction"])
+    construction["review_summary_file_sha256"] = hashlib.sha256(
+        inputs["review-summary.json"]
+    ).hexdigest()
+    frozen_bindings["agent_construction"] = construction
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+@pytest.mark.parametrize("agreement_count", (0, 127))
+def test_task5_evaluation_rejects_non_128_three_way_agreement_authority(
+    tmp_path: Path,
+    agreement_count: int,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    manifest["exact_three_way_agreement_count"] = agreement_count
+    manifest["agent_construction"]["exact_three_way_agreement_count"] = agreement_count
+    review_summary["exact_three_way_agreement_count"] = agreement_count
+    inputs["review-summary.json"] = _task5_test_canonical_json_bytes(review_summary)
+    inputs["blind-v2-manifest.json"] = _task5_test_canonical_json_bytes(manifest)
+    construction = deepcopy(manifest["agent_construction"])
+    construction["review_summary_file_sha256"] = hashlib.sha256(
+        inputs["review-summary.json"]
+    ).hexdigest()
+    frozen_bindings["agent_construction"] = construction
+    frozen_bindings["blind_v2_dataset"]["manifest_file_sha256"] = hashlib.sha256(
+        inputs["blind-v2-manifest.json"]
+    ).hexdigest()
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+@pytest.mark.parametrize(
+    ("malformed_case", "message"),
+    (
+        ("input_artifacts", "evaluation input artifact set mismatch"),
+        ("attempt_artifacts", "attempt artifact set mismatch"),
+        ("frozen_bindings", "evaluation Agent construction lineage mismatch"),
+    ),
+)
+def test_task5_evaluation_normalizes_malformed_authority_containers(
+    tmp_path: Path,
+    malformed_case: str,
+    message: str,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    attempt_artifacts = _task5_attempt_artifacts()
+    if malformed_case == "input_artifacts":
+        inputs = cast(Any, None)
+    elif malformed_case == "attempt_artifacts":
+        attempt_artifacts = cast(Any, None)
+    else:
+        frozen_bindings = cast(Any, None)
+
+    with pytest.raises(ValueError, match=message):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=attempt_artifacts,
         )
 
 
