@@ -988,6 +988,45 @@ def test_task5_lineage_rejects_superseded_human_review_section() -> None:
 
 
 @pytest.mark.parametrize(
+    "forbidden_field",
+    (
+        "human_review",
+        "analysis",
+        "reasoning",
+        "chain_of_thought",
+        "raw_reasoning",
+        "hidden_reasoning",
+        "response",
+        "raw_response",
+        "response_body",
+        "source_file_bytes",
+        "source_bytes",
+        "raw_source",
+        "rationale",
+        "reason",
+        "refusal",
+    ),
+)
+def test_task5_final_lineage_sink_rejects_nested_private_trace_fields(
+    forbidden_field: str,
+) -> None:
+    with pytest.raises(ValueError, match="private trace field"):
+        _lineage_for_bindings(
+            {"agent_construction": {"nested": [{forbidden_field: "secret"}]}}
+        )
+
+
+def test_task5_final_lineage_sink_allows_reasoning_effort() -> None:
+    lineage = _lineage_for_bindings(
+        {"agent_construction": {"reasoning_effort": "ultra"}}
+    )
+
+    assert lineage["frozen_bindings"]["agent_construction"] == {
+        "reasoning_effort": "ultra"
+    }
+
+
+@pytest.mark.parametrize(
     "invalid_bindings",
     (
         {"x": {1}},

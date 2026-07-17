@@ -1770,9 +1770,75 @@ def _pack_invocation_identity(invocation: dict[str, Any]) -> str:
     return cast(str, identity_source[next(iter(identity_fields))])
 
 
+def _task5_fixture_projected_skills() -> list[dict[str, Any]]:
+    return [
+        {
+            field: deepcopy(skill[field])
+            for field in (
+                "id",
+                "name",
+                "category",
+                "description",
+                "trigger_terms",
+                "body",
+            )
+        }
+        for skill in _skills()
+    ]
+
+
+def _task5_fixture_request(
+    *,
+    role: str,
+    gold_skill_id: str | None = None,
+    negative_quota: int | None = None,
+    positive_only_quota: int | None = None,
+    round_number: int | None = None,
+    candidate: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    config = runner.AGENT_CONFIGS[role]
+    if role == "generator":
+        request_input = {
+            "canonical_skills": _task5_fixture_projected_skills(),
+            "rules": deepcopy(runner.GENERATOR_RULES),
+            "quota": {
+                "gold_skill_id": gold_skill_id,
+                "negative_quota": negative_quota,
+                "positive_only_quota": positive_only_quota,
+                "round_number": round_number,
+            },
+        }
+        schema_version = "router-v2-blind-v2-generation-request-v1"
+        system_prompt = runner.GENERATOR_SYSTEM_PROMPT
+        response_schema = runner.GENERATOR_RESPONSE_SCHEMA
+    else:
+        assert candidate is not None
+        request_input = {
+            "task_id": candidate["candidate_id"],
+            "prompt_text": candidate["prompt_text"],
+            "canonical_skills": _task5_fixture_projected_skills(),
+            "rubric": deepcopy(runner.REVIEW_RUBRIC),
+        }
+        schema_version = "router-v2-blind-v2-review-request-v1"
+        system_prompt = runner.REVIEWER_SYSTEM_PROMPT
+        response_schema = runner.REVIEWER_RESPONSE_SCHEMA
+    payload = {
+        "schema_version": schema_version,
+        "role": role,
+        "model": config["model"],
+        "reasoning_effort": config["reasoning_effort"],
+        "timeout_seconds": config["timeout_seconds"],
+        "system_prompt": system_prompt,
+        "response_schema": deepcopy(response_schema),
+        "input": request_input,
+    }
+    return {**payload, "request_sha256": _task5_test_canonical_sha256(payload)}
+
+
 def _write_agent_pack(
     root: Path,
     *,
+    legacy_single_candidate_generation: bool = False,
     rejected_candidate_count: int = 0,
     transport_retry_role: str | None = None,
     round_one_candidate_count: int = 256,
@@ -1909,54 +1975,77 @@ def _write_agent_pack(
             cast(int, protected["generation_round"]), cast(int, protected["serial"])
         )
 
+    invocation_groups: list[list[dict[str, Any]]] = []
+    if legacy_single_candidate_generation:
+        invocation_groups = [[spec] for spec in candidate_specs]
+    else:
+        grouped_specs: dict[tuple[int, str], list[dict[str, Any]]] = {}
+        for spec in candidate_specs:
+            key = (cast(int, spec["generation_round"]), cast(str, spec["gold"]))
+            grouped_specs.setdefault(key, []).append(spec)
+        invocation_groups = list(grouped_specs.values())
+
     candidate_by_id: dict[str, dict[str, Any]] = {}
     spec_by_id: dict[str, dict[str, Any]] = {}
-    for spec in candidate_specs:
-        index = cast(int, spec["serial"])
-        round_number = cast(int, spec["generation_round"])
-        gold = cast(str, spec["gold"])
-        negative = cast(str | None, spec["negative"])
-        prompt = cast(
-            str, spec.get("prompt_override", _agent_pack_prompt(round_number, index))
-        )
-        generation_request = runner.build_generator_request(
-            _skills(),
+    for group_index, group in enumerate(invocation_groups):
+        first_spec = group[0]
+        round_number = cast(int, first_spec["generation_round"])
+        gold = cast(str, first_spec["gold"])
+        negative_quota = sum(spec["negative"] is not None for spec in group)
+        positive_only_quota = len(group) - negative_quota
+        generation_request = _task5_fixture_request(
+            role="generator",
             gold_skill_id=gold,
-            negative_quota=int(negative is not None),
-            positive_only_quota=int(negative is None),
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
             round_number=round_number,
         )
-        generated = {
-            "candidate_index": 0,
-            "prompt_text": prompt,
-            "semantic_family_id": (
-                f"{PREFIX}_TRAIN_FAMILY"
-                if spec["contamination_rejected"]
-                else f"{PREFIX}_FAMILY_R{round_number}_{index:03d}"
-            ),
-            "proposed_gold_skill_id": gold,
-            "proposed_negative_skill_id": negative,
-            "language": "en",
-            "rationale": f"{PREFIX} GENERATOR RATIONALE {index:03d}",
-        }
-        generation_response = {"candidates": [generated]}
-        candidate_id = runner.opaque_candidate_id(
-            round_number, gold, 0, runner.canonical_sha256(generation_response)
-        )
-        candidate = {
-            "candidate_id": candidate_id,
-            "generation_round": round_number,
-            "prompt_text": prompt,
-            "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
-            "semantic_family_id": generated["semantic_family_id"],
-            "proposed_gold_skill_id": gold,
-            "proposed_negative_skill_id": negative,
-            "language": "en",
-            "rationale": generated["rationale"],
-        }
-        candidate_by_id[candidate_id] = candidate
-        spec_by_id[candidate_id] = spec
-        generator_session = f"generator-{candidate_id}"
+        generated_candidates: list[dict[str, Any]] = []
+        for candidate_index, spec in enumerate(group):
+            serial = cast(int, spec["serial"])
+            prompt = cast(
+                str,
+                spec.get("prompt_override", _agent_pack_prompt(round_number, serial)),
+            )
+            generated_candidates.append(
+                {
+                    "candidate_index": candidate_index,
+                    "prompt_text": prompt,
+                    "semantic_family_id": (
+                        f"{PREFIX}_TRAIN_FAMILY"
+                        if spec["contamination_rejected"]
+                        else f"{PREFIX}_FAMILY_R{round_number}_{serial:03d}"
+                    ),
+                    "proposed_gold_skill_id": gold,
+                    "proposed_negative_skill_id": spec["negative"],
+                    "language": "en",
+                    "rationale": f"{PREFIX} GENERATOR RATIONALE {serial:03d}",
+                }
+            )
+        generation_response = {"candidates": generated_candidates}
+        response_sha256 = _task5_test_canonical_sha256(generation_response)
+        for generated, spec in zip(generated_candidates, group, strict=True):
+            candidate_id = hashlib.sha256(
+                (
+                    f"{round_number}:{gold}:{generated['candidate_index']}:"
+                    f"{response_sha256}"
+                ).encode()
+            ).hexdigest()[:24]
+            prompt = cast(str, generated["prompt_text"])
+            candidate = {
+                "candidate_id": candidate_id,
+                "generation_round": round_number,
+                "prompt_text": prompt,
+                "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+                "semantic_family_id": generated["semantic_family_id"],
+                "proposed_gold_skill_id": gold,
+                "proposed_negative_skill_id": generated["proposed_negative_skill_id"],
+                "language": "en",
+                "rationale": generated["rationale"],
+            }
+            candidate_by_id[candidate_id] = candidate
+            spec_by_id[candidate_id] = spec
+        generator_session = f"generator-r{round_number}-{gold}-{group_index:03d}"
         generator_invocations = [
             _pack_success_invocation(
                 generation_request,
@@ -1965,8 +2054,8 @@ def _write_agent_pack(
                 transport_retry_count=0,
             )
         ]
-        if transport_retry_role == "generator" and index == 0:
-            failure_session = f"generator-transport-failure-{candidate_id}"
+        if transport_retry_role == "generator" and group_index == 0:
+            failure_session = f"generator-transport-failure-{group_index:03d}"
             generator_invocations.insert(
                 0,
                 _pack_transport_failure_invocation(
@@ -1979,7 +2068,8 @@ def _write_agent_pack(
         role_invocation_counts["generator"] += len(generator_invocations)
         generation_rows.append(
             {
-                **candidate,
+                "generation_round": round_number,
+                "gold_skill_id": gold,
                 "request": generation_request,
                 "invocations": generator_invocations,
             }
@@ -2006,9 +2096,7 @@ def _write_agent_pack(
         negative = cast(str | None, candidate["proposed_negative_skill_id"])
         index = cast(int, spec["serial"])
         for role in ("reviewer_a", "reviewer_b"):
-            review_request = runner.build_reviewer_request(
-                candidate, _skills(), role=role
-            )
+            review_request = _task5_fixture_request(role=role, candidate=candidate)
             review_response = {
                 "decision": "ACCEPT",
                 "reviewed_gold_skill_id": gold,
@@ -2123,6 +2211,37 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
+def _fixture_generation_candidates(root: Path) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for row in _read_jsonl(root / "blind-v2-generation.jsonl"):
+        response = row["invocations"][-1]["envelope"]["response"]
+        response_sha256 = _task5_test_canonical_sha256(response)
+        for generated in response["candidates"]:
+            candidate_id = hashlib.sha256(
+                (
+                    f"{row['generation_round']}:{row['gold_skill_id']}:"
+                    f"{generated['candidate_index']}:{response_sha256}"
+                ).encode()
+            ).hexdigest()[:24]
+            prompt = generated["prompt_text"]
+            candidates.append(
+                {
+                    "candidate_id": candidate_id,
+                    "generation_round": row["generation_round"],
+                    "prompt_text": prompt,
+                    "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+                    "semantic_family_id": generated["semantic_family_id"],
+                    "proposed_gold_skill_id": generated["proposed_gold_skill_id"],
+                    "proposed_negative_skill_id": generated[
+                        "proposed_negative_skill_id"
+                    ],
+                    "language": generated["language"],
+                    "rationale": generated["rationale"],
+                }
+            )
+    return candidates
+
+
 def _task5_test_canonical_sha256(value: Any) -> str:
     payload = json.dumps(
         value,
@@ -2198,9 +2317,28 @@ def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
                 }
             )
         final_attempt = attempts[-1]
+        if role == "generator":
+            response = invocations[-1].get("envelope", {}).get("response")
+            if type(response) is dict and type(response.get("candidates")) is list:
+                response_sha256 = _task5_test_canonical_sha256(response)
+                quota = row["request"]["input"]["quota"]
+                candidate_ids = [
+                    hashlib.sha256(
+                        (
+                            f"{quota['round_number']}:{quota['gold_skill_id']}:"
+                            f"{candidate['candidate_index']}:{response_sha256}"
+                        ).encode()
+                    ).hexdigest()[:24]
+                    for candidate in response["candidates"]
+                ]
+            else:
+                candidate_ids = []
+        else:
+            candidate_ids = [row["candidate_id"]]
         records.append(
             {
-                "candidate_id": row["candidate_id"],
+                "invocation_id": request_sha256[:24],
+                "candidate_ids": candidate_ids,
                 "request_sha256": request_sha256,
                 "response_sha256": final_attempt["response_sha256"],
                 "requested_model": final_attempt["requested_model"],
@@ -2258,7 +2396,8 @@ def _task5_fixture_retry_records(
             retries.append(
                 {
                     "role": role,
-                    "candidate_id": record["candidate_id"],
+                    "invocation_id": record["invocation_id"],
+                    "candidate_ids": deepcopy(record["candidate_ids"]),
                     "request_sha256": record["request_sha256"],
                     "response_sha256": record["response_sha256"],
                     "failed_session_or_thread_id": identities[0],
@@ -2268,7 +2407,7 @@ def _task5_fixture_retry_records(
                     "retry_count": 1,
                 }
             )
-    return sorted(retries, key=lambda row: (row["role"], row["candidate_id"]))
+    return sorted(retries, key=lambda row: (row["role"], row["invocation_id"]))
 
 
 def _rewrite_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -2300,6 +2439,50 @@ def _sync_agent_pack_role_metadata(root: Path, role: str) -> None:
     metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
 
 
+def _task5_construction_input_bindings(
+    protected_prompts: dict[str, list[str]],
+    protected_family_ids: dict[str, set[str]],
+) -> dict[str, Any]:
+    skill_payload = _task5_test_canonical_json_bytes(_skills())
+    protected_sources: dict[str, list[dict[str, str]]] = {}
+    for scope in ("train", "pilot-002"):
+        family_ids = sorted(protected_family_ids[scope])
+        payload = _jsonl_bytes(
+            [
+                {
+                    "query_text": prompt,
+                    "positive_source_record_id": family_ids[
+                        min(index, len(family_ids) - 1)
+                    ],
+                }
+                for index, prompt in enumerate(protected_prompts[scope])
+            ]
+        )
+        protected_sources[scope] = [
+            {
+                "path": f"authority/{scope}.jsonl",
+                "file_sha256": hashlib.sha256(payload).hexdigest(),
+                "source_bytes_hex": payload.hex(),
+            }
+        ]
+    protected_sources["phase16"] = [
+        {
+            "path": f"authority/phase16/{index:03d}.md",
+            "file_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+            "source_bytes_hex": prompt.encode("utf-8").hex(),
+        }
+        for index, prompt in enumerate(protected_prompts["phase16"])
+    ]
+    return {
+        "canonical_skill_source": {
+            "path": "authority/skills.json",
+            "file_sha256": hashlib.sha256(skill_payload).hexdigest(),
+            "source_bytes_hex": skill_payload.hex(),
+        },
+        "protected_scope_sources": protected_sources,
+    }
+
+
 def _validate_agent_pack(
     pack: Path,
     repository_root: Path,
@@ -2328,7 +2511,153 @@ def _validate_agent_pack(
         semantic_model_authority=(
             semantic_model_authority or _task5_scanner_model_authority()
         ),
+        construction_input_bindings=_task5_construction_input_bindings(
+            protected_prompts, protected_family_ids
+        ),
     )
+
+
+def test_task5_round_one_generation_uses_16_invocations_with_16_candidates_each(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+
+    assert len(generation_rows) == 16
+    for gold_index, row in enumerate(generation_rows):
+        assert set(row) == {
+            "generation_round",
+            "gold_skill_id",
+            "request",
+            "invocations",
+        }
+        assert row["generation_round"] == 1
+        assert row["gold_skill_id"] == f"test-skill-{gold_index:02d}"
+        quota = row["request"]["input"]["quota"]
+        assert quota == {
+            "gold_skill_id": row["gold_skill_id"],
+            "negative_quota": 12,
+            "positive_only_quota": 4,
+            "round_number": 1,
+        }
+        response = row["invocations"][-1]["envelope"]["response"]
+        assert [
+            candidate["candidate_index"] for candidate in response["candidates"]
+        ] == list(range(16))
+        response_sha256 = _task5_test_canonical_sha256(response)
+        expected_ids = [
+            hashlib.sha256(
+                f"1:{row['gold_skill_id']}:{index}:{response_sha256}".encode()
+            ).hexdigest()[:24]
+            for index in range(16)
+        ]
+        assert len(set(expected_ids)) == 16
+
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    assert validation["status"] == "VALID"
+    assert validation["agent_roles"]["generator"]["request_count"] == 16
+    assert validation["agent_roles"]["generator"]["invocation_count"] == 16
+    assert [
+        len(record["candidate_ids"])
+        for record in validation["agent_run_records"]["generator"]
+    ] == [16] * 16
+
+
+def test_task5_validation_commits_canonical_skill_and_protected_input_authority(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    authority = validation["construction_input_authority"]
+    assert authority["canonical_skill_projection"]["row_count"] == 16
+    assert set(authority["protected_artifact_projections"]) == {
+        "train",
+        "pilot-002",
+        "phase16",
+    }
+    assert all(
+        projection["protected_authority"]["prompt_count"] > 0
+        for projection in authority["protected_artifact_projections"].values()
+    )
+
+
+def test_task5_rejects_256_single_candidate_generator_requests(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, legacy_single_candidate_generation=True)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "generation_ledger"
+
+
+def test_task5_invalid_generator_response_never_enters_candidate_pipeline(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    generation_path = pack / "blind-v2-generation.jsonl"
+    generation_rows = _read_jsonl(generation_path)
+    generation_rows[0]["invocations"][-1]["envelope"]["response"]["candidates"][0].pop(
+        "rationale"
+    )
+    _rewrite_jsonl(generation_path, generation_rows)
+    semantic_calls: list[tuple[str, str]] = []
+
+    result = _validate_agent_pack(
+        pack,
+        tmp_path / "repo",
+        semantic_similarity=lambda left, right: (
+            semantic_calls.append((left, right)) or 0.0
+        ),
+    )
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "generation_rounds"
+    assert semantic_calls == []
+    failed_record = result["agent_run_records"]["generator"][0]
+    failed_response = generation_rows[0]["invocations"][-1]["envelope"]["response"]
+    assert failed_record["candidate_ids"] == []
+    assert failed_record["response_sha256"] == _task5_test_canonical_sha256(
+        failed_response
+    )
+    assert failed_record["returned_model"] == runner.AGENT_CONFIGS["generator"]["model"]
+    assert failed_record["outcome"] == "SUBSTANTIVE_INVALID_RESPONSE"
+    assert "response" not in failed_record
+    assert result["tasks"] == []
+
+
+@pytest.mark.parametrize("invocation_count", (2, 3))
+def test_task5_multiple_substantive_responses_are_global_protocol_invalid(
+    tmp_path: Path,
+    invocation_count: int,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    review_path = pack / "blind-v2-review-a.jsonl"
+    review_rows = _read_jsonl(review_path)
+    original = review_rows[0]["invocations"][0]
+    for ordinal in range(1, invocation_count):
+        duplicate = deepcopy(original)
+        duplicate["envelope"]["session_id"] = (
+            f"reviewer-a-illegal-substantive-{ordinal}"
+        )
+        duplicate["envelope"]["transport_retry_count"] = 1
+        review_rows[0]["invocations"].append(duplicate)
+    _rewrite_jsonl(review_path, review_rows)
+    _sync_agent_pack_role_metadata(pack, "reviewer_a")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "invocation_protocol"
 
 
 @pytest.mark.parametrize("scope", runner.CONTAMINATION_SCOPES)
@@ -2431,7 +2760,7 @@ def test_task4_pack_current_loser_is_rejected_after_protected_winner(
         include_round_two=True,
         current_conflict_with_protected=True,
     )
-    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    generation_rows = _fixture_generation_candidates(pack)
     prompt_groups: dict[str, list[dict[str, Any]]] = {}
     for row in generation_rows:
         prompt_groups.setdefault(row["prompt_text"], []).append(row)
@@ -2511,7 +2840,7 @@ def test_task4_pack_threshold_equality_rejects_candidate(
     )
     target_id = next(
         row["candidate_id"]
-        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        for row in _fixture_generation_candidates(pack)
         if row["prompt_text"] == target_prompt
     )
     contamination = {
@@ -2581,7 +2910,8 @@ def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
     )
 
     result = _validate_agent_pack(pack, tmp_path / "repo")
-    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    generation_invocations = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    generation_rows = _fixture_generation_candidates(pack)
     round_two_rows = [row for row in generation_rows if row["generation_round"] == 2]
 
     assert result["status"] == "VALID"
@@ -2589,6 +2919,10 @@ def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
         "test-skill-00": {"negative": 1, "positive_only": 1}
     }
     assert len(round_two_rows) == 4
+    round_two_invocations = [
+        row for row in generation_invocations if row["generation_round"] == 2
+    ]
+    assert len(round_two_invocations) == 1
     assert (
         sum(row["proposed_negative_skill_id"] is not None for row in round_two_rows)
         == 2
@@ -2598,7 +2932,7 @@ def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
         result["selection_audit"]["round_2_request_quota_distribution"]
         == (result["selection_audit"]["round_2_distribution"])
     )
-    for row in round_two_rows:
+    for row in round_two_invocations:
         request_input = row["request"]["input"]
         assert set(request_input) == {"canonical_skills", "rules", "quota"}
         encoded = json.dumps(request_input, sort_keys=True).casefold()
@@ -2694,7 +3028,7 @@ def test_task4_round_two_insufficiency_records_deficits_and_ledger_hashes(
     assert result["tasks"] == []
     round_two_ids = {
         row["candidate_id"]
-        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        for row in _fixture_generation_candidates(pack)
         if row["generation_round"] == 2
     }
     assert {
@@ -2705,7 +3039,7 @@ def test_task4_round_two_insufficiency_records_deficits_and_ledger_hashes(
 @pytest.mark.parametrize(
     ("transport_case", "expected_status", "expected_stage"),
     (
-        ("empty", "INSUFFICIENT", "deterministic_selection"),
+        ("empty", "INVALID", "invocation_protocol"),
         ("invalid_retry_count", "INVALID", "invocation_protocol"),
     ),
 )
@@ -2723,7 +3057,7 @@ def test_task4_round_two_transport_failure_is_not_masked_by_round_one_surplus(
     )
     round_two_ids = {
         row["candidate_id"]
-        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        for row in _fixture_generation_candidates(pack)
         if row["generation_round"] == 2
     }
     path = pack / "blind-v2-review-a.jsonl"
@@ -2743,13 +3077,7 @@ def test_task4_round_two_transport_failure_is_not_masked_by_round_one_surplus(
     assert result["status"] == expected_status
     assert result["failure_stage"] == expected_stage
     assert result["router_decision"] == "KEEP_BASELINE"
-    if transport_case == "empty":
-        assert result["research_conclusion"] == ("AGENT_BLIND_V2_DATASET_INSUFFICIENT")
-        assert {
-            result["candidate_outcomes"][candidate_id] for candidate_id in round_two_ids
-        } == {"REJECTED_INVOCATION"}
-    else:
-        assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
 
 
 def test_task4_round_two_session_reuse_is_global_protocol_invalid(
@@ -2763,7 +3091,7 @@ def test_task4_round_two_session_reuse_is_global_protocol_invalid(
     )
     round_two_ids = {
         row["candidate_id"]
-        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        for row in _fixture_generation_candidates(pack)
         if row["generation_round"] == 2
     }
     path = pack / "blind-v2-review-a.jsonl"
@@ -2785,9 +3113,12 @@ def test_task4_round_two_session_reuse_is_global_protocol_invalid(
     assert result["failure_stage"] == "agent_run_metadata"
 
 
-@pytest.mark.parametrize("round_number", (1, 2))
+@pytest.mark.parametrize(
+    ("round_number", "expected_stage"),
+    ((1, "generation_rounds"), (2, "contamination_ledger")),
+)
 def test_task4_generator_quota_self_signed_drift_is_protocol_invalid(
-    tmp_path: Path, round_number: int
+    tmp_path: Path, round_number: int, expected_stage: str
 ) -> None:
     pack = tmp_path / "agent-pack"
     _write_agent_pack(
@@ -2799,12 +3130,7 @@ def test_task4_generator_quota_self_signed_drift_is_protocol_invalid(
     )
     path = pack / "blind-v2-generation.jsonl"
     rows = _read_jsonl(path)
-    row = next(
-        row
-        for row in rows
-        if row["generation_round"] == round_number
-        and row["proposed_negative_skill_id"] is not None
-    )
+    row = next(row for row in rows if row["generation_round"] == round_number)
     quota = row["request"]["input"]["quota"]
     quota["negative_quota"] = 0
     quota["positive_only_quota"] = 1
@@ -2818,7 +3144,7 @@ def test_task4_generator_quota_self_signed_drift_is_protocol_invalid(
     assert result["status"] == "INVALID"
     assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
     assert result["router_decision"] == "KEEP_BASELINE"
-    assert result["failure_stage"] == "generation_ledger"
+    assert result["failure_stage"] == expected_stage
 
 
 def test_task4_selection_is_hash_ordered_unique_and_canonical_twice(
@@ -3213,22 +3539,29 @@ def test_agent_pack_generator_response_hash_must_bind_candidate_id(
     _write_agent_pack(pack)
     path = pack / "blind-v2-generation.jsonl"
     rows = _read_jsonl(path)
-    old_candidate_id = rows[0]["candidate_id"]
+    old_candidate_ids = {
+        candidate["candidate_id"]
+        for candidate in _fixture_generation_candidates(pack)
+        if candidate["proposed_gold_skill_id"] == rows[0]["gold_skill_id"]
+    }
     changed_rationale = f"{PREFIX} RESPONSE HASH MUTATION"
-    rows[0]["rationale"] = changed_rationale
     rows[0]["invocations"][-1]["envelope"]["response"]["candidates"][0]["rationale"] = (
         changed_rationale
     )
     _rewrite_jsonl(path, rows)
 
-    assert rows[0]["candidate_id"] == old_candidate_id
+    new_candidate_ids = {
+        candidate["candidate_id"]
+        for candidate in _fixture_generation_candidates(pack)
+        if candidate["proposed_gold_skill_id"] == rows[0]["gold_skill_id"]
+    }
+    assert old_candidate_ids.isdisjoint(new_candidate_ids)
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
     assert result["status"] == "INVALID"
     assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
     assert result["router_decision"] == "KEEP_BASELINE"
-    assert result["failure_stage"] == "generation_ledger"
-    assert result["failure_reason"] == "candidate id binding mismatch"
+    assert result["failure_stage"] == "contamination_ledger"
 
 
 def test_agent_pack_reviewer_ledgers_use_distinct_role_schedules(
@@ -3421,16 +3754,18 @@ def test_agent_pack_allows_one_transport_retry_with_no_response_bytes(
     assert result["status"] == "VALID"
     assert result["task_count"] == 128
     assert result["transport_retry_count"] == 1
-    assert result["agent_roles"][role]["invocation_count"] == 257
+    expected_invocation_count = 17 if role == "generator" else 257
+    assert result["agent_roles"][role]["invocation_count"] == expected_invocation_count
 
 
-def test_agent_pack_two_exact_successes_exclude_only_candidate(tmp_path: Path) -> None:
+def test_agent_pack_two_exact_successes_are_global_protocol_invalid(
+    tmp_path: Path,
+) -> None:
     pack = tmp_path / "agent-pack"
     _write_agent_pack(pack, transport_retry_role="reviewer_a")
     path = pack / "blind-v2-review-a.jsonl"
     rows = _read_jsonl(path)
     retry_row = next(row for row in rows if len(row["invocations"]) == 2)
-    candidate_id = retry_row["candidate_id"]
     invocations = retry_row["invocations"]
     failure_session = invocations[0]["session_id"]
     invocations[0] = deepcopy(invocations[1])
@@ -3439,11 +3774,8 @@ def test_agent_pack_two_exact_successes_exclude_only_candidate(tmp_path: Path) -
 
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
-    assert result["status"] == "VALID"
-    assert result["task_count"] == 128
-    assert result["excluded_candidate_count"] == 128
-    assert result["candidate_outcomes"][candidate_id] == "REJECTED_INVOCATION"
-    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "invocation_protocol"
 
 
 @pytest.mark.parametrize(
@@ -3479,7 +3811,7 @@ def test_agent_pack_invocation_container_type_drift_is_global_invalid(
 
 
 @pytest.mark.parametrize("role", ("generator", "reviewer_a"))
-def test_agent_pack_empty_invocation_list_excludes_only_candidate(
+def test_agent_pack_empty_invocation_list_is_global_protocol_invalid(
     tmp_path: Path, role: str
 ) -> None:
     pack = tmp_path / "agent-pack"
@@ -3490,18 +3822,14 @@ def test_agent_pack_empty_invocation_list_excludes_only_candidate(
     }[role]
     path = pack / filename
     rows = _read_jsonl(path)
-    candidate_id = rows[0]["candidate_id"]
     rows[0]["invocations"] = []
     _rewrite_jsonl(path, rows)
     _sync_agent_pack_role_metadata(pack, role)
 
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
-    assert result["status"] == "VALID"
-    assert result["task_count"] == 128
-    assert result["excluded_candidate_count"] == 128
-    assert result["candidate_outcomes"][candidate_id] == "REJECTED_INVOCATION"
-    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "invocation_protocol"
 
 
 def test_agent_pack_three_successes_with_count_two_is_global_invalid(
@@ -3532,7 +3860,7 @@ def test_agent_pack_three_successes_with_count_two_is_global_invalid(
     assert result["failure_stage"] == "invocation_protocol"
 
 
-def test_agent_pack_three_exact_successes_with_count_zero_exclude_candidate(
+def test_agent_pack_three_exact_successes_with_count_zero_are_global_invalid(
     tmp_path: Path,
 ) -> None:
     pack = tmp_path / "agent-pack"
@@ -3555,11 +3883,8 @@ def test_agent_pack_three_exact_successes_with_count_zero_exclude_candidate(
 
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
-    assert result["status"] == "VALID"
-    assert result["task_count"] == 128
-    assert result["excluded_candidate_count"] == 128
-    assert result["candidate_outcomes"][candidate_id] == "REJECTED_INVOCATION"
-    assert candidate_id not in {task["candidate_id"] for task in result["tasks"]}
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "invocation_protocol"
 
 
 def test_agent_pack_allowed_retry_requires_success_count_one(tmp_path: Path) -> None:
@@ -4111,7 +4436,8 @@ def test_task5_commit_b_run_records_independently_recompute_committed_evidence(
 
     assert set(committed_records) == {"generator", "reviewer_a", "reviewer_b"}
     record_fields = {
-        "candidate_id",
+        "invocation_id",
+        "candidate_ids",
         "request_sha256",
         "response_sha256",
         "requested_model",
@@ -4201,7 +4527,12 @@ def _task5_identity_authority_from_validation(
     roles: dict[str, dict[str, Any]] = {}
     for role, ledger_path in ledger_paths.items():
         records = validation["agent_run_records"][role]
-        candidate_ids = [record["candidate_id"] for record in records]
+        invocation_ids = [record["invocation_id"] for record in records]
+        candidate_ids = [
+            candidate_id
+            for record in records
+            for candidate_id in record["candidate_ids"]
+        ]
         sessions = [
             identity
             for record in records
@@ -4210,6 +4541,8 @@ def _task5_identity_authority_from_validation(
         roles[role] = {
             "ledger_path": ledger_path,
             "ledger_file_sha256": validation["source_file_sha256"][ledger_path],
+            "invocation_ids": invocation_ids,
+            "invocation_ids_sha256": _task5_test_canonical_sha256(invocation_ids),
             "candidate_ids": candidate_ids,
             "candidate_ids_sha256": _task5_test_canonical_sha256(candidate_ids),
             "request_count": len(records),
@@ -4273,9 +4606,27 @@ def test_task5_freeze_revalidates_generation_response_candidate_and_opaque_id(
     _rewrite_jsonl(generation_path, generation_rows)
     _task5_resync_validation_from_source_pack(validation, pack, "generator")
 
-    with pytest.raises(
-        ValueError, match="Agent source ledger freeze authority mismatch"
-    ):
+    with pytest.raises(ValueError):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_freeze_rejects_resynchronized_two_substantive_generator_responses(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    generation_path = pack / "blind-v2-generation.jsonl"
+    rows = _read_jsonl(generation_path)
+    second = deepcopy(rows[0]["invocations"][0])
+    second["envelope"]["session_id"] = f"{PREFIX}-ILLEGAL-SECOND-SUBSTANTIVE"
+    rows[0]["invocations"].append(second)
+    _rewrite_jsonl(generation_path, rows)
+    _sync_agent_pack_role_metadata(pack, "generator")
+    _refresh_agent_pack_metadata(pack)
+    _task5_resync_validation_from_source_pack(validation, pack, "generator")
+
+    with pytest.raises(ValueError):
         runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -4386,7 +4737,7 @@ def test_task5_freeze_revalidates_reviewer_coverage_from_sealed_source(
     metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
     _task5_resync_validation_from_source_pack(validation, pack, "reviewer_a")
 
-    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    generation_rows = _fixture_generation_candidates(pack)
     candidate_fields = {
         "candidate_id",
         "generation_round",
@@ -4484,7 +4835,7 @@ def test_task5_freeze_rejects_resynchronized_contamination_decision_drift(
     _rewrite_jsonl(path, rows)
     _task5_resync_validation_from_source_pack(validation, pack)
 
-    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    generation_rows = _fixture_generation_candidates(pack)
     candidate_fields = {
         "candidate_id",
         "generation_round",
@@ -4551,13 +4902,19 @@ def test_task5_agent_run_identity_authority_binds_ledger_metadata(
     for role, role_authority in authority["roles"].items():
         records = validation["agent_run_records"][role]
         metadata = validation["agent_roles"][role]
+        invocation_ids = [record["invocation_id"] for record in records]
+        candidate_ids = [
+            candidate_id
+            for record in records
+            for candidate_id in record["candidate_ids"]
+        ]
         assert role_authority == {
             "ledger_path": ledger_paths[role],
             "ledger_file_sha256": validation["source_file_sha256"][ledger_paths[role]],
-            "candidate_ids": [record["candidate_id"] for record in records],
-            "candidate_ids_sha256": _task5_test_canonical_sha256(
-                [record["candidate_id"] for record in records]
-            ),
+            "invocation_ids": invocation_ids,
+            "invocation_ids_sha256": _task5_test_canonical_sha256(invocation_ids),
+            "candidate_ids": candidate_ids,
+            "candidate_ids_sha256": _task5_test_canonical_sha256(candidate_ids),
             "request_count": metadata["request_count"],
             "invocation_count": metadata["invocation_count"],
             "session_or_thread_ids": metadata["session_or_thread_ids"],
@@ -4574,14 +4931,16 @@ def test_task5_freeze_rejects_forged_record_with_resynchronized_aggregates(
     _write_agent_pack(pack)
     validation = _validate_agent_pack(pack, tmp_path / "repo")
     existing_ids = {
-        record["candidate_id"]
+        candidate_id
         for record in validation["agent_run_records"]["generator"]
+        for candidate_id in record["candidate_ids"]
     }
     forged_candidate_id = "f" * 24
     assert forged_candidate_id not in existing_ids
     validation["agent_run_records"]["generator"].append(
         {
-            "candidate_id": forged_candidate_id,
+            "invocation_id": "e" * 24,
+            "candidate_ids": [forged_candidate_id],
             "request_sha256": "e" * 64,
             "response_sha256": None,
             "requested_model": runner.AGENT_CONFIGS["generator"]["model"],
@@ -4716,11 +5075,21 @@ def test_task5_freeze_preserves_source_derived_round_two_selection_lineage(
     combined = b"".join(first.values())
     for forbidden in (
         b'"source_file_bytes"',
+        b'"source_bytes"',
+        b'"source_bytes_hex"',
+        b'"raw_source"',
         b'"response":',
+        b'"raw_response"',
+        b'"response_body"',
         b'"rationale":',
         b'"reason":',
         b'"refusal":',
+        b'"analysis":',
+        b'"reasoning":',
+        b'"chain_of_thought":',
+        b'"raw_reasoning":',
         b'"hidden_reasoning":',
+        b'"human_review":',
     ):
         assert forbidden not in combined
 
@@ -4801,8 +5170,7 @@ def test_task5_freeze_rejects_resynchronized_alternate_eligible_selection(
     tasks = validation["tasks"]
     target = tasks[0]
     generation_by_id = {
-        row["candidate_id"]: row
-        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        row["candidate_id"]: row for row in _fixture_generation_candidates(pack)
     }
     replacement_id = next(
         candidate_id
@@ -4945,13 +5313,14 @@ def test_task5_substantive_invalid_candidate_lineage_still_freezes(
     rejected_record = next(
         record
         for record in validation["agent_run_records"]["reviewer_a"]
-        if record["candidate_id"] == candidate_id
+        if record["candidate_ids"] == [candidate_id]
     )
     envelope = rejected["invocations"][0]["envelope"]
     response_sha256 = _task5_test_canonical_sha256(envelope["response"])
     session_id = _pack_invocation_identity(rejected["invocations"][0])
     assert rejected_record == {
-        "candidate_id": candidate_id,
+        "invocation_id": rejected_record["request_sha256"][:24],
+        "candidate_ids": [candidate_id],
         "request_sha256": _task5_test_canonical_sha256(
             {
                 key: value
@@ -5044,7 +5413,15 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
     path = pack / filename
     rows = _read_jsonl(path)
     rejected = next(row for row in rows if len(row["invocations"]) == 2)
-    candidate_id = rejected["candidate_id"]
+    candidate_ids = (
+        [
+            candidate["candidate_id"]
+            for candidate in _fixture_generation_candidates(pack)
+            if candidate["proposed_gold_skill_id"] == rejected["gold_skill_id"]
+        ]
+        if role == "generator"
+        else [rejected["candidate_id"]]
+    )
     rejected["invocations"][-1]["envelope"]["response"] = {
         "refusal": f"{PREFIX} FINAL REFUSAL"
     }
@@ -5052,6 +5429,12 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
     _rewrite_jsonl(path, rows)
 
     validation = _validate_agent_pack(pack, tmp_path / "repo")
+    if role == "generator":
+        assert validation["status"] == "INVALID"
+        assert validation["failure_stage"] == "generation_rounds"
+        assert validation["tasks"] == []
+        return
+    candidate_id = candidate_ids[0]
     assert validation["status"] == "VALID"
     assert validation["task_count"] == 128
     assert validation["negative_labeled_task_count"] == 96
@@ -5059,7 +5442,7 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
     record = next(
         item
         for item in validation["agent_run_records"][role]
-        if item["candidate_id"] == candidate_id
+        if item["candidate_ids"] == candidate_ids
     )
     identities = [
         _pack_invocation_identity(invocation) for invocation in rejected["invocations"]
@@ -5067,7 +5450,8 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
     final_envelope = rejected["invocations"][-1]["envelope"]
     final_response_sha256 = _task5_test_canonical_sha256(final_envelope["response"])
     assert record == {
-        "candidate_id": candidate_id,
+        "invocation_id": record["request_sha256"][:24],
+        "candidate_ids": candidate_ids,
         "request_sha256": _task5_test_canonical_sha256(
             {
                 key: value
@@ -5113,7 +5497,8 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
     assert validation["retry_records"] == [
         {
             "role": role,
-            "candidate_id": candidate_id,
+            "invocation_id": record["invocation_id"],
+            "candidate_ids": candidate_ids,
             "request_sha256": record["request_sha256"],
             "response_sha256": final_response_sha256,
             "failed_session_or_thread_id": identities[0],
@@ -5709,10 +6094,14 @@ def _task5_evaluation_route_rows(
             json.loads(line)
             for line in input_artifacts["blind-v2-tasks.jsonl"].splitlines()
         ]
+    model_grid_authority_sha256 = _task5_test_canonical_sha256(
+        _task5_evaluation_models()
+    )
     return [
         {
             "arm": arm,
             "seed": seed,
+            "model_grid_authority_sha256": model_grid_authority_sha256,
             "task_id": task["task_id"],
             "gold_skill_id": task["gold_skill_id"],
             "tempting_negative_skill_id": task["negative_skill_id"],
@@ -5779,9 +6168,40 @@ def _task5_evaluation_authority(
     ).hexdigest()
     tasks = [json.loads(line) for line in frozen["blind-v2-tasks.jsonl"].splitlines()]
     placeholder_sha256 = hashlib.sha256(f"{PREFIX}:binding".encode()).hexdigest()
+    input_authority = construction["construction_input_authority"]
+    skill_source = input_authority["canonical_skill_projection"]["sources"][0]
+    protected_sources = input_authority["protected_artifact_projections"]
+    skill_index = {
+        "canonical_skill_count": 16,
+        "path": skill_source["path"],
+        "sha256": skill_source["file_sha256"],
+    }
+    frozen_inputs = {
+        "accepted_pairs": {
+            "path": protected_sources["train"]["sources"][0]["path"],
+            "sha256": protected_sources["train"]["sources"][0]["file_sha256"],
+        },
+        "heldout_labels": {
+            "path": protected_sources["pilot-002"]["sources"][0]["path"],
+            "sha256": protected_sources["pilot-002"]["sources"][0]["file_sha256"],
+        },
+    }
+    old_phase16_prompt_files = [
+        {"path": source["path"], "sha256": source["file_sha256"]}
+        for source in protected_sources["phase16"]["sources"]
+    ]
+    preregistration = {
+        "skill_index": skill_index,
+        "frozen_inputs": frozen_inputs,
+        "old_phase16_prompt_files": old_phase16_prompt_files,
+    }
+    preregistration["preregistration_sha256"] = _task5_test_canonical_sha256(
+        preregistration
+    )
+    preregistration_bytes = _task5_test_canonical_json_bytes(preregistration)
     return (
         {
-            "preregistration.json": b"{}\n",
+            "preregistration.json": preregistration_bytes,
             "blind-v2-tasks.jsonl": frozen["blind-v2-tasks.jsonl"],
             "blind-v2-manifest.json": frozen["blind-v2-manifest.json"],
             "review-summary.json": review_summary,
@@ -5789,15 +6209,15 @@ def _task5_evaluation_authority(
         {
             "preregistration": {
                 "path": "artifacts/router-v2-blind-v2/preregistration.json",
-                "file_sha256": hashlib.sha256(b"{}\n").hexdigest(),
-                "semantic_sha256": placeholder_sha256,
+                "file_sha256": hashlib.sha256(preregistration_bytes).hexdigest(),
+                "semantic_sha256": preregistration["preregistration_sha256"],
             },
             "pilot_manifest": {
                 "path": "artifacts/router-v2-pilot/pilot-manifest.json",
                 "sha256": placeholder_sha256,
             },
-            "frozen_inputs": {},
-            "old_phase16_prompt_files": [],
+            "frozen_inputs": frozen_inputs,
+            "old_phase16_prompt_files": old_phase16_prompt_files,
             "base_model": {
                 "id": "test/base-model",
                 "revision": "a" * 40,
@@ -5819,7 +6239,7 @@ def _task5_evaluation_authority(
                 "task_rows": tasks,
             },
             "agent_construction": construction,
-            "skill_index": {"path": "skills.json", "sha256": placeholder_sha256},
+            "skill_index": skill_index,
             "query_contract": {
                 "path": "src/hermes_skilleval/router_query.py",
                 "sha256": placeholder_sha256,
@@ -5940,12 +6360,17 @@ def _task5_resync_committed_identity_authority(
     source_hashes = manifest["source_file_sha256"]
     authority_role = construction["agent_run_identity_authority"]["roles"][role]
     records = construction["sanitized_run_records"][role]
-    candidate_ids = [record["candidate_id"] for record in records]
+    invocation_ids = [record["invocation_id"] for record in records]
+    candidate_ids = [
+        candidate_id for record in records for candidate_id in record["candidate_ids"]
+    ]
     sessions = [
         identity for record in records for identity in record["session_or_thread_ids"]
     ]
     authority_role.update(
         {
+            "invocation_ids": invocation_ids,
+            "invocation_ids_sha256": _task5_test_canonical_sha256(invocation_ids),
             "candidate_ids": candidate_ids,
             "candidate_ids_sha256": _task5_test_canonical_sha256(candidate_ids),
             "request_count": len(records),
@@ -5968,6 +6393,7 @@ def _task5_resync_committed_identity_authority(
         "generation_ledger",
         "agent_run_metadata",
         "contamination",
+        "construction_input_authority",
         "agent_run_identity_authority",
     ),
 )
@@ -6005,6 +6431,45 @@ def test_task5_evaluation_requires_source_file_hash_authority(
     manifest = json.loads(inputs["blind-v2-manifest.json"])
     review_summary = json.loads(inputs["review-summary.json"])
     manifest.pop("source_file_sha256")
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(inputs),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+@pytest.mark.parametrize("projection_kind", ("skill", "protected"))
+def test_task5_evaluation_rejects_resynchronized_input_projection_source_forgery(
+    tmp_path: Path, projection_kind: str
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    authority = manifest["agent_construction"]["construction_input_authority"]
+    projection = (
+        authority["canonical_skill_projection"]
+        if projection_kind == "skill"
+        else authority["protected_artifact_projections"]["train"]
+    )
+    projection["sources"][0]["file_sha256"] = "0" * 64
+    projection["source_file_manifest_sha256"] = _task5_test_canonical_sha256(
+        projection["sources"]
+    )
+    authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
     _task5_resynchronize_evaluation_manifest_and_bindings(
         inputs, frozen_bindings, manifest, review_summary
     )
@@ -6067,7 +6532,7 @@ def test_task5_evaluation_rejects_duplicate_candidate_record_after_resync(
     review_summary = json.loads(inputs["review-summary.json"])
     construction = manifest["agent_construction"]
     duplicate = deepcopy(construction["sanitized_run_records"]["reviewer_a"][0])
-    duplicate_session = f"duplicate-{duplicate['candidate_id']}"
+    duplicate_session = f"duplicate-{duplicate['candidate_ids'][0]}"
     duplicate["session_or_thread_ids"] = [duplicate_session]
     duplicate["attempts"][0]["session_or_thread_id"] = duplicate_session
     construction["sanitized_run_records"]["reviewer_a"].append(duplicate)
@@ -6107,7 +6572,9 @@ def test_task5_evaluation_rejects_missing_candidate_record_after_resync(
         if outcome == "NOT_SELECTED"
     )
     records[:] = [
-        record for record in records if record["candidate_id"] != missing_candidate_id
+        record
+        for record in records
+        if missing_candidate_id not in record["candidate_ids"]
     ]
     _task5_resync_committed_role_evidence(construction, "reviewer_a")
     _task5_resync_committed_identity_authority(manifest, "reviewer_a")
@@ -6181,9 +6648,7 @@ def test_task5_evaluation_requires_complete_exact_model_binding_grid(
     else:
         models[0]["model_file_manifest_sha256"] = "0" * 64
 
-    with pytest.raises(
-        ValueError, match="evaluation Agent construction lineage mismatch"
-    ):
+    with pytest.raises(ValueError, match="evaluation frozen task authority mismatch"):
         runner.build_evaluation_documents(
             _task5_evaluation_route_rows(inputs),
             commit_a="a" * 40,
@@ -6201,10 +6666,18 @@ def test_task5_evaluation_requires_complete_exact_model_binding_grid(
     (
         "human_review",
         "source_file_bytes",
+        "source_bytes",
+        "raw_source",
         "response",
+        "raw_response",
+        "response_body",
         "rationale",
         "reason",
         "refusal",
+        "analysis",
+        "reasoning",
+        "chain_of_thought",
+        "raw_reasoning",
         "hidden_reasoning",
     ),
 )
@@ -6599,11 +7072,7 @@ def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b(
         json.loads(line)
         for line in inputs["blind-v2-tasks.jsonl"].decode("utf-8").splitlines()
     ]
-    bindings = [
-        {"arm": arm, "seed": seed, "model_path": f"/{PREFIX}/{arm}/{seed}"}
-        for seed in (7170, 7171, 7172)
-        for arm in ("A", "C")
-    ]
+    bindings = _task5_evaluation_models()
 
     calls: list[str] = []
     gold_by_query = {task["prompt_text"]: task["gold_skill_id"] for task in tasks}
@@ -6620,6 +7089,9 @@ def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b(
         (arm, seed) for arm in ("A", "C") for seed in (7170, 7171, 7172)
     }
     assert all(row["gold_rank"] == 1 for row in rows)
+    assert {row["model_grid_authority_sha256"] for row in rows} == {
+        _task5_test_canonical_sha256(bindings)
+    }
     assert all(row["latency_ns"] == 1 for row in rows)
     assert len(calls) == 1536
     assert all(calls.count(task["prompt_text"]) == 12 for task in tasks)
@@ -6675,11 +7147,7 @@ def test_evaluate_routes_rejects_duplicate_model_binding_key(tmp_path: Path) -> 
         json.loads(line)
         for line in inputs["blind-v2-tasks.jsonl"].decode("utf-8").splitlines()
     ]
-    bindings = [
-        {"arm": arm, "seed": seed, "model_path": f"/{PREFIX}/{arm}/{seed}"}
-        for seed in (7170, 7171, 7172)
-        for arm in ("A", "C")
-    ]
+    bindings = _task5_evaluation_models()
     bindings.append(deepcopy(bindings[0]))
 
     with pytest.raises(ValueError, match="complete A/C seed grid"):
@@ -6688,6 +7156,38 @@ def test_evaluate_routes_rejects_duplicate_model_binding_key(tmp_path: Path) -> 
             _skills(),
             bindings,
             scorer_factory=lambda arm, seed, path: _FakeScorer([], {}),
+        )
+
+
+def test_task5_evaluation_rejects_scoring_model_grid_lineage_mismatch(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    tasks = [
+        json.loads(line)
+        for line in inputs["blind-v2-tasks.jsonl"].decode("utf-8").splitlines()
+    ]
+    scoring_bindings = deepcopy(_task5_evaluation_models())
+    scoring_bindings[0]["model_path"] += "-different-scoring-authority"
+    gold_by_query = {task["prompt_text"]: task["gold_skill_id"] for task in tasks}
+    rows = runner.evaluate_routes(
+        tasks,
+        _skills(),
+        scoring_bindings,
+        scorer_factory=lambda arm, seed, path: _FakeScorer(None, gold_by_query),
+        clock_ns=iter(range(1, 1537)).__next__,
+    )
+
+    with pytest.raises(ValueError, match="evaluation frozen task authority mismatch"):
+        runner.build_evaluation_documents(
+            rows,
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
         )
 
 

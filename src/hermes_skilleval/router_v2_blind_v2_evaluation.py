@@ -45,6 +45,23 @@ _EIGHT_DECIMAL = re.compile(r"(?:0|[1-9][0-9]*)\.[0-9]{8}\Z")
 _I_JSON_SAFE_INTEGER_MAX = 2**53 - 1
 _MAX_FROZEN_BINDING_DEPTH = 100
 _FROZEN_BINDINGS_ERROR = "frozen bindings must be canonical JSON"
+_PRIVATE_LINEAGE_FIELDS = {
+    "analysis",
+    "chain_of_thought",
+    "hidden_reasoning",
+    "human_review",
+    "rationale",
+    "raw_reasoning",
+    "raw_response",
+    "raw_source",
+    "reason",
+    "reasoning",
+    "refusal",
+    "response",
+    "response_body",
+    "source_file_bytes",
+    "source_bytes",
+}
 _RATE_NAMES = (
     "recall_at_1",
     "recall_at_5",
@@ -159,6 +176,11 @@ def _validate_frozen_binding_value(
         mapping = cast(dict[Any, Any], value)
         if not all(type(key) is str for key in mapping):
             raise ValueError(f"{_FROZEN_BINDINGS_ERROR}: keys must be strings")
+        prohibited = _PRIVATE_LINEAGE_FIELDS.intersection(mapping)
+        if prohibited:
+            raise ValueError(
+                f"frozen bindings contain private trace field: {sorted(prohibited)[0]}"
+            )
         children = mapping.values()
     elif type(value) is list:
         children = cast(list[Any], value)
