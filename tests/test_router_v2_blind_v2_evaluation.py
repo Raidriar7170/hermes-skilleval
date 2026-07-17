@@ -344,6 +344,41 @@ def test_per_seed_builder_rejects_non_integer_row_seed(invalid_seed: Any) -> Non
 
 @pytest.mark.parametrize(
     "builder",
+    (
+        evaluation.build_per_seed_result,
+        evaluation.build_paired_results,
+        evaluation.build_statistics,
+        evaluation.build_failure_slices,
+    ),
+)
+@pytest.mark.parametrize(
+    "missing_key",
+    ("tempting_negative_skill_id", "tempting_negative_rank"),
+)
+def test_route_builders_reject_missing_nullable_negative_fields(
+    builder: Any,
+    missing_key: str,
+) -> None:
+    if builder is evaluation.build_per_seed_result:
+        rows = _route_rows("A", 7170)
+        del rows[6][missing_key]
+    else:
+        rows = _all_routes()
+        target = next(
+            row
+            for row in rows
+            if row["arm"] == "C"
+            and row["seed"] == 7170
+            and row["task_id"] == f"{PREFIX}_TASK_006"
+        )
+        del target[missing_key]
+
+    with pytest.raises(ValueError, match=rf"route row missing {missing_key}"):
+        builder(rows)
+
+
+@pytest.mark.parametrize(
+    "builder",
     (evaluation.build_aggregate_results, evaluation.apply_preregistered_gate),
 )
 def test_aggregate_and_gate_reject_stale_64_48_per_seed_results(

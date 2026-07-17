@@ -207,6 +207,9 @@ def _validate_route_group(
         f"route group must contain {POSITIVE_TASK_COUNT} tasks",
     )
     _require(all(type(row) is dict for row in rows), "route rows must be objects")
+    for field in ("tempting_negative_skill_id", "tempting_negative_rank"):
+        if not all(field in row for row in rows):
+            raise ValueError(f"route row missing {field}")
     arm = rows[0].get("arm")
     seed = rows[0].get("seed")
     _require(arm in ARMS, "route arm must be Arm A or C")
