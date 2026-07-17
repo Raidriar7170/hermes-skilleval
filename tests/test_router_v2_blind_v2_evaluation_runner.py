@@ -1107,6 +1107,13 @@ def _pack_transport_failure_invocation(
     }
 
 
+def _pack_invocation_identity(invocation: dict[str, Any]) -> str:
+    identity_source = invocation.get("envelope", invocation)
+    identity_fields = {"session_id", "thread_id"}.intersection(identity_source)
+    assert len(identity_fields) == 1
+    return cast(str, identity_source[next(iter(identity_fields))])
+
+
 def _write_agent_pack(
     root: Path,
     *,
@@ -1126,8 +1133,6 @@ def _write_agent_pack(
         "reviewer_b": [],
     }
     role_invocation_counts = dict.fromkeys(role_session_ids, 0)
-    candidate_ids: list[str] = []
-
     for index in range(128 + rejected_candidate_count):
         distribution_index = index % 128
         gold_index = distribution_index // 8
@@ -1155,7 +1160,6 @@ def _write_agent_pack(
         candidate_id = runner.opaque_candidate_id(
             1, gold, 0, runner.canonical_sha256(generation_response)
         )
-        candidate_ids.append(candidate_id)
         candidate = {
             "candidate_id": candidate_id,
             "generation_round": 1,
@@ -1244,6 +1248,16 @@ def _write_agent_pack(
                 }
             )
 
+    for role in ("reviewer_a", "reviewer_b"):
+        review_rows[role].sort(
+            key=lambda row: runner.review_schedule_key(role, row["candidate_id"])
+        )
+        role_session_ids[role] = [
+            _pack_invocation_identity(invocation)
+            for row in review_rows[role]
+            for invocation in row["invocations"]
+        ]
+
     payloads = {
         "blind-v2-generation.jsonl": _jsonl_bytes(generation_rows),
         "blind-v2-review-a.jsonl": _jsonl_bytes(review_rows["reviewer_a"]),
@@ -1270,10 +1284,7 @@ def _write_agent_pack(
         },
         "review_schedule_sha256": {
             role: runner.canonical_sha256(
-                sorted(
-                    candidate_ids,
-                    key=lambda value: runner.review_schedule_key(role, value),
-                )
+                [row["candidate_id"] for row in review_rows[role]]
             )
             for role in ("reviewer_a", "reviewer_b")
         },
@@ -1319,6 +1330,56 @@ def _validate_agent_pack(pack: Path, repository_root: Path) -> dict[str, Any]:
         first_read_timestamp="2026-07-16T00:00:00Z",
         semantic_similarity=lambda _left, _right: 0.0,
     )
+
+
+def test_agent_pack_reviewer_ledgers_use_distinct_role_schedules(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    reviewer_a_ids = [
+        row["candidate_id"] for row in _read_jsonl(pack / "blind-v2-review-a.jsonl")
+    ]
+    reviewer_b_ids = [
+        row["candidate_id"] for row in _read_jsonl(pack / "blind-v2-review-b.jsonl")
+    ]
+
+    assert reviewer_a_ids == sorted(
+        reviewer_a_ids,
+        key=lambda candidate_id: runner.review_schedule_key("reviewer_a", candidate_id),
+    )
+    assert reviewer_b_ids == sorted(
+        reviewer_b_ids,
+        key=lambda candidate_id: runner.review_schedule_key("reviewer_b", candidate_id),
+    )
+    assert reviewer_a_ids != reviewer_b_ids
+
+
+def test_agent_pack_reviewer_actual_order_tamper_is_protocol_invalid(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rows[0], rows[1] = rows[1], rows[0]
+    _rewrite_jsonl(path, rows)
+    metadata_path = pack / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["roles"]["reviewer_a"]["session_or_thread_ids"] = [
+        _pack_invocation_identity(invocation)
+        for row in rows
+        for invocation in row["invocations"]
+    ]
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "agent_run_metadata"
 
 
 def test_agent_pack_is_exact_unanimous_agent_review_without_human_fields(
@@ -1467,8 +1528,6 @@ def test_agent_pack_allows_one_transport_retry_with_no_response_bytes(
     (
         "second_success",
         "response_object_on_failure",
-        "request_hash_drift",
-        "config_drift",
     ),
 )
 def test_agent_pack_rejects_non_transport_retry_candidate(
@@ -1478,18 +1537,140 @@ def test_agent_pack_rejects_non_transport_retry_candidate(
     _write_agent_pack(pack, transport_retry_role="reviewer_a")
     path = pack / "blind-v2-review-a.jsonl"
     rows = _read_jsonl(path)
-    candidate_id = rows[0]["candidate_id"]
-    invocations = rows[0]["invocations"]
+    retry_row = next(row for row in rows if len(row["invocations"]) == 2)
+    candidate_id = retry_row["candidate_id"]
+    invocations = retry_row["invocations"]
     if invalid_retry == "second_success":
         failure_session = invocations[0]["session_id"]
         invocations[0] = deepcopy(invocations[1])
         invocations[0]["envelope"]["session_id"] = failure_session
     elif invalid_retry == "response_object_on_failure":
         invocations[0]["response"] = {}
-    elif invalid_retry == "request_hash_drift":
-        invocations[0]["request_sha256"] = "0" * 64
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 127
+    assert result["excluded_candidate_count"] == 1
+    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("role", "reviewer_b"),
+        ("fork_context", True),
+        ("history_message_count", 1),
+        ("imported_memory_count", 1),
+        ("requested_model", "wrong-model"),
+        ("returned_model", "wrong-model"),
+        ("reasoning_effort", "wrong-effort"),
+        ("timeout_seconds", 901),
+        ("request_sha256", "0" * 64),
+    ),
+)
+def test_agent_pack_success_invocation_protocol_drift_is_global_invalid(
+    tmp_path: Path, field: str, value: Any
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rows[0]["invocations"][-1]["envelope"][field] = value
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+def test_agent_pack_success_invocation_identity_is_global_protocol_invalid(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rows[0]["invocations"][-1]["envelope"]["thread_id"] = "unexpected-thread"
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("role", "reviewer_b"),
+        ("fork_context", True),
+        ("request_sha256", "0" * 64),
+        ("requested_model", "wrong-model"),
+    ),
+)
+def test_agent_pack_transport_retry_protocol_drift_is_global_invalid(
+    tmp_path: Path, field: str, value: Any
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    retry_row = next(row for row in rows if len(row["invocations"]) == 2)
+    retry_row["invocations"][0][field] = value
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+def test_agent_pack_illegal_retry_with_protocol_drift_is_global_invalid(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    retry_row = next(row for row in rows if len(row["invocations"]) == 2)
+    failure = retry_row["invocations"][0]
+    failure["response_bytes_present"] = True
+    failure["role"] = "reviewer_b"
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize("invalid_response", ("missing_field", "refusal"))
+def test_agent_pack_response_payload_error_excludes_only_candidate(
+    tmp_path: Path, invalid_response: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    candidate_id = rows[0]["candidate_id"]
+    response = rows[0]["invocations"][-1]["envelope"]["response"]
+    if invalid_response == "missing_field":
+        response.pop("reason")
     else:
-        invocations[0]["requested_model"] = runner.AGENT_CONFIGS["reviewer_b"]["model"]
+        rows[0]["invocations"][-1]["envelope"]["response"] = {
+            "refusal": f"{PREFIX} REFUSAL"
+        }
     _rewrite_jsonl(path, rows)
 
     result = _validate_agent_pack(pack, tmp_path / "repo")
@@ -1516,6 +1697,71 @@ def test_agent_pack_role_isolation_metadata_drift_is_protocol_invalid(
         metadata["roles"]["reviewer_b"]["session_or_thread_ids"][0] = metadata["roles"][
             "reviewer_a"
         ]["session_or_thread_ids"][0]
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "agent_run_metadata"
+
+
+@pytest.mark.parametrize(
+    "config_drift",
+    (
+        "timeout_float",
+        "timeout_bool",
+        "model_bool",
+        "reasoning_empty",
+        "extra_field",
+    ),
+)
+def test_agent_pack_metadata_config_requires_exact_fields_and_types(
+    tmp_path: Path, config_drift: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    metadata_path = pack / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    config = metadata["roles"]["reviewer_a"]["config"]
+    if config_drift == "timeout_float":
+        config["timeout_seconds"] = 900.0
+    elif config_drift == "timeout_bool":
+        config["timeout_seconds"] = True
+    elif config_drift == "model_bool":
+        config["model"] = True
+    elif config_drift == "reasoning_empty":
+        config["reasoning_effort"] = " "
+    else:
+        config["unexpected"] = "field"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "agent_run_metadata"
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "request_count",
+        "invocation_count",
+        "history_message_count",
+        "imported_memory_count",
+    ),
+)
+def test_agent_pack_metadata_numeric_fields_reject_bool(
+    tmp_path: Path, field: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    metadata_path = pack / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["roles"]["reviewer_b"][field] = True
     metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
 
     result = _validate_agent_pack(pack, tmp_path / "repo")

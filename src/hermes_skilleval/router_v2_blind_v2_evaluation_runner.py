@@ -1173,6 +1173,87 @@ def _pack_invocation_identities(invocations: Any) -> list[str]:
     return identities
 
 
+class _AgentPackProtocolViolation(Exception):
+    pass
+
+
+def _pack_protocol_require(condition: bool, message: str) -> None:
+    if not condition:
+        raise _AgentPackProtocolViolation(message)
+
+
+def _validate_pack_protocol_fields(
+    value: dict[str, Any],
+    *,
+    request: dict[str, Any],
+    include_returned_model: bool,
+) -> set[str]:
+    identity_fields = {"session_id", "thread_id"}.intersection(value)
+    _pack_protocol_require(
+        len(identity_fields) == 1,
+        "exactly one session/thread id is required",
+    )
+    required_fields = {
+        "role",
+        "fork_context",
+        "history_message_count",
+        "imported_memory_count",
+        "requested_model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "request_sha256",
+        *identity_fields,
+    }
+    if include_returned_model:
+        required_fields.add("returned_model")
+    _pack_protocol_require(
+        required_fields.issubset(value),
+        "agent invocation protocol fields mismatch",
+    )
+    identity = value[next(iter(identity_fields))]
+    _pack_protocol_require(
+        type(identity) is str and bool(identity.strip()),
+        "session/thread id must be non-empty",
+    )
+    role = cast(str, request["role"])
+    config = AGENT_CONFIGS[role]
+    _pack_protocol_require(value["role"] == role, "agent invocation role mismatch")
+    _pack_protocol_require(value["fork_context"] is False, "fork context must be false")
+    _pack_protocol_require(
+        type(value["history_message_count"]) is int
+        and value["history_message_count"] == 0,
+        "history message count must be integer zero",
+    )
+    _pack_protocol_require(
+        type(value["imported_memory_count"]) is int
+        and value["imported_memory_count"] == 0,
+        "imported memory count must be integer zero",
+    )
+    _pack_protocol_require(
+        value["requested_model"] == config["model"],
+        "requested model mismatch",
+    )
+    if include_returned_model:
+        _pack_protocol_require(
+            value["returned_model"] == config["model"],
+            "returned model mismatch",
+        )
+    _pack_protocol_require(
+        value["reasoning_effort"] == config["reasoning_effort"],
+        "reasoning effort mismatch",
+    )
+    _pack_protocol_require(
+        type(value["timeout_seconds"]) is int
+        and value["timeout_seconds"] == config["timeout_seconds"],
+        "timeout mismatch",
+    )
+    _pack_protocol_require(
+        value["request_sha256"] == request["request_sha256"],
+        "request SHA-256 mismatch",
+    )
+    return identity_fields
+
+
 def _validate_pack_invocations(
     invocations: Any, *, request: dict[str, Any]
 ) -> tuple[dict[str, Any] | None, int]:
@@ -1181,12 +1262,27 @@ def _validate_pack_invocations(
     try:
         retry_count = len(invocations) - 1
         if retry_count:
+            if type(invocations[0]) is not dict:
+                return None, 0
             failure = cast(dict[str, Any], invocations[0])
-            identity_fields = {"session_id", "thread_id"}.intersection(failure)
-            _require(
-                len(identity_fields) == 1,
-                "transport failure requires one session/thread id",
+            if failure.get("transport_failure") is False:
+                attempted_envelope = failure.get("envelope")
+                if type(attempted_envelope) is dict:
+                    _validate_pack_protocol_fields(
+                        attempted_envelope,
+                        request=request,
+                        include_returned_model=True,
+                    )
+                return None, 0
+            if failure.get("transport_failure") is not True:
+                return None, 0
+            identity_fields = _validate_pack_protocol_fields(
+                failure,
+                request=request,
+                include_returned_model=False,
             )
+            if failure.get("response_bytes_present") is not False:
+                return None, 0
             failure = _exact_object_fields(
                 failure,
                 {
@@ -1204,45 +1300,6 @@ def _validate_pack_invocations(
                 },
                 "transport failure invocation",
             )
-            role = cast(str, request["role"])
-            config = AGENT_CONFIGS[role]
-            _require(failure["transport_failure"] is True, "retry must follow failure")
-            _require(
-                failure["response_bytes_present"] is False,
-                "transport failure must contain no response bytes",
-            )
-            _nonempty_string(
-                failure[next(iter(identity_fields))], "transport failure identity"
-            )
-            _require(failure["role"] == role, "transport failure role mismatch")
-            _require(failure["fork_context"] is False, "fork context must be false")
-            _require(
-                type(failure["history_message_count"]) is int
-                and failure["history_message_count"] == 0,
-                "history message count must be integer zero",
-            )
-            _require(
-                type(failure["imported_memory_count"]) is int
-                and failure["imported_memory_count"] == 0,
-                "imported memory count must be integer zero",
-            )
-            _require(
-                failure["requested_model"] == config["model"],
-                "transport failure model mismatch",
-            )
-            _require(
-                failure["reasoning_effort"] == config["reasoning_effort"],
-                "transport failure reasoning mismatch",
-            )
-            _require(
-                type(failure["timeout_seconds"]) is int
-                and failure["timeout_seconds"] == config["timeout_seconds"],
-                "transport failure timeout mismatch",
-            )
-            _require(
-                failure["request_sha256"] == request["request_sha256"],
-                "transport retry request hash mismatch",
-            )
 
         success = _exact_object_fields(
             invocations[-1],
@@ -1254,14 +1311,22 @@ def _validate_pack_invocations(
             success["response_bytes_present"] is True,
             "success must contain response bytes",
         )
+        if type(success["envelope"]) is not dict:
+            return None, 0
         envelope = cast(dict[str, Any], success["envelope"])
+        _validate_pack_protocol_fields(
+            envelope,
+            request=request,
+            include_returned_model=True,
+        )
         _require(
-            type(envelope) is dict
-            and envelope.get("transport_retry_count") == retry_count,
+            envelope.get("transport_retry_count") == retry_count,
             "transport retry count must match invocation count",
         )
         response = validate_agent_invocation_envelope(envelope, request=request)
         return response, retry_count
+    except _AgentPackProtocolViolation:
+        raise
     except (KeyError, TypeError, ValueError):
         return None, 0
 
@@ -1400,7 +1465,22 @@ def validate_agent_pack(
             role_metadata = _exact_object_fields(
                 metadata_roles[role], role_fields, f"{role} metadata"
             )
-            _require(role_metadata["config"] == config, f"{role} config mismatch")
+            role_config = _exact_object_fields(
+                role_metadata["config"],
+                {"model", "reasoning_effort", "timeout_seconds"},
+                f"{role} config",
+            )
+            for field in ("model", "reasoning_effort"):
+                _nonempty_string(role_config[field], f"{role} config {field}")
+                _require(
+                    role_config[field] == config[field],
+                    f"{role} config {field} mismatch",
+                )
+            _require(
+                type(role_config["timeout_seconds"]) is int
+                and role_config["timeout_seconds"] == config["timeout_seconds"],
+                f"{role} config timeout_seconds mismatch",
+            )
             for field in ("request_count", "invocation_count"):
                 _require(
                     type(role_metadata[field]) is int and role_metadata[field] >= 0,
@@ -1542,6 +1622,13 @@ def validate_agent_pack(
                 _require(candidate_id == expected_id, "candidate id binding mismatch")
                 valid_transport_retry_count += retry_count
             generation_responses[candidate_id] = response
+    except _AgentPackProtocolViolation as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="invocation_protocol",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
     except (KeyError, TypeError, ValueError) as exc:
         return _agent_pack_protocol_invalid(
             failure_stage="generation_ledger",
@@ -1576,6 +1663,10 @@ def validate_agent_pack(
         "reviewer_a": {},
         "reviewer_b": {},
     }
+    actual_review_orders: dict[str, list[str]] = {
+        "reviewer_a": [],
+        "reviewer_b": [],
+    }
     for role, role_rows in review_rows_by_role.items():
         try:
             for raw_row in role_rows:
@@ -1594,6 +1685,7 @@ def validate_agent_pack(
                     candidate_id not in review_responses[role],
                     "review candidate ids must be unique",
                 )
+                actual_review_orders[role].append(candidate_id)
                 request = validate_agent_request(row["request"])
                 expected_request = build_reviewer_request(
                     candidates[candidate_id], projected_skills, role=role
@@ -1614,6 +1706,13 @@ def validate_agent_pack(
             _require(
                 set(review_responses[role]) == set(candidates),
                 f"{role} must review every candidate",
+            )
+        except _AgentPackProtocolViolation as exc:
+            return _agent_pack_protocol_invalid(
+                failure_stage="invocation_protocol",
+                failure_reason=str(exc),
+                first_read_timestamp=first_read_timestamp,
+                source_file_sha256=source_hashes,
             )
         except (KeyError, TypeError, ValueError) as exc:
             return _agent_pack_protocol_invalid(
@@ -1659,11 +1758,17 @@ def validate_agent_pack(
             "metadata session/thread ids must be globally unique",
         )
         for role in ("reviewer_a", "reviewer_b"):
-            expected_schedule = canonical_sha256(
-                sorted(candidates, key=lambda value: review_schedule_key(role, value))
+            expected_schedule_order = sorted(
+                candidates,
+                key=lambda value: review_schedule_key(role, value),
             )
             _require(
-                metadata_schedules[role] == expected_schedule,
+                actual_review_orders[role] == expected_schedule_order,
+                f"{role} ledger schedule mismatch",
+            )
+            _require(
+                metadata_schedules[role]
+                == canonical_sha256(actual_review_orders[role]),
                 f"{role} schedule hash mismatch",
             )
     except (KeyError, TypeError, ValueError) as exc:
