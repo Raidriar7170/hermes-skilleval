@@ -1317,6 +1317,30 @@ def _rewrite_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     _refresh_agent_pack_metadata(path.parent)
 
 
+def _sync_agent_pack_role_metadata(root: Path, role: str) -> None:
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }[role]
+    rows = _read_jsonl(root / filename)
+    invocation_lists = [
+        row["invocations"] for row in rows if type(row["invocations"]) is list
+    ]
+    metadata_path = root / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["roles"][role]["invocation_count"] = sum(
+        len(invocations) for invocations in invocation_lists
+    )
+    metadata["roles"][role]["session_or_thread_ids"] = [
+        _pack_invocation_identity(invocation)
+        for invocations in invocation_lists
+        for invocation in invocations
+        if type(invocation) is dict
+    ]
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+
 def _validate_agent_pack(pack: Path, repository_root: Path) -> dict[str, Any]:
     return runner.validate_agent_pack(
         pack,
@@ -1545,6 +1569,153 @@ def test_agent_pack_two_exact_successes_exclude_only_candidate(tmp_path: Path) -
 
 
 @pytest.mark.parametrize(
+    ("role", "container_drift"),
+    (
+        ("generator", "non_list"),
+        ("reviewer_a", "non_list"),
+        ("generator", "non_dict_item"),
+        ("reviewer_a", "non_dict_item"),
+    ),
+)
+def test_agent_pack_invocation_container_type_drift_is_global_invalid(
+    tmp_path: Path, role: str, container_drift: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+    }[role]
+    path = pack / filename
+    rows = _read_jsonl(path)
+    rows[0]["invocations"] = {} if container_drift == "non_list" else [None]
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, role)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a"))
+def test_agent_pack_empty_invocation_list_excludes_only_candidate(
+    tmp_path: Path, role: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+    }[role]
+    path = pack / filename
+    rows = _read_jsonl(path)
+    candidate_id = rows[0]["candidate_id"]
+    rows[0]["invocations"] = []
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, role)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 127
+    assert result["excluded_candidate_count"] == 1
+    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+
+
+def test_agent_pack_three_successes_with_count_two_is_global_invalid(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    row = rows[0]
+    success = row["invocations"][-1]
+    row["invocations"] = []
+    for index in range(3):
+        invocation = deepcopy(success)
+        invocation["envelope"]["session_id"] = (
+            f"reviewer-a-three-count-two-{row['candidate_id']}-{index}"
+        )
+        invocation["envelope"]["transport_retry_count"] = 2
+        row["invocations"].append(invocation)
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, "reviewer_a")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+def test_agent_pack_three_exact_successes_with_count_zero_exclude_candidate(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    row = rows[0]
+    candidate_id = row["candidate_id"]
+    success = row["invocations"][-1]
+    row["invocations"] = []
+    for index in range(3):
+        invocation = deepcopy(success)
+        invocation["envelope"]["session_id"] = (
+            f"reviewer-a-three-count-zero-{candidate_id}-{index}"
+        )
+        invocation["envelope"]["transport_retry_count"] = 0
+        row["invocations"].append(invocation)
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, "reviewer_a")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 127
+    assert result["excluded_candidate_count"] == 1
+    assert candidate_id not in {task["candidate_id"] for task in result["tasks"]}
+
+
+def test_agent_pack_allowed_retry_requires_success_count_one(tmp_path: Path) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    retry_row = next(row for row in rows if len(row["invocations"]) == 2)
+    retry_row["invocations"][-1]["envelope"]["transport_retry_count"] = 0
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+def test_agent_pack_single_success_requires_count_zero(tmp_path: Path) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rows[0]["invocations"][-1]["envelope"]["transport_retry_count"] = 1
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize(
     ("shape", "schema_drift"),
     (
         ("success", "extra"),
@@ -1700,7 +1871,7 @@ def test_agent_pack_success_invocation_protocol_drift_is_global_invalid(
     assert result["failure_stage"] == "invocation_protocol"
 
 
-@pytest.mark.parametrize("retry_count", (False, 0.0, "0"))
+@pytest.mark.parametrize("retry_count", (False, 0.0, "0", 2))
 def test_agent_pack_transport_retry_count_requires_exact_int_protocol_value(
     tmp_path: Path, retry_count: Any
 ) -> None:
