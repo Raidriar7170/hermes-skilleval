@@ -1356,6 +1356,55 @@ def _validate_agent_pack(pack: Path, repository_root: Path) -> dict[str, Any]:
     )
 
 
+@pytest.mark.parametrize(
+    ("mutation", "field"),
+    (
+        ("field_value", "description"),
+        ("field_value", "body"),
+        ("field_value", "name"),
+        ("field_value", "trigger_terms"),
+        ("skill_order", None),
+        ("delete_skill", None),
+        ("extra_skill_field", None),
+    ),
+)
+def test_agent_pack_generator_request_binds_authoritative_canonical_skills(
+    tmp_path: Path, mutation: str, field: str | None
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-generation.jsonl"
+    rows = _read_jsonl(path)
+    request = rows[0]["request"]
+    sealed_skills = request["input"]["canonical_skills"]
+    if mutation == "field_value":
+        assert field is not None
+        sealed_skills[0][field] = (
+            [f"{PREFIX} DRIFTED TRIGGER"]
+            if field == "trigger_terms"
+            else f"{PREFIX} DRIFTED {field.upper()}"
+        )
+    elif mutation == "skill_order":
+        sealed_skills[0], sealed_skills[1] = sealed_skills[1], sealed_skills[0]
+    elif mutation == "delete_skill":
+        sealed_skills.pop()
+    else:
+        sealed_skills[0]["unsealed_field"] = f"{PREFIX} DRIFTED EXTRA"
+    _agent_contract_rehash_request(request)
+    for invocation in rows[0]["invocations"]:
+        invocation.get("envelope", invocation)["request_sha256"] = request[
+            "request_sha256"
+        ]
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "generation_ledger"
+
+
 def test_agent_pack_reviewer_ledgers_use_distinct_role_schedules(
     tmp_path: Path,
 ) -> None:

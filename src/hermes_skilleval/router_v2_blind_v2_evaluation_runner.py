@@ -1644,6 +1644,17 @@ def validate_agent_pack(
                 quota["round_number"] == row["generation_round"],
                 "generation request round mismatch",
             )
+            expected_request = build_generator_request(
+                projected_skills,
+                gold_skill_id=gold,
+                negative_quota=quota["negative_quota"],
+                positive_only_quota=quota["positive_only_quota"],
+                round_number=row["generation_round"],
+            )
+            _require(
+                _canonical_contract_json_equal(request, expected_request),
+                "generator request must match sealed canonical skill authority",
+            )
             invocations = row["invocations"]
             actual_sessions["generator"].extend(
                 _pack_invocation_identities(invocations)
