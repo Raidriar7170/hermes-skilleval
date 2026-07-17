@@ -1405,6 +1405,72 @@ def test_agent_pack_generator_request_binds_authoritative_canonical_skills(
     assert result["failure_stage"] == "generation_ledger"
 
 
+def test_agent_pack_required_file_read_failure_is_audited_protocol_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    failed_filename = "blind-v2-review-a.jsonl"
+    original_read_bytes = Path.read_bytes
+
+    def fail_one_required_read(path: Path) -> bytes:
+        if path.name == failed_filename:
+            raise OSError(f"{PREFIX} REQUIRED FILE READ FAILURE")
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", fail_one_required_read)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "ledger_structure"
+    assert result["failure_reason"] == f"{PREFIX} REQUIRED FILE READ FAILURE"
+
+
+def test_agent_pack_stale_source_file_hash_is_global_invalid(tmp_path: Path) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-generation.jsonl"
+    rows = _read_jsonl(path)
+    rows[0]["rationale"] = f"{PREFIX} STALE HASH MUTATION"
+    path.write_bytes(_jsonl_bytes(rows))
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "agent_run_metadata"
+    assert result["failure_reason"] == "blind-v2-generation.jsonl source hash mismatch"
+
+
+def test_agent_pack_generator_response_hash_must_bind_candidate_id(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-generation.jsonl"
+    rows = _read_jsonl(path)
+    old_candidate_id = rows[0]["candidate_id"]
+    changed_rationale = f"{PREFIX} RESPONSE HASH MUTATION"
+    rows[0]["rationale"] = changed_rationale
+    rows[0]["invocations"][-1]["envelope"]["response"]["candidates"][0]["rationale"] = (
+        changed_rationale
+    )
+    _rewrite_jsonl(path, rows)
+
+    assert rows[0]["candidate_id"] == old_candidate_id
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "generation_ledger"
+    assert result["failure_reason"] == "candidate id binding mismatch"
+
+
 def test_agent_pack_reviewer_ledgers_use_distinct_role_schedules(
     tmp_path: Path,
 ) -> None:

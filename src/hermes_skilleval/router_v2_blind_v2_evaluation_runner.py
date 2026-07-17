@@ -1436,14 +1436,15 @@ def validate_agent_pack(
         for filename in REQUIRED_AGENT_PACK_FILES
     }
 
-    payloads = {
-        filename: required_paths[filename].read_bytes()
-        for filename in REQUIRED_AGENT_PACK_FILES
-    }
-    source_hashes = {
-        filename: _sha256_bytes(payload) for filename, payload in payloads.items()
-    }
+    source_hashes: dict[str, str] = {}
     try:
+        payloads = {
+            filename: required_paths[filename].read_bytes()
+            for filename in REQUIRED_AGENT_PACK_FILES
+        }
+        source_hashes = {
+            filename: _sha256_bytes(payload) for filename, payload in payloads.items()
+        }
         generation_rows = _jsonl_no_duplicate_keys(
             payloads[REQUIRED_AGENT_PACK_FILES[0]], REQUIRED_AGENT_PACK_FILES[0]
         )
