@@ -143,8 +143,6 @@ REVIEW_RUBRIC = {
 AGENT_REVIEW_DECISIONS = (
     "ACCEPT",
     "REJECT_AMBIGUOUS",
-    "REJECT_WRONG_GOLD",
-    "REJECT_WRONG_NEGATIVE",
     "REJECT_NOT_CONFUSABLE",
     "REJECT_UNNATURAL",
     "REJECT_LABEL_LEAKAGE",
@@ -179,12 +177,31 @@ GENERATOR_RESPONSE_SCHEMA = {
                 ],
                 "properties": {
                     "candidate_index": {"type": "integer", "minimum": 0},
-                    "prompt_text": {"type": "string", "minLength": 1},
-                    "semantic_family_id": {"type": "string", "minLength": 1},
-                    "proposed_gold_skill_id": {"type": "string", "minLength": 1},
-                    "proposed_negative_skill_id": {"type": ["string", "null"]},
+                    "prompt_text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": r"\S",
+                    },
+                    "semantic_family_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": r"\S",
+                    },
+                    "proposed_gold_skill_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": r"\S",
+                    },
+                    "proposed_negative_skill_id": {
+                        "type": ["string", "null"],
+                        "pattern": r"\S",
+                    },
                     "language": {"const": "en"},
-                    "rationale": {"type": "string", "minLength": 1},
+                    "rationale": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": r"\S",
+                    },
                 },
             },
         }
@@ -206,15 +223,75 @@ REVIEWER_RESPONSE_SCHEMA = {
     ],
     "properties": {
         "decision": {"enum": list(AGENT_REVIEW_DECISIONS)},
-        "reviewed_gold_skill_id": {"type": "string", "minLength": 1},
-        "reviewed_negative_skill_id": {"type": ["string", "null"]},
+        "reviewed_gold_skill_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": r"\S",
+        },
+        "reviewed_negative_skill_id": {
+            "type": ["string", "null"],
+            "pattern": r"\S",
+        },
         "natural": {"type": "boolean"},
         "single_primary_skill": {"type": "boolean"},
         "no_label_leakage": {"type": "boolean"},
         "negative_confusable": {"type": ["boolean", "null"]},
         "confidence": {"enum": list(AGENT_REVIEW_CONFIDENCE)},
-        "reason": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1, "pattern": r"\S"},
     },
+    "allOf": [
+        {
+            "if": {
+                "properties": {"reviewed_negative_skill_id": {"type": "null"}},
+                "required": ["reviewed_negative_skill_id"],
+            },
+            "then": {"properties": {"negative_confusable": {"type": "null"}}},
+            "else": {"properties": {"negative_confusable": {"type": "boolean"}}},
+        }
+    ],
+    "oneOf": [
+        {
+            "properties": {
+                "decision": {"const": "ACCEPT"},
+                "natural": {"const": True},
+                "single_primary_skill": {"const": True},
+                "no_label_leakage": {"const": True},
+            },
+            "if": {
+                "properties": {"reviewed_negative_skill_id": {"type": "string"}},
+                "required": ["reviewed_negative_skill_id"],
+            },
+            "then": {"properties": {"negative_confusable": {"const": True}}},
+        },
+        {
+            "properties": {
+                "decision": {"const": "REJECT_AMBIGUOUS"},
+                "single_primary_skill": {"const": False},
+            }
+        },
+        {
+            "properties": {
+                "decision": {"const": "REJECT_NOT_CONFUSABLE"},
+                "reviewed_negative_skill_id": {
+                    "type": "string",
+                    "pattern": r"\S",
+                },
+                "negative_confusable": {"const": False},
+            }
+        },
+        {
+            "properties": {
+                "decision": {"const": "REJECT_UNNATURAL"},
+                "natural": {"const": False},
+            }
+        },
+        {
+            "properties": {
+                "decision": {"const": "REJECT_LABEL_LEAKAGE"},
+                "no_label_leakage": {"const": False},
+            }
+        },
+    ],
 }
 LEGACY_REQUIRED_HUMAN_PACK_FILES = (
     "blind-v2-authored.csv",
@@ -737,6 +814,22 @@ def _validate_reviewer_response(
         or (negative is not None and type(response["negative_confusable"]) is bool),
         "reviewer negative confusability mismatch",
     )
+    decision = cast(str, response["decision"])
+    decision_rubric_consistent = {
+        "ACCEPT": (
+            response["natural"] is True
+            and response["single_primary_skill"] is True
+            and response["no_label_leakage"] is True
+            and (negative is None or response["negative_confusable"] is True)
+        ),
+        "REJECT_AMBIGUOUS": response["single_primary_skill"] is False,
+        "REJECT_NOT_CONFUSABLE": (
+            negative is not None and response["negative_confusable"] is False
+        ),
+        "REJECT_UNNATURAL": response["natural"] is False,
+        "REJECT_LABEL_LEAKAGE": response["no_label_leakage"] is False,
+    }[decision]
+    _require(decision_rubric_consistent, "reviewer decision/rubric mismatch")
     _require(
         type(response["confidence"]) is str
         and response["confidence"] in AGENT_REVIEW_CONFIDENCE,

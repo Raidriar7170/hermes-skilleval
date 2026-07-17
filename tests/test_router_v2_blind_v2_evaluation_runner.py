@@ -219,6 +219,91 @@ def test_agent_contract_constants_schemas_and_schedule_keys_are_frozen() -> None
     }
 
 
+def test_agent_contract_response_schemas_require_nonblank_strings() -> None:
+    generator_schema = cast(dict[str, Any], runner.GENERATOR_RESPONSE_SCHEMA)
+    generator_properties = cast(
+        dict[str, Any],
+        cast(
+            dict[str, Any],
+            cast(dict[str, Any], generator_schema["properties"])["candidates"],
+        )["items"],
+    )["properties"]
+    for field in (
+        "prompt_text",
+        "semantic_family_id",
+        "proposed_gold_skill_id",
+        "proposed_negative_skill_id",
+        "rationale",
+    ):
+        assert generator_properties[field]["pattern"] == r"\S"
+
+    reviewer_schema = cast(dict[str, Any], runner.REVIEWER_RESPONSE_SCHEMA)
+    reviewer_properties = cast(dict[str, Any], reviewer_schema["properties"])
+    for field in (
+        "reviewed_gold_skill_id",
+        "reviewed_negative_skill_id",
+        "reason",
+    ):
+        assert reviewer_properties[field]["pattern"] == r"\S"
+
+
+def test_agent_contract_reviewer_schema_encodes_decision_state_model() -> None:
+    expected_decisions = (
+        "ACCEPT",
+        "REJECT_AMBIGUOUS",
+        "REJECT_NOT_CONFUSABLE",
+        "REJECT_UNNATURAL",
+        "REJECT_LABEL_LEAKAGE",
+    )
+    assert runner.AGENT_REVIEW_DECISIONS == expected_decisions
+
+    schema = cast(dict[str, Any], runner.REVIEWER_RESPONSE_SCHEMA)
+    properties = cast(dict[str, Any], schema["properties"])
+    assert properties["decision"]["enum"] == list(expected_decisions)
+    assert schema["allOf"] == [
+        {
+            "if": {
+                "properties": {"reviewed_negative_skill_id": {"type": "null"}},
+                "required": ["reviewed_negative_skill_id"],
+            },
+            "then": {"properties": {"negative_confusable": {"type": "null"}}},
+            "else": {"properties": {"negative_confusable": {"type": "boolean"}}},
+        }
+    ]
+
+    assert "oneOf" in schema
+    branches = cast(list[dict[str, Any]], schema["oneOf"])
+    by_decision: dict[str, dict[str, Any]] = {}
+    for branch in branches:
+        branch_properties = cast(dict[str, Any], branch["properties"])
+        decision_contract = cast(dict[str, Any], branch_properties["decision"])
+        by_decision[cast(str, decision_contract["const"])] = branch
+    assert set(by_decision) == set(expected_decisions)
+
+    accept = cast(dict[str, Any], by_decision["ACCEPT"]["properties"])
+    assert accept["natural"] == {"const": True}
+    assert accept["single_primary_skill"] == {"const": True}
+    assert accept["no_label_leakage"] == {"const": True}
+    assert by_decision["ACCEPT"]["then"] == {
+        "properties": {"negative_confusable": {"const": True}}
+    }
+
+    ambiguous = cast(dict[str, Any], by_decision["REJECT_AMBIGUOUS"]["properties"])
+    assert ambiguous["single_primary_skill"] == {"const": False}
+    not_confusable = cast(
+        dict[str, Any], by_decision["REJECT_NOT_CONFUSABLE"]["properties"]
+    )
+    assert not_confusable["reviewed_negative_skill_id"] == {
+        "type": "string",
+        "pattern": r"\S",
+    }
+    assert not_confusable["negative_confusable"] == {"const": False}
+    unnatural = cast(dict[str, Any], by_decision["REJECT_UNNATURAL"]["properties"])
+    assert unnatural["natural"] == {"const": False}
+    leakage = cast(dict[str, Any], by_decision["REJECT_LABEL_LEAKAGE"]["properties"])
+    assert leakage["no_label_leakage"] == {"const": False}
+
+
 def test_agent_contract_generator_request_is_sealed_and_hash_bound() -> None:
     request = _agent_contract_generator_request()
 
@@ -699,6 +784,7 @@ def test_agent_contract_reviewer_response_validates_labels_and_strict_types() ->
     invalid_values = (
         ("decision", "MAYBE"),
         ("reviewed_gold_skill_id", "missing-skill"),
+        ("reviewed_gold_skill_id", None),
         ("reviewed_negative_skill_id", "test-skill-00"),
         ("natural", 1),
         ("single_primary_skill", 1),
@@ -733,12 +819,17 @@ def test_agent_contract_reviewer_rejection_response_and_envelope_validate() -> N
     )
 
 
-@pytest.mark.parametrize("negative_confusable", (True, False))
+@pytest.mark.parametrize(
+    ("decision", "negative_confusable"),
+    (("ACCEPT", True), ("REJECT_NOT_CONFUSABLE", False)),
+)
 def test_agent_contract_reviewer_negative_confusability_accepts_strict_booleans(
+    decision: str,
     negative_confusable: bool,
 ) -> None:
     request = _agent_contract_reviewer_request()
     response = _agent_contract_reviewer_response()
+    response["decision"] = decision
     response["negative_confusable"] = negative_confusable
 
     assert runner.validate_agent_response(response, request=request) == response
@@ -766,6 +857,121 @@ def test_agent_contract_reviewer_without_negative_requires_null_confusability(
     response["negative_confusable"] = invalid
 
     with pytest.raises(ValueError, match="reviewer negative confusability mismatch"):
+        runner.validate_agent_response(response, request=request)
+
+
+@pytest.mark.parametrize(
+    ("decision", "updates"),
+    (
+        ("ACCEPT", {}),
+        ("REJECT_AMBIGUOUS", {"single_primary_skill": False}),
+        ("REJECT_NOT_CONFUSABLE", {"negative_confusable": False}),
+        ("REJECT_UNNATURAL", {"natural": False}),
+        ("REJECT_LABEL_LEAKAGE", {"no_label_leakage": False}),
+    ),
+)
+def test_agent_contract_reviewer_accepts_each_consistent_decision_state(
+    decision: str, updates: dict[str, Any]
+) -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response["decision"] = decision
+    response.update(updates)
+
+    assert runner.validate_agent_response(response, request=request) == response
+
+
+def test_agent_contract_reviewer_allows_multiple_rubric_failures() -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response.update(
+        {
+            "decision": "REJECT_AMBIGUOUS",
+            "natural": False,
+            "single_primary_skill": False,
+            "no_label_leakage": False,
+            "negative_confusable": False,
+        }
+    )
+
+    assert runner.validate_agent_response(response, request=request) == response
+
+
+@pytest.mark.parametrize(
+    ("decision", "updates"),
+    (
+        ("ACCEPT", {"natural": False}),
+        ("ACCEPT", {"single_primary_skill": False}),
+        ("ACCEPT", {"no_label_leakage": False}),
+        ("ACCEPT", {"negative_confusable": False}),
+        ("REJECT_AMBIGUOUS", {"single_primary_skill": True}),
+        ("REJECT_UNNATURAL", {"natural": True}),
+        ("REJECT_LABEL_LEAKAGE", {"no_label_leakage": True}),
+        ("REJECT_NOT_CONFUSABLE", {"negative_confusable": True}),
+        (
+            "REJECT_NOT_CONFUSABLE",
+            {"reviewed_negative_skill_id": None, "negative_confusable": None},
+        ),
+    ),
+)
+def test_agent_contract_reviewer_rejects_decision_rubric_contradictions(
+    decision: str, updates: dict[str, Any]
+) -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response["decision"] = decision
+    response.update(updates)
+
+    with pytest.raises(ValueError, match="reviewer decision/rubric mismatch"):
+        runner.validate_agent_response(response, request=request)
+
+
+@pytest.mark.parametrize(
+    "removed_decision", ("REJECT_WRONG_GOLD", "REJECT_WRONG_NEGATIVE")
+)
+def test_agent_contract_reviewer_rejects_unobservable_decision_codes(
+    removed_decision: str,
+) -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response["decision"] = removed_decision
+
+    with pytest.raises(ValueError, match="reviewer decision mismatch"):
+        runner.validate_agent_response(response, request=request)
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "prompt_text",
+        "semantic_family_id",
+        "proposed_gold_skill_id",
+        "proposed_negative_skill_id",
+        "rationale",
+    ),
+)
+def test_agent_contract_generator_response_rejects_whitespace_strings(
+    field: str,
+) -> None:
+    request = _agent_contract_generator_request()
+    response = _agent_contract_generator_response()
+    response["candidates"][0][field] = " \t"
+
+    with pytest.raises(ValueError):
+        runner.validate_agent_response(response, request=request)
+
+
+@pytest.mark.parametrize(
+    "field", ("reviewed_gold_skill_id", "reviewed_negative_skill_id", "reason")
+)
+def test_agent_contract_reviewer_response_rejects_whitespace_strings(
+    field: str,
+) -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response[field] = " \t"
+
+    with pytest.raises(ValueError):
         runner.validate_agent_response(response, request=request)
 
 
