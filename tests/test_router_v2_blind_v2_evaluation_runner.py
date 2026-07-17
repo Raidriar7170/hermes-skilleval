@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 from copy import deepcopy
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
@@ -15,6 +16,17 @@ from hermes_skilleval import router_v2_blind_v2_evaluation_runner as runner
 
 
 PREFIX = "TEST_ONLY_DO_NOT_USE"
+TASK4_SELECTION_AUTHORITY = {
+    "selection_seed": 7170,
+    "selection_order": "ascending_selection_key(candidate_id)_within_stratum",
+    "max_generation_rounds": 2,
+    "round_1_candidate_count": 256,
+    "round_1_negative_per_skill": 12,
+    "round_1_positive_only_per_skill": 4,
+    "round_2_deficit_multiplier": 2,
+    "final_negative_per_skill": 6,
+    "final_positive_only_per_skill": 2,
+}
 
 
 def _opaque_candidate_id() -> str:
@@ -227,6 +239,231 @@ def test_agent_contract_constants_schemas_and_schedule_keys_are_frozen() -> None
         "confidence",
         "reason",
     }
+
+
+def test_task4_contamination_constants_and_decimal_jaccard_are_frozen() -> None:
+    assert runner.SEMANTIC_MODEL_ID == "sentence-transformers/all-mpnet-base-v2"
+    assert runner.SEMANTIC_MODEL_REVISION == "e8c3b32edf5434bc2275fc9bab85f82640a19130"
+    assert runner.TOKEN_5GRAM_JACCARD_MAX == Decimal("0.80")
+    assert runner.CHARACTER_5GRAM_JACCARD_MAX == Decimal("0.85")
+    assert runner.SEMANTIC_COSINE_MAX == Decimal("0.90")
+    assert runner.SELECTION_AUTHORITY == TASK4_SELECTION_AUTHORITY
+    assert runner._jaccard(set(), set()) == Decimal("1")
+    assert runner._jaccard({"a", "b", "c", "d"}, {"a", "b", "c", "e"}) == Decimal("0.6")
+
+
+def _task4_scan_candidate(
+    candidate_id: str,
+    prompt_text: str,
+    semantic_family_id: str,
+    *,
+    generation_round: int = 1,
+) -> dict[str, Any]:
+    return {
+        "candidate_id": candidate_id,
+        "generation_round": generation_round,
+        "prompt_text": prompt_text,
+        "prompt_text_sha256": hashlib.sha256(prompt_text.encode()).hexdigest(),
+        "semantic_family_id": semantic_family_id,
+        "proposed_gold_skill_id": "test-skill-00",
+        "proposed_negative_skill_id": "test-skill-01",
+        "language": "en",
+        "rationale": f"{PREFIX} LABELS MUST STAY UNCHANGED",
+    }
+
+
+def test_task4_contamination_scan_rejects_protected_exact_normalized_and_family(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidates = [
+        _task4_scan_candidate("1" * 24, "EXACT protected request", "family-a"),
+        _task4_scan_candidate("2" * 24, "Ｆｏｏ request", "family-b"),
+        _task4_scan_candidate("3" * 24, "Distinct family request", "family-pilot"),
+        _task4_scan_candidate("4" * 24, "Prior protected request", "family-d"),
+    ]
+    original_labels = [
+        (row["proposed_gold_skill_id"], row["proposed_negative_skill_id"])
+        for row in candidates
+    ]
+    monkeypatch.setattr(runner, "_token_5grams", lambda text: {f"token:{text}"})
+    monkeypatch.setattr(runner, "_character_5grams", lambda text: {f"character:{text}"})
+
+    scan = runner._scan_contamination(
+        candidates,
+        protected_prompts={
+            "train": ["EXACT protected request"],
+            "pilot-002": ["Foo request"],
+            "phase16": [],
+            "prior_candidate": ["Prior protected request"],
+        },
+        protected_family_ids={
+            "train": set(),
+            "pilot-002": {"family-pilot"},
+            "phase16": set(),
+            "prior_candidate": set(),
+        },
+        semantic_similarity=lambda _left, _right: 0.0,
+    )
+
+    by_id = {row["candidate_id"]: row for row in scan["rows"]}
+    assert "exact_prompt_bytes:train" in by_id["1" * 24]["rejection_codes"]
+    assert "normalized_prompt:pilot-002" in by_id["2" * 24]["rejection_codes"]
+    assert "protected_family:pilot-002" in by_id["3" * 24]["rejection_codes"]
+    assert "exact_prompt_bytes:prior_candidate" in by_id["4" * 24]["rejection_codes"]
+    assert scan["clean_candidate_ids"] == []
+    assert all(
+        set(row)
+        == {
+            "candidate_id",
+            "scanner_decision",
+            "rejection_codes",
+            "evidence_sha256",
+        }
+        for row in scan["rows"]
+    )
+    assert [
+        (row["proposed_gold_skill_id"], row["proposed_negative_skill_id"])
+        for row in candidates
+    ] == original_labels
+
+
+@pytest.mark.parametrize(
+    ("rule", "expected_code"),
+    (
+        ("token", "token_5gram_jaccard:train"),
+        ("character", "character_5gram_jaccard:train"),
+        ("semantic", "semantic_cosine:train"),
+    ),
+)
+def test_task4_contamination_threshold_equality_rejects_without_float_drift(
+    monkeypatch: pytest.MonkeyPatch,
+    rule: str,
+    expected_code: str,
+) -> None:
+    left = {f"shared-{index}" for index in range(17)}
+    token_right = {f"shared-{index}" for index in range(4)} | {"token-extra"}
+    character_right = left | {"char-extra-1", "char-extra-2", "char-extra-3"}
+    monkeypatch.setattr(
+        runner,
+        "_token_5grams",
+        lambda text: (
+            (
+                {f"shared-{index}" for index in range(4)}
+                if text == "candidate prompt"
+                else token_right
+            )
+            if rule == "token"
+            else {f"token:{text}"}
+        ),
+    )
+    monkeypatch.setattr(
+        runner,
+        "_character_5grams",
+        lambda text: (
+            left
+            if text == "candidate prompt"
+            else character_right
+            if rule == "character"
+            else {f"character:{text}"}
+        ),
+    )
+    semantic_calls: list[tuple[str, str]] = []
+
+    def semantic_similarity(left_text: str, right_text: str) -> float:
+        semantic_calls.append((left_text, right_text))
+        return 0.90 if rule == "semantic" else 0.0
+
+    scan = runner._scan_contamination(
+        [_task4_scan_candidate("5" * 24, "candidate prompt", "family-clean")],
+        protected_prompts={
+            "train": ["protected prompt"],
+            "pilot-002": [],
+            "phase16": [],
+            "prior_candidate": [],
+        },
+        protected_family_ids={
+            "train": set(),
+            "pilot-002": set(),
+            "phase16": set(),
+            "prior_candidate": set(),
+        },
+        semantic_similarity=semantic_similarity,
+    )
+
+    assert expected_code in scan["rows"][0]["rejection_codes"]
+    assert scan["rows"][0]["scanner_decision"] == "REJECT"
+    assert semantic_calls == [("candidate prompt", "protected prompt")]
+
+
+def test_task4_current_candidate_conflict_uses_round_then_selection_key() -> None:
+    same_round_ids = ("6" * 24, "7" * 24)
+    expected_same_round_winner = min(same_round_ids, key=runner.selection_key)
+    candidates = [
+        _task4_scan_candidate(
+            same_round_ids[0], "Shared current prompt", "shared-family"
+        ),
+        _task4_scan_candidate(
+            same_round_ids[1], "Shared current prompt", "shared-family"
+        ),
+        _task4_scan_candidate(
+            "8" * 24,
+            "Shared current prompt",
+            "shared-family",
+            generation_round=2,
+        ),
+    ]
+
+    scan = runner._scan_contamination(
+        candidates,
+        protected_prompts={
+            "train": [],
+            "pilot-002": [],
+            "phase16": [],
+            "prior_candidate": [],
+        },
+        protected_family_ids={
+            "train": set(),
+            "pilot-002": set(),
+            "phase16": set(),
+            "prior_candidate": set(),
+        },
+        semantic_similarity=lambda _left, _right: 0.0,
+    )
+
+    assert scan["clean_candidate_ids"] == [expected_same_round_winner]
+    by_id = {row["candidate_id"]: row for row in scan["rows"]}
+    for candidate_id in {row["candidate_id"] for row in candidates} - {
+        expected_same_round_winner
+    }:
+        assert by_id[candidate_id]["scanner_decision"] == "REJECT"
+        assert any(
+            code.startswith("current_candidate:")
+            for code in by_id[candidate_id]["rejection_codes"]
+        )
+
+
+@pytest.mark.parametrize("scope", ("train", "pilot-002", "phase16", "prior_candidate"))
+def test_task4_contamination_scan_rejects_every_protected_family_scope(
+    scope: str,
+) -> None:
+    protected_family_ids = {
+        name: ({"protected-family"} if name == scope else set())
+        for name in runner.CONTAMINATION_SCOPES
+    }
+
+    scan = runner._scan_contamination(
+        [
+            _task4_scan_candidate(
+                "9" * 24, "Unique protected family prompt", "protected-family"
+            )
+        ],
+        protected_prompts={name: [] for name in runner.CONTAMINATION_SCOPES},
+        protected_family_ids=protected_family_ids,
+        semantic_similarity=lambda _left, _right: 0.0,
+    )
+
+    assert scan["rows"][0]["scanner_decision"] == "REJECT"
+    assert f"protected_family:{scope}" in scan["rows"][0]["rejection_codes"]
 
 
 def test_agent_contract_response_schemas_require_nonblank_strings() -> None:
@@ -1119,6 +1356,15 @@ def _write_agent_pack(
     *,
     rejected_candidate_count: int = 0,
     transport_retry_role: str | None = None,
+    round_one_candidate_count: int = 256,
+    round_one_negative_per_skill: int = 12,
+    round_one_rejections: dict[tuple[str, str], int] | None = None,
+    round_one_contamination_rejections: dict[tuple[str, str], int] | None = None,
+    include_round_two: bool = False,
+    round_two_deficit_multiplier: int = 2,
+    reject_all_round_two: bool = False,
+    include_round_three: bool = False,
+    selection_authority: dict[str, Any] | None = None,
 ) -> None:
     root.mkdir()
     generation_rows: list[dict[str, Any]] = []
@@ -1133,24 +1379,126 @@ def _write_agent_pack(
         "reviewer_b": [],
     }
     role_invocation_counts = dict.fromkeys(role_session_ids, 0)
-    for index in range(128 + rejected_candidate_count):
-        distribution_index = index % 128
-        gold_index = distribution_index // 8
-        has_negative = distribution_index % 8 < 6
-        prompt = f"{PREFIX} REQUEST {index:03d} UNIQUE {index:05d}"
+
+    def prompt_text(round_number: int, serial: int) -> str:
+        unique_tokens = " ".join(
+            hashlib.sha256(f"{round_number}:{serial}:{offset}".encode()).hexdigest()[
+                :12
+            ]
+            for offset in range(8)
+        )
+        return f"{PREFIX} {unique_tokens}"
+
+    candidate_specs: list[dict[str, Any]] = []
+    round_one_rejections = round_one_rejections or {}
+    round_one_contamination_rejections = round_one_contamination_rejections or {}
+    rejected_by_stratum: dict[tuple[str, str], int] = {}
+    contaminated_by_stratum: dict[tuple[str, str], int] = {}
+    serial = 0
+    for gold_index in range(16):
         gold = f"test-skill-{gold_index:02d}"
-        negative = f"test-skill-{(gold_index + 1) % 16:02d}" if has_negative else None
+        for stratum_index in range(16):
+            if len(candidate_specs) >= round_one_candidate_count:
+                break
+            has_negative = stratum_index < round_one_negative_per_skill
+            stratum = "negative" if has_negative else "positive_only"
+            rejected_so_far = rejected_by_stratum.get((gold, stratum), 0)
+            contaminated_so_far = contaminated_by_stratum.get((gold, stratum), 0)
+            should_reject = serial < rejected_candidate_count or rejected_so_far < (
+                round_one_rejections.get((gold, stratum), 0)
+            )
+            should_contaminate = contaminated_so_far < (
+                round_one_contamination_rejections.get((gold, stratum), 0)
+            )
+            if should_reject:
+                rejected_by_stratum[(gold, stratum)] = rejected_so_far + 1
+            if should_contaminate:
+                contaminated_by_stratum[(gold, stratum)] = contaminated_so_far + 1
+            candidate_specs.append(
+                {
+                    "generation_round": 1,
+                    "serial": serial,
+                    "gold": gold,
+                    "negative": (
+                        f"test-skill-{(gold_index + 1) % 16:02d}"
+                        if has_negative
+                        else None
+                    ),
+                    "review_rejected": should_reject,
+                    "contamination_rejected": should_contaminate,
+                }
+            )
+            serial += 1
+
+    round_one_accepted_counts: dict[tuple[str, str], int] = {}
+    for spec in candidate_specs:
+        if spec["review_rejected"] or spec["contamination_rejected"]:
+            continue
+        stratum = "negative" if spec["negative"] is not None else "positive_only"
+        key = (cast(str, spec["gold"]), stratum)
+        round_one_accepted_counts[key] = round_one_accepted_counts.get(key, 0) + 1
+    deficits = {
+        (skill["id"], stratum): max(
+            0,
+            quota - round_one_accepted_counts.get((cast(str, skill["id"]), stratum), 0),
+        )
+        for skill in _skills()
+        for stratum, quota in (("negative", 6), ("positive_only", 2))
+    }
+    if include_round_two:
+        for (gold, stratum), deficit in deficits.items():
+            for _ in range(deficit * round_two_deficit_multiplier):
+                gold_index = int(gold.rsplit("-", 1)[1])
+                candidate_specs.append(
+                    {
+                        "generation_round": 2,
+                        "serial": serial,
+                        "gold": gold,
+                        "negative": (
+                            f"test-skill-{(gold_index + 1) % 16:02d}"
+                            if stratum == "negative"
+                            else None
+                        ),
+                        "review_rejected": reject_all_round_two,
+                        "contamination_rejected": False,
+                    }
+                )
+                serial += 1
+    if include_round_three:
+        candidate_specs.append(
+            {
+                "generation_round": 3,
+                "serial": serial,
+                "gold": "test-skill-00",
+                "negative": "test-skill-01",
+                "review_rejected": False,
+                "contamination_rejected": False,
+            }
+        )
+
+    candidate_by_id: dict[str, dict[str, Any]] = {}
+    spec_by_id: dict[str, dict[str, Any]] = {}
+    for spec in candidate_specs:
+        index = cast(int, spec["serial"])
+        round_number = cast(int, spec["generation_round"])
+        gold = cast(str, spec["gold"])
+        negative = cast(str | None, spec["negative"])
+        prompt = prompt_text(round_number, index)
         generation_request = runner.build_generator_request(
             _skills(),
             gold_skill_id=gold,
-            negative_quota=int(has_negative),
-            positive_only_quota=int(not has_negative),
-            round_number=1,
+            negative_quota=int(negative is not None),
+            positive_only_quota=int(negative is None),
+            round_number=round_number,
         )
         generated = {
             "candidate_index": 0,
             "prompt_text": prompt,
-            "semantic_family_id": f"{PREFIX}_FAMILY_{index:03d}",
+            "semantic_family_id": (
+                f"{PREFIX}_TRAIN_FAMILY"
+                if spec["contamination_rejected"]
+                else f"{PREFIX}_FAMILY_R{round_number}_{index:03d}"
+            ),
             "proposed_gold_skill_id": gold,
             "proposed_negative_skill_id": negative,
             "language": "en",
@@ -1158,11 +1506,11 @@ def _write_agent_pack(
         }
         generation_response = {"candidates": [generated]}
         candidate_id = runner.opaque_candidate_id(
-            1, gold, 0, runner.canonical_sha256(generation_response)
+            round_number, gold, 0, runner.canonical_sha256(generation_response)
         )
         candidate = {
             "candidate_id": candidate_id,
-            "generation_round": 1,
+            "generation_round": round_number,
             "prompt_text": prompt,
             "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
             "semantic_family_id": generated["semantic_family_id"],
@@ -1171,6 +1519,8 @@ def _write_agent_pack(
             "language": "en",
             "rationale": generated["rationale"],
         }
+        candidate_by_id[candidate_id] = candidate
+        spec_by_id[candidate_id] = spec
         generator_session = f"generator-{candidate_id}"
         generator_invocations = [
             _pack_success_invocation(
@@ -1199,8 +1549,33 @@ def _write_agent_pack(
                 "invocations": generator_invocations,
             }
         )
-        contamination_rows.append({"candidate_id": candidate_id})
 
+    scan = runner._scan_contamination(
+        list(candidate_by_id.values()),
+        protected_prompts={
+            "train": [f"{PREFIX} TRAIN REFERENCE"],
+            "pilot-002": [f"{PREFIX} PILOT REFERENCE"],
+            "phase16": [f"{PREFIX} PHASE16 REFERENCE"],
+            "prior_candidate": [],
+        },
+        protected_family_ids={
+            "train": {f"{PREFIX}_TRAIN_FAMILY"},
+            "pilot-002": {f"{PREFIX}_PILOT_FAMILY"},
+            "phase16": set(),
+            "prior_candidate": set(),
+        },
+        semantic_similarity=lambda _left, _right: 0.0,
+    )
+    contamination_rows.extend(scan["rows"])
+    clean_candidate_ids = set(scan["clean_candidate_ids"])
+
+    for candidate_id, candidate in candidate_by_id.items():
+        if candidate_id not in clean_candidate_ids:
+            continue
+        spec = spec_by_id[candidate_id]
+        gold = cast(str, candidate["proposed_gold_skill_id"])
+        negative = cast(str | None, candidate["proposed_negative_skill_id"])
+        index = cast(int, spec["serial"])
         for role in ("reviewer_a", "reviewer_b"):
             review_request = runner.build_reviewer_request(
                 candidate, _skills(), role=role
@@ -1216,7 +1591,7 @@ def _write_agent_pack(
                 "confidence": ("LOW", "MEDIUM", "HIGH")[index % 3],
                 "reason": f"{PREFIX} {role.upper()} REASON {index:03d}",
             }
-            if index >= 128 and role == "reviewer_a":
+            if spec["review_rejected"] and role == "reviewer_a":
                 review_response["decision"] = "REJECT_AMBIGUOUS"
                 review_response["single_primary_skill"] = False
             review_session = f"{role}-{candidate_id}"
@@ -1273,7 +1648,11 @@ def _write_agent_pack(
         "roles": {
             role: {
                 "config": deepcopy(runner.AGENT_CONFIGS[role]),
-                "request_count": len(generation_rows),
+                "request_count": (
+                    len(generation_rows)
+                    if role == "generator"
+                    else len(review_rows[role])
+                ),
                 "invocation_count": role_invocation_counts[role],
                 "session_or_thread_ids": role_session_ids[role],
                 "fork_context": False,
@@ -1288,6 +1667,9 @@ def _write_agent_pack(
             )
             for role in ("reviewer_a", "reviewer_b")
         },
+        "selection_authority": deepcopy(
+            selection_authority or TASK4_SELECTION_AUTHORITY
+        ),
         "source_file_sha256": {
             filename: hashlib.sha256(payload).hexdigest()
             for filename, payload in payloads.items()
@@ -1354,6 +1736,262 @@ def _validate_agent_pack(pack: Path, repository_root: Path) -> dict[str, Any]:
         first_read_timestamp="2026-07-16T00:00:00Z",
         semantic_similarity=lambda _left, _right: 0.0,
     )
+
+
+def test_task4_round_one_is_exact_256_with_frozen_per_skill_strata(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["selection_audit"]["round_1_candidate_count"] == 256
+    assert result["selection_audit"]["round_2_candidate_count"] == 0
+    assert all(
+        counts == {"negative": 12, "positive_only": 4}
+        for counts in result["selection_audit"]["round_1_distribution"].values()
+    )
+
+
+@pytest.mark.parametrize(
+    "fixture_options",
+    (
+        {"round_one_candidate_count": 255},
+        {"round_one_negative_per_skill": 11},
+    ),
+)
+def test_task4_round_one_count_or_stratum_drift_is_global_protocol_invalid(
+    tmp_path: Path, fixture_options: dict[str, Any]
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, **fixture_options)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "generation_rounds"
+
+
+def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    round_one_rejections = {
+        ("test-skill-00", "positive_only"): 3,
+    }
+    _write_agent_pack(
+        pack,
+        round_one_rejections=round_one_rejections,
+        round_one_contamination_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    round_two_rows = [row for row in generation_rows if row["generation_round"] == 2]
+
+    assert result["status"] == "VALID"
+    assert result["selection_audit"]["round_1_post_pipeline_deficits"] == {
+        "test-skill-00": {"negative": 1, "positive_only": 1}
+    }
+    assert len(round_two_rows) == 4
+    assert (
+        sum(row["proposed_negative_skill_id"] is not None for row in round_two_rows)
+        == 2
+    )
+    assert sum(row["proposed_negative_skill_id"] is None for row in round_two_rows) == 2
+    for row in round_two_rows:
+        request_input = row["request"]["input"]
+        assert set(request_input) == {"canonical_skills", "rules", "quota"}
+        encoded = json.dumps(request_input, sort_keys=True).casefold()
+        for forbidden in (
+            "rejected prompt",
+            "rejection reason",
+            "reviewer label",
+            "contamination score",
+            "arm a",
+            "arm c",
+        ):
+            assert forbidden not in encoded
+
+    round_two_ids = {row["candidate_id"] for row in round_two_rows}
+    for role in ("a", "b"):
+        review_rows = _read_jsonl(pack / f"blind-v2-review-{role}.jsonl")
+        assert round_two_ids <= {row["candidate_id"] for row in review_rows}
+        assert all(
+            set(row["request"]["input"])
+            == {"task_id", "prompt_text", "canonical_skills", "rubric"}
+            for row in review_rows
+            if row["candidate_id"] in round_two_ids
+        )
+
+
+@pytest.mark.parametrize("drift", ("short_round_two", "round_three"))
+def test_task4_rejects_round_two_count_drift_and_any_round_three(
+    tmp_path: Path, drift: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    options: dict[str, Any] = {
+        "round_one_rejections": {("test-skill-00", "negative"): 7},
+        "include_round_two": True,
+    }
+    if drift == "short_round_two":
+        options["round_two_deficit_multiplier"] = 1
+    else:
+        options["include_round_three"] = True
+    _write_agent_pack(pack, **options)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "generation_rounds"
+
+
+def test_task4_round_two_insufficiency_records_deficits_and_ledger_hashes(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+        reject_all_round_two=True,
+    )
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INSUFFICIENT"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_DATASET_INSUFFICIENT"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["deficits"] == {"test-skill-00": {"negative": 1, "positive_only": 0}}
+    assert result["ledger_sha256"] == result["source_file_sha256"]
+    assert result["tasks"] == []
+
+
+def test_task4_selection_is_hash_ordered_unique_and_canonical_twice(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    first = _validate_agent_pack(pack, tmp_path / "repo")
+    second = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert first == second
+    assert runner.canonical_sha256(first) == runner.canonical_sha256(second)
+    assert first["status"] == "VALID"
+    tasks = first["tasks"]
+    assert len(tasks) == 128
+    assert sum(row["proposed_negative_skill_id"] is not None for row in tasks) == 96
+    assert len({row["candidate_id"] for row in tasks}) == 128
+    assert len({row["prompt_text"].encode() for row in tasks}) == 128
+    assert len({runner._normalize(row["prompt_text"]) for row in tasks}) == 128
+    assert len({row["semantic_family_id"] for row in tasks}) == 128
+    for skill in _skills():
+        skill_tasks = [
+            row for row in tasks if row["proposed_gold_skill_id"] == skill["id"]
+        ]
+        for has_negative, expected_count in ((True, 6), (False, 2)):
+            stratum_ids = [
+                row["candidate_id"]
+                for row in skill_tasks
+                if (row["proposed_negative_skill_id"] is not None) is has_negative
+            ]
+            assert len(stratum_ids) == expected_count
+            assert stratum_ids == sorted(stratum_ids, key=runner.selection_key)
+    assert first["selection_audit"]["selected_candidate_ids"] == [
+        row["candidate_id"] for row in tasks
+    ]
+    assert first["contamination_audit"]["semantic_model_id"] == (
+        "sentence-transformers/all-mpnet-base-v2"
+    )
+    assert first["contamination_audit"]["semantic_model_revision"] == (
+        "e8c3b32edf5434bc2275fc9bab85f82640a19130"
+    )
+
+
+def test_task4_selection_authority_drift_is_global_protocol_invalid(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    drifted = deepcopy(TASK4_SELECTION_AUTHORITY)
+    drifted["selection_seed"] = 7171
+    _write_agent_pack(pack, selection_authority=drifted)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "selection_authority"
+
+
+def test_task4_contamination_ledger_is_non_voting_and_hidden_from_reviewers(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    contamination_rows = _read_jsonl(pack / "blind-v2-contamination.jsonl")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert all(
+        set(row)
+        == {
+            "candidate_id",
+            "scanner_decision",
+            "rejection_codes",
+            "evidence_sha256",
+        }
+        for row in contamination_rows
+    )
+    encoded_ledger = json.dumps(contamination_rows, sort_keys=True)
+    for forbidden in (
+        "proposed_gold_skill_id",
+        "proposed_negative_skill_id",
+        "reviewed_gold_skill_id",
+        "reviewed_negative_skill_id",
+    ):
+        assert forbidden not in encoded_ledger
+    for role in ("a", "b"):
+        for row in _read_jsonl(pack / f"blind-v2-review-{role}.jsonl"):
+            encoded_request = json.dumps(row["request"], sort_keys=True)
+            assert "scanner_decision" not in encoded_request
+            assert "rejection_codes" not in encoded_request
+            assert "evidence_sha256" not in encoded_request
+
+
+@pytest.mark.parametrize(
+    ("drift", "failure_stage"),
+    (("invalid_utf8", "ledger_structure"), ("label_field", "contamination_ledger")),
+)
+def test_task4_contamination_ledger_rejects_utf8_or_schema_drift(
+    tmp_path: Path, drift: str, failure_stage: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-contamination.jsonl"
+    if drift == "invalid_utf8":
+        path.write_bytes(b"\xff\n")
+        _refresh_agent_pack_metadata(pack)
+    else:
+        rows = _read_jsonl(path)
+        rows[0]["proposed_gold_skill_id"] = "test-skill-00"
+        _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == failure_stage
 
 
 @pytest.mark.parametrize(
@@ -1534,8 +2172,9 @@ def test_agent_pack_is_exact_unanimous_agent_review_without_human_fields(
     assert result["negative_labeled_task_count"] == 96
     assert result["family_count"] == 128
     assert result["negative_target_coverage_count"] == 16
-    assert result["exact_three_way_agreement_count"] == 128
-    assert result["excluded_candidate_count"] == 1
+    assert result["exact_three_way_agreement_count"] == 255
+    assert result["pipeline_rejected_candidate_count"] == 1
+    assert result["excluded_candidate_count"] == 128
     assert result["model_scores_observed"] is False
     assert all(row["prompt_text"].startswith(PREFIX) for row in result["tasks"])
     assert (
@@ -1614,8 +2253,9 @@ def test_unanimous_agent_pack_excludes_disagreement_without_global_invalid(
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
     assert result["status"] == "VALID"
-    assert result["task_count"] == 127
-    assert result["excluded_candidate_count"] == 1
+    assert result["task_count"] == 128
+    assert result["excluded_candidate_count"] == 128
+    assert result["candidate_outcomes"][candidate_id] == "REJECTED_REVIEW"
     assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
     assert "research_conclusion" not in result
 
@@ -1659,7 +2299,7 @@ def test_agent_pack_allows_one_transport_retry_with_no_response_bytes(
     assert result["status"] == "VALID"
     assert result["task_count"] == 128
     assert result["transport_retry_count"] == 1
-    assert result["agent_roles"][role]["invocation_count"] == 129
+    assert result["agent_roles"][role]["invocation_count"] == 257
 
 
 def test_agent_pack_two_exact_successes_exclude_only_candidate(tmp_path: Path) -> None:
@@ -1678,8 +2318,9 @@ def test_agent_pack_two_exact_successes_exclude_only_candidate(tmp_path: Path) -
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
     assert result["status"] == "VALID"
-    assert result["task_count"] == 127
-    assert result["excluded_candidate_count"] == 1
+    assert result["task_count"] == 128
+    assert result["excluded_candidate_count"] == 128
+    assert result["candidate_outcomes"][candidate_id] == "REJECTED_INVOCATION"
     assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
 
 
@@ -1735,8 +2376,9 @@ def test_agent_pack_empty_invocation_list_excludes_only_candidate(
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
     assert result["status"] == "VALID"
-    assert result["task_count"] == 127
-    assert result["excluded_candidate_count"] == 1
+    assert result["task_count"] == 128
+    assert result["excluded_candidate_count"] == 128
+    assert result["candidate_outcomes"][candidate_id] == "REJECTED_INVOCATION"
     assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
 
 
@@ -1792,8 +2434,9 @@ def test_agent_pack_three_exact_successes_with_count_zero_exclude_candidate(
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
     assert result["status"] == "VALID"
-    assert result["task_count"] == 127
-    assert result["excluded_candidate_count"] == 1
+    assert result["task_count"] == 128
+    assert result["excluded_candidate_count"] == 128
+    assert result["candidate_outcomes"][candidate_id] == "REJECTED_INVOCATION"
     assert candidate_id not in {task["candidate_id"] for task in result["tasks"]}
 
 
@@ -2144,8 +2787,9 @@ def test_agent_pack_response_payload_error_excludes_only_candidate(
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
     assert result["status"] == "VALID"
-    assert result["task_count"] == 127
-    assert result["excluded_candidate_count"] == 1
+    assert result["task_count"] == 128
+    assert result["excluded_candidate_count"] == 128
+    assert result["candidate_outcomes"][candidate_id] == "REJECTED_INVOCATION"
     assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
 
 

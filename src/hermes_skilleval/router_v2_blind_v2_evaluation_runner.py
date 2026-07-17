@@ -104,6 +104,23 @@ AGENT_CONFIGS = {
     },
 }
 SELECTION_SEED = 7170
+SEMANTIC_MODEL_ID = "sentence-transformers/all-mpnet-base-v2"
+SEMANTIC_MODEL_REVISION = "e8c3b32edf5434bc2275fc9bab85f82640a19130"
+TOKEN_5GRAM_JACCARD_MAX = Decimal("0.80")
+CHARACTER_5GRAM_JACCARD_MAX = Decimal("0.85")
+SEMANTIC_COSINE_MAX = Decimal("0.90")
+CONTAMINATION_SCOPES = ("train", "pilot-002", "phase16", "prior_candidate")
+SELECTION_AUTHORITY = {
+    "selection_seed": 7170,
+    "selection_order": "ascending_selection_key(candidate_id)_within_stratum",
+    "max_generation_rounds": 2,
+    "round_1_candidate_count": 256,
+    "round_1_negative_per_skill": 12,
+    "round_1_positive_only_per_skill": 4,
+    "round_2_deficit_multiplier": 2,
+    "final_negative_per_skill": 6,
+    "final_positive_only_per_skill": 2,
+}
 GENERATOR_SYSTEM_PROMPT = (
     "You are the Generator for a preregistered Router V2 blind evaluation. "
     "Create natural English user requests for exactly one primary canonical skill. "
@@ -997,6 +1014,285 @@ def _normalize(value: str) -> str:
     return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
 
 
+def _jaccard(left: set[str], right: set[str]) -> Decimal:
+    if not left and not right:
+        return Decimal("1")
+    return Decimal(len(left & right)) / Decimal(len(left | right))
+
+
+def _token_5grams(value: str) -> set[str]:
+    tokens = _normalize(value).split()
+    return {
+        "\u241f".join(tokens[index : index + 5])
+        for index in range(max(0, len(tokens) - 4))
+    }
+
+
+def _character_5grams(value: str) -> set[str]:
+    normalized = _normalize(value)
+    return {
+        normalized[index : index + 5] for index in range(max(0, len(normalized) - 4))
+    }
+
+
+def _semantic_decimal(
+    semantic_similarity: SemanticSimilarity, left: str, right: str
+) -> Decimal:
+    raw = semantic_similarity(left, right)
+    _require(
+        type(raw) in {int, float, Decimal} and type(raw) is not bool,
+        "semantic similarity must be numeric",
+    )
+    value = Decimal(str(raw))
+    _require(value.is_finite(), "semantic similarity must be finite")
+    return value
+
+
+def _scan_contamination(
+    candidates: list[dict[str, Any]],
+    *,
+    protected_prompts: dict[str, list[str]],
+    protected_family_ids: dict[str, set[str]],
+    semantic_similarity: SemanticSimilarity,
+) -> dict[str, Any]:
+    """Build deterministic non-voting contamination evidence from prompt text."""
+
+    _require(type(candidates) is list, "scan candidates must be a list")
+    _require(
+        type(protected_prompts) is dict
+        and tuple(protected_prompts) == CONTAMINATION_SCOPES,
+        "protected prompt scopes mismatch",
+    )
+    _require(
+        type(protected_family_ids) is dict
+        and tuple(protected_family_ids) == CONTAMINATION_SCOPES,
+        "protected family scopes mismatch",
+    )
+    _require(callable(semantic_similarity), "semantic similarity must be callable")
+
+    prompt_references: dict[str, list[dict[str, Any]]] = {}
+    for scope in CONTAMINATION_SCOPES:
+        prompts = protected_prompts[scope]
+        family_ids = protected_family_ids[scope]
+        _require(
+            type(prompts) is list and all(type(prompt) is str for prompt in prompts),
+            f"{scope} protected prompts must be a string list",
+        )
+        _require(
+            type(family_ids) is set
+            and all(type(family_id) is str for family_id in family_ids),
+            f"{scope} protected family ids must be a string set",
+        )
+        prompt_references[scope] = [
+            {
+                "prompt_text": prompt,
+                "prompt_bytes": prompt.encode("utf-8", errors="strict"),
+                "prompt_sha256": _sha256_bytes(prompt.encode("utf-8", errors="strict")),
+                "normalized": _normalize(prompt),
+                "token_5grams": _token_5grams(prompt),
+                "character_5grams": _character_5grams(prompt),
+            }
+            for prompt in prompts
+        ]
+
+    projected: list[dict[str, Any]] = []
+    seen_candidate_ids: set[str] = set()
+    for raw_candidate in candidates:
+        _require(type(raw_candidate) is dict, "scan candidate must be an object")
+        candidate_id = _exact_lowercase_hex(
+            raw_candidate.get("candidate_id"), length=24, label="candidate id"
+        )
+        _require(candidate_id not in seen_candidate_ids, "candidate ids must be unique")
+        seen_candidate_ids.add(candidate_id)
+        generation_round = raw_candidate.get("generation_round")
+        _require(
+            type(generation_round) is int and generation_round > 0,
+            "generation round must be a positive integer",
+        )
+        prompt_text = _nonempty_string(
+            raw_candidate.get("prompt_text"), "candidate prompt"
+        )
+        prompt_bytes = prompt_text.encode("utf-8", errors="strict")
+        prompt_hash = _exact_lowercase_hex(
+            raw_candidate.get("prompt_text_sha256"),
+            length=64,
+            label="candidate prompt hash",
+        )
+        _require(
+            prompt_hash == _sha256_bytes(prompt_bytes),
+            "candidate prompt hash mismatch",
+        )
+        family_id = _nonempty_string(
+            raw_candidate.get("semantic_family_id"), "semantic family id"
+        )
+        projected.append(
+            {
+                "candidate_id": candidate_id,
+                "generation_round": generation_round,
+                "prompt_text": prompt_text,
+                "prompt_bytes": prompt_bytes,
+                "prompt_text_sha256": prompt_hash,
+                "prompt_sha256": prompt_hash,
+                "normalized": _normalize(prompt_text),
+                "token_5grams": _token_5grams(prompt_text),
+                "character_5grams": _character_5grams(prompt_text),
+                "semantic_family_id": family_id,
+            }
+        )
+
+    scanner_config = {
+        "semantic_model_id": SEMANTIC_MODEL_ID,
+        "semantic_model_revision": SEMANTIC_MODEL_REVISION,
+        "token_5gram_jaccard_reject_at_or_above": str(TOKEN_5GRAM_JACCARD_MAX),
+        "character_5gram_jaccard_reject_at_or_above": str(CHARACTER_5GRAM_JACCARD_MAX),
+        "semantic_cosine_reject_at_or_above": str(SEMANTIC_COSINE_MAX),
+        "normalization": "NFKC-casefold-collapse-whitespace",
+        "selection_seed": SELECTION_SEED,
+    }
+
+    def prompt_events(
+        candidate: dict[str, Any], reference: dict[str, Any], scope: str
+    ) -> list[dict[str, str]]:
+        events: list[dict[str, str]] = []
+        reference_hash = cast(str, reference["prompt_sha256"])
+        if candidate["prompt_bytes"] == reference["prompt_bytes"]:
+            events.append(
+                {
+                    "code": f"exact_prompt_bytes:{scope}",
+                    "reference_sha256": reference_hash,
+                }
+            )
+        if candidate["normalized"] == reference["normalized"]:
+            events.append(
+                {
+                    "code": f"normalized_prompt:{scope}",
+                    "reference_sha256": reference_hash,
+                }
+            )
+        token_jaccard = _jaccard(
+            cast(set[str], candidate["token_5grams"]),
+            cast(set[str], reference["token_5grams"]),
+        )
+        if token_jaccard >= TOKEN_5GRAM_JACCARD_MAX:
+            events.append(
+                {
+                    "code": f"token_5gram_jaccard:{scope}",
+                    "reference_sha256": reference_hash,
+                    "value": str(token_jaccard),
+                }
+            )
+        character_jaccard = _jaccard(
+            cast(set[str], candidate["character_5grams"]),
+            cast(set[str], reference["character_5grams"]),
+        )
+        if character_jaccard >= CHARACTER_5GRAM_JACCARD_MAX:
+            events.append(
+                {
+                    "code": f"character_5gram_jaccard:{scope}",
+                    "reference_sha256": reference_hash,
+                    "value": str(character_jaccard),
+                }
+            )
+        semantic_cosine = _semantic_decimal(
+            semantic_similarity,
+            cast(str, candidate["prompt_text"]),
+            cast(str, reference["prompt_text"]),
+        )
+        if semantic_cosine >= SEMANTIC_COSINE_MAX:
+            events.append(
+                {
+                    "code": f"semantic_cosine:{scope}",
+                    "reference_sha256": reference_hash,
+                    "value": str(semantic_cosine),
+                }
+            )
+        return events
+
+    events_by_id: dict[str, list[dict[str, str]]] = {
+        cast(str, candidate["candidate_id"]): [] for candidate in projected
+    }
+    clean_candidates: list[dict[str, Any]] = []
+    for candidate in sorted(
+        projected,
+        key=lambda row: (
+            cast(int, row["generation_round"]),
+            selection_key(cast(str, row["candidate_id"])),
+        ),
+    ):
+        candidate_id = cast(str, candidate["candidate_id"])
+        events = events_by_id[candidate_id]
+        for scope in CONTAMINATION_SCOPES:
+            if candidate["semantic_family_id"] in protected_family_ids[scope]:
+                family_hash = _sha256_bytes(
+                    cast(str, candidate["semantic_family_id"]).encode("utf-8")
+                )
+                events.append(
+                    {
+                        "code": f"protected_family:{scope}",
+                        "reference_sha256": family_hash,
+                    }
+                )
+            for reference in prompt_references[scope]:
+                events.extend(prompt_events(candidate, reference, scope))
+        if events:
+            continue
+        for winner in clean_candidates:
+            pair_events = prompt_events(candidate, winner, "current_candidate")
+            if candidate["semantic_family_id"] == winner["semantic_family_id"]:
+                pair_events.append(
+                    {
+                        "code": "protected_family:current_candidate",
+                        "reference_sha256": _sha256_bytes(
+                            cast(str, winner["semantic_family_id"]).encode("utf-8")
+                        ),
+                    }
+                )
+            if pair_events:
+                winner_id = cast(str, winner["candidate_id"])
+                events.extend(
+                    {
+                        **event,
+                        "code": f"current_candidate:{winner_id}:{event['code']}",
+                    }
+                    for event in pair_events
+                )
+                break
+        if not events:
+            clean_candidates.append(candidate)
+
+    rows = []
+    for candidate in projected:
+        candidate_id = cast(str, candidate["candidate_id"])
+        events = events_by_id[candidate_id]
+        rejection_codes = sorted({event["code"] for event in events})
+        decision = "REJECT" if rejection_codes else "PASS"
+        evidence = {
+            "candidate_id": candidate_id,
+            "generation_round": candidate["generation_round"],
+            "prompt_text_sha256": candidate["prompt_text_sha256"],
+            "semantic_family_sha256": _sha256_bytes(
+                cast(str, candidate["semantic_family_id"]).encode("utf-8")
+            ),
+            "scanner_config": scanner_config,
+            "events": events,
+        }
+        rows.append(
+            {
+                "candidate_id": candidate_id,
+                "scanner_decision": decision,
+                "rejection_codes": rejection_codes,
+                "evidence_sha256": canonical_sha256(evidence),
+            }
+        )
+    return {
+        "rows": rows,
+        "clean_candidate_ids": [
+            cast(str, candidate["candidate_id"]) for candidate in clean_candidates
+        ],
+        "scanner_config": scanner_config,
+    }
+
+
 def _json_no_duplicate_keys(payload: bytes, label: str) -> dict[str, Any]:
     def pairs(values: list[tuple[str, Any]]) -> dict[str, Any]:
         output: dict[str, Any] = {}
@@ -1399,23 +1695,35 @@ def validate_agent_pack(
     pilot_family_ids: set[str],
     first_read_timestamp: str,
     semantic_similarity: SemanticSimilarity,
+    phase16_family_ids: set[str] | None = None,
+    prior_candidate_prompts: list[str] | None = None,
+    prior_candidate_family_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     """Validate sealed Agent ledgers without loading Arm A/C or scoring routes."""
 
     projected_skills = _project_canonical_skills(canonical_skills)
     canonical_ids = _canonical_skill_ids(projected_skills)
+    if prior_candidate_prompts is None:
+        prior_candidate_prompts = []
     for label, prompts in (
         ("train prompts", train_prompts),
         ("pilot prompts", pilot_prompts),
         ("Phase 16 prompts", phase16_prompts),
+        ("prior candidate prompts", prior_candidate_prompts),
     ):
         _require(
             type(prompts) is list and all(type(prompt) is str for prompt in prompts),
             f"{label} must be a string list",
         )
+    if phase16_family_ids is None:
+        phase16_family_ids = set()
+    if prior_candidate_family_ids is None:
+        prior_candidate_family_ids = set()
     for label, family_ids in (
         ("train family ids", train_family_ids),
         ("pilot family ids", pilot_family_ids),
+        ("Phase 16 family ids", phase16_family_ids),
+        ("prior candidate family ids", prior_candidate_family_ids),
     ):
         _require(
             type(family_ids) is set
@@ -1482,6 +1790,7 @@ def validate_agent_pack(
                 "first_read_timestamp",
                 "roles",
                 "review_schedule_sha256",
+                "selection_authority",
                 "source_file_sha256",
             },
             "agent run metadata",
@@ -1576,6 +1885,26 @@ def validate_agent_pack(
     except (KeyError, TypeError, ValueError) as exc:
         return _agent_pack_protocol_invalid(
             failure_stage="agent_run_metadata",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+
+    try:
+        metadata_selection_authority = _exact_object_fields(
+            metadata["selection_authority"],
+            set(SELECTION_AUTHORITY),
+            "selection authority",
+        )
+        _require(
+            _canonical_contract_json_equal(
+                metadata_selection_authority, SELECTION_AUTHORITY
+            ),
+            "selection authority drift",
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="selection_authority",
             failure_reason=str(exc),
             first_read_timestamp=first_read_timestamp,
             source_file_sha256=source_hashes,
@@ -1708,20 +2037,120 @@ def validate_agent_pack(
             source_file_sha256=source_hashes,
         )
 
-    try:
-        contamination_ids = []
-        for raw_row in contamination_rows:
-            row = _exact_object_fields(raw_row, {"candidate_id"}, "contamination row")
-            contamination_ids.append(
-                _exact_lowercase_hex(
-                    row["candidate_id"], length=24, label="contamination candidate id"
-                )
-            )
-        _require(
-            len(contamination_ids) == len(set(contamination_ids))
-            and set(contamination_ids) == set(candidates),
-            "contamination ledger candidate binding mismatch",
+    def candidate_stratum(candidate: dict[str, Any]) -> str:
+        return (
+            "negative"
+            if candidate["proposed_negative_skill_id"] is not None
+            else "positive_only"
         )
+
+    def stratum_counts(rows: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+        counts = {
+            skill_id: {"negative": 0, "positive_only": 0}
+            for skill_id in sorted(canonical_ids)
+        }
+        for row in rows:
+            counts[cast(str, row["proposed_gold_skill_id"])][
+                candidate_stratum(row)
+            ] += 1
+        return counts
+
+    try:
+        _require(
+            all(
+                candidate["generation_round"] in {1, 2}
+                for candidate in candidates.values()
+            ),
+            "generation is limited to rounds one and two",
+        )
+        round_one_candidates = [
+            candidate
+            for candidate in candidates.values()
+            if candidate["generation_round"] == 1
+        ]
+        round_two_candidates = [
+            candidate
+            for candidate in candidates.values()
+            if candidate["generation_round"] == 2
+        ]
+        _require(
+            len(round_one_candidates) == SELECTION_AUTHORITY["round_1_candidate_count"],
+            "round 1 must contain exactly 256 candidates",
+        )
+        round_one_distribution = stratum_counts(round_one_candidates)
+        _require(
+            all(
+                counts
+                == {
+                    "negative": SELECTION_AUTHORITY["round_1_negative_per_skill"],
+                    "positive_only": SELECTION_AUTHORITY[
+                        "round_1_positive_only_per_skill"
+                    ],
+                }
+                for counts in round_one_distribution.values()
+            ),
+            "round 1 per-skill stratum distribution mismatch",
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="generation_rounds",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
+
+    try:
+        for raw_row in contamination_rows:
+            row = _exact_object_fields(
+                raw_row,
+                {
+                    "candidate_id",
+                    "scanner_decision",
+                    "rejection_codes",
+                    "evidence_sha256",
+                },
+                "contamination row",
+            )
+            _exact_lowercase_hex(
+                row["candidate_id"], length=24, label="contamination candidate id"
+            )
+            _require(
+                row["scanner_decision"] in {"PASS", "REJECT"},
+                "contamination scanner decision mismatch",
+            )
+            _require(
+                type(row["rejection_codes"]) is list
+                and all(type(code) is str for code in row["rejection_codes"]),
+                "contamination rejection codes mismatch",
+            )
+            _exact_lowercase_hex(
+                row["evidence_sha256"],
+                length=64,
+                label="contamination evidence hash",
+            )
+        contamination_scan = _scan_contamination(
+            list(candidates.values()),
+            protected_prompts={
+                "train": train_prompts,
+                "pilot-002": pilot_prompts,
+                "phase16": phase16_prompts,
+                "prior_candidate": prior_candidate_prompts,
+            },
+            protected_family_ids={
+                "train": train_family_ids,
+                "pilot-002": pilot_family_ids,
+                "phase16": phase16_family_ids,
+                "prior_candidate": prior_candidate_family_ids,
+            },
+            semantic_similarity=semantic_similarity,
+        )
+        _require(
+            _canonical_contract_json_equal(
+                contamination_rows, contamination_scan["rows"]
+            ),
+            "contamination ledger evidence mismatch",
+        )
+        clean_candidate_ids = set(contamination_scan["clean_candidate_ids"])
     except (KeyError, TypeError, ValueError) as exc:
         return _agent_pack_protocol_invalid(
             failure_stage="contamination_ledger",
@@ -1753,6 +2182,10 @@ def validate_agent_pack(
                     candidate_id in candidates, "review references unknown candidate"
                 )
                 _require(
+                    candidate_id in clean_candidate_ids,
+                    "contamination-rejected candidate must not be reviewed",
+                )
+                _require(
                     candidate_id not in review_responses[role],
                     "review candidate ids must be unique",
                 )
@@ -1775,8 +2208,8 @@ def validate_agent_pack(
                 valid_transport_retry_count += retry_count
                 review_responses[role][candidate_id] = response
             _require(
-                set(review_responses[role]) == set(candidates),
-                f"{role} must review every candidate",
+                set(review_responses[role]) == clean_candidate_ids,
+                f"{role} must review every contamination-clean candidate",
             )
         except _AgentPackProtocolViolation as exc:
             return _agent_pack_protocol_invalid(
@@ -1830,7 +2263,7 @@ def validate_agent_pack(
         )
         for role in ("reviewer_a", "reviewer_b"):
             expected_schedule_order = sorted(
-                candidates,
+                clean_candidate_ids,
                 key=lambda value: review_schedule_key(role, value),
             )
             _require(
@@ -1851,7 +2284,11 @@ def validate_agent_pack(
         )
 
     accepted: list[dict[str, Any]] = []
+    candidate_outcomes: dict[str, str] = {}
     for candidate_id, candidate in candidates.items():
+        if candidate_id not in clean_candidate_ids:
+            candidate_outcomes[candidate_id] = "REJECTED_CONTAMINATION"
+            continue
         reviewer_a = review_responses["reviewer_a"][candidate_id]
         reviewer_b = review_responses["reviewer_b"][candidate_id]
         if (
@@ -1859,6 +2296,7 @@ def validate_agent_pack(
             or reviewer_a is None
             or reviewer_b is None
         ):
+            candidate_outcomes[candidate_id] = "REJECTED_INVOCATION"
             continue
         expected_labels = (
             candidate["proposed_gold_skill_id"],
@@ -1882,37 +2320,208 @@ def validate_agent_pack(
             == expected_labels
             for review in reviews
         ):
+            candidate_outcomes[candidate_id] = "REJECTED_REVIEW"
             continue
         accepted.append(deepcopy(candidate))
+        candidate_outcomes[candidate_id] = "ELIGIBLE"
+
+    def deficit_document(rows: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+        counts = stratum_counts(rows)
+        output: dict[str, dict[str, int]] = {}
+        for skill_id, skill_counts in counts.items():
+            deficits = {
+                "negative": max(
+                    0,
+                    cast(int, SELECTION_AUTHORITY["final_negative_per_skill"])
+                    - skill_counts["negative"],
+                ),
+                "positive_only": max(
+                    0,
+                    cast(int, SELECTION_AUTHORITY["final_positive_only_per_skill"])
+                    - skill_counts["positive_only"],
+                ),
+            }
+            if any(deficits.values()):
+                output[skill_id] = deficits
+        return output
+
+    round_one_accepted = [
+        candidate for candidate in accepted if candidate["generation_round"] == 1
+    ]
+    round_one_deficits = deficit_document(round_one_accepted)
+    round_two_distribution = stratum_counts(round_two_candidates)
+    try:
+        for skill_id in sorted(canonical_ids):
+            deficits = round_one_deficits.get(
+                skill_id, {"negative": 0, "positive_only": 0}
+            )
+            _require(
+                round_two_distribution[skill_id]
+                == {
+                    stratum: deficit
+                    * cast(int, SELECTION_AUTHORITY["round_2_deficit_multiplier"])
+                    for stratum, deficit in deficits.items()
+                },
+                "round 2 candidate count must equal twice each post-pipeline deficit",
+            )
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="generation_rounds",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
 
     accepted.sort(key=lambda row: cast(str, row["candidate_id"]))
-    gold_counts = Counter(row["proposed_gold_skill_id"] for row in accepted)
-    negative_rows = [
-        row for row in accepted if row["proposed_negative_skill_id"] is not None
-    ]
-    negative_counts = Counter(
-        row["proposed_negative_skill_id"] for row in negative_rows
+    final_deficits = deficit_document(accepted)
+    contamination_audit = {
+        "semantic_model_id": SEMANTIC_MODEL_ID,
+        "semantic_model_revision": SEMANTIC_MODEL_REVISION,
+        "token_5gram_jaccard_reject_at_or_above": str(TOKEN_5GRAM_JACCARD_MAX),
+        "character_5gram_jaccard_reject_at_or_above": str(CHARACTER_5GRAM_JACCARD_MAX),
+        "semantic_cosine_reject_at_or_above": str(SEMANTIC_COSINE_MAX),
+        "candidate_count": len(candidates),
+        "clean_candidate_count": len(clean_candidate_ids),
+        "rejected_candidate_count": len(candidates) - len(clean_candidate_ids),
+        "ledger_sha256": source_hashes["blind-v2-contamination.jsonl"],
+        "scanner_config_sha256": canonical_sha256(contamination_scan["scanner_config"]),
+        "evidence_sha256": canonical_sha256(contamination_scan["rows"]),
+    }
+
+    def selection_audit(selected: list[dict[str, Any]]) -> dict[str, Any]:
+        selected_ids = [cast(str, row["candidate_id"]) for row in selected]
+        selected_by_stratum = {
+            skill_id: {
+                stratum: [
+                    cast(str, row["candidate_id"])
+                    for row in selected
+                    if row["proposed_gold_skill_id"] == skill_id
+                    and candidate_stratum(row) == stratum
+                ]
+                for stratum in ("negative", "positive_only")
+            }
+            for skill_id in sorted(canonical_ids)
+        }
+        return {
+            "selection_authority": deepcopy(SELECTION_AUTHORITY),
+            "selection_authority_sha256": canonical_sha256(SELECTION_AUTHORITY),
+            "accepted_pool_sha256": canonical_sha256(accepted),
+            "round_1_candidate_count": len(round_one_candidates),
+            "round_2_candidate_count": len(round_two_candidates),
+            "round_1_distribution": round_one_distribution,
+            "round_2_distribution": round_two_distribution,
+            "round_1_post_pipeline_deficits": round_one_deficits,
+            "selected_candidate_ids": selected_ids,
+            "selected_candidate_ids_sha256": canonical_sha256(selected_ids),
+            "selected_by_stratum": selected_by_stratum,
+        }
+
+    pipeline_rejected_count = sum(
+        outcome.startswith("REJECTED") for outcome in candidate_outcomes.values()
     )
-    return {
+    common_result = {
         "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
-        "status": "VALID",
-        "task_count": len(accepted),
-        "negative_labeled_task_count": len(negative_rows),
-        "family_count": len({row["semantic_family_id"] for row in accepted}),
-        "gold_distribution": dict(sorted(gold_counts.items())),
-        "negative_distribution": dict(
-            sorted((cast(str, key), value) for key, value in negative_counts.items())
-        ),
-        "negative_target_coverage_count": len(negative_counts),
-        "exact_three_way_agreement_count": len(accepted),
-        "excluded_candidate_count": len(candidates) - len(accepted),
         "transport_retry_count": valid_transport_retry_count,
         "agent_roles": deepcopy(metadata_roles),
         "review_schedule_sha256": deepcopy(metadata_schedules),
         "source_file_sha256": source_hashes,
         "first_read_timestamp": first_read_timestamp,
         "model_scores_observed": False,
-        "tasks": accepted,
+        "contamination_audit": contamination_audit,
+        "exact_three_way_agreement_count": len(accepted),
+        "pipeline_rejected_candidate_count": pipeline_rejected_count,
+    }
+    if final_deficits:
+        return {
+            **common_result,
+            "status": "INSUFFICIENT",
+            "failure_stage": "deterministic_selection",
+            "research_conclusion": "AGENT_BLIND_V2_DATASET_INSUFFICIENT",
+            "router_decision": "KEEP_BASELINE",
+            "production_ready": False,
+            "release_authorized": False,
+            "default_router_unchanged": True,
+            "task_count": 0,
+            "negative_labeled_task_count": 0,
+            "family_count": 0,
+            "excluded_candidate_count": len(candidates),
+            "candidate_outcomes": dict(sorted(candidate_outcomes.items())),
+            "deficits": final_deficits,
+            "ledger_sha256": deepcopy(source_hashes),
+            "selection_audit": selection_audit([]),
+            "tasks": [],
+        }
+
+    selected: list[dict[str, Any]] = []
+    for skill_id in sorted(canonical_ids):
+        for stratum, quota_field in (
+            ("negative", "final_negative_per_skill"),
+            ("positive_only", "final_positive_only_per_skill"),
+        ):
+            pool = sorted(
+                (
+                    row
+                    for row in accepted
+                    if row["proposed_gold_skill_id"] == skill_id
+                    and candidate_stratum(row) == stratum
+                ),
+                key=lambda row: selection_key(cast(str, row["candidate_id"])),
+            )
+            selected.extend(
+                deepcopy(pool[: cast(int, SELECTION_AUTHORITY[quota_field])])
+            )
+
+    selected_ids = {cast(str, row["candidate_id"]) for row in selected}
+    for candidate_id, outcome in tuple(candidate_outcomes.items()):
+        if outcome == "ELIGIBLE":
+            candidate_outcomes[candidate_id] = (
+                "SELECTED" if candidate_id in selected_ids else "NOT_SELECTED"
+            )
+    selected_prompt_bytes = {
+        cast(str, row["prompt_text"]).encode("utf-8") for row in selected
+    }
+    selected_normalized_prompts = {
+        _normalize(cast(str, row["prompt_text"])) for row in selected
+    }
+    selected_families = {cast(str, row["semantic_family_id"]) for row in selected}
+    selected_negative_rows = [
+        row for row in selected if row["proposed_negative_skill_id"] is not None
+    ]
+    _require(len(selected) == 128, "deterministic selection must produce 128 tasks")
+    _require(
+        len(selected_negative_rows) == 96,
+        "deterministic selection must produce 96 negative-labeled tasks",
+    )
+    _require(
+        len(selected_ids)
+        == len(selected_prompt_bytes)
+        == len(selected_normalized_prompts)
+        == len(selected_families)
+        == 128,
+        "selected task, prompt, normalized prompt, and family values must be unique",
+    )
+    gold_counts = Counter(row["proposed_gold_skill_id"] for row in selected)
+    negative_counts = Counter(
+        row["proposed_negative_skill_id"] for row in selected_negative_rows
+    )
+    return {
+        **common_result,
+        "status": "VALID",
+        "task_count": len(selected),
+        "negative_labeled_task_count": len(selected_negative_rows),
+        "family_count": len(selected_families),
+        "gold_distribution": dict(sorted(gold_counts.items())),
+        "negative_distribution": dict(
+            sorted((cast(str, key), value) for key, value in negative_counts.items())
+        ),
+        "negative_target_coverage_count": len(negative_counts),
+        "excluded_candidate_count": len(candidates) - len(selected),
+        "selection_not_selected_count": sum(
+            outcome == "NOT_SELECTED" for outcome in candidate_outcomes.values()
+        ),
+        "candidate_outcomes": dict(sorted(candidate_outcomes.items())),
+        "selection_audit": selection_audit(selected),
+        "tasks": selected,
     }
 
 
