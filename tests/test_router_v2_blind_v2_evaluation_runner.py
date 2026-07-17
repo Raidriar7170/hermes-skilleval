@@ -36,6 +36,17 @@ def _skills() -> list[dict[str, Any]]:
     ]
 
 
+def _authoritative_skills() -> list[dict[str, Any]]:
+    repository = Path(__file__).resolve().parents[1]
+    raw = json.loads(
+        (
+            repository / "docs/demo/phase9-real-skill-library-migration/skills.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert type(raw) is list
+    return cast(list[dict[str, Any]], raw)
+
+
 def _agent_contract_generator_request() -> dict[str, Any]:
     return runner.build_generator_request(
         _skills(),
@@ -521,11 +532,88 @@ def test_agent_contract_non_json_schema_values_raise_controlled_value_error(
         ("reviewer_a", "generator_labels"),
     ),
 )
-def test_agent_contract_builders_reject_extra_canonical_skill_fields(
+def test_agent_contract_builders_project_extra_canonical_skill_fields(
     role: str, extra_field: str
 ) -> None:
     skills = _skills()
     skills[0][extra_field] = f"{PREFIX} SECRET"
+
+    request = (
+        runner.build_generator_request(
+            skills,
+            gold_skill_id="test-skill-00",
+            negative_quota=2,
+            positive_only_quota=1,
+        )
+        if role == "generator"
+        else runner.build_reviewer_request(
+            {
+                "candidate_id": _opaque_candidate_id(),
+                "prompt_text": f"{PREFIX} REQUEST",
+            },
+            skills,
+            role=role,
+        )
+    )
+
+    sealed_skill = request["input"]["canonical_skills"][0]
+    assert tuple(sealed_skill) == runner.CANONICAL_SKILL_FIELDS_IN_ORDER
+    assert extra_field not in sealed_skill
+    assert f"{PREFIX} SECRET" not in json.dumps(request)
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a"))
+def test_agent_contract_builders_project_real_authoritative_skills(role: str) -> None:
+    source_skills = _authoritative_skills()
+    expected = [
+        {
+            field: deepcopy(source_skill[field])
+            for field in runner.CANONICAL_SKILL_FIELDS_IN_ORDER
+        }
+        for source_skill in source_skills
+    ]
+    gold_skill_id = cast(str, source_skills[0]["id"])
+    request = (
+        runner.build_generator_request(
+            source_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=2,
+            positive_only_quota=1,
+        )
+        if role == "generator"
+        else runner.build_reviewer_request(
+            {
+                "candidate_id": _opaque_candidate_id(),
+                "prompt_text": f"{PREFIX} REQUEST",
+            },
+            source_skills,
+            role=role,
+        )
+    )
+
+    sealed_skills = request["input"]["canonical_skills"]
+    assert sealed_skills == expected
+    assert all(
+        tuple(skill) == runner.CANONICAL_SKILL_FIELDS_IN_ORDER
+        for skill in sealed_skills
+    )
+    assert all("path" not in skill for skill in sealed_skills)
+    assert all("token_count_estimate" not in skill for skill in sealed_skills)
+    assert sealed_skills[0]["trigger_terms"] is not source_skills[0]["trigger_terms"]
+
+    source_skills[0]["trigger_terms"].append(f"{PREFIX} SOURCE MUTATION")
+    assert sealed_skills == expected
+
+
+@pytest.mark.parametrize(
+    ("role", "missing_field"),
+    (("generator", "description"), ("reviewer_a", "trigger_terms")),
+)
+def test_agent_contract_builders_reject_missing_canonical_skill_fields(
+    role: str, missing_field: str
+) -> None:
+    skills = _skills()
+    del skills[0][missing_field]
 
     with pytest.raises(ValueError, match="canonical skill 0 fields mismatch"):
         if role == "generator":

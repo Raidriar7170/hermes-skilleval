@@ -378,19 +378,34 @@ def _nonempty_string(value: Any, label: str) -> str:
     return cast(str, value)
 
 
-def _canonical_skill_ids(canonical_skills: Any) -> set[str]:
+def _validated_canonical_skill_rows(
+    canonical_skills: Any, *, exact_fields: bool
+) -> list[dict[str, Any]]:
     _require(type(canonical_skills) is list, "canonical skills must be a list")
     _require(
         len(canonical_skills) == 16,
         "canonical skills must contain exactly 16 entries",
     )
+    required_fields = set(CANONICAL_SKILL_FIELDS_IN_ORDER)
+    rows: list[dict[str, Any]] = []
     ids: list[str] = []
-    for index, skill in enumerate(canonical_skills):
-        skill = _exact_object_fields(
-            skill,
-            set(CANONICAL_SKILL_FIELDS_IN_ORDER),
-            f"canonical skill {index}",
-        )
+    for index, raw_skill in enumerate(canonical_skills):
+        if exact_fields:
+            skill = _exact_object_fields(
+                raw_skill,
+                required_fields,
+                f"canonical skill {index}",
+            )
+        else:
+            _require(
+                type(raw_skill) is dict,
+                f"canonical skill {index} must be an object",
+            )
+            _require(
+                required_fields.issubset(raw_skill),
+                f"canonical skill {index} fields mismatch",
+            )
+            skill = cast(dict[str, Any], raw_skill)
         for field in ("id", "name", "category", "description", "body"):
             _nonempty_string(skill[field], f"canonical skill {index} {field}")
         trigger_terms = skill["trigger_terms"]
@@ -405,8 +420,22 @@ def _canonical_skill_ids(canonical_skills: Any) -> set[str]:
             )
         skill_id = cast(str, skill["id"])
         ids.append(skill_id)
+        rows.append(skill)
     _require(len(ids) == len(set(ids)), "canonical skill ids must be unique")
-    return set(ids)
+    return rows
+
+
+def _canonical_skill_ids(canonical_skills: Any) -> set[str]:
+    rows = _validated_canonical_skill_rows(canonical_skills, exact_fields=True)
+    return {cast(str, skill["id"]) for skill in rows}
+
+
+def _project_canonical_skills(canonical_skills: Any) -> list[dict[str, Any]]:
+    rows = _validated_canonical_skill_rows(canonical_skills, exact_fields=False)
+    return [
+        {field: deepcopy(skill[field]) for field in CANONICAL_SKILL_FIELDS_IN_ORDER}
+        for skill in rows
+    ]
 
 
 def _validate_canonical_json_value(value: Any, active_ids: set[int]) -> None:
@@ -522,7 +551,8 @@ def build_generator_request(
     positive_only_quota: int,
     round_number: int = 1,
 ) -> dict[str, Any]:
-    canonical_ids = _canonical_skill_ids(canonical_skills)
+    projected_canonical_skills = _project_canonical_skills(canonical_skills)
+    canonical_ids = {cast(str, skill["id"]) for skill in projected_canonical_skills}
     _nonempty_string(gold_skill_id, "generator gold skill")
     _require(gold_skill_id in canonical_ids, "generator gold skill must be canonical")
     for label, value in (
@@ -548,7 +578,7 @@ def build_generator_request(
         "system_prompt": GENERATOR_SYSTEM_PROMPT,
         "response_schema": deepcopy(GENERATOR_RESPONSE_SCHEMA),
         "input": {
-            "canonical_skills": deepcopy(canonical_skills),
+            "canonical_skills": projected_canonical_skills,
             "rules": deepcopy(GENERATOR_RULES),
             "quota": {
                 "gold_skill_id": gold_skill_id,
@@ -572,7 +602,7 @@ def build_reviewer_request(
         type(role) is str and role in {"reviewer_a", "reviewer_b"},
         "reviewer role mismatch",
     )
-    _canonical_skill_ids(canonical_skills)
+    projected_canonical_skills = _project_canonical_skills(canonical_skills)
     _require(type(candidate) is dict, "candidate must be an object")
     candidate_id = _exact_lowercase_hex(
         candidate.get("candidate_id"), length=24, label="candidate id"
@@ -590,7 +620,7 @@ def build_reviewer_request(
         "input": {
             "task_id": candidate_id,
             "prompt_text": prompt_text,
-            "canonical_skills": deepcopy(canonical_skills),
+            "canonical_skills": projected_canonical_skills,
             "rubric": deepcopy(REVIEW_RUBRIC),
         },
     }
