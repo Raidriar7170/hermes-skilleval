@@ -308,6 +308,31 @@ def test_per_seed_metrics_are_raw_count_first_with_fixed_denominators() -> None:
 
 
 @pytest.mark.parametrize(
+    ("violation", "message"),
+    (
+        ("non_string_gold", "gold skill"),
+        ("unknown_negative", "tempting negative skill"),
+        ("self_negative", "tempting negative skill"),
+    ),
+)
+def test_per_seed_builder_rejects_invalid_skill_identifiers(
+    violation: str,
+    message: str,
+) -> None:
+    rows = _route_rows("A", 7170)
+    if violation == "non_string_gold":
+        for row in rows[:8]:
+            row["gold_skill_id"] = 17
+    elif violation == "unknown_negative":
+        rows[0]["tempting_negative_skill_id"] = "test-skill-17"
+    else:
+        rows[0]["tempting_negative_skill_id"] = rows[0]["gold_skill_id"]
+
+    with pytest.raises(ValueError, match=message):
+        evaluation.build_per_seed_result(rows)
+
+
+@pytest.mark.parametrize(
     "builder",
     (evaluation.build_aggregate_results, evaluation.apply_preregistered_gate),
 )
@@ -375,6 +400,39 @@ def test_per_seed_grid_rejects_current_contract_drift_fail_closed() -> None:
     )
     with pytest.raises(ValueError, match="A/C seed task identity mismatch"):
         evaluation.build_aggregate_results(inconsistent_identity)
+
+
+@pytest.mark.parametrize(
+    "builder",
+    (evaluation.build_aggregate_results, evaluation.apply_preregistered_gate),
+)
+@pytest.mark.parametrize(
+    ("violation", "message"),
+    (
+        ("non_string_gold", "gold skill"),
+        ("unknown_negative", "tempting negative skill"),
+        ("self_negative", "tempting negative skill"),
+    ),
+)
+def test_aggregate_and_gate_reject_invalid_per_seed_skill_identifiers(
+    builder: Any,
+    violation: str,
+    message: str,
+) -> None:
+    per_seed = deepcopy(_per_seed())
+    for result in per_seed:
+        if violation == "non_string_gold":
+            for task in result["tasks"][:8]:
+                task["gold_skill_id"] = 17
+        elif violation == "unknown_negative":
+            result["tasks"][0]["tempting_negative_skill_id"] = "test-skill-17"
+        else:
+            result["tasks"][0]["tempting_negative_skill_id"] = result["tasks"][0][
+                "gold_skill_id"
+            ]
+
+    with pytest.raises(ValueError, match=message):
+        builder(per_seed)
 
 
 @pytest.mark.parametrize(
@@ -536,6 +594,44 @@ def test_aggregate_gate_and_conclusion_use_only_complete_a_c_seed_grid() -> None
         "release_authorized": False,
         "default_router_unchanged": True,
     }
+
+
+@pytest.mark.parametrize(
+    "builder",
+    (
+        evaluation.build_paired_results,
+        evaluation.build_statistics,
+        evaluation.build_failure_slices,
+    ),
+)
+@pytest.mark.parametrize(
+    "drift",
+    ("semantic_family_id", "tempting_negative_skill_id", "swapped_gold_skill_id"),
+)
+def test_route_matrix_rejects_cross_group_task_identity_drift(
+    builder: Any,
+    drift: str,
+) -> None:
+    routes = _all_routes()
+    changed_group = {
+        row["task_id"]: row
+        for row in routes
+        if row["arm"] == "C" and row["seed"] == 7170
+    }
+    first = changed_group[f"{PREFIX}_TASK_000"]
+    if drift == "semantic_family_id":
+        first["semantic_family_id"] = f"{PREFIX}_FAMILY_DRIFT"
+    elif drift == "tempting_negative_skill_id":
+        first["tempting_negative_skill_id"] = "test-skill-02"
+    else:
+        other = changed_group[f"{PREFIX}_TASK_016"]
+        first["gold_skill_id"], other["gold_skill_id"] = (
+            other["gold_skill_id"],
+            first["gold_skill_id"],
+        )
+
+    with pytest.raises(ValueError, match="route matrix task identity mismatch"):
+        builder(routes)
 
 
 def test_paired_statistics_are_exact_deterministic_and_warn_non_independence() -> None:

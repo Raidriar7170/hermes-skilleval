@@ -228,12 +228,18 @@ def _validate_route_group(
         and len(set(families)) == SEMANTIC_FAMILY_COUNT,
         f"route group must contain {SEMANTIC_FAMILY_COUNT} semantic families",
     )
-    gold_counts = Counter(row.get("gold_skill_id") for row in ordered)
+    gold_ids = [row.get("gold_skill_id") for row in ordered]
+    _require(
+        all(type(gold_id) is str and gold_id for gold_id in gold_ids),
+        "route group gold skill ids must be non-empty strings",
+    )
+    gold_counts = Counter(gold_ids)
     _require(
         len(gold_counts) == CANONICAL_SKILL_COUNT
         and set(gold_counts.values()) == {TASKS_PER_GOLD_SKILL},
         "route group must contain 16 gold skills with eight tasks each",
     )
+    canonical_skill_ids = set(gold_counts)
     negative_rows = [
         row for row in ordered if row.get("tempting_negative_skill_id") is not None
     ]
@@ -255,6 +261,7 @@ def _validate_route_group(
         "each gold skill must contain six negative-labeled and two positive-only tasks",
     )
     for row in ordered:
+        gold_id = row["gold_skill_id"]
         gold_rank = row.get("gold_rank")
         negative_id = row.get("tempting_negative_skill_id")
         negative_rank = row.get("tempting_negative_rank")
@@ -264,8 +271,11 @@ def _validate_route_group(
             _require(negative_rank is None, "positive-only task has a negative rank")
         else:
             _require(
-                type(negative_id) is str and bool(negative_id),
-                "tempting negative id mismatch",
+                type(negative_id) is str
+                and bool(negative_id)
+                and negative_id in canonical_skill_ids
+                and negative_id != gold_id,
+                "tempting negative skill mismatch",
             )
             _require(
                 type(negative_rank) is int and 1 <= negative_rank <= 16,
@@ -397,13 +407,18 @@ def _validate_per_seed_result_contract(
         and len(set(families)) == SEMANTIC_FAMILY_COUNT,
         "per-seed semantic families mismatch",
     )
-    gold_counts = Counter(task.get("gold_skill_id") for task in tasks)
+    gold_ids = [task.get("gold_skill_id") for task in tasks]
     _require(
-        all(type(gold) is str and gold for gold in gold_counts)
-        and len(gold_counts) == CANONICAL_SKILL_COUNT
+        all(type(gold_id) is str and gold_id for gold_id in gold_ids),
+        "per-seed gold skill ids must be non-empty strings",
+    )
+    gold_counts = Counter(gold_ids)
+    _require(
+        len(gold_counts) == CANONICAL_SKILL_COUNT
         and set(gold_counts.values()) == {TASKS_PER_GOLD_SKILL},
         "per-seed gold skill distribution mismatch",
     )
+    canonical_skill_ids = set(gold_counts)
     negative_tasks = [
         task for task in tasks if task.get("tempting_negative_skill_id") is not None
     ]
@@ -426,6 +441,7 @@ def _validate_per_seed_result_contract(
     )
     latency_ns_values: list[int] = []
     for task in tasks:
+        gold_id = task["gold_skill_id"]
         gold_rank = task.get("gold_rank")
         negative_id = task.get("tempting_negative_skill_id")
         negative_rank = task.get("tempting_negative_rank")
@@ -441,8 +457,11 @@ def _validate_per_seed_result_contract(
             )
         else:
             _require(
-                type(negative_id) is str and bool(negative_id),
-                "per-seed tempting negative id mismatch",
+                type(negative_id) is str
+                and bool(negative_id)
+                and negative_id in canonical_skill_ids
+                and negative_id != gold_id,
+                "per-seed tempting negative skill mismatch",
             )
             _require(
                 type(negative_rank) is int
@@ -757,6 +776,24 @@ def _route_matrix(
         },
         "route matrix A/C seed grid mismatch",
     )
+    identity_fields = (
+        "gold_skill_id",
+        "tempting_negative_skill_id",
+        "semantic_family_id",
+    )
+    for task_id in sorted(task_ids):
+        reference = tuple(
+            grid[(ARMS[0], SEEDS[0], task_id)][field] for field in identity_fields
+        )
+        _require(
+            all(
+                tuple(grid[(arm, seed, task_id)][field] for field in identity_fields)
+                == reference
+                for arm in ARMS
+                for seed in SEEDS
+            ),
+            "route matrix task identity mismatch",
+        )
     return grid
 
 
