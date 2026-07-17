@@ -375,7 +375,7 @@ class RouteScorer(Protocol):
 EncoderFactory = Callable[[str, int, Path], EvaluationEncoder]
 ScorerFactory = Callable[[str, int, Path], RouteScorer]
 AuthorityValidator = Callable[..., dict[str, Any]]
-SemanticSimilarity = Callable[[str, str], float]
+SemanticSimilarity = Callable[[str, str], int | float | Decimal]
 
 
 def _require(condition: bool, message: str) -> None:
@@ -1035,6 +1035,13 @@ def _character_5grams(value: str) -> set[str]:
     }
 
 
+def _canonical_decimal(value: Decimal) -> str:
+    _require(type(value) is Decimal and value.is_finite(), "decimal must be finite")
+    if value == 0:
+        return "0"
+    return format(value.normalize(), "f")
+
+
 def _semantic_decimal(
     semantic_similarity: SemanticSimilarity, left: str, right: str
 ) -> Decimal:
@@ -1045,7 +1052,39 @@ def _semantic_decimal(
     )
     value = Decimal(str(raw))
     _require(value.is_finite(), "semantic similarity must be finite")
+    _require(
+        Decimal("-1") <= value <= Decimal("1"),
+        "semantic similarity must be between -1 and 1",
+    )
     return value
+
+
+def _protected_authority_summary(
+    protected_prompts: dict[str, list[str]],
+    protected_family_ids: dict[str, set[str]],
+) -> dict[str, dict[str, int | str]]:
+    summary: dict[str, dict[str, int | str]] = {}
+    for scope in CONTAMINATION_SCOPES:
+        prompt_bytes = sorted(
+            prompt.encode("utf-8", errors="strict")
+            for prompt in protected_prompts[scope]
+        )
+        prompt_digest = hashlib.sha256()
+        for value in prompt_bytes:
+            prompt_digest.update(len(value).to_bytes(8, byteorder="big"))
+            prompt_digest.update(value)
+        normalized_prompts = sorted(
+            _normalize(prompt) for prompt in protected_prompts[scope]
+        )
+        family_ids = sorted(protected_family_ids[scope])
+        summary[scope] = {
+            "prompt_count": len(prompt_bytes),
+            "prompt_bytes_sha256": prompt_digest.hexdigest(),
+            "normalized_prompt_list_sha256": canonical_sha256(normalized_prompts),
+            "family_count": len(family_ids),
+            "family_ids_sha256": canonical_sha256(family_ids),
+        }
+    return summary
 
 
 def _scan_contamination(
@@ -1060,12 +1099,12 @@ def _scan_contamination(
     _require(type(candidates) is list, "scan candidates must be a list")
     _require(
         type(protected_prompts) is dict
-        and tuple(protected_prompts) == CONTAMINATION_SCOPES,
+        and set(protected_prompts) == set(CONTAMINATION_SCOPES),
         "protected prompt scopes mismatch",
     )
     _require(
         type(protected_family_ids) is dict
-        and tuple(protected_family_ids) == CONTAMINATION_SCOPES,
+        and set(protected_family_ids) == set(CONTAMINATION_SCOPES),
         "protected family scopes mismatch",
     )
     _require(callable(semantic_similarity), "semantic similarity must be callable")
@@ -1092,8 +1131,12 @@ def _scan_contamination(
                 "token_5grams": _token_5grams(prompt),
                 "character_5grams": _character_5grams(prompt),
             }
-            for prompt in prompts
+            for prompt in sorted(prompts, key=lambda value: value.encode("utf-8"))
         ]
+
+    protected_authority = _protected_authority_summary(
+        protected_prompts, protected_family_ids
+    )
 
     projected: list[dict[str, Any]] = []
     seen_candidate_ids: set[str] = set()
@@ -1148,6 +1191,8 @@ def _scan_contamination(
         "semantic_cosine_reject_at_or_above": str(SEMANTIC_COSINE_MAX),
         "normalization": "NFKC-casefold-collapse-whitespace",
         "selection_seed": SELECTION_SEED,
+        "protected_authority": protected_authority,
+        "protected_authority_sha256": canonical_sha256(protected_authority),
     }
 
     def prompt_events(
@@ -1203,7 +1248,7 @@ def _scan_contamination(
                 {
                     "code": f"semantic_cosine:{scope}",
                     "reference_sha256": reference_hash,
-                    "value": str(semantic_cosine),
+                    "value": _canonical_decimal(semantic_cosine),
                 }
             )
         return events
@@ -1211,7 +1256,7 @@ def _scan_contamination(
     events_by_id: dict[str, list[dict[str, str]]] = {
         cast(str, candidate["candidate_id"]): [] for candidate in projected
     }
-    clean_candidates: list[dict[str, Any]] = []
+    earlier_candidates: list[dict[str, Any]] = []
     for candidate in sorted(
         projected,
         key=lambda row: (
@@ -1234,9 +1279,7 @@ def _scan_contamination(
                 )
             for reference in prompt_references[scope]:
                 events.extend(prompt_events(candidate, reference, scope))
-        if events:
-            continue
-        for winner in clean_candidates:
+        for winner in earlier_candidates:
             pair_events = prompt_events(candidate, winner, "current_candidate")
             if candidate["semantic_family_id"] == winner["semantic_family_id"]:
                 pair_events.append(
@@ -1257,8 +1300,7 @@ def _scan_contamination(
                     for event in pair_events
                 )
                 break
-        if not events:
-            clean_candidates.append(candidate)
+        earlier_candidates.append(candidate)
 
     rows = []
     for candidate in projected:
@@ -1287,7 +1329,9 @@ def _scan_contamination(
     return {
         "rows": rows,
         "clean_candidate_ids": [
-            cast(str, candidate["candidate_id"]) for candidate in clean_candidates
+            cast(str, candidate["candidate_id"])
+            for candidate in projected
+            if not events_by_id[cast(str, candidate["candidate_id"])]
         ],
         "scanner_config": scanner_config,
     }
@@ -1693,18 +1737,16 @@ def validate_agent_pack(
     phase16_prompts: list[str],
     train_family_ids: set[str],
     pilot_family_ids: set[str],
+    phase16_family_ids: set[str],
+    prior_candidate_prompts: list[str],
+    prior_candidate_family_ids: set[str],
     first_read_timestamp: str,
     semantic_similarity: SemanticSimilarity,
-    phase16_family_ids: set[str] | None = None,
-    prior_candidate_prompts: list[str] | None = None,
-    prior_candidate_family_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     """Validate sealed Agent ledgers without loading Arm A/C or scoring routes."""
 
     projected_skills = _project_canonical_skills(canonical_skills)
     canonical_ids = _canonical_skill_ids(projected_skills)
-    if prior_candidate_prompts is None:
-        prior_candidate_prompts = []
     for label, prompts in (
         ("train prompts", train_prompts),
         ("pilot prompts", pilot_prompts),
@@ -1715,10 +1757,6 @@ def validate_agent_pack(
             type(prompts) is list and all(type(prompt) is str for prompt in prompts),
             f"{label} must be a string list",
         )
-    if phase16_family_ids is None:
-        phase16_family_ids = set()
-    if prior_candidate_family_ids is None:
-        prior_candidate_family_ids = set()
     for label, family_ids in (
         ("train family ids", train_family_ids),
         ("pilot family ids", pilot_family_ids),
@@ -1926,6 +1964,7 @@ def validate_agent_pack(
     candidate_fields = generation_fields - {"request", "invocations"}
     candidates: dict[str, dict[str, Any]] = {}
     generation_responses: dict[str, dict[str, Any] | None] = {}
+    generation_request_quota_counts: Counter[tuple[int, str, str]] = Counter()
     actual_sessions: dict[str, list[str]] = {
         "generator": [],
         "reviewer_a": [],
@@ -1974,6 +2013,20 @@ def validate_agent_pack(
                 quota["round_number"] == row["generation_round"],
                 "generation request round mismatch",
             )
+            expected_quota = {
+                "negative_quota": int(negative is not None),
+                "positive_only_quota": int(negative is None),
+            }
+            _require(
+                all(quota[field] == value for field, value in expected_quota.items()),
+                "generator request quota must match sealed candidate type",
+            )
+            generation_request_quota_counts[
+                (row["generation_round"], gold, "negative")
+            ] += quota["negative_quota"]
+            generation_request_quota_counts[
+                (row["generation_round"], gold, "positive_only")
+            ] += quota["positive_only_quota"]
             expected_request = build_generator_request(
                 projected_skills,
                 gold_skill_id=gold,
@@ -2055,6 +2108,19 @@ def validate_agent_pack(
             ] += 1
         return counts
 
+    def request_quota_distribution(
+        round_number: int,
+    ) -> dict[str, dict[str, int]]:
+        return {
+            skill_id: {
+                stratum: generation_request_quota_counts[
+                    (round_number, skill_id, stratum)
+                ]
+                for stratum in ("negative", "positive_only")
+            }
+            for skill_id in sorted(canonical_ids)
+        }
+
     try:
         _require(
             all(
@@ -2078,6 +2144,7 @@ def validate_agent_pack(
             "round 1 must contain exactly 256 candidates",
         )
         round_one_distribution = stratum_counts(round_one_candidates)
+        round_one_request_quota_distribution = request_quota_distribution(1)
         _require(
             all(
                 counts
@@ -2090,6 +2157,10 @@ def validate_agent_pack(
                 for counts in round_one_distribution.values()
             ),
             "round 1 per-skill stratum distribution mismatch",
+        )
+        _require(
+            round_one_request_quota_distribution == round_one_distribution,
+            "round 1 request quota authority mismatch",
         )
     except (KeyError, TypeError, ValueError) as exc:
         return _agent_pack_protocol_invalid(
@@ -2350,6 +2421,7 @@ def validate_agent_pack(
     ]
     round_one_deficits = deficit_document(round_one_accepted)
     round_two_distribution = stratum_counts(round_two_candidates)
+    round_two_request_quota_distribution = request_quota_distribution(2)
     try:
         for skill_id in sorted(canonical_ids):
             deficits = round_one_deficits.get(
@@ -2363,6 +2435,11 @@ def validate_agent_pack(
                     for stratum, deficit in deficits.items()
                 },
                 "round 2 candidate count must equal twice each post-pipeline deficit",
+            )
+            _require(
+                round_two_request_quota_distribution[skill_id]
+                == round_two_distribution[skill_id],
+                "round 2 request quota authority mismatch",
             )
     except (KeyError, TypeError, ValueError) as exc:
         return _agent_pack_protocol_invalid(
@@ -2385,6 +2462,12 @@ def validate_agent_pack(
         "rejected_candidate_count": len(candidates) - len(clean_candidate_ids),
         "ledger_sha256": source_hashes["blind-v2-contamination.jsonl"],
         "scanner_config_sha256": canonical_sha256(contamination_scan["scanner_config"]),
+        "protected_authority": deepcopy(
+            contamination_scan["scanner_config"]["protected_authority"]
+        ),
+        "protected_authority_sha256": contamination_scan["scanner_config"][
+            "protected_authority_sha256"
+        ],
         "evidence_sha256": canonical_sha256(contamination_scan["rows"]),
     }
 
@@ -2410,6 +2493,12 @@ def validate_agent_pack(
             "round_2_candidate_count": len(round_two_candidates),
             "round_1_distribution": round_one_distribution,
             "round_2_distribution": round_two_distribution,
+            "round_1_request_quota_distribution": (
+                round_one_request_quota_distribution
+            ),
+            "round_2_request_quota_distribution": (
+                round_two_request_quota_distribution
+            ),
             "round_1_post_pipeline_deficits": round_one_deficits,
             "selected_candidate_ids": selected_ids,
             "selected_candidate_ids_sha256": canonical_sha256(selected_ids),
@@ -2452,77 +2541,87 @@ def validate_agent_pack(
             "tasks": [],
         }
 
-    selected: list[dict[str, Any]] = []
-    for skill_id in sorted(canonical_ids):
-        for stratum, quota_field in (
-            ("negative", "final_negative_per_skill"),
-            ("positive_only", "final_positive_only_per_skill"),
-        ):
-            pool = sorted(
-                (
-                    row
-                    for row in accepted
-                    if row["proposed_gold_skill_id"] == skill_id
-                    and candidate_stratum(row) == stratum
-                ),
-                key=lambda row: selection_key(cast(str, row["candidate_id"])),
-            )
-            selected.extend(
-                deepcopy(pool[: cast(int, SELECTION_AUTHORITY[quota_field])])
-            )
+    try:
+        selected: list[dict[str, Any]] = []
+        for skill_id in sorted(canonical_ids):
+            for stratum, quota_field in (
+                ("negative", "final_negative_per_skill"),
+                ("positive_only", "final_positive_only_per_skill"),
+            ):
+                pool = sorted(
+                    (
+                        row
+                        for row in accepted
+                        if row["proposed_gold_skill_id"] == skill_id
+                        and candidate_stratum(row) == stratum
+                    ),
+                    key=lambda row: selection_key(cast(str, row["candidate_id"])),
+                )
+                selected.extend(
+                    deepcopy(pool[: cast(int, SELECTION_AUTHORITY[quota_field])])
+                )
 
-    selected_ids = {cast(str, row["candidate_id"]) for row in selected}
-    for candidate_id, outcome in tuple(candidate_outcomes.items()):
-        if outcome == "ELIGIBLE":
-            candidate_outcomes[candidate_id] = (
-                "SELECTED" if candidate_id in selected_ids else "NOT_SELECTED"
-            )
-    selected_prompt_bytes = {
-        cast(str, row["prompt_text"]).encode("utf-8") for row in selected
-    }
-    selected_normalized_prompts = {
-        _normalize(cast(str, row["prompt_text"])) for row in selected
-    }
-    selected_families = {cast(str, row["semantic_family_id"]) for row in selected}
-    selected_negative_rows = [
-        row for row in selected if row["proposed_negative_skill_id"] is not None
-    ]
-    _require(len(selected) == 128, "deterministic selection must produce 128 tasks")
-    _require(
-        len(selected_negative_rows) == 96,
-        "deterministic selection must produce 96 negative-labeled tasks",
-    )
-    _require(
-        len(selected_ids)
-        == len(selected_prompt_bytes)
-        == len(selected_normalized_prompts)
-        == len(selected_families)
-        == 128,
-        "selected task, prompt, normalized prompt, and family values must be unique",
-    )
-    gold_counts = Counter(row["proposed_gold_skill_id"] for row in selected)
-    negative_counts = Counter(
-        row["proposed_negative_skill_id"] for row in selected_negative_rows
-    )
-    return {
-        **common_result,
-        "status": "VALID",
-        "task_count": len(selected),
-        "negative_labeled_task_count": len(selected_negative_rows),
-        "family_count": len(selected_families),
-        "gold_distribution": dict(sorted(gold_counts.items())),
-        "negative_distribution": dict(
-            sorted((cast(str, key), value) for key, value in negative_counts.items())
-        ),
-        "negative_target_coverage_count": len(negative_counts),
-        "excluded_candidate_count": len(candidates) - len(selected),
-        "selection_not_selected_count": sum(
-            outcome == "NOT_SELECTED" for outcome in candidate_outcomes.values()
-        ),
-        "candidate_outcomes": dict(sorted(candidate_outcomes.items())),
-        "selection_audit": selection_audit(selected),
-        "tasks": selected,
-    }
+        selected_ids = {cast(str, row["candidate_id"]) for row in selected}
+        for candidate_id, outcome in tuple(candidate_outcomes.items()):
+            if outcome == "ELIGIBLE":
+                candidate_outcomes[candidate_id] = (
+                    "SELECTED" if candidate_id in selected_ids else "NOT_SELECTED"
+                )
+        selected_prompt_bytes = {
+            cast(str, row["prompt_text"]).encode("utf-8") for row in selected
+        }
+        selected_normalized_prompts = {
+            _normalize(cast(str, row["prompt_text"])) for row in selected
+        }
+        selected_families = {cast(str, row["semantic_family_id"]) for row in selected}
+        selected_negative_rows = [
+            row for row in selected if row["proposed_negative_skill_id"] is not None
+        ]
+        _require(len(selected) == 128, "deterministic selection must produce 128 tasks")
+        _require(
+            len(selected_negative_rows) == 96,
+            "deterministic selection must produce 96 negative-labeled tasks",
+        )
+        _require(
+            len(selected_ids)
+            == len(selected_prompt_bytes)
+            == len(selected_normalized_prompts)
+            == len(selected_families)
+            == 128,
+            "selected task, prompt, normalized prompt, and family values must be unique",
+        )
+        gold_counts = Counter(row["proposed_gold_skill_id"] for row in selected)
+        negative_counts = Counter(
+            row["proposed_negative_skill_id"] for row in selected_negative_rows
+        )
+        return {
+            **common_result,
+            "status": "VALID",
+            "task_count": len(selected),
+            "negative_labeled_task_count": len(selected_negative_rows),
+            "family_count": len(selected_families),
+            "gold_distribution": dict(sorted(gold_counts.items())),
+            "negative_distribution": dict(
+                sorted(
+                    (cast(str, key), value) for key, value in negative_counts.items()
+                )
+            ),
+            "negative_target_coverage_count": len(negative_counts),
+            "excluded_candidate_count": len(candidates) - len(selected),
+            "selection_not_selected_count": sum(
+                outcome == "NOT_SELECTED" for outcome in candidate_outcomes.values()
+            ),
+            "candidate_outcomes": dict(sorted(candidate_outcomes.items())),
+            "selection_audit": selection_audit(selected),
+            "tasks": selected,
+        }
+    except (KeyError, TypeError, ValueError) as exc:
+        return _agent_pack_protocol_invalid(
+            failure_stage="deterministic_selection",
+            failure_reason=str(exc),
+            first_read_timestamp=first_read_timestamp,
+            source_file_sha256=source_hashes,
+        )
 
 
 def _validate_legacy_human_pack(

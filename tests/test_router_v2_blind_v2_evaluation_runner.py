@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import os
 import subprocess
@@ -8,7 +9,7 @@ import sys
 from copy import deepcopy
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 import pytest
 
@@ -27,6 +28,32 @@ TASK4_SELECTION_AUTHORITY = {
     "final_negative_per_skill": 6,
     "final_positive_only_per_skill": 2,
 }
+
+
+def _task4_protected_prompts() -> dict[str, list[str]]:
+    return {
+        "train": [f"{PREFIX} TRAIN REFERENCE"],
+        "pilot-002": [f"{PREFIX} PILOT REFERENCE"],
+        "phase16": [f"{PREFIX} PHASE16 REFERENCE"],
+        "prior_candidate": [],
+    }
+
+
+def _task4_protected_family_ids() -> dict[str, set[str]]:
+    return {
+        "train": {f"{PREFIX}_TRAIN_FAMILY"},
+        "pilot-002": {f"{PREFIX}_PILOT_FAMILY"},
+        "phase16": set(),
+        "prior_candidate": set(),
+    }
+
+
+def _agent_pack_prompt(round_number: int, serial: int) -> str:
+    unique_tokens = " ".join(
+        hashlib.sha256(f"{round_number}:{serial}:{offset}".encode()).hexdigest()[:12]
+        for offset in range(8)
+    )
+    return f"{PREFIX} {unique_tokens}"
 
 
 def _opaque_candidate_id() -> str:
@@ -252,6 +279,140 @@ def test_task4_contamination_constants_and_decimal_jaccard_are_frozen() -> None:
     assert runner._jaccard({"a", "b", "c", "d"}, {"a", "b", "c", "e"}) == Decimal("0.6")
 
 
+def test_task4_protected_authority_inputs_are_explicitly_required() -> None:
+    parameters = inspect.signature(runner.validate_agent_pack).parameters
+
+    for name in (
+        "phase16_family_ids",
+        "prior_candidate_prompts",
+        "prior_candidate_family_ids",
+    ):
+        assert parameters[name].default is inspect.Parameter.empty
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    (
+        (0, "0"),
+        (-0.0, "0"),
+        (1, "1"),
+        (-1, "-1"),
+        (0.9, "0.9"),
+        (Decimal("0.90"), "0.9"),
+    ),
+)
+def test_task4_semantic_decimal_accepts_range_and_canonicalizes(
+    raw: int | float | Decimal, expected: str
+) -> None:
+    value = runner._semantic_decimal(lambda _left, _right: raw, "left", "right")
+
+    assert runner._canonical_decimal(value) == expected
+
+
+@pytest.mark.parametrize(
+    "raw",
+    (
+        True,
+        float("nan"),
+        float("inf"),
+        float("-inf"),
+        Decimal("NaN"),
+        Decimal("Infinity"),
+        Decimal("-1.0001"),
+        Decimal("1.0001"),
+    ),
+)
+def test_task4_semantic_decimal_rejects_bool_nonfinite_and_out_of_range(
+    raw: object,
+) -> None:
+    with pytest.raises(ValueError):
+        runner._semantic_decimal(lambda _left, _right: cast(Any, raw), "left", "right")
+
+
+def test_task4_semantic_evidence_canonicalizes_float_decimal_and_negative_zero() -> (
+    None
+):
+    candidate = _task4_scan_candidate(
+        "a" * 24, "semantic candidate prompt", "semantic-family"
+    )
+    protected_prompts = {
+        "train": ["semantic protected prompt"],
+        "pilot-002": [],
+        "phase16": [],
+        "prior_candidate": [],
+    }
+    protected_family_ids: dict[str, set[str]] = {
+        scope: set() for scope in runner.CONTAMINATION_SCOPES
+    }
+
+    float_scan = runner._scan_contamination(
+        [candidate],
+        protected_prompts=protected_prompts,
+        protected_family_ids=protected_family_ids,
+        semantic_similarity=lambda _left, _right: 0.9,
+    )
+    decimal_scan = runner._scan_contamination(
+        [candidate],
+        protected_prompts=protected_prompts,
+        protected_family_ids=protected_family_ids,
+        semantic_similarity=lambda _left, _right: Decimal("0.90"),
+    )
+    negative_zero_scan = runner._scan_contamination(
+        [candidate],
+        protected_prompts=protected_prompts,
+        protected_family_ids=protected_family_ids,
+        semantic_similarity=lambda _left, _right: -0.0,
+    )
+    zero_scan = runner._scan_contamination(
+        [candidate],
+        protected_prompts=protected_prompts,
+        protected_family_ids=protected_family_ids,
+        semantic_similarity=lambda _left, _right: Decimal("0.00"),
+    )
+
+    assert float_scan["rows"] == decimal_scan["rows"]
+    assert negative_zero_scan["rows"] == zero_scan["rows"]
+
+
+def test_task4_protected_authority_scope_and_prompt_order_are_canonical() -> None:
+    candidate = _task4_scan_candidate(
+        "d" * 24, "canonical authority candidate", "canonical-family"
+    )
+    forward_prompts = {
+        "train": ["z reference", "a reference", "a reference"],
+        "pilot-002": [],
+        "phase16": [],
+        "prior_candidate": [],
+    }
+    reverse_prompts = {
+        scope: (
+            ["a reference", "z reference", "a reference"] if scope == "train" else []
+        )
+        for scope in reversed(runner.CONTAMINATION_SCOPES)
+    }
+    forward_families: dict[str, set[str]] = {
+        scope: set() for scope in runner.CONTAMINATION_SCOPES
+    }
+    reverse_families: dict[str, set[str]] = {
+        scope: set() for scope in reversed(runner.CONTAMINATION_SCOPES)
+    }
+
+    forward = runner._scan_contamination(
+        [candidate],
+        protected_prompts=forward_prompts,
+        protected_family_ids=forward_families,
+        semantic_similarity=lambda _left, _right: Decimal("0.90"),
+    )
+    reverse = runner._scan_contamination(
+        [candidate],
+        protected_prompts=reverse_prompts,
+        protected_family_ids=reverse_families,
+        semantic_similarity=lambda _left, _right: Decimal("0.90"),
+    )
+
+    assert forward == reverse
+
+
 def _task4_scan_candidate(
     candidate_id: str,
     prompt_text: str,
@@ -440,6 +601,46 @@ def test_task4_current_candidate_conflict_uses_round_then_selection_key() -> Non
             code.startswith("current_candidate:")
             for code in by_id[candidate_id]["rejection_codes"]
         )
+
+
+def test_task4_current_candidate_loser_cannot_escape_protected_rejected_winner() -> (
+    None
+):
+    winner_id = "b" * 24
+    loser_id = "c" * 24
+    scan = runner._scan_contamination(
+        [
+            _task4_scan_candidate(
+                winner_id,
+                "shared protected winner prompt",
+                "protected-winner-family",
+                generation_round=1,
+            ),
+            _task4_scan_candidate(
+                loser_id,
+                "shared protected winner prompt",
+                "loser-family",
+                generation_round=2,
+            ),
+        ],
+        protected_prompts={scope: [] for scope in runner.CONTAMINATION_SCOPES},
+        protected_family_ids={
+            "train": {"protected-winner-family"},
+            "pilot-002": set(),
+            "phase16": set(),
+            "prior_candidate": set(),
+        },
+        semantic_similarity=lambda _left, _right: 0,
+    )
+
+    by_id = {row["candidate_id"]: row for row in scan["rows"]}
+    assert by_id[winner_id]["scanner_decision"] == "REJECT"
+    assert by_id[loser_id]["scanner_decision"] == "REJECT"
+    assert any(
+        code.startswith(f"current_candidate:{winner_id}:")
+        for code in by_id[loser_id]["rejection_codes"]
+    )
+    assert scan["clean_candidate_ids"] == []
 
 
 @pytest.mark.parametrize("scope", ("train", "pilot-002", "phase16", "prior_candidate"))
@@ -1365,6 +1566,10 @@ def _write_agent_pack(
     reject_all_round_two: bool = False,
     include_round_three: bool = False,
     selection_authority: dict[str, Any] | None = None,
+    protected_prompts: dict[str, list[str]] | None = None,
+    protected_family_ids: dict[str, set[str]] | None = None,
+    semantic_similarity: Callable[[str, str], int | float | Decimal] | None = None,
+    current_conflict_with_protected: bool = False,
 ) -> None:
     root.mkdir()
     generation_rows: list[dict[str, Any]] = []
@@ -1379,15 +1584,6 @@ def _write_agent_pack(
         "reviewer_b": [],
     }
     role_invocation_counts = dict.fromkeys(role_session_ids, 0)
-
-    def prompt_text(round_number: int, serial: int) -> str:
-        unique_tokens = " ".join(
-            hashlib.sha256(f"{round_number}:{serial}:{offset}".encode()).hexdigest()[
-                :12
-            ]
-            for offset in range(8)
-        )
-        return f"{PREFIX} {unique_tokens}"
 
     candidate_specs: list[dict[str, Any]] = []
     round_one_rejections = round_one_rejections or {}
@@ -1476,6 +1672,25 @@ def _write_agent_pack(
             }
         )
 
+    if current_conflict_with_protected:
+        protected = next(
+            spec for spec in candidate_specs if spec["contamination_rejected"]
+        )
+        protected_stratum = (
+            "negative" if protected["negative"] is not None else "positive_only"
+        )
+        loser = next(
+            spec
+            for spec in candidate_specs
+            if spec["generation_round"] == 2
+            and spec["gold"] == protected["gold"]
+            and ("negative" if spec["negative"] is not None else "positive_only")
+            == protected_stratum
+        )
+        loser["prompt_override"] = _agent_pack_prompt(
+            cast(int, protected["generation_round"]), cast(int, protected["serial"])
+        )
+
     candidate_by_id: dict[str, dict[str, Any]] = {}
     spec_by_id: dict[str, dict[str, Any]] = {}
     for spec in candidate_specs:
@@ -1483,7 +1698,9 @@ def _write_agent_pack(
         round_number = cast(int, spec["generation_round"])
         gold = cast(str, spec["gold"])
         negative = cast(str | None, spec["negative"])
-        prompt = prompt_text(round_number, index)
+        prompt = cast(
+            str, spec.get("prompt_override", _agent_pack_prompt(round_number, index))
+        )
         generation_request = runner.build_generator_request(
             _skills(),
             gold_skill_id=gold,
@@ -1550,21 +1767,14 @@ def _write_agent_pack(
             }
         )
 
+    protected_prompts = protected_prompts or _task4_protected_prompts()
+    protected_family_ids = protected_family_ids or _task4_protected_family_ids()
+    semantic_similarity = semantic_similarity or (lambda _left, _right: 0.0)
     scan = runner._scan_contamination(
         list(candidate_by_id.values()),
-        protected_prompts={
-            "train": [f"{PREFIX} TRAIN REFERENCE"],
-            "pilot-002": [f"{PREFIX} PILOT REFERENCE"],
-            "phase16": [f"{PREFIX} PHASE16 REFERENCE"],
-            "prior_candidate": [],
-        },
-        protected_family_ids={
-            "train": {f"{PREFIX}_TRAIN_FAMILY"},
-            "pilot-002": {f"{PREFIX}_PILOT_FAMILY"},
-            "phase16": set(),
-            "prior_candidate": set(),
-        },
-        semantic_similarity=lambda _left, _right: 0.0,
+        protected_prompts=protected_prompts,
+        protected_family_ids=protected_family_ids,
+        semantic_similarity=semantic_similarity,
     )
     contamination_rows.extend(scan["rows"])
     clean_candidate_ids = set(scan["clean_candidate_ids"])
@@ -1723,19 +1933,224 @@ def _sync_agent_pack_role_metadata(root: Path, role: str) -> None:
     metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
 
 
-def _validate_agent_pack(pack: Path, repository_root: Path) -> dict[str, Any]:
+def _validate_agent_pack(
+    pack: Path,
+    repository_root: Path,
+    *,
+    protected_prompts: dict[str, list[str]] | None = None,
+    protected_family_ids: dict[str, set[str]] | None = None,
+    semantic_similarity: Callable[[str, str], int | float | Decimal] | None = None,
+) -> dict[str, Any]:
+    protected_prompts = protected_prompts or _task4_protected_prompts()
+    protected_family_ids = protected_family_ids or _task4_protected_family_ids()
     return runner.validate_agent_pack(
         pack,
         repository_root=repository_root,
         canonical_skills=_skills(),
-        train_prompts=[f"{PREFIX} TRAIN REFERENCE"],
-        pilot_prompts=[f"{PREFIX} PILOT REFERENCE"],
-        phase16_prompts=[f"{PREFIX} PHASE16 REFERENCE"],
-        train_family_ids={f"{PREFIX}_TRAIN_FAMILY"},
-        pilot_family_ids={f"{PREFIX}_PILOT_FAMILY"},
+        train_prompts=protected_prompts["train"],
+        pilot_prompts=protected_prompts["pilot-002"],
+        phase16_prompts=protected_prompts["phase16"],
+        prior_candidate_prompts=protected_prompts["prior_candidate"],
+        train_family_ids=protected_family_ids["train"],
+        pilot_family_ids=protected_family_ids["pilot-002"],
+        phase16_family_ids=protected_family_ids["phase16"],
+        prior_candidate_family_ids=protected_family_ids["prior_candidate"],
         first_read_timestamp="2026-07-16T00:00:00Z",
-        semantic_similarity=lambda _left, _right: 0.0,
+        semantic_similarity=semantic_similarity or (lambda _left, _right: 0.0),
     )
+
+
+@pytest.mark.parametrize("scope", runner.CONTAMINATION_SCOPES)
+@pytest.mark.parametrize("authority_kind", ("prompt", "family"))
+def test_task4_pack_rejects_unmatched_protected_authority_mutation(
+    tmp_path: Path, scope: str, authority_kind: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    protected_prompts = _task4_protected_prompts()
+    protected_family_ids = _task4_protected_family_ids()
+    if authority_kind == "prompt":
+        protected_prompts[scope].append(
+            f"{PREFIX} UNMATCHED {scope} PROTECTED PROMPT MUTATION"
+        )
+    else:
+        protected_family_ids[scope].add(
+            f"{PREFIX}_UNMATCHED_{scope}_PROTECTED_FAMILY_MUTATION"
+        )
+
+    result = _validate_agent_pack(
+        pack,
+        tmp_path / "repo",
+        protected_prompts=protected_prompts,
+        protected_family_ids=protected_family_ids,
+    )
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "contamination_ledger"
+
+
+def test_task4_legal_protected_authorities_have_distinct_audit_hashes(
+    tmp_path: Path,
+) -> None:
+    baseline_pack = tmp_path / "baseline-pack"
+    changed_pack = tmp_path / "changed-pack"
+    baseline_prompts = _task4_protected_prompts()
+    baseline_families = _task4_protected_family_ids()
+    changed_prompts = deepcopy(baseline_prompts)
+    changed_families = deepcopy(baseline_families)
+    changed_prompts["prior_candidate"].extend(
+        [f"{PREFIX} UNMATCHED DUPLICATE", f"{PREFIX} UNMATCHED DUPLICATE"]
+    )
+    changed_families["phase16"].add(f"{PREFIX}_UNMATCHED_PHASE16_FAMILY")
+    _write_agent_pack(
+        baseline_pack,
+        protected_prompts=baseline_prompts,
+        protected_family_ids=baseline_families,
+    )
+    _write_agent_pack(
+        changed_pack,
+        protected_prompts=changed_prompts,
+        protected_family_ids=changed_families,
+    )
+
+    baseline = _validate_agent_pack(
+        baseline_pack,
+        tmp_path / "repo",
+        protected_prompts=baseline_prompts,
+        protected_family_ids=baseline_families,
+    )
+    changed = _validate_agent_pack(
+        changed_pack,
+        tmp_path / "repo",
+        protected_prompts=changed_prompts,
+        protected_family_ids=changed_families,
+    )
+
+    assert baseline["status"] == changed["status"] == "VALID"
+    assert (
+        baseline["contamination_audit"]["protected_authority"]
+        != changed["contamination_audit"]["protected_authority"]
+    )
+    assert (
+        baseline["contamination_audit"]["protected_authority_sha256"]
+        != changed["contamination_audit"]["protected_authority_sha256"]
+    )
+    prior_summary = changed["contamination_audit"]["protected_authority"][
+        "prior_candidate"
+    ]
+    assert prior_summary["prompt_count"] == 2
+    assert set(prior_summary) == {
+        "prompt_count",
+        "prompt_bytes_sha256",
+        "normalized_prompt_list_sha256",
+        "family_count",
+        "family_ids_sha256",
+    }
+
+
+def test_task4_pack_current_loser_is_rejected_after_protected_winner(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_contamination_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+        current_conflict_with_protected=True,
+    )
+    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    prompt_groups: dict[str, list[dict[str, Any]]] = {}
+    for row in generation_rows:
+        prompt_groups.setdefault(row["prompt_text"], []).append(row)
+    winner, loser = next(
+        sorted(rows, key=lambda row: row["generation_round"])
+        for rows in prompt_groups.values()
+        if len(rows) == 2
+    )
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["candidate_outcomes"][winner["candidate_id"]] == (
+        "REJECTED_CONTAMINATION"
+    )
+    assert result["candidate_outcomes"][loser["candidate_id"]] == (
+        "REJECTED_CONTAMINATION"
+    )
+
+
+@pytest.mark.parametrize(
+    ("rule", "expected_code"),
+    (
+        ("token", "token_5gram_jaccard:train"),
+        ("character", "character_5gram_jaccard:train"),
+        ("semantic", "semantic_cosine:train"),
+    ),
+)
+def test_task4_pack_threshold_equality_rejects_candidate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    rule: str,
+    expected_code: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    target_prompt = _agent_pack_prompt(1, 0)
+    protected_prompt = f"{PREFIX} TRAIN REFERENCE"
+    token_shared = {f"token-shared-{index}" for index in range(4)}
+    character_shared = {f"character-shared-{index}" for index in range(17)}
+    monkeypatch.setattr(
+        runner,
+        "_token_5grams",
+        lambda text: (
+            token_shared
+            if rule == "token" and text == target_prompt
+            else token_shared | {"token-extra"}
+            if rule == "token" and text == protected_prompt
+            else {f"token:{text}"}
+        ),
+    )
+    monkeypatch.setattr(
+        runner,
+        "_character_5grams",
+        lambda text: (
+            character_shared
+            if rule == "character" and text == target_prompt
+            else character_shared
+            | {"character-extra-1", "character-extra-2", "character-extra-3"}
+            if rule == "character" and text == protected_prompt
+            else {f"character:{text}"}
+        ),
+    )
+
+    def semantic_similarity(left: str, right: str) -> Decimal:
+        return (
+            Decimal("0.90")
+            if rule == "semantic"
+            and left == target_prompt
+            and right == protected_prompt
+            else Decimal("0")
+        )
+
+    _write_agent_pack(pack, semantic_similarity=semantic_similarity)
+
+    result = _validate_agent_pack(
+        pack, tmp_path / "repo", semantic_similarity=semantic_similarity
+    )
+    target_id = next(
+        row["candidate_id"]
+        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        if row["prompt_text"] == target_prompt
+    )
+    contamination = {
+        row["candidate_id"]: row
+        for row in _read_jsonl(pack / "blind-v2-contamination.jsonl")
+    }
+
+    assert result["status"] == "VALID"
+    assert result["candidate_outcomes"][target_id] == "REJECTED_CONTAMINATION"
+    assert expected_code in contamination[target_id]["rejection_codes"]
 
 
 def test_task4_round_one_is_exact_256_with_frozen_per_skill_strata(
@@ -1752,6 +2167,10 @@ def test_task4_round_one_is_exact_256_with_frozen_per_skill_strata(
     assert all(
         counts == {"negative": 12, "positive_only": 4}
         for counts in result["selection_audit"]["round_1_distribution"].values()
+    )
+    assert (
+        result["selection_audit"]["round_1_request_quota_distribution"]
+        == (result["selection_audit"]["round_1_distribution"])
     )
 
 
@@ -1804,6 +2223,10 @@ def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
         == 2
     )
     assert sum(row["proposed_negative_skill_id"] is None for row in round_two_rows) == 2
+    assert (
+        result["selection_audit"]["round_2_request_quota_distribution"]
+        == (result["selection_audit"]["round_2_distribution"])
+    )
     for row in round_two_rows:
         request_input = row["request"]["input"]
         assert set(request_input) == {"canonical_skills", "rules", "quota"}
@@ -1819,6 +2242,10 @@ def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
             assert forbidden not in encoded
 
     round_two_ids = {row["candidate_id"] for row in round_two_rows}
+    round_one_ids = {
+        row["candidate_id"] for row in generation_rows if row["generation_round"] == 1
+    }
+    all_role_sessions: list[str] = []
     for role in ("a", "b"):
         review_rows = _read_jsonl(pack / f"blind-v2-review-{role}.jsonl")
         assert round_two_ids <= {row["candidate_id"] for row in review_rows}
@@ -1828,6 +2255,28 @@ def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
             for row in review_rows
             if row["candidate_id"] in round_two_ids
         )
+        role_name = f"reviewer_{role}"
+        assert [row["candidate_id"] for row in review_rows] == sorted(
+            (row["candidate_id"] for row in review_rows),
+            key=lambda candidate_id: runner.review_schedule_key(
+                role_name, candidate_id
+            ),
+        )
+        round_one_sessions = {
+            _pack_invocation_identity(invocation)
+            for row in review_rows
+            if row["candidate_id"] in round_one_ids
+            for invocation in row["invocations"]
+        }
+        round_two_sessions = {
+            _pack_invocation_identity(invocation)
+            for row in review_rows
+            if row["candidate_id"] in round_two_ids
+            for invocation in row["invocations"]
+        }
+        assert round_one_sessions.isdisjoint(round_two_sessions)
+        all_role_sessions.extend(round_one_sessions | round_two_sessions)
+    assert len(all_role_sessions) == len(set(all_role_sessions))
 
 
 @pytest.mark.parametrize("drift", ("short_round_two", "round_three"))
@@ -1872,6 +2321,133 @@ def test_task4_round_two_insufficiency_records_deficits_and_ledger_hashes(
     assert result["deficits"] == {"test-skill-00": {"negative": 1, "positive_only": 0}}
     assert result["ledger_sha256"] == result["source_file_sha256"]
     assert result["tasks"] == []
+    round_two_ids = {
+        row["candidate_id"]
+        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        if row["generation_round"] == 2
+    }
+    assert {
+        result["candidate_outcomes"][candidate_id] for candidate_id in round_two_ids
+    } == {"REJECTED_REVIEW"}
+
+
+@pytest.mark.parametrize(
+    ("transport_case", "expected_status", "expected_stage"),
+    (
+        ("empty", "INSUFFICIENT", "deterministic_selection"),
+        ("invalid_retry_count", "INVALID", "invocation_protocol"),
+    ),
+)
+def test_task4_round_two_transport_failure_is_not_masked_by_round_one_surplus(
+    tmp_path: Path,
+    transport_case: str,
+    expected_status: str,
+    expected_stage: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+    round_two_ids = {
+        row["candidate_id"]
+        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        if row["generation_round"] == 2
+    }
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    round_two_rows = [row for row in rows if row["candidate_id"] in round_two_ids]
+    if transport_case == "empty":
+        for row in round_two_rows:
+            row["invocations"] = []
+    else:
+        round_two_rows[0]["invocations"][0]["envelope"]["transport_retry_count"] = 1
+    _rewrite_jsonl(path, rows)
+    if transport_case == "empty":
+        _sync_agent_pack_role_metadata(pack, "reviewer_a")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == expected_status
+    assert result["failure_stage"] == expected_stage
+    assert result["router_decision"] == "KEEP_BASELINE"
+    if transport_case == "empty":
+        assert result["research_conclusion"] == ("AGENT_BLIND_V2_DATASET_INSUFFICIENT")
+        assert {
+            result["candidate_outcomes"][candidate_id] for candidate_id in round_two_ids
+        } == {"REJECTED_INVOCATION"}
+    else:
+        assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+
+
+def test_task4_round_two_session_reuse_is_global_protocol_invalid(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+    round_two_ids = {
+        row["candidate_id"]
+        for row in _read_jsonl(pack / "blind-v2-generation.jsonl")
+        if row["generation_round"] == 2
+    }
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    round_one_row = next(
+        row for row in rows if row["candidate_id"] not in round_two_ids
+    )
+    round_two_row = next(row for row in rows if row["candidate_id"] in round_two_ids)
+    reused_session = _pack_invocation_identity(round_one_row["invocations"][0])
+    round_two_row["invocations"][0]["envelope"]["session_id"] = reused_session
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, "reviewer_a")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "agent_run_metadata"
+
+
+@pytest.mark.parametrize("round_number", (1, 2))
+def test_task4_generator_quota_self_signed_drift_is_protocol_invalid(
+    tmp_path: Path, round_number: int
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections=(
+            {("test-skill-00", "negative"): 7} if round_number == 2 else None
+        ),
+        include_round_two=round_number == 2,
+    )
+    path = pack / "blind-v2-generation.jsonl"
+    rows = _read_jsonl(path)
+    row = next(
+        row
+        for row in rows
+        if row["generation_round"] == round_number
+        and row["proposed_negative_skill_id"] is not None
+    )
+    quota = row["request"]["input"]["quota"]
+    quota["negative_quota"] = 0
+    quota["positive_only_quota"] = 1
+    _agent_contract_rehash_request(row["request"])
+    for invocation in row["invocations"]:
+        invocation["envelope"]["request_sha256"] = row["request"]["request_sha256"]
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "generation_ledger"
 
 
 def test_task4_selection_is_hash_ordered_unique_and_canonical_twice(
@@ -1930,6 +2506,32 @@ def test_task4_selection_authority_drift_is_global_protocol_invalid(
     assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
     assert result["router_decision"] == "KEEP_BASELINE"
     assert result["failure_stage"] == "selection_authority"
+
+
+def test_task4_deterministic_selection_error_is_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    original_selection_key = runner.selection_key
+    calls = 0
+
+    def fail_after_contamination_scan(candidate_id: str) -> str:
+        nonlocal calls
+        calls += 1
+        if calls > 256:
+            raise ValueError(f"{PREFIX} DETERMINISTIC SELECTION FAILURE")
+        return original_selection_key(candidate_id)
+
+    monkeypatch.setattr(runner, "selection_key", fail_after_contamination_scan)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "deterministic_selection"
+    assert result["failure_reason"] == (f"{PREFIX} DETERMINISTIC SELECTION FAILURE")
 
 
 def test_task4_contamination_ledger_is_non_voting_and_hidden_from_reviewers(
