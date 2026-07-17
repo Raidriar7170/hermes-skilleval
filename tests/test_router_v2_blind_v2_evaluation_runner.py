@@ -718,6 +718,57 @@ def test_agent_contract_reviewer_response_validates_labels_and_strict_types() ->
         runner.validate_agent_response(extra, request=request)
 
 
+def test_agent_contract_reviewer_rejection_response_and_envelope_validate() -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response["decision"] = "REJECT_NOT_CONFUSABLE"
+    response["negative_confusable"] = False
+    envelope = _agent_contract_envelope(
+        request, response, session_id="fresh-rejection-session"
+    )
+
+    assert runner.validate_agent_response(response, request=request) == response
+    assert (
+        runner.validate_agent_invocation_envelope(envelope, request=request) == response
+    )
+
+
+@pytest.mark.parametrize("negative_confusable", (True, False))
+def test_agent_contract_reviewer_negative_confusability_accepts_strict_booleans(
+    negative_confusable: bool,
+) -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response["negative_confusable"] = negative_confusable
+
+    assert runner.validate_agent_response(response, request=request) == response
+
+
+@pytest.mark.parametrize("invalid", (None, 0, 0.0, "false"))
+def test_agent_contract_reviewer_negative_confusability_rejects_non_booleans(
+    invalid: Any,
+) -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response["negative_confusable"] = invalid
+
+    with pytest.raises(ValueError, match="reviewer negative confusability mismatch"):
+        runner.validate_agent_response(response, request=request)
+
+
+@pytest.mark.parametrize("invalid", (False, True))
+def test_agent_contract_reviewer_without_negative_requires_null_confusability(
+    invalid: bool,
+) -> None:
+    request = _agent_contract_reviewer_request()
+    response = _agent_contract_reviewer_response()
+    response["reviewed_negative_skill_id"] = None
+    response["negative_confusable"] = invalid
+
+    with pytest.raises(ValueError, match="reviewer negative confusability mismatch"):
+        runner.validate_agent_response(response, request=request)
+
+
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)

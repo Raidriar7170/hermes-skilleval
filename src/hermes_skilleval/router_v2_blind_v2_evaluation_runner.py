@@ -734,7 +734,7 @@ def _validate_reviewer_response(
         _require(type(response[field]) is bool, f"reviewer {field} must be boolean")
     _require(
         (negative is None and response["negative_confusable"] is None)
-        or (negative is not None and response["negative_confusable"] is True),
+        or (negative is not None and type(response["negative_confusable"]) is bool),
         "reviewer negative confusability mismatch",
     )
     _require(
