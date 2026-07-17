@@ -150,6 +150,14 @@ AGENT_REVIEW_DECISIONS = (
     "REJECT_LABEL_LEAKAGE",
 )
 AGENT_REVIEW_CONFIDENCE = ("LOW", "MEDIUM", "HIGH")
+CANONICAL_SKILL_FIELDS_IN_ORDER = (
+    "id",
+    "name",
+    "category",
+    "description",
+    "trigger_terms",
+    "body",
+)
 GENERATOR_RESPONSE_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
@@ -295,25 +303,96 @@ def _nonempty_string(value: Any, label: str) -> str:
 
 def _canonical_skill_ids(canonical_skills: Any) -> set[str]:
     _require(type(canonical_skills) is list, "canonical skills must be a list")
+    _require(
+        len(canonical_skills) == 16,
+        "canonical skills must contain exactly 16 entries",
+    )
     ids: list[str] = []
     for index, skill in enumerate(canonical_skills):
-        _require(type(skill) is dict, f"canonical skill {index} must be an object")
-        skill_id = _nonempty_string(
-            cast(dict[str, Any], skill).get("id"),
-            f"canonical skill {index} id",
+        skill = _exact_object_fields(
+            skill,
+            set(CANONICAL_SKILL_FIELDS_IN_ORDER),
+            f"canonical skill {index}",
         )
+        for field in ("id", "name", "category", "description", "body"):
+            _nonempty_string(skill[field], f"canonical skill {index} {field}")
+        trigger_terms = skill["trigger_terms"]
+        _require(
+            type(trigger_terms) is list,
+            f"canonical skill {index} trigger_terms must be a list",
+        )
+        for term_index, term in enumerate(trigger_terms):
+            _nonempty_string(
+                term,
+                f"canonical skill {index} trigger_terms item {term_index}",
+            )
+        skill_id = cast(str, skill["id"])
         ids.append(skill_id)
-    _require(bool(ids), "canonical skills must not be empty")
     _require(len(ids) == len(set(ids)), "canonical skill ids must be unique")
     return set(ids)
 
 
+def _validate_canonical_json_value(value: Any, active_ids: set[int]) -> None:
+    value_type = type(value)
+    if value is None or value_type in {bool, int}:
+        return
+    if value_type is float:
+        _require(math.isfinite(value), "canonical JSON numbers must be finite")
+        return
+    if value_type is str:
+        try:
+            value.encode("utf-8", errors="strict")
+        except UnicodeEncodeError as exc:
+            raise ValueError("canonical JSON strings must be valid UTF-8") from exc
+        return
+    if value_type not in {list, dict}:
+        raise ValueError("canonical JSON contains a non-JSON value")
+    identity = id(value)
+    _require(identity not in active_ids, "canonical JSON must not contain a cycle")
+    active_ids.add(identity)
+    try:
+        if value_type is list:
+            for item in value:
+                _validate_canonical_json_value(item, active_ids)
+        else:
+            for key, item in value.items():
+                _require(
+                    type(key) is str,
+                    "canonical JSON object keys must be strings",
+                )
+                _validate_canonical_json_value(key, active_ids)
+                _validate_canonical_json_value(item, active_ids)
+    finally:
+        active_ids.remove(identity)
+
+
+def _canonical_contract_json_bytes(value: Any) -> bytes:
+    try:
+        _validate_canonical_json_value(value, set())
+        return json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8", errors="strict")
+    except (OverflowError, RecursionError, TypeError, UnicodeEncodeError) as exc:
+        raise ValueError("value must be valid canonical JSON") from exc
+
+
+def _canonical_contract_json_sha256(value: Any) -> str:
+    return hashlib.sha256(_canonical_contract_json_bytes(value)).hexdigest()
+
+
+def _canonical_contract_json_equal(actual: Any, expected: Any) -> bool:
+    return _canonical_contract_json_bytes(actual) == _canonical_contract_json_bytes(
+        expected
+    )
+
+
 def _request_sha256(request: dict[str, Any]) -> str:
     payload = {key: value for key, value in request.items() if key != "request_sha256"}
-    try:
-        return canonical_sha256(payload)
-    except (RecursionError, TypeError, ValueError) as exc:
-        raise ValueError("request payload must be canonical JSON") from exc
+    return _canonical_contract_json_sha256(payload)
 
 
 def opaque_candidate_id(
@@ -389,7 +468,7 @@ def build_generator_request(
             },
         },
     }
-    request = {**payload, "request_sha256": canonical_sha256(payload)}
+    request = {**payload, "request_sha256": _canonical_contract_json_sha256(payload)}
     return validate_agent_request(request)
 
 
@@ -423,7 +502,7 @@ def build_reviewer_request(
             "rubric": deepcopy(REVIEW_RUBRIC),
         },
     }
-    request = {**payload, "request_sha256": canonical_sha256(payload)}
+    request = {**payload, "request_sha256": _canonical_contract_json_sha256(payload)}
     return validate_agent_request(request)
 
 
@@ -484,7 +563,9 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             "generator system prompt mismatch",
         )
         _require(
-            request["response_schema"] == GENERATOR_RESPONSE_SCHEMA,
+            _canonical_contract_json_equal(
+                request["response_schema"], GENERATOR_RESPONSE_SCHEMA
+            ),
             "generator response schema mismatch",
         )
         _require(request_input["rules"] == GENERATOR_RULES, "generator rules mismatch")
@@ -526,7 +607,9 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             "reviewer system prompt mismatch",
         )
         _require(
-            request["response_schema"] == REVIEWER_RESPONSE_SCHEMA,
+            _canonical_contract_json_equal(
+                request["response_schema"], REVIEWER_RESPONSE_SCHEMA
+            ),
             "reviewer response schema mismatch",
         )
         _require(request_input["rubric"] == REVIEW_RUBRIC, "review rubric mismatch")

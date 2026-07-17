@@ -8,7 +8,7 @@ import subprocess
 import sys
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -112,6 +112,11 @@ def _agent_contract_envelope(
     }
 
 
+def _agent_contract_rehash_request(request: dict[str, Any]) -> None:
+    payload = {key: value for key, value in request.items() if key != "request_sha256"}
+    request["request_sha256"] = runner.canonical_sha256(payload)
+
+
 def test_agent_contract_constants_schemas_and_schedule_keys_are_frozen() -> None:
     assert runner.REQUIRED_AGENT_PACK_FILES == (
         "blind-v2-generation.jsonl",
@@ -179,9 +184,10 @@ def test_agent_contract_constants_schemas_and_schedule_keys_are_frozen() -> None
         == hashlib.sha256(f"review-b:7171:{candidate_id}".encode()).hexdigest()
     )
 
-    generator_item = runner.GENERATOR_RESPONSE_SCHEMA["properties"]["candidates"][
-        "items"
-    ]
+    generator_schema = cast(dict[str, Any], runner.GENERATOR_RESPONSE_SCHEMA)
+    generator_properties = cast(dict[str, Any], generator_schema["properties"])
+    generator_candidates = cast(dict[str, Any], generator_properties["candidates"])
+    generator_item = cast(dict[str, Any], generator_candidates["items"])
     assert generator_item["additionalProperties"] is False
     assert set(generator_item["required"]) == {
         "candidate_index",
@@ -192,8 +198,9 @@ def test_agent_contract_constants_schemas_and_schedule_keys_are_frozen() -> None
         "language",
         "rationale",
     }
-    assert runner.REVIEWER_RESPONSE_SCHEMA["additionalProperties"] is False
-    assert set(runner.REVIEWER_RESPONSE_SCHEMA["required"]) == {
+    reviewer_schema = cast(dict[str, Any], runner.REVIEWER_RESPONSE_SCHEMA)
+    assert reviewer_schema["additionalProperties"] is False
+    assert set(cast(list[str], reviewer_schema["required"])) == {
         "decision",
         "reviewed_gold_skill_id",
         "reviewed_negative_skill_id",
@@ -299,6 +306,158 @@ def test_agent_contract_request_validation_recomputes_hash_and_whitelists() -> N
     leaked["request_sha256"] = runner.canonical_sha256(unhashed)
     with pytest.raises(ValueError, match="generator input fields mismatch"):
         runner.validate_agent_request(leaked)
+
+
+@pytest.mark.parametrize("invalid_minimum", (False, 0.0, "0", None))
+def test_agent_contract_generator_schema_comparison_is_type_sensitive(
+    invalid_minimum: Any,
+) -> None:
+    request = _agent_contract_generator_request()
+    request["response_schema"]["properties"]["candidates"]["items"]["properties"][
+        "candidate_index"
+    ]["minimum"] = invalid_minimum
+    _agent_contract_rehash_request(request)
+
+    with pytest.raises(ValueError, match="generator response schema mismatch"):
+        runner.validate_agent_request(request)
+
+
+@pytest.mark.parametrize("invalid_boolean", (0, 0.0))
+def test_agent_contract_reviewer_schema_comparison_is_type_sensitive(
+    invalid_boolean: Any,
+) -> None:
+    request = _agent_contract_reviewer_request()
+    request["response_schema"]["additionalProperties"] = invalid_boolean
+    _agent_contract_rehash_request(request)
+
+    with pytest.raises(ValueError, match="reviewer response schema mismatch"):
+        runner.validate_agent_request(request)
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a"))
+def test_agent_contract_non_json_schema_values_raise_controlled_value_error(
+    role: str,
+) -> None:
+    request = (
+        _agent_contract_generator_request()
+        if role == "generator"
+        else _agent_contract_reviewer_request()
+    )
+    request["response_schema"]["invalid_non_json"] = object()
+
+    with pytest.raises(ValueError, match="canonical JSON"):
+        runner.validate_agent_request(request)
+
+
+@pytest.mark.parametrize(
+    ("role", "extra_field"),
+    (
+        ("generator", "model_result"),
+        ("reviewer_a", "generator_labels"),
+    ),
+)
+def test_agent_contract_builders_reject_extra_canonical_skill_fields(
+    role: str, extra_field: str
+) -> None:
+    skills = _skills()
+    skills[0][extra_field] = f"{PREFIX} SECRET"
+
+    with pytest.raises(ValueError, match="canonical skill 0 fields mismatch"):
+        if role == "generator":
+            runner.build_generator_request(
+                skills,
+                gold_skill_id="test-skill-00",
+                negative_quota=2,
+                positive_only_quota=1,
+            )
+        else:
+            runner.build_reviewer_request(
+                {"candidate_id": "opaque-001", "prompt_text": f"{PREFIX} REQUEST"},
+                skills,
+                role=role,
+            )
+
+
+@pytest.mark.parametrize(
+    ("role", "extra_field"),
+    (
+        ("generator", "model_result"),
+        ("reviewer_a", "generator_labels"),
+    ),
+)
+def test_agent_contract_validation_rejects_extra_sealed_skill_fields(
+    role: str, extra_field: str
+) -> None:
+    request = (
+        _agent_contract_generator_request()
+        if role == "generator"
+        else _agent_contract_reviewer_request()
+    )
+    request["input"]["canonical_skills"][0][extra_field] = f"{PREFIX} SECRET"
+    _agent_contract_rehash_request(request)
+
+    with pytest.raises(ValueError, match="canonical skill 0 fields mismatch"):
+        runner.validate_agent_request(request)
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    [
+        (field, invalid)
+        for field in ("id", "name", "category", "description", "body")
+        for invalid in (False, 1, 1.0, None, "", " ")
+    ],
+)
+def test_agent_contract_canonical_skill_text_fields_are_nonempty_strings(
+    field: str, invalid: Any
+) -> None:
+    skills = _skills()
+    skills[0][field] = invalid
+
+    with pytest.raises(ValueError, match=rf"canonical skill 0 {field}"):
+        runner.build_generator_request(
+            skills,
+            gold_skill_id="test-skill-00",
+            negative_quota=2,
+            positive_only_quota=1,
+        )
+
+
+@pytest.mark.parametrize(
+    "invalid_trigger_terms",
+    (False, 1, 1.0, None, "trigger", [False], [1], [["nested"]], [""], [" "]),
+)
+def test_agent_contract_canonical_skill_trigger_terms_are_nonempty_strings(
+    invalid_trigger_terms: Any,
+) -> None:
+    skills = _skills()
+    skills[0]["trigger_terms"] = invalid_trigger_terms
+
+    with pytest.raises(ValueError, match="canonical skill 0 trigger_terms"):
+        runner.build_reviewer_request(
+            {"candidate_id": "opaque-001", "prompt_text": f"{PREFIX} REQUEST"},
+            skills,
+            role="reviewer_b",
+        )
+
+
+def test_agent_contract_requires_exactly_sixteen_unique_canonical_skills() -> None:
+    with pytest.raises(ValueError, match="exactly 16"):
+        runner.build_generator_request(
+            _skills()[:-1],
+            gold_skill_id="test-skill-00",
+            negative_quota=2,
+            positive_only_quota=1,
+        )
+
+    duplicated = _skills()
+    duplicated[-1]["id"] = duplicated[0]["id"]
+    with pytest.raises(ValueError, match="ids must be unique"):
+        runner.build_reviewer_request(
+            {"candidate_id": "opaque-001", "prompt_text": f"{PREFIX} REQUEST"},
+            duplicated,
+            role="reviewer_a",
+        )
 
 
 def test_agent_contract_generator_response_and_envelope_validate() -> None:
