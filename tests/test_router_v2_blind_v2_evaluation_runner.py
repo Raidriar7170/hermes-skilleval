@@ -1588,6 +1588,25 @@ def test_agent_pack_success_invocation_protocol_drift_is_global_invalid(
     assert result["failure_stage"] == "invocation_protocol"
 
 
+@pytest.mark.parametrize("retry_count", (False, 0.0, "0"))
+def test_agent_pack_transport_retry_count_requires_exact_int_protocol_value(
+    tmp_path: Path, retry_count: Any
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rows[0]["invocations"][-1]["envelope"]["transport_retry_count"] = retry_count
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
 def test_agent_pack_success_invocation_identity_is_global_protocol_invalid(
     tmp_path: Path,
 ) -> None:
@@ -1653,6 +1672,58 @@ def test_agent_pack_illegal_retry_with_protocol_drift_is_global_invalid(
     assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
     assert result["router_decision"] == "KEEP_BASELINE"
     assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize(
+    "protocol_drift",
+    ("role", "request_hash", "config", "session"),
+)
+def test_agent_pack_non_boolean_retry_shape_still_audits_protocol_fields(
+    tmp_path: Path, protocol_drift: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    retry_row = next(row for row in rows if len(row["invocations"]) == 2)
+    failure = retry_row["invocations"][0]
+    failure["transport_failure"] = "yes"
+    if protocol_drift == "role":
+        failure["role"] = "reviewer_b"
+    elif protocol_drift == "request_hash":
+        failure["request_sha256"] = "0" * 64
+    elif protocol_drift == "config":
+        failure["requested_model"] = "wrong-model"
+    else:
+        failure["thread_id"] = "unexpected-thread"
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+def test_agent_pack_pure_non_boolean_retry_shape_excludes_only_candidate(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    retry_row = next(row for row in rows if len(row["invocations"]) == 2)
+    candidate_id = retry_row["candidate_id"]
+    retry_row["invocations"][0]["transport_failure"] = "yes"
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "VALID"
+    assert result["task_count"] == 127
+    assert result["excluded_candidate_count"] == 1
+    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
 
 
 @pytest.mark.parametrize("invalid_response", ("missing_field", "refusal"))
@@ -1786,6 +1857,43 @@ def test_agent_pack_requires_external_root_and_all_five_files(tmp_path: Path) ->
     (external / "blind-v2-contamination.jsonl").unlink()
     with pytest.raises(ValueError, match="missing required agent pack file"):
         _validate_agent_pack(external, repository)
+
+
+@pytest.mark.parametrize("symlink_scope", ("one", "all"))
+def test_agent_pack_required_files_cannot_resolve_inside_repository(
+    tmp_path: Path, symlink_scope: str
+) -> None:
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    pack = tmp_path / "external-agent-pack"
+    _write_agent_pack(pack)
+    filenames = (
+        runner.REQUIRED_AGENT_PACK_FILES[:1]
+        if symlink_scope == "one"
+        else runner.REQUIRED_AGENT_PACK_FILES
+    )
+    for filename in filenames:
+        path = pack / filename
+        target = repository / filename
+        target.write_bytes(path.read_bytes())
+        path.unlink()
+        path.symlink_to(target)
+
+    with pytest.raises(ValueError, match="outside the repository"):
+        _validate_agent_pack(pack, repository)
+
+
+def test_agent_pack_required_path_must_be_a_regular_file(tmp_path: Path) -> None:
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    pack = tmp_path / "external-agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-contamination.jsonl"
+    path.unlink()
+    path.mkdir()
+
+    with pytest.raises(ValueError):
+        _validate_agent_pack(pack, repository)
 
 
 def test_dataset_freeze_is_deterministic_and_private_when_permission_is_false(

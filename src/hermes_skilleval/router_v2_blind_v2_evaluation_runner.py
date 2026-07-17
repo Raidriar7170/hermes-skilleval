@@ -1131,6 +1131,21 @@ def _outside_repository(root: Path, repository_root: Path) -> None:
     )
 
 
+def _required_agent_pack_file(path: Path, repository_root: Path) -> Path:
+    _require(path.exists(), f"missing required agent pack file: {path.name}")
+    resolved = path.resolve(strict=True)
+    repository = repository_root.resolve(strict=False)
+    _require(
+        not resolved.is_relative_to(repository),
+        f"required agent pack file must stay outside the repository: {path.name}",
+    )
+    _require(
+        not path.is_symlink() and path.is_file() and resolved.is_file(),
+        f"required agent pack path must be a regular file: {path.name}",
+    )
+    return resolved
+
+
 def _agent_pack_protocol_invalid(
     *,
     failure_stage: str,
@@ -1177,6 +1192,24 @@ class _AgentPackProtocolViolation(Exception):
     pass
 
 
+_PACK_PROTOCOL_FIELDS = frozenset(
+    {
+        "role",
+        "session_id",
+        "thread_id",
+        "fork_context",
+        "history_message_count",
+        "imported_memory_count",
+        "requested_model",
+        "returned_model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "transport_retry_count",
+        "request_sha256",
+    }
+)
+
+
 def _pack_protocol_require(condition: bool, message: str) -> None:
     if not condition:
         raise _AgentPackProtocolViolation(message)
@@ -1186,7 +1219,9 @@ def _validate_pack_protocol_fields(
     value: dict[str, Any],
     *,
     request: dict[str, Any],
-    include_returned_model: bool,
+    expected_transport_retry_count: int,
+    require_returned_model: bool,
+    require_transport_retry_count: bool,
 ) -> set[str]:
     identity_fields = {"session_id", "thread_id"}.intersection(value)
     _pack_protocol_require(
@@ -1204,8 +1239,10 @@ def _validate_pack_protocol_fields(
         "request_sha256",
         *identity_fields,
     }
-    if include_returned_model:
+    if require_returned_model:
         required_fields.add("returned_model")
+    if require_transport_retry_count:
+        required_fields.add("transport_retry_count")
     _pack_protocol_require(
         required_fields.issubset(value),
         "agent invocation protocol fields mismatch",
@@ -1233,7 +1270,7 @@ def _validate_pack_protocol_fields(
         value["requested_model"] == config["model"],
         "requested model mismatch",
     )
-    if include_returned_model:
+    if "returned_model" in value:
         _pack_protocol_require(
             value["returned_model"] == config["model"],
             "returned model mismatch",
@@ -1251,36 +1288,65 @@ def _validate_pack_protocol_fields(
         value["request_sha256"] == request["request_sha256"],
         "request SHA-256 mismatch",
     )
+    if "transport_retry_count" in value:
+        _pack_protocol_require(
+            type(value["transport_retry_count"]) is int
+            and value["transport_retry_count"] == expected_transport_retry_count,
+            "transport retry count must be an exact integer matching invocations",
+        )
     return identity_fields
+
+
+def _audit_pack_invocation_protocol(
+    invocation: dict[str, Any],
+    *,
+    request: dict[str, Any],
+    expected_transport_retry_count: int,
+) -> None:
+    envelope = invocation.get("envelope")
+    if type(envelope) is dict:
+        _validate_pack_protocol_fields(
+            envelope,
+            request=request,
+            expected_transport_retry_count=expected_transport_retry_count,
+            require_returned_model=True,
+            require_transport_retry_count=True,
+        )
+    if _PACK_PROTOCOL_FIELDS.intersection(invocation):
+        _validate_pack_protocol_fields(
+            invocation,
+            request=request,
+            expected_transport_retry_count=expected_transport_retry_count,
+            require_returned_model=False,
+            require_transport_retry_count=False,
+        )
 
 
 def _validate_pack_invocations(
     invocations: Any, *, request: dict[str, Any]
 ) -> tuple[dict[str, Any] | None, int]:
-    if type(invocations) is not list or len(invocations) not in {1, 2}:
+    if type(invocations) is not list:
         return None, 0
     try:
         retry_count = len(invocations) - 1
+        for invocation in invocations:
+            if type(invocation) is dict:
+                _audit_pack_invocation_protocol(
+                    invocation,
+                    request=request,
+                    expected_transport_retry_count=retry_count,
+                )
+        if len(invocations) not in {1, 2}:
+            return None, 0
         if retry_count:
             if type(invocations[0]) is not dict:
                 return None, 0
             failure = cast(dict[str, Any], invocations[0])
             if failure.get("transport_failure") is False:
-                attempted_envelope = failure.get("envelope")
-                if type(attempted_envelope) is dict:
-                    _validate_pack_protocol_fields(
-                        attempted_envelope,
-                        request=request,
-                        include_returned_model=True,
-                    )
                 return None, 0
             if failure.get("transport_failure") is not True:
                 return None, 0
-            identity_fields = _validate_pack_protocol_fields(
-                failure,
-                request=request,
-                include_returned_model=False,
-            )
+            identity_fields = {"session_id", "thread_id"}.intersection(failure)
             if failure.get("response_bytes_present") is not False:
                 return None, 0
             failure = _exact_object_fields(
@@ -1314,15 +1380,6 @@ def _validate_pack_invocations(
         if type(success["envelope"]) is not dict:
             return None, 0
         envelope = cast(dict[str, Any], success["envelope"])
-        _validate_pack_protocol_fields(
-            envelope,
-            request=request,
-            include_returned_model=True,
-        )
-        _require(
-            envelope.get("transport_retry_count") == retry_count,
-            "transport retry count must match invocation count",
-        )
         response = validate_agent_invocation_envelope(envelope, request=request)
         return response, retry_count
     except _AgentPackProtocolViolation:
@@ -1370,15 +1427,18 @@ def validate_agent_pack(
     _require(callable(semantic_similarity), "semantic similarity must be callable")
 
     pack_root = Path(root)
-    _outside_repository(pack_root, Path(repository_root))
-    for filename in REQUIRED_AGENT_PACK_FILES:
-        _require(
-            (pack_root / filename).is_file(),
-            f"missing required agent pack file: {filename}",
+    repository_path = Path(repository_root)
+    _outside_repository(pack_root, repository_path)
+    required_paths = {
+        filename: _required_agent_pack_file(
+            pack_root / filename,
+            repository_path,
         )
+        for filename in REQUIRED_AGENT_PACK_FILES
+    }
 
     payloads = {
-        filename: (pack_root / filename).read_bytes()
+        filename: required_paths[filename].read_bytes()
         for filename in REQUIRED_AGENT_PACK_FILES
     }
     source_hashes = {
