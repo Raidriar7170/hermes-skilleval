@@ -1222,6 +1222,7 @@ def _validate_pack_protocol_fields(
     expected_transport_retry_count: int,
     require_returned_model: bool,
     require_transport_retry_count: bool,
+    non_protocol_fields: set[str],
 ) -> set[str]:
     identity_fields = {"session_id", "thread_id"}.intersection(value)
     _pack_protocol_require(
@@ -1244,7 +1245,7 @@ def _validate_pack_protocol_fields(
     if require_transport_retry_count:
         required_fields.add("transport_retry_count")
     _pack_protocol_require(
-        required_fields.issubset(value),
+        set(value) == required_fields | non_protocol_fields,
         "agent invocation protocol fields mismatch",
     )
     identity = value[next(iter(identity_fields))]
@@ -1303,23 +1304,54 @@ def _audit_pack_invocation_protocol(
     request: dict[str, Any],
     expected_transport_retry_count: int,
 ) -> None:
-    envelope = invocation.get("envelope")
-    if type(envelope) is dict:
+    top_level_protocol_fields = _PACK_PROTOCOL_FIELDS.intersection(invocation)
+    if "envelope" in invocation and not top_level_protocol_fields:
+        _pack_protocol_require(
+            set(invocation)
+            == {"transport_failure", "response_bytes_present", "envelope"},
+            "successful invocation fields mismatch",
+        )
+        _pack_protocol_require(
+            invocation["transport_failure"] is False,
+            "successful invocation transport_failure must be false",
+        )
+        _pack_protocol_require(
+            invocation["response_bytes_present"] is True,
+            "successful invocation response_bytes_present must be true",
+        )
+        envelope = invocation["envelope"]
+        _pack_protocol_require(
+            type(envelope) is dict,
+            "successful invocation envelope must be an object",
+        )
         _validate_pack_protocol_fields(
-            envelope,
+            cast(dict[str, Any], envelope),
             request=request,
             expected_transport_retry_count=expected_transport_retry_count,
             require_returned_model=True,
             require_transport_retry_count=True,
+            non_protocol_fields={"response"},
         )
-    if _PACK_PROTOCOL_FIELDS.intersection(invocation):
+        return
+    if top_level_protocol_fields:
         _validate_pack_protocol_fields(
             invocation,
             request=request,
             expected_transport_retry_count=expected_transport_retry_count,
             require_returned_model=False,
             require_transport_retry_count=False,
+            non_protocol_fields={"transport_failure", "response_bytes_present"},
         )
+        _pack_protocol_require(
+            invocation["transport_failure"] is True,
+            "transport failure record transport_failure must be true",
+        )
+        _pack_protocol_require(
+            invocation["response_bytes_present"] is False,
+            "transport failure record response_bytes_present must be false",
+        )
+        return
+    raise _AgentPackProtocolViolation("invocation record schema mismatch")
 
 
 def _validate_pack_invocations(
@@ -1330,12 +1362,15 @@ def _validate_pack_invocations(
     try:
         retry_count = len(invocations) - 1
         for invocation in invocations:
-            if type(invocation) is dict:
-                _audit_pack_invocation_protocol(
-                    invocation,
-                    request=request,
-                    expected_transport_retry_count=retry_count,
-                )
+            _pack_protocol_require(
+                type(invocation) is dict,
+                "invocation record must be an object",
+            )
+            _audit_pack_invocation_protocol(
+                cast(dict[str, Any], invocation),
+                request=request,
+                expected_transport_retry_count=retry_count,
+            )
         if len(invocations) not in {1, 2}:
             return None, 0
         if retry_count:

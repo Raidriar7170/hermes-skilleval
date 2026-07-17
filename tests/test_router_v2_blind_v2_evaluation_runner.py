@@ -1523,16 +1523,7 @@ def test_agent_pack_allows_one_transport_retry_with_no_response_bytes(
     assert result["agent_roles"][role]["invocation_count"] == 129
 
 
-@pytest.mark.parametrize(
-    "invalid_retry",
-    (
-        "second_success",
-        "response_object_on_failure",
-    ),
-)
-def test_agent_pack_rejects_non_transport_retry_candidate(
-    tmp_path: Path, invalid_retry: str
-) -> None:
+def test_agent_pack_two_exact_successes_exclude_only_candidate(tmp_path: Path) -> None:
     pack = tmp_path / "agent-pack"
     _write_agent_pack(pack, transport_retry_role="reviewer_a")
     path = pack / "blind-v2-review-a.jsonl"
@@ -1540,12 +1531,9 @@ def test_agent_pack_rejects_non_transport_retry_candidate(
     retry_row = next(row for row in rows if len(row["invocations"]) == 2)
     candidate_id = retry_row["candidate_id"]
     invocations = retry_row["invocations"]
-    if invalid_retry == "second_success":
-        failure_session = invocations[0]["session_id"]
-        invocations[0] = deepcopy(invocations[1])
-        invocations[0]["envelope"]["session_id"] = failure_session
-    elif invalid_retry == "response_object_on_failure":
-        invocations[0]["response"] = {}
+    failure_session = invocations[0]["session_id"]
+    invocations[0] = deepcopy(invocations[1])
+    invocations[0]["envelope"]["session_id"] = failure_session
     _rewrite_jsonl(path, rows)
 
     result = _validate_agent_pack(pack, tmp_path / "repo")
@@ -1554,6 +1542,130 @@ def test_agent_pack_rejects_non_transport_retry_candidate(
     assert result["task_count"] == 127
     assert result["excluded_candidate_count"] == 1
     assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+
+
+@pytest.mark.parametrize(
+    ("shape", "schema_drift"),
+    (
+        ("success", "extra"),
+        ("success", "missing_envelope"),
+        ("success", "non_object_envelope"),
+        ("failure", "extra_response"),
+        ("failure", "extra_envelope"),
+        ("failure", "missing_role"),
+    ),
+)
+def test_agent_pack_invocation_top_level_schema_drift_is_global_invalid(
+    tmp_path: Path, shape: str, schema_drift: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        transport_retry_role="reviewer_a" if shape == "failure" else None,
+    )
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    row = (
+        next(row for row in rows if len(row["invocations"]) == 2)
+        if shape == "failure"
+        else rows[0]
+    )
+    invocation = row["invocations"][0 if shape == "failure" else -1]
+    if schema_drift == "extra":
+        invocation["unexpected"] = True
+    elif schema_drift == "missing_envelope":
+        invocation.pop("envelope")
+    elif schema_drift == "non_object_envelope":
+        invocation["envelope"] = None
+    elif schema_drift == "extra_response":
+        invocation["response"] = {}
+    elif schema_drift == "extra_envelope":
+        invocation["envelope"] = deepcopy(row["invocations"][-1]["envelope"])
+    else:
+        invocation.pop("role")
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize(
+    ("shape", "field", "value"),
+    (
+        ("success", "transport_failure", "missing"),
+        ("success", "transport_failure", True),
+        ("success", "transport_failure", "no"),
+        ("success", "response_bytes_present", "missing"),
+        ("success", "response_bytes_present", False),
+        ("success", "response_bytes_present", 1),
+        ("failure", "transport_failure", "missing"),
+        ("failure", "transport_failure", False),
+        ("failure", "transport_failure", "yes"),
+        ("failure", "response_bytes_present", "missing"),
+        ("failure", "response_bytes_present", True),
+        ("failure", "response_bytes_present", 0),
+    ),
+)
+def test_agent_pack_transport_flags_require_exact_bool_for_record_shape(
+    tmp_path: Path, shape: str, field: str, value: Any
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        transport_retry_role="reviewer_a" if shape == "failure" else None,
+    )
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    row = (
+        next(row for row in rows if len(row["invocations"]) == 2)
+        if shape == "failure"
+        else rows[0]
+    )
+    invocation = row["invocations"][0 if shape == "failure" else -1]
+    if value == "missing":
+        invocation.pop(field)
+    else:
+        invocation[field] = value
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize(
+    "envelope_drift",
+    ("extra_field", "missing_protocol_field", "missing_response"),
+)
+def test_agent_pack_success_envelope_requires_exact_contract_fields(
+    tmp_path: Path, envelope_drift: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    envelope = rows[0]["invocations"][-1]["envelope"]
+    if envelope_drift == "extra_field":
+        envelope["unexpected_protocol_field"] = True
+    elif envelope_drift == "missing_protocol_field":
+        envelope.pop("reasoning_effort")
+    else:
+        envelope.pop("response")
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
 
 
 @pytest.mark.parametrize(
@@ -1706,7 +1818,7 @@ def test_agent_pack_non_boolean_retry_shape_still_audits_protocol_fields(
     assert result["failure_stage"] == "invocation_protocol"
 
 
-def test_agent_pack_pure_non_boolean_retry_shape_excludes_only_candidate(
+def test_agent_pack_non_boolean_retry_shape_is_global_protocol_invalid(
     tmp_path: Path,
 ) -> None:
     pack = tmp_path / "agent-pack"
@@ -1714,16 +1826,15 @@ def test_agent_pack_pure_non_boolean_retry_shape_excludes_only_candidate(
     path = pack / "blind-v2-review-a.jsonl"
     rows = _read_jsonl(path)
     retry_row = next(row for row in rows if len(row["invocations"]) == 2)
-    candidate_id = retry_row["candidate_id"]
     retry_row["invocations"][0]["transport_failure"] = "yes"
     _rewrite_jsonl(path, rows)
 
     result = _validate_agent_pack(pack, tmp_path / "repo")
 
-    assert result["status"] == "VALID"
-    assert result["task_count"] == 127
-    assert result["excluded_candidate_count"] == 1
-    assert candidate_id not in {row["candidate_id"] for row in result["tasks"]}
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
 
 
 @pytest.mark.parametrize("invalid_response", ("missing_field", "refusal"))
