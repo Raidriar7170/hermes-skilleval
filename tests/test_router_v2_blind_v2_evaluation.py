@@ -316,6 +316,14 @@ def test_per_seed_metrics_are_raw_count_first_with_fixed_denominators() -> None:
         evaluation.build_per_seed_result(wrong_skills)
 
 
+def test_per_seed_builder_rejects_unrepresentable_route_latency() -> None:
+    rows = _route_rows("A", 7170)
+    rows[0]["latency_ns"] = 10**400
+
+    with pytest.raises(ValueError, match="latency"):
+        evaluation.build_per_seed_result(rows)
+
+
 @pytest.mark.parametrize(
     ("violation", "message"),
     (
@@ -547,6 +555,14 @@ def test_per_seed_grid_rejects_stale_metric_summaries(
 def test_per_seed_grid_rejects_invalid_task_latency(latency_ms: Any) -> None:
     per_seed = deepcopy(_per_seed())
     per_seed[0]["tasks"][0]["latency_ms"] = latency_ms
+
+    with pytest.raises(ValueError, match="per-seed task latency"):
+        evaluation.build_aggregate_results(per_seed)
+
+
+def test_per_seed_grid_rejects_unquantizable_task_latency() -> None:
+    per_seed = deepcopy(_per_seed())
+    per_seed[0]["tasks"][0]["latency_ms"] = f"{10**400}.00000000"
 
     with pytest.raises(ValueError, match="per-seed task latency"):
         evaluation.build_aggregate_results(per_seed)
@@ -941,3 +957,44 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
         {key: value for key, value in lineage.items() if key != "lineage_sha256"}
     )
     assert evaluation.quantize8("1.005000005") == "1.00500000"
+
+
+@pytest.mark.parametrize(
+    "invalid_bindings",
+    (
+        {"x": {1}},
+        {"x": b"bytes"},
+        {"x": float("nan")},
+    ),
+)
+def test_lineage_rejects_non_json_frozen_bindings(
+    invalid_bindings: dict[str, Any],
+) -> None:
+    with pytest.raises(ValueError, match="frozen bindings must be canonical JSON"):
+        evaluation.build_lineage_manifest(
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=invalid_bindings,
+            artifacts={f"{PREFIX}_aggregate.json": b"{}\n"},
+        )
+
+
+def test_lineage_accepts_nested_json_frozen_bindings_without_changing_hash() -> None:
+    lineage = evaluation.build_lineage_manifest(
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        evaluator_commit="c" * 40,
+        attempt_token_sha256="d" * 64,
+        frozen_bindings={
+            "nested": {
+                "values": ["value", True, None, 1, 1.25],
+            }
+        },
+        artifacts={f"{PREFIX}_aggregate.json": b"{}\n"},
+    )
+
+    assert lineage["lineage_sha256"] == evaluation.canonical_sha256(
+        {key: value for key, value in lineage.items() if key != "lineage_sha256"}
+    )

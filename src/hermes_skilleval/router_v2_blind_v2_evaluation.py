@@ -5,7 +5,7 @@ import math
 import random
 import re
 from collections import Counter
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from typing import Any, Callable, Iterable, cast
 
 from hermes_skilleval.router_v2_pilot_evaluation import (
@@ -313,19 +313,24 @@ def build_per_seed_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
         for row in ordered
         if row["tempting_negative_skill_id"] is not None
     ]
-    latencies = [int(row["latency_ns"]) / 1_000_000 for row in ordered]
-    tasks = [
-        {
-            "task_id": row["task_id"],
-            "gold_skill_id": row["gold_skill_id"],
-            "tempting_negative_skill_id": row["tempting_negative_skill_id"],
-            "semantic_family_id": row["semantic_family_id"],
-            "gold_rank": row["gold_rank"],
-            "tempting_negative_rank": row["tempting_negative_rank"],
-            "latency_ms": quantize8(int(row["latency_ns"]) / 1_000_000),
-        }
-        for row in ordered
-    ]
+    try:
+        latencies = [int(row["latency_ns"]) / 1_000_000 for row in ordered]
+        tasks = [
+            {
+                "task_id": row["task_id"],
+                "gold_skill_id": row["gold_skill_id"],
+                "tempting_negative_skill_id": row["tempting_negative_skill_id"],
+                "semantic_family_id": row["semantic_family_id"],
+                "gold_rank": row["gold_rank"],
+                "tempting_negative_rank": row["tempting_negative_rank"],
+                "latency_ms": quantize8(int(row["latency_ns"]) / 1_000_000),
+            }
+            for row in ordered
+        ]
+        latency_p50_ms = quantize8(nearest_rank(latencies, 0.50))
+        latency_p95_ms = quantize8(nearest_rank(latencies, 0.95))
+    except (OverflowError, DecimalException) as exc:
+        raise ValueError("route latency cannot be represented") from exc
     return {
         "schema_version": PER_SEED_SCHEMA_VERSION,
         "arm": arm,
@@ -352,8 +357,8 @@ def build_per_seed_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "first_negative_rank_mean": quantize8(
             sum(negative_ranks) / TEMPTING_NEGATIVE_COUNT
         ),
-        "latency_p50_ms": quantize8(nearest_rank(latencies, 0.50)),
-        "latency_p95_ms": quantize8(nearest_rank(latencies, 0.95)),
+        "latency_p50_ms": latency_p50_ms,
+        "latency_p95_ms": latency_p95_ms,
         "tasks": tasks,
     }
 
@@ -489,17 +494,23 @@ def _validate_per_seed_result_contract(
         latency_text = cast(str, latency_ms)
         latency = _number(latency_text, "per-seed task latency")
         _require(latency >= 0, "per-seed task latency must be non-negative")
+        try:
+            canonical_latency = quantize8(latency)
+            latency_ns = latency * Decimal(1_000_000)
+            integral_latency_ns = latency_ns.to_integral_value()
+            latency_ns_value = int(latency_ns)
+        except (OverflowError, DecimalException) as exc:
+            raise ValueError("per-seed task latency cannot be represented") from exc
         _require(
             _EIGHT_DECIMAL.fullmatch(latency_text) is not None
-            and latency_text == quantize8(latency),
+            and latency_text == canonical_latency,
             "per-seed task latency must be a canonical eight-decimal string",
         )
-        latency_ns = latency * Decimal(1_000_000)
         _require(
-            latency_ns == latency_ns.to_integral_value(),
+            latency_ns == integral_latency_ns,
             "per-seed task latency is not representable in nanoseconds",
         )
-        latency_ns_values.append(int(latency_ns))
+        latency_ns_values.append(latency_ns_value)
     gold_ranks = [int(task["gold_rank"]) for task in tasks]
     negative_ranks = [int(task["tempting_negative_rank"]) for task in negative_tasks]
     _validate_rate_contract(
@@ -1142,6 +1153,10 @@ def build_lineage_manifest(
         "attempt token hash mismatch",
     )
     _require(type(frozen_bindings) is dict, "frozen bindings mismatch")
+    try:
+        canonical_sha256(frozen_bindings)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("frozen bindings must be canonical JSON") from exc
     _require(
         type(artifacts) is dict
         and all(
