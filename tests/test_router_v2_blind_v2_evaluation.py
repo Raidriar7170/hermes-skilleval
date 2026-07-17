@@ -1001,6 +1001,7 @@ def test_task5_lineage_rejects_superseded_human_review_section() -> None:
         "response_body",
         "source_file_bytes",
         "source_bytes",
+        "source_bytes_hex",
         "raw_source",
         "rationale",
         "reason",

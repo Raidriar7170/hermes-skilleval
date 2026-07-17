@@ -2771,10 +2771,21 @@ def _request_quota_distribution(
 def _deficit_document(
     rows: list[dict[str, Any]], canonical_ids: set[str]
 ) -> dict[str, dict[str, int]]:
+    return {
+        skill_id: deficits
+        for skill_id, deficits in _complete_deficit_document(
+            rows, canonical_ids
+        ).items()
+        if any(deficits.values())
+    }
+
+
+def _complete_deficit_document(
+    rows: list[dict[str, Any]], canonical_ids: set[str]
+) -> dict[str, dict[str, int]]:
     counts = _stratum_counts(rows, canonical_ids)
-    output: dict[str, dict[str, int]] = {}
-    for skill_id, skill_counts in counts.items():
-        deficits = {
+    return {
+        skill_id: {
             "negative": max(
                 0,
                 cast(int, _SELECTION_AUTHORITY["final_negative_per_skill"])
@@ -2786,9 +2797,162 @@ def _deficit_document(
                 - skill_counts["positive_only"],
             ),
         }
-        if any(deficits.values()):
-            output[skill_id] = deficits
-    return output
+        for skill_id, skill_counts in counts.items()
+    }
+
+
+_SELECTION_AUDIT_FIELDS = {
+    "selection_authority",
+    "selection_authority_sha256",
+    "accepted_pool_sha256",
+    "round_1_candidate_count",
+    "round_2_candidate_count",
+    "round_1_distribution",
+    "round_2_distribution",
+    "round_1_request_quota_distribution",
+    "round_2_request_quota_distribution",
+    "round_1_post_pipeline_deficits",
+    "selected_candidate_ids",
+    "selected_candidate_ids_sha256",
+    "selected_by_stratum",
+}
+
+
+def _validated_selection_audit_semantics(
+    value: Any,
+    *,
+    selected_rows: list[dict[str, Any]],
+    canonical_ids: set[str],
+    id_field: str,
+    gold_field: str,
+    negative_field: str,
+    require_complete_selection: bool,
+    selection_audit_sha256: Any | None = None,
+    observed_generation_rounds: set[int] | None = None,
+) -> dict[str, Any]:
+    selection = _exact_object_fields(value, _SELECTION_AUDIT_FIELDS, "selection audit")
+    _require(len(canonical_ids) == 16, "canonical selection skill count mismatch")
+    sorted_ids = sorted(canonical_ids)
+    authority = _selection_authority_document()
+    _require(
+        selection["selection_authority"] == authority
+        and selection["selection_authority_sha256"] == canonical_sha256(authority),
+        "selection authority mismatch",
+    )
+    _exact_lowercase_hex(
+        selection["accepted_pool_sha256"],
+        length=64,
+        label="accepted pool SHA-256",
+    )
+
+    expected_round_one_distribution = {
+        skill_id: {
+            "negative": _SELECTION_AUTHORITY["round_1_negative_per_skill"],
+            "positive_only": _SELECTION_AUTHORITY["round_1_positive_only_per_skill"],
+        }
+        for skill_id in sorted_ids
+    }
+    _require(
+        selection["round_1_candidate_count"]
+        == _SELECTION_AUTHORITY["round_1_candidate_count"]
+        and selection["round_1_distribution"] == expected_round_one_distribution
+        and selection["round_1_request_quota_distribution"]
+        == expected_round_one_distribution,
+        "round-one selection audit mismatch",
+    )
+
+    deficits = _exact_object_fields(
+        selection["round_1_post_pipeline_deficits"],
+        set(sorted_ids),
+        "round-one post-pipeline deficits",
+    )
+    normalized_deficits: dict[str, dict[str, int]] = {}
+    for skill_id in sorted_ids:
+        counts = _exact_object_fields(
+            deficits[skill_id],
+            {"negative", "positive_only"},
+            f"{skill_id} round-one deficit",
+        )
+        _require(
+            all(type(count) is int and count >= 0 for count in counts.values()),
+            "round-one deficit count mismatch",
+        )
+        normalized_deficits[skill_id] = cast(dict[str, int], counts)
+
+    expected_round_two_distribution = {
+        skill_id: {
+            stratum: deficit
+            * cast(int, _SELECTION_AUTHORITY["round_2_deficit_multiplier"])
+            for stratum, deficit in normalized_deficits[skill_id].items()
+        }
+        for skill_id in sorted_ids
+    }
+    round_two_count = sum(
+        sum(counts.values()) for counts in expected_round_two_distribution.values()
+    )
+    _require(
+        selection["round_2_distribution"] == expected_round_two_distribution
+        and selection["round_2_request_quota_distribution"]
+        == expected_round_two_distribution
+        and type(selection["round_2_candidate_count"]) is int
+        and selection["round_2_candidate_count"] == round_two_count,
+        "round-two selection audit mismatch",
+    )
+    if observed_generation_rounds is not None:
+        expected_rounds = {1} | ({2} if round_two_count else set())
+        _require(
+            observed_generation_rounds == expected_rounds,
+            "generation round authority mismatch",
+        )
+
+    selected_ids = [cast(str, row[id_field]) for row in selected_rows]
+    selected_by_stratum = {
+        skill_id: {
+            stratum: [
+                cast(str, row[id_field])
+                for row in selected_rows
+                if row[gold_field] == skill_id
+                and ("negative" if row[negative_field] is not None else "positive_only")
+                == stratum
+            ]
+            for stratum in ("negative", "positive_only")
+        }
+        for skill_id in sorted_ids
+    }
+    if require_complete_selection:
+        _require(
+            len(selected_ids) == POSITIVE_TASK_COUNT
+            and len(set(selected_ids)) == POSITIVE_TASK_COUNT
+            and sum(len(strata["negative"]) for strata in selected_by_stratum.values())
+            == TEMPTING_NEGATIVE_COUNT
+            and all(
+                len(strata["negative"])
+                == _SELECTION_AUTHORITY["final_negative_per_skill"]
+                and len(strata["positive_only"])
+                == _SELECTION_AUTHORITY["final_positive_only_per_skill"]
+                for strata in selected_by_stratum.values()
+            ),
+            "selected canonical quota mismatch",
+        )
+    else:
+        _require(not selected_ids, "insufficient selection must be empty")
+    _require(
+        selection["selected_candidate_ids"] == selected_ids
+        and selection["selected_candidate_ids_sha256"] == canonical_sha256(selected_ids)
+        and selection["selected_by_stratum"] == selected_by_stratum,
+        "selected identity audit mismatch",
+    )
+    if selection_audit_sha256 is not None:
+        aggregate = _exact_lowercase_hex(
+            selection_audit_sha256,
+            length=64,
+            label="selection audit SHA-256",
+        )
+        _require(
+            aggregate == canonical_sha256(selection),
+            "selection audit aggregate mismatch",
+        )
+    return deepcopy(selection)
 
 
 def _selection_audit_document(
@@ -2815,7 +2979,7 @@ def _selection_audit_document(
         }
         for skill_id in sorted(canonical_ids)
     }
-    return {
+    document = {
         "selection_authority": authority_document,
         "selection_authority_sha256": canonical_sha256(authority_document),
         "accepted_pool_sha256": canonical_sha256(accepted),
@@ -2829,13 +2993,26 @@ def _selection_audit_document(
         "round_2_request_quota_distribution": _request_quota_distribution(
             quota_counts, 2, canonical_ids
         ),
-        "round_1_post_pipeline_deficits": _deficit_document(
+        "round_1_post_pipeline_deficits": _complete_deficit_document(
             round_one_accepted, canonical_ids
         ),
         "selected_candidate_ids": selected_ids,
         "selected_candidate_ids_sha256": canonical_sha256(selected_ids),
         "selected_by_stratum": selected_by_stratum,
     }
+    return _validated_selection_audit_semantics(
+        document,
+        selected_rows=selected,
+        canonical_ids=canonical_ids,
+        id_field="candidate_id",
+        gold_field="proposed_gold_skill_id",
+        negative_field="proposed_negative_skill_id",
+        require_complete_selection=bool(selected),
+        observed_generation_rounds={
+            cast(int, row["generation_round"])
+            for row in round_one_candidates + round_two_candidates
+        },
+    )
 
 
 def validate_agent_pack(
@@ -4467,102 +4644,15 @@ def _validated_dataset_freeze_tasks(
             "three-way agreement pool count mismatch",
         )
 
-        selection = _exact_object_fields(
+        selection = _validated_selection_audit_semantics(
             validation["selection_audit"],
-            {
-                "selection_authority",
-                "selection_authority_sha256",
-                "accepted_pool_sha256",
-                "round_1_candidate_count",
-                "round_2_candidate_count",
-                "round_1_distribution",
-                "round_2_distribution",
-                "round_1_request_quota_distribution",
-                "round_2_request_quota_distribution",
-                "round_1_post_pipeline_deficits",
-                "selected_candidate_ids",
-                "selected_candidate_ids_sha256",
-                "selected_by_stratum",
-            },
-            "selection audit",
-        )
-        selection_authority = _selection_authority_document()
-        _require(
-            selection["selection_authority"] == selection_authority
-            and selection["selection_authority_sha256"]
-            == canonical_sha256(selection_authority),
-            "selection authority mismatch",
-        )
-        _exact_lowercase_hex(
-            selection["accepted_pool_sha256"],
-            length=64,
-            label="accepted pool SHA-256",
-        )
-        expected_round_one_distribution = {
-            gold: {
-                "negative": _SELECTION_AUTHORITY["round_1_negative_per_skill"],
-                "positive_only": _SELECTION_AUTHORITY[
-                    "round_1_positive_only_per_skill"
-                ],
-            }
-            for gold in gold_ids
-        }
-        _require(
-            selection["round_1_candidate_count"]
-            == _SELECTION_AUTHORITY["round_1_candidate_count"]
-            and selection["round_1_distribution"] == expected_round_one_distribution
-            and selection["round_1_request_quota_distribution"]
-            == expected_round_one_distribution,
-            "round-one selection audit mismatch",
-        )
-        round_two_distribution = _exact_object_fields(
-            selection["round_2_distribution"], set(gold_ids), "round-two distribution"
-        )
-        round_two_count = 0
-        for gold in gold_ids:
-            counts = _exact_object_fields(
-                round_two_distribution[gold],
-                {"negative", "positive_only"},
-                f"{gold} round-two distribution",
-            )
-            _require(
-                all(type(value) is int and value >= 0 for value in counts.values()),
-                "round-two distribution count mismatch",
-            )
-            round_two_count += sum(cast(int, value) for value in counts.values())
-        _require(
-            type(selection["round_2_candidate_count"]) is int
-            and selection["round_2_candidate_count"] == round_two_count
-            and selection["round_2_request_quota_distribution"]
-            == round_two_distribution,
-            "round-two selection audit mismatch",
-        )
-        deficits = selection["round_1_post_pipeline_deficits"]
-        _require(type(deficits) is dict, "round-one deficits must be an object")
-        for gold, raw_counts in deficits.items():
-            _require(gold in gold_ids, "round-one deficit gold mismatch")
-            counts = _exact_object_fields(
-                raw_counts, {"negative", "positive_only"}, "round-one deficit"
-            )
-            _require(
-                all(type(value) is int and value >= 0 for value in counts.values()),
-                "round-one deficit count mismatch",
-            )
-        _require(
-            selection["selected_candidate_ids"] == selected_ids
-            and selection["selected_candidate_ids_sha256"]
-            == canonical_sha256(selected_ids)
-            and selection["selected_by_stratum"] == selected_by_stratum,
-            "selected identity audit mismatch",
-        )
-        selection_audit_sha256 = _exact_lowercase_hex(
-            validation["selection_audit_sha256"],
-            length=64,
-            label="selection audit SHA-256",
-        )
-        _require(
-            selection_audit_sha256 == canonical_sha256(selection),
-            "selection audit aggregate mismatch",
+            selected_rows=selected,
+            canonical_ids=set(gold_ids),
+            id_field="candidate_id",
+            gold_field="proposed_gold_skill_id",
+            negative_field="proposed_negative_skill_id",
+            require_complete_selection=True,
+            selection_audit_sha256=validation["selection_audit_sha256"],
         )
         task_rows = [
             {
@@ -6214,6 +6304,7 @@ _FORBIDDEN_LINEAGE_FIELDS = frozenset(
         "human_review",
         "source_file_bytes",
         "source_bytes",
+        "source_bytes_hex",
         "raw_source",
         "response",
         "raw_response",
@@ -7221,6 +7312,18 @@ def _validate_evaluation_agent_construction_authority(
             raw_construction_input_authority["canonical_skill_projection"],
         )
         projected_skills = _project_canonical_skills(raw_skill_projection["rows"])
+        deterministic_selection = _validated_selection_audit_semantics(
+            deterministic_selection,
+            selected_rows=task_rows,
+            canonical_ids=_canonical_skill_ids(projected_skills),
+            id_field="task_id",
+            gold_field="gold_skill_id",
+            negative_field="negative_skill_id",
+            require_complete_selection=True,
+            selection_audit_sha256=manifest_construction[
+                "deterministic_selection_sha256"
+            ],
+        )
         construction_input_authority = _validated_construction_input_authority(
             raw_construction_input_authority,
             projected_skills=projected_skills,

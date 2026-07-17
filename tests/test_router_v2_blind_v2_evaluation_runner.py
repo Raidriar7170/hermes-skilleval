@@ -2915,9 +2915,13 @@ def test_task4_round_two_uses_twice_post_pipeline_numeric_deficits_only(
     round_two_rows = [row for row in generation_rows if row["generation_round"] == 2]
 
     assert result["status"] == "VALID"
-    assert result["selection_audit"]["round_1_post_pipeline_deficits"] == {
-        "test-skill-00": {"negative": 1, "positive_only": 1}
+    expected_deficits = {
+        skill["id"]: {"negative": 0, "positive_only": 0} for skill in _skills()
     }
+    expected_deficits["test-skill-00"] = {"negative": 1, "positive_only": 1}
+    assert (
+        result["selection_audit"]["round_1_post_pipeline_deficits"] == expected_deficits
+    )
     assert len(round_two_rows) == 4
     round_two_invocations = [
         row for row in generation_invocations if row["generation_round"] == 2
@@ -5033,9 +5037,41 @@ def test_task5_freeze_rejects_resynchronized_round_lineage_not_derived_from_sour
     }
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
-    with pytest.raises(
-        ValueError, match="Agent source ledger freeze authority mismatch"
-    ):
+    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_freeze_rejects_source_synchronized_one_x_round_two_selection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pack = tmp_path / "agent-pack"
+    one_x_authority = deepcopy(TASK4_SELECTION_AUTHORITY)
+    one_x_authority["round_2_deficit_multiplier"] = 1
+    with monkeypatch.context() as patch:
+        patch.setattr(runner, "_SELECTION_AUTHORITY", one_x_authority)
+        _write_agent_pack(
+            pack,
+            round_one_rejections={("test-skill-00", "positive_only"): 3},
+            round_one_contamination_rejections={("test-skill-00", "negative"): 7},
+            include_round_two=True,
+            round_two_deficit_multiplier=1,
+            selection_authority=one_x_authority,
+        )
+        validation = _validate_agent_pack(pack, tmp_path / "repo")
+    assert validation["status"] == "VALID"
+    metadata_path = pack / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["selection_authority"] = deepcopy(TASK4_SELECTION_AUTHORITY)
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    _task5_resync_validation_from_source_pack(validation, pack)
+    selection = validation["selection_audit"]
+    selection["selection_authority"] = deepcopy(TASK4_SELECTION_AUTHORITY)
+    selection["selection_authority_sha256"] = _task5_test_canonical_sha256(
+        TASK4_SELECTION_AUTHORITY
+    )
+    validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
+
+    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
         runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -5066,9 +5102,11 @@ def test_task5_freeze_preserves_source_derived_round_two_selection_lineage(
     }
     assert selection["round_1_candidate_count"] == 256
     assert selection["round_2_candidate_count"] == 4
-    assert selection["round_1_post_pipeline_deficits"] == {
-        "test-skill-00": {"negative": 1, "positive_only": 1}
+    expected_deficits = {
+        skill["id"]: {"negative": 0, "positive_only": 0} for skill in _skills()
     }
+    expected_deficits["test-skill-00"] = {"negative": 1, "positive_only": 1}
+    assert selection["round_1_post_pipeline_deficits"] == expected_deficits
     assert selection["round_2_distribution"] == expected_round_two
     assert selection["round_2_request_quota_distribution"] == expected_round_two
     assert selection == validation["selection_audit"]
@@ -6155,9 +6193,19 @@ def _task5_evaluation_models() -> list[dict[str, Any]]:
 
 def _task5_evaluation_authority(
     tmp_path: Path,
+    *,
+    include_round_two: bool = False,
 ) -> tuple[dict[str, bytes], dict[str, Any]]:
     pack = tmp_path / "evaluation-agent-pack"
-    _write_agent_pack(pack)
+    if include_round_two:
+        _write_agent_pack(
+            pack,
+            round_one_rejections={("test-skill-00", "positive_only"): 3},
+            round_one_contamination_rejections={("test-skill-00", "negative"): 7},
+            include_round_two=True,
+        )
+    else:
+        _write_agent_pack(pack)
     validation = _validate_agent_pack(pack, tmp_path / "evaluation-repo")
     frozen = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
     review_summary = frozen["blind-v2-review-summary.json"]
@@ -6316,6 +6364,111 @@ def _task5_resynchronize_evaluation_manifest_and_bindings(
     dataset_binding["task_rows"] = [
         json.loads(line) for line in inputs["blind-v2-tasks.jsonl"].splitlines()
     ]
+
+
+def test_task5_evaluation_rejects_resynchronized_one_x_round_two_selection(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(
+        tmp_path, include_round_two=True
+    )
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    selection = manifest["agent_construction"]["deterministic_selection"]
+    skill_id = "test-skill-00"
+    assert selection["round_1_post_pipeline_deficits"][skill_id] == {
+        "negative": 1,
+        "positive_only": 1,
+    }
+    selection["round_2_distribution"][skill_id] = {
+        "negative": 1,
+        "positive_only": 1,
+    }
+    selection["round_2_request_quota_distribution"][skill_id] = {
+        "negative": 1,
+        "positive_only": 1,
+    }
+    selection["round_2_candidate_count"] = 2
+    manifest["agent_construction"]["deterministic_selection_sha256"] = (
+        _task5_test_canonical_sha256(selection)
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(inputs),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+def test_task5_evaluation_rejects_resynchronized_round_one_quota_drift(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    selection = manifest["agent_construction"]["deterministic_selection"]
+    skill_id = "test-skill-00"
+    selection["round_1_distribution"][skill_id]["negative"] = 11
+    selection["round_1_request_quota_distribution"][skill_id]["negative"] = 11
+    selection["round_1_candidate_count"] = 255
+    manifest["agent_construction"]["deterministic_selection_sha256"] = (
+        _task5_test_canonical_sha256(selection)
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(inputs),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+def test_task5_evaluation_accepts_canonical_round_two_selection(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(
+        tmp_path, include_round_two=True
+    )
+
+    documents = runner.build_evaluation_documents(
+        _task5_evaluation_route_rows(inputs),
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        evaluator_commit="c" * 40,
+        attempt_token_sha256="d" * 64,
+        frozen_bindings=frozen_bindings,
+        input_artifacts=inputs,
+        attempt_artifacts=_task5_attempt_artifacts(),
+    )
+
+    manifest = json.loads(documents["blind-v2-manifest.json"])
+    assert (
+        manifest["agent_construction"]["deterministic_selection"][
+            "round_2_candidate_count"
+        ]
+        == 4
+    )
 
 
 def _task5_resync_committed_role_evidence(
@@ -6667,6 +6820,7 @@ def test_task5_evaluation_requires_complete_exact_model_binding_grid(
         "human_review",
         "source_file_bytes",
         "source_bytes",
+        "source_bytes_hex",
         "raw_source",
         "response",
         "raw_response",
@@ -6686,9 +6840,9 @@ def test_task5_evaluation_rejects_nested_legacy_or_raw_lineage_fields(
     forbidden_field: str,
 ) -> None:
     inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
-    frozen_bindings["preregistration"]["nested"] = {
-        forbidden_field: f"{PREFIX} FORBIDDEN"
-    }
+    frozen_bindings["evaluator"]["source_files"] = [
+        {"nested": {forbidden_field: f"{PREFIX} FORBIDDEN"}}
+    ]
 
     with pytest.raises(
         ValueError, match="evaluation Agent construction lineage mismatch"

@@ -61,6 +61,7 @@ _PRIVATE_LINEAGE_FIELDS = {
     "response_body",
     "source_file_bytes",
     "source_bytes",
+    "source_bytes_hex",
 }
 _RATE_NAMES = (
     "recall_at_1",
