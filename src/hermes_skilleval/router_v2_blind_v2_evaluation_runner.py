@@ -1208,6 +1208,7 @@ def _validated_semantic_model_authority(authority: Any) -> dict[str, Any]:
             path == path.strip()
             and path == unicodedata.normalize("NFC", path)
             and not path.startswith("/")
+            and "\0" not in path
             and "\\" not in path
             and all(part not in {"", ".", ".."} for part in path.split("/")),
             "semantic model file path must be normalized relative POSIX",
@@ -3281,17 +3282,31 @@ def _validated_agent_lineage_evidence(
                 request_sha256 = _exact_lowercase_hex(
                     record["request_sha256"], length=64, label="run request hash"
                 )
-                response_sha256 = _exact_lowercase_hex(
-                    record["response_sha256"], length=64, label="run response hash"
+                raw_response_sha256 = record["response_sha256"]
+                response_sha256 = (
+                    None
+                    if raw_response_sha256 is None
+                    else _exact_lowercase_hex(
+                        raw_response_sha256,
+                        length=64,
+                        label="run response hash",
+                    )
                 )
                 identities = record["session_or_thread_ids"]
                 retry_count = record["transport_retry_count"]
                 _require(candidate_id not in candidate_ids, "duplicate run candidate")
                 _require(
                     record["requested_model"] == config["model"]
-                    and record["returned_model"] == config["model"]
                     and record["reasoning_effort"] == config["reasoning_effort"],
                     "run Agent configuration mismatch",
+                )
+                _require(
+                    (response_sha256 is None and record["returned_model"] is None)
+                    or (
+                        response_sha256 is not None
+                        and record["returned_model"] == config["model"]
+                    ),
+                    "run response model binding mismatch",
                 )
                 _require(
                     type(identities) is list
@@ -4439,6 +4454,114 @@ def evaluate_routes(
     return routes
 
 
+def _validate_evaluation_agent_construction_authority(
+    frozen_bindings: dict[str, Any], input_artifacts: dict[str, bytes]
+) -> None:
+    message = "evaluation Agent construction lineage mismatch"
+    try:
+        manifest = _json_no_duplicate_keys(
+            input_artifacts["blind-v2-manifest.json"], "blind-v2 manifest"
+        )
+        for field, expected in (
+            ("task_count", POSITIVE_TASK_COUNT),
+            ("negative_labeled_task_count", TEMPTING_NEGATIVE_COUNT),
+            ("family_count", POSITIVE_TASK_COUNT),
+            ("human_author_count", 0),
+            ("human_reviewer_count", 0),
+        ):
+            _require(
+                type(manifest.get(field)) is int and manifest[field] == expected,
+                message,
+            )
+        construction = manifest.get("agent_construction")
+        _require(type(construction) is dict, message)
+        manifest_construction = cast(dict[str, Any], construction)
+        _require(
+            manifest_construction.get("review_mode") == "ISOLATED_AGENT_REVIEW"
+            and manifest_construction.get("source_type") == "AGENT_GENERATED"
+            and type(manifest_construction.get("human_author_count")) is int
+            and manifest_construction["human_author_count"] == 0
+            and type(manifest_construction.get("human_reviewer_count")) is int
+            and manifest_construction["human_reviewer_count"] == 0,
+            message,
+        )
+
+        agent_roles = manifest_construction.get("agent_roles")
+        _require(
+            type(agent_roles) is dict and set(agent_roles) == set(AGENT_CONFIGS),
+            message,
+        )
+        role_evidence = cast(dict[str, Any], agent_roles)
+        for role, config in AGENT_CONFIGS.items():
+            evidence = role_evidence.get(role)
+            _require(type(evidence) is dict, message)
+            role_document = cast(dict[str, Any], evidence)
+            _require(
+                role_document.get("config") == config
+                and role_document.get("requested_models") == [config["model"]]
+                and role_document.get("returned_models") == [config["model"]]
+                and role_document.get("reasoning_effort") == config["reasoning_effort"],
+                message,
+            )
+            for hash_field in (
+                "system_prompt_sha256",
+                "response_schema_sha256",
+                "request_hashes_sha256",
+                "response_hashes_sha256",
+                "run_sha256",
+            ):
+                _exact_lowercase_hex(
+                    role_document.get(hash_field),
+                    length=64,
+                    label=f"evaluation {role} {hash_field}",
+                )
+            sessions = role_document.get("session_or_thread_ids")
+            _require(
+                type(sessions) is list
+                and bool(sessions)
+                and all(
+                    type(identity) is str and bool(identity.strip())
+                    for identity in sessions
+                ),
+                message,
+            )
+
+        reviewer_ledgers = manifest_construction.get("reviewer_ledgers")
+        _require(
+            type(reviewer_ledgers) is dict
+            and set(reviewer_ledgers) == {"reviewer_a", "reviewer_b"},
+            message,
+        )
+        ledger_evidence = cast(dict[str, Any], reviewer_ledgers)
+        for role, suffix in (("reviewer_a", "a"), ("reviewer_b", "b")):
+            raw_ledger = ledger_evidence[role]
+            _require(type(raw_ledger) is dict, message)
+            ledger = cast(dict[str, Any], raw_ledger)
+            _require(
+                ledger.get("path") == f"blind-v2-review-{suffix}.jsonl",
+                message,
+            )
+            _exact_lowercase_hex(
+                ledger.get("sha256"), length=64, label=f"evaluation {role} ledger"
+            )
+            _exact_lowercase_hex(
+                ledger.get("schedule_sha256"),
+                length=64,
+                label=f"evaluation {role} schedule",
+            )
+
+        expected_binding = deepcopy(manifest_construction)
+        expected_binding["review_summary_file_sha256"] = _sha256_bytes(
+            input_artifacts["review-summary.json"]
+        )
+        _require(
+            frozen_bindings.get("agent_construction") == expected_binding,
+            message,
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(message) from exc
+
+
 def build_evaluation_documents(
     route_rows: list[dict[str, Any]],
     *,
@@ -4459,6 +4582,7 @@ def build_evaluation_documents(
         set(attempt_artifacts) == {"attempt-1.started.json", "attempt-1.terminal.json"},
         "attempt artifact set mismatch",
     )
+    _validate_evaluation_agent_construction_authority(frozen_bindings, input_artifacts)
     per_seed = [
         build_per_seed_result(
             [row for row in route_rows if row["arm"] == arm and row["seed"] == seed]

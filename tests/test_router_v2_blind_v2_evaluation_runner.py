@@ -2123,6 +2123,17 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
+def _task5_test_canonical_sha256(value: Any) -> str:
+    payload = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
     filename = {
         "generator": "blind-v2-generation.jsonl",
@@ -2133,11 +2144,16 @@ def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
     for row in _read_jsonl(root / filename):
         invocations = row["invocations"]
         success_envelope = invocations[-1]["envelope"]
+        request_payload = {
+            key: value
+            for key, value in row["request"].items()
+            if key != "request_sha256"
+        }
         records.append(
             {
                 "candidate_id": row["candidate_id"],
-                "request_sha256": row["request"]["request_sha256"],
-                "response_sha256": runner.canonical_sha256(
+                "request_sha256": _task5_test_canonical_sha256(request_payload),
+                "response_sha256": _task5_test_canonical_sha256(
                     success_envelope["response"]
                 ),
                 "requested_model": success_envelope["requested_model"],
@@ -2150,6 +2166,35 @@ def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
             }
         )
     return records
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_fixture_recomputes_request_hash_instead_of_trusting_self_hash(
+    tmp_path: Path,
+    role: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }[role]
+    path = pack / filename
+    rows = _read_jsonl(path)
+    request_payload = {
+        key: value
+        for key, value in rows[0]["request"].items()
+        if key != "request_sha256"
+    }
+    expected = _task5_test_canonical_sha256(request_payload)
+    rows[0]["request"]["request_sha256"] = "0" * 64
+    path.write_bytes(_jsonl_bytes(rows))
+
+    records = _task5_fixture_run_records(pack, role)
+
+    assert records[0]["request_sha256"] == expected
+    assert records[0]["request_sha256"] != "0" * 64
 
 
 def _task5_fixture_retry_records(
@@ -2855,6 +2900,7 @@ def test_task5_scanner_model_files_are_bound_from_validated_authority(
         ("duplicate_path", "paths must be unique"),
         ("unsorted", "files must be sorted"),
         ("noncanonical_path", "path must be normalized"),
+        ("nul_path", "path must be normalized"),
         ("invalid_hash", "file SHA-256"),
         ("aggregate_mismatch", "aggregate hash mismatch"),
     ),
@@ -2870,6 +2916,9 @@ def test_task5_scanner_model_authority_is_fail_closed(
         authority = _task5_scanner_model_authority(list(reversed(files)))
     elif case == "noncanonical_path":
         files[1]["path"] = "weights/../model.safetensors"
+        authority = _task5_scanner_model_authority(files)
+    elif case == "nul_path":
+        files[1]["path"] = "model\0.safetensors"
         authority = _task5_scanner_model_authority(files)
     elif case == "invalid_hash":
         files[1]["sha256"] = "f" * 63
@@ -3980,13 +4029,13 @@ def test_task5_run_hashes_and_retry_records_bind_exact_fixture_invocations(
     construction = manifest["agent_construction"]
 
     for role, records in expected_records.items():
-        expected_request_hash = runner.canonical_sha256(
+        expected_request_hash = _task5_test_canonical_sha256(
             [record["request_sha256"] for record in records]
         )
-        expected_response_hash = runner.canonical_sha256(
+        expected_response_hash = _task5_test_canonical_sha256(
             [record["response_sha256"] for record in records]
         )
-        expected_run_hash = runner.canonical_sha256(records)
+        expected_run_hash = _task5_test_canonical_sha256(records)
         for evidence in (
             validation["agent_run_evidence"][role],
             construction["agent_roles"][role],
@@ -3999,7 +4048,9 @@ def test_task5_run_hashes_and_retry_records_bind_exact_fixture_invocations(
     assert construction["retry_records"] == expected_retries
 
 
-@pytest.mark.parametrize("mutation", ("constant_run_hash", "wrong_retry_session"))
+@pytest.mark.parametrize(
+    "mutation", ("constant_run_hash", "wrong_request_hash", "wrong_retry_session")
+)
 def test_task5_dataset_freeze_rejects_misbound_run_or_retry_evidence(
     tmp_path: Path,
     mutation: str,
@@ -4009,6 +4060,8 @@ def test_task5_dataset_freeze_rejects_misbound_run_or_retry_evidence(
     validation = _validate_agent_pack(pack, tmp_path / "repo")
     if mutation == "constant_run_hash":
         validation["agent_run_evidence"]["generator"]["run_sha256"] = "0" * 64
+    elif mutation == "wrong_request_hash":
+        validation["agent_run_records"]["reviewer_b"][0]["request_sha256"] = "0" * 64
     else:
         validation["retry_records"][0]["retry_session_or_thread_id"] = (
             "wrong-retry-session"
@@ -4016,6 +4069,83 @@ def test_task5_dataset_freeze_rejects_misbound_run_or_retry_evidence(
 
     with pytest.raises(ValueError, match="Agent run or retry evidence mismatch"):
         runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+@pytest.mark.parametrize("invalid_response", ("missing_reason", "refusal"))
+def test_task5_substantive_invalid_candidate_lineage_still_freezes(
+    tmp_path: Path,
+    invalid_response: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rejected = rows[0]
+    candidate_id = rejected["candidate_id"]
+    if invalid_response == "missing_reason":
+        rejected["invocations"][0]["envelope"]["response"].pop("reason")
+    else:
+        rejected["invocations"][0]["envelope"]["response"] = {
+            "refusal": f"{PREFIX} REFUSAL"
+        }
+    _rewrite_jsonl(path, rows)
+
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    assert validation["status"] == "VALID"
+    assert validation["task_count"] == 128
+    assert validation["negative_labeled_task_count"] == 96
+    assert candidate_id not in {task["candidate_id"] for task in validation["tasks"]}
+    rejected_record = next(
+        record
+        for record in validation["agent_run_records"]["reviewer_a"]
+        if record["candidate_id"] == candidate_id
+    )
+    assert rejected_record == {
+        "candidate_id": candidate_id,
+        "request_sha256": _task5_test_canonical_sha256(
+            {
+                key: value
+                for key, value in rejected["request"].items()
+                if key != "request_sha256"
+            }
+        ),
+        "response_sha256": None,
+        "requested_model": runner.AGENT_CONFIGS["reviewer_a"]["model"],
+        "returned_model": None,
+        "reasoning_effort": runner.AGENT_CONFIGS["reviewer_a"]["reasoning_effort"],
+        "session_or_thread_ids": [
+            _pack_invocation_identity(rejected["invocations"][0])
+        ],
+        "transport_retry_count": 0,
+    }
+    assert validation["transport_retry_count"] == 0
+    assert validation["retry_records"] == []
+    assert validation["agent_run_evidence"]["reviewer_a"][
+        "run_sha256"
+    ] == _task5_test_canonical_sha256(validation["agent_run_records"]["reviewer_a"])
+    assert validation["agent_run_evidence"]["reviewer_a"][
+        "response_hashes_sha256"
+    ] == _task5_test_canonical_sha256(
+        [
+            record["response_sha256"]
+            for record in validation["agent_run_records"]["reviewer_a"]
+            if record["response_sha256"] is not None
+        ]
+    )
+
+    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    assert first == second
+    task_ids = {
+        json.loads(line)["task_id"]
+        for line in first["blind-v2-tasks.jsonl"].splitlines()
+    }
+    assert candidate_id not in task_ids
+    assert len(task_ids) == 128
+    combined = b"".join(first.values())
+    assert b'"rationale"' not in combined
+    assert b'"reason"' not in combined
+    assert f"{PREFIX} REFUSAL".encode() not in combined
 
 
 def test_task5_commit_b_freezes_agent_tasks_lineage_and_retry_evidence(
@@ -4548,6 +4678,70 @@ class _FakeScorer:
         return [gold, *[skill_id for skill_id in skill_ids if skill_id != gold]]
 
 
+def _task5_evaluation_route_rows() -> list[dict[str, Any]]:
+    return [
+        {
+            "arm": arm,
+            "seed": seed,
+            "task_id": f"{PREFIX}_TASK_{index:03d}",
+            "gold_skill_id": f"test-skill-{index // 8:02d}",
+            "tempting_negative_skill_id": (
+                f"test-skill-{((index // 8) + 1) % 16:02d}" if index % 8 < 6 else None
+            ),
+            "semantic_family_id": f"{PREFIX}_FAMILY_{index:03d}",
+            "gold_rank": 1,
+            "tempting_negative_rank": 6 if index % 8 < 6 else None,
+            "latency_ns": 10_000_000,
+        }
+        for seed in (7170, 7171, 7172)
+        for arm in ("A", "C")
+        for index in range(128)
+    ]
+
+
+def _task5_evaluation_authority(
+    tmp_path: Path,
+) -> tuple[dict[str, bytes], dict[str, Any]]:
+    pack = tmp_path / "evaluation-agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "evaluation-repo")
+    frozen = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    review_summary = frozen["blind-v2-review-summary.json"]
+    manifest = json.loads(frozen["blind-v2-manifest.json"])
+    construction = deepcopy(manifest["agent_construction"])
+    construction["review_summary_file_sha256"] = hashlib.sha256(
+        review_summary
+    ).hexdigest()
+    return (
+        {
+            "preregistration.json": b"{}\n",
+            "blind-v2-manifest.json": frozen["blind-v2-manifest.json"],
+            "review-summary.json": review_summary,
+        },
+        {
+            "agent_construction": construction,
+            "evaluation_models": [{"arm": "A"}, {"arm": "C"}],
+        },
+    )
+
+
+def _task5_attempt_artifacts() -> dict[str, bytes]:
+    started = runner.build_attempt_started_document(
+        {
+            "commit_a": "a" * 40,
+            "commit_b": "b" * 40,
+            "attempt_token_sha256": "d" * 64,
+        }
+    )
+    terminal = runner.build_attempt_terminal_document(
+        len(runner.EVALUATION_OUTPUT_FILENAMES)
+    )
+    return {
+        "attempt-1.started.json": runner._canonical_json_bytes(started),
+        "attempt-1.terminal.json": runner._canonical_json_bytes(terminal),
+    }
+
+
 class _FakeSentenceModel:
     def __init__(self) -> None:
         self.encoded: list[list[str]] = []
@@ -4587,7 +4781,35 @@ def test_real_scorer_quantizes_to_eight_decimals_before_tie_break() -> None:
     assert scorer.rank("already canonical", ["b", "a"]) == ["a", "b"]
 
 
-def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b() -> None:
+@pytest.mark.parametrize("lineage_case", ("empty", "mismatched"))
+def test_task5_evaluation_claims_require_manifest_bound_agent_construction(
+    tmp_path: Path,
+    lineage_case: str,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    if lineage_case == "empty":
+        frozen_bindings = {}
+    else:
+        frozen_bindings["agent_construction"]["review_mode"] = "UNBOUND_REVIEW"
+
+    with pytest.raises(
+        ValueError, match="evaluation Agent construction lineage mismatch"
+    ):
+        runner.build_evaluation_documents(
+            _task5_evaluation_route_rows(),
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            evaluator_commit="c" * 40,
+            attempt_token_sha256="d" * 64,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=inputs,
+            attempt_artifacts=_task5_attempt_artifacts(),
+        )
+
+
+def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b(
+    tmp_path: Path,
+) -> None:
     tasks = [
         {
             "task_id": f"{PREFIX}_TASK_{index:02d}",
@@ -4624,34 +4846,28 @@ def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b() -> None:
     assert len(calls) == 1536
     assert all(calls.count(f"{PREFIX} QUERY {index}") == 12 for index in range(128))
 
-    started = runner.build_attempt_started_document(
-        {
-            "commit_a": "a" * 40,
-            "commit_b": "b" * 40,
-            "attempt_token_sha256": "d" * 64,
-        }
-    )
-    terminal = runner.build_attempt_terminal_document(
-        len(runner.EVALUATION_OUTPUT_FILENAMES)
-    )
-    inputs = {
-        "preregistration.json": b"{}\n",
-        "blind-v2-manifest.json": b"{}\n",
-        "review-summary.json": b"{}\n",
-    }
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
     documents = runner.build_evaluation_documents(
         rows,
         commit_a="a" * 40,
         commit_b="b" * 40,
         evaluator_commit="c" * 40,
         attempt_token_sha256="d" * 64,
-        frozen_bindings={"evaluation_models": [{"arm": "A"}, {"arm": "C"}]},
+        frozen_bindings=frozen_bindings,
         input_artifacts=inputs,
-        attempt_artifacts={
-            "attempt-1.started.json": runner._canonical_json_bytes(started),
-            "attempt-1.terminal.json": runner._canonical_json_bytes(terminal),
-        },
+        attempt_artifacts=_task5_attempt_artifacts(),
     )
+    regenerated = runner.build_evaluation_documents(
+        rows,
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        evaluator_commit="c" * 40,
+        attempt_token_sha256="d" * 64,
+        frozen_bindings=frozen_bindings,
+        input_artifacts=inputs,
+        attempt_artifacts=_task5_attempt_artifacts(),
+    )
+    assert documents == regenerated
     assert set(documents) == set(runner.EVALUATION_OUTPUT_FILENAMES)
     lineage = json.loads(documents["lineage-manifest.json"])
     lineage_paths = {row["path"] for row in lineage["artifacts"]}
