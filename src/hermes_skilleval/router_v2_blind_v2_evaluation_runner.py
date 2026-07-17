@@ -2239,6 +2239,63 @@ def _agent_pack_protocol_invalid(
     return result
 
 
+def _agent_pack_infrastructure_inconclusive(
+    *,
+    failure_stage: str,
+    failure_reason: str,
+    first_read_timestamp: str,
+    source_file_sha256: dict[str, str],
+    agent_run_records: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
+    records = deepcopy(agent_run_records)
+    retries = [
+        retry
+        for role in AGENT_CONFIGS
+        for record in records[role]
+        if (retry := _transport_retry_record(record, role=role)) is not None
+    ]
+    retries.sort(
+        key=lambda row: (
+            cast(str, row["role"]),
+            cast(str, row["invocation_id"]),
+        )
+    )
+    return {
+        "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
+        "status": "INCONCLUSIVE",
+        "failure_stage": failure_stage,
+        "failure_reason": failure_reason,
+        "research_conclusion": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+        "router_decision": "KEEP_BASELINE",
+        "production_ready": False,
+        "release_authorized": False,
+        "default_router_unchanged": True,
+        "first_read_timestamp": first_read_timestamp,
+        "source_file_sha256": source_file_sha256,
+        "model_scores_observed": False,
+        "agent_run_records": records,
+        "agent_run_evidence": {
+            role: _agent_role_run_evidence(role, records[role])
+            for role in AGENT_CONFIGS
+        },
+        "transport_retry_count": len(retries),
+        "retry_records": retries,
+        "tasks": [],
+    }
+
+
+def _transport_retries_exhausted(run_record: dict[str, Any]) -> bool:
+    attempts = run_record["attempts"]
+    return (
+        run_record["transport_retry_count"] == 1
+        and len(attempts) == 2
+        and all(
+            attempt["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE"
+            for attempt in attempts
+        )
+    )
+
+
 def _pack_invocation_identities(invocations: Any) -> list[str]:
     if type(invocations) is not list:
         return []
@@ -2709,10 +2766,13 @@ def _validate_pack_invocations(
         success = cast(dict[str, Any], invocations[-1])
         if "envelope" not in success:
             _pack_protocol_require(
-                len(invocations) == 1,
-                "transport retry must end with one substantive response",
+                all(
+                    "envelope" not in cast(dict[str, Any], invocation)
+                    for invocation in invocations
+                ),
+                "transport retry cannot follow a substantive response",
             )
-            return None, 0
+            return None, len(invocations) - 1
         _pack_protocol_require(
             len(invocations) == 1 or "envelope" not in first,
             "a second substantive response is prohibited",
@@ -3029,6 +3089,7 @@ def _validated_generation_authority(
                 {
                     **normalized_candidate,
                     "generation_round": generation_round,
+                    "response_sha256": response_sha256,
                 }
             )
 
@@ -3159,6 +3220,22 @@ def _validated_generation_authority(
         "canonical round-one generation authority mismatch",
     )
     accepted_outcomes = {"ELIGIBLE", "SELECTED", "NOT_SELECTED"}
+    accepted_projection = sorted(
+        (
+            {
+                "candidate_id": candidate["candidate_id"],
+                "generation_round": candidate["generation_round"],
+                "candidate_index": candidate["candidate_index"],
+                "response_sha256": candidate["response_sha256"],
+                "gold_skill_id": candidate["gold_skill_id"],
+                "negative_skill_id": candidate["negative_skill_id"],
+                "stratum": candidate["stratum"],
+            }
+            for candidate in all_candidates
+            if candidate_outcomes[candidate["candidate_id"]] in accepted_outcomes
+        ),
+        key=lambda candidate: cast(str, candidate["candidate_id"]),
+    )
     round_one_eligible_counts = {
         skill_id: {"negative": 0, "positive_only": 0}
         for skill_id in sorted(canonical_ids)
@@ -3219,6 +3296,8 @@ def _validated_generation_authority(
         "round_1_request_quota_distribution": round_one_request_distribution,
         "round_2_request_quota_distribution": round_two_request_distribution,
         "round_1_post_pipeline_deficits": deficits,
+        "accepted_projection": accepted_projection,
+        "candidate_outcomes": candidate_outcomes,
     }
     normalized = {
         **deepcopy(authority),
@@ -3265,10 +3344,11 @@ def _validated_selection_audit_semantics(
         and selection["selection_authority_sha256"] == canonical_sha256(authority),
         "selection authority mismatch",
     )
-    _exact_lowercase_hex(
-        selection["accepted_pool_sha256"],
-        length=64,
-        label="accepted pool SHA-256",
+    accepted_projection = generation_semantics["accepted_projection"]
+    _require(
+        type(accepted_projection) is list
+        and selection["accepted_pool_sha256"] == canonical_sha256(accepted_projection),
+        "accepted pool authority mismatch",
     )
 
     _require(
@@ -3334,6 +3414,24 @@ def _validated_selection_audit_semantics(
     )
 
     selected_ids = [cast(str, row[id_field]) for row in selected_rows]
+    expected_selected_ids = [
+        cast(str, candidate["candidate_id"])
+        for skill_id in sorted_ids
+        for stratum, quota_field in (
+            ("negative", "final_negative_per_skill"),
+            ("positive_only", "final_positive_only_per_skill"),
+        )
+        for candidate in sorted(
+            (
+                candidate
+                for candidate in accepted_projection
+                if candidate["gold_skill_id"] == skill_id
+                and candidate["stratum"] == stratum
+            ),
+            key=lambda candidate: selection_key(cast(str, candidate["candidate_id"])),
+        )[: cast(int, _SELECTION_AUTHORITY[quota_field])]
+    ]
+    expected_selected_id_set = set(expected_selected_ids)
     selected_by_stratum = {
         skill_id: {
             stratum: [
@@ -3359,6 +3457,19 @@ def _validated_selection_audit_semantics(
                 and len(strata["positive_only"])
                 == _SELECTION_AUTHORITY["final_positive_only_per_skill"]
                 for strata in selected_by_stratum.values()
+            )
+            and selected_ids == expected_selected_ids
+            and all(
+                generation_semantics["candidate_outcomes"][candidate_id]
+                == (
+                    "SELECTED"
+                    if candidate_id in expected_selected_id_set
+                    else "NOT_SELECTED"
+                )
+                for candidate_id in (
+                    cast(str, candidate["candidate_id"])
+                    for candidate in accepted_projection
+                )
             ),
             "selected canonical quota mismatch",
         )
@@ -3385,7 +3496,6 @@ def _validated_selection_audit_semantics(
 
 def _selection_audit_document(
     *,
-    accepted: list[dict[str, Any]],
     generation_semantics: dict[str, Any],
     selected: list[dict[str, Any]],
     canonical_ids: set[str],
@@ -3407,7 +3517,9 @@ def _selection_audit_document(
     document = {
         "selection_authority": authority_document,
         "selection_authority_sha256": canonical_sha256(authority_document),
-        "accepted_pool_sha256": canonical_sha256(accepted),
+        "accepted_pool_sha256": canonical_sha256(
+            generation_semantics["accepted_projection"]
+        ),
         "round_1_candidate_count": generation_semantics["round_1_candidate_count"],
         "round_2_candidate_count": generation_semantics["round_2_candidate_count"],
         "round_1_distribution": deepcopy(generation_semantics["round_1_distribution"]),
@@ -3758,6 +3870,14 @@ def validate_agent_pack(
                 retry_count=retry_count,
             )
             sanitized_run_records["generator"].append(run_record)
+            if _transport_retries_exhausted(run_record):
+                return _agent_pack_infrastructure_inconclusive(
+                    failure_stage="agent_invocation_transport",
+                    failure_reason="generator transport retry exhausted without response",
+                    first_read_timestamp=first_read_timestamp,
+                    source_file_sha256=source_hashes,
+                    agent_run_records=sanitized_run_records,
+                )
             generation_authority_requests.append(
                 _generation_authority_request_document(
                     request=request,
@@ -3954,6 +4074,16 @@ def validate_agent_pack(
                     retry_count=retry_count,
                 )
                 sanitized_run_records[role].append(run_record)
+                if _transport_retries_exhausted(run_record):
+                    return _agent_pack_infrastructure_inconclusive(
+                        failure_stage="agent_invocation_transport",
+                        failure_reason=(
+                            f"{role} transport retry exhausted without response"
+                        ),
+                        first_read_timestamp=first_read_timestamp,
+                        source_file_sha256=source_hashes,
+                        agent_run_records=sanitized_run_records,
+                    )
                 retry_record = _transport_retry_record(run_record, role=role)
                 if retry_record is not None:
                     retry_records.append(retry_record)
@@ -4174,7 +4304,6 @@ def validate_agent_pack(
     }
     if final_deficits:
         insufficient_selection_audit = _selection_audit_document(
-            accepted=accepted,
             generation_semantics=generation_semantics,
             selected=[],
             canonical_ids=canonical_ids,
@@ -4250,7 +4379,6 @@ def validate_agent_pack(
             row["proposed_negative_skill_id"] for row in selected_negative_rows
         )
         selected_selection_audit = _selection_audit_document(
-            accepted=accepted,
             generation_semantics=generation_semantics,
             selected=selected,
             canonical_ids=canonical_ids,
@@ -4774,10 +4902,7 @@ def _validated_agent_lineage_evidence(
                 if attempts:
                     _require(
                         retry_count == 0
-                        or (
-                            attempts[0]["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE"
-                            and attempts[1]["transport_failure"] is False
-                        ),
+                        or (attempts[0]["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE"),
                         "transport retry attempt sequence mismatch",
                     )
                     final_attempt = attempts[-1]
@@ -5601,8 +5726,12 @@ def _validated_agent_source_ledger_evidence(
             }
             for gold in gold_ids
         }
+        for candidate_id, outcome in tuple(outcomes.items()):
+            if outcome == "ELIGIBLE":
+                outcomes[candidate_id] = (
+                    "SELECTED" if candidate_id in selected_ids else "NOT_SELECTED"
+                )
         source_selection_audit = _selection_audit_document(
-            accepted=accepted,
             generation_semantics=generation_semantics,
             selected=selected_tasks,
             canonical_ids=canonical_ids,
@@ -5617,11 +5746,6 @@ def _validated_agent_source_ledger_evidence(
             == canonical_sha256(source_selection_audit),
             "source-derived selection audit mismatch",
         )
-        for candidate_id, outcome in tuple(outcomes.items()):
-            if outcome == "ELIGIBLE":
-                outcomes[candidate_id] = (
-                    "SELECTED" if candidate_id in selected_ids else "NOT_SELECTED"
-                )
         sorted_outcomes = dict(sorted(outcomes.items()))
         pipeline_rejected_count = sum(
             outcome.startswith("REJECTED") for outcome in outcomes.values()
@@ -7006,14 +7130,93 @@ def _validated_committed_contamination(
     return deepcopy(contamination)
 
 
+def _validated_pre_scoring_authority(
+    *,
+    tasks: list[dict[str, Any]],
+    skills: list[dict[str, Any]],
+    model_bindings: list[dict[str, Any]],
+    commit_a: str,
+    commit_b: str,
+    attempt_token_sha256: str,
+    frozen_bindings: dict[str, Any],
+    input_artifacts: dict[str, bytes],
+    attempt_started_artifact: bytes,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    message = "pre-scoring authority mismatch"
+    try:
+        _exact_lowercase_hex(commit_a, length=40, label="pre-scoring Commit A")
+        _exact_lowercase_hex(commit_b, length=40, label="pre-scoring Commit B")
+        _exact_lowercase_hex(
+            attempt_token_sha256,
+            length=64,
+            label="pre-scoring attempt token SHA-256",
+        )
+        _require(
+            type(input_artifacts) is dict
+            and set(input_artifacts)
+            == {
+                "preregistration.json",
+                "blind-v2-tasks.jsonl",
+                "blind-v2-manifest.json",
+                "review-summary.json",
+            },
+            message,
+        )
+        frozen_tasks = _validated_evaluation_frozen_tasks(
+            None,
+            commit_a=commit_a,
+            commit_b=commit_b,
+            attempt_token_sha256=attempt_token_sha256,
+            frozen_bindings=frozen_bindings,
+            input_artifacts=input_artifacts,
+            attempt_started_artifact=attempt_started_artifact,
+        )
+        projected_skills = _validate_evaluation_agent_construction_authority(
+            frozen_bindings, input_artifacts, frozen_tasks
+        )
+        frozen_models = _validated_evaluation_model_bindings(
+            frozen_bindings["evaluation_models"]
+        )
+        _require(
+            tasks == frozen_tasks
+            and _project_canonical_skills(skills) == projected_skills
+            and model_bindings == frozen_models,
+            message,
+        )
+        return (
+            deepcopy(frozen_tasks),
+            deepcopy(projected_skills),
+            deepcopy(frozen_models),
+        )
+    except (AttributeError, KeyError, TypeError, ValueError) as exc:
+        raise ValueError(message) from exc
+
+
 def evaluate_routes(
     tasks: list[dict[str, Any]],
     skills: list[dict[str, Any]],
     model_bindings: list[dict[str, Any]],
     *,
+    commit_a: str,
+    commit_b: str,
+    attempt_token_sha256: str,
+    frozen_bindings: dict[str, Any],
+    input_artifacts: dict[str, bytes],
+    attempt_started_artifact: bytes,
     scorer_factory: ScorerFactory | None = None,
     clock_ns: Callable[[], int] = time.perf_counter_ns,
 ) -> list[dict[str, Any]]:
+    tasks, skills, model_bindings = _validated_pre_scoring_authority(
+        tasks=tasks,
+        skills=skills,
+        model_bindings=model_bindings,
+        commit_a=commit_a,
+        commit_b=commit_b,
+        attempt_token_sha256=attempt_token_sha256,
+        frozen_bindings=frozen_bindings,
+        input_artifacts=input_artifacts,
+        attempt_started_artifact=attempt_started_artifact,
+    )
     _require(
         len(tasks) == POSITIVE_TASK_COUNT,
         f"evaluation requires {POSITIVE_TASK_COUNT} tasks",
@@ -7075,14 +7278,14 @@ def evaluate_routes(
 
 
 def _validated_evaluation_frozen_tasks(
-    route_rows: list[dict[str, Any]],
+    route_rows: list[dict[str, Any]] | None,
     *,
     commit_a: str,
     commit_b: str,
     attempt_token_sha256: str,
     frozen_bindings: dict[str, Any],
     input_artifacts: dict[str, bytes],
-    attempt_artifacts: dict[str, bytes],
+    attempt_started_artifact: bytes,
 ) -> list[dict[str, Any]]:
     message = "evaluation frozen task authority mismatch"
     task_fields = {
@@ -7189,15 +7392,32 @@ def _validated_evaluation_frozen_tasks(
             == canonical_sha256(selected_source_authority),
             message,
         )
-        started = _json_no_duplicate_keys(
-            attempt_artifacts["attempt-1.started.json"], "attempt started marker"
+        started = _exact_object_fields(
+            _json_no_duplicate_keys(attempt_started_artifact, "attempt started marker"),
+            {
+                "schema_version",
+                "attempt_number",
+                "maximum_attempts",
+                "commit_a",
+                "commit_b",
+                "attempt_token_sha256",
+            },
+            "attempt started marker",
         )
         _require(
-            started.get("commit_a") == commit_a
-            and started.get("commit_b") == commit_b
-            and started.get("attempt_token_sha256") == attempt_token_sha256,
+            started["schema_version"] == "router-v2-blind-v2-attempt-started-v1"
+            and started["attempt_number"] == 1
+            and type(started["attempt_number"]) is int
+            and started["maximum_attempts"] == 1
+            and type(started["maximum_attempts"]) is int
+            and started["commit_a"] == commit_a
+            and started["commit_b"] == commit_b
+            and started["attempt_token_sha256"] == attempt_token_sha256,
             message,
         )
+
+        if route_rows is None:
+            return tasks
 
         _require(type(route_rows) is list, message)
         task_authority = {
@@ -7251,7 +7471,7 @@ def _validate_evaluation_agent_construction_authority(
     frozen_bindings: dict[str, Any],
     input_artifacts: dict[str, bytes],
     task_rows: list[dict[str, Any]],
-) -> None:
+) -> list[dict[str, Any]]:
     message = "evaluation Agent construction lineage mismatch"
     try:
         _require(type(frozen_bindings) is dict, message)
@@ -7912,6 +8132,7 @@ def _validate_evaluation_agent_construction_authority(
             frozen["agent_construction"] == expected_binding,
             message,
         )
+        return projected_skills
     except (AttributeError, KeyError, TypeError, ValueError) as exc:
         raise ValueError(message) from exc
 
@@ -7951,7 +8172,7 @@ def build_evaluation_documents(
         attempt_token_sha256=attempt_token_sha256,
         frozen_bindings=frozen_bindings,
         input_artifacts=input_artifacts,
-        attempt_artifacts=attempt_artifacts,
+        attempt_started_artifact=attempt_artifacts["attempt-1.started.json"],
     )
     _validate_evaluation_agent_construction_authority(
         frozen_bindings, input_artifacts, frozen_task_rows
