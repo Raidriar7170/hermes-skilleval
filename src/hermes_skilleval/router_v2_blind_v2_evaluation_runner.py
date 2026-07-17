@@ -390,6 +390,16 @@ def _canonical_contract_json_equal(actual: Any, expected: Any) -> bool:
     )
 
 
+def _exact_lowercase_hex(value: Any, *, length: int, label: str) -> str:
+    _require(
+        type(value) is str
+        and len(value) == length
+        and all(character in "0123456789abcdef" for character in value),
+        f"{label} must be exactly {length} lowercase hex characters",
+    )
+    return cast(str, value)
+
+
 def _request_sha256(request: dict[str, Any]) -> str:
     payload = {key: value for key, value in request.items() if key != "request_sha256"}
     return _canonical_contract_json_sha256(payload)
@@ -404,13 +414,16 @@ def opaque_candidate_id(
     )
     _nonempty_string(skill_id, "skill id")
     _require(type(index) is int and index >= 0, "candidate index must be an integer")
-    _nonempty_string(response_sha256, "response SHA-256")
+    response_sha256 = _exact_lowercase_hex(
+        response_sha256, length=64, label="response SHA-256"
+    )
     raw = f"{round_number}:{skill_id}:{index}:{response_sha256}"
-    return hashlib.sha256(raw.encode()).hexdigest()[:24]
+    candidate_id = hashlib.sha256(raw.encode()).hexdigest()[:24]
+    return _exact_lowercase_hex(candidate_id, length=24, label="candidate id")
 
 
 def selection_key(candidate_id: str) -> str:
-    _nonempty_string(candidate_id, "candidate id")
+    candidate_id = _exact_lowercase_hex(candidate_id, length=24, label="candidate id")
     return hashlib.sha256(f"{SELECTION_SEED}:{candidate_id}".encode()).hexdigest()
 
 
@@ -419,7 +432,7 @@ def review_schedule_key(role: str, candidate_id: str) -> str:
         type(role) is str and role in {"reviewer_a", "reviewer_b"},
         "reviewer role mismatch",
     )
-    _nonempty_string(candidate_id, "candidate id")
+    candidate_id = _exact_lowercase_hex(candidate_id, length=24, label="candidate id")
     prefix = {"reviewer_a": "review-a:7170", "reviewer_b": "review-b:7171"}[role]
     return hashlib.sha256(f"{prefix}:{candidate_id}".encode()).hexdigest()
 
@@ -484,7 +497,9 @@ def build_reviewer_request(
     )
     _canonical_skill_ids(canonical_skills)
     _require(type(candidate) is dict, "candidate must be an object")
-    candidate_id = _nonempty_string(candidate.get("candidate_id"), "candidate id")
+    candidate_id = _exact_lowercase_hex(
+        candidate.get("candidate_id"), length=24, label="candidate id"
+    )
     prompt_text = _nonempty_string(candidate.get("prompt_text"), "prompt text")
     config = AGENT_CONFIGS[role]
     payload = {
@@ -613,7 +628,7 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             "reviewer response schema mismatch",
         )
         _require(request_input["rubric"] == REVIEW_RUBRIC, "review rubric mismatch")
-        _nonempty_string(request_input["task_id"], "reviewer task id")
+        _exact_lowercase_hex(request_input["task_id"], length=24, label="candidate id")
         _nonempty_string(request_input["prompt_text"], "reviewer prompt text")
     return request
 

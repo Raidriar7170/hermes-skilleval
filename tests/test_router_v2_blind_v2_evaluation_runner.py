@@ -18,6 +18,10 @@ from hermes_skilleval import router_v2_blind_v2_evaluation_runner as runner
 PREFIX = "TEST_ONLY_DO_NOT_USE"
 
 
+def _opaque_candidate_id() -> str:
+    return runner.opaque_candidate_id(1, "test-skill-00", 0, "a" * 64)
+
+
 def _skills() -> list[dict[str, Any]]:
     return [
         {
@@ -64,7 +68,7 @@ def _agent_contract_reviewer_request(
 ) -> dict[str, Any]:
     return runner.build_reviewer_request(
         {
-            "candidate_id": "opaque-001",
+            "candidate_id": _opaque_candidate_id(),
             "prompt_text": f"{PREFIX} REVIEW REQUEST",
             "proposed_gold_skill_id": "test-skill-00",
             "proposed_negative_skill_id": "test-skill-01",
@@ -171,6 +175,8 @@ def test_agent_contract_constants_schemas_and_schedule_keys_are_frozen() -> None
         runner.opaque_candidate_id(1, "test-skill-00", 7, response_sha256)
         == candidate_id
     )
+    assert len(candidate_id) == 24
+    assert set(candidate_id) <= set("0123456789abcdef")
     assert (
         runner.selection_key(candidate_id)
         == hashlib.sha256(f"7170:{candidate_id}".encode()).hexdigest()
@@ -271,7 +277,12 @@ def test_agent_contract_reviewer_request_is_single_candidate_and_label_blind(
         "canonical_skills",
         "rubric",
     }
-    assert request["input"]["task_id"] == "opaque-001"
+    task_id = request["input"]["task_id"]
+    assert task_id == _opaque_candidate_id()
+    assert len(task_id) == 24
+    assert set(task_id) <= set("0123456789abcdef")
+    for label_marker in ("gold", "negative", "skill", "label"):
+        assert label_marker not in task_id
     assert request["input"]["rubric"] == runner.REVIEW_RUBRIC
     encoded = json.dumps(request)
     assert "proposed_gold_skill_id" not in encoded
@@ -283,6 +294,75 @@ def test_agent_contract_reviewer_request_is_single_candidate_and_label_blind(
     assert request["reasoning_effort"] == config["reasoning_effort"]
     assert request["timeout_seconds"] == config["timeout_seconds"]
     assert runner.validate_agent_request(request) == request
+
+
+@pytest.mark.parametrize(
+    "invalid_candidate_id",
+    (
+        "",
+        "a" * 23,
+        "a" * 25,
+        "g" * 24,
+        "A" * 24,
+        "gold=test-skill-00",
+        "negative-label-skill-id",
+        True,
+        24,
+        24.0,
+        None,
+    ),
+)
+def test_agent_contract_rejects_nonopaque_candidate_ids(
+    invalid_candidate_id: Any,
+) -> None:
+    message = "candidate id must be exactly 24 lowercase hex characters"
+    candidate = {
+        "candidate_id": invalid_candidate_id,
+        "prompt_text": f"{PREFIX} REVIEW REQUEST",
+    }
+
+    with pytest.raises(ValueError, match=message):
+        runner.build_reviewer_request(candidate, _skills(), role="reviewer_a")
+    with pytest.raises(ValueError, match=message):
+        runner.selection_key(invalid_candidate_id)
+    with pytest.raises(ValueError, match=message):
+        runner.review_schedule_key("reviewer_b", invalid_candidate_id)
+
+
+def test_agent_contract_validation_rejects_nonopaque_reviewer_task_id() -> None:
+    request = _agent_contract_reviewer_request()
+    request["input"]["task_id"] = "gold=test-skill-00"
+    _agent_contract_rehash_request(request)
+
+    with pytest.raises(
+        ValueError, match="candidate id must be exactly 24 lowercase hex characters"
+    ):
+        runner.validate_agent_request(request)
+
+
+@pytest.mark.parametrize(
+    "invalid_response_sha256",
+    (
+        "",
+        "a" * 63,
+        "a" * 65,
+        "g" * 64,
+        "A" * 64,
+        "gold=test-skill-00",
+        True,
+        64,
+        64.0,
+        None,
+    ),
+)
+def test_agent_contract_opaque_candidate_id_rejects_invalid_response_sha256(
+    invalid_response_sha256: Any,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="response SHA-256 must be exactly 64 lowercase hex characters",
+    ):
+        runner.opaque_candidate_id(1, "test-skill-00", 0, invalid_response_sha256)
 
 
 def test_agent_contract_request_validation_recomputes_hash_and_whitelists() -> None:
@@ -372,7 +452,10 @@ def test_agent_contract_builders_reject_extra_canonical_skill_fields(
             )
         else:
             runner.build_reviewer_request(
-                {"candidate_id": "opaque-001", "prompt_text": f"{PREFIX} REQUEST"},
+                {
+                    "candidate_id": _opaque_candidate_id(),
+                    "prompt_text": f"{PREFIX} REQUEST",
+                },
                 skills,
                 role=role,
             )
@@ -435,7 +518,10 @@ def test_agent_contract_canonical_skill_trigger_terms_are_nonempty_strings(
 
     with pytest.raises(ValueError, match="canonical skill 0 trigger_terms"):
         runner.build_reviewer_request(
-            {"candidate_id": "opaque-001", "prompt_text": f"{PREFIX} REQUEST"},
+            {
+                "candidate_id": _opaque_candidate_id(),
+                "prompt_text": f"{PREFIX} REQUEST",
+            },
             skills,
             role="reviewer_b",
         )
@@ -454,7 +540,10 @@ def test_agent_contract_requires_exactly_sixteen_unique_canonical_skills() -> No
     duplicated[-1]["id"] = duplicated[0]["id"]
     with pytest.raises(ValueError, match="ids must be unique"):
         runner.build_reviewer_request(
-            {"candidate_id": "opaque-001", "prompt_text": f"{PREFIX} REQUEST"},
+            {
+                "candidate_id": _opaque_candidate_id(),
+                "prompt_text": f"{PREFIX} REQUEST",
+            },
             duplicated,
             role="reviewer_a",
         )
