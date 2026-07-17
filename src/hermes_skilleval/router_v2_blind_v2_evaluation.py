@@ -18,14 +18,25 @@ from hermes_skilleval.router_v2_pilot_evaluation import (
 )
 
 
-POSITIVE_TASK_COUNT = 64
-TEMPTING_NEGATIVE_COUNT = 48
+POSITIVE_TASK_COUNT = 128
+TEMPTING_NEGATIVE_COUNT = 96
 CANONICAL_SKILL_COUNT = 16
-SEMANTIC_FAMILY_COUNT = 64
+SEMANTIC_FAMILY_COUNT = 128
+TASKS_PER_GOLD_SKILL = 8
+NEGATIVE_LABELED_PER_GOLD_SKILL = 6
+POSITIVE_ONLY_PER_GOLD_SKILL = 2
 ARMS = ("A", "C")
 SEEDS = (7170, 7171, 7172)
 BOOTSTRAP_RESAMPLES = 10_000
 BOOTSTRAP_SEED = 7170
+
+TERMINAL_STATES = {
+    "AGENT_BLIND_V2_DATASET_INSUFFICIENT",
+    "AGENT_BLIND_V2_PROTOCOL_INVALID",
+    "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+    "AGENT_BLIND_V2_GATES_PASSED",
+    "AGENT_BLIND_V2_GATES_NOT_PASSED",
+}
 
 _HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 _HEX64 = re.compile(r"[0-9a-f]{64}\Z")
@@ -96,6 +107,17 @@ def _require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def terminal_posture(research_conclusion: str) -> dict[str, Any]:
+    _require(research_conclusion in TERMINAL_STATES, "terminal state mismatch")
+    return {
+        "research_conclusion": research_conclusion,
+        "router_decision": "KEEP_BASELINE",
+        "production_ready": False,
+        "release_authorized": False,
+        "default_router_unchanged": True,
+    }
+
+
 def _number(value: Any, label: str) -> Decimal:
     try:
         result = Decimal(str(value))
@@ -115,9 +137,9 @@ def preregistered_evaluation_contract() -> dict[str, Any]:
             "tempting_negative_labels": TEMPTING_NEGATIVE_COUNT,
             "canonical_skills": CANONICAL_SKILL_COUNT,
             "semantic_families": SEMANTIC_FAMILY_COUNT,
-            "tasks_per_gold_skill": 4,
-            "negative_labeled_per_gold_skill": 3,
-            "positive_only_per_gold_skill": 1,
+            "tasks_per_gold_skill": TASKS_PER_GOLD_SKILL,
+            "negative_labeled_per_gold_skill": NEGATIVE_LABELED_PER_GOLD_SKILL,
+            "positive_only_per_gold_skill": POSITIVE_ONLY_PER_GOLD_SKILL,
         },
         "task_order": "ascending_task_id",
         "warmup_repeats": 1,
@@ -179,7 +201,8 @@ def _validate_route_group(
     rows: list[dict[str, Any]],
 ) -> tuple[str, int, list[dict[str, Any]]]:
     _require(
-        type(rows) is list and len(rows) == 64, "route group must contain 64 tasks"
+        type(rows) is list and len(rows) == POSITIVE_TASK_COUNT,
+        f"route group must contain {POSITIVE_TASK_COUNT} tasks",
     )
     _require(all(type(row) is dict for row in rows), "route rows must be objects")
     arm = rows[0].get("arm")
@@ -194,24 +217,41 @@ def _validate_route_group(
     task_ids = [row.get("task_id") for row in ordered]
     _require(
         all(type(task_id) is str and task_id for task_id in task_ids)
-        and len(set(task_ids)) == 64,
-        "64 task ids must be unique",
+        and len(set(task_ids)) == POSITIVE_TASK_COUNT,
+        f"{POSITIVE_TASK_COUNT} task ids must be unique",
     )
     families = [row.get("semantic_family_id") for row in ordered]
     _require(
         all(type(family) is str and family for family in families)
-        and len(set(families)) == 64,
-        "route group must contain 64 semantic families",
+        and len(set(families)) == SEMANTIC_FAMILY_COUNT,
+        f"route group must contain {SEMANTIC_FAMILY_COUNT} semantic families",
     )
     gold_counts = Counter(row.get("gold_skill_id") for row in ordered)
     _require(
-        len(gold_counts) == 16 and set(gold_counts.values()) == {4},
-        "route group must contain 16 gold skills with four tasks each",
+        len(gold_counts) == CANONICAL_SKILL_COUNT
+        and set(gold_counts.values()) == {TASKS_PER_GOLD_SKILL},
+        "route group must contain 16 gold skills with eight tasks each",
     )
     negative_rows = [
         row for row in ordered if row.get("tempting_negative_skill_id") is not None
     ]
-    _require(len(negative_rows) == 48, "route group must contain 48 tempting negatives")
+    _require(
+        len(negative_rows) == TEMPTING_NEGATIVE_COUNT,
+        f"route group must contain {TEMPTING_NEGATIVE_COUNT} tempting negatives",
+    )
+    negative_counts = Counter(row.get("gold_skill_id") for row in negative_rows)
+    positive_only_counts = Counter(
+        row.get("gold_skill_id")
+        for row in ordered
+        if row.get("tempting_negative_skill_id") is None
+    )
+    _require(
+        set(negative_counts) == set(gold_counts)
+        and set(negative_counts.values()) == {NEGATIVE_LABELED_PER_GOLD_SKILL}
+        and set(positive_only_counts) == set(gold_counts)
+        and set(positive_only_counts.values()) == {POSITIVE_ONLY_PER_GOLD_SKILL},
+        "each gold skill must contain six negative-labeled and two positive-only tasks",
+    )
     for row in ordered:
         gold_rank = row.get("gold_rank")
         negative_id = row.get("tempting_negative_skill_id")
@@ -268,17 +308,28 @@ def build_per_seed_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "schema_version": "router-v2-blind-v2-per-seed-v1",
         "arm": arm,
         "seed": seed,
-        "positive_task_count": 64,
-        "tempting_negative_count": 48,
-        "recall_at_1": _rate(sum(rank <= 1 for rank in gold_ranks), 64),
-        "recall_at_5": _rate(sum(rank <= 5 for rank in gold_ranks), 64),
-        "mrr": quantize8(sum(1 / rank for rank in gold_ranks) / 64),
-        "ndcg_at_5": quantize8(
-            sum(1 / math.log2(rank + 1) if rank <= 5 else 0 for rank in gold_ranks) / 64
+        "positive_task_count": POSITIVE_TASK_COUNT,
+        "tempting_negative_count": TEMPTING_NEGATIVE_COUNT,
+        "recall_at_1": _rate(
+            sum(rank <= 1 for rank in gold_ranks), POSITIVE_TASK_COUNT
         ),
-        "negative_hit_at_1": _rate(sum(rank <= 1 for rank in negative_ranks), 48),
-        "negative_hit_at_5": _rate(sum(rank <= 5 for rank in negative_ranks), 48),
-        "first_negative_rank_mean": quantize8(sum(negative_ranks) / 48),
+        "recall_at_5": _rate(
+            sum(rank <= 5 for rank in gold_ranks), POSITIVE_TASK_COUNT
+        ),
+        "mrr": quantize8(sum(1 / rank for rank in gold_ranks) / POSITIVE_TASK_COUNT),
+        "ndcg_at_5": quantize8(
+            sum(1 / math.log2(rank + 1) if rank <= 5 else 0 for rank in gold_ranks)
+            / POSITIVE_TASK_COUNT
+        ),
+        "negative_hit_at_1": _rate(
+            sum(rank <= 1 for rank in negative_ranks), TEMPTING_NEGATIVE_COUNT
+        ),
+        "negative_hit_at_5": _rate(
+            sum(rank <= 5 for rank in negative_ranks), TEMPTING_NEGATIVE_COUNT
+        ),
+        "first_negative_rank_mean": quantize8(
+            sum(negative_ranks) / TEMPTING_NEGATIVE_COUNT
+        ),
         "latency_p50_ms": quantize8(nearest_rank(latencies, 0.50)),
         "latency_p95_ms": quantize8(nearest_rank(latencies, 0.95)),
         "tasks": tasks,
@@ -353,8 +404,8 @@ def build_aggregate_results(results: list[dict[str, Any]]) -> dict[str, Any]:
         pooled.append(
             {
                 "arm": arm,
-                "positive_observations": 192,
-                "tempting_negative_observations": 144,
+                "positive_observations": POSITIVE_TASK_COUNT * len(SEEDS),
+                "tempting_negative_observations": TEMPTING_NEGATIVE_COUNT * len(SEEDS),
                 "recall_at_1_count": sum(
                     row["recall_at_1"]["count"] for row in arm_rows
                 ),
@@ -451,6 +502,9 @@ def apply_preregistered_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
             for row in rows
         )
     )
+    conclusion = (
+        "AGENT_BLIND_V2_GATES_PASSED" if passed else "AGENT_BLIND_V2_GATES_NOT_PASSED"
+    )
     return {
         "schema_version": "router-v2-blind-v2-gate-v1",
         "comparison_scope": "A_VS_C_ONLY",
@@ -466,13 +520,7 @@ def apply_preregistered_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
         "mean": {key: quantize8(value) for key, value in means.items()},
         "gate": dict(_GATE),
         "gate_passed": passed,
-        "research_conclusion": (
-            "BLIND_V2_GENERALIZATION_SUPPORTED" if passed else "BLIND_V2_NOT_SUPPORTED"
-        ),
-        "router_decision": "KEEP_BASELINE",
-        "default_router_unchanged": True,
-        "production_ready": False,
-        "release_eligible": False,
+        **terminal_posture(conclusion),
         "router_promotion_requires_separate_human_decision": True,
     }
 
@@ -481,7 +529,9 @@ def _route_matrix(
     rows: list[dict[str, Any]],
 ) -> dict[tuple[str, int, str], dict[str, Any]]:
     _require(
-        type(rows) is list and len(rows) == 384, "route matrix must contain 384 rows"
+        type(rows) is list
+        and len(rows) == len(ARMS) * len(SEEDS) * POSITIVE_TASK_COUNT,
+        "route matrix must contain 768 rows",
     )
     grid: dict[tuple[str, int, str], dict[str, Any]] = {}
     for row in rows:
@@ -497,7 +547,7 @@ def _route_matrix(
                 [row for (a, s, _), row in grid.items() if a == arm and s == seed]
             )
     task_ids = {key[2] for key in grid}
-    _require(len(task_ids) == 64, "route matrix task set mismatch")
+    _require(len(task_ids) == POSITIVE_TASK_COUNT, "route matrix task set mismatch")
     _require(
         set(grid)
         == {

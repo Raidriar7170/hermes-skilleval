@@ -13,27 +13,24 @@ PREFIX = "TEST_ONLY_DO_NOT_USE"
 
 def _route_rows(arm: str, seed: int) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for index in range(64):
-        baseline_rank = 2 if index % 4 == 0 else 1
-        gold_rank = baseline_rank if arm == "A" else 1
-        has_negative = index % 4 < 3
-        negative_ordinal = (index // 4) * 3 + (index % 4)
-        negative_rank = (2 if arm == "A" else 6) if has_negative else None
+    for index in range(128):
+        gold_index = index // 8
+        has_negative = index % 8 < 6
         rows.append(
             {
                 "arm": arm,
                 "seed": seed,
-                "task_id": f"{PREFIX}_TASK_{index:02d}",
-                "gold_skill_id": f"{PREFIX}_SKILL_{index // 4:02d}",
+                "task_id": f"{PREFIX}_TASK_{index:03d}",
+                "gold_skill_id": f"test-skill-{gold_index:02d}",
                 "tempting_negative_skill_id": (
-                    f"{PREFIX}_NEGATIVE_{negative_ordinal % 12:02d}"
-                    if has_negative
-                    else None
+                    f"test-skill-{(gold_index + 1) % 16:02d}" if has_negative else None
                 ),
-                "semantic_family_id": f"{PREFIX}_FAMILY_{index:02d}",
-                "gold_rank": gold_rank,
-                "tempting_negative_rank": negative_rank,
-                "latency_ns": 10_000_000 if arm == "A" else 11_000_000,
+                "semantic_family_id": f"{PREFIX}_FAMILY_{index:03d}",
+                "gold_rank": 2 if arm == "A" else 1,
+                "tempting_negative_rank": (
+                    5 if has_negative and arm == "A" else 6 if has_negative else None
+                ),
+                "latency_ns": 10_000_000,
             }
         )
     return rows
@@ -53,13 +50,16 @@ def _per_seed() -> list[dict[str, Any]]:
     ]
 
 
-def test_preregistered_contract_freezes_64_48_a_c_gate_and_non_actions() -> None:
+def test_preregistered_contract_freezes_128_96_a_c_gate_and_non_actions() -> None:
     contract = evaluation.preregistered_evaluation_contract()
 
-    assert evaluation.POSITIVE_TASK_COUNT == 64
-    assert evaluation.TEMPTING_NEGATIVE_COUNT == 48
+    assert evaluation.POSITIVE_TASK_COUNT == 128
+    assert evaluation.TEMPTING_NEGATIVE_COUNT == 96
     assert evaluation.CANONICAL_SKILL_COUNT == 16
-    assert evaluation.SEMANTIC_FAMILY_COUNT == 64
+    assert evaluation.SEMANTIC_FAMILY_COUNT == 128
+    assert evaluation.TASKS_PER_GOLD_SKILL == 8
+    assert evaluation.NEGATIVE_LABELED_PER_GOLD_SKILL == 6
+    assert evaluation.POSITIVE_ONLY_PER_GOLD_SKILL == 2
     assert evaluation.ARMS == ("A", "C")
     assert evaluation.SEEDS == (7170, 7171, 7172)
     assert evaluation.BOOTSTRAP_RESAMPLES == 10_000
@@ -68,13 +68,13 @@ def test_preregistered_contract_freezes_64_48_a_c_gate_and_non_actions() -> None
     assert contract["arms"] == ["A", "C"]
     assert contract["seeds"] == [7170, 7171, 7172]
     assert contract["counts"] == {
-        "positive_tasks": 64,
-        "tempting_negative_labels": 48,
+        "positive_tasks": 128,
+        "tempting_negative_labels": 96,
         "canonical_skills": 16,
-        "semantic_families": 64,
-        "tasks_per_gold_skill": 4,
-        "negative_labeled_per_gold_skill": 3,
-        "positive_only_per_gold_skill": 1,
+        "semantic_families": 128,
+        "tasks_per_gold_skill": 8,
+        "negative_labeled_per_gold_skill": 6,
+        "positive_only_per_gold_skill": 2,
     }
     assert contract["statistics"] == {
         "mcnemar": "exact_two_sided",
@@ -147,60 +147,99 @@ def test_preregistered_contract_freezes_64_48_a_c_gate_and_non_actions() -> None
         evaluation.validate_preregistration_truth(tampered_non_actions)
 
 
+def test_terminal_posture_accepts_only_agent_blind_v2_terminal_states() -> None:
+    terminal_states = {
+        "AGENT_BLIND_V2_DATASET_INSUFFICIENT",
+        "AGENT_BLIND_V2_PROTOCOL_INVALID",
+        "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+        "AGENT_BLIND_V2_GATES_PASSED",
+        "AGENT_BLIND_V2_GATES_NOT_PASSED",
+    }
+
+    assert evaluation.TERMINAL_STATES == terminal_states
+    for research_conclusion in terminal_states:
+        assert evaluation.terminal_posture(research_conclusion) == {
+            "research_conclusion": research_conclusion,
+            "router_decision": "KEEP_BASELINE",
+            "production_ready": False,
+            "release_authorized": False,
+            "default_router_unchanged": True,
+        }
+
+    with pytest.raises(ValueError, match="terminal state mismatch"):
+        evaluation.terminal_posture("BLIND_V2_GENERALIZATION_SUPPORTED")
+
+
 def test_per_seed_metrics_are_raw_count_first_with_fixed_denominators() -> None:
+    rows = _route_rows("A", 7170)
+    assert len(rows) == 128
+    for gold_index in range(16):
+        skill_rows = [
+            row
+            for row in rows
+            if row["gold_skill_id"] == f"test-skill-{gold_index:02d}"
+        ]
+        assert len(skill_rows) == 8
+        assert (
+            sum(row["tempting_negative_skill_id"] is not None for row in skill_rows)
+            == 6
+        )
+        assert sum(row["tempting_negative_skill_id"] is None for row in skill_rows) == 2
+    assert len({row["semantic_family_id"] for row in rows}) == 128
+
     baseline = evaluation.build_per_seed_result(_route_rows("A", 7170))
     candidate = evaluation.build_per_seed_result(_route_rows("C", 7170))
 
     assert baseline["arm"] == "A"
-    assert baseline["positive_task_count"] == 64
-    assert baseline["tempting_negative_count"] == 48
+    assert baseline["positive_task_count"] == 128
+    assert baseline["tempting_negative_count"] == 96
     assert baseline["recall_at_1"] == {
-        "count": 48,
-        "denominator": 64,
-        "rate": "0.75000000",
+        "count": 0,
+        "denominator": 128,
+        "rate": "0.00000000",
     }
     assert baseline["recall_at_5"] == {
-        "count": 64,
-        "denominator": 64,
+        "count": 128,
+        "denominator": 128,
         "rate": "1.00000000",
     }
-    assert baseline["mrr"] == "0.87500000"
-    assert baseline["ndcg_at_5"] == "0.90773244"
+    assert baseline["mrr"] == "0.50000000"
+    assert baseline["ndcg_at_5"] == "0.63092975"
     assert baseline["negative_hit_at_1"] == {
         "count": 0,
-        "denominator": 48,
+        "denominator": 96,
         "rate": "0.00000000",
     }
     assert baseline["negative_hit_at_5"] == {
-        "count": 48,
-        "denominator": 48,
+        "count": 96,
+        "denominator": 96,
         "rate": "1.00000000",
     }
-    assert baseline["first_negative_rank_mean"] == "2.00000000"
+    assert baseline["first_negative_rank_mean"] == "5.00000000"
     assert baseline["latency_p50_ms"] == "10.00000000"
     assert baseline["latency_p95_ms"] == "10.00000000"
     assert baseline["tasks"][0] == {
-        "task_id": f"{PREFIX}_TASK_00",
-        "gold_skill_id": f"{PREFIX}_SKILL_00",
-        "tempting_negative_skill_id": f"{PREFIX}_NEGATIVE_00",
-        "semantic_family_id": f"{PREFIX}_FAMILY_00",
+        "task_id": f"{PREFIX}_TASK_000",
+        "gold_skill_id": "test-skill-00",
+        "tempting_negative_skill_id": "test-skill-01",
+        "semantic_family_id": f"{PREFIX}_FAMILY_000",
         "gold_rank": 2,
-        "tempting_negative_rank": 2,
+        "tempting_negative_rank": 5,
         "latency_ms": "10.00000000",
     }
-    assert candidate["recall_at_1"]["count"] == 64
+    assert candidate["recall_at_1"]["count"] == 128
     assert candidate["negative_hit_at_5"]["count"] == 0
 
     variable_latency = _route_rows("A", 7170)
     for index, row in enumerate(variable_latency, start=1):
         row["latency_ns"] = index * 1_000_000
     percentiles = evaluation.build_per_seed_result(variable_latency)
-    assert percentiles["latency_p50_ms"] == "32.00000000"
-    assert percentiles["latency_p95_ms"] == "61.00000000"
+    assert percentiles["latency_p50_ms"] == "64.00000000"
+    assert percentiles["latency_p95_ms"] == "122.00000000"
 
     with pytest.raises(ValueError, match="Arm A or C"):
         evaluation.build_per_seed_result(_route_rows("B", 7170))
-    with pytest.raises(ValueError, match="64 tasks"):
+    with pytest.raises(ValueError, match="128 tasks"):
         evaluation.build_per_seed_result(_route_rows("A", 7170)[:-1])
 
     wrong_negative_count = _route_rows("A", 7170)
@@ -209,21 +248,35 @@ def test_per_seed_metrics_are_raw_count_first_with_fixed_denominators() -> None:
         "tempting_negative_skill_id": None,
         "tempting_negative_rank": None,
     }
-    with pytest.raises(ValueError, match="48 tempting negatives"):
+    with pytest.raises(ValueError, match="96 tempting negatives"):
         evaluation.build_per_seed_result(wrong_negative_count)
+
+    wrong_per_skill_distribution = _route_rows("A", 7170)
+    wrong_per_skill_distribution[0] = {
+        **wrong_per_skill_distribution[0],
+        "tempting_negative_skill_id": None,
+        "tempting_negative_rank": None,
+    }
+    wrong_per_skill_distribution[14] = {
+        **wrong_per_skill_distribution[14],
+        "tempting_negative_skill_id": "test-skill-02",
+        "tempting_negative_rank": 5,
+    }
+    with pytest.raises(ValueError, match="six negative-labeled and two positive-only"):
+        evaluation.build_per_seed_result(wrong_per_skill_distribution)
 
     invalid = _route_rows("A", 7170)
     invalid[-1] = {
         **invalid[-1],
         "semantic_family_id": invalid[0]["semantic_family_id"],
     }
-    with pytest.raises(ValueError, match="64 semantic families"):
+    with pytest.raises(ValueError, match="128 semantic families"):
         evaluation.build_per_seed_result(invalid)
 
     wrong_skills = _route_rows("A", 7170)
     wrong_skills[-1] = {
         **wrong_skills[-1],
-        "gold_skill_id": f"{PREFIX}_SKILL_EXTRA",
+        "gold_skill_id": "test-skill-extra",
     }
     with pytest.raises(ValueError, match="16 gold skills"):
         evaluation.build_per_seed_result(wrong_skills)
@@ -237,23 +290,23 @@ def test_aggregate_gate_and_conclusion_use_only_complete_a_c_seed_grid() -> None
 
     assert [row["arm"] for row in aggregate["arms"]] == ["A", "C"]
     assert aggregate["arms"][0]["metrics"]["mrr"] == {
-        "mean": "0.87500000",
+        "mean": "0.50000000",
         "sample_std": "0.00000000",
     }
     assert aggregate["deltas"]["comparison"] == "C_MINUS_A"
     assert aggregate["deltas"]["per_seed"][0]["metrics"] == {
-        "recall_at_1_rate": "0.25000000",
+        "recall_at_1_rate": "1.00000000",
         "recall_at_5_rate": "0.00000000",
-        "mrr": "0.12500000",
-        "ndcg_at_5": "0.09226756",
+        "mrr": "0.50000000",
+        "ndcg_at_5": "0.36907025",
         "negative_hit_rate_at_1": "0.00000000",
         "negative_hit_rate_at_5": "-1.00000000",
-        "first_negative_rank_mean": "4.00000000",
-        "latency_p50_ms": "1.00000000",
-        "latency_p95_ms": "1.00000000",
+        "first_negative_rank_mean": "1.00000000",
+        "latency_p50_ms": "0.00000000",
+        "latency_p95_ms": "0.00000000",
     }
     assert aggregate["deltas"]["metrics"]["mrr"] == {
-        "mean": "0.12500000",
+        "mean": "0.50000000",
         "sample_std": "0.00000000",
     }
     assert aggregate["pooled_repeated_counts"] == {
@@ -262,30 +315,31 @@ def test_aggregate_gate_and_conclusion_use_only_complete_a_c_seed_grid() -> None
         "arms": [
             {
                 "arm": "A",
-                "positive_observations": 192,
-                "tempting_negative_observations": 144,
-                "recall_at_1_count": 144,
-                "recall_at_5_count": 192,
+                "positive_observations": 384,
+                "tempting_negative_observations": 288,
+                "recall_at_1_count": 0,
+                "recall_at_5_count": 384,
                 "negative_hit_at_1_count": 0,
-                "negative_hit_at_5_count": 144,
+                "negative_hit_at_5_count": 288,
             },
             {
                 "arm": "C",
-                "positive_observations": 192,
-                "tempting_negative_observations": 144,
-                "recall_at_1_count": 192,
-                "recall_at_5_count": 192,
+                "positive_observations": 384,
+                "tempting_negative_observations": 288,
+                "recall_at_1_count": 384,
+                "recall_at_5_count": 384,
                 "negative_hit_at_1_count": 0,
                 "negative_hit_at_5_count": 0,
             },
         ],
     }
     assert gate["gate_passed"] is True
-    assert gate["research_conclusion"] == "BLIND_V2_GENERALIZATION_SUPPORTED"
+    assert gate["research_conclusion"] == "AGENT_BLIND_V2_GATES_PASSED"
     assert gate["router_decision"] == "KEEP_BASELINE"
     assert gate["default_router_unchanged"] is True
     assert gate["production_ready"] is False
-    assert gate["release_eligible"] is False
+    assert gate["release_authorized"] is False
+    assert "release_eligible" not in gate
 
     with pytest.raises(ValueError, match="A/C seed grid"):
         evaluation.build_aggregate_results(per_seed[:-1])
@@ -312,8 +366,21 @@ def test_aggregate_gate_and_conclusion_use_only_complete_a_c_seed_grid() -> None
             failing_per_seed.append(evaluation.build_per_seed_result(rows))
     failed_gate = evaluation.apply_preregistered_gate(failing_per_seed)
     assert failed_gate["gate_passed"] is False
-    assert failed_gate["research_conclusion"] == "BLIND_V2_NOT_SUPPORTED"
-    assert failed_gate["router_decision"] == "KEEP_BASELINE"
+    assert failed_gate["research_conclusion"] == "AGENT_BLIND_V2_GATES_NOT_PASSED"
+    assert {
+        key: failed_gate[key]
+        for key in (
+            "router_decision",
+            "production_ready",
+            "release_authorized",
+            "default_router_unchanged",
+        )
+    } == {
+        "router_decision": "KEEP_BASELINE",
+        "production_ready": False,
+        "release_authorized": False,
+        "default_router_unchanged": True,
+    }
 
 
 def test_paired_statistics_are_exact_deterministic_and_warn_non_independence() -> None:
@@ -326,26 +393,26 @@ def test_paired_statistics_are_exact_deterministic_and_warn_non_independence() -
     assert first == second
     assert paired["comparison_scope"] == "A_VS_C_ONLY"
     assert paired["seeds"][0]["metrics"]["recall_at_1"] == {
-        "wins": 16,
+        "wins": 128,
         "losses": 0,
-        "ties": 48,
-        "task_count": 64,
+        "ties": 0,
+        "task_count": 128,
     }
     assert first["mcnemar"]["recall_at_1"]["per_seed"][0] == {
         "seed": 7170,
         "a_only_success": 0,
-        "c_only_success": 16,
-        "discordant_pairs": 16,
-        "exact_two_sided_p_value": "0.00003052",
+        "c_only_success": 128,
+        "discordant_pairs": 128,
+        "exact_two_sided_p_value": "0.00000000",
     }
     assert (
-        first["mcnemar"]["negative_hit_at_5"]["per_seed"][0]["discordant_pairs"] == 48
+        first["mcnemar"]["negative_hit_at_5"]["per_seed"][0]["discordant_pairs"] == 96
     )
     assert first["bootstrap"]["resamples"] == 10_000
     assert first["bootstrap"]["seed"] == 7170
     assert first["bootstrap"]["method"] == "paired_task_resampling"
-    assert first["bootstrap"]["mrr_delta"]["observed"] == "0.12500000"
-    assert first["bootstrap"]["ndcg_at_5_delta"]["observed"] == "0.09226756"
+    assert first["bootstrap"]["mrr_delta"]["observed"] == "0.50000000"
+    assert first["bootstrap"]["ndcg_at_5_delta"]["observed"] == "0.36907025"
     assert (
         first["bootstrap"]["negative_hit_rate_at_5_delta"]["observed"] == "-1.00000000"
     )
@@ -374,7 +441,7 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
         for row in changed_routes
         if row["arm"] == "C"
         and row["seed"] == 7170
-        and row["task_id"] == f"{PREFIX}_TASK_00"
+        and row["task_id"] == f"{PREFIX}_TASK_000"
     )
     failed.update(gold_rank=6, tempting_negative_rank=1, latency_ns=13_000_000)
     slices = evaluation.build_failure_slices(changed_routes)
@@ -401,7 +468,7 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
     task_failure = next(
         row
         for row in slices["task_flags"]
-        if row["seed"] == 7170 and row["task_id"] == f"{PREFIX}_TASK_00"
+        if row["seed"] == 7170 and row["task_id"] == f"{PREFIX}_TASK_000"
     )
     assert task_failure["flags"] == [
         "TOP1_MISS",
