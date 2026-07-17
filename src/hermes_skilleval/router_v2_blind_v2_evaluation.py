@@ -110,6 +110,8 @@ def _require(condition: bool, message: str) -> None:
 
 
 def terminal_posture(research_conclusion: str) -> dict[str, Any]:
+    if type(research_conclusion) is not str:
+        raise ValueError("terminal state must be a string")
     _require(research_conclusion in TERMINAL_STATES, "terminal state mismatch")
     return {
         "research_conclusion": research_conclusion,
@@ -764,6 +766,8 @@ def _route_matrix(
         and len(rows) == len(ARMS) * len(SEEDS) * POSITIVE_TASK_COUNT,
         "route matrix must contain 768 rows",
     )
+    if not all(type(row) is dict for row in rows):
+        raise ValueError("route matrix rows must be objects")
     grid: dict[tuple[str, int, str], dict[str, Any]] = {}
     for row in rows:
         arm, seed, task_id = row.get("arm"), row.get("seed"), row.get("task_id")

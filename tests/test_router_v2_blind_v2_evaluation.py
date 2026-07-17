@@ -195,6 +195,14 @@ def test_terminal_posture_accepts_only_agent_blind_v2_terminal_states() -> None:
         evaluation.terminal_posture("BLIND_V2_GENERALIZATION_SUPPORTED")
 
 
+@pytest.mark.parametrize("invalid_conclusion", ([], {}, 1, None))
+def test_terminal_posture_rejects_non_string_conclusions(
+    invalid_conclusion: Any,
+) -> None:
+    with pytest.raises(ValueError, match="terminal state must be a string"):
+        evaluation.terminal_posture(invalid_conclusion)
+
+
 def test_per_seed_metrics_are_raw_count_first_with_fixed_denominators() -> None:
     rows = _route_rows("A", 7170)
     assert len(rows) == 128
@@ -748,6 +756,22 @@ def test_route_matrix_rejects_cross_group_task_identity_drift(
         )
 
     with pytest.raises(ValueError, match="route matrix task identity mismatch"):
+        builder(routes)
+
+
+@pytest.mark.parametrize(
+    "builder",
+    (
+        evaluation.build_paired_results,
+        evaluation.build_statistics,
+        evaluation.build_failure_slices,
+    ),
+)
+def test_route_matrix_rejects_non_object_rows(builder: Any) -> None:
+    routes: Any = _all_routes()
+    routes[0] = None
+
+    with pytest.raises(ValueError, match="route matrix rows must be objects"):
         builder(routes)
 
 
