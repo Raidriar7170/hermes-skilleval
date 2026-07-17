@@ -86,7 +86,9 @@ def test_preregistered_contract_freezes_128_96_a_c_gate_and_non_actions() -> Non
     assert evaluation.BOOTSTRAP_RESAMPLES == 10_000
     assert evaluation.BOOTSTRAP_SEED == 7170
     assert evaluation.PER_SEED_SCHEMA_VERSION == "router-v2-agent-blind-v2-per-seed-v1"
-    assert contract["schema_version"] == "router-v2-blind-v2-evaluation-contract-v1"
+    assert (
+        contract["schema_version"] == "router-v2-agent-blind-v2-evaluation-contract-v1"
+    )
     assert contract["arms"] == ["A", "C"]
     assert contract["seeds"] == [7170, 7171, 7172]
     assert contract["counts"] == {
@@ -375,12 +377,71 @@ def test_per_seed_grid_rejects_current_contract_drift_fail_closed() -> None:
         evaluation.build_aggregate_results(inconsistent_identity)
 
 
+@pytest.mark.parametrize(
+    ("field", "stale_value"),
+    (
+        ("mrr", "0.50000001"),
+        ("ndcg_at_5", "0.63092976"),
+        ("first_negative_rank_mean", "5.00000001"),
+        ("latency_p50_ms", "10.00000001"),
+        ("latency_p95_ms", "10.00000001"),
+    ),
+)
+def test_per_seed_grid_rejects_stale_metric_summaries(
+    field: str,
+    stale_value: str,
+) -> None:
+    per_seed = deepcopy(_per_seed())
+    per_seed[0][field] = stale_value
+
+    with pytest.raises(ValueError, match=rf"{field} mismatch"):
+        evaluation.build_aggregate_results(per_seed)
+
+
+@pytest.mark.parametrize(
+    "latency_ms",
+    ("NaN", "Infinity", "-0.00000001", "1", 1.0),
+)
+def test_per_seed_grid_rejects_invalid_task_latency(latency_ms: Any) -> None:
+    per_seed = deepcopy(_per_seed())
+    per_seed[0]["tasks"][0]["latency_ms"] = latency_ms
+
+    with pytest.raises(ValueError, match="per-seed task latency"):
+        evaluation.build_aggregate_results(per_seed)
+
+
+def test_gate_rejects_tampered_metric_and_stale_latency_bypass() -> None:
+    honest: list[dict[str, Any]] = []
+    for seed in SEEDS:
+        for arm in ("A", "C"):
+            rows = _route_rows(arm, seed)
+            for row in rows:
+                row["gold_rank"] = 1 if arm == "A" else 2
+            honest.append(evaluation.build_per_seed_result(rows))
+
+    assert evaluation.apply_preregistered_gate(honest)["gate_passed"] is False
+
+    tampered = deepcopy(honest)
+    for result in tampered:
+        if result["arm"] != "C":
+            continue
+        result["mrr"] = "1.00000000"
+        result["ndcg_at_5"] = "1.00000000"
+        for task in result["tasks"]:
+            task["latency_ms"] = "99.00000000"
+
+    with pytest.raises(ValueError, match="mrr mismatch"):
+        evaluation.apply_preregistered_gate(tampered)
+
+
 def test_aggregate_gate_and_conclusion_use_only_complete_a_c_seed_grid() -> None:
     per_seed = _per_seed()
 
     aggregate = evaluation.build_aggregate_results(per_seed)
     gate = evaluation.apply_preregistered_gate(per_seed)
 
+    assert aggregate["schema_version"] == "router-v2-agent-blind-v2-aggregate-v1"
+    assert gate["schema_version"] == "router-v2-agent-blind-v2-gate-v1"
     assert [row["arm"] for row in aggregate["arms"]] == ["A", "C"]
     assert aggregate["arms"][0]["metrics"]["mrr"] == {
         "mean": "0.50000000",
@@ -485,6 +546,8 @@ def test_paired_statistics_are_exact_deterministic_and_warn_non_independence() -
     second = evaluation.build_statistics(routes)
 
     assert first == second
+    assert paired["schema_version"] == "router-v2-agent-blind-v2-paired-v1"
+    assert first["schema_version"] == "router-v2-agent-blind-v2-statistics-v1"
     assert paired["comparison_scope"] == "A_VS_C_ONLY"
     assert paired["seeds"][0]["metrics"]["recall_at_1"] == {
         "wins": 128,
@@ -606,6 +669,8 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
         },
     )
 
+    assert slices["schema_version"] == "router-v2-agent-blind-v2-failure-slices-v1"
+    assert lineage["schema_version"] == "router-v2-agent-blind-v2-lineage-v1"
     dimensions = {row["dimension"] for row in slices["slices"]}
     assert dimensions == {
         "ALL",

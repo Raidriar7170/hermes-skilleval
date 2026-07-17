@@ -41,6 +41,7 @@ TERMINAL_STATES = {
 
 _HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 _HEX64 = re.compile(r"[0-9a-f]{64}\Z")
+_EIGHT_DECIMAL = re.compile(r"(?:0|[1-9][0-9]*)\.[0-9]{8}\Z")
 _RATE_NAMES = (
     "recall_at_1",
     "recall_at_5",
@@ -130,7 +131,7 @@ def _number(value: Any, label: str) -> Decimal:
 
 def preregistered_evaluation_contract() -> dict[str, Any]:
     return {
-        "schema_version": "router-v2-blind-v2-evaluation-contract-v1",
+        "schema_version": "router-v2-agent-blind-v2-evaluation-contract-v1",
         "arms": list(ARMS),
         "seeds": list(SEEDS),
         "counts": {
@@ -423,10 +424,12 @@ def _validate_per_seed_result_contract(
         and set(positive_only_counts.values()) == {POSITIVE_ONLY_PER_GOLD_SKILL},
         "per-seed gold skill label distribution mismatch",
     )
+    latency_ns_values: list[int] = []
     for task in tasks:
         gold_rank = task.get("gold_rank")
         negative_id = task.get("tempting_negative_skill_id")
         negative_rank = task.get("tempting_negative_rank")
+        latency_ms = task.get("latency_ms")
         _require(
             type(gold_rank) is int and 1 <= gold_rank <= CANONICAL_SKILL_COUNT,
             "per-seed gold rank mismatch",
@@ -446,6 +449,23 @@ def _validate_per_seed_result_contract(
                 and 1 <= negative_rank <= CANONICAL_SKILL_COUNT,
                 "per-seed tempting negative rank mismatch",
             )
+        _require(
+            type(latency_ms) is str,
+            "per-seed task latency must be a canonical eight-decimal string",
+        )
+        latency = _number(latency_ms, "per-seed task latency")
+        _require(latency >= 0, "per-seed task latency must be non-negative")
+        _require(
+            _EIGHT_DECIMAL.fullmatch(latency_ms) is not None
+            and latency_ms == quantize8(latency),
+            "per-seed task latency must be a canonical eight-decimal string",
+        )
+        latency_ns = latency * Decimal(1_000_000)
+        _require(
+            latency_ns == latency_ns.to_integral_value(),
+            "per-seed task latency is not representable in nanoseconds",
+        )
+        latency_ns_values.append(int(latency_ns))
     gold_ranks = [int(task["gold_rank"]) for task in tasks]
     negative_ranks = [int(task["tempting_negative_rank"]) for task in negative_tasks]
     _validate_rate_contract(
@@ -472,6 +492,30 @@ def _validate_per_seed_result_contract(
         TEMPTING_NEGATIVE_COUNT,
         sum(rank <= 5 for rank in negative_ranks),
     )
+    recomputed = build_per_seed_result(
+        [
+            {
+                "arm": ARMS[0],
+                "seed": SEEDS[0],
+                "task_id": task["task_id"],
+                "gold_skill_id": task["gold_skill_id"],
+                "tempting_negative_skill_id": task["tempting_negative_skill_id"],
+                "semantic_family_id": task["semantic_family_id"],
+                "gold_rank": task["gold_rank"],
+                "tempting_negative_rank": task["tempting_negative_rank"],
+                "latency_ns": latency_ns,
+            }
+            for task, latency_ns in zip(tasks, latency_ns_values, strict=True)
+        ]
+    )
+    for field in (
+        "mrr",
+        "ndcg_at_5",
+        "first_negative_rank_mean",
+        "latency_p50_ms",
+        "latency_p95_ms",
+    ):
+        _require(result.get(field) == recomputed[field], f"{field} mismatch")
     return tuple(
         (
             task["task_id"],
@@ -577,7 +621,7 @@ def build_aggregate_results(results: list[dict[str, Any]]) -> dict[str, Any]:
             }
         )
     return {
-        "schema_version": "router-v2-blind-v2-aggregate-v1",
+        "schema_version": "router-v2-agent-blind-v2-aggregate-v1",
         "arms": arms,
         "deltas": {
             "comparison": "C_MINUS_A",
@@ -662,7 +706,7 @@ def apply_preregistered_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
         "AGENT_BLIND_V2_GATES_PASSED" if passed else "AGENT_BLIND_V2_GATES_NOT_PASSED"
     )
     return {
-        "schema_version": "router-v2-blind-v2-gate-v1",
+        "schema_version": "router-v2-agent-blind-v2-gate-v1",
         "comparison_scope": "A_VS_C_ONLY",
         "per_seed": [
             {
@@ -789,7 +833,7 @@ def build_paired_results(rows: list[dict[str, Any]]) -> dict[str, Any]:
             }
         seeds.append({"seed": seed, "metrics": metrics})
     return {
-        "schema_version": "router-v2-blind-v2-paired-v1",
+        "schema_version": "router-v2-agent-blind-v2-paired-v1",
         "comparison_scope": "A_VS_C_ONLY",
         "seeds": seeds,
     }
@@ -902,7 +946,7 @@ def build_statistics(rows: list[dict[str, Any]]) -> dict[str, Any]:
         )
     rng = random.Random(BOOTSTRAP_SEED)
     return {
-        "schema_version": "router-v2-blind-v2-statistics-v1",
+        "schema_version": "router-v2-agent-blind-v2-statistics-v1",
         "mcnemar": {
             "recall_at_1": _mcnemar_metric(
                 grid, "recall_at_1", lambda row: int(row["gold_rank"]) <= 1
@@ -1013,7 +1057,7 @@ def build_failure_slices(rows: list[dict[str, Any]]) -> dict[str, Any]:
                     }
                 )
     return {
-        "schema_version": "router-v2-blind-v2-failure-slices-v1",
+        "schema_version": "router-v2-agent-blind-v2-failure-slices-v1",
         "comparison_scope": "A_VS_C_ONLY",
         "task_flags": task_flags,
         "slices": slices,
@@ -1053,7 +1097,7 @@ def build_lineage_manifest(
         "artifact bindings mismatch",
     )
     document = {
-        "schema_version": "router-v2-blind-v2-lineage-v1",
+        "schema_version": "router-v2-agent-blind-v2-lineage-v1",
         "commit_a": commit_a,
         "commit_b": commit_b,
         "evaluator_commit": evaluator_commit,
