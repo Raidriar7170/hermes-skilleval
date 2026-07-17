@@ -4320,6 +4320,73 @@ def test_task5_freeze_revalidates_selected_tasks_and_selection_audit(
         runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
+def test_task5_freeze_rejects_resynchronized_round_lineage_not_derived_from_source(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    selection = validation["selection_audit"]
+    first_gold = sorted(selection["round_2_distribution"])[0]
+    selection["round_2_distribution"][first_gold]["negative"] = 1
+    selection["round_2_request_quota_distribution"][first_gold]["negative"] = 1
+    selection["round_2_candidate_count"] = 1
+    selection["round_1_post_pipeline_deficits"] = {
+        first_gold: {"negative": 1, "positive_only": 0}
+    }
+    validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
+
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_freeze_preserves_source_derived_round_two_selection_lineage(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "positive_only"): 3},
+        round_one_contamination_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+    assert first == second
+    manifest = json.loads(first["blind-v2-manifest.json"])
+    selection = manifest["agent_construction"]["deterministic_selection"]
+    expected_round_two = {
+        skill["id"]: {"negative": 0, "positive_only": 0} for skill in _skills()
+    }
+    expected_round_two["test-skill-00"] = {
+        "negative": 2,
+        "positive_only": 2,
+    }
+    assert selection["round_1_candidate_count"] == 256
+    assert selection["round_2_candidate_count"] == 4
+    assert selection["round_1_post_pipeline_deficits"] == {
+        "test-skill-00": {"negative": 1, "positive_only": 1}
+    }
+    assert selection["round_2_distribution"] == expected_round_two
+    assert selection["round_2_request_quota_distribution"] == expected_round_two
+    assert selection == validation["selection_audit"]
+    combined = b"".join(first.values())
+    for forbidden in (
+        b'"source_file_bytes"',
+        b'"response":',
+        b'"rationale":',
+        b'"reason":',
+        b'"refusal":',
+        b'"hidden_reasoning":',
+    ):
+        assert forbidden not in combined
+
+
 def test_task5_validation_carries_hash_bound_source_bytes_without_committing_them(
     tmp_path: Path,
 ) -> None:

@@ -4062,6 +4062,7 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
 
         candidates: dict[str, dict[str, Any]] = {}
         generation_responses: dict[str, dict[str, Any] | None] = {}
+        generation_request_quota_counts: Counter[tuple[int, str, str]] = Counter()
         source_records: dict[str, list[dict[str, Any]]] = {
             role: [] for role in AGENT_CONFIGS
         }
@@ -4088,6 +4089,27 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
             candidates[candidate_id] = candidate
             request = validate_agent_request(row["request"])
             _require(request["role"] == "generator", "source generator role mismatch")
+            request_input = cast(dict[str, Any], request["input"])
+            quota = cast(dict[str, Any], request_input["quota"])
+            generation_round = cast(int, candidate["generation_round"])
+            gold = cast(str, candidate["proposed_gold_skill_id"])
+            _require(
+                quota["round_number"] == generation_round
+                and quota["gold_skill_id"] == gold,
+                "source generator quota identity mismatch",
+            )
+            for stratum, field in (
+                ("negative", "negative_quota"),
+                ("positive_only", "positive_only_quota"),
+            ):
+                value = quota[field]
+                _require(
+                    type(value) is int and value >= 0,
+                    "source generator quota count mismatch",
+                )
+                generation_request_quota_counts[(generation_round, gold, stratum)] += (
+                    value
+                )
             response, retry_count = _validate_pack_invocations(
                 row["invocations"], request=request
             )
@@ -4224,12 +4246,87 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
             outcomes[candidate_id] = "ELIGIBLE"
 
         accepted.sort(key=lambda row: cast(str, row["candidate_id"]))
+        gold_ids = sorted(
+            {
+                cast(str, candidate["proposed_gold_skill_id"])
+                for candidate in candidates.values()
+            }
+        )
+
+        def source_stratum(candidate: dict[str, Any]) -> str:
+            return (
+                "negative"
+                if candidate["proposed_negative_skill_id"] is not None
+                else "positive_only"
+            )
+
+        def source_distribution(
+            rows: list[dict[str, Any]],
+        ) -> dict[str, dict[str, int]]:
+            distribution = {
+                gold: {"negative": 0, "positive_only": 0} for gold in gold_ids
+            }
+            for row in rows:
+                distribution[cast(str, row["proposed_gold_skill_id"])][
+                    source_stratum(row)
+                ] += 1
+            return distribution
+
+        def source_request_distribution(
+            round_number: int,
+        ) -> dict[str, dict[str, int]]:
+            return {
+                gold: {
+                    stratum: generation_request_quota_counts[
+                        (round_number, gold, stratum)
+                    ]
+                    for stratum in ("negative", "positive_only")
+                }
+                for gold in gold_ids
+            }
+
+        def source_deficits(
+            rows: list[dict[str, Any]],
+        ) -> dict[str, dict[str, int]]:
+            distribution = source_distribution(rows)
+            deficits: dict[str, dict[str, int]] = {}
+            for gold, counts in distribution.items():
+                gold_deficits = {
+                    "negative": max(
+                        0,
+                        cast(int, _SELECTION_AUTHORITY["final_negative_per_skill"])
+                        - counts["negative"],
+                    ),
+                    "positive_only": max(
+                        0,
+                        cast(
+                            int,
+                            _SELECTION_AUTHORITY["final_positive_only_per_skill"],
+                        )
+                        - counts["positive_only"],
+                    ),
+                }
+                if any(gold_deficits.values()):
+                    deficits[gold] = gold_deficits
+            return deficits
+
+        round_one_candidates = [
+            candidate
+            for candidate in candidates.values()
+            if candidate["generation_round"] == 1
+        ]
+        round_two_candidates = [
+            candidate
+            for candidate in candidates.values()
+            if candidate["generation_round"] == 2
+        ]
+        round_one_accepted = [
+            candidate for candidate in accepted if candidate["generation_round"] == 1
+        ]
         selected_tasks = cast(list[dict[str, Any]], validation["tasks"])
         expected_selected_tasks = [
             task
-            for gold in sorted(
-                {cast(str, task["proposed_gold_skill_id"]) for task in accepted}
-            )
+            for gold in gold_ids
             for has_negative, quota in ((True, 6), (False, 2))
             for task in sorted(
                 (
@@ -4245,13 +4342,49 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
             selected_tasks == expected_selected_tasks,
             "selected tasks differ from deterministic source-ledger selection",
         )
-        selected_ids = {cast(str, task["candidate_id"]) for task in selected_tasks}
+        selected_id_list = [cast(str, task["candidate_id"]) for task in selected_tasks]
+        selected_ids = set(selected_id_list)
         _require(
             all(
                 task == candidates[cast(str, task["candidate_id"])]
                 for task in selected_tasks
             ),
             "selected task content differs from source generation ledger",
+        )
+        selected_by_stratum = {
+            gold: {
+                stratum: [
+                    cast(str, task["candidate_id"])
+                    for task in selected_tasks
+                    if task["proposed_gold_skill_id"] == gold
+                    and source_stratum(task) == stratum
+                ]
+                for stratum in ("negative", "positive_only")
+            }
+            for gold in gold_ids
+        }
+        source_selection_audit = {
+            "selection_authority": _selection_authority_document(),
+            "selection_authority_sha256": canonical_sha256(
+                _selection_authority_document()
+            ),
+            "accepted_pool_sha256": canonical_sha256(accepted),
+            "round_1_candidate_count": len(round_one_candidates),
+            "round_2_candidate_count": len(round_two_candidates),
+            "round_1_distribution": source_distribution(round_one_candidates),
+            "round_2_distribution": source_distribution(round_two_candidates),
+            "round_1_request_quota_distribution": source_request_distribution(1),
+            "round_2_request_quota_distribution": source_request_distribution(2),
+            "round_1_post_pipeline_deficits": source_deficits(round_one_accepted),
+            "selected_candidate_ids": selected_id_list,
+            "selected_candidate_ids_sha256": canonical_sha256(selected_id_list),
+            "selected_by_stratum": selected_by_stratum,
+        }
+        _require(
+            validation["selection_audit"] == source_selection_audit
+            and validation["selection_audit_sha256"]
+            == canonical_sha256(source_selection_audit),
+            "source-derived selection audit mismatch",
         )
         for candidate_id, outcome in tuple(outcomes.items()):
             if outcome == "ELIGIBLE":
@@ -4270,8 +4403,6 @@ def _validated_agent_source_ledger_evidence(validation: dict[str, Any]) -> None:
         )
         _require(
             validation["candidate_outcomes"] == sorted_outcomes
-            and validation["selection_audit"]["accepted_pool_sha256"]
-            == canonical_sha256(accepted)
             and validation["pipeline_rejected_candidate_count"]
             == pipeline_rejected_count
             and validation["selection_not_selected_count"] == not_selected_count
