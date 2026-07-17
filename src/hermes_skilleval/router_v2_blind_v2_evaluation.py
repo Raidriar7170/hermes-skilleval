@@ -212,7 +212,12 @@ def _validate_route_group(
     _require(arm in ARMS, "route arm must be Arm A or C")
     _require(type(seed) is int and seed in SEEDS, "route seed mismatch")
     _require(
-        all(row.get("arm") == arm and row.get("seed") == seed for row in rows),
+        all(
+            row.get("arm") == arm
+            and type(row.get("seed")) is int
+            and row.get("seed") == seed
+            for row in rows
+        ),
         "route group identity mismatch",
     )
     ordered = sorted(rows, key=lambda row: str(row.get("task_id")))
@@ -359,7 +364,7 @@ def _validate_rate_contract(
         f"{name} count mismatch",
     )
     _require(
-        rate.get("denominator") == denominator,
+        type(rate.get("denominator")) is int and rate.get("denominator") == denominator,
         f"{name} denominator mismatch",
     )
     _require(
@@ -557,11 +562,11 @@ def _per_seed_grid(
     identities: dict[tuple[str, int], tuple[tuple[Any, ...], ...]] = {}
     for result in results:
         identity = _validate_per_seed_result_contract(result)
-        key = (result.get("arm"), result.get("seed"))
-        _require(key not in grid, "A/C seed grid contains duplicate")
-        if key[0] not in ARMS or key[1] not in SEEDS:
+        arm, seed = result.get("arm"), result.get("seed")
+        if arm not in ARMS or type(seed) is not int or seed not in SEEDS:
             raise ValueError("A/C seed grid mismatch")
-        typed_key = (str(key[0]), int(key[1]))
+        typed_key = (cast(str, arm), cast(int, seed))
+        _require(typed_key not in grid, "A/C seed grid contains duplicate")
         grid[typed_key] = result
         identities[typed_key] = identity
     _require(

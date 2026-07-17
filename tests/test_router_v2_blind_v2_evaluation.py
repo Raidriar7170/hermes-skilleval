@@ -332,6 +332,15 @@ def test_per_seed_builder_rejects_invalid_skill_identifiers(
         evaluation.build_per_seed_result(rows)
 
 
+@pytest.mark.parametrize("invalid_seed", (7170.0, True))
+def test_per_seed_builder_rejects_non_integer_row_seed(invalid_seed: Any) -> None:
+    rows = _route_rows("A", 7170)
+    rows[1]["seed"] = invalid_seed
+
+    with pytest.raises(ValueError, match="route group identity mismatch"):
+        evaluation.build_per_seed_result(rows)
+
+
 @pytest.mark.parametrize(
     "builder",
     (evaluation.build_aggregate_results, evaluation.apply_preregistered_gate),
@@ -400,6 +409,37 @@ def test_per_seed_grid_rejects_current_contract_drift_fail_closed() -> None:
     )
     with pytest.raises(ValueError, match="A/C seed task identity mismatch"):
         evaluation.build_aggregate_results(inconsistent_identity)
+
+
+@pytest.mark.parametrize(
+    "builder",
+    (evaluation.build_aggregate_results, evaluation.apply_preregistered_gate),
+)
+@pytest.mark.parametrize(
+    ("field", "invalid_value", "message"),
+    (
+        ("seed", 7170.0, "A/C seed grid mismatch"),
+        ("seed", True, "A/C seed grid mismatch"),
+        ("recall_at_5", 128.0, "recall_at_5 denominator mismatch"),
+        ("recall_at_5", True, "recall_at_5 denominator mismatch"),
+        ("negative_hit_at_5", 96.0, "negative_hit_at_5 denominator mismatch"),
+        ("negative_hit_at_5", True, "negative_hit_at_5 denominator mismatch"),
+    ),
+)
+def test_aggregate_and_gate_reject_non_integer_contract_fields(
+    builder: Any,
+    field: str,
+    invalid_value: Any,
+    message: str,
+) -> None:
+    per_seed = deepcopy(_per_seed())
+    if field == "seed":
+        per_seed[0]["seed"] = invalid_value
+    else:
+        per_seed[0][field]["denominator"] = invalid_value
+
+    with pytest.raises(ValueError, match=message):
+        builder(per_seed)
 
 
 @pytest.mark.parametrize(
