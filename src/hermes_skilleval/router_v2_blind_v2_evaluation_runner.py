@@ -28,7 +28,9 @@ from typing import Any, Callable, Mapping, Protocol, cast
 from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.router_v2_blind_v2_evaluation import (
     ARMS,
+    POSITIVE_TASK_COUNT,
     SEEDS,
+    TEMPTING_NEGATIVE_COUNT,
     apply_preregistered_gate,
     build_aggregate_results,
     build_failure_slices,
@@ -1640,6 +1642,46 @@ def _pack_invocation_identities(invocations: Any) -> list[str]:
     return identities
 
 
+def _sanitized_agent_run_record(
+    *,
+    role: str,
+    candidate_id: str,
+    request: dict[str, Any],
+    response: dict[str, Any] | None,
+    invocations: Any,
+    retry_count: int,
+) -> dict[str, Any]:
+    identities = _pack_invocation_identities(invocations)
+    config = AGENT_CONFIGS[role]
+    return {
+        "candidate_id": candidate_id,
+        "request_sha256": request["request_sha256"],
+        "response_sha256": canonical_sha256(response) if response is not None else None,
+        "requested_model": config["model"],
+        "returned_model": config["model"] if response is not None else None,
+        "reasoning_effort": config["reasoning_effort"],
+        "session_or_thread_ids": identities,
+        "transport_retry_count": retry_count,
+    }
+
+
+def _transport_retry_record(
+    run_record: dict[str, Any], *, role: str
+) -> dict[str, Any] | None:
+    if run_record["transport_retry_count"] == 0:
+        return None
+    identities = cast(list[str], run_record["session_or_thread_ids"])
+    _require(len(identities) == 2, "transport retry must bind two sessions")
+    return {
+        "role": role,
+        "candidate_id": run_record["candidate_id"],
+        "request_sha256": run_record["request_sha256"],
+        "failed_session_or_thread_id": identities[0],
+        "retry_session_or_thread_id": identities[1],
+        "retry_count": 1,
+    }
+
+
 class _AgentPackProtocolViolation(Exception):
     pass
 
@@ -2085,6 +2127,12 @@ def validate_agent_pack(
     }
     actual_invocation_counts = dict.fromkeys(actual_sessions, 0)
     valid_transport_retry_count = 0
+    sanitized_run_records: dict[str, list[dict[str, Any]]] = {
+        "generator": [],
+        "reviewer_a": [],
+        "reviewer_b": [],
+    }
+    retry_records: list[dict[str, Any]] = []
     try:
         for raw_row in generation_rows:
             row = _exact_object_fields(raw_row, generation_fields, "generation row")
@@ -2160,6 +2208,18 @@ def validate_agent_pack(
             response, retry_count = _validate_pack_invocations(
                 invocations, request=request
             )
+            run_record = _sanitized_agent_run_record(
+                role="generator",
+                candidate_id=candidate_id,
+                request=request,
+                response=response,
+                invocations=invocations,
+                retry_count=retry_count,
+            )
+            sanitized_run_records["generator"].append(run_record)
+            retry_record = _transport_retry_record(run_record, role="generator")
+            if retry_record is not None:
+                retry_records.append(retry_record)
             if response is not None:
                 generated_rows = response["candidates"]
                 _require(
@@ -2390,6 +2450,18 @@ def validate_agent_pack(
                 response, retry_count = _validate_pack_invocations(
                     invocations, request=request
                 )
+                run_record = _sanitized_agent_run_record(
+                    role=role,
+                    candidate_id=candidate_id,
+                    request=request,
+                    response=response,
+                    invocations=invocations,
+                    retry_count=retry_count,
+                )
+                sanitized_run_records[role].append(run_record)
+                retry_record = _transport_retry_record(run_record, role=role)
+                if retry_record is not None:
+                    retry_records.append(retry_record)
                 valid_transport_retry_count += retry_count
                 review_responses[role][candidate_id] = response
             _require(
@@ -2629,10 +2701,60 @@ def validate_agent_pack(
     pipeline_rejected_count = sum(
         outcome.startswith("REJECTED") for outcome in candidate_outcomes.values()
     )
+
+    def agent_role_evidence(role: str) -> dict[str, Any]:
+        config = AGENT_CONFIGS[role]
+        records = sanitized_run_records[role]
+        prompt = (
+            GENERATOR_SYSTEM_PROMPT if role == "generator" else REVIEWER_SYSTEM_PROMPT
+        )
+        response_schema = (
+            GENERATOR_RESPONSE_SCHEMA
+            if role == "generator"
+            else REVIEWER_RESPONSE_SCHEMA
+        )
+        return {
+            "config": deepcopy(config),
+            "requested_models": [config["model"]],
+            "returned_models": sorted(
+                {
+                    cast(str, record["returned_model"])
+                    for record in records
+                    if record["returned_model"] is not None
+                }
+            ),
+            "reasoning_effort": config["reasoning_effort"],
+            "system_prompt_sha256": _sha256_bytes(prompt.encode("utf-8")),
+            "response_schema_sha256": canonical_sha256(response_schema),
+            "request_count": metadata_roles[role]["request_count"],
+            "invocation_count": metadata_roles[role]["invocation_count"],
+            "session_or_thread_ids": deepcopy(
+                metadata_roles[role]["session_or_thread_ids"]
+            ),
+            "request_hashes_sha256": canonical_sha256(
+                [record["request_sha256"] for record in records]
+            ),
+            "response_hashes_sha256": canonical_sha256(
+                [
+                    record["response_sha256"]
+                    for record in records
+                    if record["response_sha256"] is not None
+                ]
+            ),
+            "run_sha256": canonical_sha256(records),
+        }
+
     common_result = {
         "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
         "transport_retry_count": valid_transport_retry_count,
+        "retry_records": sorted(
+            retry_records,
+            key=lambda row: (cast(str, row["role"]), cast(str, row["candidate_id"])),
+        ),
         "agent_roles": deepcopy(metadata_roles),
+        "agent_run_evidence": {
+            role: agent_role_evidence(role) for role in AGENT_CONFIGS
+        },
         "review_schedule_sha256": deepcopy(metadata_schedules),
         "source_file_sha256": source_hashes,
         "first_read_timestamp": first_read_timestamp,
@@ -3055,69 +3177,109 @@ def _validate_legacy_human_pack(
 def build_dataset_freeze_documents(
     validation: dict[str, Any], *, commit_a: str
 ) -> dict[str, bytes]:
-    _require(validation.get("status") == "VALID", "validated human pack is required")
+    _require(validation.get("status") == "VALID", "validated Agent pack is required")
     _require(
         type(commit_a) is str and len(commit_a) == 40,
         "Commit A must be a 40-character Git SHA",
     )
-    publish = bool(
-        validation["publication_permission"]
-        and validation["prompts_may_be_public_after_evaluation"]
+    _require(
+        validation["task_count"] == POSITIVE_TASK_COUNT
+        and validation["negative_labeled_task_count"] == TEMPTING_NEGATIVE_COUNT
+        and validation["family_count"] == POSITIVE_TASK_COUNT,
+        "Agent dataset freeze counts mismatch",
     )
-    task_rows = []
-    for task in validation["tasks"]:
-        row = {
-            "task_id": task["task_id"],
+    task_rows = [
+        {
+            "task_id": task["candidate_id"],
+            "prompt_text": task["prompt_text"],
             "prompt_text_sha256": task["prompt_text_sha256"],
             "semantic_family_id": task["semantic_family_id"],
-            "gold_skill_id": task["gold_skill_id"],
-            "negative_skill_id": task["negative_skill_id"],
-            "source_type": "HUMAN_AUTHORED",
+            "gold_skill_id": task["proposed_gold_skill_id"],
+            "negative_skill_id": task["proposed_negative_skill_id"],
+            "source_type": "AGENT_GENERATED",
         }
-        if publish:
-            row["prompt_text"] = task["prompt_text"]
-        task_rows.append(row)
+        for task in validation["tasks"]
+    ]
     task_bytes = b"".join(_canonical_json_bytes(row) for row in task_rows)
+
+    reviewer_ledgers = {
+        role: {
+            "path": f"blind-v2-review-{'a' if role == 'reviewer_a' else 'b'}.jsonl",
+            "sha256": validation["source_file_sha256"][
+                f"blind-v2-review-{'a' if role == 'reviewer_a' else 'b'}.jsonl"
+            ],
+            "schedule_sha256": validation["review_schedule_sha256"][role],
+        }
+        for role in ("reviewer_a", "reviewer_b")
+    }
+    contamination = {
+        **deepcopy(validation["contamination_audit"]),
+        "ledger_file_sha256": validation["source_file_sha256"][
+            "blind-v2-contamination.jsonl"
+        ],
+    }
+    agent_construction = {
+        "review_mode": "ISOLATED_AGENT_REVIEW",
+        "source_type": "AGENT_GENERATED",
+        "human_author_count": 0,
+        "human_reviewer_count": 0,
+        "exact_three_way_agreement_count": validation[
+            "exact_three_way_agreement_count"
+        ],
+        "generation_ledger": {
+            "path": "blind-v2-generation.jsonl",
+            "sha256": validation["source_file_sha256"]["blind-v2-generation.jsonl"],
+        },
+        "reviewer_ledgers": reviewer_ledgers,
+        "agent_run_metadata": {
+            "path": "agent-run-metadata.json",
+            "sha256": validation["source_file_sha256"]["agent-run-metadata.json"],
+        },
+        "agent_roles": deepcopy(validation["agent_run_evidence"]),
+        "transport_retry_count": validation["transport_retry_count"],
+        "retry_records": deepcopy(validation["retry_records"]),
+        "contamination": contamination,
+        "deterministic_selection": deepcopy(validation["selection_audit"]),
+    }
     review_summary = {
-        "schema_version": "router-v2-blind-v2-review-summary-v1",
-        "human_author_count": validation["human_author_count"],
-        "independent_human_reviewer_count": validation[
-            "independent_human_reviewer_count"
+        "schema_version": "router-v2-agent-blind-v2-review-summary-v1",
+        "review_mode": "ISOLATED_AGENT_REVIEW",
+        "source_type": "AGENT_GENERATED",
+        "task_count": POSITIVE_TASK_COUNT,
+        "negative_labeled_task_count": TEMPTING_NEGATIVE_COUNT,
+        "family_count": POSITIVE_TASK_COUNT,
+        "human_author_count": 0,
+        "human_reviewer_count": 0,
+        "exact_three_way_agreement_count": validation[
+            "exact_three_way_agreement_count"
         ],
-        "exact_review_agreement_count": validation["exact_review_agreement_count"],
         "excluded_candidate_count": validation["excluded_candidate_count"],
-        "ai_assistance_disclosure": validation["ai_assistance_disclosure"],
-        "dataset_license": validation["dataset_license"],
-        "publication_permission": validation["publication_permission"],
-        "prompts_may_be_public_after_evaluation": validation[
-            "prompts_may_be_public_after_evaluation"
-        ],
+        "agent_roles": deepcopy(validation["agent_run_evidence"]),
+        "reviewer_ledgers": reviewer_ledgers,
+        "transport_retry_count": validation["transport_retry_count"],
+        "retry_records": deepcopy(validation["retry_records"]),
     }
     review_bytes = _canonical_json_bytes(review_summary)
     manifest = {
-        "schema_version": "router-v2-blind-v2-manifest-v1",
+        "schema_version": "router-v2-agent-blind-v2-manifest-v1",
         "commit_a": commit_a,
         "dataset_sha256": _sha256_bytes(task_bytes),
-        "task_count": 64,
-        "negative_labeled_task_count": 48,
+        "task_count": POSITIVE_TASK_COUNT,
+        "negative_labeled_task_count": TEMPTING_NEGATIVE_COUNT,
         "gold_distribution": validation["gold_distribution"],
         "negative_distribution": validation["negative_distribution"],
-        "family_count": 64,
-        "human_author_count": validation["human_author_count"],
-        "independent_human_reviewer_count": validation[
-            "independent_human_reviewer_count"
+        "family_count": POSITIVE_TASK_COUNT,
+        "human_author_count": 0,
+        "human_reviewer_count": 0,
+        "exact_three_way_agreement_count": validation[
+            "exact_three_way_agreement_count"
         ],
-        "ai_assistance_disclosure": validation["ai_assistance_disclosure"],
-        "exact_review_agreement_count": validation["exact_review_agreement_count"],
         "excluded_candidate_count": validation["excluded_candidate_count"],
-        "duplicate_checks": validation["duplicate_checks"],
-        "train_overlap_checks": validation["train_overlap_checks"],
-        "pilot_002_overlap_checks": validation["pilot_002_overlap_checks"],
-        "phase16_overlap_checks": validation["phase16_overlap_checks"],
         "source_file_sha256": validation["source_file_sha256"],
         "per_row_prompt_sha256": [row["prompt_text_sha256"] for row in task_rows],
         "blind_v2_data_first_read_timestamp": validation["first_read_timestamp"],
-        "prompts_committed": publish,
+        "prompts_committed": True,
+        "agent_construction": agent_construction,
         "model_scores_observed": False,
         "evaluation_started": False,
         "retraining_after_data_access": False,
@@ -3697,6 +3859,14 @@ def build_authoritative_lineage_bindings(
     blind_manifest = _json_no_duplicate_keys(
         frozen_documents["blind-v2-manifest.json"], "blind-v2 manifest"
     )
+    agent_construction = deepcopy(blind_manifest["agent_construction"])
+    _require(
+        type(agent_construction) is dict,
+        "blind-v2 Agent construction lineage is missing",
+    )
+    agent_construction["review_summary_file_sha256"] = _sha256_bytes(
+        frozen_documents["blind-v2-review-summary.json"]
+    )
     artifacts = cast(list[dict[str, Any]], pilot["training_artifacts"])
     model_bindings = []
     for seed in SEEDS:
@@ -3751,19 +3921,7 @@ def build_authoritative_lineage_bindings(
             "source_file_sha256": blind_manifest["source_file_sha256"],
             "per_row_prompt_sha256": blind_manifest["per_row_prompt_sha256"],
         },
-        "human_review": {
-            "review_summary_file_sha256": _sha256_bytes(
-                frozen_documents["blind-v2-review-summary.json"]
-            ),
-            "source_file_sha256": blind_manifest["source_file_sha256"],
-            "human_author_count": blind_manifest["human_author_count"],
-            "independent_human_reviewer_count": blind_manifest[
-                "independent_human_reviewer_count"
-            ],
-            "exact_review_agreement_count": blind_manifest[
-                "exact_review_agreement_count"
-            ],
-        },
+        "agent_construction": agent_construction,
         "skill_index": preregistration["skill_index"],
         "query_contract": preregistration["query_contract"],
         "skill_representation_builder": preregistration["skill_representation_builder"],
@@ -4049,10 +4207,13 @@ def evaluate_routes(
     scorer_factory: ScorerFactory | None = None,
     clock_ns: Callable[[], int] = time.perf_counter_ns,
 ) -> list[dict[str, Any]]:
-    _require(len(tasks) == 64, "evaluation requires 64 tasks")
+    _require(
+        len(tasks) == POSITIVE_TASK_COUNT,
+        f"evaluation requires {POSITIVE_TASK_COUNT} tasks",
+    )
     ordered_tasks = sorted(tasks, key=lambda row: row["task_id"])
     _require(
-        len({row["task_id"] for row in ordered_tasks}) == 64,
+        len({row["task_id"] for row in ordered_tasks}) == POSITIVE_TASK_COUNT,
         "evaluation task ids must be unique",
     )
     ordered_skills = sorted(skills, key=lambda row: row["id"])
@@ -4141,12 +4302,26 @@ def build_evaluation_documents(
     summary = {
         "schema_version": "router-v2-blind-v2-evaluation-summary-v1",
         **gate,
-        "task_count": 64,
-        "negative_labeled_task_count": 48,
+        "task_count": POSITIVE_TASK_COUNT,
+        "negative_labeled_task_count": TEMPTING_NEGATIVE_COUNT,
+        "claim_scope": "AGENT_CONSTRUCTED_DUAL_AGENT_UNANIMOUS_BLIND_SET_ONLY",
+        "same_provider_limitation": (
+            "Generator gpt-5.6-sol/max, Reviewer A gpt-5.6-sol/ultra, and "
+            "Reviewer B gpt-5.6-luna/max are OpenAI configurations, so their "
+            "review judgments are not statistically independent."
+        ),
     }
     report = (
         "# Router V2 final blind-v2\n\n"
         f"Research conclusion: `{gate['research_conclusion']}`\n\n"
+        f"Dataset: {POSITIVE_TASK_COUNT} tasks, including "
+        f"{TEMPTING_NEGATIVE_COUNT} negative-labeled tasks, constructed by one Agent "
+        "generator and accepted only by two role-isolated Agent reviewers with unanimous "
+        "labels.\n\n"
+        "Limitation: Generator gpt-5.6-sol/max, Reviewer A gpt-5.6-sol/ultra, and "
+        "Reviewer B gpt-5.6-luna/max are OpenAI configurations from the same provider; "
+        "their judgments are not statistically independent. Scope is limited to this "
+        "Agent-constructed distribution.\n\n"
         "Default router remains unchanged. This is not a production, release, or SOTA claim.\n"
     ).encode("utf-8")
     result_documents = {

@@ -927,7 +927,13 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
         commit_b="b" * 40,
         evaluator_commit="c" * 40,
         attempt_token_sha256="d" * 64,
-        frozen_bindings={"skill_index_sha256": "e" * 64},
+        frozen_bindings={
+            "skill_index_sha256": "e" * 64,
+            "agent_construction": {
+                "human_author_count": 0,
+                "human_reviewer_count": 0,
+            },
+        },
         artifacts={
             f"{PREFIX}_aggregate.json": b"{}\n",
             f"{PREFIX}_per-seed.json": b"[]\n",
@@ -960,6 +966,11 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
     ]
     assert lineage["commit_a"] == "a" * 40
     assert lineage["commit_b"] == "b" * 40
+    assert "human_review" not in lineage["frozen_bindings"]
+    assert lineage["frozen_bindings"]["agent_construction"] == {
+        "human_author_count": 0,
+        "human_reviewer_count": 0,
+    }
     assert [row["path"] for row in lineage["artifacts"]] == sorted(
         row["path"] for row in lineage["artifacts"]
     )
@@ -969,6 +980,11 @@ def test_failure_slices_and_lineage_are_pure_complete_builders() -> None:
         {key: value for key, value in lineage.items() if key != "lineage_sha256"}
     )
     assert evaluation.quantize8("1.005000005") == "1.00500000"
+
+
+def test_task5_lineage_rejects_superseded_human_review_section() -> None:
+    with pytest.raises(ValueError, match="human_review lineage is superseded"):
+        _lineage_for_bindings({"human_review": {}})
 
 
 @pytest.mark.parametrize(

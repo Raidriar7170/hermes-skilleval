@@ -3773,11 +3773,11 @@ def test_agent_pack_required_path_must_be_a_regular_file(tmp_path: Path) -> None
         _validate_agent_pack(pack, repository)
 
 
-def test_dataset_freeze_is_deterministic_and_private_when_permission_is_false(
+def test_task5_commit_b_freezes_agent_tasks_lineage_and_retry_evidence(
     tmp_path: Path,
 ) -> None:
     pack = tmp_path / "agent-pack"
-    _write_agent_pack(pack)
+    _write_agent_pack(pack, transport_retry_role="reviewer_a")
     validation = _validate_agent_pack(pack, tmp_path / "repo")
 
     first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
@@ -3789,35 +3789,154 @@ def test_dataset_freeze_is_deterministic_and_private_when_permission_is_false(
         "blind-v2-review-summary.json",
         "blind-v2-manifest.json",
     }
+    task_rows = [
+        json.loads(line) for line in first["blind-v2-tasks.jsonl"].splitlines()
+    ]
+    assert task_rows == [
+        {
+            "task_id": task["candidate_id"],
+            "prompt_text": task["prompt_text"],
+            "prompt_text_sha256": task["prompt_text_sha256"],
+            "semantic_family_id": task["semantic_family_id"],
+            "gold_skill_id": task["proposed_gold_skill_id"],
+            "negative_skill_id": task["proposed_negative_skill_id"],
+            "source_type": "AGENT_GENERATED",
+        }
+        for task in validation["tasks"]
+    ]
+    assert len(task_rows) == 128
+    assert sum(row["negative_skill_id"] is not None for row in task_rows) == 96
+    assert len({row["semantic_family_id"] for row in task_rows}) == 128
+
+    review_summary = json.loads(first["blind-v2-review-summary.json"])
     combined = b"".join(first.values())
-    assert f"{PREFIX} REQUEST".encode() not in combined
+    assert f"{PREFIX} ".encode() in combined
+    assert f"{PREFIX} GENERATOR RATIONALE".encode() not in combined
+    assert f"{PREFIX} REVIEWER_A REASON".encode() not in combined
+    assert f"{PREFIX} REVIEWER_B REASON".encode() not in combined
+    assert b'"rationale"' not in combined
+    assert b'"reason"' not in combined
+
     manifest = json.loads(first["blind-v2-manifest.json"])
-    assert manifest["task_count"] == 64
-    assert manifest["negative_labeled_task_count"] == 48
+    assert manifest["task_count"] == 128
+    assert manifest["negative_labeled_task_count"] == 96
+    assert manifest["family_count"] == 128
+    assert manifest["human_author_count"] == 0
+    assert manifest["human_reviewer_count"] == 0
     assert manifest["model_scores_observed"] is False
     assert manifest["evaluation_started"] is False
     assert manifest["retraining_after_data_access"] is False
     assert manifest["gate_changed_after_data_access"] is False
 
-    recovered = runner.validate_frozen_dataset_documents(validation, first)
-    assert len(recovered) == 64
-    assert all(row["prompt_text"].startswith(PREFIX) for row in recovered)
-    assert all(
-        "prompt_text" not in json.loads(line)
-        for line in first["blind-v2-tasks.jsonl"].splitlines()
+    construction = manifest["agent_construction"]
+    assert construction["human_author_count"] == 0
+    assert construction["human_reviewer_count"] == 0
+    assert construction["generation_ledger"] == {
+        "path": "blind-v2-generation.jsonl",
+        "sha256": validation["source_file_sha256"]["blind-v2-generation.jsonl"],
+    }
+    assert construction["reviewer_ledgers"] == {
+        "reviewer_a": {
+            "path": "blind-v2-review-a.jsonl",
+            "sha256": validation["source_file_sha256"]["blind-v2-review-a.jsonl"],
+            "schedule_sha256": validation["review_schedule_sha256"]["reviewer_a"],
+        },
+        "reviewer_b": {
+            "path": "blind-v2-review-b.jsonl",
+            "sha256": validation["source_file_sha256"]["blind-v2-review-b.jsonl"],
+            "schedule_sha256": validation["review_schedule_sha256"]["reviewer_b"],
+        },
+    }
+    assert construction["agent_run_metadata"] == {
+        "path": "agent-run-metadata.json",
+        "sha256": validation["source_file_sha256"]["agent-run-metadata.json"],
+    }
+    assert construction["transport_retry_count"] == 1
+    assert len(construction["retry_records"]) == 1
+    assert construction["retry_records"][0]["role"] == "reviewer_a"
+    assert construction["retry_records"][0]["retry_count"] == 1
+
+    prompt_hashes = {
+        "generator": hashlib.sha256(
+            runner.GENERATOR_SYSTEM_PROMPT.encode("utf-8")
+        ).hexdigest(),
+        "reviewer_a": hashlib.sha256(
+            runner.REVIEWER_SYSTEM_PROMPT.encode("utf-8")
+        ).hexdigest(),
+        "reviewer_b": hashlib.sha256(
+            runner.REVIEWER_SYSTEM_PROMPT.encode("utf-8")
+        ).hexdigest(),
+    }
+    schema_hashes = {
+        "generator": runner.canonical_sha256(runner.GENERATOR_RESPONSE_SCHEMA),
+        "reviewer_a": runner.canonical_sha256(runner.REVIEWER_RESPONSE_SCHEMA),
+        "reviewer_b": runner.canonical_sha256(runner.REVIEWER_RESPONSE_SCHEMA),
+    }
+    for role, config in runner.AGENT_CONFIGS.items():
+        role_evidence = construction["agent_roles"][role]
+        assert role_evidence["config"] == config
+        assert role_evidence["requested_models"] == [config["model"]]
+        assert role_evidence["returned_models"] == [config["model"]]
+        assert role_evidence["reasoning_effort"] == config["reasoning_effort"]
+        assert role_evidence["system_prompt_sha256"] == prompt_hashes[role]
+        assert role_evidence["response_schema_sha256"] == schema_hashes[role]
+        assert (
+            role_evidence["session_or_thread_ids"]
+            == validation["agent_roles"][role]["session_or_thread_ids"]
+        )
+        assert len(role_evidence["request_hashes_sha256"]) == 64
+        assert len(role_evidence["response_hashes_sha256"]) == 64
+        assert len(role_evidence["run_sha256"]) == 64
+
+    contamination = construction["contamination"]
+    assert (
+        contamination["ledger_file_sha256"]
+        == validation["source_file_sha256"]["blind-v2-contamination.jsonl"]
     )
+    assert contamination["required_semantic_model_id"] == runner.SEMANTIC_MODEL_ID
+    assert (
+        contamination["required_semantic_model_revision"]
+        == runner.SEMANTIC_MODEL_REVISION
+    )
+    assert len(contamination["scanner_config_sha256"]) == 64
+    assert contamination["semantic_scorer_runtime_verified"] is False
+    assert contamination["semantic_scorer_receipt_sha256"] is None
+
+    selection = construction["deterministic_selection"]
+    assert selection == validation["selection_audit"]
+    assert selection["selection_authority"]["selection_seed"] == 7170
+    assert len(selection["selected_candidate_ids"]) == 128
+    assert len(selection["selected_candidate_ids_sha256"]) == 64
+    assert review_summary["agent_roles"] == construction["agent_roles"]
+    assert review_summary["retry_records"] == construction["retry_records"]
+
+    recovered = runner.validate_frozen_dataset_documents(validation, first)
+    assert len(recovered) == 128
+    assert all(row["prompt_text"].startswith(PREFIX) for row in recovered)
 
 
-def test_authoritative_lineage_binds_all_models_inputs_and_review_bytes(
-    tmp_path: Path,
+def test_task5_authoritative_lineage_binds_agent_construction_without_human_review(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     pack = tmp_path / "agent-pack"
     _write_agent_pack(pack)
     validation = _validate_agent_pack(pack, tmp_path / "repo")
     documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
     repository = Path(__file__).resolve().parents[1]
+    preregistration_path = repository / runner.PREREGISTRATION_RELATIVE
+    preregistration = json.loads(preregistration_path.read_text(encoding="utf-8"))
+    monkeypatch.setattr(
+        runner,
+        "validate_preregistration_authority",
+        lambda *args, **kwargs: {
+            "preregistration_file_sha256": hashlib.sha256(
+                preregistration_path.read_bytes()
+            ).hexdigest(),
+            "preregistration_sha256": preregistration["preregistration_sha256"],
+        },
+    )
     bindings = runner.build_authoritative_lineage_bindings(
-        repository / runner.PREREGISTRATION_RELATIVE,
+        preregistration_path,
         repository_root=repository,
         pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
         frozen_documents=documents,
@@ -3832,7 +3951,37 @@ def test_authoritative_lineage_binds_all_models_inputs_and_review_bytes(
         bindings["blind_v2_dataset"]["source_file_sha256"]
         == validation["source_file_sha256"]
     )
-    assert bindings["human_review"]["exact_review_agreement_count"] == 64
+    assert "human_review" not in bindings
+    construction = bindings["agent_construction"]
+    assert construction["human_author_count"] == 0
+    assert construction["human_reviewer_count"] == 0
+    assert construction["exact_three_way_agreement_count"] == 256
+    assert set(construction["reviewer_ledgers"]) == {"reviewer_a", "reviewer_b"}
+    assert (
+        construction["reviewer_ledgers"]["reviewer_a"]["sha256"]
+        != (construction["reviewer_ledgers"]["reviewer_b"]["sha256"])
+    )
+    assert construction["agent_roles"]["generator"]["requested_models"] == [
+        "gpt-5.6-sol"
+    ]
+    assert construction["agent_roles"]["reviewer_a"]["reasoning_effort"] == ("ultra")
+    assert construction["agent_roles"]["reviewer_b"]["returned_models"] == [
+        "gpt-5.6-luna"
+    ]
+    assert (
+        construction["reviewer_ledgers"]["reviewer_a"]["schedule_sha256"]
+        == validation["review_schedule_sha256"]["reviewer_a"]
+    )
+    assert (
+        construction["deterministic_selection"]["selection_authority"]["selection_seed"]
+        == 7170
+    )
+    assert (
+        construction["contamination"]["ledger_file_sha256"]
+        == validation["source_file_sha256"]["blind-v2-contamination.jsonl"]
+    )
+    assert construction["contamination"]["semantic_scorer_runtime_verified"] is False
+    assert construction["contamination"]["semantic_scorer_receipt_sha256"] is None
     assert "pilot_002_result_report" in bindings["frozen_inputs"]
     assert len(bindings["old_phase16_prompt_files"]) == 16
 
@@ -4150,7 +4299,7 @@ class _FakeScorer:
         if self.calls is not None:
             self.calls.append(query)
         task_index = int(query.rsplit(" ", 1)[-1])
-        gold = f"test-skill-{task_index // 4:02d}"
+        gold = f"test-skill-{task_index // 8:02d}"
         return [gold, *[skill_id for skill_id in skill_ids if skill_id != gold]]
 
 
@@ -4199,12 +4348,12 @@ def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b() -> None:
             "task_id": f"{PREFIX}_TASK_{index:02d}",
             "prompt_text": f"{PREFIX} QUERY {index}",
             "semantic_family_id": f"{PREFIX}_FAMILY_{index:02d}",
-            "gold_skill_id": f"test-skill-{index // 4:02d}",
+            "gold_skill_id": f"test-skill-{index // 8:02d}",
             "negative_skill_id": (
-                f"test-skill-{((index // 4) + 1) % 16:02d}" if index % 4 < 3 else None
+                f"test-skill-{((index // 8) + 1) % 16:02d}" if index % 8 < 6 else None
             ),
         }
-        for index in range(64)
+        for index in range(128)
     ]
     bindings = [
         {"arm": arm, "seed": seed, "model_path": f"/{PREFIX}/{arm}/{seed}"}
@@ -4218,17 +4367,17 @@ def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b() -> None:
         _skills(),
         bindings,
         scorer_factory=lambda arm, seed, path: _FakeScorer(calls),
-        clock_ns=iter(range(1, 769)).__next__,
+        clock_ns=iter(range(1, 1537)).__next__,
     )
 
-    assert len(rows) == 384
+    assert len(rows) == 768
     assert {(row["arm"], row["seed"]) for row in rows} == {
         (arm, seed) for arm in ("A", "C") for seed in (7170, 7171, 7172)
     }
     assert all(row["gold_rank"] == 1 for row in rows)
     assert all(row["latency_ns"] == 1 for row in rows)
-    assert len(calls) == 768
-    assert all(calls.count(f"{PREFIX} QUERY {index}") == 12 for index in range(64))
+    assert len(calls) == 1536
+    assert all(calls.count(f"{PREFIX} QUERY {index}") == 12 for index in range(128))
 
     started = runner.build_attempt_started_document(
         {
@@ -4269,6 +4418,20 @@ def test_evaluate_routes_produces_complete_a_c_grid_without_arm_b() -> None:
         {"arm": "A"},
         {"arm": "C"},
     ]
+    summary = json.loads(documents["evaluation-summary.json"])
+    assert summary["task_count"] == 128
+    assert summary["negative_labeled_task_count"] == 96
+    assert summary["same_provider_limitation"] == (
+        "Generator gpt-5.6-sol/max, Reviewer A gpt-5.6-sol/ultra, and Reviewer B "
+        "gpt-5.6-luna/max are OpenAI configurations, so their review judgments are "
+        "not statistically independent."
+    )
+    report = documents["result-report.md"].decode("utf-8")
+    assert "128 tasks" in report
+    assert "96 negative-labeled" in report
+    assert "same provider" in report.lower()
+    assert "human-reviewed" not in report.lower()
+    assert "generalization" not in report.lower()
 
 
 def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) -> None:

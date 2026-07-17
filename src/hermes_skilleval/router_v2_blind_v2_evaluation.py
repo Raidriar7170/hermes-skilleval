@@ -1201,6 +1201,10 @@ def build_lineage_manifest(
         "attempt token hash mismatch",
     )
     _require(type(frozen_bindings) is dict, "frozen bindings mismatch")
+    _require(
+        "human_review" not in frozen_bindings,
+        "human_review lineage is superseded by agent_construction",
+    )
     _validate_frozen_binding_value(
         frozen_bindings,
         depth=0,
