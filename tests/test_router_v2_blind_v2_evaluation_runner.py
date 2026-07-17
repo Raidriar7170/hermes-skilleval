@@ -7,7 +7,14 @@ import os
 import subprocess
 import sys
 from copy import deepcopy
-from decimal import ROUND_DOWN, ROUND_HALF_EVEN, Decimal, localcontext
+from decimal import (
+    ROUND_DOWN,
+    ROUND_HALF_EVEN,
+    Decimal,
+    Inexact,
+    getcontext,
+    localcontext,
+)
 from pathlib import Path
 from typing import Any, Callable, cast
 
@@ -468,6 +475,31 @@ def test_task4_decimal_context_cannot_change_jaccard_or_scanner_evidence(
     assert low_precision[1] == "1.23"
     assert low_precision[2][0]["scanner_decision"] == "PASS"
     assert "token_5gram_jaccard:train" not in low_precision[2][0]["rejection_codes"]
+
+
+def test_task4_jaccard_isolates_all_decimal_context_state() -> None:
+    shared = {f"shared-{index}" for index in range(79)}
+    union = shared | {f"extra-{index}" for index in range(20)}
+
+    outer_before = getcontext().copy()
+    expected = runner._jaccard(shared, union)
+    with localcontext() as hostile_context:
+        hostile_context.prec = 2
+        hostile_context.Emin = -9
+        hostile_context.Emax = 9
+        hostile_context.capitals = 0
+        hostile_context.clamp = 1
+        hostile_context.traps[Inexact] = True
+        hostile_context.clear_flags()
+        hostile_before = hostile_context.copy()
+
+        actual = runner._jaccard(shared, union)
+
+        assert repr(hostile_context) == repr(hostile_before)
+
+    assert actual == expected
+    assert actual < runner.TOKEN_5GRAM_JACCARD_MAX
+    assert repr(getcontext()) == repr(outer_before)
 
 
 def test_task4_protected_authority_scope_and_prompt_order_are_canonical() -> None:

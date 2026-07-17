@@ -12,7 +12,15 @@ import time
 import unicodedata
 from collections import Counter
 from copy import deepcopy
-from decimal import ROUND_HALF_EVEN, Decimal, localcontext
+from decimal import (
+    ROUND_HALF_EVEN,
+    Context,
+    Decimal,
+    DivisionByZero,
+    InvalidOperation,
+    Overflow,
+    localcontext,
+)
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable, Mapping, Protocol, cast
@@ -1038,9 +1046,17 @@ def _jaccard(left: set[str], right: set[str]) -> Decimal:
     # Task 4.2 freezes two empty sets as full overlap.
     if not left and not right:
         return Decimal("1")
-    with localcontext() as context:
-        context.prec = 50
-        context.rounding = ROUND_HALF_EVEN
+    context = Context(
+        prec=50,
+        rounding=ROUND_HALF_EVEN,
+        Emin=-999999,
+        Emax=999999,
+        capitals=1,
+        clamp=0,
+        flags=[],
+        traps=[InvalidOperation, DivisionByZero, Overflow],
+    )
+    with localcontext(context):
         return Decimal(len(left & right)) / Decimal(len(left | right))
 
 
