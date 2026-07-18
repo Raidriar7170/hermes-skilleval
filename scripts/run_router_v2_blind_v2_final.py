@@ -170,7 +170,8 @@ def _load_preregistered_agent_inputs(
 
 
 def _canonical_agent_staging_root(repository: Path, commit_a: str) -> Path:
-    expected = (AGENT_STAGING_ROOT / commit_a).resolve(strict=False)
+    expected = AGENT_STAGING_ROOT / commit_a
+    _require(expected.is_absolute(), "Agent staging root must be absolute")
     configured = os.environ.get("HERMES_BLIND_V2_ROOT")
     if configured is not None:
         configured_path = Path(configured)
@@ -179,13 +180,28 @@ def _canonical_agent_staging_root(repository: Path, commit_a: str) -> Path:
             "HERMES_BLIND_V2_ROOT must be absolute",
         )
         _require(
-            configured_path.resolve(strict=False) == expected,
+            configured_path == expected,
             "HERMES_BLIND_V2_ROOT must match the Commit A-agent staging authority",
         )
-    _require(
-        not expected.is_relative_to(repository),
-        "Agent staging root must remain outside the repository",
+    workflow._assert_no_existing_symlink_components(
+        expected,
+        label="Agent staging root",
     )
+    resolved = expected.resolve(strict=False)
+    worktree_output = workflow._git(repository, "worktree", "list", "--porcelain")
+    worktrees = [
+        Path(line.removeprefix("worktree "))
+        for line in worktree_output.splitlines()
+        if line.startswith("worktree ")
+    ]
+    _require(bool(worktrees), "linked Git worktree authority is missing")
+    for worktree in worktrees:
+        _require(worktree.is_absolute(), "linked Git worktree path must be absolute")
+        worktree_root = worktree.resolve(strict=True)
+        _require(
+            not resolved.is_relative_to(worktree_root),
+            "Agent staging root must remain outside every linked Git worktree",
+        )
     return expected
 
 
@@ -926,7 +942,11 @@ def _freeze(_args: argparse.Namespace) -> int:
         semantic_similarity=similarity,
     )
     output_dir = cast(Path, context["repository"]) / workflow.DATASET_FREEZE_RELATIVE
-    workflow.write_dataset_freeze(documents, output_dir)
+    workflow.write_dataset_freeze(
+        documents,
+        output_dir,
+        repository_root=cast(Path, context["repository"]),
+    )
     _write_stdout(
         {
             "status": "AGENT_BLIND_V2_DATASET_FROZEN",

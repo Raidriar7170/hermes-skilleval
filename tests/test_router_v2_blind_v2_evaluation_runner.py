@@ -10406,6 +10406,161 @@ def test_single_attempt_keyboard_interrupt_is_terminal_and_reraised(
     assert terminal_path.read_bytes() == terminal_bytes
 
 
+def _task7_freeze_documents() -> dict[str, bytes]:
+    return {
+        "blind-v2-tasks.jsonl": b'{"task_id":"test-only"}\n',
+        "blind-v2-review-summary.json": b'{"status":"VALID"}\n',
+        "blind-v2-manifest.json": b'{"task_count":128}\n',
+    }
+
+
+def test_task7_dataset_freeze_accepts_only_exact_canonical_repository_path(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    output = repository / runner.DATASET_FREEZE_RELATIVE
+    documents = _task7_freeze_documents()
+
+    runner.write_dataset_freeze(
+        documents,
+        output,
+        repository_root=repository,
+    )
+
+    assert {
+        path.name: path.read_bytes() for path in sorted(output.iterdir())
+    } == documents
+
+    alternate = repository / "alternate-freeze"
+    with pytest.raises(ValueError, match="canonical repository path"):
+        runner.write_dataset_freeze(
+            documents,
+            alternate,
+            repository_root=repository,
+        )
+    assert not alternate.exists()
+
+
+@pytest.mark.parametrize("symlink_scope", ("parent", "final"))
+def test_task7_dataset_freeze_rejects_symlink_redirection_without_outside_writes(
+    tmp_path: Path,
+    symlink_scope: str,
+) -> None:
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    output = repository / runner.DATASET_FREEZE_RELATIVE
+
+    if symlink_scope == "parent":
+        (repository / "data").symlink_to(outside, target_is_directory=True)
+    else:
+        output.parent.mkdir(parents=True)
+        outside_target = outside / "freeze-target"
+        outside_target.mkdir()
+        output.symlink_to(outside_target, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="symlink"):
+        runner.write_dataset_freeze(
+            _task7_freeze_documents(),
+            output,
+            repository_root=repository,
+        )
+
+    assert not list(outside.rglob("blind-v2-tasks.jsonl"))
+    assert not list(outside.rglob("blind-v2-review-summary.json"))
+    assert not list(outside.rglob("blind-v2-manifest.json"))
+
+
+@pytest.mark.parametrize("symlink_scope", ("parent", "final"))
+def test_task7_evaluation_rejects_symlink_redirection_before_marker_or_callback(
+    tmp_path: Path,
+    symlink_scope: str,
+) -> None:
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    output = repository / runner.FINAL_NAMESPACE_RELATIVE
+
+    if symlink_scope == "parent":
+        (outside / runner.FINAL_NAMESPACE_RELATIVE.parts[1]).mkdir()
+        (repository / "artifacts").symlink_to(outside, target_is_directory=True)
+    else:
+        output.parent.mkdir(parents=True)
+        outside_target = outside / "attempt-target"
+        outside_target.mkdir()
+        output.symlink_to(outside_target, target_is_directory=True)
+
+    callback_calls: list[str] = []
+
+    def evaluate() -> dict[str, bytes]:
+        callback_calls.append("called")
+        return {}
+
+    with pytest.raises(ValueError, match="symlink"):
+        runner.run_single_attempt(
+            output,
+            repository_root=repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=evaluate,
+            protected_roots=[],
+        )
+
+    assert callback_calls == []
+    assert not list(outside.rglob("attempt-1.started.json"))
+    assert not list(outside.rglob("attempt-1.terminal.json"))
+
+
+def test_task7_evaluation_accepts_exact_canonical_repository_path(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repo"
+    output = repository / runner.FINAL_NAMESPACE_RELATIVE
+    output.parent.mkdir(parents=True)
+    documents = {
+        name: f"test-only:{name}\n".encode()
+        for name in runner.EVALUATION_OUTPUT_FILENAMES
+    }
+
+    terminal = runner.run_single_attempt(
+        output,
+        repository_root=repository,
+        started_payload={"commit_b": "b" * 40},
+        evaluate=lambda: documents,
+        protected_roots=[],
+    )
+
+    assert terminal == runner.build_attempt_terminal_document(len(documents))
+    assert (output / "attempt-1.started.json").is_file()
+    assert (output / "attempt-1.terminal.json").is_file()
+
+
+def test_task7_runner_removes_human_authoring_and_validation_workflow() -> None:
+    for legacy_name in (
+        "AUTHORING_TEMPLATE_ROOT",
+        "LEGACY_REQUIRED_HUMAN_PACK_FILES",
+        "AUTHORED_FIELDS",
+        "REVIEW_FIELDS",
+        "REVIEW_DECISIONS",
+        "_read_csv",
+        "_validate_legacy_human_pack",
+        "write_authoring_templates",
+        "load_preregistered_human_validation_inputs",
+        "human_pack_root_from_environment",
+    ):
+        assert not hasattr(runner, legacy_name)
+
+    source = inspect.getsource(runner)
+    assert "import csv" not in source
+    assert "blind-v2-human-authoring-guide" not in source
+    assert "HUMAN_AUTHORED" not in source
+    assert (
+        runner.HISTORICAL_HUMAN_COMMIT_A == "09ba4104a147a2f740ef69283c850f40e78a0b15"
+    )
+
+
 def test_task7_final_cli_exposes_only_sealed_agent_workflow() -> None:
     environment = dict(os.environ)
     environment["PYTHONPATH"] = "src"
@@ -10533,6 +10688,106 @@ def _task7_cli_module() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _task7_worktree_porcelain(*roots: Path) -> str:
+    return "\n\n".join(f"worktree {root}\nHEAD {'a' * 40}\ndetached" for root in roots)
+
+
+def test_task7_staging_accepts_exact_canonical_path_outside_all_worktrees(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    linked = tmp_path / "linked-worktree"
+    repository.mkdir()
+    linked.mkdir()
+    staging_base = tmp_path / "home/.codex/private/hermes-blind-v2"
+    commit_a = "a" * 40
+    calls: list[tuple[Path, tuple[str, ...]]] = []
+
+    monkeypatch.setattr(cli, "AGENT_STAGING_ROOT", staging_base)
+    monkeypatch.delenv("HERMES_BLIND_V2_ROOT", raising=False)
+
+    def fake_git(root: Path, *arguments: str) -> str:
+        calls.append((root, arguments))
+        return _task7_worktree_porcelain(repository, linked)
+
+    monkeypatch.setattr(cli.workflow, "_git", fake_git)
+
+    assert cli._canonical_agent_staging_root(repository, commit_a) == (
+        staging_base / commit_a
+    )
+    assert calls == [(repository, ("worktree", "list", "--porcelain"))]
+    assert not staging_base.exists()
+
+
+@pytest.mark.parametrize("symlink_scope", ("parent", "final"))
+def test_task7_staging_rejects_existing_symlink_components_without_mutation(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    symlink_scope: str,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    staging_base = tmp_path / "home/.codex/private/hermes-blind-v2"
+    commit_a = "a" * 40
+    outside = tmp_path / "outside"
+    outside.mkdir()
+
+    if symlink_scope == "parent":
+        staging_base.parent.parent.mkdir(parents=True)
+        staging_base.parent.symlink_to(outside, target_is_directory=True)
+    else:
+        staging_base.mkdir(parents=True)
+        outside_target = outside / "staging-target"
+        outside_target.mkdir()
+        (staging_base / commit_a).symlink_to(
+            outside_target,
+            target_is_directory=True,
+        )
+
+    monkeypatch.setattr(cli, "AGENT_STAGING_ROOT", staging_base)
+    monkeypatch.delenv("HERMES_BLIND_V2_ROOT", raising=False)
+    monkeypatch.setattr(
+        cli.workflow,
+        "_git",
+        lambda _root, *_arguments: _task7_worktree_porcelain(repository),
+    )
+
+    before = sorted(path.relative_to(outside) for path in outside.rglob("*"))
+    with pytest.raises(ValueError, match="symlink"):
+        cli._canonical_agent_staging_root(repository, commit_a)
+    after = sorted(path.relative_to(outside) for path in outside.rglob("*"))
+
+    assert after == before
+
+
+def test_task7_staging_rejects_path_inside_any_linked_worktree(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    linked = tmp_path / "linked-worktree"
+    repository.mkdir()
+    linked.mkdir()
+    staging_base = linked / ".codex/private/hermes-blind-v2"
+
+    monkeypatch.setattr(cli, "AGENT_STAGING_ROOT", staging_base)
+    monkeypatch.delenv("HERMES_BLIND_V2_ROOT", raising=False)
+    monkeypatch.setattr(
+        cli.workflow,
+        "_git",
+        lambda _root, *_arguments: _task7_worktree_porcelain(repository, linked),
+    )
+
+    with pytest.raises(ValueError, match="linked Git worktree"):
+        cli._canonical_agent_staging_root(repository, "a" * 40)
+
+    assert not staging_base.exists()
 
 
 def _task7_context(tmp_path: Path) -> dict[str, Any]:
@@ -11809,7 +12064,11 @@ def test_task7_freeze_handler_uses_validated_pack_and_fixed_output(
     monkeypatch.setattr(
         cli.workflow,
         "write_dataset_freeze",
-        lambda value, output_dir: writes.append((value, output_dir)),
+        lambda value, output_dir, *, repository_root: (
+            writes.append((value, output_dir))
+            if repository_root == repository
+            else pytest.fail("freeze repository authority drift")
+        ),
     )
 
     assert cli._freeze(SimpleNamespace()) == 0

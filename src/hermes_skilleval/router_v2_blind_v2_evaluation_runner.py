@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
 import math
@@ -88,7 +87,6 @@ EVALUATION_OUTPUT_FILENAMES = (
     "lineage-manifest.json",
 )
 SMOKE_RECEIPT_ROOT = Path("/tmp/hermes-router-v2-blind-v2-smoke-receipts")
-AUTHORING_TEMPLATE_ROOT = Path("/tmp/hermes-blind-v2-authoring-pack")
 PREREGISTRATION_PARENT_COMMIT = "8f6a21e53c1363ee18ea6d6e3db1f4b3805ff552"
 HISTORICAL_HUMAN_COMMIT_A = "09ba4104a147a2f740ef69283c850f40e78a0b15"
 EVALUATOR_SOURCE_PATHS = (
@@ -336,42 +334,6 @@ REVIEWER_RESPONSE_SCHEMA = {
             }
         },
     ],
-}
-LEGACY_REQUIRED_HUMAN_PACK_FILES = (
-    "blind-v2-authored.csv",
-    "blind-v2-independent-review.csv",
-    "reviewer-metadata.json",
-)
-AUTHORED_FIELDS = (
-    "task_id",
-    "prompt_text",
-    "semantic_family_id",
-    "gold_skill_id",
-    "negative_skill_id",
-    "author_id",
-    "author_reason",
-    "language",
-    "source_type",
-)
-REVIEW_FIELDS = (
-    "task_id",
-    "prompt_text_sha256",
-    "reviewer_id",
-    "review_decision",
-    "reviewed_gold_skill_id",
-    "reviewed_negative_skill_id",
-    "review_confidence",
-    "review_reason",
-)
-REVIEW_DECISIONS = {
-    "ACCEPT",
-    "REJECT_AMBIGUOUS",
-    "REJECT_WRONG_GOLD",
-    "REJECT_WRONG_NEGATIVE",
-    "REJECT_NOT_CONFUSABLE",
-    "REJECT_NEAR_DUPLICATE",
-    "REJECT_UNNATURAL",
-    "REJECT_LABEL_LEAKAGE",
 }
 _LEAKAGE_MARKERS = (
     "gold skill",
@@ -2437,27 +2399,6 @@ def validate_commit_b_repository(
         "origin_main": origin_main,
         "changed_files": sorted(changed),
     }
-
-
-def _read_csv(
-    path: Path, required_fields: tuple[str, ...]
-) -> tuple[bytes, list[dict[str, str]]]:
-    payload = path.read_bytes()
-    try:
-        text = payload.decode("utf-8", errors="strict")
-    except UnicodeDecodeError as exc:
-        raise ValueError(f"{path.name} must be UTF-8") from exc
-    reader = csv.DictReader(text.splitlines())
-    fields = reader.fieldnames
-    if fields is None:
-        raise ValueError(f"{path.name} is missing a header")
-    _require(len(fields) == len(set(fields)), f"{path.name} contains duplicate keys")
-    _require(
-        set(required_fields).issubset(fields),
-        f"{path.name} schema is missing required fields",
-    )
-    rows = [dict(row) for row in reader]
-    return payload, rows
 
 
 def _outside_repository(root: Path, repository_root: Path) -> None:
@@ -5223,317 +5164,6 @@ def validate_agent_pack(
         )
 
 
-def _validate_legacy_human_pack(
-    root: Path | str,
-    *,
-    repository_root: Path | str,
-    canonical_skills: list[dict[str, Any]],
-    train_prompts: list[str],
-    pilot_prompts: list[str],
-    train_family_ids: set[str],
-    pilot_family_ids: set[str],
-    first_read_timestamp: str,
-    phase16_prompts: list[str] | None = None,
-) -> dict[str, Any]:
-    pack_root = Path(root)
-    _outside_repository(pack_root, Path(repository_root))
-    for filename in LEGACY_REQUIRED_HUMAN_PACK_FILES:
-        _require(
-            (pack_root / filename).is_file(),
-            f"missing required human pack file: {filename}",
-        )
-
-    authored_bytes, authored_rows = _read_csv(
-        pack_root / LEGACY_REQUIRED_HUMAN_PACK_FILES[0], AUTHORED_FIELDS
-    )
-    review_bytes, review_rows = _read_csv(
-        pack_root / LEGACY_REQUIRED_HUMAN_PACK_FILES[1], REVIEW_FIELDS
-    )
-    metadata_bytes = (pack_root / LEGACY_REQUIRED_HUMAN_PACK_FILES[2]).read_bytes()
-    metadata = _json_no_duplicate_keys(
-        metadata_bytes, LEGACY_REQUIRED_HUMAN_PACK_FILES[2]
-    )
-
-    _require(
-        len(canonical_skills) == 16, "canonical skill index must contain 16 skills"
-    )
-    skill_ids = [row.get("id") for row in canonical_skills]
-    _require(
-        all(type(skill_id) is str and skill_id for skill_id in skill_ids)
-        and len(set(skill_ids)) == 16,
-        "canonical skill ids must be unique",
-    )
-    canonical_ids = {cast(str, skill_id) for skill_id in skill_ids}
-    normalized_phase16_prompts = {
-        _normalize(prompt) for prompt in (phase16_prompts or [])
-    }
-    leakage_terms = {
-        _normalize(cast(str, row[field]))
-        for row in canonical_skills
-        for field in ("id", "name")
-        if type(row.get(field)) is str and row[field]
-    }
-
-    authored_by_id: dict[str, dict[str, Any]] = {}
-    prompt_bytes_seen: set[bytes] = set()
-    normalized_prompts_seen: set[str] = set()
-    family_ids_seen: set[str] = set()
-    for raw in authored_rows:
-        _require(
-            all(
-                raw.get(field, "").strip()
-                for field in AUTHORED_FIELDS
-                if field != "negative_skill_id"
-            ),
-            "authored row contains empty required field",
-        )
-        task_id = raw["task_id"].strip()
-        _require(task_id not in authored_by_id, "task ids must be unique")
-        prompt = raw["prompt_text"]
-        prompt_bytes = prompt.encode("utf-8")
-        normalized = _normalize(prompt)
-        family = raw["semantic_family_id"].strip()
-        gold = raw["gold_skill_id"].strip()
-        negative = raw["negative_skill_id"].strip() or None
-        _require(prompt_bytes not in prompt_bytes_seen, "prompt bytes must be unique")
-        _require(
-            normalized not in normalized_prompts_seen,
-            "normalized prompts must be unique",
-        )
-        _require(
-            normalized not in normalized_phase16_prompts,
-            "Phase 16 prompt overlap detected",
-        )
-        _require(family not in family_ids_seen, "semantic families must be unique")
-        _require(gold in canonical_ids, "gold skill must be canonical")
-        _require(
-            negative is None or negative in canonical_ids,
-            "negative skill must be canonical",
-        )
-        _require(negative != gold, "negative skill must differ from gold")
-        _require(
-            raw["source_type"] == "HUMAN_AUTHORED", "source_type must be HUMAN_AUTHORED"
-        )
-        normalized_with_spaces = f" {normalized.replace('-', ' ')} "
-        _require(
-            not any(
-                f" {marker} " in normalized_with_spaces for marker in _LEAKAGE_MARKERS
-            ),
-            "prompt contains label leakage",
-        )
-        _require(
-            not any(marker in normalized for marker in _PROTECTED_MARKERS),
-            "prompt contains protected old-data marker",
-        )
-        for term in leakage_terms:
-            expanded = term.replace("-", " ")
-            _require(
-                f" {expanded} " not in normalized_with_spaces,
-                "prompt contains a skill id or name",
-            )
-        authored_by_id[task_id] = {
-            "task_id": task_id,
-            "prompt_text": prompt,
-            "prompt_text_sha256": _sha256_bytes(prompt_bytes),
-            "semantic_family_id": family,
-            "gold_skill_id": gold,
-            "negative_skill_id": negative,
-            "author_id": raw["author_id"].strip(),
-            "author_reason": raw["author_reason"].strip(),
-            "language": raw["language"].strip(),
-            "source_type": raw["source_type"],
-        }
-        prompt_bytes_seen.add(prompt_bytes)
-        normalized_prompts_seen.add(normalized)
-        family_ids_seen.add(family)
-
-    review_by_id: dict[str, dict[str, str]] = {}
-    for row in review_rows:
-        _require(
-            all(
-                row.get(field, "").strip()
-                for field in REVIEW_FIELDS
-                if field != "reviewed_negative_skill_id"
-            ),
-            "review row contains empty required field",
-        )
-        task_id = row["task_id"].strip()
-        _require(task_id not in review_by_id, "review task ids must be unique")
-        _require(task_id in authored_by_id, "review references unknown task")
-        _require(row["review_decision"] in REVIEW_DECISIONS, "review decision mismatch")
-        _require(
-            row["prompt_text_sha256"] == authored_by_id[task_id]["prompt_text_sha256"],
-            "review prompt hash mismatch",
-        )
-        _require(
-            row["reviewer_id"].strip() != authored_by_id[task_id]["author_id"],
-            "author and reviewer must differ",
-        )
-        review_by_id[task_id] = {key: value.strip() for key, value in row.items()}
-
-    _require(
-        set(review_by_id) == set(authored_by_id), "every authored task must be reviewed"
-    )
-    accepted = []
-    excluded = 0
-    for task_id, authored in authored_by_id.items():
-        review = review_by_id[task_id]
-        if review["review_decision"] != "ACCEPT":
-            excluded += 1
-            continue
-        reviewed_negative = review["reviewed_negative_skill_id"] or None
-        _require(
-            review["reviewed_gold_skill_id"] == authored["gold_skill_id"]
-            and reviewed_negative == authored["negative_skill_id"],
-            "accepted review must exactly agree with author labels",
-        )
-        accepted.append(
-            {
-                **authored,
-                "reviewer_id": review["reviewer_id"],
-                "review_confidence": review["review_confidence"],
-                "review_reason": review["review_reason"],
-            }
-        )
-
-    _require(len(accepted) == 64, "human agreement must leave exactly 64 tasks")
-    negative_rows = [row for row in accepted if row["negative_skill_id"] is not None]
-    _require(
-        len(negative_rows) == 48,
-        "human agreement must leave exactly 48 negative-labeled tasks",
-    )
-    gold_counts = Counter(row["gold_skill_id"] for row in accepted)
-    _require(
-        set(gold_counts) == canonical_ids and set(gold_counts.values()) == {4},
-        "gold distribution must be 16 skills x 4 tasks",
-    )
-    negative_by_gold = Counter(row["gold_skill_id"] for row in negative_rows)
-    _require(
-        set(negative_by_gold) == canonical_ids
-        and set(negative_by_gold.values()) == {3},
-        "each gold skill must have three negative-labeled tasks",
-    )
-    target_counts = Counter(row["negative_skill_id"] for row in negative_rows)
-    _require(len(target_counts) >= 12, "negative targets must cover at least 12 skills")
-    _require(
-        max(target_counts.values(), default=0) <= 6,
-        "negative target count may not exceed six",
-    )
-    _require(
-        len({row["semantic_family_id"] for row in accepted}) == 64,
-        "final pack must contain 64 semantic families",
-    )
-
-    train_normalized = {_normalize(prompt) for prompt in train_prompts}
-    pilot_normalized = {_normalize(prompt) for prompt in pilot_prompts}
-    for row in accepted:
-        normalized = _normalize(row["prompt_text"])
-        _require(normalized not in train_normalized, "train prompt overlap detected")
-        _require(
-            normalized not in pilot_normalized, "pilot-002 prompt overlap detected"
-        )
-        _require(
-            row["semantic_family_id"] not in train_family_ids,
-            "train family overlap detected",
-        )
-        _require(
-            row["semantic_family_id"] not in pilot_family_ids,
-            "pilot-002 family overlap detected",
-        )
-
-    author_ids = {row["author_id"] for row in accepted}
-    reviewer_ids = {row["reviewer_id"] for row in accepted}
-    _require(
-        author_ids.isdisjoint(reviewer_ids),
-        "author and reviewer identities must be disjoint",
-    )
-    _require(
-        metadata.get("authors_and_reviewers_are_different_people") is True,
-        "metadata must confirm different humans",
-    )
-    _require(
-        metadata.get("reviewer_saw_model_rankings") is False,
-        "reviewer must not see model rankings",
-    )
-    _require(
-        metadata.get("reviewer_saw_pilot_002_task_level_results") is False,
-        "reviewer must not see pilot-002 task-level results",
-    )
-    _require(
-        metadata.get("human_author_count") == len(author_ids),
-        "human author count mismatch",
-    )
-    _require(
-        metadata.get("independent_human_reviewer_count") == len(reviewer_ids),
-        "human reviewer count mismatch",
-    )
-    for field in ("review_date", "reviewer_qualification", "dataset_license"):
-        _require(
-            type(metadata.get(field)) is str and bool(metadata[field].strip()),
-            f"metadata {field} is required",
-        )
-    for field in (
-        "reviewer_used_ai_assistance",
-        "publication_permission",
-        "prompts_may_be_public_after_evaluation",
-    ):
-        _require(type(metadata.get(field)) is bool, f"metadata {field} must be boolean")
-    _require(
-        metadata.get("author_ids") == sorted(author_ids), "metadata author ids mismatch"
-    )
-    _require(
-        metadata.get("reviewer_ids") == sorted(reviewer_ids),
-        "metadata reviewer ids mismatch",
-    )
-
-    accepted.sort(key=lambda row: row["task_id"])
-    source_hashes = {
-        LEGACY_REQUIRED_HUMAN_PACK_FILES[0]: _sha256_bytes(authored_bytes),
-        LEGACY_REQUIRED_HUMAN_PACK_FILES[1]: _sha256_bytes(review_bytes),
-        LEGACY_REQUIRED_HUMAN_PACK_FILES[2]: _sha256_bytes(metadata_bytes),
-    }
-    return {
-        "schema_version": "router-v2-blind-v2-human-pack-validation-v1",
-        "status": "VALID",
-        "task_count": 64,
-        "negative_labeled_task_count": 48,
-        "family_count": 64,
-        "gold_distribution": dict(sorted(gold_counts.items())),
-        "negative_distribution": dict(
-            sorted((str(key), value) for key, value in target_counts.items())
-        ),
-        "negative_target_coverage_count": len(target_counts),
-        "human_author_count": len(author_ids),
-        "independent_human_reviewer_count": len(reviewer_ids),
-        "exact_review_agreement_count": len(accepted),
-        "excluded_candidate_count": excluded,
-        "ai_assistance_disclosure": metadata["reviewer_used_ai_assistance"],
-        "publication_permission": metadata["publication_permission"],
-        "prompts_may_be_public_after_evaluation": metadata[
-            "prompts_may_be_public_after_evaluation"
-        ],
-        "dataset_license": metadata["dataset_license"],
-        "review_date": metadata["review_date"],
-        "reviewer_qualification": metadata["reviewer_qualification"],
-        "source_file_sha256": source_hashes,
-        "first_read_timestamp": first_read_timestamp,
-        "duplicate_checks": {
-            "task_ids_unique": True,
-            "prompt_bytes_unique": True,
-            "nfkc_casefold_prompts_unique": True,
-            "semantic_families_unique": True,
-        },
-        "train_overlap_checks": {"prompt_overlap_count": 0, "family_overlap_count": 0},
-        "pilot_002_overlap_checks": {
-            "prompt_overlap_count": 0,
-            "family_overlap_count": 0,
-        },
-        "phase16_overlap_checks": {"prompt_overlap_count": 0},
-        "model_scores_observed": False,
-        "tasks": accepted,
-    }
-
-
 def _validated_agent_lineage_evidence(
     validation: dict[str, Any],
 ) -> tuple[
@@ -6911,56 +6541,27 @@ def validate_frozen_dataset_documents(
     return cast(list[dict[str, Any]], validation["tasks"])
 
 
-def write_dataset_freeze(documents: dict[str, bytes], output_dir: Path | str) -> None:
-    root = Path(output_dir)
+def write_dataset_freeze(
+    documents: dict[str, bytes],
+    output_dir: Path | str,
+    *,
+    repository_root: Path | str,
+) -> None:
+    root = _canonical_repository_destination(
+        Path(output_dir),
+        Path(repository_root),
+        DATASET_FREEZE_RELATIVE,
+        label="dataset freeze",
+    )
+    _require(
+        set(documents) == set(DATASET_FREEZE_FILENAMES),
+        "frozen dataset document set mismatch",
+    )
     root.mkdir(mode=0o700, parents=True, exist_ok=False)
-    for name in (
-        "blind-v2-tasks.jsonl",
-        "blind-v2-review-summary.json",
-        "blind-v2-manifest.json",
-    ):
+    for name in DATASET_FREEZE_FILENAMES:
         payload = documents[name]
         with (root / name).open("xb") as handle:
             handle.write(payload)
-
-
-def write_authoring_templates() -> list[Path]:
-    root = AUTHORING_TEMPLATE_ROOT
-    root.mkdir(mode=0o700, parents=True, exist_ok=True)
-    authored = root / "blind-v2-authored.template.csv"
-    review = root / "blind-v2-independent-review.template.csv"
-    metadata = root / "reviewer-metadata.template.json"
-    guide = root / "blind-v2-human-authoring-guide.md"
-    authored.write_text(",".join(AUTHORED_FIELDS) + "\n", encoding="utf-8")
-    review.write_text(",".join(REVIEW_FIELDS) + "\n", encoding="utf-8")
-    metadata.write_bytes(
-        _canonical_json_bytes(
-            {
-                "author_ids": [],
-                "reviewer_ids": [],
-                "human_author_count": 0,
-                "independent_human_reviewer_count": 0,
-                "authors_and_reviewers_are_different_people": False,
-                "review_date": "",
-                "reviewer_saw_model_rankings": False,
-                "reviewer_saw_pilot_002_task_level_results": False,
-                "reviewer_used_ai_assistance": False,
-                "reviewer_qualification": "",
-                "dataset_license": "",
-                "publication_permission": False,
-                "prompts_may_be_public_after_evaluation": False,
-            }
-        )
-    )
-    guide.write_text(
-        "# Router V2 blind-v2 human authoring guide\n\n"
-        "Humans must author candidate tasks and a different human must independently "
-        "review labels. Do not include model scores, rankings, skill ids/names, benchmark "
-        "metadata, old prompts, or AI-generated replacement rows. Freeze exactly 64 "
-        "accepted tasks, 48 negative labels, 16 skills x 4 tasks, and 64 disjoint families.\n",
-        encoding="utf-8",
-    )
-    return [authored, review, metadata, guide]
 
 
 def _manifest_rows_hash(rows: list[dict[str, Any]]) -> str:
@@ -6992,6 +6593,37 @@ def _verify_model_files(
             _sha256_file(target) == row["sha256"],
             f"model file hash mismatch: {relative}",
         )
+
+
+def _assert_no_existing_symlink_components(path: Path, *, label: str) -> None:
+    _require(path.is_absolute(), f"{label} must be absolute")
+    current = Path(path.anchor)
+    for component in path.parts[1:]:
+        current /= component
+        _require(
+            not current.is_symlink(),
+            f"{label} path components must not be symlinks",
+        )
+
+
+def _canonical_repository_destination(
+    requested: Path,
+    repository_root: Path,
+    relative: Path,
+    *,
+    label: str,
+) -> Path:
+    repository = repository_root.resolve(strict=True)
+    _require(repository.is_dir(), "repository root must be a directory")
+    canonical = repository / relative
+    _require(
+        requested.is_absolute() and requested == canonical,
+        f"{label} must use the exact canonical repository path",
+    )
+    _assert_no_existing_symlink_components(requested, label=label)
+    resolved = requested.resolve(strict=False)
+    _require(resolved.is_relative_to(repository), f"{label} escapes repository")
+    return requested
 
 
 def _safe_repository_regular_file(
@@ -7382,117 +7014,6 @@ def validate_preregistration_authority(
         "pilot_manifest_sha256": pilot_binding["sha256"],
         "preregistration_file_sha256": _sha256_file(preregistration_file),
         "model_files_verified": verify_model_files,
-    }
-
-
-def load_preregistered_human_validation_inputs(
-    preregistration_path: Path | str, *, repository_root: Path | str
-) -> dict[str, Any]:
-    repository = Path(repository_root).resolve(strict=True)
-    preregistration_file = Path(preregistration_path).resolve(strict=True)
-    preregistration = _json_no_duplicate_keys(
-        preregistration_file.read_bytes(), "preregistration"
-    )
-    frozen = cast(dict[str, Any], preregistration["frozen_inputs"])
-    skills_binding = cast(dict[str, Any], preregistration["skill_index"])
-    skills_file = _repository_file(
-        repository, skills_binding["path"], label="skill index"
-    )
-    skills_payload = skills_file.read_bytes()
-    _require(
-        _sha256_bytes(skills_payload) == skills_binding["sha256"],
-        "skill index hash mismatch",
-    )
-    skills = _json_no_duplicate_keys(
-        b'{"skills":' + skills_payload + b"}",
-        "skill index wrapper",
-    )["skills"]
-    _require(type(skills) is list, "skill index must be a JSON array")
-
-    accepted_binding = cast(dict[str, Any], frozen["accepted_pairs"])
-    accepted_payload = _repository_file(
-        repository, accepted_binding["path"], label="accepted pairs"
-    ).read_bytes()
-    _require(
-        _sha256_bytes(accepted_payload) == accepted_binding["sha256"],
-        "accepted pairs hash mismatch",
-    )
-    accepted_rows = _jsonl_no_duplicate_keys(
-        accepted_payload,
-        "accepted pairs",
-    )
-    heldout_binding = cast(dict[str, Any], frozen["heldout_labels"])
-    heldout_payload = _repository_file(
-        repository, heldout_binding["path"], label="heldout labels"
-    ).read_bytes()
-    _require(
-        _sha256_bytes(heldout_payload) == heldout_binding["sha256"],
-        "heldout labels hash mismatch",
-    )
-    heldout_rows = _jsonl_no_duplicate_keys(
-        heldout_payload,
-        "heldout labels",
-    )
-    phase16_bindings = cast(list[Any], preregistration["old_phase16_prompt_files"])
-    phase16_files = [
-        _repository_file(
-            repository,
-            cast(dict[str, Any], raw_binding)["path"],
-            label="old Phase 16 prompt",
-        )
-        for raw_binding in phase16_bindings
-    ]
-    for raw_binding, phase16_file in zip(phase16_bindings, phase16_files, strict=True):
-        _require(
-            _sha256_file(phase16_file) == cast(dict[str, Any], raw_binding)["sha256"],
-            "old Phase 16 prompt hash mismatch",
-        )
-    phase16_prompts = [path.read_text(encoding="utf-8") for path in phase16_files]
-    return {
-        "preregistration": preregistration,
-        "canonical_skills": cast(list[dict[str, Any]], skills),
-        "train_prompts": [str(row["query_text"]) for row in accepted_rows],
-        "pilot_prompts": [str(row["query_text"]) for row in heldout_rows],
-        "train_family_ids": {
-            str(row["positive_source_record_id"]) for row in accepted_rows
-        },
-        "pilot_family_ids": {
-            str(row["positive_source_record_id"]) for row in heldout_rows
-        },
-        "phase16_prompts": phase16_prompts,
-        "construction_input_bindings": {
-            "canonical_skill_source": {
-                "path": skills_binding["path"],
-                "file_sha256": skills_binding["sha256"],
-                "source_bytes_hex": skills_payload.hex(),
-            },
-            "protected_scope_sources": {
-                "train": [
-                    {
-                        "path": accepted_binding["path"],
-                        "file_sha256": accepted_binding["sha256"],
-                        "source_bytes_hex": accepted_payload.hex(),
-                    }
-                ],
-                "pilot-002": [
-                    {
-                        "path": heldout_binding["path"],
-                        "file_sha256": heldout_binding["sha256"],
-                        "source_bytes_hex": heldout_payload.hex(),
-                    }
-                ],
-                "phase16": [
-                    {
-                        "path": cast(dict[str, Any], binding)["path"],
-                        "file_sha256": cast(dict[str, Any], binding)["sha256"],
-                        "source_bytes_hex": phase16_file.read_bytes().hex(),
-                    }
-                    for binding, phase16_file in zip(
-                        phase16_bindings, phase16_files, strict=True
-                    )
-                ],
-            },
-        },
     }
 
 
@@ -9630,20 +9151,20 @@ def build_attempt_terminal_document(artifact_count: int) -> dict[str, Any]:
 def _assert_output_safe(
     output_root: Path, repository_root: Path, protected_roots: list[Path]
 ) -> Path:
-    repository = repository_root.resolve(strict=True)
-    resolved = output_root.resolve(strict=False)
-    canonical = (repository / FINAL_NAMESPACE_RELATIVE).resolve(strict=False)
-    _require(
-        resolved == canonical,
-        "evaluation output must use the canonical namespace",
+    output = _canonical_repository_destination(
+        output_root,
+        repository_root,
+        FINAL_NAMESPACE_RELATIVE,
+        label="evaluation output canonical namespace",
     )
+    resolved = output.resolve(strict=False)
     for root in protected_roots:
         protected = root.resolve(strict=False)
         _require(
             not resolved.is_relative_to(protected),
             "evaluation output may not be inside a protected root",
         )
-    return resolved
+    return output
 
 
 def run_single_attempt(
@@ -9696,17 +9217,3 @@ def run_single_attempt(
         if not terminal_path.exists():
             _write_exclusive_json(terminal_path, terminal)
         raise
-
-
-def human_pack_root_from_environment(repository_root: Path | str) -> Path | None:
-    value = os.environ.get("HERMES_BLIND_V2_ROOT")
-    if not value:
-        return None
-    root = Path(value)
-    _require(root.is_absolute(), "HERMES_BLIND_V2_ROOT must be absolute")
-    if not root.exists() or any(
-        not (root / name).is_file() for name in LEGACY_REQUIRED_HUMAN_PACK_FILES
-    ):
-        return None
-    _outside_repository(root, Path(repository_root))
-    return root
