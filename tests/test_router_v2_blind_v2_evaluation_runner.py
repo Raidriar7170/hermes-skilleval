@@ -10572,6 +10572,230 @@ def test_task7_round_one_requests_derive_every_authority_from_runner(
     assert all(call["repository_root"] == context["repository"] for call in calls)
 
 
+def test_task7_agent_config_status_handler_reports_validated_receipt(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    context = _task7_context(tmp_path)
+    context["agent_config_receipt"] = {"receipt_sha256": "e" * 64}
+    calls: list[bool] = []
+
+    def context_factory(*, require_config_smoke: bool) -> dict[str, Any]:
+        calls.append(require_config_smoke)
+        return context
+
+    monkeypatch.setattr(cli, "_commit_a_context", context_factory)
+
+    assert cli._agent_config_status(SimpleNamespace()) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert calls == [True]
+    assert output == {
+        "status": "AGENT_BLIND_V2_READY_FOR_GENERATION",
+        "commit_a": "a" * 40,
+        "staging_root": str(context["staging_root"]),
+        "agent_config_receipt_sha256": "e" * 64,
+    }
+
+
+def test_task7_generation_loader_rejects_self_authorized_round_one_quota(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, round_one_negative_per_skill=11)
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+
+    with pytest.raises(ValueError, match="sealed round-1 request authority"):
+        cli._generation_candidates(context, stage="round-1")
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (("generation_round", 2), ("gold_skill_id", "test-skill-01")),
+)
+def test_task7_generation_loader_binds_top_level_identity_to_sealed_request(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    field: str,
+    value: Any,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    generation_path = pack / "blind-v2-generation.jsonl"
+    rows = _read_jsonl(generation_path)
+    rows[0][field] = value
+    generation_path.write_bytes(_jsonl_bytes(rows))
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+
+    with pytest.raises(ValueError, match="generation row sealed identity mismatch"):
+        cli._generation_candidates(context, stage="round-1")
+
+
+def test_task7_generation_loader_rejects_round_two_quota_not_equal_to_deficit(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+        round_two_deficit_multiplier=1,
+    )
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+    monkeypatch.setattr(
+        cli,
+        "_validated_contamination_clean_ids",
+        lambda _context, candidates: {
+            cast(str, candidate["candidate_id"]) for candidate in candidates
+        },
+    )
+
+    with pytest.raises(ValueError, match="sealed round-2 request authority"):
+        cli._generation_candidates(context, stage="round-2")
+
+
+def test_task7_generation_loader_rejects_repeated_round_two_record(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+    generation_path = pack / "blind-v2-generation.jsonl"
+    rows = _read_jsonl(generation_path)
+    rows.append(deepcopy(rows[-1]))
+    generation_path.write_bytes(_jsonl_bytes(rows))
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    monkeypatch.setattr(
+        cli,
+        "_validated_contamination_clean_ids",
+        lambda _context, candidates: {
+            cast(str, candidate["candidate_id"]) for candidate in candidates
+        },
+    )
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+
+    with pytest.raises(ValueError, match="sealed round-2 request authority duplicated"):
+        cli._generation_candidates(context, stage="round-2")
+
+
+def test_task7_round_two_handler_refuses_a_second_request(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+
+    with pytest.raises(ValueError, match="round 2 has already been generated"):
+        cli._request_round_2(SimpleNamespace())
+
+
 def test_task7_review_requests_derive_candidates_and_schedule_for_selected_stage_role(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -10598,6 +10822,11 @@ def test_task7_review_requests_derive_candidates_and_schedule_for_selected_stage
             if active_context is context and stage == "round-2"
             else pytest.fail("review candidate authority drift")
         ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "_validate_existing_review_sequences",
+        lambda active_context, *, stage: None,
     )
     monkeypatch.setattr(
         cli.workflow,
@@ -10628,6 +10857,65 @@ def test_task7_review_requests_derive_candidates_and_schedule_for_selected_stage
         "2" * 24,
     ]
     assert roles == ["reviewer_b", "reviewer_b"]
+
+
+def test_task7_round_two_review_request_accepts_valid_existing_other_role_sequence(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_validated_contamination_clean_ids",
+        lambda _context, candidates: {
+            cast(str, candidate["candidate_id"]) for candidate in candidates
+        },
+    )
+
+    def build_generator_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(
+        cli.workflow, "build_generator_request", build_generator_request
+    )
+
+    assert (
+        cli._request_reviews(SimpleNamespace(stage="round-2", role="reviewer_b")) == 0
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["stage"] == "round-2"
+    assert output["role"] == "reviewer_b"
+    assert output["request_count"] == 2
 
 
 def test_task7_review_candidates_replay_frozen_contamination_authority(
@@ -10791,6 +11079,93 @@ def test_task7_round_two_requests_use_only_post_pipeline_deficits(
     ]
 
 
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    (
+        ("unknown-review-candidate", "review references unknown candidate"),
+        ("global-session-reuse", "globally unique"),
+        ("retry-after-success", "retry ordering"),
+        ("review-schedule-reversed", "ledger schedule mismatch"),
+    ),
+)
+def test_task7_round_two_handler_rejects_unvalidated_invocation_sequences(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    mutation: str,
+    message: str,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+    )
+    generation_path = pack / "blind-v2-generation.jsonl"
+    review_a_path = pack / "blind-v2-review-a.jsonl"
+    generation_rows = _read_jsonl(generation_path)
+    review_a_rows = _read_jsonl(review_a_path)
+    if mutation == "unknown-review-candidate":
+        unknown = deepcopy(review_a_rows[0])
+        unknown["candidate_id"] = "f" * 24
+        review_a_rows.append(unknown)
+    elif mutation == "global-session-reuse":
+        generator_session = generation_rows[0]["invocations"][0]["envelope"][
+            "session_id"
+        ]
+        review_a_rows[0]["invocations"][0]["envelope"]["session_id"] = generator_session
+    elif mutation == "retry-after-success":
+        review_a_rows[0]["invocations"].append(
+            _pack_transport_failure_invocation(
+                review_a_rows[0]["request"],
+                session_id="reviewer-a-invalid-retry-order",
+            )
+        )
+    elif mutation == "review-schedule-reversed":
+        review_a_rows.reverse()
+    else:
+        pytest.fail(f"unhandled mutation: {mutation}")
+    generation_path.write_bytes(_jsonl_bytes(generation_rows))
+    review_a_path.write_bytes(_jsonl_bytes(review_a_rows))
+
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_validated_contamination_clean_ids",
+        lambda _context, candidates: {
+            cast(str, candidate["candidate_id"]) for candidate in candidates
+        },
+    )
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+
+    with pytest.raises(ValueError, match=message):
+        cli._request_round_2(SimpleNamespace())
+
+
 def test_task7_model_smoke_uses_task6_public_api_without_receipt_builder(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -10833,3 +11208,241 @@ def test_task7_model_smoke_uses_task6_public_api_without_receipt_builder(
 
     assert calls == [(repository / runner.PILOT_MANIFEST_RELATIVE, repository)]
     assert output["receipt_path"] == str(tmp_path / "receipt.json")
+
+
+def test_task7_pack_status_handler_reports_only_validated_pack_summary(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    context = _task7_context(tmp_path)
+    validation = {
+        "status": "VALID",
+        "task_count": 128,
+        "negative_labeled_task_count": 96,
+        "family_count": 128,
+        "model_scores_observed": False,
+    }
+    monkeypatch.setattr(
+        cli,
+        "_validated_pack_context",
+        lambda: (context, validation, object()),
+    )
+
+    assert cli._pack_status(SimpleNamespace()) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert output == {
+        "status": "VALID",
+        "research_conclusion": None,
+        "commit_a": "a" * 40,
+        "task_count": 128,
+        "negative_labeled_task_count": 96,
+        "family_count": 128,
+        "deficits": {},
+        "model_scores_observed": False,
+    }
+
+
+def test_task7_freeze_handler_uses_validated_pack_and_fixed_output(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    context = _task7_context(tmp_path)
+    context["repository"] = repository
+    validation = {
+        "status": "VALID",
+        "task_count": 128,
+        "negative_labeled_task_count": 96,
+        "family_count": 128,
+    }
+    similarity = object()
+    documents = {"sealed": b"bytes"}
+    writes: list[tuple[dict[str, bytes], Path]] = []
+    monkeypatch.setattr(
+        cli,
+        "_validated_pack_context",
+        lambda: (context, validation, similarity),
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "build_dataset_freeze_documents",
+        lambda value, *, commit_a, semantic_similarity: (
+            documents
+            if value is validation
+            and commit_a == "a" * 40
+            and semantic_similarity is similarity
+            else pytest.fail("freeze authority drift")
+        ),
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "write_dataset_freeze",
+        lambda value, output_dir: writes.append((value, output_dir)),
+    )
+
+    assert cli._freeze(SimpleNamespace()) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    expected_output = repository / runner.DATASET_FREEZE_RELATIVE
+    assert writes == [(documents, expected_output)]
+    assert output["output_dir"] == str(expected_output)
+    assert output["task_count"] == 128
+    assert output["negative_labeled_task_count"] == 96
+    assert output["family_count"] == 128
+
+
+def test_task7_evaluate_preflights_commit_b_before_attempt_marker(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    preregistration_path = repository / runner.PREREGISTRATION_RELATIVE
+    preregistration_path.parent.mkdir(parents=True)
+    preregistration_path.write_bytes(b"{}\n")
+    context = {
+        "repository": repository,
+        "preregistration_path": preregistration_path,
+        "pilot_manifest_path": repository / runner.PILOT_MANIFEST_RELATIVE,
+        "frozen_documents": {
+            "blind-v2-tasks.jsonl": b'{"task_id":"bad"}\n',
+            "blind-v2-manifest.json": b"{}\n",
+            "blind-v2-review-summary.json": b"{}\n",
+        },
+        "canonical_skills": _skills(),
+        "commit_a": "a" * 40,
+        "commit_b": "b" * 40,
+        "frozen_manifest_file_sha256": "c" * 64,
+    }
+    attempt_called = False
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_b_context",
+        lambda *, require_model_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "validate_preregistration_authority",
+        lambda *args, **kwargs: {"preregistration_sha256": "d" * 64},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_json",
+        lambda _path: {"training_execution_root": str(tmp_path / "training")},
+    )
+    monkeypatch.setattr(cli, "_model_bindings", lambda _pilot: [{"model": "A/C"}])
+    monkeypatch.setattr(
+        cli.workflow,
+        "build_authoritative_lineage_bindings",
+        lambda *args, **kwargs: {"frozen": "bindings"},
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "_validated_pre_scoring_authority",
+        lambda **kwargs: (_ for _ in ()).throw(
+            ValueError("pre-scoring authority mismatch")
+        ),
+    )
+
+    def run_attempt(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        nonlocal attempt_called
+        attempt_called = True
+        pytest.fail("attempt runner must not be called before Commit B preflight")
+
+    monkeypatch.setattr(cli.workflow, "run_single_attempt", run_attempt)
+
+    with pytest.raises(ValueError, match="pre-scoring authority mismatch"):
+        cli._evaluate(SimpleNamespace())
+
+    assert attempt_called is False
+    assert not (repository / runner.FINAL_NAMESPACE_RELATIVE).exists()
+
+
+def test_task7_evaluate_handler_runs_attempt_only_after_side_effect_free_preflight(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    preregistration_path = repository / runner.PREREGISTRATION_RELATIVE
+    preregistration_path.parent.mkdir(parents=True)
+    preregistration_path.write_bytes(b"{}\n")
+    task = {"task_id": "1" * 24}
+    skills = _skills()
+    bindings = [{"model": "A/C"}]
+    frozen_bindings = {"frozen": "bindings"}
+    context = {
+        "repository": repository,
+        "preregistration_path": preregistration_path,
+        "pilot_manifest_path": repository / runner.PILOT_MANIFEST_RELATIVE,
+        "frozen_documents": {
+            "blind-v2-tasks.jsonl": _jsonl_bytes([task]),
+            "blind-v2-manifest.json": b"{}\n",
+            "blind-v2-review-summary.json": b"{}\n",
+        },
+        "canonical_skills": skills,
+        "commit_a": "a" * 40,
+        "commit_b": "b" * 40,
+        "frozen_manifest_file_sha256": "c" * 64,
+    }
+    order: list[str] = []
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_b_context",
+        lambda *, require_model_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "validate_preregistration_authority",
+        lambda *args, **kwargs: {"preregistration_sha256": "d" * 64},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_json",
+        lambda _path: {"training_execution_root": str(tmp_path / "training")},
+    )
+    monkeypatch.setattr(cli, "_model_bindings", lambda _pilot: bindings)
+    monkeypatch.setattr(
+        cli.workflow,
+        "build_authoritative_lineage_bindings",
+        lambda *args, **kwargs: frozen_bindings,
+    )
+
+    def preflight(
+        **kwargs: Any,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+        order.append("preflight")
+        assert kwargs["tasks"] == [task]
+        assert kwargs["skills"] == skills
+        assert kwargs["model_bindings"] == bindings
+        assert kwargs["frozen_bindings"] is frozen_bindings
+        assert kwargs["attempt_started_artifact"].endswith(b"\n")
+        return [task], skills, bindings
+
+    def run_attempt(
+        output_dir: Path,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        order.append("attempt")
+        assert output_dir == repository / runner.FINAL_NAMESPACE_RELATIVE
+        assert callable(kwargs["evaluate"])
+        return {"status": "TEST_ONLY_ATTEMPT_NOT_EXECUTED"}
+
+    monkeypatch.setattr(cli.workflow, "_validated_pre_scoring_authority", preflight)
+    monkeypatch.setattr(cli.workflow, "run_single_attempt", run_attempt)
+
+    assert cli._evaluate(SimpleNamespace()) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert order == ["preflight", "attempt"]
+    assert output == {"status": "TEST_ONLY_ATTEMPT_NOT_EXECUTED"}

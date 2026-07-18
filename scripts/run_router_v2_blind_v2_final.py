@@ -303,34 +303,58 @@ def _agent_pack_file(context: dict[str, Any], filename: str) -> Path:
 
 
 def _successful_response(
-    invocations: Any, *, request: dict[str, Any]
+    invocations: Any,
+    *,
+    request: dict[str, Any],
+    seen_session_ids: set[str] | None = None,
 ) -> dict[str, Any]:
-    _require(type(invocations) is list, "Agent invocations must be a list")
-    substantive = [
-        invocation
-        for invocation in cast(list[Any], invocations)
-        if type(invocation) is dict
-        and invocation.get("transport_failure") is False
-        and invocation.get("response_bytes_present") is True
-    ]
+    try:
+        response, _retry_count = workflow._validate_pack_invocations(
+            invocations, request=request
+        )
+    except workflow._AgentPackProtocolViolation as exc:
+        raise ValueError("Agent invocation retry ordering mismatch") from exc
+    identities = workflow._pack_invocation_identities(invocations)
     _require(
-        len(substantive) == 1,
+        type(invocations) is list and len(identities) == len(invocations),
+        "Agent invocation identity sequence mismatch",
+    )
+    if seen_session_ids is not None:
+        _require(
+            all(identity not in seen_session_ids for identity in identities),
+            "session/thread ids must be globally unique",
+        )
+        seen_session_ids.update(identities)
+    _require(
+        response is not None,
         "Agent request requires exactly one substantive response",
     )
-    envelope = substantive[0].get("envelope")
-    _require(type(envelope) is dict, "Agent substantive response envelope is missing")
-    return workflow.validate_agent_response_envelope(
-        cast(dict[str, Any], envelope), request=request
-    )
+    return cast(dict[str, Any], response)
 
 
 def _generation_candidates(
-    context: dict[str, Any], *, stage: str
+    context: dict[str, Any],
+    *,
+    stage: str,
+    seen_session_ids: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     round_number = {"round-1": 1, "round-2": 2}[stage]
     canonical_skills = cast(list[dict[str, Any]], context["canonical_skills"])
+    selection = workflow.SELECTION_AUTHORITY
+    active_session_ids = seen_session_ids if seen_session_ids is not None else set()
+    round_two_deficits = (
+        _round_one_post_pipeline_deficits(
+            context,
+            seen_session_ids=active_session_ids,
+            allow_later_round_reviews=True,
+        )
+        if round_number == 2
+        else {}
+    )
+    expected_round_two_skills = sorted(round_two_deficits)
     candidates: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
+    seen_request_skills: list[str] = []
     for index, row in enumerate(
         _jsonl(_agent_pack_file(context, "blind-v2-generation.jsonl")), start=1
     ):
@@ -341,18 +365,49 @@ def _generation_candidates(
         request = workflow.validate_agent_request(cast(dict[str, Any], row["request"]))
         _require(request["role"] == "generator", "generation request role mismatch")
         quota = cast(dict[str, Any], cast(dict[str, Any], request["input"])["quota"])
-        expected = workflow.build_generator_request(
-            canonical_skills,
-            gold_skill_id=cast(str, quota["gold_skill_id"]),
-            negative_quota=cast(int, quota["negative_quota"]),
-            positive_only_quota=cast(int, quota["positive_only_quota"]),
-            repository_root=cast(Path, context["repository"]),
-            round_number=cast(int, quota["round_number"]),
+        _require(
+            row["generation_round"] == quota["round_number"]
+            and row["gold_skill_id"] == quota["gold_skill_id"],
+            "generation row sealed identity mismatch",
         )
-        _require(request == expected, "generation request authority mismatch")
-        response = _successful_response(row["invocations"], request=request)
         if quota["round_number"] != round_number:
             continue
+        gold_skill_id = cast(str, quota["gold_skill_id"])
+        if round_number == 1:
+            negative_quota = cast(int, selection["round_1_negative_per_skill"])
+            positive_only_quota = cast(
+                int, selection["round_1_positive_only_per_skill"]
+            )
+            authority_label = "sealed round-1 request authority"
+        else:
+            _require(
+                gold_skill_id in round_two_deficits,
+                "sealed round-2 request authority mismatch",
+            )
+            multiplier = cast(int, selection["round_2_deficit_multiplier"])
+            counts = round_two_deficits[gold_skill_id]
+            negative_quota = counts["negative"] * multiplier
+            positive_only_quota = counts["positive_only"] * multiplier
+            authority_label = "sealed round-2 request authority"
+        expected = workflow.build_generator_request(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            repository_root=cast(Path, context["repository"]),
+            round_number=round_number,
+        )
+        _require(request == expected, f"{authority_label} mismatch")
+        _require(
+            gold_skill_id not in seen_request_skills,
+            f"{authority_label} duplicated",
+        )
+        seen_request_skills.append(gold_skill_id)
+        response = _successful_response(
+            row["invocations"],
+            request=request,
+            seen_session_ids=active_session_ids,
+        )
         response_sha256 = canonical_sha256(response)
         for generated in sorted(
             cast(list[dict[str, Any]], response["candidates"]),
@@ -382,6 +437,15 @@ def _generation_candidates(
                     "rationale": generated["rationale"],
                 }
             )
+    expected_request_skills = (
+        sorted(cast(str, skill["id"]) for skill in canonical_skills)
+        if round_number == 1
+        else expected_round_two_skills
+    )
+    _require(
+        seen_request_skills == expected_request_skills,
+        f"sealed {stage} request schedule mismatch",
+    )
     _require(bool(candidates), f"{stage} generator responses are missing")
     return candidates
 
@@ -428,6 +492,100 @@ def _review_candidates(context: dict[str, Any], *, stage: str) -> list[dict[str,
     return selected
 
 
+def _validate_existing_review_sequences(context: dict[str, Any], *, stage: str) -> None:
+    round_one = _generation_candidates(context, stage="round-1")
+    round_two = (
+        _generation_candidates(context, stage="round-2") if stage == "round-2" else []
+    )
+    if stage == "round-1":
+        raw_generation_rows = _jsonl(
+            _agent_pack_file(context, "blind-v2-generation.jsonl")
+        )
+        _require(
+            all(row.get("generation_round") == 1 for row in raw_generation_rows),
+            "round-1 reviews must precede round-2 generation",
+        )
+    all_candidates = round_one + round_two
+    candidates_by_id = {
+        cast(str, candidate["candidate_id"]): candidate for candidate in all_candidates
+    }
+    clean_ids = _validated_contamination_clean_ids(context, all_candidates)
+    seen_session_ids: set[str] = set()
+    for row in _jsonl(_agent_pack_file(context, "blind-v2-generation.jsonl")):
+        identities = workflow._pack_invocation_identities(row.get("invocations"))
+        _require(
+            type(row.get("invocations")) is list
+            and len(identities) == len(cast(list[Any], row["invocations"])),
+            "generator invocation identity sequence mismatch",
+        )
+        _require(
+            all(identity not in seen_session_ids for identity in identities),
+            "session/thread ids must be globally unique",
+        )
+        seen_session_ids.update(identities)
+
+    projected_skills = workflow._project_canonical_skills(
+        cast(list[dict[str, Any]], context["canonical_skills"])
+    )
+    for role, filename in (
+        ("reviewer_a", "blind-v2-review-a.jsonl"),
+        ("reviewer_b", "blind-v2-review-b.jsonl"),
+    ):
+        actual_by_round: dict[int, list[str]] = {1: [], 2: []}
+        seen_candidates: set[str] = set()
+        for raw_row in _jsonl(_agent_pack_file(context, filename)):
+            row, candidate_id, request = workflow._validated_reviewer_source_row(
+                raw_row,
+                role=role,
+                candidates=candidates_by_id,
+                projected_skills=projected_skills,
+                clean_candidate_ids=clean_ids,
+                label=f"{role} staged row",
+            )
+            _require(
+                candidate_id not in seen_candidates,
+                f"{role} candidate duplicated",
+            )
+            seen_candidates.add(candidate_id)
+            candidate_round = cast(
+                int, candidates_by_id[candidate_id]["generation_round"]
+            )
+            actual_by_round[candidate_round].append(candidate_id)
+            _successful_response(
+                row["invocations"],
+                request=request,
+                seen_session_ids=seen_session_ids,
+            )
+
+        expected_by_round = {
+            round_number: sorted(
+                (
+                    candidate_id
+                    for candidate_id in clean_ids
+                    if candidates_by_id[candidate_id]["generation_round"]
+                    == round_number
+                ),
+                key=lambda candidate_id: workflow.review_schedule_key(
+                    role, candidate_id
+                ),
+            )
+            for round_number in (1, 2)
+        }
+        _require(
+            actual_by_round[1]
+            == (
+                expected_by_round[1]
+                if stage == "round-2"
+                else expected_by_round[1][: len(actual_by_round[1])]
+            ),
+            f"{role} round-1 ledger schedule mismatch",
+        )
+        _require(
+            actual_by_round[2] == expected_by_round[2][: len(actual_by_round[2])],
+            f"{role} round-2 ledger schedule mismatch",
+        )
+
+
 def _request_reviews(args: argparse.Namespace) -> int:
     context = _commit_a_context(require_config_smoke=True)
     candidates = sorted(
@@ -436,6 +594,7 @@ def _request_reviews(args: argparse.Namespace) -> int:
             args.role, cast(str, candidate["candidate_id"])
         ),
     )
+    _validate_existing_review_sequences(context, stage=args.stage)
     requests = [
         workflow.build_reviewer_request(
             candidate,
@@ -462,12 +621,15 @@ def _review_responses(
     *,
     role: str,
     candidates: dict[str, dict[str, Any]],
+    seen_session_ids: set[str],
+    allow_later_round_rows: bool = False,
 ) -> dict[str, dict[str, Any]]:
     filename = {
         "reviewer_a": "blind-v2-review-a.jsonl",
         "reviewer_b": "blind-v2-review-b.jsonl",
     }[role]
     responses: dict[str, dict[str, Any]] = {}
+    actual_order: list[str] = []
     skills = cast(list[dict[str, Any]], context["canonical_skills"])
     for row in _jsonl(_agent_pack_file(context, filename)):
         _require(
@@ -475,17 +637,26 @@ def _review_responses(
             f"{role} source row fields mismatch",
         )
         candidate_id = row.get("candidate_id")
-        if candidate_id not in candidates:
+        if candidate_id not in candidates and allow_later_round_rows:
             continue
+        _require(candidate_id in candidates, "review references unknown candidate")
         _require(candidate_id not in responses, f"{role} candidate duplicated")
+        actual_order.append(cast(str, candidate_id))
         expected = workflow.build_reviewer_request(
             candidates[cast(str, candidate_id)], skills, role=role
         )
         request = workflow.validate_agent_request(cast(dict[str, Any], row["request"]))
         _require(request == expected, f"{role} request authority mismatch")
         responses[cast(str, candidate_id)] = _successful_response(
-            row["invocations"], request=request
+            row["invocations"],
+            request=request,
+            seen_session_ids=seen_session_ids,
         )
+    expected_order = sorted(
+        candidates,
+        key=lambda candidate_id: workflow.review_schedule_key(role, candidate_id),
+    )
+    _require(actual_order == expected_order, f"{role} ledger schedule mismatch")
     return responses
 
 
@@ -494,27 +665,27 @@ def _unanimously_accepted(
     review_a: dict[str, Any],
     review_b: dict[str, Any],
 ) -> bool:
-    gold = candidate["proposed_gold_skill_id"]
-    negative = candidate["proposed_negative_skill_id"]
-    return all(
-        review["decision"] == "ACCEPT"
-        and review["natural"] is True
-        and review["single_primary_skill"] is True
-        and review["no_label_leakage"] is True
-        and review["reviewed_gold_skill_id"] == gold
-        and review["reviewed_negative_skill_id"] == negative
-        and review["negative_confusable"] is (True if negative is not None else None)
-        for review in (review_a, review_b)
+    return workflow._reviewers_unanimously_accept(
+        (review_a, review_b),
+        expected_labels=(
+            cast(str, candidate["proposed_gold_skill_id"]),
+            cast(str | None, candidate["proposed_negative_skill_id"]),
+        ),
     )
 
 
-def _round_two_deficits(context: dict[str, Any]) -> dict[str, dict[str, int]]:
-    generation_rows = _jsonl(_agent_pack_file(context, "blind-v2-generation.jsonl"))
-    _require(
-        all(row.get("generation_round") == 1 for row in generation_rows),
-        "round 2 has already been generated",
+def _round_one_post_pipeline_deficits(
+    context: dict[str, Any],
+    *,
+    seen_session_ids: set[str] | None = None,
+    allow_later_round_reviews: bool = False,
+) -> dict[str, dict[str, int]]:
+    active_session_ids = seen_session_ids if seen_session_ids is not None else set()
+    round_one_candidates = _generation_candidates(
+        context,
+        stage="round-1",
+        seen_session_ids=active_session_ids,
     )
-    round_one_candidates = _generation_candidates(context, stage="round-1")
     clean_candidate_ids = _validated_contamination_clean_ids(
         context, round_one_candidates
     )
@@ -523,8 +694,20 @@ def _round_two_deficits(context: dict[str, Any]) -> dict[str, dict[str, int]]:
         for row in round_one_candidates
         if row["candidate_id"] in clean_candidate_ids
     }
-    review_a = _review_responses(context, role="reviewer_a", candidates=candidates)
-    review_b = _review_responses(context, role="reviewer_b", candidates=candidates)
+    review_a = _review_responses(
+        context,
+        role="reviewer_a",
+        candidates=candidates,
+        seen_session_ids=active_session_ids,
+        allow_later_round_rows=allow_later_round_reviews,
+    )
+    review_b = _review_responses(
+        context,
+        role="reviewer_b",
+        candidates=candidates,
+        seen_session_ids=active_session_ids,
+        allow_later_round_rows=allow_later_round_reviews,
+    )
     _require(
         set(review_a) == set(candidates) == set(review_b),
         "round 1 reviews must be complete before round 2",
@@ -567,6 +750,24 @@ def _round_two_deficits(context: dict[str, Any]) -> dict[str, dict[str, int]]:
         if any(skill_deficits.values()):
             deficits[skill_id] = skill_deficits
     return deficits
+
+
+def _round_two_deficits(context: dict[str, Any]) -> dict[str, dict[str, int]]:
+    generation_rows = _jsonl(_agent_pack_file(context, "blind-v2-generation.jsonl"))
+    _require(
+        all(
+            row.get("generation_round") == 1
+            and type(row.get("request")) is dict
+            and cast(dict[str, Any], row["request"])
+            .get("input", {})
+            .get("quota", {})
+            .get("round_number")
+            == 1
+            for row in generation_rows
+        ),
+        "round 2 has already been generated",
+    )
+    return _round_one_post_pipeline_deficits(context)
 
 
 def _request_round_2(_args: argparse.Namespace) -> int:
@@ -883,11 +1084,22 @@ def _evaluate(_args: argparse.Namespace) -> int:
         "blind-v2-manifest.json": frozen_documents["blind-v2-manifest.json"],
         "review-summary.json": frozen_documents["blind-v2-review-summary.json"],
     }
+    tasks, validated_skills, bindings = workflow._validated_pre_scoring_authority(
+        tasks=cast(list[dict[str, Any]], tasks),
+        skills=cast(list[dict[str, Any]], context["canonical_skills"]),
+        model_bindings=bindings,
+        commit_a=cast(str, context["commit_a"]),
+        commit_b=cast(str, context["commit_b"]),
+        attempt_token_sha256=attempt_token_sha256,
+        frozen_bindings=lineage_bindings,
+        input_artifacts=input_artifacts,
+        attempt_started_artifact=attempt_artifacts["attempt-1.started.json"],
+    )
 
     def evaluate() -> dict[str, bytes]:
         routes = workflow.evaluate_routes(
-            cast(list[dict[str, Any]], tasks),
-            cast(list[dict[str, Any]], context["canonical_skills"]),
+            tasks,
+            validated_skills,
             bindings,
             commit_a=cast(str, context["commit_a"]),
             commit_b=cast(str, context["commit_b"]),
