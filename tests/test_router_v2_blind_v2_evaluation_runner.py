@@ -6767,7 +6767,7 @@ def _task6_build_public_generator_request(
 
 def test_task6_public_generator_request_requires_authority_arguments() -> None:
     with pytest.raises(TypeError):
-        runner.build_generator_request(
+        runner.build_generator_request(  # type: ignore[call-arg]
             _skills(),
             gold_skill_id="test-skill-00",
             negative_quota=2,
@@ -6843,7 +6843,9 @@ def test_task6_historical_human_commit_cannot_authorize_agent_generation(
         ("rev-parse", "origin/main"): parent,
         ("rev-list", "--count", f"{parent}..{historical}"): "1",
         ("merge-base", "--is-ancestor", historical, historical): "",
-        ("diff", "--name-only", f"{parent}..{historical}"): "\n".join(changed_files),
+        ("diff", "--name-only", "--no-renames", f"{parent}..{historical}"): (
+            "\n".join(changed_files)
+        ),
     }
     monkeypatch.setattr(
         runner,
@@ -6879,7 +6881,9 @@ def test_task6_commit_a_agent_supersedes_history_and_uses_changed_file_authority
         ("rev-parse", "origin/main"): parent,
         ("rev-list", "--count", f"{'f' * 40}..{head}"): "1",
         ("merge-base", "--is-ancestor", historical, head): "",
-        ("diff", "--name-only", f"{parent}..{head}"): "\n".join(changed_files),
+        ("diff", "--name-only", "--no-renames", f"{parent}..{head}"): "\n".join(
+            changed_files
+        ),
     }
     monkeypatch.setattr(
         runner,
@@ -6916,7 +6920,7 @@ def test_task6_commit_a_agent_rejects_changed_file_authority_drift(
         ("rev-parse", "origin/main"): parent,
         ("rev-list", "--count", f"{parent}..{head}"): "1",
         ("merge-base", "--is-ancestor", historical, head): "",
-        ("diff", "--name-only", f"{parent}..{head}"): (
+        ("diff", "--name-only", "--no-renames", f"{parent}..{head}"): (
             "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py\n"
             "tests/test_router_v2_blind_v2_evaluation_runner.py"
         ),
@@ -6934,6 +6938,44 @@ def test_task6_commit_a_agent_rejects_changed_file_authority_drift(
                 "preregistration_parent_git_commit": parent,
                 "supersedes_commit": historical,
                 "commit_a_changed_files": authorized,
+            },
+        )
+
+
+def test_task6_commit_a_rejects_rename_hidden_unauthorized_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    historical = runner.HISTORICAL_HUMAN_COMMIT_A
+    parent = runner.PREREGISTRATION_PARENT_COMMIT
+    head = "a" * 40
+    authorized_destination = (
+        "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py"
+    )
+    unauthorized_source = "scripts/unauthorized-source.py"
+    commit_range = f"{parent}..{head}"
+    outputs: dict[tuple[str, ...], str] = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "origin/main"): parent,
+        ("merge-base", "--is-ancestor", historical, head): "",
+        ("diff", "--name-only", commit_range): authorized_destination,
+        ("diff", "--name-only", "--no-renames", commit_range): (
+            f"{unauthorized_source}\n{authorized_destination}"
+        ),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="changed-file authority"):
+        runner.validate_commit_a_repository(
+            tmp_path,
+            {
+                "preregistration_parent_git_commit": parent,
+                "supersedes_commit": historical,
+                "commit_a_changed_files": [authorized_destination],
             },
         )
 
@@ -7261,7 +7303,7 @@ def test_task6_model_load_smoke_rejects_rehashed_semantic_tampering(
 def _task6_commit_b_tree_outputs(
     *, invalid_filename: str | None = None, mode: str = "100644", kind: str = "blob"
 ) -> dict[tuple[str, ...], str]:
-    outputs = {}
+    outputs: dict[tuple[str, ...], str] = {}
     for index, filename in enumerate(runner.DATASET_FREEZE_FILENAMES):
         path = (runner.DATASET_FREEZE_RELATIVE / filename).as_posix()
         entry_mode = mode if filename == invalid_filename else "100644"
@@ -7292,7 +7334,9 @@ def test_task6_commit_b_rejects_merge_commit_even_with_commit_a_first_parent(
         ),
         ("rev-list", "--count", f"{commit_a}..{head}"): "1",
         ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
-        ("diff", "--name-only", f"{commit_a}..{head}"): expected_changed,
+        ("diff", "--name-only", "--no-renames", f"{commit_a}..{head}"): (
+            expected_changed
+        ),
         **_task6_commit_b_tree_outputs(),
     }
     monkeypatch.setattr(
@@ -7330,7 +7374,9 @@ def test_task6_commit_b_rejects_nonordinary_dataset_tree_entries(
         ("rev-list", "--parents", "-n", "1", "HEAD"): f"{head} {commit_a}",
         ("rev-list", "--count", f"{commit_a}..{head}"): "1",
         ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
-        ("diff", "--name-only", f"{commit_a}..{head}"): expected_changed,
+        ("diff", "--name-only", "--no-renames", f"{commit_a}..{head}"): (
+            expected_changed
+        ),
         **_task6_commit_b_tree_outputs(
             invalid_filename=invalid_filename,
             mode=mode,
@@ -7344,6 +7390,73 @@ def test_task6_commit_b_rejects_nonordinary_dataset_tree_entries(
     )
 
     with pytest.raises(ValueError, match="ordinary committed blob"):
+        runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
+
+
+def test_task6_commit_b_rejects_rename_hidden_unauthorized_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commit_a = "a" * 40
+    head = "b" * 40
+    expected_changed = "\n".join(
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    )
+    unauthorized_source = "data/legacy-blind-v2.jsonl"
+    commit_range = f"{commit_a}..{head}"
+    outputs: dict[tuple[str, ...], str] = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--parents", "-n", "1", "HEAD"): f"{head} {commit_a}",
+        ("rev-list", "--count", commit_range): "1",
+        ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
+        ("diff", "--name-only", commit_range): expected_changed,
+        ("diff", "--name-only", "--no-renames", commit_range): (
+            f"{unauthorized_source}\n{expected_changed}"
+        ),
+        **_task6_commit_b_tree_outputs(),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="only frozen blind-v2 data"):
+        runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
+
+
+def test_task6_commit_b_rejects_duplicate_changed_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commit_a = "a" * 40
+    head = "b" * 40
+    expected_paths = [
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    ]
+    expected_changed = "\n".join(expected_paths)
+    duplicate_changed = "\n".join([*expected_paths, expected_paths[0]])
+    commit_range = f"{commit_a}..{head}"
+    outputs: dict[tuple[str, ...], str] = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--parents", "-n", "1", "HEAD"): f"{head} {commit_a}",
+        ("rev-list", "--count", commit_range): "1",
+        ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
+        ("diff", "--name-only", commit_range): expected_changed,
+        ("diff", "--name-only", "--no-renames", commit_range): duplicate_changed,
+        **_task6_commit_b_tree_outputs(),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="only frozen blind-v2 data"):
         runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
 
 
@@ -7367,6 +7480,21 @@ def test_task6_frozen_dataset_reader_rejects_per_file_symlinks(
         runner.read_frozen_dataset_documents(repository)
 
 
+def test_task6_frozen_dataset_reader_rejects_in_repository_ancestor_symlink(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repository"
+    storage_root = repository / "stored-data"
+    dataset_root = storage_root / runner.DATASET_FREEZE_RELATIVE.name
+    dataset_root.mkdir(parents=True)
+    for filename in runner.DATASET_FREEZE_FILENAMES:
+        (dataset_root / filename).write_bytes(filename.encode())
+    (repository / "data").symlink_to(storage_root, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="symlink"):
+        runner.read_frozen_dataset_documents(repository)
+
+
 def test_task6_commit_b_must_be_direct_child_of_commit_a_agent(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -7385,7 +7513,9 @@ def test_task6_commit_b_must_be_direct_child_of_commit_a_agent(
         ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
         ("rev-list", "--parents", "-n", "1", "HEAD"): (f"{head} {sibling_parent}"),
         ("rev-list", "--count", f"{commit_a}..{head}"): "1",
-        ("diff", "--name-only", f"{commit_a}..{head}"): expected_changed,
+        ("diff", "--name-only", "--no-renames", f"{commit_a}..{head}"): (
+            expected_changed
+        ),
     }
     monkeypatch.setattr(
         runner,
@@ -7415,7 +7545,9 @@ def test_task6_commit_b_accepts_agent_commit_a_above_historical_commit(
         ("rev-list", "--parents", "-n", "1", "HEAD"): f"{commit_b} {commit_a}",
         ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
         ("rev-list", "--count", f"{commit_a}..{commit_b}"): "1",
-        ("diff", "--name-only", f"{commit_a}..{commit_b}"): expected_changed,
+        ("diff", "--name-only", "--no-renames", f"{commit_a}..{commit_b}"): (
+            expected_changed
+        ),
         **_task6_commit_b_tree_outputs(),
     }
     monkeypatch.setattr(
@@ -7451,7 +7583,9 @@ def test_task6_commit_b_rejects_historical_human_commit_as_commit_a(
         ("rev-list", "--parents", "-n", "1", "HEAD"): f"{commit_b} {commit_a}",
         ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
         ("rev-list", "--count", f"{commit_a}..{commit_b}"): "1",
-        ("diff", "--name-only", f"{commit_a}..{commit_b}"): expected_changed,
+        ("diff", "--name-only", "--no-renames", f"{commit_a}..{commit_b}"): (
+            expected_changed
+        ),
     }
     monkeypatch.setattr(
         runner,

@@ -2312,7 +2312,11 @@ def validate_commit_a_repository(
         "Commit A-agent changed-file authority mismatch",
     )
     changed = _git(
-        repository, "diff", "--name-only", f"{expected_parent}..{head}"
+        repository,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        f"{expected_parent}..{head}",
     ).splitlines()
     _require(
         len(changed) == len(set(changed)) and set(changed) == set(authorized_changed),
@@ -2381,14 +2385,21 @@ def validate_commit_b_repository(
         == "",
         "Commit A-agent must descend from historical Commit A",
     )
-    changed = set(
-        _git(repository, "diff", "--name-only", f"{commit_a}..{head}").splitlines()
-    )
+    changed = _git(
+        repository,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        f"{commit_a}..{head}",
+    ).splitlines()
     expected = {
         (DATASET_FREEZE_RELATIVE / filename).as_posix()
         for filename in DATASET_FREEZE_FILENAMES
     }
-    _require(changed == expected, "Commit B may contain only frozen blind-v2 data")
+    _require(
+        len(changed) == len(set(changed)) and set(changed) == expected,
+        "Commit B may contain only frozen blind-v2 data",
+    )
     for path in sorted(expected):
         entries = _git(repository, "ls-tree", "HEAD", "--", path).splitlines()
         _require(
@@ -7447,10 +7458,13 @@ def load_preregistered_human_validation_inputs(
 
 def read_frozen_dataset_documents(repository_root: Path | str) -> dict[str, bytes]:
     repository = Path(repository_root).resolve(strict=True)
-    unresolved_root = repository / DATASET_FREEZE_RELATIVE
-    _require(
-        not unresolved_root.is_symlink(), "frozen dataset root must not be a symlink"
-    )
+    unresolved_root = repository
+    for component in DATASET_FREEZE_RELATIVE.parts:
+        unresolved_root /= component
+        _require(
+            not unresolved_root.is_symlink(),
+            "frozen dataset path components must not be symlinks",
+        )
     root = unresolved_root.resolve(strict=True)
     _require(root.is_relative_to(repository), "frozen dataset root escapes repository")
     _require(root.is_dir(), "frozen dataset root must be a directory")
