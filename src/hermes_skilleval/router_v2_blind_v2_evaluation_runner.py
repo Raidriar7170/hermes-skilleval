@@ -50,6 +50,10 @@ MODEL_LOAD_SMOKE_TEXTS = (
     "synthetic blind-v2 model load query",
     "synthetic blind-v2 skill description",
 )
+AGENT_CONFIG_SMOKE_REQUEST_TEXT = "synthetic blind-v2 agent configuration smoke request"
+AGENT_CONFIG_SMOKE_RESPONSE_TEXT = (
+    "synthetic blind-v2 agent configuration smoke response"
+)
 QUERY_CONTRACT_VERSION = "router-v2-prompt-only-query-v1"
 SKILL_REPRESENTATION_BUILDER_VERSION = (
     "router-v2-id-name-category-description-trigger-terms-body-v1"
@@ -85,6 +89,7 @@ EVALUATION_OUTPUT_FILENAMES = (
 SMOKE_RECEIPT_ROOT = Path("/tmp/hermes-router-v2-blind-v2-smoke-receipts")
 AUTHORING_TEMPLATE_ROOT = Path("/tmp/hermes-blind-v2-authoring-pack")
 PREREGISTRATION_PARENT_COMMIT = "8f6a21e53c1363ee18ea6d6e3db1f4b3805ff552"
+HISTORICAL_HUMAN_COMMIT_A = "09ba4104a147a2f740ef69283c850f40e78a0b15"
 EVALUATOR_SOURCE_PATHS = (
     "src/hermes_skilleval/router_v2_blind_v2_evaluation.py",
     "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
@@ -396,6 +401,7 @@ class RouteScorer(Protocol):
 EncoderFactory = Callable[[str, int, Path], EvaluationEncoder]
 ScorerFactory = Callable[[str, int, Path], RouteScorer]
 AuthorityValidator = Callable[..., dict[str, Any]]
+CommitBValidator = Callable[..., dict[str, Any]]
 SemanticSimilarity = Callable[[str, str], int | float | Decimal]
 
 
@@ -2202,21 +2208,82 @@ def validate_commit_a_repository(
     repository = Path(repository_root).resolve(strict=True)
     _require(
         _git(repository, "status", "--porcelain", "--untracked-files=all") == "",
-        "Commit A worktree must be clean",
+        "Commit A-agent worktree must be clean",
     )
-    head = _git(repository, "rev-parse", "HEAD")
-    parent = _git(repository, "rev-parse", "HEAD^")
-    origin_main = _git(repository, "rev-parse", "origin/main")
-    expected_parent = preregistration.get("preregistration_parent_git_commit")
+    head = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "HEAD"), length=40, label="Commit A-agent"
+    )
+    origin_main = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "origin/main"),
+        length=40,
+        label="origin/main",
+    )
+    expected_parent = _exact_lowercase_hex(
+        preregistration.get("preregistration_parent_git_commit"),
+        length=40,
+        label="preregistered origin/main",
+    )
     _require(
-        parent == expected_parent and origin_main == expected_parent,
-        "Commit A must be based directly on the preregistered origin/main",
+        expected_parent == PREREGISTRATION_PARENT_COMMIT,
+        "preregistered origin/main authority mismatch",
     )
     _require(
-        _git(repository, "rev-list", "--count", f"{parent}..{head}") == "1",
-        "Commit A must be exactly one commit above origin/main",
+        origin_main == expected_parent,
+        "origin/main drift from preregistration parent authority",
     )
-    return {"commit_a": head, "parent": parent, "origin_main": origin_main}
+    _require(
+        preregistration.get("supersedes_commit") == HISTORICAL_HUMAN_COMMIT_A,
+        "Commit A-agent supersession mismatch",
+    )
+    _require(
+        head != HISTORICAL_HUMAN_COMMIT_A,
+        "historical Commit A has been superseded and is not active",
+    )
+    _require(
+        _git(
+            repository,
+            "merge-base",
+            "--is-ancestor",
+            HISTORICAL_HUMAN_COMMIT_A,
+            head,
+        )
+        == "",
+        "historical Commit A must be an ancestor of Commit A-agent",
+    )
+    expected_changed = preregistration.get("commit_a_changed_files")
+    _require(
+        type(expected_changed) is list
+        and bool(expected_changed)
+        and all(type(path) is str and bool(path) for path in expected_changed),
+        "Commit A-agent changed-file authority mismatch",
+    )
+    authorized_changed: list[str] = []
+    for raw_path in cast(list[str], expected_changed):
+        relative = Path(raw_path)
+        _require(
+            not relative.is_absolute()
+            and ".." not in relative.parts
+            and relative.as_posix() == raw_path,
+            "Commit A-agent changed-file authority mismatch",
+        )
+        authorized_changed.append(raw_path)
+    _require(
+        len(authorized_changed) == len(set(authorized_changed)),
+        "Commit A-agent changed-file authority mismatch",
+    )
+    changed = _git(
+        repository, "diff", "--name-only", f"{expected_parent}..{head}"
+    ).splitlines()
+    _require(
+        len(changed) == len(set(changed)) and set(changed) == set(authorized_changed),
+        "Commit A-agent changed-file authority mismatch",
+    )
+    return {
+        "commit_a": head,
+        "origin_main": origin_main,
+        "supersedes_commit": HISTORICAL_HUMAN_COMMIT_A,
+        "changed_files": sorted(changed),
+    }
 
 
 def validate_commit_b_repository(
@@ -2227,20 +2294,47 @@ def validate_commit_b_repository(
         _git(repository, "status", "--porcelain", "--untracked-files=all") == "",
         "Commit B worktree must be clean",
     )
-    head = _git(repository, "rev-parse", "HEAD")
-    head_parent = _git(repository, "rev-parse", "HEAD^")
-    commit_a_parent = _git(repository, "rev-parse", f"{commit_a}^")
-    origin_main = _git(repository, "rev-parse", "origin/main")
+    commit_a = _exact_lowercase_hex(commit_a, length=40, label="Commit A-agent")
+    head = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "HEAD"), length=40, label="Commit B"
+    )
+    head_parent = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "HEAD^"),
+        length=40,
+        label="Commit B parent",
+    )
+    origin_main = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "origin/main"),
+        length=40,
+        label="origin/main",
+    )
     _require(
-        commit_a_parent == PREREGISTRATION_PARENT_COMMIT
-        and origin_main == PREREGISTRATION_PARENT_COMMIT,
+        origin_main == PREREGISTRATION_PARENT_COMMIT,
         "Commit B lineage no longer matches preregistered origin/main",
     )
-    _require(head != commit_a, "Commit B must differ from Commit A")
-    _require(head_parent == commit_a, "Commit B must be a direct child of Commit A")
+    _require(head != commit_a, "Commit B must differ from Commit A-agent")
+    _require(
+        head_parent == commit_a,
+        "Commit B must be a direct child of Commit A-agent",
+    )
     _require(
         _git(repository, "rev-list", "--count", f"{commit_a}..{head}") == "1",
-        "Commit B must be exactly one commit above Commit A",
+        "Commit B must be exactly one commit above Commit A-agent",
+    )
+    _require(
+        commit_a != HISTORICAL_HUMAN_COMMIT_A,
+        "historical Commit A has been superseded and is not active",
+    )
+    _require(
+        _git(
+            repository,
+            "merge-base",
+            "--is-ancestor",
+            HISTORICAL_HUMAN_COMMIT_A,
+            commit_a,
+        )
+        == "",
+        "Commit A-agent must descend from historical Commit A",
     )
     changed = set(
         _git(repository, "diff", "--name-only", f"{commit_a}..{head}").splitlines()
@@ -7403,6 +7497,199 @@ def build_authoritative_lineage_bindings(
     }
 
 
+def _validated_agent_config_smoke_invocations(
+    invocations: Any,
+) -> list[dict[str, Any]]:
+    _require(
+        type(invocations) is list and len(invocations) == len(AGENT_CONFIGS),
+        "Agent-config smoke must contain exactly three provider invocations",
+    )
+    normalized: list[dict[str, Any]] = []
+    seen_identities: set[str] = set()
+    roles = [
+        invocation.get("role") if type(invocation) is dict else None
+        for invocation in invocations
+    ]
+    _require(
+        roles == list(AGENT_CONFIGS),
+        "Agent-config smoke role coverage mismatch",
+    )
+    for raw_invocation, role in zip(invocations, AGENT_CONFIGS, strict=True):
+        _require(
+            type(raw_invocation) is dict,
+            "Agent-config smoke invocation must be an object",
+        )
+        identity_fields = {"session_id", "thread_id"}.intersection(raw_invocation)
+        _require(
+            len(identity_fields) == 1,
+            "Agent-config smoke requires exactly one session/thread id",
+        )
+        invocation = _exact_object_fields(
+            raw_invocation,
+            {
+                "role",
+                "fork_context",
+                "history_message_count",
+                "imported_memory_count",
+                "requested_model",
+                "returned_model",
+                "reasoning_effort",
+                "timeout_seconds",
+                "transport_retry_count",
+                "request_text",
+                "request_sha256",
+                "response_text",
+                "response_sha256",
+                "timestamp_utc",
+                *identity_fields,
+            },
+            "Agent-config smoke invocation",
+        )
+        identity_field = next(iter(identity_fields))
+        identity = _nonempty_string(
+            invocation[identity_field], "Agent-config smoke session/thread id"
+        )
+        _require(
+            identity not in seen_identities,
+            "Agent-config smoke session/thread id must be unique",
+        )
+        seen_identities.add(identity)
+        config = AGENT_CONFIGS[role]
+        _require(invocation["role"] == role, "Agent-config smoke role mismatch")
+        _require(
+            invocation["fork_context"] is False,
+            "Agent-config smoke fork context must be false",
+        )
+        _require(
+            type(invocation["history_message_count"]) is int
+            and invocation["history_message_count"] == 0,
+            "Agent-config smoke history message count must be integer zero",
+        )
+        _require(
+            type(invocation["imported_memory_count"]) is int
+            and invocation["imported_memory_count"] == 0,
+            "Agent-config smoke imported memory count must be integer zero",
+        )
+        _require(
+            invocation["requested_model"] == config["model"],
+            "Agent-config smoke requested model mismatch",
+        )
+        _require(
+            invocation["returned_model"] == config["model"],
+            "Agent-config smoke returned model mismatch",
+        )
+        _require(
+            invocation["reasoning_effort"] == config["reasoning_effort"],
+            "Agent-config smoke reasoning effort mismatch",
+        )
+        _require(
+            type(invocation["timeout_seconds"]) is int
+            and invocation["timeout_seconds"] == config["timeout_seconds"],
+            "Agent-config smoke timeout mismatch",
+        )
+        _require(
+            type(invocation["transport_retry_count"]) is int
+            and invocation["transport_retry_count"] == 0,
+            "Agent-config smoke must use exactly three provider invocations",
+        )
+        _require(
+            invocation["request_text"] == AGENT_CONFIG_SMOKE_REQUEST_TEXT
+            and invocation["request_sha256"]
+            == _sha256_bytes(AGENT_CONFIG_SMOKE_REQUEST_TEXT.encode("utf-8")),
+            "Agent-config smoke dummy request mismatch",
+        )
+        _require(
+            invocation["response_text"] == AGENT_CONFIG_SMOKE_RESPONSE_TEXT
+            and invocation["response_sha256"]
+            == _sha256_bytes(AGENT_CONFIG_SMOKE_RESPONSE_TEXT.encode("utf-8")),
+            "Agent-config smoke dummy response mismatch",
+        )
+        _nonempty_string(invocation["timestamp_utc"], "Agent-config smoke timestamp")
+        normalized.append(deepcopy(invocation))
+    return normalized
+
+
+def build_agent_config_smoke_receipt(
+    invocations: list[dict[str, Any]],
+    *,
+    commit_a: str,
+    preregistration_sha256: str,
+) -> dict[str, Any]:
+    commit_a = _exact_lowercase_hex(
+        commit_a, length=40, label="Agent-config smoke Commit A-agent"
+    )
+    preregistration_sha256 = _exact_lowercase_hex(
+        preregistration_sha256,
+        length=64,
+        label="Agent-config smoke preregistration SHA-256",
+    )
+    normalized_invocations = _validated_agent_config_smoke_invocations(invocations)
+    document = {
+        "schema_version": "router-v2-blind-v2-agent-config-smoke-receipt-v1",
+        "smoke_status": "PASS",
+        "commit_a": commit_a,
+        "preregistration_sha256": preregistration_sha256,
+        "provider_invocation_count": len(normalized_invocations),
+        "request_text": AGENT_CONFIG_SMOKE_REQUEST_TEXT,
+        "response_text": AGENT_CONFIG_SMOKE_RESPONSE_TEXT,
+        "invocations": normalized_invocations,
+        "benchmark_metrics_computed": False,
+        "blind_v2_data_read": False,
+    }
+    return {**document, "receipt_sha256": canonical_sha256(document)}
+
+
+def agent_config_smoke_receipt_path(commit_a: str) -> Path:
+    commit_a = _exact_lowercase_hex(
+        commit_a, length=40, label="Agent-config smoke Commit A-agent"
+    )
+    return SMOKE_RECEIPT_ROOT / "agent-config" / f"{commit_a}.json"
+
+
+def write_agent_config_smoke_receipt(receipt: dict[str, Any]) -> Path:
+    commit_a = receipt.get("commit_a")
+    _require(
+        type(commit_a) is str,
+        "Agent-config smoke receipt Commit A-agent is missing",
+    )
+    path = agent_config_smoke_receipt_path(cast(str, commit_a))
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path.parent.chmod(0o700)
+    with path.open("xb") as handle:
+        handle.write(_canonical_json_bytes(receipt))
+    return path
+
+
+def validate_agent_config_smoke_receipt(
+    *, commit_a: str, preregistration_sha256: str
+) -> dict[str, Any]:
+    path = agent_config_smoke_receipt_path(commit_a)
+    receipt = _json_no_duplicate_keys(path.read_bytes(), "Agent-config smoke receipt")
+    receipt_sha256 = receipt.get("receipt_sha256")
+    unhashed = {key: value for key, value in receipt.items() if key != "receipt_sha256"}
+    _require(
+        receipt_sha256 == canonical_sha256(unhashed),
+        "Agent-config smoke receipt hash mismatch",
+    )
+    _require(
+        receipt.get("commit_a") == commit_a
+        and receipt.get("preregistration_sha256") == preregistration_sha256,
+        "Agent-config smoke receipt authority mismatch",
+    )
+    invocations = receipt.get("invocations")
+    _require(
+        type(invocations) is list,
+        "Agent-config smoke receipt structure mismatch",
+    )
+    rebuilt = build_agent_config_smoke_receipt(
+        cast(list[dict[str, Any]], invocations),
+        commit_a=commit_a,
+        preregistration_sha256=preregistration_sha256,
+    )
+    _require(receipt == rebuilt, "Agent-config smoke receipt structure mismatch")
+    return receipt
+
+
 class _LocalSentenceTransformerEncoder:
     def __init__(self, model_path: Path) -> None:
         try:
@@ -7429,12 +7716,47 @@ def run_model_load_smoke(
     *,
     preregistration_path: Path | str,
     repository_root: Path | str,
+    commit_a: str,
+    commit_b: str,
+    frozen_dataset_manifest_sha256: str,
     encoder_factory: EncoderFactory | None = None,
     authority_validator: AuthorityValidator = validate_preregistration_authority,
+    commit_b_validator: CommitBValidator = validate_commit_b_repository,
 ) -> dict[str, Any]:
+    repository = Path(repository_root).resolve(strict=True)
+    commit_a = _exact_lowercase_hex(
+        commit_a, length=40, label="model-load smoke Commit A-agent"
+    )
+    commit_b = _exact_lowercase_hex(
+        commit_b, length=40, label="model-load smoke Commit B"
+    )
+    _require(
+        commit_b != commit_a,
+        "model-load smoke Commit B must differ from Commit A-agent",
+    )
+    frozen_dataset_manifest_sha256 = _exact_lowercase_hex(
+        frozen_dataset_manifest_sha256,
+        length=64,
+        label="frozen dataset manifest SHA-256",
+    )
+    commit_state = commit_b_validator(repository, commit_a=commit_a)
+    _require(
+        commit_state.get("commit_a") == commit_a
+        and commit_state.get("commit_b") == commit_b,
+        "model-load smoke Commit B repository authority mismatch",
+    )
+    frozen_manifest_path = (
+        repository / DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"
+    ).resolve(strict=True)
+    _require(
+        frozen_manifest_path.is_relative_to(repository)
+        and frozen_manifest_path.is_file()
+        and _sha256_file(frozen_manifest_path) == frozen_dataset_manifest_sha256,
+        "model-load smoke frozen dataset manifest authority mismatch",
+    )
     authority_validator(
         preregistration_path,
-        repository_root=repository_root,
+        repository_root=repository,
         pilot_manifest_path=pilot_manifest_path,
         verify_model_files=True,
     )
@@ -7529,7 +7851,12 @@ def run_model_load_smoke(
 
 
 def build_model_load_smoke_receipt(
-    smoke: dict[str, Any], *, commit_a: str, preregistration_sha256: str
+    smoke: dict[str, Any],
+    *,
+    commit_a: str,
+    commit_b: str,
+    preregistration_sha256: str,
+    frozen_dataset_manifest_sha256: str,
 ) -> dict[str, Any]:
     _require(
         set(smoke)
@@ -7569,32 +7896,50 @@ def build_model_load_smoke_receipt(
         smoke.get("synthetic_strings") == list(MODEL_LOAD_SMOKE_TEXTS),
         "smoke strings mismatch",
     )
-    _require(
-        type(commit_a) is str and len(commit_a) == 40,
-        "smoke Commit A binding mismatch",
+    commit_a = _exact_lowercase_hex(commit_a, length=40, label="smoke Commit A-agent")
+    commit_b = _exact_lowercase_hex(commit_b, length=40, label="smoke Commit B")
+    _require(commit_b != commit_a, "smoke Commit B must differ from Commit A-agent")
+    preregistration_sha256 = _exact_lowercase_hex(
+        preregistration_sha256,
+        length=64,
+        label="smoke preregistration SHA-256",
     )
-    _require(
-        type(preregistration_sha256) is str and len(preregistration_sha256) == 64,
-        "smoke preregistration binding mismatch",
+    frozen_dataset_manifest_sha256 = _exact_lowercase_hex(
+        frozen_dataset_manifest_sha256,
+        length=64,
+        label="smoke frozen dataset manifest SHA-256",
     )
     document = {
-        "schema_version": "router-v2-blind-v2-model-load-smoke-receipt-v1",
+        "schema_version": "router-v2-blind-v2-model-load-smoke-receipt-v2",
         "commit_a": commit_a,
+        "commit_b": commit_b,
         "preregistration_sha256": preregistration_sha256,
+        "frozen_dataset_manifest_sha256": frozen_dataset_manifest_sha256,
         "smoke": smoke,
     }
     return {**document, "receipt_sha256": canonical_sha256(document)}
 
 
-def model_load_smoke_receipt_path(commit_a: str) -> Path:
-    _require(type(commit_a) is str and len(commit_a) == 40, "Commit A SHA mismatch")
-    return SMOKE_RECEIPT_ROOT / f"{commit_a}.json"
+def model_load_smoke_receipt_path(commit_a: str, commit_b: str) -> Path:
+    commit_a = _exact_lowercase_hex(
+        commit_a, length=40, label="model-load smoke Commit A-agent"
+    )
+    commit_b = _exact_lowercase_hex(
+        commit_b, length=40, label="model-load smoke Commit B"
+    )
+    _require(
+        commit_b != commit_a,
+        "model-load smoke Commit B must differ from Commit A-agent",
+    )
+    return SMOKE_RECEIPT_ROOT / "model-load" / f"{commit_a}-{commit_b}.json"
 
 
 def write_model_load_smoke_receipt(receipt: dict[str, Any]) -> Path:
     commit_a = receipt.get("commit_a")
-    _require(type(commit_a) is str, "smoke receipt Commit A is missing")
-    path = model_load_smoke_receipt_path(cast(str, commit_a))
+    commit_b = receipt.get("commit_b")
+    _require(type(commit_a) is str, "smoke receipt Commit A-agent is missing")
+    _require(type(commit_b) is str, "smoke receipt Commit B is missing")
+    path = model_load_smoke_receipt_path(cast(str, commit_a), cast(str, commit_b))
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     path.parent.chmod(0o700)
     with path.open("xb") as handle:
@@ -7603,9 +7948,13 @@ def write_model_load_smoke_receipt(receipt: dict[str, Any]) -> Path:
 
 
 def validate_model_load_smoke_receipt(
-    *, commit_a: str, preregistration_sha256: str
+    *,
+    commit_a: str,
+    commit_b: str,
+    preregistration_sha256: str,
+    frozen_dataset_manifest_sha256: str,
 ) -> dict[str, Any]:
-    path = model_load_smoke_receipt_path(commit_a)
+    path = model_load_smoke_receipt_path(commit_a, commit_b)
     receipt = _json_no_duplicate_keys(path.read_bytes(), "model-load smoke receipt")
     receipt_sha256 = receipt.get("receipt_sha256")
     unhashed = {key: value for key, value in receipt.items() if key != "receipt_sha256"}
@@ -7615,7 +7964,10 @@ def validate_model_load_smoke_receipt(
     )
     _require(
         receipt.get("commit_a") == commit_a
-        and receipt.get("preregistration_sha256") == preregistration_sha256,
+        and receipt.get("commit_b") == commit_b
+        and receipt.get("preregistration_sha256") == preregistration_sha256
+        and receipt.get("frozen_dataset_manifest_sha256")
+        == frozen_dataset_manifest_sha256,
         "model-load smoke receipt authority mismatch",
     )
     smoke = receipt.get("smoke")
@@ -7623,7 +7975,9 @@ def validate_model_load_smoke_receipt(
     rebuilt = build_model_load_smoke_receipt(
         cast(dict[str, Any], smoke),
         commit_a=commit_a,
+        commit_b=commit_b,
         preregistration_sha256=preregistration_sha256,
+        frozen_dataset_manifest_sha256=frozen_dataset_manifest_sha256,
     )
     _require(receipt == rebuilt, "model-load smoke receipt structure mismatch")
     return receipt

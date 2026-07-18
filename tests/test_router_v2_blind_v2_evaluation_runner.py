@@ -6722,7 +6722,204 @@ class _FakeEncoder:
         return [[1.0, 0.0, 0.0] for _ in texts]
 
 
-def test_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
+def _task6_agent_config_smoke_invocations() -> list[dict[str, Any]]:
+    invocations = []
+    for index, role in enumerate(("generator", "reviewer_a", "reviewer_b")):
+        config = runner.AGENT_CONFIGS[role]
+        invocations.append(
+            {
+                "role": role,
+                "session_id": f"task6-smoke-session-{index}",
+                "fork_context": False,
+                "history_message_count": 0,
+                "imported_memory_count": 0,
+                "requested_model": config["model"],
+                "returned_model": config["model"],
+                "reasoning_effort": config["reasoning_effort"],
+                "timeout_seconds": config["timeout_seconds"],
+                "transport_retry_count": 0,
+                "request_text": runner.AGENT_CONFIG_SMOKE_REQUEST_TEXT,
+                "request_sha256": hashlib.sha256(
+                    runner.AGENT_CONFIG_SMOKE_REQUEST_TEXT.encode()
+                ).hexdigest(),
+                "response_text": runner.AGENT_CONFIG_SMOKE_RESPONSE_TEXT,
+                "response_sha256": hashlib.sha256(
+                    runner.AGENT_CONFIG_SMOKE_RESPONSE_TEXT.encode()
+                ).hexdigest(),
+                "timestamp_utc": f"2026-07-18T00:00:0{index}Z",
+            }
+        )
+    return invocations
+
+
+def test_task6_historical_human_commit_cannot_authorize_agent_generation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    historical = runner.HISTORICAL_HUMAN_COMMIT_A
+    parent = runner.PREREGISTRATION_PARENT_COMMIT
+    changed_files = ["artifacts/router-v2-blind-v2/preregistration.json"]
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): historical,
+        ("rev-parse", "HEAD^"): parent,
+        ("rev-parse", "origin/main"): parent,
+        ("rev-list", "--count", f"{parent}..{historical}"): "1",
+        ("merge-base", "--is-ancestor", historical, historical): "",
+        ("diff", "--name-only", f"{parent}..{historical}"): "\n".join(changed_files),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="historical Commit A.*not active|superseded"):
+        runner.validate_commit_a_repository(
+            tmp_path,
+            {
+                "preregistration_parent_git_commit": parent,
+                "supersedes_commit": historical,
+                "commit_a_changed_files": changed_files,
+            },
+        )
+
+
+def test_task6_commit_a_agent_supersedes_history_and_uses_changed_file_authority(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    historical = runner.HISTORICAL_HUMAN_COMMIT_A
+    parent = runner.PREREGISTRATION_PARENT_COMMIT
+    head = "a" * 40
+    changed_files = [
+        "artifacts/router-v2-blind-v2/preregistration.json",
+        "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
+    ]
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "HEAD^"): "f" * 40,
+        ("rev-parse", "origin/main"): parent,
+        ("rev-list", "--count", f"{'f' * 40}..{head}"): "1",
+        ("merge-base", "--is-ancestor", historical, head): "",
+        ("diff", "--name-only", f"{parent}..{head}"): "\n".join(changed_files),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    assert runner.validate_commit_a_repository(
+        tmp_path,
+        {
+            "preregistration_parent_git_commit": parent,
+            "supersedes_commit": historical,
+            "commit_a_changed_files": changed_files,
+        },
+    ) == {
+        "commit_a": head,
+        "origin_main": parent,
+        "supersedes_commit": historical,
+        "changed_files": changed_files,
+    }
+
+
+def test_task6_commit_a_agent_rejects_changed_file_authority_drift(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    historical = runner.HISTORICAL_HUMAN_COMMIT_A
+    parent = runner.PREREGISTRATION_PARENT_COMMIT
+    head = "a" * 40
+    authorized = ["src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py"]
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "HEAD^"): parent,
+        ("rev-parse", "origin/main"): parent,
+        ("rev-list", "--count", f"{parent}..{head}"): "1",
+        ("merge-base", "--is-ancestor", historical, head): "",
+        ("diff", "--name-only", f"{parent}..{head}"): (
+            "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py\n"
+            "tests/test_router_v2_blind_v2_evaluation_runner.py"
+        ),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="changed-file authority"):
+        runner.validate_commit_a_repository(
+            tmp_path,
+            {
+                "preregistration_parent_git_commit": parent,
+                "supersedes_commit": historical,
+                "commit_a_changed_files": authorized,
+            },
+        )
+
+
+def test_task6_agent_config_smoke_is_pre_generation_and_commit_bound(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(runner, "SMOKE_RECEIPT_ROOT", tmp_path / "smoke-receipts")
+    commit_a = "a" * 40
+    preregistration_sha256 = "b" * 64
+
+    with pytest.raises(FileNotFoundError):
+        runner.validate_agent_config_smoke_receipt(
+            commit_a=commit_a,
+            preregistration_sha256=preregistration_sha256,
+        )
+
+    receipt = runner.build_agent_config_smoke_receipt(
+        _task6_agent_config_smoke_invocations(),
+        commit_a=commit_a,
+        preregistration_sha256=preregistration_sha256,
+    )
+    path = runner.write_agent_config_smoke_receipt(receipt)
+
+    assert path.is_file()
+    assert receipt["schema_version"] == (
+        "router-v2-blind-v2-agent-config-smoke-receipt-v1"
+    )
+    assert receipt["provider_invocation_count"] == 3
+    assert [row["role"] for row in receipt["invocations"]] == [
+        "generator",
+        "reviewer_a",
+        "reviewer_b",
+    ]
+    assert (
+        runner.validate_agent_config_smoke_receipt(
+            commit_a=commit_a,
+            preregistration_sha256=preregistration_sha256,
+        )
+        == receipt
+    )
+
+
+def test_task6_agent_config_smoke_requires_exact_three_approved_configs() -> None:
+    invocations = _task6_agent_config_smoke_invocations()
+    invocations[2]["role"] = "reviewer_a"
+    with pytest.raises(ValueError, match="role coverage"):
+        runner.build_agent_config_smoke_receipt(
+            invocations,
+            commit_a="a" * 40,
+            preregistration_sha256="b" * 64,
+        )
+
+    invocations = _task6_agent_config_smoke_invocations()
+    invocations[1]["returned_model"] = "wrong-model"
+    with pytest.raises(ValueError, match="returned model"):
+        runner.build_agent_config_smoke_receipt(
+            invocations,
+            commit_a="a" * 40,
+            preregistration_sha256="b" * 64,
+        )
+
+
+def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
     tmp_path: Path,
 ) -> None:
     base = tmp_path / "base"
@@ -6758,8 +6955,19 @@ def test_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
     pilot_path.write_text(json.dumps(pilot), encoding="utf-8")
     preregistration_path = tmp_path / "preregistration.json"
     preregistration_path.write_text("{}", encoding="utf-8")
+    frozen_manifest_path = (
+        tmp_path / runner.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"
+    )
+    frozen_manifest_path.parent.mkdir(parents=True)
+    frozen_manifest_path.write_bytes(b"task6-frozen-dataset-manifest")
+    frozen_manifest_sha256 = hashlib.sha256(
+        frozen_manifest_path.read_bytes()
+    ).hexdigest()
+    commit_a = "a" * 40
+    commit_b = "b" * 40
     calls: list[tuple[str, int, Path]] = []
     authority_calls: list[tuple[Path, Path, Path]] = []
+    repository_calls: list[tuple[Path, str]] = []
 
     def factory(arm: str, seed: int, model_path: Path) -> _FakeEncoder:
         calls.append((arm, seed, model_path))
@@ -6778,12 +6986,22 @@ def test_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
         )
         return {"status": "VALID"}
 
+    def commit_b_validator(
+        repository_root: Path | str, *, commit_a: str
+    ) -> dict[str, Any]:
+        repository_calls.append((Path(repository_root), commit_a))
+        return {"commit_a": commit_a, "commit_b": commit_b}
+
     result = runner.run_model_load_smoke(
         pilot_path,
         preregistration_path=preregistration_path,
         repository_root=tmp_path,
+        commit_a=commit_a,
+        commit_b=commit_b,
+        frozen_dataset_manifest_sha256=frozen_manifest_sha256,
         encoder_factory=factory,
         authority_validator=authority_validator,
+        commit_b_validator=commit_b_validator,
     )
 
     assert result["smoke_status"] == "PASS"
@@ -6797,13 +7015,37 @@ def test_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
     assert calls[0][2] != base
     assert not calls[0][2].exists()
     assert authority_calls == [(preregistration_path, tmp_path, pilot_path)]
+    assert repository_calls == [(tmp_path, commit_a)]
     assert runner.MODEL_LOAD_SMOKE_TEXTS == (
         "synthetic blind-v2 model load query",
         "synthetic blind-v2 skill description",
     )
 
 
-def test_model_load_smoke_receipt_is_commit_bound_and_tamper_evident(
+def test_task6_model_load_smoke_refuses_commit_a_agent_without_commit_b(
+    tmp_path: Path,
+) -> None:
+    factory_called = False
+
+    def factory(arm: str, seed: int, model_path: Path) -> _FakeEncoder:
+        nonlocal factory_called
+        factory_called = True
+        return _FakeEncoder()
+
+    with pytest.raises(ValueError, match="Commit B.*differ"):
+        runner.run_model_load_smoke(
+            tmp_path / "pilot-manifest.json",
+            preregistration_path=tmp_path / "preregistration.json",
+            repository_root=tmp_path,
+            commit_a="a" * 40,
+            commit_b="a" * 40,
+            frozen_dataset_manifest_sha256="c" * 64,
+            encoder_factory=factory,
+        )
+    assert factory_called is False
+
+
+def test_task6_model_load_smoke_receipt_binds_both_commits_and_dataset_manifest(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(runner, "SMOKE_RECEIPT_ROOT", tmp_path / "smoke-receipts")
@@ -6823,17 +7065,24 @@ def test_model_load_smoke_receipt_is_commit_bound_and_tamper_evident(
         "blind_v2_data_read": False,
     }
     receipt = runner.build_model_load_smoke_receipt(
-        smoke, commit_a="a" * 40, preregistration_sha256="b" * 64
+        smoke,
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        preregistration_sha256="c" * 64,
+        frozen_dataset_manifest_sha256="d" * 64,
     )
     path = runner.write_model_load_smoke_receipt(receipt)
 
     assert receipt["schema_version"] == (
-        "router-v2-blind-v2-model-load-smoke-receipt-v1"
+        "router-v2-blind-v2-model-load-smoke-receipt-v2"
     )
     assert receipt["smoke"] == smoke
     assert (
         runner.validate_model_load_smoke_receipt(
-            commit_a="a" * 40, preregistration_sha256="b" * 64
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            preregistration_sha256="c" * 64,
+            frozen_dataset_manifest_sha256="d" * 64,
         )
         == receipt
     )
@@ -6842,7 +7091,10 @@ def test_model_load_smoke_receipt_is_commit_bound_and_tamper_evident(
     path.write_text(json.dumps(tampered), encoding="utf-8")
     with pytest.raises(ValueError, match="receipt hash mismatch"):
         runner.validate_model_load_smoke_receipt(
-            commit_a="a" * 40, preregistration_sha256="b" * 64
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            preregistration_sha256="c" * 64,
+            frozen_dataset_manifest_sha256="d" * 64,
         )
 
     drifted = {**receipt, "unexpected": True}
@@ -6851,11 +7103,14 @@ def test_model_load_smoke_receipt_is_commit_bound_and_tamper_evident(
     path.write_text(json.dumps(drifted), encoding="utf-8")
     with pytest.raises(ValueError, match="receipt structure mismatch"):
         runner.validate_model_load_smoke_receipt(
-            commit_a="a" * 40, preregistration_sha256="b" * 64
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            preregistration_sha256="c" * 64,
+            frozen_dataset_manifest_sha256="d" * 64,
         )
 
 
-def test_commit_b_must_be_direct_child_of_commit_a(
+def test_task6_commit_b_must_be_direct_child_of_commit_a_agent(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     commit_a = "a" * 40
@@ -6881,6 +7136,69 @@ def test_commit_b_must_be_direct_child_of_commit_a(
     )
 
     with pytest.raises(ValueError, match="direct child"):
+        runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
+
+
+def test_task6_commit_b_accepts_agent_commit_a_above_historical_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commit_a = "a" * 40
+    commit_b = "b" * 40
+    expected_changed = "\n".join(
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    )
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): commit_b,
+        ("rev-parse", "HEAD^"): commit_a,
+        ("rev-parse", f"{commit_a}^"): "d" * 40,
+        ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
+        ("rev-list", "--count", f"{commit_a}..{commit_b}"): "1",
+        ("diff", "--name-only", f"{commit_a}..{commit_b}"): expected_changed,
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    result = runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
+    assert result["commit_a"] == commit_a
+    assert result["commit_b"] == commit_b
+    assert result["changed_files"] == sorted(
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    )
+
+
+def test_task6_commit_b_rejects_historical_human_commit_as_commit_a(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commit_a = runner.HISTORICAL_HUMAN_COMMIT_A
+    commit_b = "b" * 40
+    expected_changed = "\n".join(
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    )
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): commit_b,
+        ("rev-parse", "HEAD^"): commit_a,
+        ("rev-parse", f"{commit_a}^"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
+        ("rev-list", "--count", f"{commit_a}..{commit_b}"): "1",
+        ("diff", "--name-only", f"{commit_a}..{commit_b}"): expected_changed,
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="historical Commit A.*not active|superseded"):
         runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
 
 
