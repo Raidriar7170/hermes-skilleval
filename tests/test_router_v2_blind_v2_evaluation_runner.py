@@ -5799,7 +5799,9 @@ def test_task5_freeze_revalidates_selected_tasks_and_selection_audit(
     else:
         selection["selected_candidate_ids_sha256"] = "0" * 64
 
-    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
         _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -5819,7 +5821,9 @@ def test_task5_freeze_rejects_resynchronized_round_lineage_not_derived_from_sour
     }
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
-    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
         _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -5853,7 +5857,9 @@ def test_task5_freeze_rejects_source_synchronized_one_x_round_two_selection(
     )
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
-    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
         _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -6053,7 +6059,9 @@ def test_task5_freeze_rejects_resynchronized_alternate_eligible_selection(
     }
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
-    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
         _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -7677,7 +7685,9 @@ def test_task5_freeze_rejects_resynchronized_arbitrary_accepted_pool_hash(
         validation["selection_audit"]
     )
 
-    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
         _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -7876,7 +7886,9 @@ def test_task5_freeze_rederives_hash_order_winners_after_full_resynchronization(
     )
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
-    with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
         _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
