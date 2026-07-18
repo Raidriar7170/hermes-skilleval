@@ -653,22 +653,30 @@ def build_generator_request(
     gold_skill_id: str,
     negative_quota: int,
     positive_only_quota: int,
-    commit_a: str,
-    preregistration_sha256: str,
+    repository_root: Path | str,
     round_number: int = 1,
 ) -> dict[str, Any]:
+    repository = Path(repository_root).resolve(strict=True)
+    preregistration_file = _safe_repository_regular_file(
+        repository,
+        PREREGISTRATION_RELATIVE,
+        label="generator preregistration",
+    )
+    preregistration_source = preregistration_file.read_bytes()
+    preregistration = _json_no_duplicate_keys(
+        preregistration_source, "generator preregistration"
+    )
+    repository_authority = validate_commit_a_repository(repository, preregistration)
     commit_a = _exact_lowercase_hex(
-        commit_a, length=40, label="generator Commit A-agent"
+        repository_authority.get("commit_a"),
+        length=40,
+        label="generator Commit A-agent",
     )
     _require(
         commit_a != HISTORICAL_HUMAN_COMMIT_A,
         "historical Commit A has been superseded and cannot authorize generation",
     )
-    preregistration_sha256 = _exact_lowercase_hex(
-        preregistration_sha256,
-        length=64,
-        label="generator preregistration SHA-256",
-    )
+    preregistration_sha256 = _sha256_bytes(preregistration_source)
     receipt = validate_agent_config_smoke_receipt(
         commit_a=commit_a,
         preregistration_sha256=preregistration_sha256,
@@ -6980,6 +6988,32 @@ def _verify_model_files(
         )
 
 
+def _safe_repository_regular_file(
+    repository_root: Path, relative: Path, *, label: str
+) -> Path:
+    repository = repository_root.resolve(strict=True)
+    _require(
+        bool(relative.parts)
+        and not relative.is_absolute()
+        and ".." not in relative.parts,
+        f"{label} path must be repository-relative",
+    )
+    unresolved = repository
+    for component in relative.parts:
+        unresolved /= component
+        _require(
+            not unresolved.is_symlink(),
+            f"{label} path components must not be symlinks",
+        )
+    resolved = unresolved.resolve(strict=True)
+    _require(resolved.is_relative_to(repository), f"{label} path escapes repository")
+    _require(
+        unresolved.is_file() and resolved.is_file(),
+        f"{label} path must be a regular file",
+    )
+    return resolved
+
+
 def _repository_file(repository_root: Path, relative_value: Any, *, label: str) -> Path:
     _require(
         type(relative_value) is str and bool(relative_value), f"{label} path mismatch"
@@ -7475,15 +7509,13 @@ def read_frozen_dataset_documents(repository_root: Path | str) -> dict[str, byte
     )
     documents: dict[str, bytes] = {}
     for filename in DATASET_FREEZE_FILENAMES:
-        path = root / filename
-        _require(not path.is_symlink(), "frozen dataset files must not be symlinks")
-        resolved = path.resolve(strict=True)
-        _require(resolved.is_relative_to(root), "frozen dataset file escapes root")
-        _require(
-            path.is_file() and resolved.is_file(),
-            "frozen dataset paths must be regular files",
+        path = _safe_repository_regular_file(
+            repository,
+            DATASET_FREEZE_RELATIVE / filename,
+            label="frozen dataset",
         )
-        documents[filename] = resolved.read_bytes()
+        _require(path.is_relative_to(root), "frozen dataset file escapes root")
+        documents[filename] = path.read_bytes()
     return documents
 
 
@@ -7679,7 +7711,7 @@ def _validated_agent_config_smoke_invocations(
         _require(
             type(invocation["transport_retry_count"]) is int
             and invocation["transport_retry_count"] == 0,
-            "Agent-config smoke must use exactly three provider invocations",
+            "Agent-config smoke transport retry count mismatch",
         )
         _require(
             invocation["request_text"] == AGENT_CONFIG_SMOKE_REQUEST_TEXT
@@ -7803,51 +7835,67 @@ class _LocalSentenceTransformerEncoder:
 def run_model_load_smoke(
     pilot_manifest_path: Path | str,
     *,
-    preregistration_path: Path | str,
     repository_root: Path | str,
-    commit_a: str,
-    commit_b: str,
-    frozen_dataset_manifest_sha256: str,
     encoder_factory: EncoderFactory | None = None,
     authority_validator: AuthorityValidator = validate_preregistration_authority,
     commit_b_validator: CommitBValidator = validate_commit_b_repository,
 ) -> dict[str, Any]:
     repository = Path(repository_root).resolve(strict=True)
+    frozen_manifest_path = _safe_repository_regular_file(
+        repository,
+        DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json",
+        label="model-load smoke frozen dataset manifest",
+    )
+    frozen_manifest_source = frozen_manifest_path.read_bytes()
+    frozen_manifest = _json_no_duplicate_keys(
+        frozen_manifest_source, "model-load smoke frozen dataset manifest"
+    )
     commit_a = _exact_lowercase_hex(
-        commit_a, length=40, label="model-load smoke Commit A-agent"
+        frozen_manifest.get("commit_a"),
+        length=40,
+        label="model-load smoke Commit A-agent",
+    )
+    _require(
+        commit_a != HISTORICAL_HUMAN_COMMIT_A,
+        "historical Commit A has been superseded and is not active",
+    )
+    commit_state = commit_b_validator(repository, commit_a=commit_a)
+    repository_commit_a = _exact_lowercase_hex(
+        commit_state.get("commit_a"),
+        length=40,
+        label="model-load smoke repository Commit A-agent",
     )
     commit_b = _exact_lowercase_hex(
-        commit_b, length=40, label="model-load smoke Commit B"
+        commit_state.get("commit_b"),
+        length=40,
+        label="model-load smoke Commit B",
     )
     _require(
         commit_b != commit_a,
         "model-load smoke Commit B must differ from Commit A-agent",
     )
-    frozen_dataset_manifest_sha256 = _exact_lowercase_hex(
-        frozen_dataset_manifest_sha256,
-        length=64,
-        label="frozen dataset manifest SHA-256",
-    )
-    commit_state = commit_b_validator(repository, commit_a=commit_a)
     _require(
-        commit_state.get("commit_a") == commit_a
-        and commit_state.get("commit_b") == commit_b,
+        repository_commit_a == commit_a,
         "model-load smoke Commit B repository authority mismatch",
     )
-    frozen_manifest_path = (
-        repository / DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"
-    ).resolve(strict=True)
-    _require(
-        frozen_manifest_path.is_relative_to(repository)
-        and frozen_manifest_path.is_file()
-        and _sha256_file(frozen_manifest_path) == frozen_dataset_manifest_sha256,
-        "model-load smoke frozen dataset manifest authority mismatch",
+    preregistration_file = _safe_repository_regular_file(
+        repository,
+        PREREGISTRATION_RELATIVE,
+        label="model-load smoke preregistration",
     )
-    authority_validator(
-        preregistration_path,
+    preregistration_source = preregistration_file.read_bytes()
+    preregistration_sha256 = _sha256_bytes(preregistration_source)
+    frozen_dataset_manifest_sha256 = _sha256_bytes(frozen_manifest_source)
+    preregistration_authority = authority_validator(
+        preregistration_file,
         repository_root=repository,
         pilot_manifest_path=pilot_manifest_path,
         verify_model_files=True,
+    )
+    _require(
+        preregistration_authority.get("preregistration_file_sha256")
+        == preregistration_sha256,
+        "model-load smoke preregistration byte authority mismatch",
     )
     manifest = _json_no_duplicate_keys(
         Path(pilot_manifest_path).read_bytes(), "pilot manifest"
@@ -7925,7 +7973,7 @@ def run_model_load_smoke(
             dimensions.append(dimension)
             models.append({"arm": binding["arm"], "seed": binding["seed"]})
         _require(len(set(dimensions)) == 1, "model embedding dimensions differ")
-        return {
+        smoke = {
             "schema_version": "router-v2-blind-v2-model-load-smoke-v1",
             "smoke_status": "PASS",
             "models": models,
@@ -7935,11 +7983,18 @@ def run_model_load_smoke(
             "benchmark_metrics_computed": False,
             "blind_v2_data_read": False,
         }
+        return _build_model_load_smoke_receipt(
+            smoke,
+            commit_a=commit_a,
+            commit_b=commit_b,
+            preregistration_sha256=preregistration_sha256,
+            frozen_dataset_manifest_sha256=frozen_dataset_manifest_sha256,
+        )
     finally:
         shutil.rmtree(temporary)
 
 
-def build_model_load_smoke_receipt(
+def _build_model_load_smoke_receipt(
     smoke: dict[str, Any],
     *,
     commit_a: str,
@@ -8067,7 +8122,7 @@ def validate_model_load_smoke_receipt(
     )
     smoke = receipt.get("smoke")
     _require(type(smoke) is dict, "model-load smoke receipt structure mismatch")
-    rebuilt = build_model_load_smoke_receipt(
+    rebuilt = _build_model_load_smoke_receipt(
         cast(dict[str, Any], smoke),
         commit_a=commit_a,
         commit_b=commit_b,

@@ -6752,16 +6752,30 @@ def _task6_agent_config_smoke_invocations() -> list[dict[str, Any]]:
     return invocations
 
 
-def _task6_build_public_generator_request(
-    *, commit_a: str = "a" * 40, preregistration_sha256: str = "b" * 64
-) -> dict[str, Any]:
+def _task6_write_preregistration(
+    repository: Path,
+) -> tuple[Path, bytes, dict[str, Any]]:
+    preregistration = {
+        "preregistration_parent_git_commit": runner.PREREGISTRATION_PARENT_COMMIT,
+        "supersedes_commit": runner.HISTORICAL_HUMAN_COMMIT_A,
+        "commit_a_changed_files": [
+            "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py"
+        ],
+    }
+    source = (json.dumps(preregistration, indent=2) + "\n").encode()
+    path = repository / runner.PREREGISTRATION_RELATIVE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(source)
+    return path, source, preregistration
+
+
+def _task6_build_public_generator_request(*, repository_root: Path) -> dict[str, Any]:
     return runner.build_generator_request(
         _skills(),
         gold_skill_id="test-skill-00",
         negative_quota=2,
         positive_only_quota=1,
-        commit_a=commit_a,
-        preregistration_sha256=preregistration_sha256,
+        repository_root=repository_root,
     )
 
 
@@ -6776,9 +6790,20 @@ def test_task6_public_generator_request_requires_authority_arguments() -> None:
 
 
 def test_task6_public_generator_request_validates_exact_smoke_authority(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _, source, preregistration = _task6_write_preregistration(tmp_path)
     calls: list[tuple[str, str]] = []
+    repository_calls: list[tuple[Path, dict[str, Any]]] = []
+    commit_a = "a" * 40
+    preregistration_sha256 = hashlib.sha256(source).hexdigest()
+
+    def validate_repository(
+        repository_root: Path | str, candidate: dict[str, Any]
+    ) -> dict[str, Any]:
+        repository_calls.append((Path(repository_root), candidate))
+        return {"commit_a": commit_a}
 
     def validate_receipt(
         *, commit_a: str, preregistration_sha256: str
@@ -6789,12 +6814,14 @@ def test_task6_public_generator_request_validates_exact_smoke_authority(
             "preregistration_sha256": preregistration_sha256,
         }
 
+    monkeypatch.setattr(runner, "validate_commit_a_repository", validate_repository)
     monkeypatch.setattr(runner, "validate_agent_config_smoke_receipt", validate_receipt)
 
-    request = _task6_build_public_generator_request()
+    request = _task6_build_public_generator_request(repository_root=tmp_path)
 
     assert request["role"] == "generator"
-    assert calls == [("a" * 40, "b" * 64)]
+    assert repository_calls == [(tmp_path, preregistration)]
+    assert calls == [(commit_a, preregistration_sha256)]
 
 
 @pytest.mark.parametrize(
@@ -6805,29 +6832,73 @@ def test_task6_public_generator_request_validates_exact_smoke_authority(
     ),
 )
 def test_task6_public_generator_request_refuses_missing_or_drifted_smoke(
-    monkeypatch: pytest.MonkeyPatch, error: Exception, message: str
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    error: Exception,
+    message: str,
 ) -> None:
+    _task6_write_preregistration(tmp_path)
+
+    def validate_repository(
+        repository_root: Path | str, preregistration: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {"commit_a": "a" * 40}
+
     def reject_receipt(**kwargs: str) -> dict[str, Any]:
         raise error
 
+    monkeypatch.setattr(runner, "validate_commit_a_repository", validate_repository)
     monkeypatch.setattr(runner, "validate_agent_config_smoke_receipt", reject_receipt)
 
     with pytest.raises(type(error), match=message):
-        _task6_build_public_generator_request()
+        _task6_build_public_generator_request(repository_root=tmp_path)
 
 
 def test_task6_public_generator_request_rejects_historical_commit_before_smoke(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _task6_write_preregistration(tmp_path)
+
+    def validate_repository(
+        repository_root: Path | str, preregistration: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {"commit_a": runner.HISTORICAL_HUMAN_COMMIT_A}
+
     def must_not_validate(**kwargs: str) -> dict[str, Any]:
         pytest.fail("historical Commit A reached smoke validation")
 
+    monkeypatch.setattr(runner, "validate_commit_a_repository", validate_repository)
     monkeypatch.setattr(
         runner, "validate_agent_config_smoke_receipt", must_not_validate
     )
 
     with pytest.raises(ValueError, match="historical Commit A.*superseded"):
-        _task6_build_public_generator_request(commit_a=runner.HISTORICAL_HUMAN_COMMIT_A)
+        _task6_build_public_generator_request(repository_root=tmp_path)
+
+
+def test_task6_public_generator_request_refuses_unvalidated_arbitrary_authority(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    parameters = inspect.signature(runner.build_generator_request).parameters
+    assert {"commit_a", "preregistration_sha256"}.isdisjoint(parameters)
+    _task6_write_preregistration(tmp_path)
+
+    def reject_repository(
+        repository_root: Path | str, preregistration: dict[str, Any]
+    ) -> dict[str, Any]:
+        raise ValueError("live Commit A-agent repository authority mismatch")
+
+    def must_not_validate_smoke(**kwargs: str) -> dict[str, Any]:
+        pytest.fail("arbitrary authority reached Agent-config smoke validation")
+
+    monkeypatch.setattr(runner, "validate_commit_a_repository", reject_repository)
+    monkeypatch.setattr(
+        runner, "validate_agent_config_smoke_receipt", must_not_validate_smoke
+    )
+
+    with pytest.raises(ValueError, match="live Commit A-agent"):
+        _task6_build_public_generator_request(repository_root=tmp_path)
 
 
 def test_task6_historical_human_commit_cannot_authorize_agent_generation(
@@ -7039,6 +7110,18 @@ def test_task6_agent_config_smoke_requires_exact_three_approved_configs() -> Non
         )
 
 
+def test_task6_agent_config_smoke_retry_error_describes_retry_mismatch() -> None:
+    invocations = _task6_agent_config_smoke_invocations()
+    invocations[0]["transport_retry_count"] = 1
+
+    with pytest.raises(ValueError, match="retry"):
+        runner.build_agent_config_smoke_receipt(
+            invocations,
+            commit_a="a" * 40,
+            preregistration_sha256="b" * 64,
+        )
+
+
 def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
     tmp_path: Path,
 ) -> None:
@@ -7073,18 +7156,22 @@ def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
     }
     pilot_path = tmp_path / "pilot-manifest.json"
     pilot_path.write_text(json.dumps(pilot), encoding="utf-8")
-    preregistration_path = tmp_path / "preregistration.json"
-    preregistration_path.write_text("{}", encoding="utf-8")
+    preregistration_path, preregistration_source, _ = _task6_write_preregistration(
+        tmp_path
+    )
+    commit_a = "a" * 40
+    commit_b = "b" * 40
     frozen_manifest_path = (
         tmp_path / runner.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"
     )
     frozen_manifest_path.parent.mkdir(parents=True)
-    frozen_manifest_path.write_bytes(b"task6-frozen-dataset-manifest")
+    frozen_manifest_path.write_text(
+        json.dumps({"commit_a": commit_a}), encoding="utf-8"
+    )
     frozen_manifest_sha256 = hashlib.sha256(
         frozen_manifest_path.read_bytes()
     ).hexdigest()
-    commit_a = "a" * 40
-    commit_b = "b" * 40
+    preregistration_sha256 = hashlib.sha256(preregistration_source).hexdigest()
     calls: list[tuple[str, int, Path]] = []
     authority_calls: list[tuple[Path, Path, Path]] = []
     repository_calls: list[tuple[Path, str]] = []
@@ -7104,7 +7191,7 @@ def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
         authority_calls.append(
             (Path(preregistration), Path(repository_root), Path(pilot_manifest_path))
         )
-        return {"status": "VALID"}
+        return {"preregistration_file_sha256": preregistration_sha256}
 
     def commit_b_validator(
         repository_root: Path | str, *, commit_a: str
@@ -7114,18 +7201,18 @@ def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
 
     result = runner.run_model_load_smoke(
         pilot_path,
-        preregistration_path=preregistration_path,
         repository_root=tmp_path,
-        commit_a=commit_a,
-        commit_b=commit_b,
-        frozen_dataset_manifest_sha256=frozen_manifest_sha256,
         encoder_factory=factory,
         authority_validator=authority_validator,
         commit_b_validator=commit_b_validator,
     )
 
-    assert result["smoke_status"] == "PASS"
-    assert result["embedding_dimension"] == 3
+    assert result["commit_a"] == commit_a
+    assert result["commit_b"] == commit_b
+    assert result["preregistration_sha256"] == preregistration_sha256
+    assert result["frozen_dataset_manifest_sha256"] == frozen_manifest_sha256
+    assert result["smoke"]["smoke_status"] == "PASS"
+    assert result["smoke"]["embedding_dimension"] == 3
     assert [(arm, seed) for arm, seed, _ in calls] == [
         ("A", 7170),
         ("C", 7170),
@@ -7145,6 +7232,15 @@ def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
 def test_task6_model_load_smoke_refuses_commit_a_agent_without_commit_b(
     tmp_path: Path,
 ) -> None:
+    commit_a = "a" * 40
+    frozen_manifest_path = (
+        tmp_path / runner.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"
+    )
+    frozen_manifest_path.parent.mkdir(parents=True)
+    frozen_manifest_path.write_text(
+        json.dumps({"commit_a": commit_a}), encoding="utf-8"
+    )
+    _task6_write_preregistration(tmp_path)
     factory_called = False
 
     def factory(arm: str, seed: int, model_path: Path) -> _FakeEncoder:
@@ -7152,17 +7248,56 @@ def test_task6_model_load_smoke_refuses_commit_a_agent_without_commit_b(
         factory_called = True
         return _FakeEncoder()
 
+    def commit_b_validator(
+        repository_root: Path | str, *, commit_a: str
+    ) -> dict[str, Any]:
+        return {"commit_a": commit_a, "commit_b": commit_a}
+
     with pytest.raises(ValueError, match="Commit B.*differ"):
         runner.run_model_load_smoke(
             tmp_path / "pilot-manifest.json",
-            preregistration_path=tmp_path / "preregistration.json",
             repository_root=tmp_path,
-            commit_a="a" * 40,
-            commit_b="a" * 40,
-            frozen_dataset_manifest_sha256="c" * 64,
             encoder_factory=factory,
+            commit_b_validator=commit_b_validator,
         )
     assert factory_called is False
+
+
+def test_task6_model_load_smoke_rejects_manifest_ancestor_symlink(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    _task6_write_preregistration(repository)
+    storage = repository / "storage" / "router-v2-blind-v2"
+    storage.mkdir(parents=True)
+    (storage / "blind-v2-manifest.json").write_text(
+        json.dumps({"commit_a": "a" * 40}), encoding="utf-8"
+    )
+    (repository / "data").symlink_to(repository / "storage", target_is_directory=True)
+
+    def must_not_validate_commit_b(
+        repository_root: Path | str, *, commit_a: str
+    ) -> dict[str, Any]:
+        pytest.fail("manifest ancestor symlink reached Commit B validation")
+
+    with pytest.raises(ValueError, match="symlink"):
+        runner.run_model_load_smoke(
+            tmp_path / "pilot-manifest.json",
+            repository_root=repository,
+            commit_b_validator=must_not_validate_commit_b,
+        )
+
+
+def test_task6_model_load_smoke_has_no_public_authority_rebinding_helper() -> None:
+    parameters = inspect.signature(runner.run_model_load_smoke).parameters
+    assert {
+        "preregistration_path",
+        "commit_a",
+        "commit_b",
+        "frozen_dataset_manifest_sha256",
+    }.isdisjoint(parameters)
+    assert not hasattr(runner, "build_model_load_smoke_receipt")
 
 
 def test_task6_model_load_smoke_receipt_binds_both_commits_and_dataset_manifest(
@@ -7184,7 +7319,7 @@ def test_task6_model_load_smoke_receipt_binds_both_commits_and_dataset_manifest(
         "benchmark_metrics_computed": False,
         "blind_v2_data_read": False,
     }
-    receipt = runner.build_model_load_smoke_receipt(
+    receipt = runner._build_model_load_smoke_receipt(
         smoke,
         commit_a="a" * 40,
         commit_b="b" * 40,
@@ -7269,7 +7404,7 @@ def test_task6_model_load_smoke_rejects_rehashed_semantic_tampering(
     invalid_smoke = {**smoke, field: invalid}
 
     with pytest.raises(ValueError, match=message):
-        runner.build_model_load_smoke_receipt(
+        runner._build_model_load_smoke_receipt(
             invalid_smoke,
             commit_a="a" * 40,
             commit_b="b" * 40,
@@ -7277,7 +7412,7 @@ def test_task6_model_load_smoke_rejects_rehashed_semantic_tampering(
             frozen_dataset_manifest_sha256="d" * 64,
         )
 
-    receipt = runner.build_model_load_smoke_receipt(
+    receipt = runner._build_model_load_smoke_receipt(
         smoke,
         commit_a="a" * 40,
         commit_b="b" * 40,
