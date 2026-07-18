@@ -7836,9 +7836,23 @@ def run_model_load_smoke(
     pilot_manifest_path: Path | str,
     *,
     repository_root: Path | str,
-    encoder_factory: EncoderFactory | None = None,
-    authority_validator: AuthorityValidator = validate_preregistration_authority,
-    commit_b_validator: CommitBValidator = validate_commit_b_repository,
+) -> dict[str, Any]:
+    return _run_model_load_smoke(
+        pilot_manifest_path,
+        repository_root=repository_root,
+        encoder_factory=None,
+        authority_validator=validate_preregistration_authority,
+        commit_b_validator=validate_commit_b_repository,
+    )
+
+
+def _run_model_load_smoke(
+    pilot_manifest_path: Path | str,
+    *,
+    repository_root: Path | str,
+    encoder_factory: EncoderFactory | None,
+    authority_validator: AuthorityValidator,
+    commit_b_validator: CommitBValidator,
 ) -> dict[str, Any]:
     repository = Path(repository_root).resolve(strict=True)
     frozen_manifest_path = _safe_repository_regular_file(

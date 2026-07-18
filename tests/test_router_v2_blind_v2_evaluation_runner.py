@@ -7122,6 +7122,67 @@ def test_task6_agent_config_smoke_retry_error_describes_retry_mismatch() -> None
         )
 
 
+@pytest.mark.parametrize(
+    "injected_argument",
+    ("encoder_factory", "authority_validator", "commit_b_validator"),
+)
+def test_task6_public_model_smoke_rejects_dependency_injection(
+    tmp_path: Path, injected_argument: str
+) -> None:
+    injected: dict[str, Any] = {injected_argument: object()}
+
+    with pytest.raises(TypeError, match=injected_argument):
+        runner.run_model_load_smoke(
+            tmp_path / "pilot-manifest.json",
+            repository_root=tmp_path,
+            **injected,
+        )
+
+
+def test_task6_public_model_smoke_hardwires_production_dependencies(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    receipt = {"schema_version": "test-only-bound-model-smoke-receipt"}
+    calls: list[dict[str, Any]] = []
+
+    def private_smoke(
+        pilot_manifest_path: Path | str,
+        *,
+        repository_root: Path | str,
+        encoder_factory: Any,
+        authority_validator: Any,
+        commit_b_validator: Any,
+    ) -> dict[str, Any]:
+        calls.append(
+            {
+                "pilot_manifest_path": Path(pilot_manifest_path),
+                "repository_root": Path(repository_root),
+                "encoder_factory": encoder_factory,
+                "authority_validator": authority_validator,
+                "commit_b_validator": commit_b_validator,
+            }
+        )
+        return receipt
+
+    monkeypatch.setattr(runner, "_run_model_load_smoke", private_smoke)
+
+    result = runner.run_model_load_smoke(
+        tmp_path / "pilot-manifest.json",
+        repository_root=tmp_path,
+    )
+
+    assert result is receipt
+    assert calls == [
+        {
+            "pilot_manifest_path": tmp_path / "pilot-manifest.json",
+            "repository_root": tmp_path,
+            "encoder_factory": None,
+            "authority_validator": runner.validate_preregistration_authority,
+            "commit_b_validator": runner.validate_commit_b_repository,
+        }
+    ]
+
+
 def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
     tmp_path: Path,
 ) -> None:
@@ -7199,7 +7260,7 @@ def test_task6_model_load_smoke_uses_only_one_a_and_three_c_then_removes_temp(
         repository_calls.append((Path(repository_root), commit_a))
         return {"commit_a": commit_a, "commit_b": commit_b}
 
-    result = runner.run_model_load_smoke(
+    result = runner._run_model_load_smoke(
         pilot_path,
         repository_root=tmp_path,
         encoder_factory=factory,
@@ -7254,10 +7315,11 @@ def test_task6_model_load_smoke_refuses_commit_a_agent_without_commit_b(
         return {"commit_a": commit_a, "commit_b": commit_a}
 
     with pytest.raises(ValueError, match="Commit B.*differ"):
-        runner.run_model_load_smoke(
+        runner._run_model_load_smoke(
             tmp_path / "pilot-manifest.json",
             repository_root=tmp_path,
             encoder_factory=factory,
+            authority_validator=runner.validate_preregistration_authority,
             commit_b_validator=commit_b_validator,
         )
     assert factory_called is False
@@ -7276,16 +7338,10 @@ def test_task6_model_load_smoke_rejects_manifest_ancestor_symlink(
     )
     (repository / "data").symlink_to(repository / "storage", target_is_directory=True)
 
-    def must_not_validate_commit_b(
-        repository_root: Path | str, *, commit_a: str
-    ) -> dict[str, Any]:
-        pytest.fail("manifest ancestor symlink reached Commit B validation")
-
     with pytest.raises(ValueError, match="symlink"):
         runner.run_model_load_smoke(
             tmp_path / "pilot-manifest.json",
             repository_root=repository,
-            commit_b_validator=must_not_validate_commit_b,
         )
 
 
@@ -7296,6 +7352,9 @@ def test_task6_model_load_smoke_has_no_public_authority_rebinding_helper() -> No
         "commit_a",
         "commit_b",
         "frozen_dataset_manifest_sha256",
+        "encoder_factory",
+        "authority_validator",
+        "commit_b_validator",
     }.isdisjoint(parameters)
     assert not hasattr(runner, "build_model_load_smoke_receipt")
 
