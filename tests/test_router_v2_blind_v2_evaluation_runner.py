@@ -6589,14 +6589,6 @@ def test_preregistration_authority_rejects_gate_source_and_model_drift() -> None
         "router-v2-v4-confusion-mined-pilot-002-eval-replay/pilot-manifest.json"
     )
 
-    authority = runner.validate_preregistration_authority(
-        preregistration,
-        repository_root=repository,
-        pilot_manifest_path=pilot,
-        verify_model_files=False,
-    )
-    assert authority["status"] == "VALID"
-
     original = json.loads(preregistration.read_text(encoding="utf-8"))
 
     def write_tampered(value: dict[str, Any], name: str) -> Path:
@@ -6606,6 +6598,36 @@ def test_preregistration_authority_rejects_gate_source_and_model_drift() -> None
         path = repository / f".{PREFIX}-{name}"
         path.write_text(json.dumps(value), encoding="utf-8")
         return path
+
+    with pytest.raises(ValueError, match="canonical namespace binding"):
+        runner.validate_preregistration_authority(
+            preregistration,
+            repository_root=repository,
+            pilot_manifest_path=pilot,
+            verify_model_files=False,
+        )
+
+    original["evaluation_output_namespace"] = (
+        "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1"
+    )
+    original["evaluator"]["contract_sha256"] = runner.canonical_sha256(
+        runner.preregistered_evaluation_contract()
+    )
+    for source_binding in original["evaluator"]["source_files"]:
+        source_path = repository / source_binding["path"]
+        source_binding["sha256"] = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    canonical_path = write_tampered(original, "canonical-namespace.json")
+    try:
+        authority = runner.validate_preregistration_authority(
+            canonical_path,
+            repository_root=repository,
+            pilot_manifest_path=pilot,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+        assert authority["status"] == "VALID"
+    finally:
+        canonical_path.unlink(missing_ok=True)
 
     gate = deepcopy(original)
     gate["gate"]["mrr_mean_delta_min"] = "-0.02000000"
@@ -10359,6 +10381,41 @@ def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) 
         )
 
 
+def test_task7_final_namespace_is_exact_attempt_one_literal() -> None:
+    assert runner.FINAL_NAMESPACE_RELATIVE == Path(
+        "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1"
+    )
+
+
+def test_task7_parent_namespace_is_rejected_before_attempt_side_effects(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repo"
+    parent_namespace = repository / Path(
+        "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001"
+    )
+    parent_namespace.parent.mkdir(parents=True)
+    callback_calls: list[str] = []
+
+    def evaluate() -> dict[str, bytes]:
+        callback_calls.append("called")
+        return {}
+
+    with pytest.raises(ValueError, match="canonical namespace"):
+        runner.run_single_attempt(
+            parent_namespace,
+            repository_root=repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=evaluate,
+            protected_roots=[],
+        )
+
+    assert callback_calls == []
+    assert not parent_namespace.exists()
+    assert not list(repository.rglob("attempt-1.started.json"))
+    assert not list(repository.rglob("attempt-1.terminal.json"))
+
+
 def test_single_attempt_keyboard_interrupt_is_terminal_and_reraised(
     tmp_path: Path,
 ) -> None:
@@ -10517,8 +10574,10 @@ def test_task7_evaluation_accepts_exact_canonical_repository_path(
     tmp_path: Path,
 ) -> None:
     repository = tmp_path / "repo"
-    output = repository / runner.FINAL_NAMESPACE_RELATIVE
-    output.parent.mkdir(parents=True)
+    (repository / "artifacts/router-v2-blind-v2").mkdir(parents=True)
+    output = repository / Path(
+        "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1"
+    )
     documents = {
         name: f"test-only:{name}\n".encode()
         for name in runner.EVALUATION_OUTPUT_FILENAMES
@@ -10533,8 +10592,12 @@ def test_task7_evaluation_accepts_exact_canonical_repository_path(
     )
 
     assert terminal == runner.build_attempt_terminal_document(len(documents))
-    assert (output / "attempt-1.started.json").is_file()
-    assert (output / "attempt-1.terminal.json").is_file()
+    started_marker = output / "attempt-1.started.json"
+    terminal_marker = output / "attempt-1.terminal.json"
+    assert started_marker.is_file()
+    assert terminal_marker.is_file()
+    assert started_marker.parent == output
+    assert terminal_marker.parent == output
 
 
 def test_task7_runner_removes_human_authoring_and_validation_workflow() -> None:

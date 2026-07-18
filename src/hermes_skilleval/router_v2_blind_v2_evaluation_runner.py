@@ -59,7 +59,7 @@ SKILL_REPRESENTATION_BUILDER_VERSION = (
     "router-v2-id-name-category-description-trigger-terms-body-v1"
 )
 FINAL_NAMESPACE_RELATIVE = Path(
-    "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001"
+    "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1"
 )
 DATASET_FREEZE_RELATIVE = Path("data/router-v2-blind-v2")
 PREREGISTRATION_RELATIVE = Path("artifacts/router-v2-blind-v2/preregistration.json")
@@ -9178,6 +9178,7 @@ def run_single_attempt(
     output = _assert_output_safe(
         Path(output_root), Path(repository_root), protected_roots
     )
+    output.parent.mkdir(mode=0o700, parents=False, exist_ok=True)
     output.mkdir(mode=0o700, parents=False, exist_ok=False)
     started = build_attempt_started_document(started_payload)
     _write_exclusive_json(output / "attempt-1.started.json", started)
