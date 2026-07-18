@@ -9681,7 +9681,7 @@ def run_single_attempt(
             "schema_version": "router-v2-blind-v2-attempt-terminal-v1",
             "attempt_number": 1,
             "status": "INFRASTRUCTURE_FAILURE",
-            "research_conclusion": "BLIND_V2_INCONCLUSIVE_INFRASTRUCTURE_FAILURE",
+            "research_conclusion": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
             "error_type": type(exc).__name__,
             "error_message": str(exc),
             "retry_allowed": False,

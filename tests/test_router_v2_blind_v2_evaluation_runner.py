@@ -10324,8 +10324,10 @@ def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) 
     terminal = json.loads((output / "attempt-1.terminal.json").read_text())
     assert terminal["status"] == "INFRASTRUCTURE_FAILURE"
     assert terminal["research_conclusion"] == (
-        "BLIND_V2_INCONCLUSIVE_INFRASTRUCTURE_FAILURE"
+        "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE"
     )
+    assert terminal["retry_allowed"] is False
+    terminal_bytes = (output / "attempt-1.terminal.json").read_bytes()
     with pytest.raises(FileExistsError):
         runner.run_single_attempt(
             output,
@@ -10334,6 +10336,7 @@ def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) 
             evaluate=lambda: {},
             protected_roots=[],
         )
+    assert (output / "attempt-1.terminal.json").read_bytes() == terminal_bytes
 
     protected_repository = tmp_path / "protected-repo"
     protected = protected_repository / runner.FINAL_NAMESPACE_RELATIVE
