@@ -852,7 +852,10 @@ def _derived_generator_candidates(
     quota = cast(dict[str, Any], cast(dict[str, Any], request["input"])["quota"])
     response_sha256 = canonical_sha256(response)
     candidates: list[dict[str, Any]] = []
-    for generated in cast(list[dict[str, Any]], response["candidates"]):
+    for generated in sorted(
+        cast(list[dict[str, Any]], response["candidates"]),
+        key=lambda candidate: cast(int, candidate["candidate_index"]),
+    ):
         prompt_text = cast(str, generated["prompt_text"])
         candidates.append(
             {
@@ -1304,6 +1307,15 @@ def _protected_authority_summary(
             "normalized_prompt_list_sha256": canonical_sha256(normalized_prompts),
             "family_count": len(family_ids),
             "family_ids_sha256": canonical_sha256(family_ids),
+            "row_projection_sha256": canonical_sha256(
+                {
+                    "prompts": sorted(
+                        protected_prompts[scope],
+                        key=lambda value: value.encode("utf-8"),
+                    ),
+                    "family_ids": family_ids,
+                }
+            ),
         }
     return summary
 
@@ -1471,7 +1483,10 @@ def _construction_input_authority(
             "source_file_manifest_sha256": canonical_sha256(sources),
             "row_projection_sha256": canonical_sha256(
                 {
-                    "prompts": protected_prompts[scope],
+                    "prompts": sorted(
+                        protected_prompts[scope],
+                        key=lambda value: value.encode("utf-8"),
+                    ),
                     "family_ids": sorted(protected_family_ids[scope]),
                 }
             ),
@@ -1556,6 +1571,7 @@ def _validated_construction_input_authority(
         expected_protected = protected_authority[scope]
         _require(
             projection["source_file_manifest_sha256"] == canonical_sha256(sources)
+            and row_projection_sha256 == expected_protected.get("row_projection_sha256")
             and projection["protected_authority"] == expected_protected
             and type(expected_protected.get("prompt_count")) is int
             and expected_protected["prompt_count"] > 0
@@ -1958,6 +1974,7 @@ def _validated_contamination_scanner_config(value: Any) -> dict[str, Any]:
         "normalized_prompt_list_sha256",
         "family_count",
         "family_ids_sha256",
+        "row_projection_sha256",
     }
     for scope in CONTAMINATION_SCOPES:
         row = _exact_object_fields(
@@ -1974,6 +1991,7 @@ def _validated_contamination_scanner_config(value: Any) -> dict[str, Any]:
             "prompt_bytes_sha256",
             "normalized_prompt_list_sha256",
             "family_ids_sha256",
+            "row_projection_sha256",
         ):
             _exact_lowercase_hex(
                 row[hash_field],
@@ -2958,6 +2976,8 @@ _GENERATION_AUTHORITY_REQUEST_FIELDS = {
 _GENERATION_AUTHORITY_CANDIDATE_FIELDS = {
     "candidate_index",
     "candidate_id",
+    "prompt_text_sha256",
+    "semantic_family_id",
     "gold_skill_id",
     "negative_skill_id",
     "stratum",
@@ -2978,8 +2998,12 @@ def _generation_authority_request_document(
             type(response_sha256) is str,
             "valid generator response must bind response SHA-256",
         )
-        for generated in cast(list[dict[str, Any]], response["candidates"]):
+        for generated in sorted(
+            cast(list[dict[str, Any]], response["candidates"]),
+            key=lambda candidate: cast(int, candidate["candidate_index"]),
+        ):
             negative = generated["proposed_negative_skill_id"]
+            prompt_text = cast(str, generated["prompt_text"])
             candidates.append(
                 {
                     "candidate_index": generated["candidate_index"],
@@ -2989,6 +3013,10 @@ def _generation_authority_request_document(
                         cast(int, generated["candidate_index"]),
                         cast(str, response_sha256),
                     ),
+                    "prompt_text_sha256": _sha256_bytes(
+                        prompt_text.encode("utf-8", errors="strict")
+                    ),
+                    "semantic_family_id": generated["semantic_family_id"],
                     "gold_skill_id": generated["proposed_gold_skill_id"],
                     "negative_skill_id": negative,
                     "stratum": (
@@ -3131,6 +3159,15 @@ def _validated_generation_authority(
                 length=24,
                 label="generation candidate id",
             )
+            prompt_text_sha256 = _exact_lowercase_hex(
+                candidate["prompt_text_sha256"],
+                length=64,
+                label="generation candidate prompt SHA-256",
+            )
+            semantic_family_id = _nonempty_string(
+                candidate["semantic_family_id"],
+                "generation candidate semantic family",
+            )
             negative_skill_id = candidate["negative_skill_id"]
             _require(
                 type(candidate_index) is int
@@ -3160,6 +3197,8 @@ def _validated_generation_authority(
                 "generation candidate opaque identity mismatch",
             )
             normalized_candidate = deepcopy(candidate)
+            normalized_candidate["prompt_text_sha256"] = prompt_text_sha256
+            normalized_candidate["semantic_family_id"] = semantic_family_id
             normalized_candidates.append(normalized_candidate)
             all_candidates.append(
                 {
@@ -3303,6 +3342,8 @@ def _validated_generation_authority(
                 "generation_round": candidate["generation_round"],
                 "candidate_index": candidate["candidate_index"],
                 "response_sha256": candidate["response_sha256"],
+                "prompt_text_sha256": candidate["prompt_text_sha256"],
+                "semantic_family_id": candidate["semantic_family_id"],
                 "gold_skill_id": candidate["gold_skill_id"],
                 "negative_skill_id": candidate["negative_skill_id"],
                 "stratum": candidate["stratum"],
@@ -3409,6 +3450,7 @@ def _validated_selection_audit_semantics(
     gold_field: str,
     negative_field: str,
     require_complete_selection: bool,
+    validate_selected_semantics: bool = True,
     selection_audit_sha256: Any | None = None,
 ) -> dict[str, Any]:
     selection = _exact_object_fields(value, _SELECTION_AUDIT_FIELDS, "selection audit")
@@ -3426,6 +3468,32 @@ def _validated_selection_audit_semantics(
         and selection["accepted_pool_sha256"] == canonical_sha256(accepted_projection),
         "accepted pool authority mismatch",
     )
+    accepted_by_id = {
+        cast(str, candidate["candidate_id"]): candidate
+        for candidate in accepted_projection
+    }
+    if validate_selected_semantics:
+        _require(
+            len(accepted_by_id) == len(accepted_projection)
+            and all(
+                row[id_field] in accepted_by_id
+                and row["prompt_text_sha256"]
+                == accepted_by_id[cast(str, row[id_field])]["prompt_text_sha256"]
+                and row["semantic_family_id"]
+                == accepted_by_id[cast(str, row[id_field])]["semantic_family_id"]
+                and row[gold_field]
+                == accepted_by_id[cast(str, row[id_field])]["gold_skill_id"]
+                and row[negative_field]
+                == accepted_by_id[cast(str, row[id_field])]["negative_skill_id"]
+                and ("negative" if row[negative_field] is not None else "positive_only")
+                == accepted_by_id[cast(str, row[id_field])]["stratum"]
+                and (
+                    "source_type" not in row or row["source_type"] == "AGENT_GENERATED"
+                )
+                for row in selected_rows
+            ),
+            "selected task generation semantic mismatch",
+        )
 
     _require(
         generation_semantics["observed_generation_rounds"]
@@ -5362,6 +5430,7 @@ def _validated_dataset_freeze_tasks(
             gold_field="proposed_gold_skill_id",
             negative_field="proposed_negative_skill_id",
             require_complete_selection=True,
+            validate_selected_semantics=False,
             selection_audit_sha256=validation["selection_audit_sha256"],
         )
         task_rows = [
@@ -7548,12 +7617,49 @@ def _validated_evaluation_frozen_tasks(
             message,
         )
         task_ids = [cast(str, task["task_id"]) for task in tasks]
+        prompt_bytes = [
+            cast(str, task["prompt_text"]).encode("utf-8", errors="strict")
+            for task in tasks
+        ]
+        normalized_prompts = [
+            _normalize(cast(str, task["prompt_text"])) for task in tasks
+        ]
         family_ids = [cast(str, task["semantic_family_id"]) for task in tasks]
+        gold_counts = Counter(task["gold_skill_id"] for task in tasks)
+        negative_counts = Counter(
+            cast(str, task["negative_skill_id"])
+            for task in tasks
+            if task["negative_skill_id"] is not None
+        )
         _require(
             len(set(task_ids)) == POSITIVE_TASK_COUNT
+            and len(set(prompt_bytes)) == POSITIVE_TASK_COUNT
+            and len(set(normalized_prompts)) == POSITIVE_TASK_COUNT
             and len(set(family_ids)) == POSITIVE_TASK_COUNT
             and sum(task["negative_skill_id"] is not None for task in tasks)
             == TEMPTING_NEGATIVE_COUNT,
+            message,
+        )
+        _require(
+            len(gold_counts) == 16
+            and set(gold_counts.values()) == {8}
+            and all(
+                sum(
+                    task["gold_skill_id"] == gold
+                    and task["negative_skill_id"] is not None
+                    for task in tasks
+                )
+                == 6
+                and sum(
+                    task["gold_skill_id"] == gold and task["negative_skill_id"] is None
+                    for task in tasks
+                )
+                == 2
+                for gold in gold_counts
+            )
+            and manifest.get("gold_distribution") == dict(sorted(gold_counts.items()))
+            and manifest.get("negative_distribution")
+            == dict(sorted(negative_counts.items())),
             message,
         )
         task_file_sha256 = _sha256_bytes(task_bytes)

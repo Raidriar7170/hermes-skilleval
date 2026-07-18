@@ -1839,6 +1839,7 @@ def _write_agent_pack(
     root: Path,
     *,
     legacy_single_candidate_generation: bool = False,
+    shuffle_generator_candidates: bool = False,
     rejected_candidate_count: int = 0,
     transport_retry_role: str | None = None,
     round_one_candidate_count: int = 256,
@@ -2022,9 +2023,14 @@ def _write_agent_pack(
                     "rationale": f"{PREFIX} GENERATOR RATIONALE {serial:03d}",
                 }
             )
+        if shuffle_generator_candidates:
+            generated_candidates.reverse()
         generation_response = {"candidates": generated_candidates}
         response_sha256 = _task5_test_canonical_sha256(generation_response)
-        for generated, spec in zip(generated_candidates, group, strict=True):
+        for generated in sorted(
+            generated_candidates, key=lambda candidate: candidate["candidate_index"]
+        ):
+            spec = group[cast(int, generated["candidate_index"])]
             candidate_id = hashlib.sha256(
                 (
                     f"{round_number}:{gold}:{generated['candidate_index']}:"
@@ -2569,6 +2575,37 @@ def test_task5_round_one_generation_uses_16_invocations_with_16_candidates_each(
     ] == [16] * 16
 
 
+def test_task5_shuffled_generator_candidate_wire_order_is_canonicalized(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, shuffle_generator_candidates=True)
+    generation_rows = _read_jsonl(pack / "blind-v2-generation.jsonl")
+    assert [
+        candidate["candidate_index"]
+        for candidate in generation_rows[0]["invocations"][0]["envelope"]["response"][
+            "candidates"
+        ]
+    ] == list(reversed(range(16)))
+
+    first = _validate_agent_pack(pack, tmp_path / "repo")
+    second = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert first["status"] == second["status"] == "VALID"
+    assert first["tasks"] == second["tasks"]
+    first_documents = runner.build_dataset_freeze_documents(first, commit_a="a" * 40)
+    second_documents = runner.build_dataset_freeze_documents(second, commit_a="a" * 40)
+    assert first_documents == second_documents
+    manifest = json.loads(first_documents["blind-v2-manifest.json"])
+    assert all(
+        [candidate["candidate_index"] for candidate in request["candidates"]]
+        == list(range(len(request["candidates"])))
+        for request in manifest["agent_construction"]["generation_authority"][
+            "requests"
+        ]
+    )
+
+
 def test_task5_validation_commits_canonical_skill_and_protected_input_authority(
     tmp_path: Path,
 ) -> None:
@@ -2751,6 +2788,7 @@ def test_task4_legal_protected_authorities_have_distinct_audit_hashes(
         "normalized_prompt_list_sha256",
         "family_count",
         "family_ids_sha256",
+        "row_projection_sha256",
     }
 
 
@@ -6614,6 +6652,112 @@ def _task5_resynchronize_evaluation_manifest_and_bindings(
     ]
 
 
+def _task5_resynchronize_selected_task_semantics(
+    inputs: dict[str, bytes],
+    frozen_bindings: dict[str, Any],
+    tasks: list[dict[str, Any]],
+) -> None:
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    construction = manifest["agent_construction"]
+    inputs["blind-v2-tasks.jsonl"] = b"".join(
+        _task5_test_canonical_json_bytes(task) for task in tasks
+    )
+    task_hash = hashlib.sha256(inputs["blind-v2-tasks.jsonl"]).hexdigest()
+    manifest["dataset_sha256"] = task_hash
+    manifest["tasks_file_sha256"] = task_hash
+    manifest["per_row_prompt_sha256"] = [task["prompt_text_sha256"] for task in tasks]
+    gold_distribution: dict[str, int] = {}
+    negative_distribution: dict[str, int] = {}
+    for task in tasks:
+        gold = task["gold_skill_id"]
+        gold_distribution[gold] = gold_distribution.get(gold, 0) + 1
+        negative = task["negative_skill_id"]
+        if negative is not None:
+            negative_distribution[negative] = negative_distribution.get(negative, 0) + 1
+    manifest["gold_distribution"] = dict(sorted(gold_distribution.items()))
+    manifest["negative_distribution"] = dict(sorted(negative_distribution.items()))
+    construction["selected_task_source_authority"] = [
+        {
+            "task_id": task["task_id"],
+            "prompt_text_sha256": task["prompt_text_sha256"],
+            "semantic_family_id": task["semantic_family_id"],
+            "gold_skill_id": task["gold_skill_id"],
+            "negative_skill_id": task["negative_skill_id"],
+            "source_type": task["source_type"],
+        }
+        for task in tasks
+    ]
+    construction["selected_task_source_authority_sha256"] = (
+        _task5_test_canonical_sha256(construction["selected_task_source_authority"])
+    )
+    selection = construction["deterministic_selection"]
+    selection["selected_by_stratum"] = {
+        skill_id: {
+            stratum: [
+                task["task_id"]
+                for task in tasks
+                if task["gold_skill_id"] == skill_id
+                and (
+                    "negative"
+                    if task["negative_skill_id"] is not None
+                    else "positive_only"
+                )
+                == stratum
+            ]
+            for stratum in ("negative", "positive_only")
+        }
+        for skill_id in sorted(gold_distribution)
+    }
+    construction["deterministic_selection_sha256"] = _task5_test_canonical_sha256(
+        selection
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+
+
+@pytest.mark.parametrize("mutation", ("prompt", "family", "gold", "negative"))
+def test_task5_scoring_preflight_rejects_resynchronized_selected_task_semantic_drift_without_calls(
+    tmp_path: Path,
+    mutation: str,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    tasks = [json.loads(line) for line in inputs["blind-v2-tasks.jsonl"].splitlines()]
+    if mutation == "prompt":
+        tasks[0]["prompt_text"] += " forged"
+        tasks[0]["prompt_text_sha256"] = hashlib.sha256(
+            tasks[0]["prompt_text"].encode()
+        ).hexdigest()
+    elif mutation == "family":
+        tasks[0]["semantic_family_id"] = f"{PREFIX}_FORGED_SELECTED_FAMILY"
+    elif mutation == "gold":
+        tasks[0]["gold_skill_id"], tasks[16]["gold_skill_id"] = (
+            tasks[16]["gold_skill_id"],
+            tasks[0]["gold_skill_id"],
+        )
+    else:
+        tasks[0]["negative_skill_id"], tasks[16]["negative_skill_id"] = (
+            tasks[16]["negative_skill_id"],
+            tasks[0]["negative_skill_id"],
+        )
+    _task5_resynchronize_selected_task_semantics(inputs, frozen_bindings, tasks)
+    factory_calls: list[tuple[str, int]] = []
+    rank_calls: list[str] = []
+
+    with pytest.raises(ValueError, match="pre-scoring authority mismatch"):
+        _task5_evaluate_routes_with_authority(
+            inputs,
+            frozen_bindings,
+            scorer_factory=lambda arm, seed, _path: (
+                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            ),
+        )
+
+    assert factory_calls == []
+    assert rank_calls == []
+
+
 def test_task5_evaluation_rejects_resynchronized_one_x_round_two_selection(
     tmp_path: Path,
 ) -> None:
@@ -6758,6 +6902,15 @@ def test_task5_commit_b_binds_sanitized_generation_round_authority(
             candidate["candidate_index"] for candidate in request["candidates"]
         ] == list(range(16))
         for candidate in request["candidates"]:
+            assert set(candidate) == {
+                "candidate_index",
+                "candidate_id",
+                "prompt_text_sha256",
+                "semantic_family_id",
+                "gold_skill_id",
+                "negative_skill_id",
+                "stratum",
+            }
             expected_id = hashlib.sha256(
                 (
                     f"1:{request['gold_skill_id']}:{candidate['candidate_index']}:"
@@ -6784,6 +6937,32 @@ def test_task5_commit_b_binds_sanitized_generation_round_authority(
         assert forbidden not in encoded
 
 
+def test_task5_commit_b_binds_every_selected_task_to_generation_semantics(
+    tmp_path: Path,
+) -> None:
+    inputs, _ = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    tasks = [json.loads(line) for line in inputs["blind-v2-tasks.jsonl"].splitlines()]
+    construction = manifest["agent_construction"]
+    candidates = {
+        candidate["candidate_id"]: candidate
+        for request in construction["generation_authority"]["requests"]
+        for candidate in request["candidates"]
+    }
+
+    assert len(tasks) == 128
+    for task in tasks:
+        candidate = candidates[task["task_id"]]
+        assert task["prompt_text_sha256"] == candidate["prompt_text_sha256"]
+        assert task["semantic_family_id"] == candidate["semantic_family_id"]
+        assert task["gold_skill_id"] == candidate["gold_skill_id"]
+        assert task["negative_skill_id"] == candidate["negative_skill_id"]
+        assert (
+            "negative" if task["negative_skill_id"] is not None else "positive_only"
+        ) == candidate["stratum"]
+        assert task["source_type"] == "AGENT_GENERATED"
+
+
 def _task5_safe_accepted_projection(
     construction: dict[str, Any],
 ) -> list[dict[str, Any]]:
@@ -6794,6 +6973,8 @@ def _task5_safe_accepted_projection(
             "generation_round": request["generation_round"],
             "candidate_index": candidate["candidate_index"],
             "response_sha256": request["response_sha256"],
+            "prompt_text_sha256": candidate["prompt_text_sha256"],
+            "semantic_family_id": candidate["semantic_family_id"],
             "gold_skill_id": candidate["gold_skill_id"],
             "negative_skill_id": candidate["negative_skill_id"],
             "stratum": candidate["stratum"],
@@ -7620,6 +7801,54 @@ def test_task5_evaluation_rejects_resynchronized_input_projection_source_forgery
             input_artifacts=inputs,
             attempt_artifacts=_task5_attempt_artifacts(),
         )
+
+
+def test_task5_freeze_rejects_resynchronized_protected_row_projection_forgery(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    authority = validation["construction_input_authority"]
+    projection = authority["protected_artifact_projections"]["train"]
+    projection["row_projection_sha256"] = "0" * 64
+    authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
+
+    with pytest.raises(ValueError, match="protected artifact projection authority"):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_scoring_preflight_rejects_resynchronized_protected_row_projection_without_calls(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    authority = manifest["agent_construction"]["construction_input_authority"]
+    projection = authority["protected_artifact_projections"]["train"]
+    projection["row_projection_sha256"] = "0" * 64
+    authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+    factory_calls: list[tuple[str, int]] = []
+    rank_calls: list[str] = []
+
+    with pytest.raises(ValueError, match="pre-scoring authority mismatch"):
+        _task5_evaluate_routes_with_authority(
+            inputs,
+            frozen_bindings,
+            scorer_factory=lambda arm, seed, _path: (
+                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            ),
+        )
+
+    assert factory_calls == []
+    assert rank_calls == []
 
 
 def test_task5_evaluation_rejects_cross_role_duplicate_session_after_resync(
