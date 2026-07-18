@@ -10600,6 +10600,52 @@ def test_task7_agent_config_status_handler_reports_validated_receipt(
     }
 
 
+def test_task7_successful_response_rejects_duplicate_retry_identity_before_validation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cli = _task7_cli_module()
+    request = _agent_contract_generator_request()
+    response = _agent_contract_generator_response()
+    shared_session_id = "task7-shared-retry-session"
+    invocations = [
+        _pack_transport_failure_invocation(
+            request,
+            session_id=shared_session_id,
+        ),
+        _pack_success_invocation(
+            request,
+            response,
+            session_id=shared_session_id,
+            transport_retry_count=1,
+        ),
+    ]
+    validation_calls = 0
+
+    def validate_invocations(
+        value: Any,
+        *,
+        request: dict[str, Any],
+    ) -> tuple[dict[str, Any] | None, int]:
+        nonlocal validation_calls
+        validation_calls += 1
+        return response, 1
+
+    monkeypatch.setattr(
+        cli.workflow,
+        "_validate_pack_invocations",
+        validate_invocations,
+    )
+
+    with pytest.raises(ValueError, match="retry sequence must use unique"):
+        cli._successful_response(
+            invocations,
+            request=request,
+            seen_session_ids=set(),
+        )
+
+    assert validation_calls == 0
+
+
 def test_task7_generation_loader_rejects_self_authorized_round_one_quota(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -10916,6 +10962,61 @@ def test_task7_round_two_review_request_accepts_valid_existing_other_role_sequen
     assert output["stage"] == "round-2"
     assert output["role"] == "reviewer_b"
     assert output["request_count"] == 2
+
+
+def test_task7_round_two_review_rejects_round_three_before_authorization(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+        include_round_three=True,
+    )
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+
+    def build_generator_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(
+        cli.workflow,
+        "build_generator_request",
+        build_generator_request,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_validated_contamination_clean_ids",
+        lambda _context, _candidates: pytest.fail(
+            "round domain must fail before contamination authorization"
+        ),
+    )
+
+    with pytest.raises(ValueError, match="generation round must be 1 or 2"):
+        cli._request_reviews(SimpleNamespace(stage="round-2", role="reviewer_a"))
 
 
 def test_task7_review_candidates_replay_frozen_contamination_authority(

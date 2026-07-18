@@ -308,22 +308,27 @@ def _successful_response(
     request: dict[str, Any],
     seen_session_ids: set[str] | None = None,
 ) -> dict[str, Any]:
-    try:
-        response, _retry_count = workflow._validate_pack_invocations(
-            invocations, request=request
-        )
-    except workflow._AgentPackProtocolViolation as exc:
-        raise ValueError("Agent invocation retry ordering mismatch") from exc
     identities = workflow._pack_invocation_identities(invocations)
     _require(
         type(invocations) is list and len(identities) == len(invocations),
         "Agent invocation identity sequence mismatch",
+    )
+    _require(
+        len(set(identities)) == len(identities),
+        "retry sequence must use unique session/thread ids",
     )
     if seen_session_ids is not None:
         _require(
             all(identity not in seen_session_ids for identity in identities),
             "session/thread ids must be globally unique",
         )
+    try:
+        response, _retry_count = workflow._validate_pack_invocations(
+            invocations, request=request
+        )
+    except workflow._AgentPackProtocolViolation as exc:
+        raise ValueError("Agent invocation retry ordering mismatch") from exc
+    if seen_session_ids is not None:
         seen_session_ids.update(identities)
     _require(
         response is not None,
@@ -342,6 +347,31 @@ def _generation_candidates(
     canonical_skills = cast(list[dict[str, Any]], context["canonical_skills"])
     selection = workflow.SELECTION_AUTHORITY
     active_session_ids = seen_session_ids if seen_session_ids is not None else set()
+    validated_rows: list[tuple[dict[str, Any], dict[str, Any], dict[str, Any]]] = []
+    for index, row in enumerate(
+        _jsonl(_agent_pack_file(context, "blind-v2-generation.jsonl")), start=1
+    ):
+        _require(
+            set(row) == {"generation_round", "gold_skill_id", "request", "invocations"},
+            f"generation row {index} fields mismatch",
+        )
+        _require(
+            type(row["generation_round"]) is int and row["generation_round"] in {1, 2},
+            "generation round must be 1 or 2",
+        )
+        request = workflow.validate_agent_request(cast(dict[str, Any], row["request"]))
+        _require(request["role"] == "generator", "generation request role mismatch")
+        quota = cast(dict[str, Any], cast(dict[str, Any], request["input"])["quota"])
+        _require(
+            type(quota["round_number"]) is int and quota["round_number"] in {1, 2},
+            "generation round must be 1 or 2",
+        )
+        _require(
+            row["generation_round"] == quota["round_number"]
+            and row["gold_skill_id"] == quota["gold_skill_id"],
+            "generation row sealed identity mismatch",
+        )
+        validated_rows.append((row, request, quota))
     round_two_deficits = (
         _round_one_post_pipeline_deficits(
             context,
@@ -355,21 +385,7 @@ def _generation_candidates(
     candidates: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     seen_request_skills: list[str] = []
-    for index, row in enumerate(
-        _jsonl(_agent_pack_file(context, "blind-v2-generation.jsonl")), start=1
-    ):
-        _require(
-            set(row) == {"generation_round", "gold_skill_id", "request", "invocations"},
-            f"generation row {index} fields mismatch",
-        )
-        request = workflow.validate_agent_request(cast(dict[str, Any], row["request"]))
-        _require(request["role"] == "generator", "generation request role mismatch")
-        quota = cast(dict[str, Any], cast(dict[str, Any], request["input"])["quota"])
-        _require(
-            row["generation_round"] == quota["round_number"]
-            and row["gold_skill_id"] == quota["gold_skill_id"],
-            "generation row sealed identity mismatch",
-        )
+    for row, request, quota in validated_rows:
         if quota["round_number"] != round_number:
             continue
         gold_skill_id = cast(str, quota["gold_skill_id"])
