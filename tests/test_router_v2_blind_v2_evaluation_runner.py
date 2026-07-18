@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import inspect
 import json
 import os
@@ -17,6 +18,7 @@ from decimal import (
     localcontext,
 )
 from pathlib import Path
+from types import ModuleType, SimpleNamespace
 from typing import Any, Callable, cast
 
 import pytest
@@ -10346,7 +10348,7 @@ def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) 
         )
 
 
-def test_final_cli_freezes_only_protocol_subcommands() -> None:
+def test_task7_final_cli_exposes_only_sealed_agent_workflow() -> None:
     environment = dict(os.environ)
     environment["PYTHONPATH"] = "src"
     result = subprocess.run(
@@ -10358,70 +10360,476 @@ def test_final_cli_freezes_only_protocol_subcommands() -> None:
     )
 
     assert result.returncode == 0
-    for subcommand in ("smoke", "pack-status", "freeze", "evaluate"):
-        assert subcommand in result.stdout
-    for forbidden in ("train", "mine", "tune", "attempt-2", "blind-v3"):
-        assert forbidden not in result.stdout
-
-    freeze = subprocess.run(
-        [
-            sys.executable,
-            "scripts/run_router_v2_blind_v2_final.py",
-            "freeze",
-            "--help",
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-        env=environment,
+    subcommands = (
+        "agent-config-status",
+        "request-round-1",
+        "request-reviews",
+        "request-round-2",
+        "pack-status",
+        "freeze",
+        "model-smoke",
+        "evaluate",
     )
-    assert freeze.returncode == 0
-    for caller_controlled in (
-        "--pack-root",
-        "--skills",
-        "--train-reference",
-        "--pilot-reference",
-        "--commit-a",
-        "--output-dir",
+    assert "{" + ",".join(subcommands) + "}" in result.stdout
+
+    for subcommand in subcommands:
+        command_help = subprocess.run(
+            [
+                sys.executable,
+                "scripts/run_router_v2_blind_v2_final.py",
+                subcommand,
+                "--help",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=environment,
+        )
+        assert command_help.returncode == 0
+
+    source = Path("scripts/run_router_v2_blind_v2_final.py").read_text(encoding="utf-8")
+    for legacy in (
+        "write_authoring_templates",
+        "load_preregistered_human_validation_inputs",
+        "human_pack_root_from_environment",
+        "validate_human_pack",
+        "build_model_load_smoke_receipt",
+        "BLIND_V2_WAITING_FOR_HUMAN_DATA",
     ):
-        assert caller_controlled not in freeze.stdout
+        assert legacy not in source
 
-    pack_status = subprocess.run(
+
+@pytest.mark.parametrize(
+    "subcommand",
+    (
+        "smoke",
+        "write-authoring-templates",
+        "human-status",
+        "train",
+        "mine",
+        "tune",
+        "attempt-2",
+        "blind-v2-002",
+        "blind-v3",
+    ),
+)
+def test_task7_final_cli_rejects_unknown_and_legacy_commands(subcommand: str) -> None:
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = "src"
+    result = subprocess.run(
+        [sys.executable, "scripts/run_router_v2_blind_v2_final.py", subcommand],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+
+    assert result.returncode == 2
+    assert "invalid choice" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "subcommand",
+    (
+        "agent-config-status",
+        "request-round-1",
+        "request-reviews",
+        "request-round-2",
+        "pack-status",
+        "freeze",
+        "model-smoke",
+        "evaluate",
+    ),
+)
+def test_task7_cli_rejects_caller_authority_injection(subcommand: str) -> None:
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = "src"
+    required_controls = (
+        ["--stage", "round-1", "--role", "reviewer_a"]
+        if subcommand == "request-reviews"
+        else []
+    )
+    result = subprocess.run(
         [
             sys.executable,
             "scripts/run_router_v2_blind_v2_final.py",
-            "pack-status",
-            "--help",
+            subcommand,
+            *required_controls,
+            "--output-dir",
+            "/tmp/injected",
         ],
         check=False,
         capture_output=True,
         text=True,
         env=environment,
     )
-    assert pack_status.returncode == 0
-    assert "--preregistration" in pack_status.stdout
-    assert "--template-output" not in pack_status.stdout
 
-    evaluate = subprocess.run(
-        [
-            sys.executable,
-            "scripts/run_router_v2_blind_v2_final.py",
-            "evaluate",
-            "--help",
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-        env=environment,
+    assert result.returncode == 2
+    assert "unrecognized arguments" in result.stderr
+
+
+def _task7_cli_module() -> ModuleType:
+    path = Path("scripts/run_router_v2_blind_v2_final.py").resolve(strict=True)
+    spec = importlib.util.spec_from_file_location("task7_router_v2_cli", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _task7_context(tmp_path: Path) -> dict[str, Any]:
+    return {
+        "repository": tmp_path / "repo",
+        "preregistration_path": tmp_path / "repo" / runner.PREREGISTRATION_RELATIVE,
+        "pilot_manifest_path": tmp_path / "repo" / runner.PILOT_MANIFEST_RELATIVE,
+        "preregistration": {"preregistration_sha256": "1" * 64},
+        "canonical_skills": _skills(),
+        "commit_a": "a" * 40,
+        "staging_root": tmp_path / "private" / ("a" * 40),
+    }
+
+
+def test_task7_request_commands_expose_only_frozen_stage_and_reviewer_role() -> None:
+    cli = _task7_cli_module()
+    parser = cli._parser()
+    subparsers = next(
+        action for action in parser._actions if getattr(action, "choices", None)
     )
-    assert evaluate.returncode == 0
-    for caller_controlled in (
-        "--tasks",
-        "--skills",
-        "--commit-a",
-        "--commit-b",
-        "--evaluator-commit",
-        "--attempt-token-sha256",
-        "--output-root",
-    ):
-        assert caller_controlled not in evaluate.stdout
+    commands = cast(dict[str, Any], subparsers.choices)
+
+    for name, command_parser in commands.items():
+        options = {
+            option
+            for action in command_parser._actions
+            for option in action.option_strings
+        }
+        expected = {"-h", "--help"}
+        if name == "request-reviews":
+            expected.update({"--stage", "--role"})
+        assert options == expected
+
+    review_args = parser.parse_args(
+        ["request-reviews", "--stage", "round-2", "--role", "reviewer_b"]
+    )
+    assert review_args.stage == "round-2"
+    assert review_args.role == "reviewer_b"
+
+
+def test_task7_round_one_requests_derive_every_authority_from_runner(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    context = _task7_context(tmp_path)
+    context_calls: list[bool] = []
+    calls: list[dict[str, Any]] = []
+
+    def context_factory(*, require_config_smoke: bool) -> dict[str, Any]:
+        context_calls.append(require_config_smoke)
+        return context
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        calls.append(
+            {
+                "canonical_skills": canonical_skills,
+                "gold_skill_id": gold_skill_id,
+                "negative_quota": negative_quota,
+                "positive_only_quota": positive_only_quota,
+                "repository_root": repository_root,
+                "round_number": round_number,
+            }
+        )
+        return {"request_sha256": hashlib.sha256(gold_skill_id.encode()).hexdigest()}
+
+    monkeypatch.setattr(cli, "_commit_a_context", context_factory)
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+
+    assert cli._request_round_1(SimpleNamespace()) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert context_calls == [True]
+    assert output["stage"] == "round-1"
+    assert output["staging_root"] == str(context["staging_root"])
+    assert len(output["requests"]) == 16
+    assert [call["gold_skill_id"] for call in calls] == [
+        f"test-skill-{index:02d}" for index in range(16)
+    ]
+    assert all(
+        call["canonical_skills"] is context["canonical_skills"] for call in calls
+    )
+    assert all(call["negative_quota"] == 12 for call in calls)
+    assert all(call["positive_only_quota"] == 4 for call in calls)
+    assert all(call["round_number"] == 1 for call in calls)
+    assert all(call["repository_root"] == context["repository"] for call in calls)
+
+
+def test_task7_review_requests_derive_candidates_and_schedule_for_selected_stage_role(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    context = _task7_context(tmp_path)
+    candidates = [
+        {"candidate_id": "2" * 24, "prompt_text": "second"},
+        {"candidate_id": "1" * 24, "prompt_text": "first"},
+    ]
+    roles: list[str] = []
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_review_candidates",
+        lambda active_context, *, stage: (
+            candidates
+            if active_context is context and stage == "round-2"
+            else pytest.fail("review candidate authority drift")
+        ),
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "review_schedule_key",
+        lambda role, candidate_id: candidate_id,
+    )
+
+    def build_review_request(
+        candidate: dict[str, Any],
+        canonical_skills: list[dict[str, Any]],
+        *,
+        role: str,
+    ) -> dict[str, Any]:
+        assert canonical_skills is context["canonical_skills"]
+        roles.append(role)
+        return {"task_id": candidate["candidate_id"], "role": role}
+
+    monkeypatch.setattr(cli.workflow, "build_reviewer_request", build_review_request)
+
+    args = SimpleNamespace(stage="round-2", role="reviewer_b")
+    assert cli._request_reviews(args) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["stage"] == "round-2"
+    assert output["role"] == "reviewer_b"
+    assert [request["task_id"] for request in output["requests"]] == [
+        "1" * 24,
+        "2" * 24,
+    ]
+    assert roles == ["reviewer_b", "reviewer_b"]
+
+
+def test_task7_review_candidates_replay_frozen_contamination_authority(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    context = _task7_context(tmp_path)
+    context.update(
+        {
+            "train_prompts": ["train prompt"],
+            "pilot_prompts": ["pilot prompt"],
+            "phase16_prompts": ["phase16 prompt"],
+            "prior_candidate_prompts": [],
+            "train_family_ids": {"train-family"},
+            "pilot_family_ids": {"pilot-family"},
+            "phase16_family_ids": set(),
+            "prior_candidate_family_ids": set(),
+        }
+    )
+    candidates = [
+        {
+            "candidate_id": "1" * 24,
+            "generation_round": 1,
+            "prompt_text": "candidate prompt",
+            "prompt_text_sha256": hashlib.sha256(b"candidate prompt").hexdigest(),
+            "semantic_family_id": "candidate-family",
+            "proposed_gold_skill_id": "test-skill-00",
+            "proposed_negative_skill_id": "test-skill-01",
+            "language": "en",
+            "rationale": "test rationale",
+        }
+    ]
+    scanner_rows = [
+        {
+            "candidate_id": "1" * 24,
+            "scanner_decision": "PASS",
+            "rejection_codes": [],
+            "evidence_sha256": "2" * 64,
+        }
+    ]
+    replayed_rows = deepcopy(scanner_rows)
+
+    def semantic_similarity(_left: str, _right: str) -> float:
+        return 0.0
+
+    semantic_authority = _task5_scanner_model_authority()
+    scan_calls: list[dict[str, Any]] = []
+
+    monkeypatch.setattr(
+        cli,
+        "_generation_candidates",
+        lambda active_context, *, stage: candidates,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_semantic_validation_components",
+        lambda: (semantic_similarity, semantic_authority),
+    )
+    monkeypatch.setattr(
+        cli,
+        "_agent_pack_file",
+        lambda active_context, filename: tmp_path / filename,
+    )
+    monkeypatch.setattr(cli, "_jsonl", lambda _path: deepcopy(scanner_rows))
+
+    def replay_scan(
+        rows: list[dict[str, Any]],
+        *,
+        protected_prompts: dict[str, list[str]],
+        protected_family_ids: dict[str, set[str]],
+        semantic_similarity: Callable[[str, str], float],
+        semantic_model_authority: dict[str, Any],
+    ) -> dict[str, Any]:
+        scan_calls.append(
+            {
+                "rows": rows,
+                "protected_prompts": protected_prompts,
+                "protected_family_ids": protected_family_ids,
+                "semantic_similarity": semantic_similarity,
+                "semantic_model_authority": semantic_model_authority,
+            }
+        )
+        return {
+            "rows": deepcopy(replayed_rows),
+            "clean_candidate_ids": ["1" * 24],
+            "scanner_config": {},
+        }
+
+    monkeypatch.setattr(cli.workflow, "_scan_contamination", replay_scan)
+
+    assert cli._review_candidates(context, stage="round-1") == candidates
+    assert scan_calls == [
+        {
+            "rows": candidates,
+            "protected_prompts": {
+                "train": ["train prompt"],
+                "pilot-002": ["pilot prompt"],
+                "phase16": ["phase16 prompt"],
+                "prior_candidate": [],
+            },
+            "protected_family_ids": {
+                "train": {"train-family"},
+                "pilot-002": {"pilot-family"},
+                "phase16": set(),
+                "prior_candidate": set(),
+            },
+            "semantic_similarity": semantic_similarity,
+            "semantic_model_authority": semantic_authority,
+        }
+    ]
+
+    scanner_rows[0]["scanner_decision"] = "REJECT"
+    with pytest.raises(ValueError, match="contamination ledger authority mismatch"):
+        cli._review_candidates(context, stage="round-1")
+
+
+def test_task7_round_two_requests_use_only_post_pipeline_deficits(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    context = _task7_context(tmp_path)
+    calls: list[tuple[str, int, int, int]] = []
+    deficits = {
+        "test-skill-00": {"negative": 2, "positive_only": 1},
+        "test-skill-07": {"negative": 0, "positive_only": 1},
+    }
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+    monkeypatch.setattr(cli, "_round_two_deficits", lambda active: deficits)
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        assert canonical_skills is context["canonical_skills"]
+        assert repository_root == context["repository"]
+        calls.append((gold_skill_id, negative_quota, positive_only_quota, round_number))
+        return {"gold_skill_id": gold_skill_id}
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+
+    assert cli._request_round_2(SimpleNamespace()) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["stage"] == "round-2"
+    assert calls == [
+        ("test-skill-00", 4, 2, 2),
+        ("test-skill-07", 0, 2, 2),
+    ]
+
+
+def test_task7_model_smoke_uses_task6_public_api_without_receipt_builder(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    receipt = {
+        "smoke_status": "PASS",
+        "commit_a": "a" * 40,
+        "commit_b": "b" * 40,
+    }
+    calls: list[tuple[Path, Path]] = []
+
+    monkeypatch.setattr(cli, "REPOSITORY_ROOT", repository)
+
+    def run_model_smoke(
+        pilot_manifest_path: Path, *, repository_root: Path
+    ) -> dict[str, Any]:
+        calls.append((pilot_manifest_path, repository_root))
+        return receipt
+
+    monkeypatch.setattr(
+        cli.workflow,
+        "run_model_load_smoke",
+        run_model_smoke,
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "write_model_load_smoke_receipt",
+        lambda value: (
+            tmp_path / "receipt.json"
+            if value is receipt
+            else pytest.fail("model-smoke receipt drift")
+        ),
+    )
+
+    assert cli._model_smoke(SimpleNamespace()) == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert calls == [(repository / runner.PILOT_MANIFEST_RELATIVE, repository)]
+    assert output["receipt_path"] == str(tmp_path / "receipt.json")
