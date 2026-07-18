@@ -116,7 +116,7 @@ def _authoritative_skills() -> list[dict[str, Any]]:
 
 
 def _agent_contract_generator_request() -> dict[str, Any]:
-    return runner.build_generator_request(
+    return runner._build_generator_request_payload(
         _skills(),
         gold_skill_id="test-skill-00",
         negative_quota=2,
@@ -1195,7 +1195,7 @@ def test_agent_contract_builders_project_extra_canonical_skill_fields(
     skills[0][extra_field] = f"{PREFIX} SECRET"
 
     request = (
-        runner.build_generator_request(
+        runner._build_generator_request_payload(
             skills,
             gold_skill_id="test-skill-00",
             negative_quota=2,
@@ -1230,7 +1230,7 @@ def test_agent_contract_builders_project_real_authoritative_skills(role: str) ->
     ]
     gold_skill_id = cast(str, source_skills[0]["id"])
     request = (
-        runner.build_generator_request(
+        runner._build_generator_request_payload(
             source_skills,
             gold_skill_id=gold_skill_id,
             negative_quota=2,
@@ -1273,7 +1273,7 @@ def test_agent_contract_builders_reject_missing_canonical_skill_fields(
 
     with pytest.raises(ValueError, match="canonical skill 0 fields mismatch"):
         if role == "generator":
-            runner.build_generator_request(
+            runner._build_generator_request_payload(
                 skills,
                 gold_skill_id="test-skill-00",
                 negative_quota=2,
@@ -1327,7 +1327,7 @@ def test_agent_contract_canonical_skill_text_fields_are_nonempty_strings(
     skills[0][field] = invalid
 
     with pytest.raises(ValueError, match=rf"canonical skill 0 {field}"):
-        runner.build_generator_request(
+        runner._build_generator_request_payload(
             skills,
             gold_skill_id="test-skill-00",
             negative_quota=2,
@@ -1358,7 +1358,7 @@ def test_agent_contract_canonical_skill_trigger_terms_are_nonempty_strings(
 
 def test_agent_contract_requires_exactly_sixteen_unique_canonical_skills() -> None:
     with pytest.raises(ValueError, match="exactly 16"):
-        runner.build_generator_request(
+        runner._build_generator_request_payload(
             _skills()[:-1],
             gold_skill_id="test-skill-00",
             negative_quota=2,
@@ -6752,6 +6752,84 @@ def _task6_agent_config_smoke_invocations() -> list[dict[str, Any]]:
     return invocations
 
 
+def _task6_build_public_generator_request(
+    *, commit_a: str = "a" * 40, preregistration_sha256: str = "b" * 64
+) -> dict[str, Any]:
+    return runner.build_generator_request(
+        _skills(),
+        gold_skill_id="test-skill-00",
+        negative_quota=2,
+        positive_only_quota=1,
+        commit_a=commit_a,
+        preregistration_sha256=preregistration_sha256,
+    )
+
+
+def test_task6_public_generator_request_requires_authority_arguments() -> None:
+    with pytest.raises(TypeError):
+        runner.build_generator_request(
+            _skills(),
+            gold_skill_id="test-skill-00",
+            negative_quota=2,
+            positive_only_quota=1,
+        )
+
+
+def test_task6_public_generator_request_validates_exact_smoke_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, str]] = []
+
+    def validate_receipt(
+        *, commit_a: str, preregistration_sha256: str
+    ) -> dict[str, Any]:
+        calls.append((commit_a, preregistration_sha256))
+        return {
+            "commit_a": commit_a,
+            "preregistration_sha256": preregistration_sha256,
+        }
+
+    monkeypatch.setattr(runner, "validate_agent_config_smoke_receipt", validate_receipt)
+
+    request = _task6_build_public_generator_request()
+
+    assert request["role"] == "generator"
+    assert calls == [("a" * 40, "b" * 64)]
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    (
+        (FileNotFoundError("missing smoke receipt"), "missing smoke receipt"),
+        (ValueError("Agent-config smoke receipt authority mismatch"), "authority"),
+    ),
+)
+def test_task6_public_generator_request_refuses_missing_or_drifted_smoke(
+    monkeypatch: pytest.MonkeyPatch, error: Exception, message: str
+) -> None:
+    def reject_receipt(**kwargs: str) -> dict[str, Any]:
+        raise error
+
+    monkeypatch.setattr(runner, "validate_agent_config_smoke_receipt", reject_receipt)
+
+    with pytest.raises(type(error), match=message):
+        _task6_build_public_generator_request()
+
+
+def test_task6_public_generator_request_rejects_historical_commit_before_smoke(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def must_not_validate(**kwargs: str) -> dict[str, Any]:
+        pytest.fail("historical Commit A reached smoke validation")
+
+    monkeypatch.setattr(
+        runner, "validate_agent_config_smoke_receipt", must_not_validate
+    )
+
+    with pytest.raises(ValueError, match="historical Commit A.*superseded"):
+        _task6_build_public_generator_request(commit_a=runner.HISTORICAL_HUMAN_COMMIT_A)
+
+
 def test_task6_historical_human_commit_cannot_authorize_agent_generation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -7110,6 +7188,185 @@ def test_task6_model_load_smoke_receipt_binds_both_commits_and_dataset_manifest(
         )
 
 
+@pytest.mark.parametrize(
+    ("field", "invalid", "message"),
+    (
+        ("device", "cuda", "device"),
+        ("embedding_dimension", 0, "embedding dimension"),
+        ("embedding_dimension", -1, "embedding dimension"),
+        ("embedding_dimension", False, "embedding dimension"),
+        ("embedding_dimension", True, "embedding dimension"),
+        ("embedding_dimension", 384.0, "embedding dimension"),
+        ("embedding_dimension", "384", "embedding dimension"),
+        ("embedding_dimension", None, "embedding dimension"),
+    ),
+)
+def test_task6_model_load_smoke_rejects_rehashed_semantic_tampering(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    field: str,
+    invalid: Any,
+    message: str,
+) -> None:
+    monkeypatch.setattr(runner, "SMOKE_RECEIPT_ROOT", tmp_path / "smoke-receipts")
+    smoke = {
+        "schema_version": "router-v2-blind-v2-model-load-smoke-v1",
+        "smoke_status": "PASS",
+        "models": [
+            {"arm": "A", "seed": 7170},
+            {"arm": "C", "seed": 7170},
+            {"arm": "C", "seed": 7171},
+            {"arm": "C", "seed": 7172},
+        ],
+        "embedding_dimension": 384,
+        "device": "cpu",
+        "synthetic_strings": list(runner.MODEL_LOAD_SMOKE_TEXTS),
+        "benchmark_metrics_computed": False,
+        "blind_v2_data_read": False,
+    }
+    invalid_smoke = {**smoke, field: invalid}
+
+    with pytest.raises(ValueError, match=message):
+        runner.build_model_load_smoke_receipt(
+            invalid_smoke,
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            preregistration_sha256="c" * 64,
+            frozen_dataset_manifest_sha256="d" * 64,
+        )
+
+    receipt = runner.build_model_load_smoke_receipt(
+        smoke,
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        preregistration_sha256="c" * 64,
+        frozen_dataset_manifest_sha256="d" * 64,
+    )
+    receipt["smoke"][field] = invalid
+    unhashed = {key: value for key, value in receipt.items() if key != "receipt_sha256"}
+    receipt["receipt_sha256"] = runner.canonical_sha256(unhashed)
+    path = runner.model_load_smoke_receipt_path("a" * 40, "b" * 40)
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(receipt), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        runner.validate_model_load_smoke_receipt(
+            commit_a="a" * 40,
+            commit_b="b" * 40,
+            preregistration_sha256="c" * 64,
+            frozen_dataset_manifest_sha256="d" * 64,
+        )
+
+
+def _task6_commit_b_tree_outputs(
+    *, invalid_filename: str | None = None, mode: str = "100644", kind: str = "blob"
+) -> dict[tuple[str, ...], str]:
+    outputs = {}
+    for index, filename in enumerate(runner.DATASET_FREEZE_FILENAMES):
+        path = (runner.DATASET_FREEZE_RELATIVE / filename).as_posix()
+        entry_mode = mode if filename == invalid_filename else "100644"
+        entry_kind = kind if filename == invalid_filename else "blob"
+        outputs[("ls-tree", "HEAD", "--", path)] = (
+            f"{entry_mode} {entry_kind} {index + 1:040x}\t{path}"
+        )
+    return outputs
+
+
+def test_task6_commit_b_rejects_merge_commit_even_with_commit_a_first_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commit_a = "a" * 40
+    head = "b" * 40
+    extra_parent = "c" * 40
+    expected_changed = "\n".join(
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    )
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "HEAD^"): commit_a,
+        ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--parents", "-n", "1", "HEAD"): (
+            f"{head} {commit_a} {extra_parent}"
+        ),
+        ("rev-list", "--count", f"{commit_a}..{head}"): "1",
+        ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
+        ("diff", "--name-only", f"{commit_a}..{head}"): expected_changed,
+        **_task6_commit_b_tree_outputs(),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="exactly one parent|merge commit"):
+        runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
+
+
+@pytest.mark.parametrize(
+    ("mode", "kind"),
+    (("120000", "blob"), ("160000", "commit")),
+)
+def test_task6_commit_b_rejects_nonordinary_dataset_tree_entries(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mode: str,
+    kind: str,
+) -> None:
+    commit_a = "a" * 40
+    head = "b" * 40
+    invalid_filename = runner.DATASET_FREEZE_FILENAMES[0]
+    expected_changed = "\n".join(
+        (runner.DATASET_FREEZE_RELATIVE / name).as_posix()
+        for name in runner.DATASET_FREEZE_FILENAMES
+    )
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "HEAD^"): commit_a,
+        ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--parents", "-n", "1", "HEAD"): f"{head} {commit_a}",
+        ("rev-list", "--count", f"{commit_a}..{head}"): "1",
+        ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
+        ("diff", "--name-only", f"{commit_a}..{head}"): expected_changed,
+        **_task6_commit_b_tree_outputs(
+            invalid_filename=invalid_filename,
+            mode=mode,
+            kind=kind,
+        ),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="ordinary committed blob"):
+        runner.validate_commit_b_repository(tmp_path, commit_a=commit_a)
+
+
+@pytest.mark.parametrize("escape_repository", (False, True))
+def test_task6_frozen_dataset_reader_rejects_per_file_symlinks(
+    tmp_path: Path, escape_repository: bool
+) -> None:
+    repository = tmp_path / "repository"
+    root = repository / runner.DATASET_FREEZE_RELATIVE
+    root.mkdir(parents=True)
+    first, second, linked = runner.DATASET_FREEZE_FILENAMES
+    (root / first).write_bytes(b"first")
+    (root / second).write_bytes(b"second")
+    target = root / first
+    if escape_repository:
+        target = tmp_path / "outside.json"
+        target.write_bytes(b"outside")
+    (root / linked).symlink_to(target)
+
+    with pytest.raises(ValueError, match="symlink|escapes"):
+        runner.read_frozen_dataset_documents(repository)
+
+
 def test_task6_commit_b_must_be_direct_child_of_commit_a_agent(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -7126,6 +7383,7 @@ def test_task6_commit_b_must_be_direct_child_of_commit_a_agent(
         ("rev-parse", "HEAD^"): sibling_parent,
         ("rev-parse", f"{commit_a}^"): runner.PREREGISTRATION_PARENT_COMMIT,
         ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--parents", "-n", "1", "HEAD"): (f"{head} {sibling_parent}"),
         ("rev-list", "--count", f"{commit_a}..{head}"): "1",
         ("diff", "--name-only", f"{commit_a}..{head}"): expected_changed,
     }
@@ -7154,9 +7412,11 @@ def test_task6_commit_b_accepts_agent_commit_a_above_historical_commit(
         ("rev-parse", "HEAD^"): commit_a,
         ("rev-parse", f"{commit_a}^"): "d" * 40,
         ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--parents", "-n", "1", "HEAD"): f"{commit_b} {commit_a}",
         ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
         ("rev-list", "--count", f"{commit_a}..{commit_b}"): "1",
         ("diff", "--name-only", f"{commit_a}..{commit_b}"): expected_changed,
+        **_task6_commit_b_tree_outputs(),
     }
     monkeypatch.setattr(
         runner,
@@ -7188,6 +7448,7 @@ def test_task6_commit_b_rejects_historical_human_commit_as_commit_a(
         ("rev-parse", "HEAD^"): commit_a,
         ("rev-parse", f"{commit_a}^"): runner.PREREGISTRATION_PARENT_COMMIT,
         ("rev-parse", "origin/main"): runner.PREREGISTRATION_PARENT_COMMIT,
+        ("rev-list", "--parents", "-n", "1", "HEAD"): f"{commit_b} {commit_a}",
         ("merge-base", "--is-ancestor", runner.HISTORICAL_HUMAN_COMMIT_A, commit_a): "",
         ("rev-list", "--count", f"{commit_a}..{commit_b}"): "1",
         ("diff", "--name-only", f"{commit_a}..{commit_b}"): expected_changed,

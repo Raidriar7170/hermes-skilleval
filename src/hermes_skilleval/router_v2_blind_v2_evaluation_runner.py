@@ -598,7 +598,7 @@ def review_schedule_key(role: str, candidate_id: str) -> str:
     return hashlib.sha256(f"{prefix}:{candidate_id}".encode()).hexdigest()
 
 
-def build_generator_request(
+def _build_generator_request_payload(
     canonical_skills: list[dict[str, Any]],
     *,
     gold_skill_id: str,
@@ -645,6 +645,46 @@ def build_generator_request(
     }
     request = {**payload, "request_sha256": _canonical_contract_json_sha256(payload)}
     return validate_agent_request(request)
+
+
+def build_generator_request(
+    canonical_skills: list[dict[str, Any]],
+    *,
+    gold_skill_id: str,
+    negative_quota: int,
+    positive_only_quota: int,
+    commit_a: str,
+    preregistration_sha256: str,
+    round_number: int = 1,
+) -> dict[str, Any]:
+    commit_a = _exact_lowercase_hex(
+        commit_a, length=40, label="generator Commit A-agent"
+    )
+    _require(
+        commit_a != HISTORICAL_HUMAN_COMMIT_A,
+        "historical Commit A has been superseded and cannot authorize generation",
+    )
+    preregistration_sha256 = _exact_lowercase_hex(
+        preregistration_sha256,
+        length=64,
+        label="generator preregistration SHA-256",
+    )
+    receipt = validate_agent_config_smoke_receipt(
+        commit_a=commit_a,
+        preregistration_sha256=preregistration_sha256,
+    )
+    _require(
+        receipt.get("commit_a") == commit_a
+        and receipt.get("preregistration_sha256") == preregistration_sha256,
+        "Agent-config smoke receipt authority mismatch",
+    )
+    return _build_generator_request_payload(
+        canonical_skills,
+        gold_skill_id=gold_skill_id,
+        negative_quota=negative_quota,
+        positive_only_quota=positive_only_quota,
+        round_number=round_number,
+    )
 
 
 def build_reviewer_request(
@@ -838,7 +878,7 @@ def _validated_generation_source_row(
         quota["round_number"] == generation_round,
         "generation request round mismatch",
     )
-    expected_request = build_generator_request(
+    expected_request = _build_generator_request_payload(
         projected_skills,
         gold_skill_id=cast(str, gold),
         negative_quota=cast(int, quota["negative_quota"]),
@@ -2298,8 +2338,13 @@ def validate_commit_b_repository(
     head = _exact_lowercase_hex(
         _git(repository, "rev-parse", "HEAD"), length=40, label="Commit B"
     )
+    parent_line = _git(repository, "rev-list", "--parents", "-n", "1", "HEAD").split()
+    _require(
+        len(parent_line) == 2 and parent_line[0] == head,
+        "Commit B must have exactly one parent and cannot be a merge commit",
+    )
     head_parent = _exact_lowercase_hex(
-        _git(repository, "rev-parse", "HEAD^"),
+        parent_line[1],
         length=40,
         label="Commit B parent",
     )
@@ -2344,6 +2389,23 @@ def validate_commit_b_repository(
         for filename in DATASET_FREEZE_FILENAMES
     }
     _require(changed == expected, "Commit B may contain only frozen blind-v2 data")
+    for path in sorted(expected):
+        entries = _git(repository, "ls-tree", "HEAD", "--", path).splitlines()
+        _require(
+            len(entries) == 1, "Commit B datasets must be ordinary committed blobs"
+        )
+        metadata, separator, entry_path = entries[0].partition("\t")
+        parts = metadata.split()
+        valid_entry = (
+            separator == "\t"
+            and entry_path == path
+            and len(parts) == 3
+            and parts[0] in {"100644", "100755"}
+            and parts[1] == "blob"
+            and len(parts[2]) == 40
+            and all(character in "0123456789abcdef" for character in parts[2])
+        )
+        _require(valid_entry, "Commit B datasets must be ordinary committed blobs")
     return {
         "commit_a": commit_a,
         "commit_b": head,
@@ -7385,17 +7447,30 @@ def load_preregistered_human_validation_inputs(
 
 def read_frozen_dataset_documents(repository_root: Path | str) -> dict[str, bytes]:
     repository = Path(repository_root).resolve(strict=True)
-    root = (repository / DATASET_FREEZE_RELATIVE).resolve(strict=True)
+    unresolved_root = repository / DATASET_FREEZE_RELATIVE
+    _require(
+        not unresolved_root.is_symlink(), "frozen dataset root must not be a symlink"
+    )
+    root = unresolved_root.resolve(strict=True)
     _require(root.is_relative_to(repository), "frozen dataset root escapes repository")
-    actual = {path.name for path in root.iterdir() if path.is_file()}
+    _require(root.is_dir(), "frozen dataset root must be a directory")
+    actual = {path.name for path in root.iterdir()}
     _require(
         actual == set(DATASET_FREEZE_FILENAMES),
         "frozen dataset directory must contain exactly three files",
     )
-    return {
-        filename: (root / filename).read_bytes()
-        for filename in DATASET_FREEZE_FILENAMES
-    }
+    documents: dict[str, bytes] = {}
+    for filename in DATASET_FREEZE_FILENAMES:
+        path = root / filename
+        _require(not path.is_symlink(), "frozen dataset files must not be symlinks")
+        resolved = path.resolve(strict=True)
+        _require(resolved.is_relative_to(root), "frozen dataset file escapes root")
+        _require(
+            path.is_file() and resolved.is_file(),
+            "frozen dataset paths must be regular files",
+        )
+        documents[filename] = resolved.read_bytes()
+    return documents
 
 
 def build_authoritative_lineage_bindings(
@@ -7895,6 +7970,12 @@ def build_model_load_smoke_receipt(
     _require(
         smoke.get("synthetic_strings") == list(MODEL_LOAD_SMOKE_TEXTS),
         "smoke strings mismatch",
+    )
+    _require(smoke.get("device") == "cpu", "smoke device must be exactly cpu")
+    embedding_dimension = smoke.get("embedding_dimension")
+    _require(
+        type(embedding_dimension) is int and embedding_dimension > 0,
+        "smoke embedding dimension must be a positive integer",
     )
     commit_a = _exact_lowercase_hex(commit_a, length=40, label="smoke Commit A-agent")
     commit_b = _exact_lowercase_hex(commit_b, length=40, label="smoke Commit B")
