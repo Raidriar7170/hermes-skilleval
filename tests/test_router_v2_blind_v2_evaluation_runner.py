@@ -10322,11 +10322,19 @@ def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) 
 
     assert (output / "attempt-1.started.json").is_file()
     terminal = json.loads((output / "attempt-1.terminal.json").read_text())
-    assert terminal["status"] == "INFRASTRUCTURE_FAILURE"
-    assert terminal["research_conclusion"] == (
-        "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE"
-    )
-    assert terminal["retry_allowed"] is False
+    assert terminal == {
+        "schema_version": "router-v2-blind-v2-attempt-terminal-v1",
+        "attempt_number": 1,
+        "status": "INFRASTRUCTURE_FAILURE",
+        "research_conclusion": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+        "router_decision": "KEEP_BASELINE",
+        "production_ready": False,
+        "release_authorized": False,
+        "default_router_unchanged": True,
+        "error_type": "RuntimeError",
+        "error_message": "TEST_ONLY_INFRASTRUCTURE_FAILURE",
+        "retry_allowed": False,
+    }
     terminal_bytes = (output / "attempt-1.terminal.json").read_bytes()
     with pytest.raises(FileExistsError):
         runner.run_single_attempt(
@@ -10349,6 +10357,53 @@ def test_single_attempt_is_terminal_on_failure_and_cannot_retry(tmp_path: Path) 
             evaluate=lambda: {},
             protected_roots=[protected_repository / "artifacts"],
         )
+
+
+def test_single_attempt_keyboard_interrupt_is_terminal_and_reraised(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repo"
+    output = repository / runner.FINAL_NAMESPACE_RELATIVE
+    output.parent.mkdir(parents=True)
+
+    def interrupt() -> dict[str, bytes]:
+        raise KeyboardInterrupt("TEST_ONLY_KEYBOARD_INTERRUPT")
+
+    with pytest.raises(KeyboardInterrupt, match="TEST_ONLY_KEYBOARD_INTERRUPT"):
+        runner.run_single_attempt(
+            output,
+            repository_root=repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=interrupt,
+            protected_roots=[],
+        )
+
+    assert (output / "attempt-1.started.json").is_file()
+    terminal_path = output / "attempt-1.terminal.json"
+    terminal = json.loads(terminal_path.read_text())
+    assert terminal == {
+        "schema_version": "router-v2-blind-v2-attempt-terminal-v1",
+        "attempt_number": 1,
+        "status": "INFRASTRUCTURE_FAILURE",
+        "research_conclusion": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+        "router_decision": "KEEP_BASELINE",
+        "production_ready": False,
+        "release_authorized": False,
+        "default_router_unchanged": True,
+        "error_type": "KeyboardInterrupt",
+        "error_message": "TEST_ONLY_KEYBOARD_INTERRUPT",
+        "retry_allowed": False,
+    }
+    terminal_bytes = terminal_path.read_bytes()
+    with pytest.raises(FileExistsError):
+        runner.run_single_attempt(
+            output,
+            repository_root=repository,
+            started_payload={"commit_b": "b" * 40},
+            evaluate=lambda: {},
+            protected_roots=[],
+        )
+    assert terminal_path.read_bytes() == terminal_bytes
 
 
 def test_task7_final_cli_exposes_only_sealed_agent_workflow() -> None:
@@ -10520,6 +10575,217 @@ def test_task7_json_loader_rejects_nested_duplicate_config_key(
         match=r"agent-run-metadata\.json contains duplicate key: model",
     ):
         cli._json(path)
+
+
+def _task7_preregistered_loader_files(
+    tmp_path: Path,
+    *,
+    duplicate_source: str | None,
+) -> tuple[Path, Path]:
+    repository = tmp_path / f"repo-{duplicate_source or 'valid'}"
+    repository.mkdir()
+    payloads = {
+        "canonical-skills.json": b'[{"id":"test-skill-00"}]',
+        "train.jsonl": (
+            b'{"query_text":"train prompt","positive_source_record_id":'
+            b'"train-family","metadata":{"id":"train"}}\n'
+        ),
+        "pilot.jsonl": (
+            b'{"query_text":"pilot prompt","positive_source_record_id":'
+            b'"pilot-family","metadata":{"id":"pilot"}}\n'
+        ),
+    }
+    if duplicate_source == "canonical-skills":
+        payloads["canonical-skills.json"] = b'[{"id":"poison","id":"test-skill-00"}]'
+    elif duplicate_source == "train":
+        payloads["train.jsonl"] = (
+            b'{"query_text":"train prompt","positive_source_record_id":'
+            b'"train-family","metadata":{"id":"poison","id":"train"}}\n'
+        )
+    elif duplicate_source == "pilot":
+        payloads["pilot.jsonl"] = (
+            b'{"query_text":"pilot prompt","positive_source_record_id":'
+            b'"pilot-family","metadata":{"id":"poison","id":"pilot"}}\n'
+        )
+    elif duplicate_source is not None:
+        pytest.fail(f"unhandled duplicate source: {duplicate_source}")
+
+    for filename, payload in payloads.items():
+        (repository / filename).write_bytes(payload)
+
+    def binding(filename: str) -> dict[str, str]:
+        return {
+            "path": filename,
+            "sha256": hashlib.sha256(payloads[filename]).hexdigest(),
+        }
+
+    preregistration = {
+        "frozen_inputs": {
+            "accepted_pairs": binding("train.jsonl"),
+            "heldout_labels": binding("pilot.jsonl"),
+        },
+        "skill_index": binding("canonical-skills.json"),
+        "old_phase16_prompt_files": [],
+    }
+    preregistration_path = repository / "preregistration.json"
+    preregistration_path.write_text(json.dumps(preregistration), encoding="utf-8")
+    return repository, preregistration_path
+
+
+def test_task7_preregistered_input_loader_accepts_unambiguous_sources(
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository, preregistration_path = _task7_preregistered_loader_files(
+        tmp_path,
+        duplicate_source=None,
+    )
+
+    inputs = cli._load_preregistered_agent_inputs(
+        preregistration_path,
+        repository_root=repository,
+    )
+
+    assert inputs["canonical_skills"] == [{"id": "test-skill-00"}]
+    assert inputs["train_prompts"] == ["train prompt"]
+    assert inputs["pilot_prompts"] == ["pilot prompt"]
+
+
+@pytest.mark.parametrize(
+    ("duplicate_source", "message"),
+    (
+        (
+            "canonical-skills",
+            r"canonical-skills\.json contains duplicate key: id",
+        ),
+        ("train", r"train\.jsonl line 1 contains duplicate key: id"),
+        ("pilot", r"pilot\.jsonl line 1 contains duplicate key: id"),
+    ),
+)
+def test_task7_preregistered_input_loader_rejects_nested_duplicate_keys(
+    tmp_path: Path,
+    duplicate_source: str,
+    message: str,
+) -> None:
+    cli = _task7_cli_module()
+    repository, preregistration_path = _task7_preregistered_loader_files(
+        tmp_path,
+        duplicate_source=duplicate_source,
+    )
+
+    with pytest.raises(ValueError, match=message):
+        cli._load_preregistered_agent_inputs(
+            preregistration_path,
+            repository_root=repository,
+        )
+
+
+def test_task7_commit_b_context_rejects_nested_duplicate_frozen_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    preregistration_path = repository / runner.PREREGISTRATION_RELATIVE
+    preregistration_path.parent.mkdir(parents=True)
+    preregistration_path.write_bytes(b"{}")
+    pilot_manifest_path = repository / runner.PILOT_MANIFEST_RELATIVE
+    pilot_manifest_path.parent.mkdir(parents=True)
+    pilot_manifest_path.write_bytes(b"{}")
+    frozen_documents = {
+        "blind-v2-manifest.json": (
+            b'{"commit_a":"'
+            + (b"a" * 40)
+            + b'","lineage":{"sha256":"poison","sha256":"valid"}}'
+        )
+    }
+
+    monkeypatch.setattr(cli, "REPOSITORY_ROOT", repository)
+    monkeypatch.setattr(
+        cli.workflow,
+        "validate_preregistration_authority",
+        lambda *args, **kwargs: {},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_load_preregistered_agent_inputs",
+        lambda *args, **kwargs: {},
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "read_frozen_dataset_documents",
+        lambda active_repository: (
+            frozen_documents
+            if active_repository == repository
+            else pytest.fail("repository authority drift")
+        ),
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "validate_commit_b_repository",
+        lambda *args, **kwargs: {"commit_a": "a" * 40, "commit_b": "b" * 40},
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"blind-v2-manifest\.json contains duplicate key: sha256",
+    ):
+        cli._commit_b_context(require_model_smoke=False)
+
+
+def test_task7_evaluate_rejects_nested_duplicate_frozen_task_before_attempt(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    context = {
+        "repository": repository,
+        "preregistration_path": repository / runner.PREREGISTRATION_RELATIVE,
+        "pilot_manifest_path": repository / runner.PILOT_MANIFEST_RELATIVE,
+        "frozen_documents": {
+            "blind-v2-tasks.jsonl": (
+                b'{"task_id":"task-001","labels":'
+                b'{"gold":"poison","gold":"test-skill-00"}}\n'
+            )
+        },
+        "canonical_skills": _skills(),
+        "commit_a": "a" * 40,
+        "commit_b": "b" * 40,
+        "frozen_manifest_file_sha256": "f" * 64,
+    }
+    attempt_calls: list[dict[str, Any]] = []
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_b_context",
+        lambda *, require_model_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "validate_preregistration_authority",
+        lambda *args, **kwargs: {"preregistration_sha256": "p" * 64},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_json",
+        lambda _path: pytest.fail("frozen tasks must fail before pilot parsing"),
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "run_single_attempt",
+        lambda *args, **kwargs: attempt_calls.append(kwargs),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"blind-v2-tasks\.jsonl line 1 contains duplicate key: gold",
+    ):
+        cli._evaluate(SimpleNamespace())
+
+    assert attempt_calls == []
 
 
 def test_task7_request_commands_expose_only_frozen_stage_and_reviewer_role() -> None:

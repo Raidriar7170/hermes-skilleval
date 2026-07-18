@@ -40,6 +40,7 @@ from hermes_skilleval.router_v2_blind_v2_evaluation import (
     build_statistics,
     canonical_sha256,
     preregistered_evaluation_contract,
+    terminal_posture,
     validate_preregistration_truth,
 )
 from hermes_skilleval.router_v2_pilot_candidates import _skill_text
@@ -2209,7 +2210,7 @@ def _contamination_audit_document(
     }
 
 
-def _json_no_duplicate_keys(payload: bytes, label: str) -> dict[str, Any]:
+def _json_value_no_duplicate_keys(payload: bytes, label: str) -> Any:
     def pairs(values: list[tuple[str, Any]]) -> dict[str, Any]:
         output: dict[str, Any] = {}
         for key, value in values:
@@ -2223,6 +2224,11 @@ def _json_no_duplicate_keys(payload: bytes, label: str) -> dict[str, Any]:
         value = json.loads(decoded, object_pairs_hook=pairs)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"{label} must be valid UTF-8 JSON") from exc
+    return value
+
+
+def _json_no_duplicate_keys(payload: bytes, label: str) -> dict[str, Any]:
+    value = _json_value_no_duplicate_keys(payload, label)
     _require(type(value) is dict, f"{label} must be a JSON object")
     return cast(dict[str, Any], value)
 
@@ -9676,12 +9682,12 @@ def run_single_attempt(
         terminal = build_attempt_terminal_document(len(documents))
         _write_exclusive_json(output / "attempt-1.terminal.json", terminal)
         return terminal
-    except Exception as exc:
+    except BaseException as exc:
         terminal = {
             "schema_version": "router-v2-blind-v2-attempt-terminal-v1",
             "attempt_number": 1,
             "status": "INFRASTRUCTURE_FAILURE",
-            "research_conclusion": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+            **terminal_posture("AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE"),
             "error_type": type(exc).__name__,
             "error_message": str(exc),
             "retry_allowed": False,

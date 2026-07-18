@@ -89,29 +89,27 @@ def _load_preregistered_agent_inputs(
     preregistration = _json(preregistration_path)
     frozen = cast(dict[str, Any], preregistration["frozen_inputs"])
     skill_binding = cast(dict[str, Any], preregistration["skill_index"])
-    _, skill_payload = _bound_file(
+    skill_path, skill_payload = _bound_file(
         repository_root, skill_binding, label="canonical skill index"
     )
-    canonical_skills = json.loads(skill_payload)
+    canonical_skills = workflow._json_value_no_duplicate_keys(
+        skill_payload, str(skill_path)
+    )
     _require(
         type(canonical_skills) is list,
         "canonical skill index must contain a JSON array",
     )
 
     train_binding = cast(dict[str, Any], frozen["accepted_pairs"])
-    _, train_payload = _bound_file(
+    train_path, train_payload = _bound_file(
         repository_root, train_binding, label="frozen train source"
     )
-    train_rows = [
-        json.loads(line) for line in train_payload.splitlines() if line.strip()
-    ]
+    train_rows = workflow._jsonl_no_duplicate_keys(train_payload, str(train_path))
     pilot_binding = cast(dict[str, Any], frozen["heldout_labels"])
-    _, pilot_payload = _bound_file(
+    pilot_path, pilot_payload = _bound_file(
         repository_root, pilot_binding, label="frozen pilot source"
     )
-    pilot_rows = [
-        json.loads(line) for line in pilot_payload.splitlines() if line.strip()
-    ]
+    pilot_rows = workflow._jsonl_no_duplicate_keys(pilot_payload, str(pilot_path))
 
     phase16_bindings = cast(
         list[dict[str, Any]], preregistration["old_phase16_prompt_files"]
@@ -975,10 +973,10 @@ def _commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
         preregistration_path, repository_root=repository
     )
     frozen_documents = workflow.read_frozen_dataset_documents(repository)
-    blind_manifest = json.loads(
-        frozen_documents["blind-v2-manifest.json"].decode("utf-8")
+    blind_manifest = workflow._json_no_duplicate_keys(
+        frozen_documents["blind-v2-manifest.json"],
+        str(repository / workflow.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"),
     )
-    _require(type(blind_manifest) is dict, "frozen dataset manifest mismatch")
     state = workflow.validate_commit_b_repository(
         repository, commit_a=cast(str, blind_manifest["commit_a"])
     )
@@ -1039,11 +1037,10 @@ def _evaluate(_args: argparse.Namespace) -> int:
         pilot_manifest_path=pilot_manifest_path,
         verify_model_files=True,
     )
-    tasks = [
-        json.loads(line)
-        for line in frozen_documents["blind-v2-tasks.jsonl"].splitlines()
-        if line.strip()
-    ]
+    tasks = workflow._jsonl_no_duplicate_keys(
+        frozen_documents["blind-v2-tasks.jsonl"],
+        str(repository / workflow.DATASET_FREEZE_RELATIVE / "blind-v2-tasks.jsonl"),
+    )
     pilot = _json(pilot_manifest_path)
     bindings = _model_bindings(pilot)
     lineage_bindings = workflow.build_authoritative_lineage_bindings(
