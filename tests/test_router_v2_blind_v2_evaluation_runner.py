@@ -11397,6 +11397,115 @@ def test_task7_freeze_handler_uses_validated_pack_and_fixed_output(
     assert output["family_count"] == 128
 
 
+@pytest.mark.parametrize("authority_case", ("valid", "invalid-marker", "invalid-data"))
+def test_task7_evaluate_uses_real_shared_preflight_before_attempt_marker(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    authority_case: str,
+) -> None:
+    cli = _task7_cli_module()
+    input_artifacts, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    preregistration_path = repository / runner.PREREGISTRATION_RELATIVE
+    preregistration_path.parent.mkdir(parents=True)
+    preregistration_path.write_bytes(input_artifacts["preregistration.json"])
+    preregistration = json.loads(input_artifacts["preregistration.json"])
+    frozen_documents = {
+        "blind-v2-tasks.jsonl": input_artifacts["blind-v2-tasks.jsonl"],
+        "blind-v2-manifest.json": input_artifacts["blind-v2-manifest.json"],
+        "blind-v2-review-summary.json": input_artifacts["review-summary.json"],
+    }
+    if authority_case == "invalid-data":
+        frozen_documents["blind-v2-tasks.jsonl"] = b'{"task_id":"bad"}\n'
+    context = {
+        "repository": repository,
+        "preregistration_path": preregistration_path,
+        "pilot_manifest_path": repository / runner.PILOT_MANIFEST_RELATIVE,
+        "frozen_documents": frozen_documents,
+        "canonical_skills": _skills(),
+        "commit_a": "a" * 40,
+        "commit_b": "b" * 40,
+        "frozen_manifest_file_sha256": hashlib.sha256(
+            input_artifacts["blind-v2-manifest.json"]
+        ).hexdigest(),
+    }
+    attempt_payloads: list[dict[str, Any]] = []
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_b_context",
+        lambda *, require_model_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "validate_preregistration_authority",
+        lambda *args, **kwargs: {
+            "preregistration_sha256": preregistration["preregistration_sha256"]
+        },
+    )
+    monkeypatch.setattr(
+        cli,
+        "_json",
+        lambda _path: {"training_execution_root": str(tmp_path / "training")},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_model_bindings",
+        lambda _pilot: deepcopy(frozen_bindings["evaluation_models"]),
+    )
+    monkeypatch.setattr(
+        cli.workflow,
+        "build_authoritative_lineage_bindings",
+        lambda *args, **kwargs: frozen_bindings,
+    )
+    if authority_case == "invalid-marker":
+        canonical_started_builder = cli.workflow.build_attempt_started_document
+
+        def invalid_started_builder(payload: dict[str, Any]) -> dict[str, Any]:
+            return {
+                **canonical_started_builder(payload),
+                "evaluator_commit": "a" * 40,
+            }
+
+        monkeypatch.setattr(
+            cli.workflow,
+            "build_attempt_started_document",
+            invalid_started_builder,
+        )
+
+    def run_attempt(
+        output_dir: Path,
+        *,
+        repository_root: Path,
+        started_payload: dict[str, Any],
+        evaluate: Callable[[], dict[str, bytes]],
+        protected_roots: list[Path],
+    ) -> dict[str, Any]:
+        del evaluate, protected_roots
+        assert output_dir == repository / runner.FINAL_NAMESPACE_RELATIVE
+        assert repository_root == repository
+        attempt_payloads.append(started_payload)
+        return {"status": "TEST_ONLY_ATTEMPT_NOT_EXECUTED"}
+
+    monkeypatch.setattr(cli.workflow, "run_single_attempt", run_attempt)
+
+    if authority_case == "valid":
+        assert cli._evaluate(SimpleNamespace()) == 0
+        assert len(attempt_payloads) == 1
+        assert set(attempt_payloads[0]) == {
+            "commit_a",
+            "commit_b",
+            "attempt_token_sha256",
+        }
+    else:
+        with pytest.raises(ValueError, match="pre-scoring authority mismatch"):
+            cli._evaluate(SimpleNamespace())
+        assert attempt_payloads == []
+
+    assert not (repository / runner.FINAL_NAMESPACE_RELATIVE).exists()
+
+
 def test_task7_evaluate_preflights_commit_b_before_attempt_marker(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

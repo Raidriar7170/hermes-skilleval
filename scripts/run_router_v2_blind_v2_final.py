@@ -1079,10 +1079,7 @@ def _evaluate(_args: argparse.Namespace) -> int:
     started_payload = {
         "commit_a": context["commit_a"],
         "commit_b": context["commit_b"],
-        "evaluator_commit": context["commit_a"],
         "attempt_token_sha256": attempt_token_sha256,
-        "preregistration_sha256": authority["preregistration_sha256"],
-        "blind_v2_manifest_file_sha256": context["frozen_manifest_file_sha256"],
     }
     attempt_artifacts = {
         "attempt-1.started.json": _canonical_bytes(
