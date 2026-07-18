@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import unicodedata
 from copy import deepcopy
 from decimal import (
     ROUND_DOWN,
@@ -1835,6 +1836,290 @@ def _task5_fixture_request(
     return {**payload, "request_sha256": _task5_test_canonical_sha256(payload)}
 
 
+def _task5_oracle_normalize(value: str) -> str:
+    return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+
+
+def _task5_oracle_ngrams(value: str, *, tokenized: bool) -> set[str]:
+    normalized = _task5_oracle_normalize(value)
+    if tokenized:
+        parts = normalized.split()
+        return {
+            "\u241f".join(parts[index : index + 5])
+            for index in range(max(0, len(parts) - 4))
+        }
+    return {
+        normalized[index : index + 5] for index in range(max(0, len(normalized) - 4))
+    }
+
+
+def _task5_oracle_jaccard(left: set[str], right: set[str]) -> Decimal:
+    if not left and not right:
+        return Decimal("1")
+    with localcontext() as context:
+        context.prec = 50
+        context.rounding = ROUND_HALF_EVEN
+        return Decimal(len(left & right)) / Decimal(len(left | right))
+
+
+def _task5_oracle_decimal(value: Decimal) -> str:
+    rendered = format(value, "f")
+    if "." in rendered:
+        rendered = rendered.rstrip("0").rstrip(".")
+    return "0" if rendered in {"-0", ""} else rendered
+
+
+def _task5_oracle_protected_authority(
+    protected_prompts: dict[str, list[str]],
+    protected_family_ids: dict[str, set[str]],
+) -> dict[str, dict[str, int | str]]:
+    authority: dict[str, dict[str, int | str]] = {}
+    for scope in runner.CONTAMINATION_SCOPES:
+        prompt_bytes = sorted(prompt.encode() for prompt in protected_prompts[scope])
+        digest = hashlib.sha256()
+        for payload in prompt_bytes:
+            digest.update(len(payload).to_bytes(8, byteorder="big"))
+            digest.update(payload)
+        normalized_prompts = sorted(
+            _task5_oracle_normalize(prompt) for prompt in protected_prompts[scope]
+        )
+        family_ids = sorted(protected_family_ids[scope])
+        authority[scope] = {
+            "prompt_count": len(prompt_bytes),
+            "prompt_bytes_sha256": digest.hexdigest(),
+            "normalized_prompt_list_sha256": _task5_test_canonical_sha256(
+                normalized_prompts
+            ),
+            "family_count": len(family_ids),
+            "family_ids_sha256": _task5_test_canonical_sha256(family_ids),
+            "row_projection_sha256": _task5_test_canonical_sha256(
+                {
+                    "prompts": sorted(
+                        protected_prompts[scope], key=lambda value: value.encode()
+                    ),
+                    "family_ids": family_ids,
+                }
+            ),
+        }
+    return authority
+
+
+def _task5_expected_contamination_scan(
+    candidates: list[dict[str, Any]],
+    *,
+    protected_prompts: dict[str, list[str]],
+    protected_family_ids: dict[str, set[str]],
+    semantic_similarity: Callable[[str, str], int | float | Decimal],
+    semantic_model_authority: dict[str, Any],
+    token_5grams: Callable[[str], set[str]] | None = None,
+    character_5grams: Callable[[str], set[str]] | None = None,
+) -> dict[str, Any]:
+    token_5grams = token_5grams or (
+        lambda value: _task5_oracle_ngrams(value, tokenized=True)
+    )
+    character_5grams = character_5grams or (
+        lambda value: _task5_oracle_ngrams(value, tokenized=False)
+    )
+    protected_authority = _task5_oracle_protected_authority(
+        protected_prompts, protected_family_ids
+    )
+    scanner_config = {
+        "required_semantic_model_id": runner.SEMANTIC_MODEL_ID,
+        "required_semantic_model_revision": runner.SEMANTIC_MODEL_REVISION,
+        "materialized_model_files": deepcopy(
+            semantic_model_authority["materialized_model_files"]
+        ),
+        "materialized_model_files_sha256": semantic_model_authority[
+            "materialized_model_files_sha256"
+        ],
+        "semantic_scorer_runtime_verified": False,
+        "semantic_scorer_receipt_sha256": None,
+        "token_5gram_jaccard_reject_at_or_above": str(runner.TOKEN_5GRAM_JACCARD_MAX),
+        "character_5gram_jaccard_reject_at_or_above": str(
+            runner.CHARACTER_5GRAM_JACCARD_MAX
+        ),
+        "semantic_cosine_reject_at_or_above": str(runner.SEMANTIC_COSINE_MAX),
+        "normalization": "NFKC-casefold-collapse-whitespace",
+        "selection_seed": TASK4_SELECTION_AUTHORITY["selection_seed"],
+        "protected_authority": protected_authority,
+        "protected_authority_sha256": _task5_test_canonical_sha256(protected_authority),
+    }
+
+    def projected(value: dict[str, Any]) -> dict[str, Any]:
+        prompt = cast(str, value["prompt_text"])
+        return {
+            "candidate_id": value["candidate_id"],
+            "generation_round": value["generation_round"],
+            "prompt_text": prompt,
+            "prompt_bytes": prompt.encode(),
+            "prompt_text_sha256": value["prompt_text_sha256"],
+            "normalized": _task5_oracle_normalize(prompt),
+            "token_5grams": token_5grams(prompt),
+            "character_5grams": character_5grams(prompt),
+            "semantic_family_id": value["semantic_family_id"],
+        }
+
+    projected_candidates = [projected(candidate) for candidate in candidates]
+    references = {
+        scope: [
+            projected(
+                {
+                    "candidate_id": "0" * 24,
+                    "generation_round": 0,
+                    "prompt_text": prompt,
+                    "prompt_text_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+                    "semantic_family_id": "reference",
+                }
+            )
+            for prompt in sorted(
+                protected_prompts[scope], key=lambda value: value.encode()
+            )
+        ]
+        for scope in runner.CONTAMINATION_SCOPES
+    }
+
+    def prompt_events(
+        candidate: dict[str, Any], reference: dict[str, Any], scope: str
+    ) -> list[dict[str, str]]:
+        events: list[dict[str, str]] = []
+        reference_hash = cast(str, reference["prompt_text_sha256"])
+        if candidate["prompt_bytes"] == reference["prompt_bytes"]:
+            events.append(
+                {
+                    "code": f"exact_prompt_bytes:{scope}",
+                    "reference_sha256": reference_hash,
+                }
+            )
+        if candidate["normalized"] == reference["normalized"]:
+            events.append(
+                {
+                    "code": f"normalized_prompt:{scope}",
+                    "reference_sha256": reference_hash,
+                }
+            )
+        token_score = _task5_oracle_jaccard(
+            candidate["token_5grams"], reference["token_5grams"]
+        )
+        if token_score >= Decimal("0.80"):
+            events.append(
+                {
+                    "code": f"token_5gram_jaccard:{scope}",
+                    "reference_sha256": reference_hash,
+                    "value": _task5_oracle_decimal(token_score),
+                }
+            )
+        character_score = _task5_oracle_jaccard(
+            candidate["character_5grams"], reference["character_5grams"]
+        )
+        if character_score >= Decimal("0.85"):
+            events.append(
+                {
+                    "code": f"character_5gram_jaccard:{scope}",
+                    "reference_sha256": reference_hash,
+                    "value": _task5_oracle_decimal(character_score),
+                }
+            )
+        semantic_score = Decimal(
+            str(
+                semantic_similarity(
+                    cast(str, candidate["prompt_text"]),
+                    cast(str, reference["prompt_text"]),
+                )
+            )
+        )
+        if semantic_score >= Decimal("0.90"):
+            events.append(
+                {
+                    "code": f"semantic_cosine:{scope}",
+                    "reference_sha256": reference_hash,
+                    "value": _task5_oracle_decimal(semantic_score),
+                }
+            )
+        return events
+
+    events_by_id: dict[str, list[dict[str, str]]] = {
+        candidate["candidate_id"]: [] for candidate in projected_candidates
+    }
+    earlier: list[dict[str, Any]] = []
+    ordered = sorted(
+        projected_candidates,
+        key=lambda candidate: (
+            candidate["generation_round"],
+            hashlib.sha256(f"7170:{candidate['candidate_id']}".encode()).hexdigest(),
+        ),
+    )
+    for candidate in ordered:
+        events = events_by_id[candidate["candidate_id"]]
+        for scope in runner.CONTAMINATION_SCOPES:
+            if candidate["semantic_family_id"] in protected_family_ids[scope]:
+                events.append(
+                    {
+                        "code": f"protected_family:{scope}",
+                        "reference_sha256": hashlib.sha256(
+                            candidate["semantic_family_id"].encode()
+                        ).hexdigest(),
+                    }
+                )
+            for reference in references[scope]:
+                events.extend(prompt_events(candidate, reference, scope))
+        for winner in earlier:
+            pair_events = prompt_events(candidate, winner, "current_candidate")
+            if candidate["semantic_family_id"] == winner["semantic_family_id"]:
+                pair_events.append(
+                    {
+                        "code": "protected_family:current_candidate",
+                        "reference_sha256": hashlib.sha256(
+                            winner["semantic_family_id"].encode()
+                        ).hexdigest(),
+                    }
+                )
+            if pair_events:
+                events.extend(
+                    {
+                        **event,
+                        "code": (
+                            f"current_candidate:{winner['candidate_id']}:"
+                            f"{event['code']}"
+                        ),
+                    }
+                    for event in pair_events
+                )
+                break
+        earlier.append(candidate)
+
+    rows: list[dict[str, Any]] = []
+    for candidate in projected_candidates:
+        events = events_by_id[candidate["candidate_id"]]
+        rejection_codes = sorted({event["code"] for event in events})
+        evidence = {
+            "candidate_id": candidate["candidate_id"],
+            "generation_round": candidate["generation_round"],
+            "prompt_text_sha256": candidate["prompt_text_sha256"],
+            "semantic_family_sha256": hashlib.sha256(
+                candidate["semantic_family_id"].encode()
+            ).hexdigest(),
+            "scanner_config": scanner_config,
+            "events": events,
+        }
+        rows.append(
+            {
+                "candidate_id": candidate["candidate_id"],
+                "scanner_decision": "REJECT" if rejection_codes else "PASS",
+                "rejection_codes": rejection_codes,
+                "evidence_sha256": _task5_test_canonical_sha256(evidence),
+            }
+        )
+    return {
+        "rows": rows,
+        "clean_candidate_ids": [
+            candidate["candidate_id"]
+            for candidate in projected_candidates
+            if not events_by_id[candidate["candidate_id"]]
+        ],
+        "scanner_config": scanner_config,
+    }
+
+
 def _write_agent_pack(
     root: Path,
     *,
@@ -1854,6 +2139,8 @@ def _write_agent_pack(
     protected_prompts: dict[str, list[str]] | None = None,
     protected_family_ids: dict[str, set[str]] | None = None,
     semantic_similarity: Callable[[str, str], int | float | Decimal] | None = None,
+    oracle_token_5grams: Callable[[str], set[str]] | None = None,
+    oracle_character_5grams: Callable[[str], set[str]] | None = None,
     current_conflict_with_protected: bool = False,
 ) -> None:
     root.mkdir()
@@ -2084,12 +2371,14 @@ def _write_agent_pack(
     protected_prompts = protected_prompts or _task4_protected_prompts()
     protected_family_ids = protected_family_ids or _task4_protected_family_ids()
     semantic_similarity = semantic_similarity or (lambda _left, _right: 0.0)
-    scan = runner._scan_contamination(
+    scan = _task5_expected_contamination_scan(
         list(candidate_by_id.values()),
         protected_prompts=protected_prompts,
         protected_family_ids=protected_family_ids,
         semantic_similarity=semantic_similarity,
         semantic_model_authority=_task5_scanner_model_authority(),
+        token_5grams=oracle_token_5grams,
+        character_5grams=oracle_character_5grams,
     )
     contamination_rows.extend(scan["rows"])
     clean_candidate_ids = set(scan["clean_candidate_ids"])
@@ -2501,6 +2790,7 @@ def _validate_agent_pack(
     protected_family_ids: dict[str, set[str]] | None = None,
     semantic_similarity: Callable[[str, str], int | float | Decimal] | None = None,
     semantic_model_authority: dict[str, Any] | None = None,
+    include_construction_input_bindings: bool = True,
 ) -> dict[str, Any]:
     protected_prompts = protected_prompts or _task4_protected_prompts()
     protected_family_ids = protected_family_ids or _task4_protected_family_ids()
@@ -2521,10 +2811,146 @@ def _validate_agent_pack(
         semantic_model_authority=(
             semantic_model_authority or _task5_scanner_model_authority()
         ),
-        construction_input_bindings=_task5_construction_input_bindings(
-            protected_prompts, protected_family_ids
+        construction_input_bindings=(
+            _task5_construction_input_bindings(protected_prompts, protected_family_ids)
+            if include_construction_input_bindings
+            else None
         ),
     )
+
+
+def _task5_zero_semantic_similarity(_left: str, _right: str) -> float:
+    return 0.0
+
+
+def _task5_build_dataset_freeze_documents(
+    validation: dict[str, Any],
+    *,
+    commit_a: str,
+    semantic_similarity: Callable[[str, str], int | float | Decimal] | None = None,
+) -> dict[str, bytes]:
+    return runner.build_dataset_freeze_documents(
+        validation,
+        commit_a=commit_a,
+        semantic_similarity=semantic_similarity or _task5_zero_semantic_similarity,
+    )
+
+
+def test_task5_agent_pack_requires_sealed_construction_input_bindings(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    result = _validate_agent_pack(
+        pack,
+        tmp_path / "repo",
+        include_construction_input_bindings=False,
+    )
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "contamination_ledger"
+    assert "construction input bindings are required" in result["failure_reason"]
+
+
+def test_task5_reviewer_rubric_and_unanimity_use_one_immutable_contract() -> None:
+    accepted = {
+        "decision": "ACCEPT",
+        "reviewed_gold_skill_id": "test-skill-00",
+        "reviewed_negative_skill_id": "test-skill-01",
+        "natural": True,
+        "single_primary_skill": True,
+        "no_label_leakage": True,
+        "negative_confusable": True,
+    }
+    rejected = {**accepted, "decision": "REJECT_AMBIGUOUS"}
+    rejected["single_primary_skill"] = False
+
+    assert isinstance(runner._REVIEWER_DECISION_PROJECTION_FIELDS, frozenset)
+    assert runner._reviewer_decision_rubric_consistent(accepted) is True
+    assert runner._reviewer_decision_rubric_consistent(rejected) is True
+    assert (
+        runner._reviewers_unanimously_accept(
+            (accepted, deepcopy(accepted)),
+            expected_labels=("test-skill-00", "test-skill-01"),
+        )
+        is True
+    )
+    assert (
+        runner._reviewers_unanimously_accept(
+            (accepted, rejected),
+            expected_labels=("test-skill-00", "test-skill-01"),
+        )
+        is False
+    )
+
+
+def test_task5_agent_pack_fixture_uses_independent_contamination_oracle(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def production_scanner_must_not_build_fixture(*_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("fixture called production contamination scanner")
+
+    monkeypatch.setattr(
+        runner, "_scan_contamination", production_scanner_must_not_build_fixture
+    )
+
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+
+    rows = _read_jsonl(pack / "blind-v2-contamination.jsonl")
+    assert len(rows) == 256
+    assert all(row["scanner_decision"] == "PASS" for row in rows)
+    assert all(len(row["evidence_sha256"]) == 64 for row in rows)
+
+
+def test_task5_pipeline_outcomes_and_winners_use_shared_pure_derivation() -> None:
+    candidate_ids = ("a" * 24, "b" * 24, "c" * 24)
+    candidates = {
+        candidate_id: {
+            "candidate_id": candidate_id,
+            "proposed_gold_skill_id": "test-skill-00",
+            "proposed_negative_skill_id": "test-skill-01",
+        }
+        for candidate_id in candidate_ids
+    }
+    accepted_review = {
+        "decision": "ACCEPT",
+        "reviewed_gold_skill_id": "test-skill-00",
+        "reviewed_negative_skill_id": "test-skill-01",
+        "natural": True,
+        "single_primary_skill": True,
+        "no_label_leakage": True,
+        "negative_confusable": True,
+    }
+    rejected_review = {
+        **accepted_review,
+        "decision": "REJECT_AMBIGUOUS",
+        "single_primary_skill": False,
+    }
+    reviews = {
+        "reviewer_a": {
+            candidate_ids[0]: accepted_review,
+            candidate_ids[1]: rejected_review,
+        },
+        "reviewer_b": {
+            candidate_ids[0]: deepcopy(accepted_review),
+            candidate_ids[1]: deepcopy(accepted_review),
+        },
+    }
+
+    accepted, outcomes = runner._derive_candidate_pipeline_semantics(
+        candidates,
+        clean_candidate_ids={candidate_ids[0], candidate_ids[1]},
+        review_responses=reviews,
+    )
+
+    assert [row["candidate_id"] for row in accepted] == [candidate_ids[0]]
+    assert outcomes == {
+        candidate_ids[0]: "ELIGIBLE",
+        candidate_ids[1]: "REJECTED_REVIEW",
+        candidate_ids[2]: "REJECTED_CONTAMINATION",
+    }
 
 
 def test_task5_round_one_generation_uses_16_invocations_with_16_candidates_each(
@@ -2593,8 +3019,8 @@ def test_task5_shuffled_generator_candidate_wire_order_is_canonicalized(
 
     assert first["status"] == second["status"] == "VALID"
     assert first["tasks"] == second["tasks"]
-    first_documents = runner.build_dataset_freeze_documents(first, commit_a="a" * 40)
-    second_documents = runner.build_dataset_freeze_documents(second, commit_a="a" * 40)
+    first_documents = _task5_build_dataset_freeze_documents(first, commit_a="a" * 40)
+    second_documents = _task5_build_dataset_freeze_documents(second, commit_a="a" * 40)
     assert first_documents == second_documents
     manifest = json.loads(first_documents["blind-v2-manifest.json"])
     assert all(
@@ -2732,7 +3158,7 @@ def test_task4_pack_rejects_unmatched_protected_authority_mutation(
     assert result["failure_stage"] == "contamination_ledger"
 
 
-def test_task4_legal_protected_authorities_have_distinct_audit_hashes(
+def test_task4_unsealed_protected_authority_drift_is_protocol_invalid(
     tmp_path: Path,
 ) -> None:
     baseline_pack = tmp_path / "baseline-pack"
@@ -2769,27 +3195,10 @@ def test_task4_legal_protected_authorities_have_distinct_audit_hashes(
         protected_family_ids=changed_families,
     )
 
-    assert baseline["status"] == changed["status"] == "VALID"
-    assert (
-        baseline["contamination_audit"]["protected_authority"]
-        != changed["contamination_audit"]["protected_authority"]
-    )
-    assert (
-        baseline["contamination_audit"]["protected_authority_sha256"]
-        != changed["contamination_audit"]["protected_authority_sha256"]
-    )
-    prior_summary = changed["contamination_audit"]["protected_authority"][
-        "prior_candidate"
-    ]
-    assert prior_summary["prompt_count"] == 2
-    assert set(prior_summary) == {
-        "prompt_count",
-        "prompt_bytes_sha256",
-        "normalized_prompt_list_sha256",
-        "family_count",
-        "family_ids_sha256",
-        "row_projection_sha256",
-    }
+    assert baseline["status"] == "VALID"
+    assert changed["status"] == "INVALID"
+    assert changed["failure_stage"] == "contamination_ledger"
+    assert "sealed bindings" in changed["failure_reason"]
 
 
 def test_task4_pack_current_loser_is_rejected_after_protected_winner(
@@ -2842,29 +3251,28 @@ def test_task4_pack_threshold_equality_rejects_candidate(
     protected_prompt = f"{PREFIX} TRAIN REFERENCE"
     token_shared = {f"token-shared-{index}" for index in range(4)}
     character_shared = {f"character-shared-{index}" for index in range(17)}
-    monkeypatch.setattr(
-        runner,
-        "_token_5grams",
-        lambda text: (
+
+    def token_5grams(text: str) -> set[str]:
+        return (
             token_shared
             if rule == "token" and text == target_prompt
             else token_shared | {"token-extra"}
             if rule == "token" and text == protected_prompt
             else {f"token:{text}"}
-        ),
-    )
-    monkeypatch.setattr(
-        runner,
-        "_character_5grams",
-        lambda text: (
+        )
+
+    def character_5grams(text: str) -> set[str]:
+        return (
             character_shared
             if rule == "character" and text == target_prompt
             else character_shared
             | {"character-extra-1", "character-extra-2", "character-extra-3"}
             if rule == "character" and text == protected_prompt
             else {f"character:{text}"}
-        ),
-    )
+        )
+
+    monkeypatch.setattr(runner, "_token_5grams", token_5grams)
+    monkeypatch.setattr(runner, "_character_5grams", character_5grams)
 
     def semantic_similarity(left: str, right: str) -> Decimal:
         return (
@@ -2875,7 +3283,12 @@ def test_task4_pack_threshold_equality_rejects_candidate(
             else Decimal("0")
         )
 
-    _write_agent_pack(pack, semantic_similarity=semantic_similarity)
+    _write_agent_pack(
+        pack,
+        semantic_similarity=semantic_similarity,
+        oracle_token_5grams=token_5grams,
+        oracle_character_5grams=character_5grams,
+    )
 
     result = _validate_agent_pack(
         pack, tmp_path / "repo", semantic_similarity=semantic_similarity
@@ -3302,7 +3715,7 @@ def test_task5_scanner_model_files_are_bound_from_validated_authority(
     assert audit["semantic_scorer_runtime_verified"] is False
     assert audit["semantic_scorer_receipt_sha256"] is None
 
-    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    documents = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     manifest = json.loads(documents["blind-v2-manifest.json"])
     frozen = manifest["agent_construction"]["contamination"]
     assert frozen["materialized_model_files"] == authority["materialized_model_files"]
@@ -4592,7 +5005,7 @@ def test_task5_run_hashes_and_retry_records_bind_exact_fixture_invocations(
     expected_retries = _task5_fixture_retry_records(expected_records)
 
     validation = _validate_agent_pack(pack, tmp_path / "repo")
-    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    documents = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     manifest = json.loads(documents["blind-v2-manifest.json"])
     construction = manifest["agent_construction"]
 
@@ -4620,8 +5033,8 @@ def test_task5_commit_b_run_records_independently_recompute_committed_evidence(
     _write_agent_pack(pack, transport_retry_role="reviewer_b")
     validation = _validate_agent_pack(pack, tmp_path / "repo")
 
-    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
-    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    first = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     assert {
         name: hashlib.sha256(payload).hexdigest() for name, payload in first.items()
     } == {name: hashlib.sha256(payload).hexdigest() for name, payload in second.items()}
@@ -4868,7 +5281,11 @@ def test_task5_freeze_rejects_resynchronized_double_transport_source_terminal(
     with pytest.raises(
         ValueError, match="Agent source ledger freeze authority mismatch"
     ):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(
+            validation,
+            commit_a="a" * 40,
+            semantic_similarity=lambda _left, _right: 0.0,
+        )
 
 
 @pytest.mark.parametrize(
@@ -4896,7 +5313,7 @@ def test_task5_freeze_revalidates_generation_response_candidate_and_opaque_id(
     _task5_resync_validation_from_source_pack(validation, pack, "generator")
 
     with pytest.raises(ValueError):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_rejects_resynchronized_two_substantive_generator_responses(
@@ -4916,7 +5333,7 @@ def test_task5_freeze_rejects_resynchronized_two_substantive_generator_responses
     _task5_resync_validation_from_source_pack(validation, pack, "generator")
 
     with pytest.raises(ValueError):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 @pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
@@ -4966,7 +5383,7 @@ def test_task5_freeze_requires_canonical_source_request_skill_authority(
     with pytest.raises(
         ValueError, match="Agent source ledger freeze authority mismatch"
     ):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_revalidates_reviewer_schedule_from_sealed_source(
@@ -4991,7 +5408,7 @@ def test_task5_freeze_revalidates_reviewer_schedule_from_sealed_source(
     with pytest.raises(
         ValueError, match="Agent source ledger freeze authority mismatch"
     ):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_revalidates_reviewer_rubric_from_sealed_source(
@@ -5014,7 +5431,7 @@ def test_task5_freeze_revalidates_reviewer_rubric_from_sealed_source(
     with pytest.raises(
         ValueError, match="Agent source ledger freeze authority mismatch"
     ):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_revalidates_reviewer_coverage_from_sealed_source(
@@ -5056,7 +5473,7 @@ def test_task5_freeze_revalidates_reviewer_coverage_from_sealed_source(
         ValueError,
         match="Agent (?:run identity|source ledger freeze) authority mismatch",
     ):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_rebinds_complete_contamination_audit_authority(
@@ -5096,7 +5513,7 @@ def test_task5_freeze_rebinds_complete_contamination_audit_authority(
         with pytest.raises(
             ValueError, match="Agent source ledger freeze authority mismatch"
         ):
-            runner.build_dataset_freeze_documents(forged, commit_a="a" * 40)
+            _task5_build_dataset_freeze_documents(forged, commit_a="a" * 40)
 
 
 def test_task5_freeze_rejects_resynchronized_contamination_decision_drift(
@@ -5140,7 +5557,112 @@ def test_task5_freeze_rejects_resynchronized_contamination_decision_drift(
     with pytest.raises(
         ValueError, match="Agent source ledger freeze authority mismatch"
     ):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_freeze_replays_fully_resynchronized_contamination_semantics(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    candidate_id = next(
+        candidate_id
+        for candidate_id, outcome in validation["candidate_outcomes"].items()
+        if outcome == "NOT_SELECTED"
+    )
+
+    contamination_path = pack / "blind-v2-contamination.jsonl"
+    contamination_rows = _read_jsonl(contamination_path)
+    contamination_row = next(
+        row for row in contamination_rows if row["candidate_id"] == candidate_id
+    )
+    contamination_row.update(
+        {
+            "scanner_decision": "REJECT",
+            "rejection_codes": ["forged:fully-resynchronized"],
+            "evidence_sha256": "f" * 64,
+        }
+    )
+    contamination_path.write_bytes(_jsonl_bytes(contamination_rows))
+
+    review_rows_by_role: dict[str, list[dict[str, Any]]] = {}
+    for role, filename in (
+        ("reviewer_a", "blind-v2-review-a.jsonl"),
+        ("reviewer_b", "blind-v2-review-b.jsonl"),
+    ):
+        path = pack / filename
+        rows = [row for row in _read_jsonl(path) if row["candidate_id"] != candidate_id]
+        path.write_bytes(_jsonl_bytes(rows))
+        review_rows_by_role[role] = rows
+
+    metadata_path = pack / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    for role, rows in review_rows_by_role.items():
+        invocations = [invocation for row in rows for invocation in row["invocations"]]
+        metadata["roles"][role]["request_count"] = len(rows)
+        metadata["roles"][role]["invocation_count"] = len(invocations)
+        metadata["roles"][role]["session_or_thread_ids"] = [
+            _pack_invocation_identity(invocation) for invocation in invocations
+        ]
+        metadata["review_schedule_sha256"][role] = _task5_test_canonical_sha256(
+            [row["candidate_id"] for row in rows]
+        )
+    metadata["source_file_sha256"] = {
+        filename: hashlib.sha256((pack / filename).read_bytes()).hexdigest()
+        for filename in runner.REQUIRED_AGENT_PACK_FILES[:-1]
+    }
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    _task5_resync_validation_from_source_pack(
+        validation, pack, "reviewer_a", "reviewer_b"
+    )
+    validation["contamination_source_authority"]["rows"] = deepcopy(contamination_rows)
+    validation["contamination_source_authority"]["clean_candidate_ids"] = [
+        row["candidate_id"]
+        for row in contamination_rows
+        if row["scanner_decision"] == "PASS"
+    ]
+    validation["contamination_audit"] = runner._contamination_audit_document(
+        {
+            "scanner_config": validation["contamination_source_authority"][
+                "scanner_config"
+            ],
+            "rows": contamination_rows,
+        },
+        source_hashes=validation["source_file_sha256"],
+        candidate_count=256,
+        clean_candidate_count=255,
+    )
+    validation["candidate_outcomes"][candidate_id] = "REJECTED_CONTAMINATION"
+    validation["candidate_outcomes"] = dict(
+        sorted(validation["candidate_outcomes"].items())
+    )
+    _task5_resync_candidate_outcome_aggregates(validation)
+    validation["selection_audit"]["accepted_pool_sha256"] = (
+        _task5_test_canonical_sha256(_task5_safe_accepted_projection(validation))
+    )
+    validation["selection_audit_sha256"] = _task5_test_canonical_sha256(
+        validation["selection_audit"]
+    )
+    reviewer_authority = validation["reviewer_decision_authority"]
+    for role in ("reviewer_a", "reviewer_b"):
+        reviewer_authority["roles"][role] = [
+            row
+            for row in reviewer_authority["roles"][role]
+            if row["candidate_id"] != candidate_id
+        ]
+    reviewer_authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {
+            "schema_version": reviewer_authority["schema_version"],
+            "roles": reviewer_authority["roles"],
+        }
+    )
+
+    with pytest.raises(
+        ValueError, match="Agent source ledger freeze authority mismatch"
+    ):
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_agent_run_identity_authority_binds_ledger_metadata(
@@ -5151,7 +5673,7 @@ def test_task5_agent_run_identity_authority_binds_ledger_metadata(
     validation = _validate_agent_pack(pack, tmp_path / "repo")
 
     authority = validation["agent_run_identity_authority"]
-    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    documents = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     construction = json.loads(documents["blind-v2-manifest.json"])["agent_construction"]
 
     assert construction["agent_run_identity_authority"] == authority
@@ -5238,7 +5760,7 @@ def test_task5_freeze_rejects_forged_record_with_resynchronized_aggregates(
     validation["transport_retry_count"] = len(validation["retry_records"])
 
     with pytest.raises(ValueError, match="Agent run or retry evidence mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 @pytest.mark.parametrize(
@@ -5278,7 +5800,7 @@ def test_task5_freeze_revalidates_selected_tasks_and_selection_audit(
         selection["selected_candidate_ids_sha256"] = "0" * 64
 
     with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_rejects_resynchronized_round_lineage_not_derived_from_source(
@@ -5298,7 +5820,7 @@ def test_task5_freeze_rejects_resynchronized_round_lineage_not_derived_from_sour
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
     with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_rejects_source_synchronized_one_x_round_two_selection(
@@ -5332,7 +5854,7 @@ def test_task5_freeze_rejects_source_synchronized_one_x_round_two_selection(
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
     with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_preserves_source_derived_round_two_selection_lineage(
@@ -5347,8 +5869,8 @@ def test_task5_freeze_preserves_source_derived_round_two_selection_lineage(
     )
     validation = _validate_agent_pack(pack, tmp_path / "repo")
 
-    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
-    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    first = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
     assert first == second
     manifest = json.loads(first["blind-v2-manifest.json"])
@@ -5408,7 +5930,7 @@ def test_task5_validation_carries_hash_bound_source_bytes_without_committing_the
             == hashlib.sha256(bytes.fromhex(payload_hex)).hexdigest()
         )
 
-    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    documents = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     combined = b"".join(documents.values())
     assert b'"source_file_bytes"' not in combined
     assert f"{PREFIX} GENERATOR RATIONALE".encode() not in combined
@@ -5458,7 +5980,7 @@ def test_task5_freeze_rejects_selected_task_drift_from_sealed_source_ledgers(
     with pytest.raises(
         ValueError, match="Agent source ledger freeze authority mismatch"
     ):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_rejects_resynchronized_alternate_eligible_selection(
@@ -5532,7 +6054,7 @@ def test_task5_freeze_rejects_resynchronized_alternate_eligible_selection(
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
     with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_freeze_requires_strict_commit_a_and_normalizes_bad_container(
@@ -5546,13 +6068,13 @@ def test_task5_freeze_requires_strict_commit_a_and_normalizes_bad_container(
         with pytest.raises(
             ValueError, match="Commit A must be exactly 40 lowercase hex characters"
         ):
-            runner.build_dataset_freeze_documents(validation, commit_a=commit_a)
+            _task5_build_dataset_freeze_documents(validation, commit_a=commit_a)
     malformed_values: tuple[Any, ...] = (None, [])
     for malformed in malformed_values:
         with pytest.raises(
             ValueError, match="Agent dataset freeze validation container mismatch"
         ):
-            runner.build_dataset_freeze_documents(
+            _task5_build_dataset_freeze_documents(
                 cast(Any, malformed), commit_a="a" * 40
             )
 
@@ -5577,7 +6099,7 @@ def test_task5_dataset_freeze_rejects_misbound_run_or_retry_evidence(
         )
 
     with pytest.raises(ValueError, match="Agent run or retry evidence mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 @pytest.mark.parametrize(
@@ -5665,8 +6187,8 @@ def test_task5_substantive_invalid_candidate_lineage_still_freezes(
         ]
     )
 
-    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
-    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    first = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     assert first == second
     task_ids = {
         json.loads(line)["task_id"]
@@ -5807,8 +6329,8 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
         }
     ]
 
-    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
-    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    first = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     assert {
         name: hashlib.sha256(payload).hexdigest() for name, payload in first.items()
     } == {name: hashlib.sha256(payload).hexdigest() for name, payload in second.items()}
@@ -5829,8 +6351,8 @@ def test_task5_commit_b_freezes_agent_tasks_lineage_and_retry_evidence(
     _write_agent_pack(pack, transport_retry_role="reviewer_a")
     validation = _validate_agent_pack(pack, tmp_path / "repo")
 
-    first = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
-    second = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    first = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    second = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
     assert first == second
     assert set(first) == {
@@ -5969,7 +6491,11 @@ def test_task5_commit_b_freezes_agent_tasks_lineage_and_retry_evidence(
     assert review_summary["agent_roles"] == construction["agent_roles"]
     assert review_summary["retry_records"] == construction["retry_records"]
 
-    recovered = runner.validate_frozen_dataset_documents(validation, first)
+    recovered = runner.validate_frozen_dataset_documents(
+        validation,
+        first,
+        semantic_similarity=_task5_zero_semantic_similarity,
+    )
     assert len(recovered) == 128
     assert all(row["prompt_text"].startswith(PREFIX) for row in recovered)
 
@@ -5980,7 +6506,7 @@ def test_task5_authoritative_lineage_binds_agent_construction_without_human_revi
     pack = tmp_path / "agent-pack"
     _write_agent_pack(pack)
     validation = _validate_agent_pack(pack, tmp_path / "repo")
-    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    documents = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     repository = Path(__file__).resolve().parents[1]
     preregistration_path = repository / runner.PREREGISTRATION_RELATIVE
     preregistration = json.loads(preregistration_path.read_text(encoding="utf-8"))
@@ -6514,7 +7040,7 @@ def _task5_evaluation_authority(
         assert (
             validation["candidate_outcomes"][rejected_candidate_id] == "REJECTED_REVIEW"
         )
-    frozen = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    frozen = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     review_summary = frozen["blind-v2-review-summary.json"]
     manifest = json.loads(frozen["blind-v2-manifest.json"])
     construction = deepcopy(manifest["agent_construction"])
@@ -6903,7 +7429,7 @@ def test_task5_commit_b_binds_sanitized_generation_round_authority(
     _write_agent_pack(pack)
     validation = _validate_agent_pack(pack, tmp_path / "repo")
 
-    documents = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+    documents = _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
     manifest = json.loads(documents["blind-v2-manifest.json"])
     authority = manifest["agent_construction"]["generation_authority"]
 
@@ -7152,7 +7678,7 @@ def test_task5_freeze_rejects_resynchronized_arbitrary_accepted_pool_hash(
     )
 
     with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_evaluation_rejects_resynchronized_arbitrary_accepted_pool_hash(
@@ -7351,7 +7877,7 @@ def test_task5_freeze_rederives_hash_order_winners_after_full_resynchronization(
     validation["selection_audit_sha256"] = _task5_test_canonical_sha256(selection)
 
     with pytest.raises(ValueError, match="Agent dataset selection validation mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_evaluation_rederives_hash_order_winners_after_full_resynchronization(
@@ -7805,7 +8331,7 @@ def test_task5_freeze_rejects_invalid_generator_run_with_candidate_ids(
     _task5_resync_role_aggregates_from_records(validation, "generator")
 
     with pytest.raises(ValueError, match="Agent run or retry evidence mismatch"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_evaluation_rejects_invalid_generator_run_with_candidate_ids(
@@ -7959,7 +8485,7 @@ def test_task5_freeze_rejects_resynchronized_protected_row_projection_forgery(
     )
 
     with pytest.raises(ValueError, match="protected semantic source authority"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_scoring_preflight_rejects_resynchronized_protected_row_projection_without_calls(
@@ -8098,7 +8624,7 @@ def test_task5_freeze_rejects_fully_resynchronized_protected_semantic_forgery(
     )
 
     with pytest.raises(ValueError, match="protected semantic source authority"):
-        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+        _task5_build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
 def test_task5_scoring_preflight_rejects_fully_resynchronized_protected_semantic_forgery_without_calls(

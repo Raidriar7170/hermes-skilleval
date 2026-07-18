@@ -1015,22 +1015,10 @@ def _validate_reviewer_response(
         or (negative is not None and type(response["negative_confusable"]) is bool),
         "reviewer negative confusability mismatch",
     )
-    decision = cast(str, response["decision"])
-    decision_rubric_consistent = {
-        "ACCEPT": (
-            response["natural"] is True
-            and response["single_primary_skill"] is True
-            and response["no_label_leakage"] is True
-            and (negative is None or response["negative_confusable"] is True)
-        ),
-        "REJECT_AMBIGUOUS": response["single_primary_skill"] is False,
-        "REJECT_NOT_CONFUSABLE": (
-            negative is not None and response["negative_confusable"] is False
-        ),
-        "REJECT_UNNATURAL": response["natural"] is False,
-        "REJECT_LABEL_LEAKAGE": response["no_label_leakage"] is False,
-    }[decision]
-    _require(decision_rubric_consistent, "reviewer decision/rubric mismatch")
+    _require(
+        _reviewer_decision_rubric_consistent(response),
+        "reviewer decision/rubric mismatch",
+    )
     _require(
         type(response["confidence"]) is str
         and response["confidence"] in AGENT_REVIEW_CONFIDENCE,
@@ -2616,18 +2604,134 @@ def _agent_role_run_evidence(
     }
 
 
-_REVIEWER_DECISION_PROJECTION_FIELDS = {
-    "candidate_id",
-    "reviewer_role",
-    "decision",
-    "reviewed_gold_skill_id",
-    "reviewed_negative_skill_id",
-    "natural",
-    "single_primary_skill",
-    "no_label_leakage",
-    "negative_confusable",
-    "response_sha256",
-}
+_REVIEWER_DECISION_PROJECTION_FIELDS = frozenset(
+    {
+        "candidate_id",
+        "reviewer_role",
+        "decision",
+        "reviewed_gold_skill_id",
+        "reviewed_negative_skill_id",
+        "natural",
+        "single_primary_skill",
+        "no_label_leakage",
+        "negative_confusable",
+        "response_sha256",
+    }
+)
+
+
+def _reviewer_decision_rubric_consistent(review: dict[str, Any]) -> bool:
+    decision = review.get("decision")
+    negative = review.get("reviewed_negative_skill_id")
+    return bool(
+        {
+            "ACCEPT": (
+                review.get("natural") is True
+                and review.get("single_primary_skill") is True
+                and review.get("no_label_leakage") is True
+                and (negative is None or review.get("negative_confusable") is True)
+            ),
+            "REJECT_AMBIGUOUS": review.get("single_primary_skill") is False,
+            "REJECT_NOT_CONFUSABLE": (
+                negative is not None and review.get("negative_confusable") is False
+            ),
+            "REJECT_UNNATURAL": review.get("natural") is False,
+            "REJECT_LABEL_LEAKAGE": review.get("no_label_leakage") is False,
+        }.get(cast(str, decision), False)
+    )
+
+
+def _reviewers_unanimously_accept(
+    reviews: tuple[dict[str, Any], dict[str, Any]],
+    *,
+    expected_labels: tuple[str, str | None],
+) -> bool:
+    return all(
+        review.get("decision") == "ACCEPT"
+        and _reviewer_decision_rubric_consistent(review)
+        and (
+            review.get("reviewed_gold_skill_id"),
+            review.get("reviewed_negative_skill_id"),
+        )
+        == expected_labels
+        for review in reviews
+    )
+
+
+def _derive_candidate_pipeline_semantics(
+    candidates: dict[str, dict[str, Any]],
+    *,
+    clean_candidate_ids: set[str],
+    review_responses: dict[str, dict[str, dict[str, Any] | None]],
+) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    accepted: list[dict[str, Any]] = []
+    outcomes: dict[str, str] = {}
+    for candidate_id, candidate in candidates.items():
+        if candidate_id not in clean_candidate_ids:
+            outcomes[candidate_id] = "REJECTED_CONTAMINATION"
+            continue
+        reviewer_a = review_responses["reviewer_a"].get(candidate_id)
+        reviewer_b = review_responses["reviewer_b"].get(candidate_id)
+        if reviewer_a is None or reviewer_b is None:
+            outcomes[candidate_id] = "REJECTED_INVOCATION"
+            continue
+        expected_labels = (
+            cast(str, candidate["proposed_gold_skill_id"]),
+            cast(str | None, candidate["proposed_negative_skill_id"]),
+        )
+        if not _reviewers_unanimously_accept(
+            (reviewer_a, reviewer_b), expected_labels=expected_labels
+        ):
+            outcomes[candidate_id] = "REJECTED_REVIEW"
+            continue
+        accepted.append(deepcopy(candidate))
+        outcomes[candidate_id] = "ELIGIBLE"
+    accepted.sort(key=lambda row: cast(str, row["candidate_id"]))
+    return accepted, outcomes
+
+
+def _deterministically_select_candidates(
+    accepted: list[dict[str, Any]], canonical_ids: set[str]
+) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    for skill_id in sorted(canonical_ids):
+        for stratum, quota_field in (
+            ("negative", "final_negative_per_skill"),
+            ("positive_only", "final_positive_only_per_skill"),
+        ):
+            pool = sorted(
+                (
+                    row
+                    for row in accepted
+                    if row["proposed_gold_skill_id"] == skill_id
+                    and _candidate_stratum(row) == stratum
+                ),
+                key=lambda row: selection_key(cast(str, row["candidate_id"])),
+            )
+            selected.extend(
+                deepcopy(pool[: cast(int, _SELECTION_AUTHORITY[quota_field])])
+            )
+    return selected
+
+
+def _finalized_candidate_outcomes(
+    outcomes: dict[str, str], selected: list[dict[str, Any]]
+) -> dict[str, str]:
+    selected_ids = {cast(str, row["candidate_id"]) for row in selected}
+    finalized = dict(
+        sorted(
+            (
+                candidate_id,
+                ("SELECTED" if candidate_id in selected_ids else "NOT_SELECTED")
+                if outcome == "ELIGIBLE"
+                else outcome,
+            )
+            for candidate_id, outcome in outcomes.items()
+        )
+    )
+    outcomes.clear()
+    outcomes.update(finalized)
+    return outcomes
 
 
 def _sanitized_reviewer_decision_row(
@@ -2795,26 +2899,8 @@ def _validated_reviewer_decision_authority(
                     ),
                     f"{role} reviewer decision label or rubric mismatch",
                 )
-                rubric_consistent = {
-                    "ACCEPT": (
-                        row["natural"] is True
-                        and row["single_primary_skill"] is True
-                        and row["no_label_leakage"] is True
-                        and (
-                            reviewed_negative is None
-                            or row["negative_confusable"] is True
-                        )
-                    ),
-                    "REJECT_AMBIGUOUS": row["single_primary_skill"] is False,
-                    "REJECT_NOT_CONFUSABLE": (
-                        reviewed_negative is not None
-                        and row["negative_confusable"] is False
-                    ),
-                    "REJECT_UNNATURAL": row["natural"] is False,
-                    "REJECT_LABEL_LEAKAGE": row["no_label_leakage"] is False,
-                }[cast(str, decision)]
                 _require(
-                    rubric_consistent,
+                    _reviewer_decision_rubric_consistent(row),
                     f"{role} reviewer decision rubric mismatch",
                 )
             candidate_ids.append(candidate_id)
@@ -2852,22 +2938,8 @@ def _validated_reviewer_decision_authority(
             ]
             if any(review["decision"] is None for review in reviews):
                 derived_outcome = "REJECTED_INVOCATION"
-            elif all(
-                review["decision"] == "ACCEPT"
-                and review["natural"] is True
-                and review["single_primary_skill"] is True
-                and review["no_label_leakage"] is True
-                and (
-                    review["negative_confusable"] is True
-                    if review["reviewed_negative_skill_id"] is not None
-                    else review["negative_confusable"] is None
-                )
-                and (
-                    review["reviewed_gold_skill_id"],
-                    review["reviewed_negative_skill_id"],
-                )
-                == labels
-                for review in reviews
+            elif _reviewers_unanimously_accept(
+                (reviews[0], reviews[1]), expected_labels=labels
             ):
                 derived_outcome = "ELIGIBLE"
             else:
@@ -4124,27 +4196,46 @@ def validate_agent_pack(
         )
     _nonempty_string(first_read_timestamp, "first read timestamp")
     _require(callable(semantic_similarity), "semantic similarity must be callable")
+    sealed_protected_prompts = {
+        "train": train_prompts,
+        "pilot-002": pilot_prompts,
+        "phase16": phase16_prompts,
+        "prior_candidate": prior_candidate_prompts,
+    }
+    sealed_protected_family_ids = {
+        "train": train_family_ids,
+        "pilot-002": pilot_family_ids,
+        "phase16": phase16_family_ids,
+        "prior_candidate": prior_candidate_family_ids,
+    }
     construction_authority_error: ValueError | None = None
     try:
-        construction_authority = (
-            None
-            if construction_input_bindings is None
-            else _construction_input_authority(
-                bindings=construction_input_bindings,
-                projected_skills=projected_skills,
-                protected_prompts={
-                    "train": train_prompts,
-                    "pilot-002": pilot_prompts,
-                    "phase16": phase16_prompts,
-                    "prior_candidate": prior_candidate_prompts,
-                },
-                protected_family_ids={
-                    "train": train_family_ids,
-                    "pilot-002": pilot_family_ids,
-                    "phase16": phase16_family_ids,
-                    "prior_candidate": prior_candidate_family_ids,
-                },
+        _require(
+            type(construction_input_bindings) is dict,
+            "construction input bindings are required",
+        )
+        derived_prompts, derived_family_ids = (
+            _protected_inputs_from_sealed_construction_bindings(
+                construction_input_bindings
             )
+        )
+        _require(
+            derived_prompts == sealed_protected_prompts
+            and derived_family_ids == sealed_protected_family_ids,
+            "parallel protected construction inputs differ from sealed bindings",
+        )
+        _require(
+            derived_prompts["prior_candidate"] == []
+            and derived_family_ids["prior_candidate"] == set(),
+            "prior-candidate contamination authority must be empty unless sealed",
+        )
+        sealed_protected_prompts = derived_prompts
+        sealed_protected_family_ids = derived_family_ids
+        construction_authority = _construction_input_authority(
+            bindings=construction_input_bindings,
+            projected_skills=projected_skills,
+            protected_prompts=sealed_protected_prompts,
+            protected_family_ids=sealed_protected_family_ids,
         )
     except ValueError as exc:
         construction_authority = None
@@ -4567,18 +4658,8 @@ def validate_agent_pack(
             )
         contamination_scan = _scan_contamination(
             list(candidates.values()),
-            protected_prompts={
-                "train": train_prompts,
-                "pilot-002": pilot_prompts,
-                "phase16": phase16_prompts,
-                "prior_candidate": prior_candidate_prompts,
-            },
-            protected_family_ids={
-                "train": train_family_ids,
-                "pilot-002": pilot_family_ids,
-                "phase16": phase16_family_ids,
-                "prior_candidate": prior_candidate_family_ids,
-            },
+            protected_prompts=sealed_protected_prompts,
+            protected_family_ids=sealed_protected_family_ids,
             semantic_similarity=semantic_similarity,
             semantic_model_authority=semantic_model_authority,
         )
@@ -4750,43 +4831,11 @@ def validate_agent_pack(
             source_file_sha256=source_hashes,
         )
 
-    accepted: list[dict[str, Any]] = []
-    candidate_outcomes: dict[str, str] = {}
-    for candidate_id, candidate in candidates.items():
-        if candidate_id not in clean_candidate_ids:
-            candidate_outcomes[candidate_id] = "REJECTED_CONTAMINATION"
-            continue
-        reviewer_a = review_responses["reviewer_a"][candidate_id]
-        reviewer_b = review_responses["reviewer_b"][candidate_id]
-        if reviewer_a is None or reviewer_b is None:
-            candidate_outcomes[candidate_id] = "REJECTED_INVOCATION"
-            continue
-        expected_labels = (
-            candidate["proposed_gold_skill_id"],
-            candidate["proposed_negative_skill_id"],
-        )
-        reviews = (reviewer_a, reviewer_b)
-        if not all(
-            review["decision"] == "ACCEPT"
-            and review["natural"] is True
-            and review["single_primary_skill"] is True
-            and review["no_label_leakage"] is True
-            and (
-                review["negative_confusable"] is True
-                if review["reviewed_negative_skill_id"] is not None
-                else review["negative_confusable"] is None
-            )
-            and (
-                review["reviewed_gold_skill_id"],
-                review["reviewed_negative_skill_id"],
-            )
-            == expected_labels
-            for review in reviews
-        ):
-            candidate_outcomes[candidate_id] = "REJECTED_REVIEW"
-            continue
-        accepted.append(deepcopy(candidate))
-        candidate_outcomes[candidate_id] = "ELIGIBLE"
+    accepted, candidate_outcomes = _derive_candidate_pipeline_semantics(
+        candidates,
+        clean_candidate_ids=clean_candidate_ids,
+        review_responses=review_responses,
+    )
 
     round_one_accepted = [
         candidate for candidate in accepted if candidate["generation_round"] == 1
@@ -4823,7 +4872,6 @@ def validate_agent_pack(
             source_file_sha256=source_hashes,
         )
 
-    accepted.sort(key=lambda row: cast(str, row["candidate_id"]))
     final_deficits = _deficit_document(accepted, canonical_ids)
     contamination_audit = _contamination_audit_document(
         contamination_scan,
@@ -4932,31 +4980,9 @@ def validate_agent_pack(
         }
 
     try:
-        selected: list[dict[str, Any]] = []
-        for skill_id in sorted(canonical_ids):
-            for stratum, quota_field in (
-                ("negative", "final_negative_per_skill"),
-                ("positive_only", "final_positive_only_per_skill"),
-            ):
-                pool = sorted(
-                    (
-                        row
-                        for row in accepted
-                        if row["proposed_gold_skill_id"] == skill_id
-                        and _candidate_stratum(row) == stratum
-                    ),
-                    key=lambda row: selection_key(cast(str, row["candidate_id"])),
-                )
-                selected.extend(
-                    deepcopy(pool[: cast(int, _SELECTION_AUTHORITY[quota_field])])
-                )
-
+        selected = _deterministically_select_candidates(accepted, canonical_ids)
         selected_ids = {cast(str, row["candidate_id"]) for row in selected}
-        for candidate_id, outcome in tuple(candidate_outcomes.items()):
-            if outcome == "ELIGIBLE":
-                candidate_outcomes[candidate_id] = (
-                    "SELECTED" if candidate_id in selected_ids else "NOT_SELECTED"
-                )
+        candidate_outcomes = _finalized_candidate_outcomes(candidate_outcomes, selected)
         selected_prompt_bytes = {
             cast(str, row["prompt_text"]).encode("utf-8") for row in selected
         }
@@ -5867,6 +5893,8 @@ def _validated_dataset_freeze_tasks(
 
 def _validated_agent_source_ledger_evidence(
     validation: dict[str, Any],
+    *,
+    semantic_similarity: SemanticSimilarity,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     message = "Agent source ledger freeze authority mismatch"
     try:
@@ -6066,6 +6094,34 @@ def _validated_agent_source_ledger_evidence(
             and contamination_rows == authority_rows,
             "contamination source evidence mismatch",
         )
+        protected_prompts, protected_family_ids = (
+            _protected_inputs_from_sealed_construction_bindings(
+                validation["construction_input_source_bindings"]
+            )
+        )
+        _require(
+            protected_prompts["prior_candidate"] == []
+            and protected_family_ids["prior_candidate"] == set(),
+            "unbound prior-candidate contamination authority",
+        )
+        replayed_contamination = _scan_contamination(
+            list(candidates.values()),
+            protected_prompts=protected_prompts,
+            protected_family_ids=protected_family_ids,
+            semantic_similarity=semantic_similarity,
+            semantic_model_authority={
+                "materialized_model_files": scanner_config["materialized_model_files"],
+                "materialized_model_files_sha256": scanner_config[
+                    "materialized_model_files_sha256"
+                ],
+            },
+        )
+        _require(
+            replayed_contamination["scanner_config"] == scanner_config
+            and replayed_contamination["rows"] == contamination_rows
+            and replayed_contamination["clean_candidate_ids"] == authority_clean_ids,
+            "sealed contamination replay mismatch",
+        )
         contamination_decisions: dict[str, str] = {}
         for raw_row in contamination_rows:
             row = _exact_object_fields(
@@ -6251,45 +6307,11 @@ def _validated_agent_source_ledger_evidence(
                 f"source {role} schedule hash mismatch",
             )
 
-        accepted: list[dict[str, Any]] = []
-        outcomes: dict[str, str] = {}
-        for candidate_id, candidate in candidates.items():
-            if contamination_decisions[candidate_id] == "REJECT":
-                outcomes[candidate_id] = "REJECTED_CONTAMINATION"
-                continue
-            reviewer_a = review_responses["reviewer_a"].get(candidate_id)
-            reviewer_b = review_responses["reviewer_b"].get(candidate_id)
-            if reviewer_a is None or reviewer_b is None:
-                outcomes[candidate_id] = "REJECTED_INVOCATION"
-                continue
-            expected_labels = (
-                candidate["proposed_gold_skill_id"],
-                candidate["proposed_negative_skill_id"],
-            )
-            reviews = (reviewer_a, reviewer_b)
-            if not all(
-                review["decision"] == "ACCEPT"
-                and review["natural"] is True
-                and review["single_primary_skill"] is True
-                and review["no_label_leakage"] is True
-                and (
-                    review["negative_confusable"] is True
-                    if review["reviewed_negative_skill_id"] is not None
-                    else review["negative_confusable"] is None
-                )
-                and (
-                    review["reviewed_gold_skill_id"],
-                    review["reviewed_negative_skill_id"],
-                )
-                == expected_labels
-                for review in reviews
-            ):
-                outcomes[candidate_id] = "REJECTED_REVIEW"
-                continue
-            accepted.append(deepcopy(candidate))
-            outcomes[candidate_id] = "ELIGIBLE"
-
-        accepted.sort(key=lambda row: cast(str, row["candidate_id"]))
+        accepted, outcomes = _derive_candidate_pipeline_semantics(
+            candidates,
+            clean_candidate_ids=clean_candidate_ids,
+            review_responses=review_responses,
+        )
         source_gold_ids = {
             cast(str, candidate["proposed_gold_skill_id"])
             for candidate in candidates.values()
@@ -6322,26 +6344,13 @@ def _validated_agent_source_ledger_evidence(
             "source generation authority mismatch",
         )
         selected_tasks = cast(list[dict[str, Any]], validation["tasks"])
-        expected_selected_tasks = [
-            task
-            for gold in gold_ids
-            for has_negative, quota in ((True, 6), (False, 2))
-            for task in sorted(
-                (
-                    row
-                    for row in accepted
-                    if row["proposed_gold_skill_id"] == gold
-                    and (row["proposed_negative_skill_id"] is not None) is has_negative
-                ),
-                key=lambda row: selection_key(cast(str, row["candidate_id"])),
-            )[:quota]
-        ]
+        expected_selected_tasks = _deterministically_select_candidates(
+            accepted, canonical_ids
+        )
         _require(
             selected_tasks == expected_selected_tasks,
             "selected tasks differ from deterministic source-ledger selection",
         )
-        selected_id_list = [cast(str, task["candidate_id"]) for task in selected_tasks]
-        selected_ids = set(selected_id_list)
         _require(
             all(
                 task == candidates[cast(str, task["candidate_id"])]
@@ -6361,11 +6370,7 @@ def _validated_agent_source_ledger_evidence(
             }
             for gold in gold_ids
         }
-        for candidate_id, outcome in tuple(outcomes.items()):
-            if outcome == "ELIGIBLE":
-                outcomes[candidate_id] = (
-                    "SELECTED" if candidate_id in selected_ids else "NOT_SELECTED"
-                )
+        outcomes = _finalized_candidate_outcomes(outcomes, selected_tasks)
         source_selection_audit = _selection_audit_document(
             generation_semantics=generation_semantics,
             selected=selected_tasks,
@@ -6501,13 +6506,20 @@ def _validate_source_invocation_terminality(validation: dict[str, Any]) -> None:
 
 
 def build_dataset_freeze_documents(
-    validation: dict[str, Any], *, commit_a: str
+    validation: dict[str, Any],
+    *,
+    commit_a: str,
+    semantic_similarity: SemanticSimilarity,
 ) -> dict[str, bytes]:
     _require(
         type(validation) is dict,
         "Agent dataset freeze validation container mismatch",
     )
     _require(validation.get("status") == "VALID", "validated Agent pack is required")
+    _require(
+        callable(semantic_similarity),
+        "contamination replay semantic similarity is required",
+    )
     commit_a = _exact_lowercase_hex(
         commit_a,
         length=40,
@@ -6541,15 +6553,18 @@ def build_dataset_freeze_documents(
         retry_records,
         agent_run_identity_authority,
     ) = _validated_agent_lineage_evidence(validation)
-    task_rows, deterministic_selection = _validated_dataset_freeze_tasks(
-        validation,
-        generator_run_records=sanitized_run_records["generator"],
-    )
     (
         generation_authority,
         _,
         reviewer_decision_authority,
-    ) = _validated_agent_source_ledger_evidence(validation)
+    ) = _validated_agent_source_ledger_evidence(
+        validation,
+        semantic_similarity=semantic_similarity,
+    )
+    task_rows, deterministic_selection = _validated_dataset_freeze_tasks(
+        validation,
+        generator_run_records=sanitized_run_records["generator"],
+    )
     task_bytes = b"".join(_canonical_json_bytes(row) for row in task_rows)
 
     reviewer_ledgers = {
@@ -6686,7 +6701,10 @@ def build_dataset_freeze_documents(
 
 
 def validate_frozen_dataset_documents(
-    validation: dict[str, Any], documents: dict[str, bytes]
+    validation: dict[str, Any],
+    documents: dict[str, bytes],
+    *,
+    semantic_similarity: SemanticSimilarity,
 ) -> list[dict[str, Any]]:
     _require(
         set(documents)
@@ -6702,7 +6720,11 @@ def validate_frozen_dataset_documents(
     )
     commit_a = manifest.get("commit_a")
     _require(type(commit_a) is str, "frozen dataset Commit A binding is missing")
-    rebuilt = build_dataset_freeze_documents(validation, commit_a=cast(str, commit_a))
+    rebuilt = build_dataset_freeze_documents(
+        validation,
+        commit_a=cast(str, commit_a),
+        semantic_similarity=semantic_similarity,
+    )
     for name, expected in rebuilt.items():
         _require(documents[name] == expected, f"frozen dataset bytes mismatch: {name}")
     return cast(list[dict[str, Any]], validation["tasks"])
