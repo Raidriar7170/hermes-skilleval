@@ -6481,6 +6481,7 @@ def _task5_evaluation_authority(
     tmp_path: Path,
     *,
     include_round_two: bool = False,
+    actual_reviewer_rejection: bool = False,
 ) -> tuple[dict[str, bytes], dict[str, Any]]:
     pack = tmp_path / "evaluation-agent-pack"
     if include_round_two:
@@ -6493,6 +6494,26 @@ def _task5_evaluation_authority(
     else:
         _write_agent_pack(pack)
     validation = _validate_agent_pack(pack, tmp_path / "evaluation-repo")
+    if actual_reviewer_rejection:
+        rejected_candidate_id = next(
+            candidate_id
+            for candidate_id, outcome in validation["candidate_outcomes"].items()
+            if outcome == "NOT_SELECTED"
+        )
+        review_path = pack / "blind-v2-review-a.jsonl"
+        review_rows = _read_jsonl(review_path)
+        review_row = next(
+            row for row in review_rows if row["candidate_id"] == rejected_candidate_id
+        )
+        response = review_row["invocations"][-1]["envelope"]["response"]
+        response["decision"] = "REJECT_AMBIGUOUS"
+        response["single_primary_skill"] = False
+        _rewrite_jsonl(review_path, review_rows)
+        validation = _validate_agent_pack(pack, tmp_path / "evaluation-repo")
+        assert validation["status"] == "VALID"
+        assert (
+            validation["candidate_outcomes"][rejected_candidate_id] == "REJECTED_REVIEW"
+        )
     frozen = runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
     review_summary = frozen["blind-v2-review-summary.json"]
     manifest = json.loads(frozen["blind-v2-manifest.json"])
@@ -6528,6 +6549,9 @@ def _task5_evaluation_authority(
         "skill_index": skill_index,
         "frozen_inputs": frozen_inputs,
         "old_phase16_prompt_files": old_phase16_prompt_files,
+        "protected_semantic_commitment": deepcopy(
+            construction["protected_semantic_commitment"]
+        ),
     }
     preregistration["preregistration_sha256"] = _task5_test_canonical_sha256(
         preregistration
@@ -6963,6 +6987,58 @@ def test_task5_commit_b_binds_every_selected_task_to_generation_semantics(
         assert task["source_type"] == "AGENT_GENERATED"
 
 
+def test_task5_commit_b_binds_exact_sanitized_reviewer_decision_projection(
+    tmp_path: Path,
+) -> None:
+    inputs, _ = _task5_evaluation_authority(tmp_path, actual_reviewer_rejection=True)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    authority = manifest["agent_construction"]["reviewer_decision_authority"]
+    assert authority["schema_version"] == (
+        "router-v2-blind-v2-reviewer-decision-authority-v1"
+    )
+    assert set(authority["roles"]) == {"reviewer_a", "reviewer_b"}
+    expected_fields = {
+        "candidate_id",
+        "reviewer_role",
+        "decision",
+        "reviewed_gold_skill_id",
+        "reviewed_negative_skill_id",
+        "natural",
+        "single_primary_skill",
+        "no_label_leakage",
+        "negative_confusable",
+        "response_sha256",
+    }
+    assert all(
+        set(row) == expected_fields
+        for rows in authority["roles"].values()
+        for row in rows
+    )
+    assert any(
+        row["decision"] == "REJECT_AMBIGUOUS"
+        for row in authority["roles"]["reviewer_a"]
+    )
+    assert authority["authority_sha256"] == _task5_test_canonical_sha256(
+        {
+            "schema_version": authority["schema_version"],
+            "roles": authority["roles"],
+        }
+    )
+    encoded = inputs["blind-v2-manifest.json"] + inputs["review-summary.json"]
+    for forbidden in (
+        b'"reason":',
+        b'"refusal":',
+        b'"rationale":',
+        b'"raw_response":',
+        b'"response":',
+        b'"analysis":',
+        b'"reasoning":',
+        b'"chain_of_thought":',
+        b'"hidden_reasoning":',
+    ):
+        assert forbidden not in encoded
+
+
 def _task5_safe_accepted_projection(
     construction: dict[str, Any],
 ) -> list[dict[str, Any]]:
@@ -6984,6 +7060,72 @@ def _task5_safe_accepted_projection(
         if outcomes[candidate["candidate_id"]] in {"SELECTED", "NOT_SELECTED"}
     ]
     return sorted(projection, key=lambda row: row["candidate_id"])
+
+
+def _task5_resynchronize_rejected_review_as_not_selected(
+    inputs: dict[str, bytes], frozen_bindings: dict[str, Any]
+) -> str:
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    construction = manifest["agent_construction"]
+    candidate_id = next(
+        candidate_id
+        for candidate_id, outcome in construction["candidate_outcomes"].items()
+        if outcome == "REJECTED_REVIEW"
+    )
+    for document in (manifest, construction, review_summary):
+        document["candidate_outcomes"][candidate_id] = "NOT_SELECTED"
+        document["candidate_outcomes"] = dict(
+            sorted(document["candidate_outcomes"].items())
+        )
+        outcomes = document["candidate_outcomes"]
+        document["exact_three_way_agreement_count"] = sum(
+            outcome in {"SELECTED", "NOT_SELECTED"} for outcome in outcomes.values()
+        )
+        document["selection_not_selected_count"] = sum(
+            outcome == "NOT_SELECTED" for outcome in outcomes.values()
+        )
+        document["pipeline_rejected_candidate_count"] = sum(
+            outcome.startswith("REJECTED") for outcome in outcomes.values()
+        )
+        document["excluded_candidate_count"] = (
+            document["selection_not_selected_count"]
+            + document["pipeline_rejected_candidate_count"]
+        )
+    selection = construction["deterministic_selection"]
+    selection["accepted_pool_sha256"] = _task5_test_canonical_sha256(
+        _task5_safe_accepted_projection(construction)
+    )
+    construction["deterministic_selection_sha256"] = _task5_test_canonical_sha256(
+        selection
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+    return candidate_id
+
+
+def test_task5_scoring_preflight_rejects_resynchronized_reviewer_rejection_reclassification_without_calls(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(
+        tmp_path, actual_reviewer_rejection=True
+    )
+    _task5_resynchronize_rejected_review_as_not_selected(inputs, frozen_bindings)
+    factory_calls: list[tuple[str, int]] = []
+    rank_calls: list[str] = []
+
+    with pytest.raises(ValueError, match="pre-scoring authority mismatch"):
+        _task5_evaluate_routes_with_authority(
+            inputs,
+            frozen_bindings,
+            scorer_factory=lambda arm, seed, _path: (
+                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            ),
+        )
+
+    assert factory_calls == []
+    assert rank_calls == []
 
 
 def test_task5_accepted_pool_hash_uses_only_safe_committed_projection(
@@ -7816,7 +7958,7 @@ def test_task5_freeze_rejects_resynchronized_protected_row_projection_forgery(
         {key: value for key, value in authority.items() if key != "authority_sha256"}
     )
 
-    with pytest.raises(ValueError, match="protected artifact projection authority"):
+    with pytest.raises(ValueError, match="protected semantic source authority"):
         runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
 
 
@@ -7831,6 +7973,149 @@ def test_task5_scoring_preflight_rejects_resynchronized_protected_row_projection
     projection["row_projection_sha256"] = "0" * 64
     authority["authority_sha256"] = _task5_test_canonical_sha256(
         {key: value for key, value in authority.items() if key != "authority_sha256"}
+    )
+    _task5_resynchronize_evaluation_manifest_and_bindings(
+        inputs, frozen_bindings, manifest, review_summary
+    )
+    factory_calls: list[tuple[str, int]] = []
+    rank_calls: list[str] = []
+
+    with pytest.raises(ValueError, match="pre-scoring authority mismatch"):
+        _task5_evaluate_routes_with_authority(
+            inputs,
+            frozen_bindings,
+            scorer_factory=lambda arm, seed, _path: (
+                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            ),
+        )
+
+    assert factory_calls == []
+    assert rank_calls == []
+
+
+def _task5_resynchronize_forged_protected_semantics(
+    construction: dict[str, Any],
+) -> None:
+    forged_summary = deepcopy(
+        construction["construction_input_authority"]["protected_artifact_projections"][
+            "train"
+        ]["protected_authority"]
+    )
+    forged_summary.update(
+        {
+            "prompt_bytes_sha256": "1" * 64,
+            "normalized_prompt_list_sha256": "2" * 64,
+            "family_ids_sha256": "3" * 64,
+            "row_projection_sha256": "4" * 64,
+        }
+    )
+    input_authority = construction["construction_input_authority"]
+    projection = input_authority["protected_artifact_projections"]["train"]
+    projection["row_projection_sha256"] = forged_summary["row_projection_sha256"]
+    projection["protected_authority"] = deepcopy(forged_summary)
+    input_authority["authority_sha256"] = _task5_test_canonical_sha256(
+        {
+            key: value
+            for key, value in input_authority.items()
+            if key != "authority_sha256"
+        }
+    )
+
+    contamination = construction["contamination"]
+    contamination["protected_authority"]["train"] = deepcopy(forged_summary)
+    contamination["protected_authority_sha256"] = _task5_test_canonical_sha256(
+        contamination["protected_authority"]
+    )
+    scanner_config = {
+        "required_semantic_model_id": contamination["required_semantic_model_id"],
+        "required_semantic_model_revision": contamination[
+            "required_semantic_model_revision"
+        ],
+        "materialized_model_files": contamination["materialized_model_files"],
+        "materialized_model_files_sha256": contamination[
+            "materialized_model_files_sha256"
+        ],
+        "semantic_scorer_runtime_verified": contamination[
+            "semantic_scorer_runtime_verified"
+        ],
+        "semantic_scorer_receipt_sha256": contamination[
+            "semantic_scorer_receipt_sha256"
+        ],
+        "token_5gram_jaccard_reject_at_or_above": contamination[
+            "token_5gram_jaccard_reject_at_or_above"
+        ],
+        "character_5gram_jaccard_reject_at_or_above": contamination[
+            "character_5gram_jaccard_reject_at_or_above"
+        ],
+        "semantic_cosine_reject_at_or_above": contamination[
+            "semantic_cosine_reject_at_or_above"
+        ],
+        "normalization": "NFKC-casefold-collapse-whitespace",
+        "selection_seed": 7170,
+        "protected_authority": deepcopy(contamination["protected_authority"]),
+        "protected_authority_sha256": contamination["protected_authority_sha256"],
+    }
+    contamination["scanner_config_sha256"] = _task5_test_canonical_sha256(
+        scanner_config
+    )
+
+
+def _task5_resynchronize_validation_protected_semantics(
+    validation: dict[str, Any],
+) -> None:
+    construction = {
+        "construction_input_authority": validation["construction_input_authority"],
+        "contamination": validation["contamination_audit"],
+    }
+    _task5_resynchronize_forged_protected_semantics(construction)
+    scanner_config = validation["contamination_source_authority"]["scanner_config"]
+    scanner_config["protected_authority"] = deepcopy(
+        validation["contamination_audit"]["protected_authority"]
+    )
+    scanner_config["protected_authority_sha256"] = validation["contamination_audit"][
+        "protected_authority_sha256"
+    ]
+    validation["contamination_audit"]["scanner_config_sha256"] = (
+        _task5_test_canonical_sha256(scanner_config)
+    )
+
+
+def test_task5_freeze_rejects_fully_resynchronized_protected_semantic_forgery(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+    original_source_hash = validation["construction_input_authority"][
+        "protected_artifact_projections"
+    ]["train"]["sources"][0]["file_sha256"]
+    _task5_resynchronize_validation_protected_semantics(validation)
+    assert (
+        validation["construction_input_authority"]["protected_artifact_projections"][
+            "train"
+        ]["sources"][0]["file_sha256"]
+        == original_source_hash
+    )
+
+    with pytest.raises(ValueError, match="protected semantic source authority"):
+        runner.build_dataset_freeze_documents(validation, commit_a="a" * 40)
+
+
+def test_task5_scoring_preflight_rejects_fully_resynchronized_protected_semantic_forgery_without_calls(
+    tmp_path: Path,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(tmp_path)
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    review_summary = json.loads(inputs["review-summary.json"])
+    original_source_hash = manifest["agent_construction"][
+        "construction_input_authority"
+    ]["protected_artifact_projections"]["train"]["sources"][0]["file_sha256"]
+    _task5_resynchronize_forged_protected_semantics(manifest["agent_construction"])
+    assert (
+        manifest["agent_construction"]["construction_input_authority"][
+            "protected_artifact_projections"
+        ]["train"]["sources"][0]["file_sha256"]
+        == original_source_hash
     )
     _task5_resynchronize_evaluation_manifest_and_bindings(
         inputs, frozen_bindings, manifest, review_summary

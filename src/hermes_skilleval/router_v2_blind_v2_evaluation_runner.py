@@ -1402,6 +1402,54 @@ def _sealed_construction_source_files(
     return public_sources, payloads
 
 
+def _protected_inputs_from_sealed_construction_bindings(
+    bindings: Any,
+) -> tuple[dict[str, list[str]], dict[str, set[str]]]:
+    document = _exact_object_fields(
+        bindings,
+        {"canonical_skill_source", "protected_scope_sources"},
+        "construction input bindings",
+    )
+    raw_scope_sources = _exact_object_fields(
+        document["protected_scope_sources"],
+        {"train", "pilot-002", "phase16"},
+        "protected scope source bindings",
+    )
+    prompts: dict[str, list[str]] = {scope: [] for scope in CONTAMINATION_SCOPES}
+    family_ids: dict[str, set[str]] = {scope: set() for scope in CONTAMINATION_SCOPES}
+    for scope in ("train", "pilot-002"):
+        _sources, payloads = _sealed_construction_source_files(
+            raw_scope_sources[scope], label=f"{scope} protected projection"
+        )
+        rows = [
+            row
+            for index, payload in enumerate(payloads)
+            for row in _jsonl_no_duplicate_keys(
+                payload, f"{scope} protected source {index + 1}"
+            )
+        ]
+        for row in rows:
+            prompts[scope].append(
+                _nonempty_string(row.get("query_text"), f"{scope} protected prompt")
+            )
+            family_ids[scope].add(
+                _nonempty_string(
+                    row.get("positive_source_record_id"),
+                    f"{scope} protected family id",
+                )
+            )
+    _sources, phase16_payloads = _sealed_construction_source_files(
+        raw_scope_sources["phase16"], label="phase16 protected projection"
+    )
+    try:
+        prompts["phase16"] = [
+            payload.decode("utf-8", errors="strict") for payload in phase16_payloads
+        ]
+    except UnicodeDecodeError as exc:
+        raise ValueError("phase16 protected source must be UTF-8") from exc
+    return prompts, family_ids
+
+
 def _construction_input_authority(
     *,
     bindings: Any,
@@ -1503,6 +1551,68 @@ def _construction_input_authority(
         "protected_artifact_projections": protected_projections,
     }
     return {**authority, "authority_sha256": canonical_sha256(authority)}
+
+
+def _construction_input_authority_from_sealed_bindings(
+    bindings: Any,
+    *,
+    projected_skills: list[dict[str, Any]],
+) -> dict[str, Any]:
+    protected_prompts, protected_family_ids = (
+        _protected_inputs_from_sealed_construction_bindings(bindings)
+    )
+    return _construction_input_authority(
+        bindings=bindings,
+        projected_skills=projected_skills,
+        protected_prompts=protected_prompts,
+        protected_family_ids=protected_family_ids,
+    )
+
+
+def _protected_semantic_commitment(
+    construction_input_authority: dict[str, Any],
+) -> dict[str, Any]:
+    raw_projections = _exact_object_fields(
+        construction_input_authority["protected_artifact_projections"],
+        {"train", "pilot-002", "phase16"},
+        "protected semantic commitment projections",
+    )
+    scopes = {
+        scope: {
+            "sources": deepcopy(raw_projections[scope]["sources"]),
+            "source_file_manifest_sha256": raw_projections[scope][
+                "source_file_manifest_sha256"
+            ],
+            "row_projection_sha256": raw_projections[scope]["row_projection_sha256"],
+            "protected_authority": deepcopy(
+                raw_projections[scope]["protected_authority"]
+            ),
+        }
+        for scope in ("train", "pilot-002", "phase16")
+    }
+    body = {
+        "schema_version": "router-v2-blind-v2-protected-semantic-commitment-v1",
+        "scopes": scopes,
+    }
+    return {**body, "commitment_sha256": canonical_sha256(body)}
+
+
+def _validated_protected_semantic_commitment(
+    value: Any,
+    *,
+    construction_input_authority: dict[str, Any],
+) -> dict[str, Any]:
+    commitment = _exact_object_fields(
+        value,
+        {"schema_version", "scopes", "commitment_sha256"},
+        "protected semantic commitment",
+    )
+    expected = _protected_semantic_commitment(construction_input_authority)
+    _require(
+        commitment == expected,
+        "protected semantic commitment mismatch",
+    )
+    return deepcopy(expected)
 
 
 def _validated_construction_input_authority(
@@ -2504,6 +2614,282 @@ def _agent_role_run_evidence(
         ),
         "run_sha256": canonical_sha256(records),
     }
+
+
+_REVIEWER_DECISION_PROJECTION_FIELDS = {
+    "candidate_id",
+    "reviewer_role",
+    "decision",
+    "reviewed_gold_skill_id",
+    "reviewed_negative_skill_id",
+    "natural",
+    "single_primary_skill",
+    "no_label_leakage",
+    "negative_confusable",
+    "response_sha256",
+}
+
+
+def _sanitized_reviewer_decision_row(
+    *,
+    role: str,
+    candidate_id: str,
+    response: dict[str, Any] | None,
+    run_record: dict[str, Any],
+) -> dict[str, Any]:
+    row = {
+        "candidate_id": candidate_id,
+        "reviewer_role": role,
+        "decision": None,
+        "reviewed_gold_skill_id": None,
+        "reviewed_negative_skill_id": None,
+        "natural": None,
+        "single_primary_skill": None,
+        "no_label_leakage": None,
+        "negative_confusable": None,
+        "response_sha256": run_record["response_sha256"],
+    }
+    if response is not None:
+        for field in (
+            "decision",
+            "reviewed_gold_skill_id",
+            "reviewed_negative_skill_id",
+            "natural",
+            "single_primary_skill",
+            "no_label_leakage",
+            "negative_confusable",
+        ):
+            row[field] = response[field]
+    return row
+
+
+def _reviewer_decision_authority_document(
+    rows_by_role: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
+    body = {
+        "schema_version": "router-v2-blind-v2-reviewer-decision-authority-v1",
+        "roles": deepcopy(rows_by_role),
+    }
+    return {**body, "authority_sha256": canonical_sha256(body)}
+
+
+def _validated_reviewer_decision_authority(
+    value: Any,
+    *,
+    candidate_labels: dict[str, tuple[str, str | None]],
+    candidate_outcomes: dict[str, Any],
+    reviewer_run_records: dict[str, list[dict[str, Any]]],
+    canonical_ids: set[str],
+) -> dict[str, Any]:
+    authority = _exact_object_fields(
+        value,
+        {"schema_version", "roles", "authority_sha256"},
+        "reviewer decision authority",
+    )
+    _require(
+        authority["schema_version"]
+        == "router-v2-blind-v2-reviewer-decision-authority-v1",
+        "reviewer decision authority schema mismatch",
+    )
+    raw_roles = _exact_object_fields(
+        authority["roles"],
+        {"reviewer_a", "reviewer_b"},
+        "reviewer decision authority roles",
+    )
+    normalized_roles: dict[str, list[dict[str, Any]]] = {}
+    role_candidate_ids: dict[str, list[str]] = {}
+    for role in ("reviewer_a", "reviewer_b"):
+        raw_rows = raw_roles[role]
+        records = reviewer_run_records[role]
+        _require(
+            type(raw_rows) is list and len(raw_rows) == len(records),
+            f"{role} reviewer decision coverage mismatch",
+        )
+        rows: list[dict[str, Any]] = []
+        candidate_ids: list[str] = []
+        for raw_row, record in zip(raw_rows, records, strict=True):
+            row = _exact_object_fields(
+                raw_row,
+                _REVIEWER_DECISION_PROJECTION_FIELDS,
+                f"{role} reviewer decision row",
+            )
+            candidate_id = _exact_lowercase_hex(
+                row["candidate_id"],
+                length=24,
+                label=f"{role} reviewer decision candidate id",
+            )
+            _require(
+                candidate_id in candidate_labels
+                and row["reviewer_role"] == role
+                and record["candidate_ids"] == [candidate_id]
+                and row["response_sha256"] == record["response_sha256"],
+                f"{role} reviewer decision run binding mismatch",
+            )
+            decision = row["decision"]
+            if decision is None:
+                _require(
+                    all(
+                        row[field] is None
+                        for field in (
+                            "reviewed_gold_skill_id",
+                            "reviewed_negative_skill_id",
+                            "natural",
+                            "single_primary_skill",
+                            "no_label_leakage",
+                            "negative_confusable",
+                        )
+                    )
+                    and record["outcome"] != "VALID_RESPONSE"
+                    and (
+                        row["response_sha256"] is None
+                        or _exact_lowercase_hex(
+                            row["response_sha256"],
+                            length=64,
+                            label=f"{role} invalid response SHA-256",
+                        )
+                        == row["response_sha256"]
+                    ),
+                    f"{role} invalid reviewer decision projection mismatch",
+                )
+            else:
+                _require(
+                    decision in AGENT_REVIEW_DECISIONS
+                    and record["outcome"] == "VALID_RESPONSE",
+                    f"{role} reviewer decision outcome mismatch",
+                )
+                _exact_lowercase_hex(
+                    row["response_sha256"],
+                    length=64,
+                    label=f"{role} reviewer response SHA-256",
+                )
+                reviewed_gold = row["reviewed_gold_skill_id"]
+                reviewed_negative = row["reviewed_negative_skill_id"]
+                _require(
+                    type(reviewed_gold) is str
+                    and reviewed_gold in canonical_ids
+                    and (
+                        reviewed_negative is None
+                        or (
+                            type(reviewed_negative) is str
+                            and reviewed_negative in canonical_ids
+                            and reviewed_negative != reviewed_gold
+                        )
+                    )
+                    and all(
+                        type(row[field]) is bool
+                        for field in (
+                            "natural",
+                            "single_primary_skill",
+                            "no_label_leakage",
+                        )
+                    )
+                    and (
+                        (
+                            reviewed_negative is None
+                            and row["negative_confusable"] is None
+                        )
+                        or (
+                            reviewed_negative is not None
+                            and type(row["negative_confusable"]) is bool
+                        )
+                    ),
+                    f"{role} reviewer decision label or rubric mismatch",
+                )
+                rubric_consistent = {
+                    "ACCEPT": (
+                        row["natural"] is True
+                        and row["single_primary_skill"] is True
+                        and row["no_label_leakage"] is True
+                        and (
+                            reviewed_negative is None
+                            or row["negative_confusable"] is True
+                        )
+                    ),
+                    "REJECT_AMBIGUOUS": row["single_primary_skill"] is False,
+                    "REJECT_NOT_CONFUSABLE": (
+                        reviewed_negative is not None
+                        and row["negative_confusable"] is False
+                    ),
+                    "REJECT_UNNATURAL": row["natural"] is False,
+                    "REJECT_LABEL_LEAKAGE": row["no_label_leakage"] is False,
+                }[cast(str, decision)]
+                _require(
+                    rubric_consistent,
+                    f"{role} reviewer decision rubric mismatch",
+                )
+            candidate_ids.append(candidate_id)
+            rows.append(deepcopy(row))
+        _require(
+            len(candidate_ids) == len(set(candidate_ids))
+            and candidate_ids
+            == sorted(
+                candidate_ids,
+                key=lambda candidate_id: review_schedule_key(role, candidate_id),
+            ),
+            f"{role} reviewer decision schedule mismatch",
+        )
+        normalized_roles[role] = rows
+        role_candidate_ids[role] = candidate_ids
+
+    reviewed_candidate_ids = set(role_candidate_ids["reviewer_a"])
+    _require(
+        reviewed_candidate_ids == set(role_candidate_ids["reviewer_b"])
+        and reviewed_candidate_ids <= set(candidate_labels)
+        and set(candidate_outcomes) == set(candidate_labels),
+        "reviewer decision candidate coverage mismatch",
+    )
+    rows_by_role_and_id = {
+        role: {row["candidate_id"]: row for row in normalized_roles[role]}
+        for role in ("reviewer_a", "reviewer_b")
+    }
+    for candidate_id, labels in candidate_labels.items():
+        if candidate_id not in reviewed_candidate_ids:
+            derived_outcome = "REJECTED_CONTAMINATION"
+        else:
+            reviews = [
+                rows_by_role_and_id[role][candidate_id]
+                for role in ("reviewer_a", "reviewer_b")
+            ]
+            if any(review["decision"] is None for review in reviews):
+                derived_outcome = "REJECTED_INVOCATION"
+            elif all(
+                review["decision"] == "ACCEPT"
+                and review["natural"] is True
+                and review["single_primary_skill"] is True
+                and review["no_label_leakage"] is True
+                and (
+                    review["negative_confusable"] is True
+                    if review["reviewed_negative_skill_id"] is not None
+                    else review["negative_confusable"] is None
+                )
+                and (
+                    review["reviewed_gold_skill_id"],
+                    review["reviewed_negative_skill_id"],
+                )
+                == labels
+                for review in reviews
+            ):
+                derived_outcome = "ELIGIBLE"
+            else:
+                derived_outcome = "REJECTED_REVIEW"
+        claimed_outcome = candidate_outcomes[candidate_id]
+        _require(
+            (
+                derived_outcome == "ELIGIBLE"
+                and claimed_outcome in {"ELIGIBLE", "SELECTED", "NOT_SELECTED"}
+            )
+            or claimed_outcome == derived_outcome,
+            "reviewer decision candidate outcome mismatch",
+        )
+    normalized_body = {
+        "schema_version": authority["schema_version"],
+        "roles": normalized_roles,
+    }
+    _require(
+        authority["authority_sha256"] == canonical_sha256(normalized_body),
+        "reviewer decision authority hash mismatch",
+    )
+    return {**normalized_body, "authority_sha256": authority["authority_sha256"]}
 
 
 _AGENT_ROLE_LEDGER_PATHS = {
@@ -4215,6 +4601,10 @@ def validate_agent_pack(
         "reviewer_a": {},
         "reviewer_b": {},
     }
+    reviewer_decision_rows: dict[str, list[dict[str, Any]]] = {
+        "reviewer_a": [],
+        "reviewer_b": [],
+    }
     actual_review_orders: dict[str, list[str]] = {
         "reviewer_a": [],
         "reviewer_b": [],
@@ -4261,6 +4651,14 @@ def validate_agent_pack(
                     retry_count=retry_count,
                 )
                 sanitized_run_records[role].append(run_record)
+                reviewer_decision_rows[role].append(
+                    _sanitized_reviewer_decision_row(
+                        role=role,
+                        candidate_id=candidate_id,
+                        response=response,
+                        run_record=run_record,
+                    )
+                )
                 if _transport_retries_exhausted(run_record):
                     return _agent_pack_infrastructure_inconclusive(
                         failure_stage="agent_invocation_transport",
@@ -4452,6 +4850,21 @@ def validate_agent_pack(
         cast(dict[str, Any], metadata_roles),
         source_hashes,
     )
+    reviewer_decision_authority = _validated_reviewer_decision_authority(
+        _reviewer_decision_authority_document(reviewer_decision_rows),
+        candidate_labels={
+            candidate_id: (
+                cast(str, candidate["proposed_gold_skill_id"]),
+                cast(str | None, candidate["proposed_negative_skill_id"]),
+            )
+            for candidate_id, candidate in candidates.items()
+        },
+        candidate_outcomes=candidate_outcomes,
+        reviewer_run_records={
+            role: sanitized_run_records[role] for role in ("reviewer_a", "reviewer_b")
+        },
+        canonical_ids=canonical_ids,
+    )
 
     common_result = {
         "schema_version": "router-v2-blind-v2-agent-pack-validation-v1",
@@ -4466,6 +4879,7 @@ def validate_agent_pack(
         "agent_roles": deepcopy(metadata_roles),
         "agent_run_records": deepcopy(sanitized_run_records),
         "generation_authority": generation_authority,
+        "reviewer_decision_authority": reviewer_decision_authority,
         "agent_run_evidence": {
             role: _agent_role_run_evidence(role, sanitized_run_records[role])
             for role in AGENT_CONFIGS
@@ -4473,6 +4887,7 @@ def validate_agent_pack(
         "agent_run_identity_authority": agent_run_identity_authority,
         "canonical_skills_authority": deepcopy(projected_skills),
         "construction_input_authority": deepcopy(construction_authority),
+        "construction_input_source_bindings": deepcopy(construction_input_bindings),
         "contamination_source_authority": {
             "scanner_config": deepcopy(contamination_scan["scanner_config"]),
             "rows": deepcopy(contamination_scan["rows"]),
@@ -5452,7 +5867,7 @@ def _validated_dataset_freeze_tasks(
 
 def _validated_agent_source_ledger_evidence(
     validation: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     message = "Agent source ledger freeze authority mismatch"
     try:
         projected_skills = _project_canonical_skills(
@@ -5716,6 +6131,10 @@ def _validated_agent_source_ledger_evidence(
             "reviewer_a": {},
             "reviewer_b": {},
         }
+        reviewer_decision_rows: dict[str, list[dict[str, Any]]] = {
+            "reviewer_a": [],
+            "reviewer_b": [],
+        }
         actual_review_orders: dict[str, list[str]] = {
             "reviewer_a": [],
             "reviewer_b": [],
@@ -5748,14 +6167,21 @@ def _validated_agent_source_ledger_evidence(
                     )
                     else [candidate_id]
                 )
-                source_records[role].append(
-                    _sanitized_agent_run_record(
+                run_record = _sanitized_agent_run_record(
+                    role=role,
+                    candidate_ids=terminal_candidate_ids,
+                    request=request,
+                    response=response,
+                    invocations=row["invocations"],
+                    retry_count=retry_count,
+                )
+                source_records[role].append(run_record)
+                reviewer_decision_rows[role].append(
+                    _sanitized_reviewer_decision_row(
                         role=role,
-                        candidate_ids=terminal_candidate_ids,
-                        request=request,
+                        candidate_id=candidate_id,
                         response=response,
-                        invocations=row["invocations"],
-                        retry_count=retry_count,
+                        run_record=run_record,
                     )
                 )
                 review_responses[role][candidate_id] = response
@@ -5975,7 +6401,34 @@ def _validated_agent_source_ledger_evidence(
             == pipeline_rejected_count + not_selected_count,
             "source candidate outcome aggregate mismatch",
         )
-        return source_generation_authority, generation_semantics
+        source_reviewer_decision_authority = _reviewer_decision_authority_document(
+            reviewer_decision_rows
+        )
+        _require(
+            validation["reviewer_decision_authority"]
+            == source_reviewer_decision_authority,
+            "source reviewer decision authority mismatch",
+        )
+        reviewer_decision_authority = _validated_reviewer_decision_authority(
+            source_reviewer_decision_authority,
+            candidate_labels={
+                candidate_id: (
+                    cast(str, candidate["proposed_gold_skill_id"]),
+                    cast(str | None, candidate["proposed_negative_skill_id"]),
+                )
+                for candidate_id, candidate in candidates.items()
+            },
+            candidate_outcomes=sorted_outcomes,
+            reviewer_run_records={
+                role: source_records[role] for role in ("reviewer_a", "reviewer_b")
+            },
+            canonical_ids=canonical_ids,
+        )
+        return (
+            source_generation_authority,
+            generation_semantics,
+            reviewer_decision_authority,
+        )
     except (
         _AgentPackProtocolViolation,
         AttributeError,
@@ -6061,6 +6514,27 @@ def build_dataset_freeze_documents(
         label="Commit A",
     )
     _validate_source_invocation_terminality(validation)
+    projected_skills = _project_canonical_skills(
+        validation["canonical_skills_authority"]
+    )
+    sealed_construction_input_authority = (
+        _construction_input_authority_from_sealed_bindings(
+            validation["construction_input_source_bindings"],
+            projected_skills=projected_skills,
+        )
+    )
+    _require(
+        validation["construction_input_authority"]
+        == sealed_construction_input_authority
+        and all(
+            validation["contamination_audit"]["protected_authority"][scope]
+            == sealed_construction_input_authority["protected_artifact_projections"][
+                scope
+            ]["protected_authority"]
+            for scope in ("train", "pilot-002", "phase16")
+        ),
+        "protected semantic source authority mismatch",
+    )
     (
         sanitized_run_records,
         agent_run_evidence,
@@ -6071,7 +6545,11 @@ def build_dataset_freeze_documents(
         validation,
         generator_run_records=sanitized_run_records["generator"],
     )
-    generation_authority, _ = _validated_agent_source_ledger_evidence(validation)
+    (
+        generation_authority,
+        _,
+        reviewer_decision_authority,
+    ) = _validated_agent_source_ledger_evidence(validation)
     task_bytes = b"".join(_canonical_json_bytes(row) for row in task_rows)
 
     reviewer_ledgers = {
@@ -6091,13 +6569,14 @@ def build_dataset_freeze_documents(
         ],
     }
     construction_input_authority = _validated_construction_input_authority(
-        validation["construction_input_authority"],
-        projected_skills=_project_canonical_skills(
-            validation["canonical_skills_authority"]
-        ),
+        sealed_construction_input_authority,
+        projected_skills=projected_skills,
         protected_authority=cast(
             dict[str, Any], validation["contamination_audit"]["protected_authority"]
         ),
+    )
+    protected_semantic_commitment = _protected_semantic_commitment(
+        construction_input_authority
     )
     exact_three_way_agreement_count = validation["exact_three_way_agreement_count"]
     selection_not_selected_count = validation["selection_not_selected_count"]
@@ -6126,11 +6605,13 @@ def build_dataset_freeze_documents(
         "excluded_candidate_count": excluded_candidate_count,
         "candidate_outcomes": candidate_outcomes,
         "construction_input_authority": construction_input_authority,
+        "protected_semantic_commitment": protected_semantic_commitment,
         "selected_task_source_authority": selected_task_source_authority,
         "selected_task_source_authority_sha256": canonical_sha256(
             selected_task_source_authority
         ),
         "generation_authority": generation_authority,
+        "reviewer_decision_authority": reviewer_decision_authority,
         "generation_ledger": {
             "path": "blind-v2-generation.jsonl",
             "sha256": validation["source_file_sha256"]["blind-v2-generation.jsonl"],
@@ -7841,6 +8322,9 @@ def _validate_evaluation_agent_construction_authority(
             == frozen["old_phase16_prompt_files"],
             message,
         )
+        preregistered_protected_semantic_commitment = preregistration.get(
+            "protected_semantic_commitment"
+        )
         manifest_bytes = input_artifacts["blind-v2-manifest.json"]
         review_summary_bytes = input_artifacts["review-summary.json"]
         dataset_document = _exact_object_fields(
@@ -7976,9 +8460,11 @@ def _validate_evaluation_agent_construction_authority(
                 "excluded_candidate_count",
                 "candidate_outcomes",
                 "construction_input_authority",
+                "protected_semantic_commitment",
                 "selected_task_source_authority",
                 "selected_task_source_authority_sha256",
                 "generation_authority",
+                "reviewer_decision_authority",
                 "generation_ledger",
                 "reviewer_ledgers",
                 "agent_run_metadata",
@@ -8255,6 +8741,23 @@ def _validate_evaluation_agent_construction_authority(
             manifest_construction["generation_authority"] == generation_authority,
             message,
         )
+        generation_candidate_labels = {
+            cast(str, candidate["candidate_id"]): (
+                cast(str, candidate["gold_skill_id"]),
+                cast(str | None, candidate["negative_skill_id"]),
+            )
+            for request in generation_authority["requests"]
+            for candidate in request["candidates"]
+        }
+        _validated_reviewer_decision_authority(
+            manifest_construction["reviewer_decision_authority"],
+            candidate_labels=generation_candidate_labels,
+            candidate_outcomes=outcomes,
+            reviewer_run_records={
+                role: validated_records[role] for role in ("reviewer_a", "reviewer_b")
+            },
+            canonical_ids=canonical_ids,
+        )
 
         generator_ids = {
             candidate_id
@@ -8362,6 +8865,15 @@ def _validate_evaluation_agent_construction_authority(
             protected_authority=cast(
                 dict[str, Any], committed_contamination["protected_authority"]
             ),
+        )
+        protected_semantic_commitment = _validated_protected_semantic_commitment(
+            manifest_construction["protected_semantic_commitment"],
+            construction_input_authority=construction_input_authority,
+        )
+        _require(
+            preregistered_protected_semantic_commitment
+            == protected_semantic_commitment,
+            message,
         )
         skill_source = construction_input_authority["canonical_skill_projection"][
             "sources"
