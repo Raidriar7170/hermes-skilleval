@@ -10492,6 +10492,36 @@ def _task7_context(tmp_path: Path) -> dict[str, Any]:
     }
 
 
+def test_task7_json_loaders_accept_unambiguous_external_inputs(
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    json_path = tmp_path / "agent-run-metadata.json"
+    json_path.write_text('{"roles":{"generator":{"model":"test-model"}}}')
+    jsonl_path = tmp_path / "blind-v2-generation.jsonl"
+    jsonl_path.write_text('{"generation_round":1}\n\n{"generation_round":2}\n')
+
+    assert cli._json(json_path) == {"roles": {"generator": {"model": "test-model"}}}
+    assert cli._jsonl(jsonl_path) == [
+        {"generation_round": 1},
+        {"generation_round": 2},
+    ]
+
+
+def test_task7_json_loader_rejects_nested_duplicate_config_key(
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    path = tmp_path / "agent-run-metadata.json"
+    path.write_text('{"roles":{"generator":{"model":"poison","model":"test-model"}}}')
+
+    with pytest.raises(
+        ValueError,
+        match=r"agent-run-metadata\.json contains duplicate key: model",
+    ):
+        cli._json(path)
+
+
 def test_task7_request_commands_expose_only_frozen_stage_and_reviewer_role() -> None:
     cli = _task7_cli_module()
     parser = cli._parser()
@@ -10647,6 +10677,133 @@ def test_task7_successful_response_rejects_duplicate_retry_identity_before_valid
         )
 
     assert validation_calls == 0
+
+
+def test_task7_review_request_rejects_duplicate_generation_key_before_output(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    generation_path = pack / "blind-v2-generation.jsonl"
+    lines = generation_path.read_text(encoding="utf-8").splitlines()
+    lines[0] = lines[0].replace(
+        '"generation_round":1',
+        '"generation_round":3,"generation_round":1',
+        1,
+    )
+    generation_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    outputs: list[Any] = []
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_validated_contamination_clean_ids",
+        lambda _context, candidates: {
+            cast(str, candidate["candidate_id"]) for candidate in candidates
+        },
+    )
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+    monkeypatch.setattr(cli, "_write_stdout", outputs.append)
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"blind-v2-generation\.jsonl line 1 contains duplicate key: "
+            r"generation_round"
+        ),
+    ):
+        cli._request_reviews(SimpleNamespace(stage="round-1", role="reviewer_a"))
+
+    assert outputs == []
+
+
+def test_task7_round_two_rejects_nested_duplicate_review_key_before_output(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    review_path = pack / "blind-v2-review-a.jsonl"
+    lines = review_path.read_text(encoding="utf-8").splitlines()
+    lines[0] = lines[0].replace(
+        '"role":"reviewer_a"',
+        '"role":"generator","role":"reviewer_a"',
+        1,
+    )
+    review_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    outputs: list[Any] = []
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_validated_contamination_clean_ids",
+        lambda _context, candidates: {
+            cast(str, candidate["candidate_id"]) for candidate in candidates
+        },
+    )
+
+    def build_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(cli.workflow, "build_generator_request", build_request)
+    monkeypatch.setattr(cli, "_write_stdout", outputs.append)
+
+    with pytest.raises(
+        ValueError,
+        match=r"blind-v2-review-a\.jsonl line 1 contains duplicate key: role",
+    ):
+        cli._request_round_2(SimpleNamespace())
+
+    assert outputs == []
 
 
 def test_task7_generation_loader_rejects_self_authorized_round_one_quota(

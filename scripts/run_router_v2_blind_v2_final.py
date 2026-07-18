@@ -30,25 +30,11 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    _require(type(value) is dict, f"{path.name} must contain a JSON object")
-    return cast(dict[str, Any], value)
+    return workflow._json_no_duplicate_keys(path.read_bytes(), str(path))
 
 
 def _jsonl(path: Path) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for line_number, line in enumerate(
-        path.read_text(encoding="utf-8").splitlines(), start=1
-    ):
-        if not line.strip():
-            continue
-        value = json.loads(line)
-        _require(
-            type(value) is dict,
-            f"{path.name} line {line_number} must contain a JSON object",
-        )
-        rows.append(cast(dict[str, Any], value))
-    return rows
+    return workflow._jsonl_no_duplicate_keys(path.read_bytes(), str(path))
 
 
 def _write_stdout(value: Any) -> None:
