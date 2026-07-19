@@ -6593,8 +6593,13 @@ def test_task5_authoritative_lineage_binds_agent_construction_without_human_revi
     assert len(bindings["old_phase16_prompt_files"]) == 16
 
 
-def test_preregistration_authority_rejects_gate_source_and_model_drift() -> None:
+def test_preregistration_authority_rejects_gate_source_and_model_drift(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     repository = Path(__file__).resolve().parents[1]
+    monkeypatch.setattr(
+        runner, "SEMANTIC_MODEL_SNAPSHOT_PATH", TASK8_SEMANTIC_MODEL_SNAPSHOT
+    )
     preregistration = repository / "artifacts/router-v2-blind-v2/preregistration.json"
     pilot = repository / (
         "artifacts/router-v2-v4/internal-training-pilot/"
@@ -12611,8 +12616,13 @@ def _task8_semantic_model_files() -> list[dict[str, Any]]:
     return files
 
 
-def test_task8_checked_in_preregistration_is_exact_agent_authority() -> None:
+def test_task8_checked_in_preregistration_is_exact_agent_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     repository = _task8_repository()
+    monkeypatch.setattr(
+        runner, "SEMANTIC_MODEL_SNAPSHOT_PATH", TASK8_SEMANTIC_MODEL_SNAPSHOT
+    )
     preregistration = _task8_preregistration()
     pilot = repository / runner.PILOT_MANIFEST_RELATIVE
 
@@ -12641,18 +12651,36 @@ def test_task8_checked_in_preregistration_is_exact_agent_authority() -> None:
         pilot_manifest_path=pilot,
         verify_model_files=False,
     )
+    assert authority_without_model_reads["status"] == "VALID"
+    assert authority_without_model_reads["model_files_verified"] is False
+
+
+@pytest.mark.skipif(
+    not TASK8_SEMANTIC_MODEL_SNAPSHOT.is_dir(),
+    reason="exact semantic model snapshot is not materialized on this host",
+)
+def test_task8_checked_in_preregistration_verifies_materialized_model_files(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = _task8_repository()
+    monkeypatch.setattr(
+        runner, "SEMANTIC_MODEL_SNAPSHOT_PATH", TASK8_SEMANTIC_MODEL_SNAPSHOT
+    )
     authority_with_model_reads = runner.validate_preregistration_authority(
         repository / runner.PREREGISTRATION_RELATIVE,
         repository_root=repository,
-        pilot_manifest_path=pilot,
+        pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
         verify_model_files=True,
     )
-    assert authority_without_model_reads["status"] == "VALID"
-    assert authority_without_model_reads["model_files_verified"] is False
+
     assert authority_with_model_reads["status"] == "VALID"
     assert authority_with_model_reads["model_files_verified"] is True
 
 
+@pytest.mark.skipif(
+    not TASK8_SEMANTIC_MODEL_SNAPSHOT.is_dir(),
+    reason="exact preregistration source snapshot is not materialized on this host",
+)
 def test_task8_semantic_model_authority_is_derived_from_exact_snapshot() -> None:
     preregistration = _task8_preregistration()
     semantic = preregistration["semantic_contamination"]
@@ -13535,10 +13563,13 @@ def _task9_rehash_protected_semantic_commitment(value: dict[str, Any]) -> None:
     _task8_refresh_preregistration_hashes(value)
 
 
-def test_task9_checked_preregistration_derives_protected_semantic_commitment_from_sources() -> (  # noqa: E501
-    None
-):
+def test_task9_checked_preregistration_derives_protected_semantic_commitment_from_sources(  # noqa: E501
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     repository = _task8_repository()
+    monkeypatch.setattr(
+        runner, "SEMANTIC_MODEL_SNAPSHOT_PATH", TASK8_SEMANTIC_MODEL_SNAPSHOT
+    )
     preregistration = _task8_preregistration()
     cli = _task7_cli_module()
     inputs = cli._load_preregistered_agent_inputs(
@@ -13752,6 +13783,10 @@ def test_task9_cli_contamination_boundary_rejects_self_consistent_prereg_authori
         cli._validated_contamination_clean_ids(context, [])
 
 
+@pytest.mark.skipif(
+    not TASK8_SEMANTIC_MODEL_SNAPSHOT.is_dir(),
+    reason="exact preregistered semantic snapshot is not materialized on this host",
+)
 def test_task9_cli_semantic_components_validate_all_checked_prereg_files_before_load(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
