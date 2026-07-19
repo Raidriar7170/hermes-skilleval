@@ -8,6 +8,8 @@ import os
 import subprocess
 import sys
 import unicodedata
+import re
+from collections import Counter
 from copy import deepcopy
 from decimal import (
     ROUND_DOWN,
@@ -6599,41 +6601,21 @@ def test_preregistration_authority_rejects_gate_source_and_model_drift() -> None
         path.write_text(json.dumps(value), encoding="utf-8")
         return path
 
-    with pytest.raises(ValueError, match="canonical namespace binding"):
-        runner.validate_preregistration_authority(
-            preregistration,
-            repository_root=repository,
-            pilot_manifest_path=pilot,
-            verify_model_files=False,
-        )
-
-    original["evaluation_output_namespace"] = (
-        "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1"
+    authority = runner.validate_preregistration_authority(
+        preregistration,
+        repository_root=repository,
+        pilot_manifest_path=pilot,
+        verify_model_files=False,
     )
-    original["evaluator"]["contract_sha256"] = runner.canonical_sha256(
-        runner.preregistered_evaluation_contract()
-    )
-    for source_binding in original["evaluator"]["source_files"]:
-        source_path = repository / source_binding["path"]
-        source_binding["sha256"] = hashlib.sha256(source_path.read_bytes()).hexdigest()
-    canonical_path = write_tampered(original, "canonical-namespace.json")
-    try:
-        authority = runner.validate_preregistration_authority(
-            canonical_path,
-            repository_root=repository,
-            pilot_manifest_path=pilot,
-            verify_model_files=False,
-            canonical_path_required=False,
-        )
-        assert authority["status"] == "VALID"
-    finally:
-        canonical_path.unlink(missing_ok=True)
+    assert authority["status"] == "VALID"
 
     gate = deepcopy(original)
     gate["gate"]["mrr_mean_delta_min"] = "-0.02000000"
     gate_path = write_tampered(gate, "gate.json")
     try:
-        with pytest.raises(ValueError, match="gate binding"):
+        with pytest.raises(
+            ValueError, match="protected preregistration identity drift"
+        ):
             runner.validate_preregistration_authority(
                 gate_path,
                 repository_root=repository,
@@ -6665,7 +6647,7 @@ def test_preregistration_authority_rejects_gate_source_and_model_drift() -> None
     ][:-1]
     missing_source_path = write_tampered(missing_source, "missing-source.json")
     try:
-        with pytest.raises(ValueError, match="evaluator source set"):
+        with pytest.raises(ValueError, match="evaluator sources are missing"):
             runner.validate_preregistration_authority(
                 missing_source_path,
                 repository_root=repository,
@@ -6710,7 +6692,9 @@ def test_preregistration_authority_rejects_gate_source_and_model_drift() -> None
     model["base_model"]["model_id"] = "tampered/model"
     model_path = write_tampered(model, "model.json")
     try:
-        with pytest.raises(ValueError, match="base model binding"):
+        with pytest.raises(
+            ValueError, match="protected preregistration identity drift"
+        ):
             runner.validate_preregistration_authority(
                 model_path,
                 repository_root=repository,
@@ -6930,7 +6914,7 @@ def test_task6_historical_human_commit_cannot_authorize_agent_generation(
 ) -> None:
     historical = runner.HISTORICAL_HUMAN_COMMIT_A
     parent = runner.PREREGISTRATION_PARENT_COMMIT
-    changed_files = ["artifacts/router-v2-blind-v2/preregistration.json"]
+    changed_files = list(runner.COMMIT_A_CHANGED_FILES)
     outputs = {
         ("status", "--porcelain", "--untracked-files=all"): "",
         ("rev-parse", "HEAD"): historical,
@@ -6954,6 +6938,7 @@ def test_task6_historical_human_commit_cannot_authorize_agent_generation(
             {
                 "preregistration_parent_git_commit": parent,
                 "supersedes_commit": historical,
+                "commit_a_binding": runner.COMMIT_A_BINDING,
                 "commit_a_changed_files": changed_files,
             },
         )
@@ -6965,10 +6950,7 @@ def test_task6_commit_a_agent_supersedes_history_and_uses_changed_file_authority
     historical = runner.HISTORICAL_HUMAN_COMMIT_A
     parent = runner.PREREGISTRATION_PARENT_COMMIT
     head = "a" * 40
-    changed_files = [
-        "artifacts/router-v2-blind-v2/preregistration.json",
-        "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
-    ]
+    changed_files = list(runner.COMMIT_A_CHANGED_FILES)
     outputs = {
         ("status", "--porcelain", "--untracked-files=all"): "",
         ("rev-parse", "HEAD"): head,
@@ -6977,7 +6959,7 @@ def test_task6_commit_a_agent_supersedes_history_and_uses_changed_file_authority
         ("rev-list", "--count", f"{'f' * 40}..{head}"): "1",
         ("merge-base", "--is-ancestor", historical, head): "",
         ("diff", "--name-only", "--no-renames", f"{parent}..{head}"): "\n".join(
-            changed_files
+            reversed(changed_files)
         ),
     }
     monkeypatch.setattr(
@@ -6991,13 +6973,14 @@ def test_task6_commit_a_agent_supersedes_history_and_uses_changed_file_authority
         {
             "preregistration_parent_git_commit": parent,
             "supersedes_commit": historical,
+            "commit_a_binding": runner.COMMIT_A_BINDING,
             "commit_a_changed_files": changed_files,
         },
     ) == {
         "commit_a": head,
         "origin_main": parent,
         "supersedes_commit": historical,
-        "changed_files": changed_files,
+        "changed_files": sorted(changed_files),
     }
 
 
@@ -7007,7 +6990,7 @@ def test_task6_commit_a_agent_rejects_changed_file_authority_drift(
     historical = runner.HISTORICAL_HUMAN_COMMIT_A
     parent = runner.PREREGISTRATION_PARENT_COMMIT
     head = "a" * 40
-    authorized = ["src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py"]
+    authorized = list(runner.COMMIT_A_CHANGED_FILES)
     outputs = {
         ("status", "--porcelain", "--untracked-files=all"): "",
         ("rev-parse", "HEAD"): head,
@@ -7015,9 +6998,8 @@ def test_task6_commit_a_agent_rejects_changed_file_authority_drift(
         ("rev-parse", "origin/main"): parent,
         ("rev-list", "--count", f"{parent}..{head}"): "1",
         ("merge-base", "--is-ancestor", historical, head): "",
-        ("diff", "--name-only", "--no-renames", f"{parent}..{head}"): (
-            "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py\n"
-            "tests/test_router_v2_blind_v2_evaluation_runner.py"
+        ("diff", "--name-only", "--no-renames", f"{parent}..{head}"): "\n".join(
+            [*authorized, "README.md"]
         ),
     }
     monkeypatch.setattr(
@@ -7032,6 +7014,7 @@ def test_task6_commit_a_agent_rejects_changed_file_authority_drift(
             {
                 "preregistration_parent_git_commit": parent,
                 "supersedes_commit": historical,
+                "commit_a_binding": runner.COMMIT_A_BINDING,
                 "commit_a_changed_files": authorized,
             },
         )
@@ -7043,9 +7026,8 @@ def test_task6_commit_a_rejects_rename_hidden_unauthorized_source(
     historical = runner.HISTORICAL_HUMAN_COMMIT_A
     parent = runner.PREREGISTRATION_PARENT_COMMIT
     head = "a" * 40
-    authorized_destination = (
-        "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py"
-    )
+    authorized = list(runner.COMMIT_A_CHANGED_FILES)
+    authorized_destination = authorized[-1]
     unauthorized_source = "scripts/unauthorized-source.py"
     commit_range = f"{parent}..{head}"
     outputs: dict[tuple[str, ...], str] = {
@@ -7053,9 +7035,8 @@ def test_task6_commit_a_rejects_rename_hidden_unauthorized_source(
         ("rev-parse", "HEAD"): head,
         ("rev-parse", "origin/main"): parent,
         ("merge-base", "--is-ancestor", historical, head): "",
-        ("diff", "--name-only", commit_range): authorized_destination,
         ("diff", "--name-only", "--no-renames", commit_range): (
-            f"{unauthorized_source}\n{authorized_destination}"
+            "\n".join([*authorized[:-1], unauthorized_source, authorized_destination])
         ),
     }
     monkeypatch.setattr(
@@ -7070,7 +7051,8 @@ def test_task6_commit_a_rejects_rename_hidden_unauthorized_source(
             {
                 "preregistration_parent_git_commit": parent,
                 "supersedes_commit": historical,
-                "commit_a_changed_files": [authorized_destination],
+                "commit_a_binding": runner.COMMIT_A_BINDING,
+                "commit_a_changed_files": authorized,
             },
         )
 
@@ -11290,7 +11272,7 @@ def test_task7_review_request_rejects_duplicate_generation_key_before_output(
     monkeypatch.setattr(
         cli,
         "_validated_contamination_clean_ids",
-        lambda _context, candidates: {
+        lambda _context, candidates, **_kwargs: {
             cast(str, candidate["candidate_id"]) for candidate in candidates
         },
     )
@@ -11355,7 +11337,7 @@ def test_task7_round_two_rejects_nested_duplicate_review_key_before_output(
     monkeypatch.setattr(
         cli,
         "_validated_contamination_clean_ids",
-        lambda _context, candidates: {
+        lambda _context, candidates, **_kwargs: {
             cast(str, candidate["candidate_id"]) for candidate in candidates
         },
     )
@@ -11505,7 +11487,7 @@ def test_task7_generation_loader_rejects_round_two_quota_not_equal_to_deficit(
     monkeypatch.setattr(
         cli,
         "_validated_contamination_clean_ids",
-        lambda _context, candidates: {
+        lambda _context, candidates, **_kwargs: {
             cast(str, candidate["candidate_id"]) for candidate in candidates
         },
     )
@@ -11534,7 +11516,7 @@ def test_task7_generation_loader_rejects_repeated_round_two_record(
     monkeypatch.setattr(
         cli,
         "_validated_contamination_clean_ids",
-        lambda _context, candidates: {
+        lambda _context, candidates, **_kwargs: {
             cast(str, candidate["candidate_id"]) for candidate in candidates
         },
     )
@@ -11671,7 +11653,7 @@ def test_task7_round_two_review_request_accepts_valid_existing_other_role_sequen
     monkeypatch.setattr(
         cli,
         "_validated_contamination_clean_ids",
-        lambda _context, candidates: {
+        lambda _context, candidates, **_kwargs: {
             cast(str, candidate["candidate_id"]) for candidate in candidates
         },
     )
@@ -11706,6 +11688,100 @@ def test_task7_round_two_review_request_accepts_valid_existing_other_role_sequen
     assert output["stage"] == "round-2"
     assert output["role"] == "reviewer_b"
     assert output["request_count"] == 2
+
+
+def test_task9_round_two_production_chain_scopes_deficits_and_binds_combined_ledger(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    cli = _task7_cli_module()
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        round_one_rejections={("test-skill-00", "negative"): 7},
+        include_round_two=True,
+    )
+    context = _task7_context(tmp_path)
+    context["staging_root"] = pack
+    protected_prompts = _task4_protected_prompts()
+    protected_family_ids = _task4_protected_family_ids()
+    context.update(
+        {
+            "train_prompts": protected_prompts["train"],
+            "pilot_prompts": protected_prompts["pilot-002"],
+            "phase16_prompts": protected_prompts["phase16"],
+            "prior_candidate_prompts": protected_prompts["prior_candidate"],
+            "train_family_ids": protected_family_ids["train"],
+            "pilot_family_ids": protected_family_ids["pilot-002"],
+            "phase16_family_ids": protected_family_ids["phase16"],
+            "prior_candidate_family_ids": protected_family_ids["prior_candidate"],
+        }
+    )
+    semantic_authority = _task5_scanner_model_authority()
+
+    monkeypatch.setattr(
+        cli,
+        "_commit_a_context",
+        lambda *, require_config_smoke: context,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_semantic_validation_components",
+        lambda _preregistration: (
+            lambda _left, _right: 0.0,
+            semantic_authority,
+        ),
+    )
+
+    def build_generator_request(
+        canonical_skills: list[dict[str, Any]],
+        *,
+        gold_skill_id: str,
+        negative_quota: int,
+        positive_only_quota: int,
+        repository_root: Path,
+        round_number: int,
+    ) -> dict[str, Any]:
+        del repository_root
+        return runner._build_generator_request_payload(
+            canonical_skills,
+            gold_skill_id=gold_skill_id,
+            negative_quota=negative_quota,
+            positive_only_quota=positive_only_quota,
+            round_number=round_number,
+        )
+
+    monkeypatch.setattr(
+        cli.workflow,
+        "build_generator_request",
+        build_generator_request,
+    )
+
+    assert (
+        cli._request_reviews(SimpleNamespace(stage="round-2", role="reviewer_b")) == 0
+    )
+    output = json.loads(capsys.readouterr().out)
+    assert output["request_count"] == 2
+
+    round_one_ids = {
+        cast(str, candidate["candidate_id"])
+        for candidate in cli._generation_candidates(context, stage="round-1")
+    }
+    contamination_path = pack / "blind-v2-contamination.jsonl"
+    contamination_rows = _read_jsonl(contamination_path)
+    round_two_row = next(
+        row for row in contamination_rows if row["candidate_id"] not in round_one_ids
+    )
+    round_two_row["evidence_sha256"] = "0" * 64
+    contamination_path.write_bytes(_jsonl_bytes(contamination_rows))
+
+    assert cli._round_one_post_pipeline_deficits(
+        context,
+        allow_later_round_reviews=True,
+    ) == {"test-skill-00": {"negative": 1, "positive_only": 0}}
+    with pytest.raises(ValueError, match="contamination ledger authority mismatch"):
+        cli._review_candidates(context, stage="round-2")
 
 
 def test_task7_round_two_review_rejects_round_three_before_authorization(
@@ -11754,7 +11830,7 @@ def test_task7_round_two_review_rejects_round_three_before_authorization(
     monkeypatch.setattr(
         cli,
         "_validated_contamination_clean_ids",
-        lambda _context, _candidates: pytest.fail(
+        lambda _context, _candidates, **_kwargs: pytest.fail(
             "round domain must fail before contamination authorization"
         ),
     )
@@ -11818,7 +11894,7 @@ def test_task7_review_candidates_replay_frozen_contamination_authority(
     monkeypatch.setattr(
         cli,
         "_semantic_validation_components",
-        lambda: (semantic_similarity, semantic_authority),
+        lambda _preregistration: (semantic_similarity, semantic_authority),
     )
     monkeypatch.setattr(
         cli,
@@ -11982,7 +12058,7 @@ def test_task7_round_two_handler_rejects_unvalidated_invocation_sequences(
     monkeypatch.setattr(
         cli,
         "_validated_contamination_clean_ids",
-        lambda _context, candidates: {
+        lambda _context, candidates, **_kwargs: {
             cast(str, candidate["candidate_id"]) for candidate in candidates
         },
     )
@@ -12404,3 +12480,1285 @@ def test_task7_evaluate_handler_runs_attempt_only_after_side_effect_free_preflig
 
     assert order == ["preflight", "attempt"]
     assert output == {"status": "TEST_ONLY_ATTEMPT_NOT_EXECUTED"}
+
+
+TASK8_BASELINE_HEAD = "0998b814e82b4da164a54d0a6ce219573f037994"
+TASK8_PROTECTED_PREREGISTRATION_SUBTREES = (
+    "base_model",
+    "arm_c_checkpoints",
+    "frozen_inputs",
+    "pilot_002_gate_artifact",
+    "query_contract",
+    "skill_representation_builder",
+    "old_phase16_prompt_files",
+    "gate",
+    "skill_index",
+)
+TASK8_PROTECTED_SUBTREE_SHA256 = {
+    "base_model": "9c8c287edecec1d3db119afbad9468a6fe71b5c3c591e3068b9a4a3275c6cc2d",
+    "arm_c_checkpoints": "09a462fe6d888bffb75ffed7187bfe397e17224227d4c2126c82eb909e95d2ce",
+    "frozen_inputs": "dd2ea7dd0fe1675cb87bc6ece6cea8f330afb98c7cb52cd69676ca259e275056",
+    "pilot_002_gate_artifact": "3a2641bae204676574dc2c58d15198bbd601ce8ec82a3deeca9aedb1c71cfb9a",
+    "query_contract": "4e1ea3f5eb074939abccc1e8198286e55313b385545fc1c4f45e0b47bd11b2a5",
+    "skill_representation_builder": "5959ad6e5c9b700cf17ccd0ccede02c3777c6e9d7c13da4a933dbae40e07faa3",
+    "old_phase16_prompt_files": "e6cbc0d7aeb9f04928b635892409fe21c70a038439b875015a25ffce921fd39a",
+    "gate": "19a53521277f914393fcb815e9c35a1e2e6bc549b0db49027d03e1d6cd875bba",
+    "skill_index": "61349bc19f92705aa0ba0c410ffc79cee52103823a20250bd9908fa248b813f3",
+}
+TASK8_GENERATOR_SYSTEM_PROMPT = (
+    "You are the Generator for a preregistered Router V2 blind evaluation. "
+    "Create natural English user requests for exactly one primary canonical skill. "
+    "Do not mention skill IDs, skill names, gold labels, negative labels, benchmarks, "
+    "routers, training, pilot data, Phase 16, Arm A, Arm C, or model behavior. For a "
+    "negative-labeled candidate, choose one plausible but insufficient canonical "
+    "negative skill. Use only the supplied skill definitions and quota. Do not use "
+    "external memory or prior conversation. Return only JSON matching the supplied "
+    "schema."
+)
+TASK8_REVIEWER_SYSTEM_PROMPT = (
+    "You are a role-isolated reviewer for one preregistered Router V2 blind candidate. "
+    "Use only the supplied task text, canonical skill definitions, and rubric. "
+    "Independently decide the single primary gold skill and one "
+    "plausible-but-insufficient negative skill or null. Reject ambiguity, unnatural "
+    "wording, label leakage, invalid negatives, and tasks with more than one equally "
+    "primary skill. Do not use external memory, prior conversation, quotas, other "
+    "reviews, generator labels, Router models, or model results. Return only JSON "
+    "matching the supplied schema."
+)
+TASK8_GENERATOR_HUMAN_READABLE_SCHEMA = {
+    "candidates": [
+        {
+            "candidate_index": 0,
+            "prompt_text": "natural English request",
+            "semantic_family_id": "opaque family string",
+            "proposed_gold_skill_id": "canonical skill id",
+            "proposed_negative_skill_id": "canonical skill id or null",
+            "language": "en",
+            "rationale": "brief label rationale",
+        }
+    ]
+}
+TASK8_REVIEWER_HUMAN_READABLE_SCHEMA = {
+    "decision": "ACCEPT or frozen REJECT code",
+    "reviewed_gold_skill_id": "canonical skill id",
+    "reviewed_negative_skill_id": "canonical skill id or null",
+    "natural": True,
+    "single_primary_skill": True,
+    "no_label_leakage": True,
+    "negative_confusable": None,
+    "confidence": "LOW, MEDIUM, or HIGH",
+    "reason": "brief decision rationale",
+}
+TASK8_SEMANTIC_MODEL_SNAPSHOT = Path(
+    "/Users/raidriar/.cache/huggingface/hub/"
+    "models--sentence-transformers--all-mpnet-base-v2/snapshots/"
+    "e8c3b32edf5434bc2275fc9bab85f82640a19130"
+)
+
+
+def _task8_repository() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def _task8_preregistration() -> dict[str, Any]:
+    repository = _task8_repository()
+    return json.loads(
+        (repository / runner.PREREGISTRATION_RELATIVE).read_text(encoding="utf-8")
+    )
+
+
+def _task8_semantic_model_files() -> list[dict[str, Any]]:
+    snapshot = TASK8_SEMANTIC_MODEL_SNAPSHOT.resolve(strict=True)
+    files = []
+    for path in sorted(
+        snapshot.rglob("*"),
+        key=lambda value: value.relative_to(snapshot).as_posix().encode("utf-8"),
+    ):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(snapshot).as_posix()
+        assert ".locks/" not in relative
+        assert not relative.endswith(".lock")
+        assert ".incomplete" not in relative
+        source = path.read_bytes()
+        files.append(
+            {
+                "path": relative,
+                "size": len(source),
+                "sha256": hashlib.sha256(source).hexdigest(),
+            }
+        )
+    return files
+
+
+def test_task8_checked_in_preregistration_is_exact_agent_authority() -> None:
+    repository = _task8_repository()
+    preregistration = _task8_preregistration()
+    pilot = repository / runner.PILOT_MANIFEST_RELATIVE
+
+    assert preregistration["schema_version"] == (
+        "router-v2-blind-v2-agent-preregistration-v2"
+    )
+    assert preregistration["supersedes_commit"] == runner.HISTORICAL_HUMAN_COMMIT_A
+    assert preregistration["blind_v2_candidate_data_seen"] is False
+    assert preregistration["blind_v2_data_seen"] is False
+    assert preregistration["blind_v2_data_seen_compatibility"] == (
+        "LEGACY_PRE_DATA_TRUTH_ONLY"
+    )
+    assert preregistration["blind_v2_expected_task_count"] == 128
+    assert preregistration["blind_v2_expected_negative_labeled_task_count"] == 96
+    assert preregistration["metric_definitions"]["positive_denominator"] == 128
+    assert preregistration["metric_definitions"]["negative_denominator"] == 96
+    assert preregistration["evaluation_output_namespace"] == str(
+        runner.FINAL_NAMESPACE_RELATIVE
+    )
+    assert preregistration["router_decision"] == "KEEP_BASELINE"
+    assert "router_promotion_requires_separate_human_decision" not in preregistration
+
+    authority_without_model_reads = runner.validate_preregistration_authority(
+        repository / runner.PREREGISTRATION_RELATIVE,
+        repository_root=repository,
+        pilot_manifest_path=pilot,
+        verify_model_files=False,
+    )
+    authority_with_model_reads = runner.validate_preregistration_authority(
+        repository / runner.PREREGISTRATION_RELATIVE,
+        repository_root=repository,
+        pilot_manifest_path=pilot,
+        verify_model_files=True,
+    )
+    assert authority_without_model_reads["status"] == "VALID"
+    assert authority_without_model_reads["model_files_verified"] is False
+    assert authority_with_model_reads["status"] == "VALID"
+    assert authority_with_model_reads["model_files_verified"] is True
+
+
+def test_task8_semantic_model_authority_is_derived_from_exact_snapshot() -> None:
+    preregistration = _task8_preregistration()
+    semantic = preregistration["semantic_contamination"]
+    files = _task8_semantic_model_files()
+
+    assert len(files) == 28
+    assert sum(row["size"] for row in files) == 3_824_846_935
+    assert semantic["model_id"] == "sentence-transformers/all-mpnet-base-v2"
+    assert semantic["revision"] == ("e8c3b32edf5434bc2275fc9bab85f82640a19130")
+    assert semantic["snapshot_path"] == str(TASK8_SEMANTIC_MODEL_SNAPSHOT)
+    assert semantic["materialized_model_files"] == files
+    assert semantic["materialized_model_files_sha256"] == runner.canonical_sha256(files)
+    assert semantic["materialized_model_files_sha256"] == (
+        "11a0b5bd48efbae208424572fe30f873a139d552582047201c96e3b6d85b7f1a"
+    )
+
+
+def test_task8_protocol_and_preregistration_embed_verbatim_agent_contracts() -> None:
+    repository = _task8_repository()
+    preregistration = _task8_preregistration()
+    protocol = (repository / "docs/router-v2-blind-v2-protocol.md").read_text(
+        encoding="utf-8"
+    )
+    marker = "## Historical supersession note"
+    assert marker in protocol
+    active, historical = protocol.split(marker, maxsplit=1)
+
+    generator = preregistration["agent_construction"]["generator"]
+    assert generator["system_prompt"] == TASK8_GENERATOR_SYSTEM_PROMPT
+    assert generator["human_readable_response_schema"] == (
+        TASK8_GENERATOR_HUMAN_READABLE_SCHEMA
+    )
+    assert protocol.count(TASK8_GENERATOR_SYSTEM_PROMPT) == 1
+    assert (
+        json.dumps(TASK8_GENERATOR_HUMAN_READABLE_SCHEMA, indent=2, ensure_ascii=False)
+        in protocol
+    )
+
+    for role in ("reviewer_a", "reviewer_b"):
+        reviewer = preregistration["agent_construction"][role]
+        assert reviewer["system_prompt"] == TASK8_REVIEWER_SYSTEM_PROMPT
+        assert reviewer["human_readable_response_schema"] == (
+            TASK8_REVIEWER_HUMAN_READABLE_SCHEMA
+        )
+        assert reviewer["negative_confusable_semantics"] == (
+            "true when reviewed_negative_skill_id is non-null; null when the reviewer "
+            "independently selects no negative"
+        )
+    assert protocol.count(TASK8_REVIEWER_SYSTEM_PROMPT) == 2
+    assert (
+        protocol.count(
+            json.dumps(
+                TASK8_REVIEWER_HUMAN_READABLE_SCHEMA,
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        == 2
+    )
+
+    protocol_json_documents = [
+        json.loads(block.split("\n```", maxsplit=1)[0])
+        for block in protocol.split("```json\n")[1:]
+    ]
+    protocol_json_hashes = [
+        runner.canonical_sha256(document) for document in protocol_json_documents
+    ]
+    for role, expected_count in (
+        ("generator", 1),
+        ("reviewer_a", 2),
+        ("reviewer_b", 2),
+    ):
+        role_authority = preregistration["agent_construction"][role]
+        for field in (
+            "human_readable_response_schema",
+            "response_json_schema",
+            "request_schema",
+        ):
+            digest = role_authority[f"{field}_sha256"]
+            assert protocol_json_hashes.count(digest) == expected_count
+            assert digest in protocol
+
+    candidate_rule = preregistration["agent_construction"]["candidate_id"]
+    assert candidate_rule["rule"] in protocol
+    assert candidate_rule["rule_sha256"] in protocol
+
+    for forbidden in (
+        "BLIND_V2_WAITING_FOR_HUMAN_DATA",
+        "Human-data gate",
+        "Static human-pack validation",
+        "publication permission",
+        "independently reviewed by humans",
+        "64/48",
+    ):
+        assert forbidden.lower() not in active.lower()
+    assert runner.HISTORICAL_HUMAN_COMMIT_A in historical
+    assert "64/48" in historical
+    assert "non-authoritative" in historical.lower()
+
+
+def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
+    repository = _task8_repository()
+    preregistration_path = repository / runner.PREREGISTRATION_RELATIVE
+    preregistration = _task8_preregistration()
+    protocol = (repository / "docs/router-v2-blind-v2-protocol.md").read_text(
+        encoding="utf-8"
+    )
+
+    def section(start: str, end: str) -> str:
+        return protocol.split(start, maxsplit=1)[1].split(end, maxsplit=1)[0]
+
+    sections = {
+        "repository": section(
+            "## Frozen repository and evaluation authority",
+            "## Generator authority",
+        ),
+        "generator": section("## Generator authority", "## Reviewer A authority"),
+        "reviewer_a": section("## Reviewer A authority", "## Reviewer B authority"),
+        "reviewer_b": section(
+            "## Reviewer B authority",
+            "## Isolation and transport-only retry",
+        ),
+        "selection": section(
+            "## Generation rounds, unanimous admission, and deterministic selection",
+            "## Non-voting contamination authority",
+        ),
+        "semantic": section(
+            "## Non-voting contamination authority",
+            "## Commit B, single attempt, metrics, and gate",
+        ),
+    }
+    parsed: list[tuple[str, str]] = []
+
+    def bind_line(
+        section_name: str,
+        rendered_label: str,
+        semantic_label: str,
+        expected: str,
+    ) -> None:
+        matches = re.findall(
+            rf"(?m)^{re.escape(rendered_label)}: `([0-9a-f]{{64}})`$",
+            sections[section_name],
+        )
+        assert matches == [expected], semantic_label
+        parsed.append((semantic_label, matches[0]))
+
+    def bind_table_row(
+        section_name: str,
+        rendered_label: str,
+        semantic_label: str,
+        expected: str,
+    ) -> None:
+        matches = re.findall(
+            rf"(?m)^\| `{re.escape(rendered_label)}` \| `([0-9a-f]{{64}})` \|$",
+            sections[section_name],
+        )
+        assert matches == [expected], semantic_label
+        parsed.append((semantic_label, matches[0]))
+
+    repository_authority = (
+        (
+            "- Evaluator contract SHA-256",
+            "evaluator.contract_sha256",
+            preregistration["evaluator"]["contract_sha256"],
+        ),
+        (
+            "- Evaluator source aggregate SHA-256",
+            "evaluator.source_files_sha256",
+            preregistration["evaluator"]["source_files_sha256"],
+        ),
+        (
+            "- Frozen-input aggregate SHA-256",
+            "frozen_inputs_sha256",
+            preregistration["frozen_inputs_sha256"],
+        ),
+        ("- Gate semantic SHA-256", "gate_sha256", preregistration["gate_sha256"]),
+        (
+            "- Skill-index semantic SHA-256",
+            "skill_index_semantic_sha256",
+            preregistration["skill_index_semantic_sha256"],
+        ),
+        (
+            "- Query-contract semantic SHA-256",
+            "query_contract_sha256",
+            preregistration["query_contract_sha256"],
+        ),
+        (
+            "- Skill-representation semantic SHA-256",
+            "skill_representation_builder_sha256",
+            preregistration["skill_representation_builder_sha256"],
+        ),
+        (
+            "- Phase 16 binding aggregate SHA-256",
+            "old_phase16_prompt_files_sha256",
+            preregistration["old_phase16_prompt_files_sha256"],
+        ),
+        (
+            "- Protected semantic commitment SHA-256",
+            "protected_semantic_commitment.commitment_sha256",
+            preregistration["protected_semantic_commitment"]["commitment_sha256"],
+        ),
+    )
+
+    for rendered_label, semantic_label, expected in repository_authority:
+        bind_line("repository", rendered_label, semantic_label, expected)
+
+    for key, expected in preregistration[
+        "protected_preregistration_subtree_sha256"
+    ].items():
+        bind_table_row("repository", key, f"protected.{key}", expected)
+
+    construction = preregistration["agent_construction"]
+    for role in ("generator", "reviewer_a", "reviewer_b"):
+        role_authority = construction[role]
+        for rendered_label, field in (
+            ("System-prompt SHA-256", "system_prompt_sha256"),
+            ("Human-readable schema SHA-256", "human_readable_response_schema_sha256"),
+            ("Response JSON Schema SHA-256", "response_json_schema_sha256"),
+            ("Request schema SHA-256", "request_schema_sha256"),
+        ):
+            bind_line(
+                role,
+                rendered_label,
+                f"{role}.{field}",
+                role_authority[field],
+            )
+
+    bind_line(
+        "generator",
+        "Candidate-ID rule SHA-256",
+        "candidate_id.rule_sha256",
+        construction["candidate_id"]["rule_sha256"],
+    )
+    for role in ("reviewer_a", "reviewer_b"):
+        bind_line(
+            role,
+            "Schedule-rule SHA-256",
+            f"reviewer_schedules.{role}.ordering_rule_sha256",
+            construction["reviewer_schedules"][role]["ordering_rule_sha256"],
+        )
+
+    selection_matches = re.findall(
+        r'(?m)^  "selection_key_rule_sha256": "([0-9a-f]{64})",$',
+        sections["selection"],
+    )
+    expected_selection = construction["selection"]["selection_key_rule_sha256"]
+    assert selection_matches == [expected_selection]
+    parsed.append(("selection.selection_key_rule_sha256", selection_matches[0]))
+
+    semantic = preregistration["semantic_contamination"]
+    bind_line(
+        "semantic",
+        "- Aggregate authority SHA-256",
+        "semantic.materialized_model_files_sha256",
+        semantic["materialized_model_files_sha256"],
+    )
+    bind_line(
+        "semantic",
+        "- Semantic authority self-hash",
+        "semantic_contamination_sha256",
+        preregistration["semantic_contamination_sha256"],
+    )
+    for row in semantic["materialized_model_files"]:
+        matches = re.findall(
+            rf"(?m)^\| `{re.escape(row['path'])}` \| `{row['size']}` \| "
+            rf"`([0-9a-f]{{64}})` \|$",
+            sections["semantic"],
+        )
+        semantic_label = f"semantic.materialized_model_files.{row['path']}"
+        assert matches == [row["sha256"]], semantic_label
+        parsed.append((semantic_label, matches[0]))
+
+    source_files = preregistration["evaluator"]["source_files"]
+    for row in source_files:
+        actual_sha256 = hashlib.sha256(
+            (repository / row["path"]).read_bytes()
+        ).hexdigest()
+        assert row["sha256"] == actual_sha256, row["path"]
+    assert preregistration["evaluator"]["source_files_sha256"] == (
+        runner.canonical_sha256(source_files)
+    )
+
+    protocol_hashes = re.findall(
+        r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])",
+        protocol,
+    )
+    assert len(parsed) == 64
+    assert len({label for label, _ in parsed}) == len(parsed)
+    assert Counter(protocol_hashes) == Counter(digest for _, digest in parsed)
+
+    preregistration_file_sha256 = hashlib.sha256(
+        preregistration_path.read_bytes()
+    ).hexdigest()
+    assert preregistration["preregistration_sha256"] not in protocol
+    assert preregistration_file_sha256 not in protocol
+
+
+def test_task8_protected_preregistration_subtrees_match_baseline_head() -> None:
+    repository = _task8_repository()
+    baseline_source = subprocess.run(
+        [
+            "git",
+            "show",
+            f"{TASK8_BASELINE_HEAD}:{runner.PREREGISTRATION_RELATIVE.as_posix()}",
+        ],
+        cwd=repository,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    baseline = json.loads(baseline_source)
+    current = _task8_preregistration()
+
+    for key in TASK8_PROTECTED_PREREGISTRATION_SUBTREES:
+        assert current[key] == baseline[key]
+        assert (
+            runner.canonical_sha256(current[key])
+            == (TASK8_PROTECTED_SUBTREE_SHA256[key])
+        )
+
+
+def _task8_refresh_preregistration_hashes(value: dict[str, Any]) -> None:
+    construction = value["agent_construction"]
+    for role in ("generator", "reviewer_a", "reviewer_b"):
+        role_authority = construction[role]
+        role_authority["system_prompt_sha256"] = hashlib.sha256(
+            role_authority["system_prompt"].encode("utf-8")
+        ).hexdigest()
+        for field in (
+            "human_readable_response_schema",
+            "response_json_schema",
+            "request_schema",
+        ):
+            role_authority[f"{field}_sha256"] = runner.canonical_sha256(
+                role_authority[field]
+            )
+    candidate_id = construction["candidate_id"]
+    candidate_id["rule_sha256"] = hashlib.sha256(
+        candidate_id["rule"].encode("utf-8")
+    ).hexdigest()
+    selection = construction["selection"]
+    selection["selection_key_rule_sha256"] = hashlib.sha256(
+        selection["selection_key_rule"].encode("utf-8")
+    ).hexdigest()
+    for schedule in construction["reviewer_schedules"].values():
+        schedule["ordering_rule_sha256"] = hashlib.sha256(
+            schedule["ordering_rule"].encode("utf-8")
+        ).hexdigest()
+    value["agent_construction_sha256"] = runner.canonical_sha256(construction)
+
+    semantic = value["semantic_contamination"]
+    semantic["materialized_model_files_sha256"] = runner.canonical_sha256(
+        semantic["materialized_model_files"]
+    )
+    value["semantic_contamination_sha256"] = runner.canonical_sha256(semantic)
+    value["protected_preregistration_subtree_sha256"] = {
+        key: runner.canonical_sha256(value[key])
+        for key in TASK8_PROTECTED_PREREGISTRATION_SUBTREES
+    }
+    value["frozen_inputs_sha256"] = runner.canonical_sha256(value["frozen_inputs"])
+    value["gate_sha256"] = runner.canonical_sha256(value["gate"])
+    value["query_contract_sha256"] = runner.canonical_sha256(value["query_contract"])
+    value["skill_representation_builder_sha256"] = runner.canonical_sha256(
+        value["skill_representation_builder"]
+    )
+    value["old_phase16_prompt_files_sha256"] = runner.canonical_sha256(
+        value["old_phase16_prompt_files"]
+    )
+    value["evaluator"]["source_files_sha256"] = runner.canonical_sha256(
+        value["evaluator"]["source_files"]
+    )
+    value.pop("preregistration_sha256", None)
+    value["preregistration_sha256"] = runner.canonical_sha256(value)
+
+
+def _task8_set_path(
+    value: dict[str, Any], path: tuple[Any, ...], replacement: Any
+) -> None:
+    cursor: Any = value
+    for component in path[:-1]:
+        cursor = cursor[component]
+    cursor[path[-1]] = replacement
+
+
+def _task8_write_tampered_preregistration(
+    tmp_path: Path,
+    path: tuple[Any, ...],
+    replacement: Any,
+) -> Path:
+    value = deepcopy(_task8_preregistration())
+    if value.get("schema_version") != "router-v2-blind-v2-agent-preregistration-v2":
+        pytest.fail("Task 8 Agent preregistration authority is not implemented")
+    _task8_set_path(value, path, replacement)
+    _task8_refresh_preregistration_hashes(value)
+    output = tmp_path / "tampered-preregistration.json"
+    output.write_text(
+        json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return output
+
+
+@pytest.mark.parametrize(
+    ("path", "replacement"),
+    (
+        (("blind_v2_expected_task_count",), 64),
+        (("blind_v2_expected_negative_labeled_task_count",), 48),
+        (("metric_definitions", "positive_denominator"), 64),
+        (("metric_definitions", "negative_denominator"), 48),
+        (("agent_construction", "generator", "system_prompt"), "tampered"),
+        (
+            (
+                "agent_construction",
+                "generator",
+                "human_readable_response_schema",
+                "candidates",
+                0,
+                "language",
+            ),
+            "fr",
+        ),
+        (
+            ("agent_construction", "generator", "response_json_schema", "type"),
+            "array",
+        ),
+        (
+            ("agent_construction", "generator", "request_schema", "input_fields"),
+            ["canonical_skills", "quota"],
+        ),
+        (
+            ("agent_construction", "generator", "config", "timeout_seconds"),
+            1799,
+        ),
+        (
+            ("agent_construction", "reviewer_a", "config", "reasoning_effort"),
+            "max",
+        ),
+        (
+            ("agent_construction", "reviewer_b", "config", "model"),
+            "gpt-5.6-sol",
+        ),
+        (("agent_construction", "reviewer_a", "system_prompt"), "tampered"),
+        (
+            (
+                "agent_construction",
+                "reviewer_a",
+                "human_readable_response_schema",
+                "negative_confusable",
+            ),
+            "boolean",
+        ),
+        (
+            ("agent_construction", "reviewer_b", "response_json_schema", "type"),
+            "array",
+        ),
+        (
+            ("agent_construction", "reviewer_b", "request_schema", "input_fields"),
+            ["candidate"],
+        ),
+        (
+            ("agent_construction", "reviewer_b", "negative_confusable_semantics"),
+            "tampered",
+        ),
+        (("agent_construction", "isolation", "fork_context"), True),
+        (("agent_construction", "transport_retry", "maximum_retries"), 2),
+        (
+            ("agent_construction", "rounds", "round_1", "candidate_count"),
+            255,
+        ),
+        (
+            (
+                "agent_construction",
+                "reviewer_schedules",
+                "reviewer_a",
+                "ordering_rule",
+            ),
+            "ascending candidate_id",
+        ),
+        (("semantic_contamination", "model_id"), "tampered/model"),
+        (("semantic_contamination", "revision"), "0" * 40),
+        (("semantic_contamination", "materialized_model_files", 0, "size"), 0),
+        (
+            (
+                "semantic_contamination",
+                "thresholds",
+                "token_5gram_jaccard_reject_at_or_above",
+            ),
+            "0.81",
+        ),
+        (
+            (
+                "semantic_contamination",
+                "thresholds",
+                "character_5gram_jaccard_reject_at_or_above",
+            ),
+            "0.86",
+        ),
+        (
+            (
+                "semantic_contamination",
+                "thresholds",
+                "semantic_cosine_reject_at_or_above",
+            ),
+            "0.91",
+        ),
+        (
+            ("agent_construction", "terminal", "terminal_states"),
+            ["AGENT_BLIND_V2_GATES_PASSED"],
+        ),
+        (("blind_v2_candidate_data_seen",), True),
+        (
+            ("evaluation_output_namespace",),
+            "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001",
+        ),
+        (("agent_construction", "final_dataset", "family_count"), 127),
+        (("agent_construction", "selection", "selection_seed"), 7171),
+    ),
+    ids=(
+        "task-count-64",
+        "negative-count-48",
+        "positive-denominator-64",
+        "negative-denominator-48",
+        "generator-prompt",
+        "generator-readable-schema",
+        "generator-json-schema",
+        "generator-request-schema",
+        "generator-config",
+        "reviewer-a-config",
+        "reviewer-b-config",
+        "reviewer-prompt",
+        "reviewer-readable-schema",
+        "reviewer-json-schema",
+        "reviewer-request-schema",
+        "negative-confusable-semantics",
+        "isolation",
+        "retry",
+        "round-quota",
+        "reviewer-schedule",
+        "semantic-model",
+        "semantic-revision",
+        "semantic-file",
+        "token-threshold",
+        "character-threshold",
+        "semantic-threshold",
+        "terminal-states",
+        "candidate-data-seen",
+        "output-namespace",
+        "family-count",
+        "selection-seed",
+    ),
+)
+def test_task8_preregistration_rejects_rehashed_authority_drift(
+    tmp_path: Path,
+    path: tuple[Any, ...],
+    replacement: Any,
+) -> None:
+    repository = _task8_repository()
+    tampered = _task8_write_tampered_preregistration(tmp_path, path, replacement)
+
+    with pytest.raises(ValueError):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+@pytest.mark.parametrize(
+    "attack",
+    (
+        "duplicate-source-row",
+        "reordered-source-rows",
+        "duplicate-path-with-omitted-path",
+        "unknown-source-row-field",
+        "unknown-evaluator-field",
+        "unknown-top-level-field",
+        "missing-top-level-field",
+        "missing-evaluator-field",
+    ),
+)
+def test_task8_preregistration_rejects_rehashed_structural_authority_attack(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    repository = _task8_repository()
+    value = deepcopy(_task8_preregistration())
+    evaluator = value["evaluator"]
+    source_files = evaluator["source_files"]
+
+    if attack == "duplicate-source-row":
+        source_files.append(deepcopy(source_files[0]))
+    elif attack == "reordered-source-rows":
+        source_files.reverse()
+    elif attack == "duplicate-path-with-omitted-path":
+        source_files[-1] = deepcopy(source_files[0])
+    elif attack == "unknown-source-row-field":
+        source_files[0]["unexpected"] = True
+    elif attack == "unknown-evaluator-field":
+        evaluator["unexpected"] = True
+    elif attack == "unknown-top-level-field":
+        value["unexpected"] = True
+    elif attack == "missing-top-level-field":
+        del value["preexisting_main_validation"]
+    elif attack == "missing-evaluator-field":
+        del evaluator["arms"]
+    else:  # pragma: no cover - the parametrization is closed above
+        raise AssertionError(attack)
+
+    _task8_refresh_preregistration_hashes(value)
+    tampered = tmp_path / f"{attack}.json"
+    tampered.write_text(
+        json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+@pytest.mark.parametrize(
+    "attack",
+    (
+        "arbitrary-commit-a-binding",
+        "reordered-commit-a-changed-files",
+        "duplicate-commit-a-changed-file",
+        "omitted-commit-a-changed-file",
+        "readme-commit-a-substitution",
+        "unknown-preexisting-field",
+        "unknown-local-pytest-field",
+        "preexisting-failed-count-drift",
+        "preexisting-passed-count-drift",
+        "preexisting-conclusion-drift",
+        "preexisting-run-id-drift",
+        "preexisting-bool-as-int",
+        "preexisting-run-id-as-bool",
+        "preexisting-count-as-bool",
+    ),
+)
+def test_task8_preregistration_rejects_rehashed_commit_a_authority_attack(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    repository = _task8_repository()
+    value = deepcopy(_task8_preregistration())
+    changed_files = value["commit_a_changed_files"]
+    preexisting = value["preexisting_main_validation"]
+    local_pytest = preexisting["local_full_pytest"]
+
+    if attack == "arbitrary-commit-a-binding":
+        value["commit_a_binding"] = "ATTACKER_CONTROLLED"
+    elif attack == "reordered-commit-a-changed-files":
+        changed_files.reverse()
+    elif attack == "duplicate-commit-a-changed-file":
+        changed_files.append(changed_files[0])
+    elif attack == "omitted-commit-a-changed-file":
+        changed_files.pop()
+    elif attack == "readme-commit-a-substitution":
+        changed_files[-1] = "README.md"
+    elif attack == "unknown-preexisting-field":
+        preexisting["unexpected"] = True
+    elif attack == "unknown-local-pytest-field":
+        local_pytest["unexpected"] = True
+    elif attack == "preexisting-failed-count-drift":
+        local_pytest["failed"] += 1
+    elif attack == "preexisting-passed-count-drift":
+        local_pytest["passed"] += 1
+    elif attack == "preexisting-conclusion-drift":
+        preexisting["github_validate_conclusion"] = "success"
+    elif attack == "preexisting-run-id-drift":
+        preexisting["github_validate_run_id"] += 1
+    elif attack == "preexisting-bool-as-int":
+        preexisting["not_attributed_to_blind_v2_change"] = 1
+    elif attack == "preexisting-run-id-as-bool":
+        preexisting["github_validate_run_id"] = True
+    elif attack == "preexisting-count-as-bool":
+        local_pytest["failed"] = True
+    else:  # pragma: no cover - the parametrization is closed above
+        raise AssertionError(attack)
+
+    _task8_refresh_preregistration_hashes(value)
+    tampered = tmp_path / f"{attack}.json"
+    tampered.write_text(
+        json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+def test_task8_commit_a_repository_uses_code_boundary_not_preregistration(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    preregistration = _task8_preregistration()
+    parent = runner.PREREGISTRATION_PARENT_COMMIT
+    historical = runner.HISTORICAL_HUMAN_COMMIT_A
+    head = "a" * 40
+    attacker_boundary = ["README.md"]
+    outputs = {
+        ("status", "--porcelain", "--untracked-files=all"): "",
+        ("rev-parse", "HEAD"): head,
+        ("rev-parse", "origin/main"): parent,
+        ("merge-base", "--is-ancestor", historical, head): "",
+        ("diff", "--name-only", "--no-renames", f"{parent}..{head}"): (
+            "\n".join(attacker_boundary)
+        ),
+    }
+    monkeypatch.setattr(
+        runner,
+        "_git",
+        lambda repository, *arguments: outputs[arguments],
+    )
+
+    with pytest.raises(ValueError, match="changed-file authority"):
+        runner.validate_commit_a_repository(tmp_path, preregistration)
+
+
+@pytest.mark.parametrize(
+    ("path", "replacement"),
+    (
+        (("best_seed_selection_allowed",), 0),
+        (("blind_v3_allowed",), 0),
+        (("posthoc_tuning_allowed",), 0),
+        (("production_ready",), 0),
+        (("release_authorized",), 0),
+        (("release_eligible",), 0),
+        (("retraining_allowed",), 0),
+        (("threshold_change_allowed",), 0),
+        (("generated_at_utc",), "2026-07-18T00:00:00+00:00"),
+        (("historical_supersession", "candidate_data_seen"), 0),
+        (("metric_definitions", "raw_count_first"), 1),
+        (("statistics", "repeated_seed_samples_independent"), 0),
+        (("single_attempt", "attempt_number"), True),
+        (("non_actions", "archive"), 0),
+    ),
+    ids=(
+        "best-seed-bool-int",
+        "blind-v3-bool-int",
+        "posthoc-tuning-bool-int",
+        "production-ready-bool-int",
+        "release-authorized-bool-int",
+        "release-eligible-bool-int",
+        "retraining-bool-int",
+        "threshold-change-bool-int",
+        "alternate-generated-at",
+        "historical-bool-int",
+        "metric-bool-int",
+        "statistics-bool-int",
+        "single-attempt-int-bool",
+        "non-action-bool-int",
+    ),
+)
+def test_task8_preregistration_rejects_rehashed_uncovered_authority_drift(
+    tmp_path: Path,
+    path: tuple[Any, ...],
+    replacement: Any,
+) -> None:
+    repository = _task8_repository()
+    tampered = _task8_write_tampered_preregistration(tmp_path, path, replacement)
+
+    with pytest.raises(ValueError):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+def test_task8_preregistration_field_authority_coverage_is_complete() -> None:
+    preregistration = _task8_preregistration()
+    allowed_authorities = {
+        "actual_file_bytes",
+        "exact_constant",
+        "protected_baseline_snapshot",
+        "validated_nested_exact_authority",
+    }
+
+    assert len(preregistration) == 55
+    assert frozenset(preregistration) == runner.PREREGISTRATION_FIELDS
+    assert frozenset(runner.PREREGISTRATION_FIELD_AUTHORITY_LEDGER) == (
+        runner.PREREGISTRATION_FIELDS
+    )
+    assert set(runner.PREREGISTRATION_FIELD_AUTHORITY_LEDGER.values()) == (
+        allowed_authorities
+    )
+    assert all(
+        type(field) is str and type(authority) is str
+        for field, authority in runner.PREREGISTRATION_FIELD_AUTHORITY_LEDGER.items()
+    )
+
+
+def test_task8_preregistration_rejects_self_hash_tamper(tmp_path: Path) -> None:
+    repository = _task8_repository()
+    value = deepcopy(_task8_preregistration())
+    if value.get("schema_version") != "router-v2-blind-v2-agent-preregistration-v2":
+        pytest.fail("Task 8 Agent preregistration authority is not implemented")
+    value["preregistration_sha256"] = "0" * 64
+    tampered = tmp_path / "self-hash-tampered.json"
+    tampered.write_text(json.dumps(value), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="semantic hash mismatch"):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+def test_task8_preregistration_rejects_missing_agent_authority(
+    tmp_path: Path,
+) -> None:
+    repository = _task8_repository()
+    value = deepcopy(_task8_preregistration())
+    del value["agent_construction"]["reviewer_b"]["request_schema"]
+    value["agent_construction_sha256"] = runner.canonical_sha256(
+        value["agent_construction"]
+    )
+    value.pop("preregistration_sha256")
+    value["preregistration_sha256"] = runner.canonical_sha256(value)
+    tampered = tmp_path / "missing-agent-authority.json"
+    tampered.write_text(json.dumps(value), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Agent construction authority mismatch"):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+def test_task8_preregistration_rejects_rehashed_protected_old_identity_drift(
+    tmp_path: Path,
+) -> None:
+    repository = _task8_repository()
+    tampered = _task8_write_tampered_preregistration(
+        tmp_path,
+        ("frozen_inputs", "training_execution_id"),
+        "execution-tampered",
+    )
+
+    with pytest.raises(ValueError, match="protected preregistration identity drift"):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+def _task9_rehash_protected_semantic_commitment(value: dict[str, Any]) -> None:
+    commitment = value["protected_semantic_commitment"]
+    commitment["commitment_sha256"] = runner.canonical_sha256(
+        {
+            "schema_version": commitment["schema_version"],
+            "scopes": commitment["scopes"],
+        }
+    )
+    _task8_refresh_preregistration_hashes(value)
+
+
+def test_task9_checked_preregistration_derives_protected_semantic_commitment_from_sources() -> (  # noqa: E501
+    None
+):
+    repository = _task8_repository()
+    preregistration = _task8_preregistration()
+    cli = _task7_cli_module()
+    inputs = cli._load_preregistered_agent_inputs(
+        repository / runner.PREREGISTRATION_RELATIVE,
+        repository_root=repository,
+    )
+    projected_skills = runner._project_canonical_skills(inputs["canonical_skills"])
+    construction_input_authority = (
+        runner._construction_input_authority_from_sealed_bindings(
+            inputs["construction_input_bindings"],
+            projected_skills=projected_skills,
+        )
+    )
+    expected = runner._protected_semantic_commitment(construction_input_authority)
+
+    assert len(preregistration) == 55
+    assert preregistration["protected_semantic_commitment"] == expected
+    assert expected["commitment_sha256"] == (
+        "0e7ab288035d274e3cbee8cc5f15c0a74b5e080d6fa7b6aea5377fd5dc43122a"
+    )
+    assert (
+        runner.validate_preregistration_authority(
+            repository / runner.PREREGISTRATION_RELATIVE,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+        )["status"]
+        == "VALID"
+    )
+
+
+@pytest.mark.parametrize(
+    "attack",
+    (
+        "commitment-hash",
+        "schema-version",
+        "unknown-scope",
+        "missing-scope",
+        "reordered-sources",
+        "source-substitution",
+        "unknown-source-field",
+        "nested-count-bool",
+    ),
+)
+def test_task9_preregistration_rejects_rehashed_protected_semantic_commitment_attack(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    repository = _task8_repository()
+    value = deepcopy(_task8_preregistration())
+    commitment = value["protected_semantic_commitment"]
+    scopes = commitment["scopes"]
+
+    if attack == "commitment-hash":
+        commitment["commitment_sha256"] = "0" * 64
+        _task8_refresh_preregistration_hashes(value)
+    elif attack == "schema-version":
+        commitment["schema_version"] = "attacker-controlled"
+        _task9_rehash_protected_semantic_commitment(value)
+    elif attack == "unknown-scope":
+        scopes["unknown"] = deepcopy(scopes["train"])
+        _task9_rehash_protected_semantic_commitment(value)
+    elif attack == "missing-scope":
+        del scopes["phase16"]
+        _task9_rehash_protected_semantic_commitment(value)
+    elif attack == "reordered-sources":
+        scopes["phase16"]["sources"].reverse()
+        _task9_rehash_protected_semantic_commitment(value)
+    elif attack == "source-substitution":
+        scopes["train"]["sources"][0]["path"] = "README.md"
+        _task9_rehash_protected_semantic_commitment(value)
+    elif attack == "unknown-source-field":
+        scopes["pilot-002"]["sources"][0]["unexpected"] = True
+        _task9_rehash_protected_semantic_commitment(value)
+    elif attack == "nested-count-bool":
+        scopes["train"]["protected_authority"]["prompt_count"] = True
+        _task9_rehash_protected_semantic_commitment(value)
+    else:  # pragma: no cover - parametrization is closed above
+        raise AssertionError(attack)
+
+    tampered = tmp_path / f"protected-semantic-{attack}.json"
+    tampered.write_text(
+        json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="protected semantic commitment"):
+        runner.validate_preregistration_authority(
+            tampered,
+            repository_root=repository,
+            pilot_manifest_path=repository / runner.PILOT_MANIFEST_RELATIVE,
+            verify_model_files=False,
+            canonical_path_required=False,
+        )
+
+
+def test_task9_cli_model_bindings_real_pilot_match_production_pre_scoring_grid() -> (
+    None
+):
+    repository = _task8_repository()
+    cli = _task7_cli_module()
+    pilot = json.loads(
+        (repository / runner.PILOT_MANIFEST_RELATIVE).read_text(encoding="utf-8")
+    )
+
+    bindings = cli._model_bindings(pilot)
+
+    assert [(row["arm"], row["seed"]) for row in bindings] == [
+        (arm, seed) for seed in runner.SEEDS for arm in runner.ARMS
+    ]
+    assert runner._validated_evaluation_model_bindings(bindings) == bindings
+
+
+def test_task9_cli_model_bindings_reject_duplicate_real_pilot_grid_entry() -> None:
+    repository = _task8_repository()
+    cli = _task7_cli_module()
+    pilot = json.loads(
+        (repository / runner.PILOT_MANIFEST_RELATIVE).read_text(encoding="utf-8")
+    )
+    pilot["training_artifacts"][-1] = deepcopy(pilot["training_artifacts"][0])
+
+    with pytest.raises(ValueError, match="A/C model grid"):
+        cli._model_bindings(pilot)
+
+
+def _task9_refresh_semantic_contamination_authority(value: dict[str, Any]) -> None:
+    semantic = value["semantic_contamination"]
+    files = semantic["materialized_model_files"]
+    semantic["materialized_model_file_count"] = len(files)
+    semantic["materialized_model_total_size"] = sum(row["size"] for row in files)
+    semantic["materialized_model_files_sha256"] = runner.canonical_sha256(files)
+    _task8_refresh_preregistration_hashes(value)
+
+
+@pytest.mark.parametrize(
+    "attack",
+    (
+        "one-row-substitute",
+        "model-id",
+        "revision",
+        "snapshot",
+        "file-path",
+        "file-order",
+        "file-size",
+        "file-hash",
+    ),
+)
+def test_task9_cli_contamination_boundary_rejects_self_consistent_prereg_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+) -> None:
+    cli = _task7_cli_module()
+    value = deepcopy(_task8_preregistration())
+    semantic = value["semantic_contamination"]
+    files = semantic["materialized_model_files"]
+    fake_snapshot = tmp_path / "semantic-snapshot"
+    fake_snapshot.mkdir()
+    (fake_snapshot / "substitute.bin").write_bytes(b"self-consistent substitute")
+
+    if attack == "one-row-substitute":
+        semantic["model_id"] = "attacker/substitute"
+        semantic["revision"] = "0" * 40
+        semantic["snapshot_path"] = str(fake_snapshot)
+        semantic["materialized_model_files"] = [
+            {
+                "path": "substitute.bin",
+                "size": len(b"self-consistent substitute"),
+                "sha256": hashlib.sha256(b"self-consistent substitute").hexdigest(),
+            }
+        ]
+    elif attack == "model-id":
+        semantic["model_id"] = "attacker/substitute"
+    elif attack == "revision":
+        semantic["revision"] = "0" * 40
+    elif attack == "snapshot":
+        semantic["snapshot_path"] = str(fake_snapshot)
+    elif attack == "file-path":
+        files[0]["path"] = "substitute.bin"
+    elif attack == "file-order":
+        files.reverse()
+    elif attack == "file-size":
+        files[0]["size"] += 1
+    elif attack == "file-hash":
+        files[0]["sha256"] = "0" * 64
+    else:  # pragma: no cover - parametrization is closed above
+        raise AssertionError(attack)
+    _task9_refresh_semantic_contamination_authority(value)
+
+    monkeypatch.setattr(cli, "SEMANTIC_MODEL_SNAPSHOT", fake_snapshot)
+    monkeypatch.setattr(cli, "_SemanticSimilarity", lambda _path: object())
+    monkeypatch.setattr(
+        cli.workflow,
+        "_scan_contamination",
+        lambda *args, **kwargs: {"rows": [], "clean_candidate_ids": []},
+    )
+    monkeypatch.setattr(cli, "_agent_pack_file", lambda *args: tmp_path / "ledger")
+    monkeypatch.setattr(cli, "_jsonl", lambda _path: [])
+    context = {
+        "preregistration": value,
+        "train_prompts": [],
+        "pilot_prompts": [],
+        "phase16_prompts": [],
+        "prior_candidate_prompts": [],
+        "train_family_ids": set(),
+        "pilot_family_ids": set(),
+        "phase16_family_ids": set(),
+        "prior_candidate_family_ids": set(),
+    }
+
+    with pytest.raises(ValueError, match="preregistered semantic model authority"):
+        cli._validated_contamination_clean_ids(context, [])
+
+
+def test_task9_cli_semantic_components_validate_all_checked_prereg_files_before_load(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cli = _task7_cli_module()
+    preregistration = _task8_preregistration()
+    sentinel = object()
+    loaded_paths: list[Path] = []
+
+    def semantic_similarity(path: Path) -> object:
+        loaded_paths.append(path)
+        return sentinel
+
+    monkeypatch.setattr(cli, "_SemanticSimilarity", semantic_similarity)
+
+    similarity, authority = cli._semantic_validation_components(preregistration)
+
+    expected_files = preregistration["semantic_contamination"][
+        "materialized_model_files"
+    ]
+    assert similarity is sentinel
+    assert loaded_paths == [
+        Path(preregistration["semantic_contamination"]["snapshot_path"])
+    ]
+    assert len(expected_files) == 28
+    assert authority["materialized_model_files"] == [
+        {"path": row["path"], "sha256": row["sha256"]} for row in expected_files
+    ]
+    assert authority["materialized_model_files_sha256"] == runner.canonical_sha256(
+        authority["materialized_model_files"]
+    )

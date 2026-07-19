@@ -467,9 +467,14 @@ def _generation_candidates(
 
 
 def _validated_contamination_clean_ids(
-    context: dict[str, Any], candidates: list[dict[str, Any]]
+    context: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    allow_later_round_rows: bool = False,
 ) -> set[str]:
-    similarity, semantic_model_authority = _semantic_validation_components()
+    similarity, semantic_model_authority = _semantic_validation_components(
+        cast(dict[str, Any], context["preregistration"])
+    )
     replay = workflow._scan_contamination(
         candidates,
         protected_prompts={
@@ -488,8 +493,14 @@ def _validated_contamination_clean_ids(
         semantic_model_authority=semantic_model_authority,
     )
     staged_rows = _jsonl(_agent_pack_file(context, "blind-v2-contamination.jsonl"))
+    replay_rows = cast(list[dict[str, Any]], replay["rows"])
+    if allow_later_round_rows:
+        candidate_ids = {cast(str, row["candidate_id"]) for row in replay_rows}
+        staged_rows = [
+            row for row in staged_rows if row.get("candidate_id") in candidate_ids
+        ]
     _require(
-        staged_rows == replay["rows"],
+        staged_rows == replay_rows,
         "contamination ledger authority mismatch",
     )
     return set(cast(list[str], replay["clean_candidate_ids"]))
@@ -703,7 +714,9 @@ def _round_one_post_pipeline_deficits(
         seen_session_ids=active_session_ids,
     )
     clean_candidate_ids = _validated_contamination_clean_ids(
-        context, round_one_candidates
+        context,
+        round_one_candidates,
+        allow_later_round_rows=allow_later_round_reviews,
     )
     candidates = {
         cast(str, row["candidate_id"]): row
@@ -858,16 +871,30 @@ class _SemanticSimilarity:
         return value
 
 
-def _semantic_validation_components() -> tuple[_SemanticSimilarity, dict[str, Any]]:
+def _semantic_validation_components(
+    preregistration: dict[str, Any],
+) -> tuple[_SemanticSimilarity, dict[str, Any]]:
+    expected = workflow._task8_semantic_contamination_authority()
+    _require(
+        workflow._canonical_contract_json_equal(
+            preregistration.get("semantic_contamination"), expected
+        ),
+        "preregistered semantic model authority mismatch",
+    )
+    _require(
+        SEMANTIC_MODEL_SNAPSHOT == workflow.SEMANTIC_MODEL_SNAPSHOT_PATH
+        and str(SEMANTIC_MODEL_SNAPSHOT) == expected["snapshot_path"],
+        "preregistered semantic model snapshot mismatch",
+    )
     snapshot = SEMANTIC_MODEL_SNAPSHOT.resolve(strict=True)
     _require(snapshot.is_dir(), "preregistered semantic model snapshot is missing")
+    workflow._verify_task8_semantic_model_snapshot()
     files = [
         {
-            "path": path.relative_to(snapshot).as_posix(),
-            "sha256": _sha256_bytes(path.read_bytes()),
+            "path": row["path"],
+            "sha256": row["sha256"],
         }
-        for path in sorted(snapshot.rglob("*"))
-        if path.is_file()
+        for row in cast(list[dict[str, Any]], expected["materialized_model_files"])
     ]
     _require(bool(files), "preregistered semantic model files are missing")
     authority = {
@@ -889,7 +916,9 @@ def _validated_pack_context() -> tuple[
         type(first_read_timestamp) is str and bool(first_read_timestamp),
         "Agent metadata first-read timestamp is missing",
     )
-    similarity, semantic_model_authority = _semantic_validation_components()
+    similarity, semantic_model_authority = _semantic_validation_components(
+        cast(dict[str, Any], context["preregistration"])
+    )
     validation = workflow.validate_agent_pack(
         cast(Path, context["staging_root"]),
         repository_root=cast(Path, context["repository"]),
@@ -1027,22 +1056,51 @@ def _commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
 
 
 def _model_bindings(pilot: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_artifacts = pilot.get("training_artifacts")
+    _require(
+        type(raw_artifacts) is list,
+        "pilot manifest does not contain the A/C model grid",
+    )
+    artifacts: dict[tuple[str, int], dict[str, Any]] = {}
+    for raw_artifact in cast(list[Any], raw_artifacts):
+        _require(
+            type(raw_artifact) is dict,
+            "pilot manifest does not contain the A/C model grid",
+        )
+        artifact = cast(dict[str, Any], raw_artifact)
+        arm = artifact.get("arm")
+        if type(arm) is not str or arm not in workflow.ARMS:
+            continue
+        seed = artifact.get("seed")
+        _require(
+            type(seed) is int and seed in workflow.SEEDS,
+            "pilot manifest does not contain the A/C model grid",
+        )
+        key = (arm, cast(int, seed))
+        _require(
+            key not in artifacts,
+            "pilot manifest does not contain the A/C model grid",
+        )
+        artifacts[key] = artifact
+    expected_keys = [(arm, seed) for seed in workflow.SEEDS for arm in workflow.ARMS]
+    _require(
+        set(artifacts) == set(expected_keys),
+        "pilot manifest does not contain the A/C model grid",
+    )
     rows = [
         {
-            "arm": row["arm"],
-            "seed": row["seed"],
-            "model_path": row["model_path"],
-            "model_manifest_path": row["model_manifest_path"],
-            "model_manifest_file_sha256": row["model_manifest_file_sha256"],
-            "model_manifest_sha256": row["model_manifest_sha256"],
-            "model_file_manifest_sha256": row["model_file_manifest_sha256"],
-            "model_files": row["model_file_manifest"],
+            "arm": artifacts[key]["arm"],
+            "seed": artifacts[key]["seed"],
+            "model_path": artifacts[key]["model_path"],
+            "model_manifest_path": artifacts[key]["model_manifest_path"],
+            "model_manifest_file_sha256": artifacts[key]["model_manifest_file_sha256"],
+            "model_manifest_sha256": artifacts[key]["model_manifest_sha256"],
+            "model_file_manifest_sha256": artifacts[key]["model_file_manifest_sha256"],
+            "model_files": artifacts[key]["model_file_manifest"],
         }
-        for row in cast(list[dict[str, Any]], pilot["training_artifacts"])
-        if row.get("arm") in {"A", "C"}
+        for key in expected_keys
     ]
-    _require(len(rows) == 6, "pilot manifest does not contain the A/C model grid")
-    return rows
+    return workflow._validated_evaluation_model_bindings(rows)
 
 
 def _evaluate(_args: argparse.Namespace) -> int:

@@ -11,6 +11,7 @@ import time
 import unicodedata
 from collections import Counter
 from copy import deepcopy
+from datetime import datetime
 from decimal import (
     ROUND_HALF_EVEN,
     Context,
@@ -27,9 +28,15 @@ from typing import Any, Callable, Mapping, Protocol, cast
 from hermes_skilleval.router_query import router_query_text
 from hermes_skilleval.router_v2_blind_v2_evaluation import (
     ARMS,
+    CANONICAL_SKILL_COUNT,
+    NEGATIVE_LABELED_PER_GOLD_SKILL,
     POSITIVE_TASK_COUNT,
+    POSITIVE_ONLY_PER_GOLD_SKILL,
     SEEDS,
+    SEMANTIC_FAMILY_COUNT,
+    TASKS_PER_GOLD_SKILL,
     TEMPTING_NEGATIVE_COUNT,
+    TERMINAL_STATES,
     apply_preregistered_gate,
     build_aggregate_results,
     build_failure_slices,
@@ -89,12 +96,17 @@ EVALUATION_OUTPUT_FILENAMES = (
 SMOKE_RECEIPT_ROOT = Path("/tmp/hermes-router-v2-blind-v2-smoke-receipts")
 PREREGISTRATION_PARENT_COMMIT = "8f6a21e53c1363ee18ea6d6e3db1f4b3805ff552"
 HISTORICAL_HUMAN_COMMIT_A = "09ba4104a147a2f740ef69283c850f40e78a0b15"
+TASK8_BASELINE_HEAD = "0998b814e82b4da164a54d0a6ce219573f037994"
 EVALUATOR_SOURCE_PATHS = (
     "src/hermes_skilleval/router_v2_blind_v2_evaluation.py",
     "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
     "src/hermes_skilleval/router_v2_pilot_evaluation.py",
     "scripts/run_router_v2_blind_v2_final.py",
 )
+EVALUATOR_FIELDS = frozenset(
+    {"arms", "contract_sha256", "seeds", "source_files", "source_files_sha256"}
+)
+EVALUATOR_SOURCE_ROW_FIELDS = frozenset({"path", "sha256"})
 REQUIRED_AGENT_PACK_FILES = (
     "blind-v2-generation.jsonl",
     "blind-v2-review-a.jsonl",
@@ -335,6 +347,394 @@ REVIEWER_RESPONSE_SCHEMA = {
         },
     ],
 }
+PREREGISTRATION_SCHEMA_VERSION = "router-v2-blind-v2-agent-preregistration-v2"
+PREREGISTRATION_GENERATED_AT_UTC = "2026-07-18T19:53:21.592178+00:00"
+COMMIT_A_BINDING = (
+    "SUPERSEDING_COMMIT_A_AGENT_BINDS_THIS_DOCUMENT_AND_ALL_CHANGED_FILES"
+)
+COMMIT_A_CHANGED_FILES = (
+    "artifacts/router-v2-blind-v2/preregistration.json",
+    "docs/router-v2-blind-v2-protocol.md",
+    "openspec/changes/run-router-v2-final-blind-v2/.openspec.yaml",
+    "openspec/changes/run-router-v2-final-blind-v2/design.md",
+    "openspec/changes/run-router-v2-final-blind-v2/proposal.md",
+    "openspec/changes/run-router-v2-final-blind-v2/specs/router-v2-final-blind-v2/spec.md",
+    "openspec/changes/run-router-v2-final-blind-v2/tasks.md",
+    "scripts/run_router_v2_blind_v2_final.py",
+    "src/hermes_skilleval/router_v2_blind_v2_evaluation.py",
+    "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
+    "tests/test_router_v2_blind_v2_evaluation.py",
+    "tests/test_router_v2_blind_v2_evaluation_runner.py",
+)
+PREEXISTING_MAIN_VALIDATION_AUTHORITY = MappingProxyType(
+    {
+        "github_validate_conclusion": "failure",
+        "github_validate_run_id": 29433191147,
+        "local_full_pytest": MappingProxyType({"failed": 25, "passed": 1155}),
+        "not_attributed_to_blind_v2_change": True,
+    }
+)
+PREREGISTRATION_FIELDS = frozenset(
+    {
+        "agent_construction",
+        "agent_construction_sha256",
+        "arm_c_checkpoints",
+        "base_model",
+        "best_seed_selection_allowed",
+        "blind_v2_candidate_data_seen",
+        "blind_v2_data_seen",
+        "blind_v2_data_seen_compatibility",
+        "blind_v2_expected_negative_labeled_task_count",
+        "blind_v2_expected_task_count",
+        "blind_v3_allowed",
+        "commit_a_binding",
+        "commit_a_changed_files",
+        "current_git_commit_before_commit_a",
+        "default_router_unchanged",
+        "evaluation_output_namespace",
+        "evaluator",
+        "frozen_inputs",
+        "frozen_inputs_sha256",
+        "gate",
+        "gate_sha256",
+        "generated_at_utc",
+        "historical_supersession",
+        "latency_measurement_protocol",
+        "metric_definitions",
+        "non_actions",
+        "old_phase16_prompt_files",
+        "old_phase16_prompt_files_sha256",
+        "origin_main_git_commit",
+        "pilot_002_gate_artifact",
+        "posthoc_tuning_allowed",
+        "preexisting_main_validation",
+        "preregistration_parent_git_commit",
+        "preregistration_sha256",
+        "production_ready",
+        "protected_semantic_commitment",
+        "protected_preregistration_subtree_sha256",
+        "query_contract",
+        "query_contract_sha256",
+        "release_authorized",
+        "release_eligible",
+        "research_question",
+        "retraining_allowed",
+        "router_decision",
+        "schema_version",
+        "semantic_contamination",
+        "semantic_contamination_sha256",
+        "single_attempt",
+        "skill_index",
+        "skill_index_semantic_sha256",
+        "skill_representation_builder",
+        "skill_representation_builder_sha256",
+        "statistics",
+        "supersedes_commit",
+        "threshold_change_allowed",
+    }
+)
+PREREGISTRATION_FIELD_AUTHORITY_LEDGER = MappingProxyType(
+    {
+        "agent_construction": "validated_nested_exact_authority",
+        "agent_construction_sha256": "validated_nested_exact_authority",
+        "arm_c_checkpoints": "protected_baseline_snapshot",
+        "base_model": "protected_baseline_snapshot",
+        "best_seed_selection_allowed": "exact_constant",
+        "blind_v2_candidate_data_seen": "exact_constant",
+        "blind_v2_data_seen": "exact_constant",
+        "blind_v2_data_seen_compatibility": "exact_constant",
+        "blind_v2_expected_negative_labeled_task_count": "exact_constant",
+        "blind_v2_expected_task_count": "exact_constant",
+        "blind_v3_allowed": "exact_constant",
+        "commit_a_binding": "exact_constant",
+        "commit_a_changed_files": "exact_constant",
+        "current_git_commit_before_commit_a": "exact_constant",
+        "default_router_unchanged": "exact_constant",
+        "evaluation_output_namespace": "exact_constant",
+        "evaluator": "actual_file_bytes",
+        "frozen_inputs": "protected_baseline_snapshot",
+        "frozen_inputs_sha256": "protected_baseline_snapshot",
+        "gate": "protected_baseline_snapshot",
+        "gate_sha256": "protected_baseline_snapshot",
+        "generated_at_utc": "exact_constant",
+        "historical_supersession": "validated_nested_exact_authority",
+        "latency_measurement_protocol": "validated_nested_exact_authority",
+        "metric_definitions": "validated_nested_exact_authority",
+        "non_actions": "validated_nested_exact_authority",
+        "old_phase16_prompt_files": "protected_baseline_snapshot",
+        "old_phase16_prompt_files_sha256": "protected_baseline_snapshot",
+        "origin_main_git_commit": "exact_constant",
+        "pilot_002_gate_artifact": "protected_baseline_snapshot",
+        "posthoc_tuning_allowed": "exact_constant",
+        "preexisting_main_validation": "exact_constant",
+        "preregistration_parent_git_commit": "exact_constant",
+        "preregistration_sha256": "validated_nested_exact_authority",
+        "production_ready": "exact_constant",
+        "protected_semantic_commitment": "actual_file_bytes",
+        "protected_preregistration_subtree_sha256": ("protected_baseline_snapshot"),
+        "query_contract": "actual_file_bytes",
+        "query_contract_sha256": "actual_file_bytes",
+        "release_authorized": "exact_constant",
+        "release_eligible": "exact_constant",
+        "research_question": "exact_constant",
+        "retraining_allowed": "exact_constant",
+        "router_decision": "exact_constant",
+        "schema_version": "exact_constant",
+        "semantic_contamination": "actual_file_bytes",
+        "semantic_contamination_sha256": "actual_file_bytes",
+        "single_attempt": "validated_nested_exact_authority",
+        "skill_index": "actual_file_bytes",
+        "skill_index_semantic_sha256": "actual_file_bytes",
+        "skill_representation_builder": "actual_file_bytes",
+        "skill_representation_builder_sha256": "actual_file_bytes",
+        "statistics": "validated_nested_exact_authority",
+        "supersedes_commit": "exact_constant",
+        "threshold_change_allowed": "exact_constant",
+    }
+)
+TASK8_RESEARCH_QUESTION = (
+    "Do the unchanged Router V2 Arm C checkpoints meet the unchanged pilot-002 "
+    "gate once on a preregistered 128-task Agent-constructed set accepted by two "
+    "role-isolated reviewers with unanimous labels?"
+)
+GENERATOR_HUMAN_READABLE_RESPONSE_SCHEMA = {
+    "candidates": [
+        {
+            "candidate_index": 0,
+            "prompt_text": "natural English request",
+            "semantic_family_id": "opaque family string",
+            "proposed_gold_skill_id": "canonical skill id",
+            "proposed_negative_skill_id": "canonical skill id or null",
+            "language": "en",
+            "rationale": "brief label rationale",
+        }
+    ]
+}
+REVIEWER_HUMAN_READABLE_RESPONSE_SCHEMA = {
+    "decision": "ACCEPT or frozen REJECT code",
+    "reviewed_gold_skill_id": "canonical skill id",
+    "reviewed_negative_skill_id": "canonical skill id or null",
+    "natural": True,
+    "single_primary_skill": True,
+    "no_label_leakage": True,
+    "negative_confusable": None,
+    "confidence": "LOW, MEDIUM, or HIGH",
+    "reason": "brief decision rationale",
+}
+GENERATOR_REQUEST_SCHEMA_AUTHORITY = {
+    "schema_version": "router-v2-blind-v2-generation-request-v1",
+    "top_level_fields": [
+        "schema_version",
+        "role",
+        "model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "system_prompt",
+        "response_schema",
+        "input",
+        "request_sha256",
+    ],
+    "input_fields": ["canonical_skills", "rules", "quota"],
+    "canonical_skill_fields": list(CANONICAL_SKILL_FIELDS_IN_ORDER),
+    "quota_fields": [
+        "gold_skill_id",
+        "negative_quota",
+        "positive_only_quota",
+        "round_number",
+    ],
+}
+REVIEWER_REQUEST_SCHEMA_AUTHORITY = {
+    "schema_version": "router-v2-blind-v2-review-request-v1",
+    "top_level_fields": [
+        "schema_version",
+        "role",
+        "model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "system_prompt",
+        "response_schema",
+        "input",
+        "request_sha256",
+    ],
+    "input_fields": ["task_id", "prompt_text", "canonical_skills", "rubric"],
+    "canonical_skill_fields": list(CANONICAL_SKILL_FIELDS_IN_ORDER),
+}
+CANDIDATE_ID_RULE = (
+    'first 24 hex characters of sha256(f"{round_number}:{skill_id}:'
+    '{candidate_index}:{response_sha256}")'
+)
+SELECTION_KEY_RULE = 'sha256("7170:" + candidate_id)'
+REVIEWER_SCHEDULE_RULES = {
+    "reviewer_a": 'ascending sha256("review-a:7170:" + candidate_id)',
+    "reviewer_b": 'ascending sha256("review-b:7171:" + candidate_id)',
+}
+NEGATIVE_CONFUSABLE_SEMANTICS = (
+    "true when reviewed_negative_skill_id is non-null; null when the reviewer "
+    "independently selects no negative"
+)
+PROTECTED_PREREGISTRATION_SUBTREE_SHA256 = {
+    "base_model": "9c8c287edecec1d3db119afbad9468a6fe71b5c3c591e3068b9a4a3275c6cc2d",
+    "arm_c_checkpoints": "09a462fe6d888bffb75ffed7187bfe397e17224227d4c2126c82eb909e95d2ce",
+    "frozen_inputs": "dd2ea7dd0fe1675cb87bc6ece6cea8f330afb98c7cb52cd69676ca259e275056",
+    "pilot_002_gate_artifact": "3a2641bae204676574dc2c58d15198bbd601ce8ec82a3deeca9aedb1c71cfb9a",
+    "query_contract": "4e1ea3f5eb074939abccc1e8198286e55313b385545fc1c4f45e0b47bd11b2a5",
+    "skill_representation_builder": "5959ad6e5c9b700cf17ccd0ccede02c3777c6e9d7c13da4a933dbae40e07faa3",
+    "old_phase16_prompt_files": "e6cbc0d7aeb9f04928b635892409fe21c70a038439b875015a25ffce921fd39a",
+    "gate": "19a53521277f914393fcb815e9c35a1e2e6bc549b0db49027d03e1d6cd875bba",
+    "skill_index": "61349bc19f92705aa0ba0c410ffc79cee52103823a20250bd9908fa248b813f3",
+}
+SEMANTIC_MODEL_SNAPSHOT_PATH = (
+    Path.home()
+    / ".cache/huggingface/hub"
+    / "models--sentence-transformers--all-mpnet-base-v2"
+    / "snapshots"
+    / SEMANTIC_MODEL_REVISION
+)
+SEMANTIC_MODEL_MATERIALIZED_FILES = (
+    (
+        ".gitattributes",
+        1229,
+        "98ccb431c012ebfe976280fbd45aea4cec7409935868ccecf3954370f96732a1",
+    ),
+    (
+        "1_Pooling/config.json",
+        190,
+        "a37f83ada23e7887be6b88f4998927dbeac0038af301553c7cd5461413bf1a56",
+    ),
+    (
+        "README.md",
+        11612,
+        "89a1a9c3290fe58e76c939b578c48a14331dc7bfcaaf5a53102adb183da6f96a",
+    ),
+    (
+        "config.json",
+        571,
+        "d46a3e04ded82bba22528424480697d394eeda6a27484e08c5bb2bdf5906cfa0",
+    ),
+    (
+        "config_sentence_transformers.json",
+        116,
+        "061ca9d39661d6c6d6de5ba27f79a1cd5770ea247f8d46412a68a498dc5ac9f3",
+    ),
+    (
+        "data_config.json",
+        39265,
+        "32edcb108fc2516b920734a862ae0692bcae1c5d45d5f8d972cb0d53434a4c54",
+    ),
+    (
+        "model.safetensors",
+        437971872,
+        "78c0197b6159d92658e319bc1d72e4c73a9a03dd03815e70e555c5ef05615658",
+    ),
+    (
+        "modules.json",
+        349,
+        "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf",
+    ),
+    (
+        "onnx/model.onnx",
+        435826548,
+        "74187b16d9c946fea252e120cfd7a12c5779d8b8b86838a2e4c56573c47941bd",
+    ),
+    (
+        "onnx/model_O1.onnx",
+        435730180,
+        "5c0b47004076ab40bf15a2c52b98a53e985ebb84faaeeb6d2551768f96e384b0",
+    ),
+    (
+        "onnx/model_O2.onnx",
+        435666661,
+        "14d01256f5f3d2245b15b596173bca4367c9405fde5700dd7fb4e110708c1793",
+    ),
+    (
+        "onnx/model_O3.onnx",
+        435666516,
+        "dd55510706038d0817b7d41bf2078f01472e4865190584ad624e8ab79bbcb310",
+    ),
+    (
+        "onnx/model_O4.onnx",
+        217894954,
+        "cab2a54139fc4fd5b8e2a23cb5729ee28dc44cfde685ad3356d533653e635310",
+    ),
+    (
+        "onnx/model_qint8_arm64.onnx",
+        110124379,
+        "c392a9c545c7d4438a16fed8287a76a576b27eaf029c1c23bbf78a7a666d197f",
+    ),
+    (
+        "onnx/model_qint8_avx512.onnx",
+        110124379,
+        "c392a9c545c7d4438a16fed8287a76a576b27eaf029c1c23bbf78a7a666d197f",
+    ),
+    (
+        "onnx/model_qint8_avx512_vnni.onnx",
+        110124379,
+        "c392a9c545c7d4438a16fed8287a76a576b27eaf029c1c23bbf78a7a666d197f",
+    ),
+    (
+        "onnx/model_quint8_avx2.onnx",
+        110207323,
+        "aa5c27172d77bbd1cbae3628cbac4b26d7c12adabff25d2d4285d0f29159b237",
+    ),
+    (
+        "openvino/openvino_model.bin",
+        435583684,
+        "5c3279d833888eaab745e24b652126c5a71375af185ac21aa47e112e2468dec0",
+    ),
+    (
+        "openvino/openvino_model.xml",
+        432773,
+        "a2912e3dbd3426b77984992953998d8026a3d2377104093079e810b53fc51bf6",
+    ),
+    (
+        "openvino/openvino_model_qint8_quantized.bin",
+        109974792,
+        "fde0c650018f5e244f793316b666aaf4758d4e19072f430e59eb2bcc414895ce",
+    ),
+    (
+        "openvino/openvino_model_qint8_quantized.xml",
+        741875,
+        "930bc2a849d48941bb4752d8dac018f0c0ee8709ba023e47aeab4f8bb9c25b59",
+    ),
+    (
+        "pytorch_model.bin",
+        438011953,
+        "a8fd120b1a0032e70ff3d4b8ab8e46a6d01c2cb08ffe7c007a021c1788928146",
+    ),
+    (
+        "sentence_bert_config.json",
+        53,
+        "cabfacded9272091a06ff595a46ef027a76ddf4ac9e77d0fcf11c605748f1667",
+    ),
+    (
+        "special_tokens_map.json",
+        239,
+        "9ef40e9c160511bf3f46ceb71f1471dafa1e9473d5120bb816c36b2efa75f8ba",
+    ),
+    (
+        "tokenizer.json",
+        466021,
+        "b8be2c30ba5dd723a6d5ee26d013da103d5408d92ddcb23747622f9e48f1d842",
+    ),
+    (
+        "tokenizer_config.json",
+        363,
+        "67f2ff7e223518e729869bb3a70f0caf8368fe549383fc11cfe2dfb42fffc268",
+    ),
+    (
+        "train_script.py",
+        13123,
+        "dea86a7066caa55d0c84c343890dfd849714b6affd8b424ba12372a091578cc8",
+    ),
+    (
+        "vocab.txt",
+        231536,
+        "dbd90cb94e2247bd4d4ccaecbf616d2290e66691d7d5e5bb81f063c2d0649ada",
+    ),
+)
+SEMANTIC_MODEL_MATERIALIZED_FILES_SHA256 = (
+    "11a0b5bd48efbae208424572fe30f873a139d552582047201c96e3b6d85b7f1a"
+)
 _LEAKAGE_MARKERS = (
     "gold skill",
     "negative skill",
@@ -371,6 +771,193 @@ SemanticSimilarity = Callable[[str, str], int | float | Decimal]
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
+
+
+def _task8_text_sha256(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _task8_role_authority(role: str) -> dict[str, Any]:
+    _require(role in AGENT_CONFIGS, "Task 8 Agent role mismatch")
+    reviewer = role != "generator"
+    system_prompt = REVIEWER_SYSTEM_PROMPT if reviewer else GENERATOR_SYSTEM_PROMPT
+    human_schema = (
+        REVIEWER_HUMAN_READABLE_RESPONSE_SCHEMA
+        if reviewer
+        else GENERATOR_HUMAN_READABLE_RESPONSE_SCHEMA
+    )
+    response_schema = (
+        REVIEWER_RESPONSE_SCHEMA if reviewer else GENERATOR_RESPONSE_SCHEMA
+    )
+    request_schema = (
+        REVIEWER_REQUEST_SCHEMA_AUTHORITY
+        if reviewer
+        else GENERATOR_REQUEST_SCHEMA_AUTHORITY
+    )
+    authority = {
+        "config": deepcopy(AGENT_CONFIGS[role]),
+        "system_prompt": system_prompt,
+        "system_prompt_sha256": _task8_text_sha256(system_prompt),
+        "human_readable_response_schema": deepcopy(human_schema),
+        "human_readable_response_schema_sha256": canonical_sha256(human_schema),
+        "response_json_schema": deepcopy(response_schema),
+        "response_json_schema_sha256": canonical_sha256(response_schema),
+        "request_schema": deepcopy(request_schema),
+        "request_schema_sha256": canonical_sha256(request_schema),
+    }
+    if reviewer:
+        authority["negative_confusable_semantics"] = NEGATIVE_CONFUSABLE_SEMANTICS
+    return authority
+
+
+def _task8_agent_construction_authority() -> dict[str, Any]:
+    candidate_rule = CANDIDATE_ID_RULE
+    selection_rule = SELECTION_KEY_RULE
+    schedules = {
+        role: {
+            "ordering_rule": rule,
+            "ordering_rule_sha256": _task8_text_sha256(rule),
+            "runtime_schedule_sha256_definition": (
+                "canonical_sha256(ordered_candidate_ids)"
+            ),
+        }
+        for role, rule in REVIEWER_SCHEDULE_RULES.items()
+    }
+    return {
+        "schema_version": "router-v2-blind-v2-agent-construction-authority-v1",
+        "review_mode": "DUAL_AGENT_UNANIMOUS_REVIEWED",
+        "source_type": "AGENT_GENERATED",
+        "human_author_count": 0,
+        "human_reviewer_count": 0,
+        "generator": _task8_role_authority("generator"),
+        "reviewer_a": _task8_role_authority("reviewer_a"),
+        "reviewer_b": _task8_role_authority("reviewer_b"),
+        "candidate_id": {
+            "assigned_by": "controller",
+            "rule": candidate_rule,
+            "rule_sha256": _task8_text_sha256(candidate_rule),
+        },
+        "isolation": {
+            "fresh_session_per_invocation": True,
+            "unique_session_or_thread_id": True,
+            "fork_context": False,
+            "history_message_count": 0,
+            "imported_memory_count": 0,
+            "reviewer_candidate_count_per_session": 1,
+            "generator_external_memory_allowed": False,
+            "reviewer_external_memory_allowed": False,
+        },
+        "transport_retry": {
+            "maximum_retries": 1,
+            "condition": (
+                "recorded transport failure with no syntactically valid response bytes"
+            ),
+            "fresh_session_required": True,
+            "byte_identical_request_required": True,
+            "identical_model_alias_required": True,
+            "identical_reasoning_effort_required": True,
+            "identical_prompt_hash_required": True,
+            "substantive_response_retry_allowed": False,
+            "fallback_model_allowed": False,
+        },
+        "rounds": {
+            "maximum_generation_rounds": 2,
+            "round_1": {
+                "skill_count": CANONICAL_SKILL_COUNT,
+                "request_count": CANONICAL_SKILL_COUNT,
+                "candidate_count_per_skill": 16,
+                "negative_labeled_per_skill": 12,
+                "positive_only_per_skill": 4,
+                "candidate_count": 256,
+                "skill_schedule": "ascending canonical skill id",
+            },
+            "round_2": {
+                "allowed": True,
+                "deficit_only": True,
+                "candidate_count_rule": "twice each final stratum deficit",
+                "maximum_round_count": 1,
+                "full_scan_and_dual_review_required": True,
+                "rejection_feedback_allowed": False,
+            },
+            "round_3_allowed": False,
+        },
+        "reviewer_schedules": schedules,
+        "selection": {
+            "selection_seed": SELECTION_SEED,
+            "selection_key_rule": selection_rule,
+            "selection_key_rule_sha256": _task8_text_sha256(selection_rule),
+            "ordering": (
+                "ascending lexicographic selection key within each "
+                "(gold_skill_id, negative_or_positive_only) stratum"
+            ),
+            "confidence_used": False,
+            "rationale_used": False,
+        },
+        "final_dataset": {
+            "task_count": POSITIVE_TASK_COUNT,
+            "negative_labeled_task_count": TEMPTING_NEGATIVE_COUNT,
+            "family_count": SEMANTIC_FAMILY_COUNT,
+            "canonical_skill_count": CANONICAL_SKILL_COUNT,
+            "tasks_per_gold_skill": TASKS_PER_GOLD_SKILL,
+            "negative_labeled_per_gold_skill": NEGATIVE_LABELED_PER_GOLD_SKILL,
+            "positive_only_per_gold_skill": POSITIVE_ONLY_PER_GOLD_SKILL,
+        },
+        "terminal": {
+            "pre_evaluation_states": [
+                "AGENT_BLIND_V2_READY_FOR_GENERATION",
+                "AGENT_BLIND_V2_READY_FOR_FORMAL_ATTEMPT",
+            ],
+            "terminal_states": [
+                "AGENT_BLIND_V2_DATASET_INSUFFICIENT",
+                "AGENT_BLIND_V2_PROTOCOL_INVALID",
+                "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+                "AGENT_BLIND_V2_GATES_PASSED",
+                "AGENT_BLIND_V2_GATES_NOT_PASSED",
+            ],
+            "terminal_posture": {
+                "router_decision": "KEEP_BASELINE",
+                "production_ready": False,
+                "release_authorized": False,
+                "default_router_unchanged": True,
+            },
+        },
+        "same_provider_limitation": (
+            "All three roles use OpenAI models; role isolation does not establish "
+            "statistical independence or human-task generalization."
+        ),
+    }
+
+
+def _task8_semantic_model_files() -> list[dict[str, Any]]:
+    return [
+        {"path": path, "size": size, "sha256": sha256}
+        for path, size, sha256 in SEMANTIC_MODEL_MATERIALIZED_FILES
+    ]
+
+
+def _task8_semantic_contamination_authority() -> dict[str, Any]:
+    files = _task8_semantic_model_files()
+    return {
+        "model_id": SEMANTIC_MODEL_ID,
+        "revision": SEMANTIC_MODEL_REVISION,
+        "snapshot_path": str(SEMANTIC_MODEL_SNAPSHOT_PATH),
+        "materialized_model_file_count": len(files),
+        "materialized_model_total_size": sum(row["size"] for row in files),
+        "materialized_model_files": files,
+        "materialized_model_files_sha256": SEMANTIC_MODEL_MATERIALIZED_FILES_SHA256,
+        "normalized_embeddings": True,
+        "prompt_text_only": True,
+        "router_skill_representation_used": False,
+        "scopes": ["train", "pilot-002", "phase16", "prior_candidate"],
+        "normalization": "NFKC-casefold-collapse-whitespace",
+        "thresholds": {
+            "token_5gram_jaccard_reject_at_or_above": str(TOKEN_5GRAM_JACCARD_MAX),
+            "character_5gram_jaccard_reject_at_or_above": str(
+                CHARACTER_5GRAM_JACCARD_MAX
+            ),
+            "semantic_cosine_reject_at_or_above": str(SEMANTIC_COSINE_MAX),
+        },
+    }
 
 
 class _DeterministicSelectionProtocolViolation(Exception):
@@ -511,6 +1098,10 @@ def _canonical_contract_json_equal(actual: Any, expected: Any) -> bool:
     return _canonical_contract_json_bytes(actual) == _canonical_contract_json_bytes(
         expected
     )
+
+
+def _require_exact_json_authority(actual: Any, expected: Any, *, message: str) -> None:
+    _require(_canonical_contract_json_equal(actual, expected), message)
 
 
 def _exact_lowercase_hex(value: Any, *, length: int, label: str) -> str:
@@ -1614,7 +2205,7 @@ def _validated_protected_semantic_commitment(
     )
     expected = _protected_semantic_commitment(construction_input_authority)
     _require(
-        commitment == expected,
+        _canonical_contract_json_equal(commitment, expected),
         "protected semantic commitment mismatch",
     )
     return deepcopy(expected)
@@ -2218,6 +2809,80 @@ def _git(repository: Path, *arguments: str) -> str:
     return result.stdout.strip()
 
 
+def _validated_commit_a_changed_files(
+    preregistration: Mapping[str, Any],
+) -> tuple[str, ...]:
+    _require(
+        type(preregistration.get("commit_a_binding")) is str
+        and preregistration.get("commit_a_binding") == COMMIT_A_BINDING,
+        "Commit A-agent binding authority mismatch",
+    )
+    changed_files = preregistration.get("commit_a_changed_files")
+    _require_exact_json_authority(
+        changed_files,
+        list(COMMIT_A_CHANGED_FILES),
+        message="Commit A-agent changed-file authority mismatch",
+    )
+    _require(
+        len(COMMIT_A_CHANGED_FILES) == len(set(COMMIT_A_CHANGED_FILES)),
+        "Commit A-agent code boundary is not unique",
+    )
+    return COMMIT_A_CHANGED_FILES
+
+
+def _validate_preexisting_main_validation_authority(
+    preregistration: Mapping[str, Any],
+) -> None:
+    actual = preregistration.get("preexisting_main_validation")
+    _require(
+        type(actual) is dict,
+        "preexisting main validation authority mismatch",
+    )
+    actual = cast(dict[str, Any], actual)
+    expected_fields = frozenset(PREEXISTING_MAIN_VALIDATION_AUTHORITY)
+    _require(
+        frozenset(actual) == expected_fields,
+        "preexisting main validation field set mismatch",
+    )
+    local = actual.get("local_full_pytest")
+    _require(
+        type(local) is dict
+        and frozenset(cast(dict[str, Any], local)) == {"failed", "passed"},
+        "preexisting local pytest field set mismatch",
+    )
+    local = cast(dict[str, Any], local)
+    _require(
+        type(actual.get("github_validate_conclusion")) is str
+        and type(actual.get("github_validate_run_id")) is int
+        and type(local.get("failed")) is int
+        and type(local.get("passed")) is int
+        and type(actual.get("not_attributed_to_blind_v2_change")) is bool,
+        "preexisting main validation type mismatch",
+    )
+    expected = {
+        "github_validate_conclusion": PREEXISTING_MAIN_VALIDATION_AUTHORITY[
+            "github_validate_conclusion"
+        ],
+        "github_validate_run_id": PREEXISTING_MAIN_VALIDATION_AUTHORITY[
+            "github_validate_run_id"
+        ],
+        "local_full_pytest": dict(
+            cast(
+                Mapping[str, int],
+                PREEXISTING_MAIN_VALIDATION_AUTHORITY["local_full_pytest"],
+            )
+        ),
+        "not_attributed_to_blind_v2_change": (
+            PREEXISTING_MAIN_VALIDATION_AUTHORITY["not_attributed_to_blind_v2_change"]
+        ),
+    }
+    _require_exact_json_authority(
+        actual,
+        expected,
+        message="preexisting main validation authority mismatch",
+    )
+
+
 def validate_commit_a_repository(
     repository_root: Path | str, preregistration: dict[str, Any]
 ) -> dict[str, Any]:
@@ -2266,27 +2931,7 @@ def validate_commit_a_repository(
         == "",
         "historical Commit A must be an ancestor of Commit A-agent",
     )
-    expected_changed = preregistration.get("commit_a_changed_files")
-    _require(
-        type(expected_changed) is list
-        and bool(expected_changed)
-        and all(type(path) is str and bool(path) for path in expected_changed),
-        "Commit A-agent changed-file authority mismatch",
-    )
-    authorized_changed: list[str] = []
-    for raw_path in cast(list[str], expected_changed):
-        relative = Path(raw_path)
-        _require(
-            not relative.is_absolute()
-            and ".." not in relative.parts
-            and relative.as_posix() == raw_path,
-            "Commit A-agent changed-file authority mismatch",
-        )
-        authorized_changed.append(raw_path)
-    _require(
-        len(authorized_changed) == len(set(authorized_changed)),
-        "Commit A-agent changed-file authority mismatch",
-    )
+    authorized_changed = _validated_commit_a_changed_files(preregistration)
     changed = _git(
         repository,
         "diff",
@@ -2295,7 +2940,9 @@ def validate_commit_a_repository(
         f"{expected_parent}..{head}",
     ).splitlines()
     _require(
-        len(changed) == len(set(changed)) and set(changed) == set(authorized_changed),
+        len(changed) == len(set(changed))
+        and len(changed) == len(authorized_changed)
+        and set(changed) == set(authorized_changed),
         "Commit A-agent changed-file authority mismatch",
     )
     return {
@@ -6680,6 +7327,132 @@ def _artifact_binding(
     return matches[0]
 
 
+def _verify_task8_semantic_model_snapshot() -> None:
+    snapshot = SEMANTIC_MODEL_SNAPSHOT_PATH.resolve(strict=True)
+    _require(snapshot.is_dir(), "preregistered semantic model snapshot is missing")
+    expected = _task8_semantic_model_files()
+    expected_paths = [row["path"] for row in expected]
+    actual_paths = [
+        path.relative_to(snapshot).as_posix()
+        for path in sorted(
+            snapshot.rglob("*"),
+            key=lambda value: value.relative_to(snapshot).as_posix().encode("utf-8"),
+        )
+        if path.is_file()
+    ]
+    _require(
+        actual_paths == expected_paths,
+        "semantic model materialized file set mismatch",
+    )
+    for row in expected:
+        relative = cast(str, row["path"])
+        _require(
+            ".locks/" not in relative
+            and not relative.endswith(".lock")
+            and ".incomplete" not in relative,
+            "semantic model authority contains cache control file",
+        )
+        path = snapshot / relative
+        _require(
+            path.is_file()
+            and path.stat().st_size == row["size"]
+            and _sha256_file(path) == row["sha256"],
+            f"semantic model materialized file mismatch: {relative}",
+        )
+
+
+def _protected_semantic_commitment_from_preregistration_sources(
+    preregistration: Mapping[str, Any], repository: Path
+) -> dict[str, Any]:
+    def source(
+        raw_binding: Any, *, fields: set[str], label: str
+    ) -> tuple[dict[str, Any], bytes]:
+        binding = _exact_object_fields(raw_binding, fields, label)
+        path = _repository_file(repository, binding["path"], label=label)
+        payload = path.read_bytes()
+        _require(
+            _sha256_bytes(payload) == binding["sha256"],
+            f"{label} hash mismatch",
+        )
+        return binding, payload
+
+    skill_binding, skill_payload = source(
+        preregistration.get("skill_index"),
+        fields={"canonical_skill_count", "path", "sha256"},
+        label="protected semantic skill source",
+    )
+    canonical_skills = _json_value_no_duplicate_keys(
+        skill_payload, "protected semantic skill source"
+    )
+    projected_skills = _project_canonical_skills(canonical_skills)
+    _require(
+        skill_binding["canonical_skill_count"] == len(projected_skills),
+        "protected semantic skill count mismatch",
+    )
+    frozen_inputs = preregistration.get("frozen_inputs")
+    _require(type(frozen_inputs) is dict, "protected semantic inputs mismatch")
+    frozen_inputs = cast(dict[str, Any], frozen_inputs)
+    train_binding, train_payload = source(
+        frozen_inputs.get("accepted_pairs"),
+        fields={"path", "sha256"},
+        label="protected semantic train source",
+    )
+    pilot_binding, pilot_payload = source(
+        frozen_inputs.get("heldout_labels"),
+        fields={"path", "sha256"},
+        label="protected semantic pilot source",
+    )
+    raw_phase16 = preregistration.get("old_phase16_prompt_files")
+    _require(
+        type(raw_phase16) is list and len(raw_phase16) == 16,
+        "protected semantic Phase 16 sources mismatch",
+    )
+    phase16_sources = [
+        source(
+            raw_binding,
+            fields={"path", "sha256"},
+            label="protected semantic Phase 16 source",
+        )
+        for raw_binding in cast(list[Any], raw_phase16)
+    ]
+    construction_input_bindings = {
+        "canonical_skill_source": {
+            "path": skill_binding["path"],
+            "file_sha256": skill_binding["sha256"],
+            "source_bytes_hex": skill_payload.hex(),
+        },
+        "protected_scope_sources": {
+            "train": [
+                {
+                    "path": train_binding["path"],
+                    "file_sha256": train_binding["sha256"],
+                    "source_bytes_hex": train_payload.hex(),
+                }
+            ],
+            "pilot-002": [
+                {
+                    "path": pilot_binding["path"],
+                    "file_sha256": pilot_binding["sha256"],
+                    "source_bytes_hex": pilot_payload.hex(),
+                }
+            ],
+            "phase16": [
+                {
+                    "path": binding["path"],
+                    "file_sha256": binding["sha256"],
+                    "source_bytes_hex": payload.hex(),
+                }
+                for binding, payload in phase16_sources
+            ],
+        },
+    }
+    construction_input_authority = _construction_input_authority_from_sealed_bindings(
+        construction_input_bindings,
+        projected_skills=projected_skills,
+    )
+    return _protected_semantic_commitment(construction_input_authority)
+
+
 def validate_preregistration_authority(
     preregistration_path: Path | str,
     *,
@@ -6699,6 +7472,14 @@ def validate_preregistration_authority(
     preregistration = _json_no_duplicate_keys(
         preregistration_file.read_bytes(), "preregistration"
     )
+    _require(
+        frozenset(preregistration) == PREREGISTRATION_FIELDS,
+        "preregistration field set mismatch",
+    )
+    _require(
+        frozenset(PREREGISTRATION_FIELD_AUTHORITY_LEDGER) == PREREGISTRATION_FIELDS,
+        "internal preregistration authority coverage mismatch",
+    )
     semantic_sha256 = preregistration.get("preregistration_sha256")
     _require(type(semantic_sha256) is str, "preregistration semantic hash is missing")
     unhashed = {
@@ -6710,30 +7491,150 @@ def validate_preregistration_authority(
         canonical_sha256(unhashed) == semantic_sha256,
         "preregistration semantic hash mismatch",
     )
-    validate_preregistration_truth(preregistration)
+    _require(
+        preregistration.get("schema_version") == PREREGISTRATION_SCHEMA_VERSION,
+        "preregistration schema mismatch",
+    )
+    generated_at = preregistration.get("generated_at_utc")
+    _require(type(generated_at) is str, "generated_at_utc is missing")
+    try:
+        parsed_generated_at = datetime.fromisoformat(cast(str, generated_at))
+    except ValueError as exc:
+        raise ValueError("generated_at_utc must be ISO-8601") from exc
+    generated_at_offset = parsed_generated_at.utcoffset()
+    _require(
+        parsed_generated_at.tzinfo is not None
+        and generated_at_offset is not None
+        and generated_at_offset.total_seconds() == 0,
+        "generated_at_utc must be UTC",
+    )
+    _require(
+        generated_at == PREREGISTRATION_GENERATED_AT_UTC,
+        "generated_at_utc authority mismatch",
+    )
+    _validated_commit_a_changed_files(preregistration)
+    _validate_preexisting_main_validation_authority(preregistration)
+    expected_historical = {
+        "commit": HISTORICAL_HUMAN_COMMIT_A,
+        "status": "SUPERSEDED_NON_AUTHORITATIVE",
+        "previous_contract": "EXTERNAL_HUMAN_64_48",
+        "retained_for": "AUDIT_HISTORY_ONLY",
+        "candidate_data_seen": False,
+        "formal_attempt_started": False,
+    }
+    _require(
+        preregistration.get("supersedes_commit") == HISTORICAL_HUMAN_COMMIT_A
+        and _canonical_contract_json_equal(
+            preregistration.get("historical_supersession"), expected_historical
+        ),
+        "historical supersession authority mismatch",
+    )
+    for obsolete_field in (
+        "superseded_before_blind_data_access",
+        "superseded_pre_data_commit_a",
+        "superseded_pre_data_commit_as",
+        "supersession_reason",
+        "router_promotion_requires_separate_human_decision",
+    ):
+        _require(
+            obsolete_field not in preregistration,
+            f"obsolete human preregistration field remains active: {obsolete_field}",
+        )
+    _require(
+        preregistration.get("research_question") == TASK8_RESEARCH_QUESTION,
+        "research question mismatch",
+    )
+    _require(
+        preregistration.get("blind_v2_candidate_data_seen") is False
+        and preregistration.get("blind_v2_data_seen") is False
+        and preregistration.get("blind_v2_data_seen_compatibility")
+        == "LEGACY_PRE_DATA_TRUTH_ONLY",
+        "blind-v2 candidate data seen truth mismatch",
+    )
+    legacy_truth = deepcopy(preregistration)
+    legacy_truth["schema_version"] = "router-v2-blind-v2-preregistration-v1"
+    validate_preregistration_truth(legacy_truth)
+
+    protected = {
+        key: canonical_sha256(preregistration.get(key))
+        for key in PROTECTED_PREREGISTRATION_SUBTREE_SHA256
+    }
+    _require(
+        preregistration.get("protected_preregistration_subtree_sha256")
+        == PROTECTED_PREREGISTRATION_SUBTREE_SHA256
+        and protected == PROTECTED_PREREGISTRATION_SUBTREE_SHA256,
+        "protected preregistration identity drift",
+    )
+    expected_protected_semantic_commitment = (
+        _protected_semantic_commitment_from_preregistration_sources(
+            preregistration, repository
+        )
+    )
+    _require_exact_json_authority(
+        preregistration.get("protected_semantic_commitment"),
+        expected_protected_semantic_commitment,
+        message="protected semantic commitment mismatch",
+    )
+
+    expected_construction = _task8_agent_construction_authority()
+    construction = preregistration.get("agent_construction")
+    _require(
+        _canonical_contract_json_equal(construction, expected_construction)
+        and preregistration.get("agent_construction_sha256")
+        == canonical_sha256(expected_construction)
+        and set(expected_construction["terminal"]["terminal_states"])
+        == TERMINAL_STATES,
+        "Agent construction authority mismatch",
+    )
+    expected_semantic = _task8_semantic_contamination_authority()
+    semantic = preregistration.get("semantic_contamination")
+    _require(
+        _canonical_contract_json_equal(semantic, expected_semantic)
+        and preregistration.get("semantic_contamination_sha256")
+        == canonical_sha256(expected_semantic)
+        and expected_semantic["materialized_model_files_sha256"]
+        == canonical_sha256(expected_semantic["materialized_model_files"]),
+        "semantic contamination authority mismatch",
+    )
 
     contract = preregistered_evaluation_contract()
     _require(
         preregistration.get("preregistration_parent_git_commit")
         == PREREGISTRATION_PARENT_COMMIT
-        and preregistration.get("current_git_commit_before_commit_a")
-        == PREREGISTRATION_PARENT_COMMIT
         and preregistration.get("origin_main_git_commit")
-        == PREREGISTRATION_PARENT_COMMIT,
+        == PREREGISTRATION_PARENT_COMMIT
+        and preregistration.get("current_git_commit_before_commit_a")
+        == TASK8_BASELINE_HEAD,
         "preregistration parent Git binding mismatch",
     )
     _require(
-        preregistration.get("blind_v2_expected_task_count") == 64
-        and preregistration.get("blind_v2_expected_negative_labeled_task_count") == 48,
+        type(preregistration.get("blind_v2_expected_task_count")) is int
+        and preregistration.get("blind_v2_expected_task_count") == POSITIVE_TASK_COUNT
+        and type(preregistration.get("blind_v2_expected_negative_labeled_task_count"))
+        is int
+        and preregistration.get("blind_v2_expected_negative_labeled_task_count")
+        == TEMPTING_NEGATIVE_COUNT,
         "blind-v2 count binding mismatch",
     )
-    _require(
-        preregistration.get("statistics") == contract["statistics"],
-        "statistics binding mismatch",
+    _require_exact_json_authority(
+        preregistration.get("statistics"),
+        contract["statistics"],
+        message="statistics binding mismatch",
     )
-    _require(
-        preregistration.get("latency_measurement_protocol") == contract["latency"],
-        "latency protocol binding mismatch",
+    _require_exact_json_authority(
+        preregistration.get("latency_measurement_protocol"),
+        contract["latency"],
+        message="latency protocol binding mismatch",
+    )
+    _require_exact_json_authority(
+        preregistration.get("single_attempt"),
+        contract["single_attempt"],
+        message="single-attempt binding mismatch",
+    )
+    _require_exact_json_authority(
+        preregistration.get("non_actions"),
+        contract["prohibited_actions"],
+        message="non-action binding mismatch",
     )
     _require(
         preregistration.get("evaluation_output_namespace")
@@ -6742,8 +7643,8 @@ def validate_preregistration_authority(
     )
     expected_metric_definitions = {
         "raw_count_first": True,
-        "positive_denominator": 64,
-        "negative_denominator": 48,
+        "positive_denominator": POSITIVE_TASK_COUNT,
+        "negative_denominator": TEMPTING_NEGATIVE_COUNT,
         "fields": [
             "recall_at_1",
             "recall_at_5",
@@ -6758,9 +7659,10 @@ def validate_preregistration_authority(
         "aggregate_mean": "arithmetic",
         "aggregate_std": "sample_n_minus_1",
     }
-    _require(
-        preregistration.get("metric_definitions") == expected_metric_definitions,
-        "metric definition binding mismatch",
+    _require_exact_json_authority(
+        preregistration.get("metric_definitions"),
+        expected_metric_definitions,
+        message="metric definition binding mismatch",
     )
     for field, expected_truth in (
         ("retraining_allowed", False),
@@ -6771,16 +7673,35 @@ def validate_preregistration_authority(
         ("default_router_unchanged", True),
         ("production_ready", False),
         ("release_eligible", False),
-        ("router_promotion_requires_separate_human_decision", True),
+        ("release_authorized", False),
     ):
         _require(
             preregistration.get(field) is expected_truth,
             f"preregistration truth binding mismatch: {field}",
         )
+    _require(
+        type(preregistration.get("router_decision")) is str
+        and preregistration.get("router_decision") == "KEEP_BASELINE",
+        "preregistration truth binding mismatch: router_decision",
+    )
     _require(preregistration.get("gate") == contract["gate"], "gate binding mismatch")
     evaluator = preregistration.get("evaluator")
     _require(type(evaluator) is dict, "evaluator binding is missing")
     evaluator = cast(dict[str, Any], evaluator)
+    _require(
+        frozenset(evaluator) == EVALUATOR_FIELDS,
+        "evaluator field set mismatch",
+    )
+    _require_exact_json_authority(
+        evaluator.get("arms"),
+        list(ARMS),
+        message="evaluator arm authority mismatch",
+    )
+    _require_exact_json_authority(
+        evaluator.get("seeds"),
+        list(SEEDS),
+        message="evaluator seed authority mismatch",
+    )
     _require(
         evaluator.get("contract_sha256") == canonical_sha256(contract),
         "evaluator contract hash mismatch",
@@ -6789,7 +7710,9 @@ def validate_preregistration_authority(
     _require(type(gate_artifact) is dict, "pilot-002 gate artifact binding is missing")
     gate_artifact = cast(dict[str, Any], gate_artifact)
     _require(
-        gate_artifact.get("gate_semantic_sha256") == canonical_sha256(contract["gate"]),
+        gate_artifact.get("gate_semantic_sha256") == canonical_sha256(contract["gate"])
+        and preregistration.get("gate_sha256")
+        == canonical_sha256(preregistration["gate"]),
         "gate binding mismatch",
     )
     gate_file = _repository_file(
@@ -6815,7 +7738,8 @@ def validate_preregistration_authority(
     )
     query_file = _repository_file(repository, query.get("path"), label="query contract")
     _require(
-        _sha256_file(query_file) == query.get("sha256"),
+        _sha256_file(query_file) == query.get("sha256")
+        and preregistration.get("query_contract_sha256") == canonical_sha256(query),
         "query contract source hash mismatch",
     )
     skill_index = preregistration.get("skill_index")
@@ -6825,7 +7749,13 @@ def validate_preregistration_authority(
         repository, skill_index.get("path"), label="skill index"
     )
     _require(
-        _sha256_file(skill_index_file) == skill_index.get("sha256"),
+        _sha256_file(skill_index_file) == skill_index.get("sha256")
+        and preregistration.get("skill_index_semantic_sha256")
+        == canonical_sha256(
+            _json_value_no_duplicate_keys(
+                skill_index_file.read_bytes(), "canonical skill index"
+            )
+        ),
         "skill index hash mismatch",
     )
     skill_builder = preregistration.get("skill_representation_builder")
@@ -6839,31 +7769,55 @@ def validate_preregistration_authority(
         repository, skill_builder.get("path"), label="skill builder"
     )
     _require(
-        _sha256_file(skill_builder_file) == skill_builder.get("sha256"),
+        _sha256_file(skill_builder_file) == skill_builder.get("sha256")
+        and preregistration.get("skill_representation_builder_sha256")
+        == canonical_sha256(skill_builder),
         "skill builder source hash mismatch",
     )
     source_files = evaluator.get("source_files")
     _require(
-        type(source_files) is list and bool(source_files),
+        type(source_files) is list and len(source_files) == len(EVALUATOR_SOURCE_PATHS),
         "evaluator sources are missing",
     )
+    source_rows = cast(list[Any], source_files)
     _require(
-        {cast(dict[str, Any], row).get("path") for row in cast(list[Any], source_files)}
-        == set(EVALUATOR_SOURCE_PATHS),
-        "evaluator source set mismatch",
+        all(
+            type(raw_row) is dict
+            and frozenset(cast(dict[str, Any], raw_row)) == EVALUATOR_SOURCE_ROW_FIELDS
+            for raw_row in source_rows
+        ),
+        "evaluator source row field set mismatch",
     )
-    for raw_row in cast(list[Any], source_files):
-        row = cast(dict[str, Any], raw_row)
-        _require(type(row) is dict, "evaluator source binding mismatch")
-        source = _repository_file(repository, row.get("path"), label="evaluator source")
-        _require(
-            _sha256_file(source) == row.get("sha256"),
-            "evaluator source hash mismatch",
-        )
+    source_rows = cast(list[dict[str, Any]], source_rows)
+    source_paths = tuple(cast(str, row["path"]) for row in source_rows)
+    _require(
+        len(EVALUATOR_SOURCE_PATHS) == 4
+        and len(set(EVALUATOR_SOURCE_PATHS)) == 4
+        and source_paths == EVALUATOR_SOURCE_PATHS
+        and len(set(source_paths)) == len(source_paths),
+        "evaluator source path sequence mismatch",
+    )
+    expected_source_rows = []
+    for relative in EVALUATOR_SOURCE_PATHS:
+        source = _repository_file(repository, relative, label="evaluator source")
+        expected_source_rows.append({"path": relative, "sha256": _sha256_file(source)})
+    _require(
+        source_rows == expected_source_rows,
+        "evaluator source hash mismatch",
+    )
+    expected_source_aggregate = canonical_sha256(expected_source_rows)
+    _require(
+        evaluator.get("source_files_sha256") == expected_source_aggregate,
+        "evaluator source aggregate hash mismatch",
+    )
 
     frozen_inputs = preregistration.get("frozen_inputs")
     _require(type(frozen_inputs) is dict, "frozen input bindings are missing")
     frozen_inputs = cast(dict[str, Any], frozen_inputs)
+    _require(
+        preregistration.get("frozen_inputs_sha256") == canonical_sha256(frozen_inputs),
+        "frozen input aggregate hash mismatch",
+    )
     for key in (
         "training_data_manifest",
         "accepted_pairs",
@@ -6890,6 +7844,11 @@ def validate_preregistration_authority(
     _require(
         type(phase16_files) is list and len(phase16_files) == 16,
         "old Phase 16 prompt bindings are missing",
+    )
+    _require(
+        preregistration.get("old_phase16_prompt_files_sha256")
+        == canonical_sha256(phase16_files),
+        "old Phase 16 prompt aggregate hash mismatch",
     )
     phase16_paths: set[str] = set()
     for raw_binding in cast(list[Any], phase16_files):
@@ -7008,12 +7967,14 @@ def validate_preregistration_authority(
                     == artifact["model_manifest_file_sha256"],
                     f"{arm}/{seed} model manifest file hash mismatch",
                 )
+        _verify_task8_semantic_model_snapshot()
     return {
         "status": "VALID",
         "preregistration_sha256": semantic_sha256,
         "pilot_manifest_sha256": pilot_binding["sha256"],
         "preregistration_file_sha256": _sha256_file(preregistration_file),
         "model_files_verified": verify_model_files,
+        "semantic_model_files_verified": verify_model_files,
     }
 
 
