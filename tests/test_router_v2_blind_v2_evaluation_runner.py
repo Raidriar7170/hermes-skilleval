@@ -191,8 +191,12 @@ def _agent_contract_envelope(
         "imported_memory_count": 0,
         "requested_model": config["model"],
         "returned_model": config["model"],
+        "provider_returned_model_status": "AVAILABLE",
         "reasoning_effort": config["reasoning_effort"],
         "timeout_seconds": config["timeout_seconds"],
+        "lineage_observed": True,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0,
         "transport_retry_count": 0,
         "request_sha256": request["request_sha256"],
         "response": response,
@@ -1413,6 +1417,105 @@ def test_agent_contract_generator_response_and_envelope_validate() -> None:
     assert invalid_seen == set()
 
 
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+@pytest.mark.parametrize("provider_metadata_available", (False, True))
+def test_agent_contract_host_envelope_accepts_nullable_provider_metadata(
+    role: str,
+    provider_metadata_available: bool,
+) -> None:
+    if role == "generator":
+        request = _agent_contract_generator_request()
+        response = _agent_contract_generator_response()
+    else:
+        request = _agent_contract_reviewer_request(role)
+        response = _agent_contract_reviewer_response()
+    envelope = _agent_contract_envelope(request, response)
+    if not provider_metadata_available:
+        envelope["returned_model"] = None
+        envelope["provider_returned_model_status"] = "INTERFACE_UNAVAILABLE"
+
+    assert (
+        runner.validate_agent_invocation_envelope(envelope, request=request) == response
+    )
+
+
+@pytest.mark.parametrize(
+    ("returned_model", "provider_status"),
+    (
+        (None, "AVAILABLE"),
+        ("gpt-5.6-sol", "INTERFACE_UNAVAILABLE"),
+        ("gpt-5.6-luna", "AVAILABLE"),
+        (None, "UNKNOWN"),
+    ),
+)
+def test_agent_contract_rejects_conflicting_provider_metadata_combinations(
+    returned_model: str | None,
+    provider_status: str,
+) -> None:
+    request = _agent_contract_generator_request()
+    envelope = _agent_contract_envelope(request, _agent_contract_generator_response())
+    envelope["returned_model"] = returned_model
+    envelope["provider_returned_model_status"] = provider_status
+
+    with pytest.raises(ValueError, match="provider|returned model"):
+        runner.validate_agent_invocation_envelope(envelope, request=request)
+
+
+@pytest.mark.parametrize("host_metadata", ("missing", "conflicting"))
+def test_agent_response_self_report_cannot_rescue_host_model_metadata(
+    host_metadata: str,
+) -> None:
+    request = _agent_contract_generator_request()
+    response = _agent_contract_generator_response()
+    response["model"] = runner.AGENT_CONFIGS["generator"]["model"]
+    response["reasoning_effort"] = runner.AGENT_CONFIGS["generator"]["reasoning_effort"]
+    envelope = _agent_contract_envelope(request, response)
+    if host_metadata == "missing":
+        envelope["returned_model"] = None
+        envelope["provider_returned_model_status"] = "INTERFACE_UNAVAILABLE"
+    else:
+        envelope["returned_model"] = "gpt-5.6-luna"
+        envelope["provider_returned_model_status"] = "AVAILABLE"
+
+    with pytest.raises(ValueError):
+        runner.validate_agent_invocation_envelope(envelope, request=request)
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    (
+        ("lineage_observed", False),
+        ("lineage_observed", None),
+        ("tool_call_count", 1),
+        ("tool_call_count", False),
+        ("descendant_agent_count", 1),
+        ("descendant_agent_count", False),
+    ),
+)
+def test_agent_contract_rejects_unobserved_or_nonzero_host_lineage(
+    field: str,
+    invalid: Any,
+) -> None:
+    request = _agent_contract_generator_request()
+    envelope = _agent_contract_envelope(request, _agent_contract_generator_response())
+    envelope[field] = invalid
+
+    with pytest.raises(ValueError, match="lineage|tool|descendant"):
+        runner.validate_agent_invocation_envelope(envelope, request=request)
+
+
+@pytest.mark.parametrize(
+    "field", ("lineage_observed", "tool_call_count", "descendant_agent_count")
+)
+def test_agent_contract_requires_host_lineage_fields(field: str) -> None:
+    request = _agent_contract_generator_request()
+    envelope = _agent_contract_envelope(request, _agent_contract_generator_response())
+    envelope.pop(field)
+
+    with pytest.raises(ValueError, match="fields mismatch"):
+        runner.validate_agent_invocation_envelope(envelope, request=request)
+
+
 @pytest.mark.parametrize(
     ("field", "invalid"),
     (
@@ -1424,8 +1527,14 @@ def test_agent_contract_generator_response_and_envelope_validate() -> None:
         ("imported_memory_count", 0.0),
         ("requested_model", "gpt-5.6-luna"),
         ("returned_model", "gpt-5.6-luna"),
+        ("returned_model", None),
+        ("provider_returned_model_status", "INTERFACE_UNAVAILABLE"),
+        ("provider_returned_model_status", "UNKNOWN"),
         ("reasoning_effort", "ultra"),
         ("timeout_seconds", 1800.0),
+        ("lineage_observed", 1),
+        ("tool_call_count", 0.0),
+        ("descendant_agent_count", 0.0),
         ("transport_retry_count", False),
         ("transport_retry_count", 1.0),
         ("transport_retry_count", 2),
@@ -1762,8 +1871,13 @@ def _pack_transport_failure_invocation(
         "history_message_count": 0,
         "imported_memory_count": 0,
         "requested_model": config["model"],
+        "returned_model": None,
+        "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
         "reasoning_effort": config["reasoning_effort"],
         "timeout_seconds": config["timeout_seconds"],
+        "lineage_observed": True,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0,
         "request_sha256": request["request_sha256"],
     }
 
@@ -1773,6 +1887,55 @@ def _pack_invocation_identity(invocation: dict[str, Any]) -> str:
     identity_fields = {"session_id", "thread_id"}.intersection(identity_source)
     assert len(identity_fields) == 1
     return cast(str, identity_source[next(iter(identity_fields))])
+
+
+def _pack_role_host_metadata(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    provider_models: list[str | None] = []
+    provider_statuses: list[str] = []
+    for row in rows:
+        for invocation in row["invocations"]:
+            if type(invocation) is not dict:
+                continue
+            envelope = invocation.get("envelope")
+            source = envelope if type(envelope) is dict else invocation
+            provider_model = source["returned_model"]
+            provider_status = source["provider_returned_model_status"]
+            if provider_model not in provider_models:
+                provider_models.append(provider_model)
+            if provider_status not in provider_statuses:
+                provider_statuses.append(provider_status)
+    return {
+        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+        "provider_returned_models": provider_models,
+        "provider_returned_model_statuses": sorted(provider_statuses),
+        "lineage_observed": True,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0,
+    }
+
+
+def _set_agent_pack_provider_metadata(
+    root: Path,
+    *,
+    role: str,
+    returned_model: str | None,
+    provider_status: str,
+) -> None:
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }[role]
+    path = root / filename
+    rows = _read_jsonl(path)
+    for row in rows:
+        for invocation in row["invocations"]:
+            envelope = invocation.get("envelope")
+            target = envelope if type(envelope) is dict else invocation
+            target["returned_model"] = returned_model
+            target["provider_returned_model_status"] = provider_status
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(root, role)
 
 
 def _task5_fixture_projected_skills() -> list[dict[str, Any]]:
@@ -2477,6 +2640,9 @@ def _write_agent_pack(
                 "fork_context": False,
                 "history_message_count": 0,
                 "imported_memory_count": 0,
+                **_pack_role_host_metadata(
+                    generation_rows if role == "generator" else review_rows[role]
+                ),
             }
             for role in ("generator", "reviewer_a", "reviewer_b")
         },
@@ -2594,7 +2760,14 @@ def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
                         "request_sha256": request_sha256,
                         "requested_model": invocation["requested_model"],
                         "returned_model": None,
+                        "provider_returned_model_status": invocation[
+                            "provider_returned_model_status"
+                        ],
+                        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
                         "reasoning_effort": invocation["reasoning_effort"],
+                        "lineage_observed": invocation["lineage_observed"],
+                        "tool_call_count": invocation["tool_call_count"],
+                        "descendant_agent_count": invocation["descendant_agent_count"],
                         "transport_failure": True,
                         "response_bytes_present": False,
                         "response_sha256": None,
@@ -2609,7 +2782,14 @@ def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
                     "request_sha256": request_sha256,
                     "requested_model": envelope["requested_model"],
                     "returned_model": envelope["returned_model"],
+                    "provider_returned_model_status": envelope[
+                        "provider_returned_model_status"
+                    ],
+                    "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
                     "reasoning_effort": envelope["reasoning_effort"],
+                    "lineage_observed": envelope["lineage_observed"],
+                    "tool_call_count": envelope["tool_call_count"],
+                    "descendant_agent_count": envelope["descendant_agent_count"],
                     "transport_failure": False,
                     "response_bytes_present": True,
                     "response_sha256": _task5_test_canonical_sha256(
@@ -2649,7 +2829,20 @@ def _task5_fixture_run_records(root: Path, role: str) -> list[dict[str, Any]]:
                 "response_sha256": final_attempt["response_sha256"],
                 "requested_model": final_attempt["requested_model"],
                 "returned_model": final_attempt["returned_model"],
+                "provider_returned_model_status": final_attempt[
+                    "provider_returned_model_status"
+                ],
+                "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
                 "reasoning_effort": final_attempt["reasoning_effort"],
+                "lineage_observed": all(
+                    attempt["lineage_observed"] is True for attempt in attempts
+                ),
+                "tool_call_count": sum(
+                    attempt["tool_call_count"] for attempt in attempts
+                ),
+                "descendant_agent_count": sum(
+                    attempt["descendant_agent_count"] for attempt in attempts
+                ),
                 "session_or_thread_ids": [
                     _pack_invocation_identity(invocation) for invocation in invocations
                 ],
@@ -2710,6 +2903,27 @@ def _task5_fixture_retry_records(
                     "retry_session_or_thread_id": identities[1],
                     "failed_attempt_ordinal": 1,
                     "retry_attempt_ordinal": 2,
+                    "failed_returned_model": record["attempts"][0]["returned_model"],
+                    "failed_provider_returned_model_status": record["attempts"][0][
+                        "provider_returned_model_status"
+                    ],
+                    "retry_returned_model": record["attempts"][1]["returned_model"],
+                    "retry_provider_returned_model_status": record["attempts"][1][
+                        "provider_returned_model_status"
+                    ],
+                    "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+                    "failed_lineage_observed": record["attempts"][0][
+                        "lineage_observed"
+                    ],
+                    "failed_tool_call_count": record["attempts"][0]["tool_call_count"],
+                    "failed_descendant_agent_count": record["attempts"][0][
+                        "descendant_agent_count"
+                    ],
+                    "retry_lineage_observed": record["attempts"][1]["lineage_observed"],
+                    "retry_tool_call_count": record["attempts"][1]["tool_call_count"],
+                    "retry_descendant_agent_count": record["attempts"][1][
+                        "descendant_agent_count"
+                    ],
                     "retry_count": 1,
                 }
             )
@@ -2742,6 +2956,7 @@ def _sync_agent_pack_role_metadata(root: Path, role: str) -> None:
         for invocation in invocations
         if type(invocation) is dict
     ]
+    metadata["roles"][role].update(_pack_role_host_metadata(rows))
     metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
 
 
@@ -2847,6 +3062,250 @@ def _task5_build_dataset_freeze_documents(
         validation,
         commit_a=commit_a,
         semantic_similarity=semantic_similarity or _task5_zero_semantic_similarity,
+    )
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_nullable_provider_metadata_survives_pack_freeze_and_revalidation(
+    tmp_path: Path,
+    role: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    _set_agent_pack_provider_metadata(
+        pack,
+        role=role,
+        returned_model=None,
+        provider_status="INTERFACE_UNAVAILABLE",
+    )
+
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert validation["status"] == "VALID"
+    role_records = validation["agent_run_records"][role]
+    assert role_records
+    assert all(record["returned_model"] is None for record in role_records)
+    assert all(
+        record["provider_returned_model_status"] == "INTERFACE_UNAVAILABLE"
+        and record["model_identity_evidence"] == "HOST_REQUEST_ENVELOPE"
+        and record["lineage_observed"] is True
+        and record["tool_call_count"] == 0
+        and record["descendant_agent_count"] == 0
+        for record in role_records
+    )
+    assert all(
+        attempt["returned_model"] is None
+        and attempt["provider_returned_model_status"] == "INTERFACE_UNAVAILABLE"
+        and attempt["model_identity_evidence"] == "HOST_REQUEST_ENVELOPE"
+        and attempt["lineage_observed"] is True
+        and attempt["tool_call_count"] == 0
+        and attempt["descendant_agent_count"] == 0
+        for record in role_records
+        for attempt in record["attempts"]
+    )
+    role_evidence = validation["agent_run_evidence"][role]
+    external_metadata = validation["agent_roles"][role]
+    assert external_metadata["model_identity_evidence"] == "HOST_REQUEST_ENVELOPE"
+    assert external_metadata["provider_returned_models"] == [None]
+    assert external_metadata["provider_returned_model_statuses"] == [
+        "INTERFACE_UNAVAILABLE"
+    ]
+    assert external_metadata["lineage_observed"] is True
+    assert external_metadata["tool_call_count"] == 0
+    assert external_metadata["descendant_agent_count"] == 0
+    assert role_evidence["model_identity_evidence"] == "HOST_REQUEST_ENVELOPE"
+    assert role_evidence["returned_models"] == []
+    assert role_evidence["provider_returned_model_statuses"] == [
+        "INTERFACE_UNAVAILABLE"
+    ]
+    assert role_evidence["lineage_observed"] is True
+    assert role_evidence["tool_call_count"] == 0
+    assert role_evidence["descendant_agent_count"] == 0
+
+    documents = _task5_build_dataset_freeze_documents(
+        validation,
+        commit_a="a" * 40,
+    )
+    recovered = runner.validate_frozen_dataset_documents(
+        validation,
+        documents,
+        semantic_similarity=_task5_zero_semantic_similarity,
+    )
+    manifest = json.loads(documents["blind-v2-manifest.json"])
+    committed_records = manifest["agent_construction"]["sanitized_run_records"][role]
+    assert committed_records == role_records
+    assert len(recovered) == 128
+
+
+@pytest.mark.parametrize(
+    ("returned_model", "provider_status"),
+    (("gpt-5.6-unexpected", "AVAILABLE"), (None, "AVAILABLE")),
+)
+def test_task5_pack_rejects_conflicting_provider_metadata(
+    tmp_path: Path,
+    returned_model: str | None,
+    provider_status: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-b.jsonl"
+    rows = _read_jsonl(path)
+    envelope = rows[0]["invocations"][0]["envelope"]
+    envelope["returned_model"] = returned_model
+    envelope["provider_returned_model_status"] = provider_status
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+def test_task5_substantive_invalid_response_with_unavailable_metadata_is_not_transport(
+    tmp_path: Path,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    rejected = rows[0]
+    envelope = rejected["invocations"][0]["envelope"]
+    envelope["returned_model"] = None
+    envelope["provider_returned_model_status"] = "INTERFACE_UNAVAILABLE"
+    envelope["response"].pop("reason")
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, "reviewer_a")
+
+    validation = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert validation["status"] == "VALID"
+    record = next(
+        candidate_record
+        for candidate_record in validation["agent_run_records"]["reviewer_a"]
+        if candidate_record["candidate_ids"] == [rejected["candidate_id"]]
+    )
+    assert record["outcome"] == "SUBSTANTIVE_INVALID_RESPONSE"
+    assert record["response_sha256"] is not None
+    assert record["returned_model"] is None
+    assert record["provider_returned_model_status"] == "INTERFACE_UNAVAILABLE"
+    assert record["transport_retry_count"] == 0
+    assert record["attempts"][0]["transport_failure"] is False
+    assert record["attempts"][0]["response_bytes_present"] is True
+    assert validation["transport_retry_count"] == 0
+    assert validation["retry_records"] == []
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    (
+        ("lineage_observed", False),
+        ("tool_call_count", 1),
+        ("descendant_agent_count", 1),
+    ),
+)
+@pytest.mark.parametrize("transport_failure", (False, True))
+def test_task5_pack_rejects_unobservable_or_nonzero_invocation_lineage(
+    tmp_path: Path,
+    field: str,
+    invalid: Any,
+    transport_failure: bool,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        transport_retry_role="reviewer_a" if transport_failure else None,
+    )
+    path = pack / "blind-v2-review-a.jsonl"
+    rows = _read_jsonl(path)
+    target_invocation = (
+        next(
+            invocation
+            for row in rows
+            for invocation in row["invocations"]
+            if "envelope" not in invocation
+        )
+        if transport_failure
+        else rows[0]["invocations"][0]
+    )
+    target = target_invocation if transport_failure else target_invocation["envelope"]
+    target[field] = invalid
+    _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "invocation_protocol"
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    (
+        ("lineage_observed", False),
+        ("tool_call_count", 1),
+        ("descendant_agent_count", 1),
+    ),
+)
+def test_task5_external_run_metadata_rejects_lineage_drift(
+    tmp_path: Path,
+    field: str,
+    invalid: Any,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack)
+    metadata_path = pack / "agent-run-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["roles"]["reviewer_b"][field] = invalid
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == "agent_run_metadata"
+
+
+@pytest.mark.parametrize(
+    "surface", ("successful_invocation", "transport_failure", "external_metadata")
+)
+def test_task5_formal_surfaces_require_host_lineage_fields(
+    tmp_path: Path,
+    surface: str,
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(
+        pack,
+        transport_retry_role=("reviewer_a" if surface == "transport_failure" else None),
+    )
+    if surface == "external_metadata":
+        metadata_path = pack / "agent-run-metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["roles"]["reviewer_a"].pop("lineage_observed")
+        metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    else:
+        path = pack / "blind-v2-review-a.jsonl"
+        rows = _read_jsonl(path)
+        invocation = (
+            next(
+                candidate_invocation
+                for row in rows
+                for candidate_invocation in row["invocations"]
+                if "envelope" not in candidate_invocation
+            )
+            if surface == "transport_failure"
+            else rows[0]["invocations"][0]
+        )
+        target = (
+            invocation if surface == "transport_failure" else invocation["envelope"]
+        )
+        target.pop("lineage_observed")
+        _rewrite_jsonl(path, rows)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["failure_stage"] == (
+        "agent_run_metadata"
+        if surface == "external_metadata"
+        else "invocation_protocol"
     )
 
 
@@ -4231,6 +4690,37 @@ def test_agent_pack_allows_one_transport_retry_with_no_response_bytes(
     assert result["agent_roles"][role]["invocation_count"] == expected_invocation_count
 
 
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_agent_pack_rejects_available_provider_metadata_on_no_response_transport(
+    tmp_path: Path, role: str
+) -> None:
+    pack = tmp_path / "agent-pack"
+    _write_agent_pack(pack, transport_retry_role=role)
+    filename = {
+        "generator": "blind-v2-generation.jsonl",
+        "reviewer_a": "blind-v2-review-a.jsonl",
+        "reviewer_b": "blind-v2-review-b.jsonl",
+    }[role]
+    path = pack / filename
+    rows = _read_jsonl(path)
+    retry_row = next(row for row in rows if len(row["invocations"]) == 2)
+    transport = retry_row["invocations"][0]
+    assert transport["transport_failure"] is True
+    assert transport["response_bytes_present"] is False
+    transport["returned_model"] = runner.AGENT_CONFIGS[role]["model"]
+    transport["provider_returned_model_status"] = "AVAILABLE"
+    _rewrite_jsonl(path, rows)
+    _sync_agent_pack_role_metadata(pack, role)
+
+    result = _validate_agent_pack(pack, tmp_path / "repo")
+
+    assert result["status"] == "INVALID"
+    assert result["research_conclusion"] == "AGENT_BLIND_V2_PROTOCOL_INVALID"
+    assert result["router_decision"] == "KEEP_BASELINE"
+    assert result["failure_stage"] == "invocation_protocol"
+    assert result["tasks"] == []
+
+
 def _task5_replace_first_run_with_double_transport_failure(
     pack: Path, role: str
 ) -> None:
@@ -4306,6 +4796,17 @@ def test_task5_double_transport_failure_is_infrastructure_inconclusive(
         "retry_session_or_thread_id": record["session_or_thread_ids"][1],
         "failed_attempt_ordinal": 1,
         "retry_attempt_ordinal": 2,
+        "failed_returned_model": None,
+        "failed_provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+        "retry_returned_model": None,
+        "retry_provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+        "failed_lineage_observed": True,
+        "failed_tool_call_count": 0,
+        "failed_descendant_agent_count": 0,
+        "retry_lineage_observed": True,
+        "retry_tool_call_count": 0,
+        "retry_descendant_agent_count": 0,
         "retry_count": 1,
     }
     assert "generation_authority" not in result
@@ -4326,6 +4827,7 @@ def test_task5_double_transport_sanitized_lineage_is_terminal_not_freezable(
     record["attempts"][1].update(
         {
             "returned_model": None,
+            "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
             "transport_failure": True,
             "response_bytes_present": False,
             "response_sha256": None,
@@ -4334,6 +4836,7 @@ def test_task5_double_transport_sanitized_lineage_is_terminal_not_freezable(
     )
     record["response_sha256"] = None
     record["returned_model"] = None
+    record["provider_returned_model_status"] = "INTERFACE_UNAVAILABLE"
     record["outcome"] = "TRANSPORT_FAILURE_NO_RESPONSE"
     record["candidate_ids"] = []
     if role in {"reviewer_a", "reviewer_b"}:
@@ -5064,7 +5567,12 @@ def test_task5_commit_b_run_records_independently_recompute_committed_evidence(
         "response_sha256",
         "requested_model",
         "returned_model",
+        "provider_returned_model_status",
+        "model_identity_evidence",
         "reasoning_effort",
+        "lineage_observed",
+        "tool_call_count",
+        "descendant_agent_count",
         "session_or_thread_ids",
         "transport_retry_count",
         "outcome",
@@ -5108,6 +5616,25 @@ def _task5_resync_role_aggregates_from_records(
 ) -> None:
     records = validation["agent_run_records"][role]
     evidence = validation["agent_run_evidence"][role]
+    attempts = [attempt for record in records for attempt in record["attempts"]]
+    provider_models: list[str | None] = []
+    for attempt in attempts:
+        if attempt["returned_model"] not in provider_models:
+            provider_models.append(attempt["returned_model"])
+    evidence["model_identity_evidence"] = "HOST_REQUEST_ENVELOPE"
+    evidence["provider_returned_models"] = provider_models
+    evidence["provider_returned_model_statuses"] = sorted(
+        {attempt["provider_returned_model_status"] for attempt in attempts}
+    )
+    evidence["lineage_observed"] = all(
+        attempt["lineage_observed"] is True for attempt in attempts
+    )
+    evidence["tool_call_count"] = sum(
+        attempt["tool_call_count"] for attempt in attempts
+    )
+    evidence["descendant_agent_count"] = sum(
+        attempt["descendant_agent_count"] for attempt in attempts
+    )
     evidence["requested_models"] = sorted(
         {record["requested_model"] for record in records}
     )
@@ -5160,6 +5687,11 @@ def _task5_identity_authority_from_validation(
             for record in records
             for identity in record["session_or_thread_ids"]
         ]
+        attempts = [attempt for record in records for attempt in record["attempts"]]
+        provider_models: list[str | None] = []
+        for attempt in attempts:
+            if attempt["returned_model"] not in provider_models:
+                provider_models.append(attempt["returned_model"])
         roles[role] = {
             "ledger_path": ledger_path,
             "ledger_file_sha256": validation["source_file_sha256"][ledger_path],
@@ -5171,6 +5703,18 @@ def _task5_identity_authority_from_validation(
             "invocation_count": len(sessions),
             "session_or_thread_ids": sessions,
             "session_or_thread_ids_sha256": _task5_test_canonical_sha256(sessions),
+            "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+            "provider_returned_models": provider_models,
+            "provider_returned_model_statuses": sorted(
+                {attempt["provider_returned_model_status"] for attempt in attempts}
+            ),
+            "lineage_observed": all(
+                attempt["lineage_observed"] is True for attempt in attempts
+            ),
+            "tool_call_count": sum(attempt["tool_call_count"] for attempt in attempts),
+            "descendant_agent_count": sum(
+                attempt["descendant_agent_count"] for attempt in attempts
+            ),
         }
     return {
         "roles": roles,
@@ -5721,6 +6265,14 @@ def test_task5_agent_run_identity_authority_binds_ledger_metadata(
             "session_or_thread_ids_sha256": _task5_test_canonical_sha256(
                 metadata["session_or_thread_ids"]
             ),
+            "model_identity_evidence": metadata["model_identity_evidence"],
+            "provider_returned_models": metadata["provider_returned_models"],
+            "provider_returned_model_statuses": metadata[
+                "provider_returned_model_statuses"
+            ],
+            "lineage_observed": metadata["lineage_observed"],
+            "tool_call_count": metadata["tool_call_count"],
+            "descendant_agent_count": metadata["descendant_agent_count"],
         }
 
 
@@ -5745,7 +6297,12 @@ def test_task5_freeze_rejects_forged_record_with_resynchronized_aggregates(
             "response_sha256": None,
             "requested_model": runner.AGENT_CONFIGS["generator"]["model"],
             "returned_model": None,
+            "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+            "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
             "reasoning_effort": runner.AGENT_CONFIGS["generator"]["reasoning_effort"],
+            "lineage_observed": True,
+            "tool_call_count": 0,
+            "descendant_agent_count": 0,
             "session_or_thread_ids": ["forged-generator-session"],
             "transport_retry_count": 0,
             "outcome": "TRANSPORT_FAILURE_NO_RESPONSE",
@@ -5756,9 +6313,14 @@ def test_task5_freeze_rejects_forged_record_with_resynchronized_aggregates(
                     "request_sha256": "e" * 64,
                     "requested_model": runner.AGENT_CONFIGS["generator"]["model"],
                     "returned_model": None,
+                    "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+                    "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
                     "reasoning_effort": runner.AGENT_CONFIGS["generator"][
                         "reasoning_effort"
                     ],
+                    "lineage_observed": True,
+                    "tool_call_count": 0,
+                    "descendant_agent_count": 0,
                     "transport_failure": True,
                     "response_bytes_present": False,
                     "response_sha256": None,
@@ -6148,6 +6710,10 @@ def test_task5_substantive_invalid_candidate_lineage_still_freezes(
     _rewrite_jsonl(path, rows)
 
     validation = _validate_agent_pack(pack, tmp_path / "repo")
+    if invalid_response == "wrong_model":
+        assert validation["status"] == "INVALID"
+        assert validation["failure_stage"] == "invocation_protocol"
+        return
     assert validation["status"] == "VALID"
     assert validation["task_count"] == 128
     assert validation["negative_labeled_task_count"] == 96
@@ -6173,7 +6739,12 @@ def test_task5_substantive_invalid_candidate_lineage_still_freezes(
         "response_sha256": response_sha256,
         "requested_model": runner.AGENT_CONFIGS["reviewer_a"]["model"],
         "returned_model": envelope["returned_model"],
+        "provider_returned_model_status": envelope["provider_returned_model_status"],
+        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
         "reasoning_effort": runner.AGENT_CONFIGS["reviewer_a"]["reasoning_effort"],
+        "lineage_observed": True,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0,
         "session_or_thread_ids": [session_id],
         "transport_retry_count": 0,
         "outcome": "SUBSTANTIVE_INVALID_RESPONSE",
@@ -6184,9 +6755,16 @@ def test_task5_substantive_invalid_candidate_lineage_still_freezes(
                 "request_sha256": rejected_record["request_sha256"],
                 "requested_model": runner.AGENT_CONFIGS["reviewer_a"]["model"],
                 "returned_model": envelope["returned_model"],
+                "provider_returned_model_status": envelope[
+                    "provider_returned_model_status"
+                ],
+                "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
                 "reasoning_effort": runner.AGENT_CONFIGS["reviewer_a"][
                     "reasoning_effort"
                 ],
+                "lineage_observed": True,
+                "tool_call_count": 0,
+                "descendant_agent_count": 0,
                 "transport_failure": False,
                 "response_bytes_present": True,
                 "response_sha256": response_sha256,
@@ -6304,7 +6882,14 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
         "response_sha256": final_response_sha256,
         "requested_model": runner.AGENT_CONFIGS[role]["model"],
         "returned_model": final_envelope["returned_model"],
+        "provider_returned_model_status": final_envelope[
+            "provider_returned_model_status"
+        ],
+        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
         "reasoning_effort": runner.AGENT_CONFIGS[role]["reasoning_effort"],
+        "lineage_observed": True,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0,
         "session_or_thread_ids": identities,
         "transport_retry_count": 1,
         "outcome": "SUBSTANTIVE_INVALID_RESPONSE",
@@ -6315,7 +6900,12 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
                 "request_sha256": record["request_sha256"],
                 "requested_model": runner.AGENT_CONFIGS[role]["model"],
                 "returned_model": None,
+                "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+                "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
                 "reasoning_effort": runner.AGENT_CONFIGS[role]["reasoning_effort"],
+                "lineage_observed": True,
+                "tool_call_count": 0,
+                "descendant_agent_count": 0,
                 "transport_failure": True,
                 "response_bytes_present": False,
                 "response_sha256": None,
@@ -6327,7 +6917,14 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
                 "request_sha256": record["request_sha256"],
                 "requested_model": runner.AGENT_CONFIGS[role]["model"],
                 "returned_model": final_envelope["returned_model"],
+                "provider_returned_model_status": final_envelope[
+                    "provider_returned_model_status"
+                ],
+                "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
                 "reasoning_effort": runner.AGENT_CONFIGS[role]["reasoning_effort"],
+                "lineage_observed": True,
+                "tool_call_count": 0,
+                "descendant_agent_count": 0,
                 "transport_failure": False,
                 "response_bytes_present": True,
                 "response_sha256": final_response_sha256,
@@ -6347,6 +6944,19 @@ def test_task5_transport_retry_then_refusal_preserves_retry_lineage_and_freezes(
             "retry_session_or_thread_id": identities[1],
             "failed_attempt_ordinal": 1,
             "retry_attempt_ordinal": 2,
+            "failed_returned_model": None,
+            "failed_provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+            "retry_returned_model": final_envelope["returned_model"],
+            "retry_provider_returned_model_status": final_envelope[
+                "provider_returned_model_status"
+            ],
+            "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+            "failed_lineage_observed": True,
+            "failed_tool_call_count": 0,
+            "failed_descendant_agent_count": 0,
+            "retry_lineage_observed": True,
+            "retry_tool_call_count": 0,
+            "retry_descendant_agent_count": 0,
             "retry_count": 1,
         }
     ]
@@ -7954,6 +8564,7 @@ def _task5_evaluation_authority(
     *,
     include_round_two: bool = False,
     actual_reviewer_rejection: bool = False,
+    provider_metadata_unavailable_role: str | None = None,
 ) -> tuple[dict[str, bytes], dict[str, Any]]:
     pack = tmp_path / "evaluation-agent-pack"
     if include_round_two:
@@ -7965,6 +8576,13 @@ def _task5_evaluation_authority(
         )
     else:
         _write_agent_pack(pack)
+    if provider_metadata_unavailable_role is not None:
+        _set_agent_pack_provider_metadata(
+            pack,
+            role=provider_metadata_unavailable_role,
+            returned_model=None,
+            provider_status="INTERFACE_UNAVAILABLE",
+        )
     validation = _validate_agent_pack(pack, tmp_path / "evaluation-repo")
     if actual_reviewer_rejection:
         rejected_candidate_id = next(
@@ -8113,6 +8731,41 @@ def test_task5_evaluation_lineage_includes_canonical_frozen_task_artifact(
         lineage["frozen_bindings"]["blind_v2_dataset"]
         == frozen_bindings["blind_v2_dataset"]
     )
+
+
+@pytest.mark.parametrize("role", ("generator", "reviewer_a", "reviewer_b"))
+def test_task5_evaluation_revalidation_accepts_frozen_nullable_provider_metadata(
+    tmp_path: Path,
+    role: str,
+) -> None:
+    inputs, frozen_bindings = _task5_evaluation_authority(
+        tmp_path,
+        provider_metadata_unavailable_role=role,
+    )
+
+    documents = runner.build_evaluation_documents(
+        _task5_evaluation_route_rows(inputs),
+        commit_a="a" * 40,
+        commit_b="b" * 40,
+        evaluator_commit="c" * 40,
+        attempt_token_sha256="d" * 64,
+        frozen_bindings=frozen_bindings,
+        input_artifacts=inputs,
+        attempt_artifacts=_task5_attempt_artifacts(),
+    )
+
+    manifest = json.loads(inputs["blind-v2-manifest.json"])
+    records = manifest["agent_construction"]["sanitized_run_records"][role]
+    assert all(record["returned_model"] is None for record in records)
+    assert all(
+        record["provider_returned_model_status"] == "INTERFACE_UNAVAILABLE"
+        and record["model_identity_evidence"] == "HOST_REQUEST_ENVELOPE"
+        and record["lineage_observed"] is True
+        and record["tool_call_count"] == 0
+        and record["descendant_agent_count"] == 0
+        for record in records
+    )
+    assert "lineage-manifest.json" in documents
 
 
 def _task5_resynchronize_evaluation_manifest_and_bindings(
@@ -9033,6 +9686,25 @@ def _task5_resync_committed_role_evidence(
 ) -> None:
     records = construction["sanitized_run_records"][role]
     evidence = construction["agent_roles"][role]
+    attempts = [attempt for record in records for attempt in record["attempts"]]
+    provider_models: list[str | None] = []
+    for attempt in attempts:
+        if attempt["returned_model"] not in provider_models:
+            provider_models.append(attempt["returned_model"])
+    evidence["model_identity_evidence"] = "HOST_REQUEST_ENVELOPE"
+    evidence["provider_returned_models"] = provider_models
+    evidence["provider_returned_model_statuses"] = sorted(
+        {attempt["provider_returned_model_status"] for attempt in attempts}
+    )
+    evidence["lineage_observed"] = all(
+        attempt["lineage_observed"] is True for attempt in attempts
+    )
+    evidence["tool_call_count"] = sum(
+        attempt["tool_call_count"] for attempt in attempts
+    )
+    evidence["descendant_agent_count"] = sum(
+        attempt["descendant_agent_count"] for attempt in attempts
+    )
     evidence["requested_models"] = sorted(
         {record["requested_model"] for record in records}
     )
@@ -9077,6 +9749,11 @@ def _task5_resync_committed_identity_authority(
     sessions = [
         identity for record in records for identity in record["session_or_thread_ids"]
     ]
+    attempts = [attempt for record in records for attempt in record["attempts"]]
+    provider_models: list[str | None] = []
+    for attempt in attempts:
+        if attempt["returned_model"] not in provider_models:
+            provider_models.append(attempt["returned_model"])
     authority_role.update(
         {
             "invocation_ids": invocation_ids,
@@ -9088,6 +9765,18 @@ def _task5_resync_committed_identity_authority(
             "session_or_thread_ids": sessions,
             "session_or_thread_ids_sha256": _task5_test_canonical_sha256(sessions),
             "ledger_file_sha256": source_hashes[authority_role["ledger_path"]],
+            "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+            "provider_returned_models": provider_models,
+            "provider_returned_model_statuses": sorted(
+                {attempt["provider_returned_model_status"] for attempt in attempts}
+            ),
+            "lineage_observed": all(
+                attempt["lineage_observed"] is True for attempt in attempts
+            ),
+            "tool_call_count": sum(attempt["tool_call_count"] for attempt in attempts),
+            "descendant_agent_count": sum(
+                attempt["descendant_agent_count"] for attempt in attempts
+            ),
         }
     )
     construction["agent_run_identity_authority"]["authority_sha256"] = (
@@ -9122,7 +9811,12 @@ def _task5_forge_committed_double_transport_terminal(
             "request_sha256": record["request_sha256"],
             "requested_model": record["requested_model"],
             "returned_model": None,
+            "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+            "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
             "reasoning_effort": record["reasoning_effort"],
+            "lineage_observed": True,
+            "tool_call_count": 0,
+            "descendant_agent_count": 0,
             "transport_failure": True,
             "response_bytes_present": False,
             "response_sha256": None,
@@ -9135,6 +9829,11 @@ def _task5_forge_committed_double_transport_terminal(
             "candidate_ids": [],
             "response_sha256": None,
             "returned_model": None,
+            "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+            "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+            "lineage_observed": True,
+            "tool_call_count": 0,
+            "descendant_agent_count": 0,
             "session_or_thread_ids": sessions,
             "transport_retry_count": 1,
             "outcome": "TRANSPORT_FAILURE_NO_RESPONSE",
@@ -10645,6 +11344,7 @@ def test_task7_final_cli_exposes_only_sealed_agent_workflow() -> None:
     assert result.returncode == 0
     subcommands = (
         "agent-config-status",
+        "runtime-qualification-status",
         "request-round-1",
         "request-reviews",
         "request-round-2",
@@ -10715,6 +11415,7 @@ def test_task7_final_cli_rejects_unknown_and_legacy_commands(subcommand: str) ->
     "subcommand",
     (
         "agent-config-status",
+        "runtime-qualification-status",
         "request-round-1",
         "request-reviews",
         "request-round-2",
@@ -11034,8 +11735,12 @@ def test_task7_commit_b_context_rejects_nested_duplicate_frozen_manifest(
     )
     monkeypatch.setattr(
         cli,
-        "_load_preregistered_agent_inputs",
-        lambda *args, **kwargs: {},
+        "_commit_a_context",
+        lambda **kwargs: {
+            "repository": repository,
+            "preregistration_path": preregistration_path,
+            "pilot_manifest_path": pilot_manifest_path,
+        },
     )
     monkeypatch.setattr(
         cli.workflow,
@@ -12127,6 +12832,7 @@ def test_task7_model_smoke_uses_task6_public_api_without_receipt_builder(
     calls: list[tuple[Path, Path]] = []
 
     monkeypatch.setattr(cli, "REPOSITORY_ROOT", repository)
+    monkeypatch.setattr(cli, "_commit_a_context", lambda **kwargs: {})
 
     def run_model_smoke(
         pilot_manifest_path: Path, *, repository_root: Path
@@ -12627,7 +13333,7 @@ def test_task8_checked_in_preregistration_is_exact_agent_authority(
     pilot = repository / runner.PILOT_MANIFEST_RELATIVE
 
     assert preregistration["schema_version"] == (
-        "router-v2-blind-v2-agent-preregistration-v2"
+        runner.RUNTIME_PREREGISTRATION_SCHEMA_VERSION
     )
     assert preregistration["supersedes_commit"] == runner.HISTORICAL_HUMAN_COMMIT_A
     assert preregistration["blind_v2_candidate_data_seen"] is False
@@ -12793,6 +13499,10 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
         return protocol.split(start, maxsplit=1)[1].split(end, maxsplit=1)[0]
 
     sections = {
+        "stage0": section(
+            "## Stage 0 Agent-runtime requalification (qualified; Commit A2 pending)",
+            "## Frozen repository and evaluation authority",
+        ),
         "repository": section(
             "## Frozen repository and evaluation authority",
             "## Generator authority",
@@ -12922,6 +13632,36 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
             construction["reviewer_schedules"][role]["ordering_rule_sha256"],
         )
 
+    stage0_authority = (
+        (
+            "- Prior terminal artifact SHA-256",
+            "runtime_requalification.prior_terminal_sha256",
+            preregistration["runtime_requalification"]["prior_terminal_sha256"],
+        ),
+        (
+            "- Stage 0 contract SHA-256",
+            "runtime_requalification.stage0_contract_sha256",
+            preregistration["runtime_requalification"]["stage0_contract_sha256"],
+        ),
+        (
+            "- Stage 0 receipt self-hash SHA-256",
+            "runtime_requalification.stage0_receipt_sha256",
+            preregistration["runtime_requalification"]["stage0_receipt_sha256"],
+        ),
+        (
+            "- Scientific contract SHA-256",
+            "runtime_requalification.scientific_contract_sha256",
+            preregistration["runtime_requalification"]["scientific_contract_sha256"],
+        ),
+        (
+            "- Scientific projection SHA-256",
+            "runtime_requalification.scientific_projection_sha256",
+            preregistration["runtime_requalification"]["scientific_projection_sha256"],
+        ),
+    )
+    for rendered_label, semantic_label, expected in stage0_authority:
+        bind_line("stage0", rendered_label, semantic_label, expected)
+
     selection_matches = re.findall(
         r'(?m)^  "selection_key_rule_sha256": "([0-9a-f]{64})",$',
         sections["selection"],
@@ -12967,7 +13707,7 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
         r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])",
         protocol,
     )
-    assert len(parsed) == 64
+    assert len(parsed) == 69
     assert len({label for label, _ in parsed}) == len(parsed)
     assert Counter(protocol_hashes) == Counter(digest for _, digest in parsed)
 
@@ -13071,7 +13811,7 @@ def _task8_write_tampered_preregistration(
     replacement: Any,
 ) -> Path:
     value = deepcopy(_task8_preregistration())
-    if value.get("schema_version") != "router-v2-blind-v2-agent-preregistration-v2":
+    if value.get("schema_version") != runner.RUNTIME_PREREGISTRATION_SCHEMA_VERSION:
         pytest.fail("Task 8 Agent preregistration authority is not implemented")
     _task8_set_path(value, path, replacement)
     _task8_refresh_preregistration_hashes(value)
@@ -13390,6 +14130,8 @@ def test_task8_commit_a_repository_uses_code_boundary_not_preregistration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     preregistration = _task8_preregistration()
+    preregistration.pop("runtime_requalification")
+    preregistration["schema_version"] = runner.PREREGISTRATION_SCHEMA_VERSION
     parent = runner.PREREGISTRATION_PARENT_COMMIT
     historical = runner.HISTORICAL_HUMAN_COMMIT_A
     head = "a" * 40
@@ -13475,24 +14217,26 @@ def test_task8_preregistration_field_authority_coverage_is_complete() -> None:
         "validated_nested_exact_authority",
     }
 
-    assert len(preregistration) == 55
-    assert frozenset(preregistration) == runner.PREREGISTRATION_FIELDS
-    assert frozenset(runner.PREREGISTRATION_FIELD_AUTHORITY_LEDGER) == (
-        runner.PREREGISTRATION_FIELDS
+    assert len(preregistration) == 56
+    assert frozenset(preregistration) == runner.RUNTIME_PREREGISTRATION_FIELDS
+    assert frozenset(runner.RUNTIME_PREREGISTRATION_FIELD_AUTHORITY_LEDGER) == (
+        runner.RUNTIME_PREREGISTRATION_FIELDS
     )
-    assert set(runner.PREREGISTRATION_FIELD_AUTHORITY_LEDGER.values()) == (
+    assert set(runner.RUNTIME_PREREGISTRATION_FIELD_AUTHORITY_LEDGER.values()) == (
         allowed_authorities
     )
     assert all(
         type(field) is str and type(authority) is str
-        for field, authority in runner.PREREGISTRATION_FIELD_AUTHORITY_LEDGER.items()
+        for field, authority in (
+            runner.RUNTIME_PREREGISTRATION_FIELD_AUTHORITY_LEDGER.items()
+        )
     )
 
 
 def test_task8_preregistration_rejects_self_hash_tamper(tmp_path: Path) -> None:
     repository = _task8_repository()
     value = deepcopy(_task8_preregistration())
-    if value.get("schema_version") != "router-v2-blind-v2-agent-preregistration-v2":
+    if value.get("schema_version") != runner.RUNTIME_PREREGISTRATION_SCHEMA_VERSION:
         pytest.fail("Task 8 Agent preregistration authority is not implemented")
     value["preregistration_sha256"] = "0" * 64
     tampered = tmp_path / "self-hash-tampered.json"
@@ -13585,7 +14329,7 @@ def test_task9_checked_preregistration_derives_protected_semantic_commitment_fro
     )
     expected = runner._protected_semantic_commitment(construction_input_authority)
 
-    assert len(preregistration) == 55
+    assert len(preregistration) == 56
     assert preregistration["protected_semantic_commitment"] == expected
     assert expected["commitment_sha256"] == (
         "0e7ab288035d274e3cbee8cc5f15c0a74b5e080d6fa7b6aea5377fd5dc43122a"

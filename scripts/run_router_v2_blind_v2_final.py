@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import stat
 import sys
 from pathlib import Path
 from typing import Any, Sequence, cast
@@ -223,18 +224,24 @@ def _commit_a_context(*, require_config_smoke: bool) -> dict[str, Any]:
         pilot_manifest_path=pilot_manifest_path,
         verify_model_files=False,
     )
+    preregistration = _json(preregistration_path)
+    state = workflow.validate_commit_a_repository(repository, preregistration)
+    commit_a = cast(str, state["commit_a"])
     inputs = _load_preregistered_agent_inputs(
         preregistration_path, repository_root=repository
     )
-    state = workflow.validate_commit_a_repository(repository, inputs["preregistration"])
-    commit_a = cast(str, state["commit_a"])
     preregistration_file_sha256 = _sha256_bytes(preregistration_path.read_bytes())
     receipt: dict[str, Any] | None = None
     if require_config_smoke:
-        receipt = workflow.validate_agent_config_smoke_receipt(
-            commit_a=commit_a,
-            preregistration_sha256=preregistration_file_sha256,
-        )
+        if "runtime_requalification" in inputs["preregistration"]:
+            receipt = workflow.validate_active_stage0_qualification_receipt(
+                inputs["preregistration"]
+            )
+        else:
+            receipt = workflow.validate_agent_config_smoke_receipt(
+                commit_a=commit_a,
+                preregistration_sha256=preregistration_file_sha256,
+            )
     return {
         **inputs,
         "repository": repository,
@@ -259,6 +266,58 @@ def _agent_config_status(_args: argparse.Namespace) -> int:
         }
     )
     return 0
+
+
+def _stage0_host_ledger() -> dict[str, Any]:
+    path = workflow.STAGE0_HOST_LEDGER_PATH
+    _require(path.is_absolute(), "Stage 0 host ledger path must be absolute")
+    workflow._assert_stage0_private_path(path, label="Stage 0 host ledger path")
+    _require(path.is_file() and not path.is_symlink(), "Stage 0 host ledger is missing")
+    resolved = path.resolve(strict=True)
+    repository = REPOSITORY_ROOT.resolve(strict=True)
+    _require(
+        not resolved.is_relative_to(repository)
+        and not resolved.is_relative_to(
+            (repository / workflow.FINAL_NAMESPACE_RELATIVE).resolve(strict=False)
+        ),
+        "Stage 0 host ledger must remain outside the repository and attempt namespace",
+    )
+    _require(
+        stat.S_IMODE(resolved.parent.stat().st_mode) == 0o700,
+        "Stage 0 host ledger directory must use mode 0700",
+    )
+    _require(
+        stat.S_IMODE(resolved.stat().st_mode) == 0o600,
+        "Stage 0 host ledger must use mode 0600",
+    )
+    return workflow.parse_stage0_host_envelope_ledger(resolved.read_bytes())
+
+
+def _runtime_qualification_status(_args: argparse.Namespace) -> int:
+    repository = REPOSITORY_ROOT.resolve(strict=True)
+    eligibility = workflow.validate_stage0_requalification_eligibility(
+        repository / workflow.PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE,
+        repository_root=repository,
+    )
+    if eligibility["eligible"] is not True:
+        _write_stdout(eligibility)
+        return 2
+
+    ledger = _stage0_host_ledger()
+    receipt = workflow.build_stage0_qualification_receipt(
+        ledger,
+        eligibility=eligibility,
+    )
+    receipt_path = workflow.write_stage0_qualification_receipt(receipt)
+    _write_stdout(
+        {
+            "status": receipt["status"],
+            "router_decision": receipt["router_decision"],
+            "receipt_path": str(receipt_path),
+            "receipt_sha256": receipt["receipt_sha256"],
+        }
+    )
+    return 0 if receipt["status"] == "AGENT_RUNTIME_STAGE0_QUALIFIED" else 2
 
 
 def _request_round_1(_args: argparse.Namespace) -> int:
@@ -990,6 +1049,7 @@ def _freeze(_args: argparse.Namespace) -> int:
 
 
 def _model_smoke(_args: argparse.Namespace) -> int:
+    _commit_a_context(require_config_smoke=True)
     repository = REPOSITORY_ROOT.resolve(strict=False)
     pilot_manifest_path = repository / workflow.PILOT_MANIFEST_RELATIVE
     receipt = workflow.run_model_load_smoke(
@@ -1001,26 +1061,10 @@ def _model_smoke(_args: argparse.Namespace) -> int:
 
 
 def _commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
-    repository = REPOSITORY_ROOT.resolve(strict=True)
-    preregistration_path = _repository_file(
-        repository,
-        workflow.PREREGISTRATION_RELATIVE.as_posix(),
-        label="preregistration",
-    )
-    pilot_manifest_path = _repository_file(
-        repository,
-        workflow.PILOT_MANIFEST_RELATIVE.as_posix(),
-        label="pilot manifest",
-    )
-    workflow.validate_preregistration_authority(
-        preregistration_path,
-        repository_root=repository,
-        pilot_manifest_path=pilot_manifest_path,
-        verify_model_files=False,
-    )
-    inputs = _load_preregistered_agent_inputs(
-        preregistration_path, repository_root=repository
-    )
+    inputs = _commit_a_context(require_config_smoke=True)
+    repository = cast(Path, inputs["repository"])
+    preregistration_path = cast(Path, inputs["preregistration_path"])
+    pilot_manifest_path = cast(Path, inputs["pilot_manifest_path"])
     frozen_documents = workflow.read_frozen_dataset_documents(repository)
     blind_manifest = workflow._json_no_duplicate_keys(
         frozen_documents["blind-v2-manifest.json"],
@@ -1216,6 +1260,15 @@ def _parser() -> argparse.ArgumentParser:
         help="Validate the Commit A-agent configuration receipt.",
     )
     status.set_defaults(handler=_agent_config_status)
+
+    runtime_status = commands.add_parser(
+        "runtime-qualification-status",
+        help=(
+            "Validate the fixed private Stage 0 host-envelope ledger; this command "
+            "does not invoke an Agent."
+        ),
+    )
+    runtime_status.set_defaults(handler=_runtime_qualification_status)
 
     round_one = commands.add_parser(
         "request-round-1",

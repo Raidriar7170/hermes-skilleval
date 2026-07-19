@@ -955,7 +955,7 @@
       },
       {
         "path": "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
-        "sha256": "27f7eda16775cce256d9d6363fd52b9efd50fa2a739381a98b7b6e407220559b"
+        "sha256": "0d845d8a8fbc4d7d33241520c7c89313221e92c94ab46ba4a8c8a05a4ce6f425"
       },
       {
         "path": "src/hermes_skilleval/router_v2_pilot_evaluation.py",
@@ -963,10 +963,10 @@
       },
       {
         "path": "scripts/run_router_v2_blind_v2_final.py",
-        "sha256": "e0ad1380043af9b9e2ed427c460274c13da4896b002d9a69ca381e99fc0940ac"
+        "sha256": "63d18f6792a5d572913b32b7b28f907678408fab87d9f6585e5a0107c5a58927"
       }
     ],
-    "source_files_sha256": "214fed284e5a28224f6dd534d45efe1875ddb9bcea9e7b94e2dc5eb2778afd3d"
+    "source_files_sha256": "b76c3de0f82b5ffbc13c2e15eb4ec310ff2657bad9d96b0cfc3b7bc107c225f9"
   },
   "frozen_inputs": {
     "accepted_pairs": {
@@ -1312,7 +1312,216 @@
   "research_question": "Do the unchanged Router V2 Arm C checkpoints meet the unchanged pilot-002 gate once on a preregistered 128-task Agent-constructed set accepted by two role-isolated reviewers with unanimous labels?",
   "retraining_allowed": false,
   "router_decision": "KEEP_BASELINE",
-  "schema_version": "router-v2-blind-v2-agent-preregistration-v2",
+  "runtime_requalification": {
+    "schema_version": "router-v2-blind-v2-runtime-requalification-v1",
+    "status": "STAGE0_QUALIFIED_COMMIT_A2_PENDING",
+    "supersession_reason": "PRE_DATA_HOST_ATTESTATION_CONTRACT_REPAIR",
+    "classification": "PRE_DATA_CONTRACT_REPAIR_NOT_A_FORMAL_ATTEMPT",
+    "prior_commit_a": "50069a124a8d129e11926e78d1bcc2388bc91a22",
+    "prior_terminal_commit": "c208ddde330b408e571df0e315ee3f688bff32e8",
+    "prior_terminal_artifact_commit": "c90595862089ab8d201077fdedf8a1d083ff4498",
+    "prior_terminal_path": "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/agent-config-smoke-terminal.json",
+    "prior_terminal_sha256": "b83aea9ea8fb1bb6bfd3baa58ac23347765bc9bda48a08c20185088d45fe193e",
+    "exact_head_before_change": "b756a411cc8910999ae1c05d4b5c7a05868302ad",
+    "legacy_v1_receipt_status": "FAILED_AUDIT_HISTORY_ONLY",
+    "stage0_contract": {
+      "protocol": "router-v2-blind-v2-agent-runtime-stage0-v1",
+      "roles": {
+        "generator": {
+          "model": "gpt-5.6-sol",
+          "reasoning_effort": "max",
+          "timeout_seconds": 1800,
+          "nonce": "generator-7170-4f87d78d",
+          "canary": {
+            "protocol": "router-v2-blind-v2-agent-runtime-stage0-v1",
+            "role": "generator",
+            "nonce": "generator-7170-4f87d78d",
+            "status": "READY"
+          },
+          "canary_prompt": "Return exactly this UTF-8 JSON object and nothing else: {\"nonce\":\"generator-7170-4f87d78d\",\"protocol\":\"router-v2-blind-v2-agent-runtime-stage0-v1\",\"role\":\"generator\",\"status\":\"READY\"}",
+          "canary_prompt_sha256": "b426a38eab058930976744603f1803826f8d70df0a67646f76fa73001a986e48"
+        },
+        "reviewer_a": {
+          "model": "gpt-5.6-sol",
+          "reasoning_effort": "ultra",
+          "timeout_seconds": 900,
+          "nonce": "reviewer-a-7170-b8ce599a",
+          "canary": {
+            "protocol": "router-v2-blind-v2-agent-runtime-stage0-v1",
+            "role": "reviewer_a",
+            "nonce": "reviewer-a-7170-b8ce599a",
+            "status": "READY"
+          },
+          "canary_prompt": "Return exactly this UTF-8 JSON object and nothing else: {\"nonce\":\"reviewer-a-7170-b8ce599a\",\"protocol\":\"router-v2-blind-v2-agent-runtime-stage0-v1\",\"role\":\"reviewer_a\",\"status\":\"READY\"}",
+          "canary_prompt_sha256": "84c1cebedb9b764134326065dacbe431a5efb2b3131e42325a89eef45a0ade50"
+        },
+        "reviewer_b": {
+          "model": "gpt-5.6-luna",
+          "reasoning_effort": "max",
+          "timeout_seconds": 900,
+          "nonce": "reviewer-b-7170-30e5fcef",
+          "canary": {
+            "protocol": "router-v2-blind-v2-agent-runtime-stage0-v1",
+            "role": "reviewer_b",
+            "nonce": "reviewer-b-7170-30e5fcef",
+            "status": "READY"
+          },
+          "canary_prompt": "Return exactly this UTF-8 JSON object and nothing else: {\"nonce\":\"reviewer-b-7170-30e5fcef\",\"protocol\":\"router-v2-blind-v2-agent-runtime-stage0-v1\",\"role\":\"reviewer_b\",\"status\":\"READY\"}",
+          "canary_prompt_sha256": "a07b7984910ec022b64c41b62b1304c362cc6da37c1faf7c261474a554593377"
+        }
+      },
+      "top_level_invocation_count": 3,
+      "retry_allowed": false,
+      "fallback_allowed": false,
+      "fork_context": false,
+      "history_message_count": 0,
+      "imported_memory_count": 0,
+      "tool_call_count": 0,
+      "descendant_agent_count": 0,
+      "response_count": 1,
+      "canary_fields": [
+        "protocol",
+        "role",
+        "nonce",
+        "status"
+      ],
+      "canary_status": "READY",
+      "host_ledger_fields": [
+        "schema_version",
+        "prior_commit_a",
+        "prior_terminal_sha256",
+        "contract_sha256",
+        "top_level_invocation_count",
+        "total_observed_agent_invocation_count",
+        "invocations"
+      ],
+      "invocation_fields": [
+        "role",
+        "agent_id",
+        "fork_context",
+        "history_message_count",
+        "imported_memory_count",
+        "requested_model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "provider_returned_model",
+        "provider_returned_model_status",
+        "timestamp_utc",
+        "transport_retry_count",
+        "outcome",
+        "fallback_model_used",
+        "lineage_observed",
+        "tool_call_count",
+        "descendant_agent_count",
+        "response_count",
+        "response_text",
+        "response_base64",
+        "response_sha256"
+      ],
+      "raw_response_encoding": "base64",
+      "model_identity_evidence": "HOST_REQUEST_ENVELOPE"
+    },
+    "stage0_contract_sha256": "140175c56684ed35956975511384cef51b3ec5ff527869c63507e8e710366739",
+    "stage0_ledger_schema_version": "router-v2-blind-v2-stage0-host-envelope-ledger-v1",
+    "stage0_receipt_schema_version": "router-v2-blind-v2-stage0-qualification-receipt-v1",
+    "stage0_host_ledger_path": "/tmp/hermes-router-v2-blind-v2-stage0/host-envelope-ledger.json",
+    "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+    "provider_returned_model_policy": "NULLABLE; ABSENT_MEANS_INTERFACE_UNAVAILABLE; CONFLICT_IS_TERMINAL",
+    "formal_agent_invocation_contract": {
+      "schema_version": "router-v2-blind-v2-formal-agent-invocation-v2",
+      "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+      "requested_model_authority": "HOST_REQUEST_ENVELOPE",
+      "reasoning_effort_authority": "HOST_REQUEST_ENVELOPE",
+      "provider_returned_model_field": "returned_model",
+      "provider_returned_model_status_field": "provider_returned_model_status",
+      "legal_provider_metadata_combinations": [
+        {
+          "returned_model": null,
+          "provider_returned_model_status": "INTERFACE_UNAVAILABLE"
+        },
+        {
+          "returned_model": "EXACT_REQUESTED_ALIAS",
+          "provider_returned_model_status": "AVAILABLE"
+        }
+      ],
+      "required_host_lineage": {
+        "lineage_observed": true,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0
+      },
+      "substantive_response_classification": "RESPONSE_BYTES_PRESENT_NEVER_TRANSPORT_FAILURE",
+      "agent_response_identity_fields_authoritative": false,
+      "external_metadata_and_replay_required": true,
+      "transport_retry": {
+        "maximum_retries": 1,
+        "requires_no_response_bytes": true,
+        "identical_request_required": true,
+        "fresh_session_required": true,
+        "fallback_allowed": false
+      }
+    },
+    "formal_agent_invocation_contract_sha256": "e672445e50dacabc3313fc998b219586a13f39a1be0b76183a5eb3e09bba0e26",
+    "backend_alias_resolution_independently_proven": false,
+    "top_level_invocation_limit": 3,
+    "stage0_top_level_invocations_observed": 3,
+    "transport_retry_count": 0,
+    "substantive_retry_count": 0,
+    "zero_exposure_expectations": {
+      "failure_stage": "agent_config_smoke",
+      "candidate_count": 0,
+      "commit_b_created": false,
+      "arm_a_or_c_model_loaded": false,
+      "model_scores_observed": false,
+      "formal_evaluation_started": false,
+      "attempt_marker_created": false
+    },
+    "scientific_contract_sha256": "5865263ab3e63aad375a16259d5ff4391d48b011e104b8a0fb3c96b476262cc5",
+    "scientific_projection_sha256": "58a5d40fdf3b966dc3e16c81321bafe4391ffc0bb9910d8f11154b2aa5d9e866",
+    "commit_a2_parent": "b756a411cc8910999ae1c05d4b5c7a05868302ad",
+    "commit_a2_changed_files": [
+      "artifacts/router-v2-blind-v2/preregistration.json",
+      "docs/router-v2-blind-v2-protocol.md",
+      "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/.openspec.yaml",
+      "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/design.md",
+      "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/proposal.md",
+      "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/specs/router-v2-blind-v2-agent-runtime-requalification/spec.md",
+      "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/tasks.md",
+      "scripts/run_router_v2_blind_v2_final.py",
+      "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
+      "tests/test_router_v2_blind_v2_evaluation_runner.py",
+      "tests/test_router_v2_blind_v2_runtime_requalification.py"
+    ],
+    "openspec_change_artifacts": [
+      {
+        "path": "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/.openspec.yaml",
+        "sha256": "d3303db6f75b216446a93edc56aa644a8ea525317c7866103860f1c536e60cc0"
+      },
+      {
+        "path": "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/design.md",
+        "sha256": "d4fc38945d81b763dc2f68480e4a4f4f5ab73f342741aeb702452ff469160634"
+      },
+      {
+        "path": "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/proposal.md",
+        "sha256": "9552cc5e66a91afad91c9ebf69f95705a1170482782e362f09d8ba023f0554ec"
+      },
+      {
+        "path": "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/specs/router-v2-blind-v2-agent-runtime-requalification/spec.md",
+        "sha256": "e6d1bf0f0a1e99490f04a1339630530ef034040c9e1ab1b8e58f0b709365e6a3"
+      },
+      {
+        "path": "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/tasks.md",
+        "sha256": "49288bb00fa37701e1f1065e23d8e6b0c8e973940d79433ff3ae99548d1b66ba"
+      }
+    ],
+    "stage0_receipt_sha256": "9009d03fe349efcf60e4f58b0a0b63a9fcaf2a78a04b7d4d838486212bbb9118",
+    "commit_a2_preparation_authorized": true,
+    "commit_a2_creation_authorized": true,
+    "candidate_generation_authorized": false,
+    "model_loading_authorized": false,
+    "model_scoring_authorized": false,
+    "formal_evaluation_authorized": false
+  },
+  "schema_version": "router-v2-blind-v2-agent-preregistration-v3",
   "semantic_contamination": {
     "model_id": "sentence-transformers/all-mpnet-base-v2",
     "revision": "e8c3b32edf5434bc2275fc9bab85f82640a19130",
@@ -1516,5 +1725,5 @@
   },
   "supersedes_commit": "09ba4104a147a2f740ef69283c850f40e78a0b15",
   "threshold_change_allowed": false,
-  "preregistration_sha256": "70827e1b894654508f6cbc2d3e8afb70332703dfc89228ed72b8b72ab152d5d3"
+  "preregistration_sha256": "95a2dfa96e711b5eca675cc424f9e240664bcc3fa69b39f73cdcb0c90a1f3238"
 }

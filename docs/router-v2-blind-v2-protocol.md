@@ -14,13 +14,95 @@ Active pre-data truth:
 - `human_reviewer_count=0`
 - `router_decision=KEEP_BASELINE` on every terminal path
 
+## Stage 0 Agent-runtime requalification (qualified; Commit A2 pending)
+
+The prior configuration smoke is immutable failed audit history. Commit A-agent
+`50069a124a8d129e11926e78d1bcc2388bc91a22` terminalized in commit
+`c208ddde330b408e571df0e315ee3f688bff32e8`; the canonical v2 terminal artifact
+was finalized by `c90595862089ab8d201077fdedf8a1d083ff4498`.
+It proves `failure_stage=agent_config_smoke`, zero candidates, no Commit B, no
+Arm A/C load, no model score, no formal evaluation, and no attempt marker. The
+old v1 smoke receipt is not a qualification receipt and remains
+`FAILED_AUDIT_HISTORY_ONLY`.
+
+The repository preregistration now records
+`STAGE0_QUALIFIED_COMMIT_A2_PENDING`, binds the qualified receipt self-hash,
+and records exactly three observed top-level invocations. The separately
+authorized Stage 0 Goal made exactly the three frozen calls and wrote one
+exclusive, hash-bound qualified receipt. Those roles must not be invoked again.
+Separate Commit A2 authorization now permits preparation and creation of that
+administrative successor only. Candidate generation, model loading/scoring,
+and formal evaluation remain unauthorized until Commit A2 exists as clean
+authority.
+
+- Prior terminal artifact SHA-256: `b83aea9ea8fb1bb6bfd3baa58ac23347765bc9bda48a08c20185088d45fe193e`
+- Stage 0 contract SHA-256: `140175c56684ed35956975511384cef51b3ec5ff527869c63507e8e710366739`
+- Stage 0 receipt self-hash SHA-256: `9009d03fe349efcf60e4f58b0a0b63a9fcaf2a78a04b7d4d838486212bbb9118`
+- Scientific contract SHA-256: `5865263ab3e63aad375a16259d5ff4391d48b011e104b8a0fb3c96b476262cc5`
+- Scientific projection SHA-256: `58a5d40fdf3b966dc3e16c81321bafe4391ffc0bb9910d8f11154b2aa5d9e866`
+
+| Role | Requested alias | Reasoning | Timeout | Frozen nonce |
+|---|---|---|---:|---|
+| Generator | `gpt-5.6-sol` | `max` | 1800 | `generator-7170-4f87d78d` |
+| Reviewer A | `gpt-5.6-sol` | `ultra` | 900 | `reviewer-a-7170-b8ce599a` |
+| Reviewer B | `gpt-5.6-luna` | `max` | 900 | `reviewer-b-7170-30e5fcef` |
+
+The Stage 0 host made exactly one fresh, top-level,
+`fork_context=false` dummy call per role, with empty history, zero imported
+memory, zero tools, zero descendants, one response, and no retry or fallback.
+Each response must be one UTF-8 JSON object containing exactly `protocol`,
+`role`, `nonce`, and `status=READY`; duplicate keys, extra or missing fields,
+surrounding prose, invalid UTF-8, or semantic mismatch fail closed. The host
+ledger preserves raw response bytes as base64 and binds the full top-level and
+per-invocation field lists in the Stage 0 contract hash.
+
+The frozen logical ledger root remains
+`/tmp/hermes-router-v2-blind-v2-stage0`. A platform-owned `/tmp` entry may
+resolve to a real sticky temporary directory (as on macOS), but every component
+below `/tmp` remains non-symlinked. This narrow alias rule does not permit
+relocation to `/private/tmp`, `$TMPDIR`, a home directory, or another
+fallback. The Stage 0 and receipt directories are `0700`; the ledger and every
+terminal receipt are regular `0600` files. Receipt creation is hash-bound and
+exclusive, and validation rejects any symlink, non-regular file, parent mode
+other than `0700`, or file mode other than `0600` before reading bytes.
+Outside-repository checks remain mandatory.
+
+Requested model alias and reasoning effort are attested by the host invocation
+envelope, not by Agent self-report. `provider_returned_model` is nullable;
+absence is recorded as `INTERFACE_UNAVAILABLE`. Host-envelope qualification
+does not independently prove backend alias resolution, and that limitation must
+remain disclosed.
+
+The only Stage 0 terminal states are
+`AGENT_RUNTIME_STAGE0_QUALIFIED`,
+`AGENT_RUNTIME_STAGE0_CONFIG_UNAVAILABLE`,
+`AGENT_RUNTIME_STAGE0_CANARY_MISMATCH`,
+`AGENT_RUNTIME_STAGE0_ISOLATION_VIOLATION`,
+`AGENT_RUNTIME_STAGE0_LINEAGE_UNVERIFIABLE`,
+`AGENT_RUNTIME_STAGE0_TRANSPORT_FAILURE`, and
+`AGENT_RUNTIME_STAGE0_AUTHORITY_DRIFT`. Every state keeps `KEEP_BASELINE`,
+`production_ready=false`, `release_authorized=false`, and the default router
+unchanged. Qualification plus the separately received authorization permits
+only preparation and creation of Commit A2; it does not authorize candidate
+generation, model access, scoring, or formal evaluation.
+
+The separately authorized Commit A2, after this qualified receipt and a fresh
+zero-exposure audit, must be one direct child of
+`b756a411cc8910999ae1c05d4b5c7a05868302ad`, use the exact preregistered
+changed-file boundary, and record
+`supersession_reason=PRE_DATA_HOST_ATTESTATION_CONTRACT_REPAIR`. It is a
+pre-data contract repair—not attempt-2, `blind-v2-002`, blind-v3, a replacement
+dataset, or a repeated formal evaluation. All existing generation, review,
+freeze, model-smoke, and evaluation commands remain blocked until that authority
+exists.
+
 ## Frozen repository and evaluation authority
 
 - Origin authority: `8f6a21e53c1363ee18ea6d6e3db1f4b3805ff552`
 - Task 8 pre-edit HEAD: `0998b814e82b4da164a54d0a6ce219573f037994`
 - Canonical skill count: `16`
 - Evaluator contract SHA-256: `575ec2c596a2cd2bfdd33ae59209adcd815e89c24ab7b254ede2c9387a992a56`
-- Evaluator source aggregate SHA-256: `214fed284e5a28224f6dd534d45efe1875ddb9bcea9e7b94e2dc5eb2778afd3d`
+- Evaluator source aggregate SHA-256: `b76c3de0f82b5ffbc13c2e15eb4ec310ff2657bad9d96b0cfc3b7bc107c225f9`
 - Frozen-input aggregate SHA-256: `dd2ea7dd0fe1675cb87bc6ece6cea8f330afb98c7cb52cd69676ca259e275056`
 - Gate semantic SHA-256: `19a53521277f914393fcb815e9c35a1e2e6bc549b0db49027d03e1d6cd875bba`
 - Skill-index semantic SHA-256: `23a3123bd2247f1d209b616212d3118db5851f3a8a3891493d265fc7fa46a036`
@@ -718,6 +800,28 @@ Runtime schedule hash: `canonical_sha256(ordered_candidate_ids)`
 ```
 
 Every invocation is fresh and non-forked with empty history and no imported memory. A single retry uses a fresh session and is permitted only after a recorded transport failure with no valid response bytes. Model mismatch, refusal, invalid schema, label disagreement, or rubric rejection is substantive and receives no retry or fallback.
+
+Formal Generator and Reviewer calls use the hash-bound
+`router-v2-blind-v2-formal-agent-invocation-v2` host-envelope contract. The
+requested model alias and reasoning effort in the host request are authoritative;
+model or reasoning fields emitted in Agent response text are never identity
+evidence. Provider-returned model metadata has exactly two legal states:
+`returned_model=null` with
+`provider_returned_model_status=INTERFACE_UNAVAILABLE`, or the exact requested
+alias with `provider_returned_model_status=AVAILABLE`. Missing status, a
+different alias, or any other combination fails closed.
+
+Every formal invocation, including a transport-failure row, also requires
+host-observed `lineage_observed=true`, `tool_call_count=0`, and
+`descendant_agent_count=0`. These provider and lineage fields are preserved in
+external Agent metadata, sanitized attempt/terminal records, transport-retry
+records, the frozen ledger, and evaluation replay; missing or nonzero lineage at
+any layer invalidates the pack or replay. Any response bytes are substantive
+even when provider metadata is unavailable, so a refusal or invalid response
+cannot be reclassified as transport failure to obtain a retry. The older
+canonical Agent-config smoke retains its strict returned-model check only as
+immutable failed audit history; it is not the authority for formal generation,
+review, freeze, or evaluation.
 
 ## Generation rounds, unanimous admission, and deterministic selection
 

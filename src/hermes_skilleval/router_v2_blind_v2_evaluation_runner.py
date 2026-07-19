@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import base64
+import binascii
 import hashlib
 import json
 import math
 import os
 import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -131,6 +134,145 @@ AGENT_CONFIGS = {
         "timeout_seconds": 900,
     },
 }
+PRIOR_AGENT_COMMIT_A = "50069a124a8d129e11926e78d1bcc2388bc91a22"
+PRIOR_AGENT_TERMINAL_COMMIT = "c208ddde330b408e571df0e315ee3f688bff32e8"
+PRIOR_AGENT_TERMINAL_ARTIFACT_COMMIT = "c90595862089ab8d201077fdedf8a1d083ff4498"
+PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE = Path(
+    "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/"
+    "agent-config-smoke-terminal.json"
+)
+PRIOR_AGENT_SMOKE_TERMINAL_SHA256 = (
+    "b83aea9ea8fb1bb6bfd3baa58ac23347765bc9bda48a08c20185088d45fe193e"
+)
+STAGE0_PROTOCOL = "router-v2-blind-v2-agent-runtime-stage0-v1"
+STAGE0_ROLE_NONCES = MappingProxyType(
+    {
+        "generator": "generator-7170-4f87d78d",
+        "reviewer_a": "reviewer-a-7170-b8ce599a",
+        "reviewer_b": "reviewer-b-7170-30e5fcef",
+    }
+)
+STAGE0_CANARIES = MappingProxyType(
+    {
+        role: {
+            "protocol": STAGE0_PROTOCOL,
+            "role": role,
+            "nonce": nonce,
+            "status": "READY",
+        }
+        for role, nonce in STAGE0_ROLE_NONCES.items()
+    }
+)
+STAGE0_CANARY_PROMPTS = MappingProxyType(
+    {
+        role: (
+            "Return exactly this UTF-8 JSON object and nothing else: "
+            + json.dumps(
+                canary,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        for role, canary in STAGE0_CANARIES.items()
+    }
+)
+STAGE0_LEDGER_SCHEMA_VERSION = "router-v2-blind-v2-stage0-host-envelope-ledger-v1"
+STAGE0_RECEIPT_SCHEMA_VERSION = "router-v2-blind-v2-stage0-qualification-receipt-v1"
+STAGE0_LEDGER_FIELDS_IN_ORDER = (
+    "schema_version",
+    "prior_commit_a",
+    "prior_terminal_sha256",
+    "contract_sha256",
+    "top_level_invocation_count",
+    "total_observed_agent_invocation_count",
+    "invocations",
+)
+STAGE0_INVOCATION_FIELDS_IN_ORDER = (
+    "role",
+    "agent_id",
+    "fork_context",
+    "history_message_count",
+    "imported_memory_count",
+    "requested_model",
+    "reasoning_effort",
+    "timeout_seconds",
+    "provider_returned_model",
+    "provider_returned_model_status",
+    "timestamp_utc",
+    "transport_retry_count",
+    "outcome",
+    "fallback_model_used",
+    "lineage_observed",
+    "tool_call_count",
+    "descendant_agent_count",
+    "response_count",
+    "response_text",
+    "response_base64",
+    "response_sha256",
+)
+STAGE0_TERMINAL_STATES = (
+    "AGENT_RUNTIME_STAGE0_QUALIFIED",
+    "AGENT_RUNTIME_STAGE0_CONFIG_UNAVAILABLE",
+    "AGENT_RUNTIME_STAGE0_CANARY_MISMATCH",
+    "AGENT_RUNTIME_STAGE0_ISOLATION_VIOLATION",
+    "AGENT_RUNTIME_STAGE0_LINEAGE_UNVERIFIABLE",
+    "AGENT_RUNTIME_STAGE0_TRANSPORT_FAILURE",
+    "AGENT_RUNTIME_STAGE0_AUTHORITY_DRIFT",
+)
+STAGE0_CONTRACT = {
+    "protocol": STAGE0_PROTOCOL,
+    "roles": {
+        role: {
+            "model": config["model"],
+            "reasoning_effort": config["reasoning_effort"],
+            "timeout_seconds": config["timeout_seconds"],
+            "nonce": STAGE0_ROLE_NONCES[role],
+            "canary": dict(STAGE0_CANARIES[role]),
+            "canary_prompt": STAGE0_CANARY_PROMPTS[role],
+            "canary_prompt_sha256": hashlib.sha256(
+                STAGE0_CANARY_PROMPTS[role].encode("utf-8")
+            ).hexdigest(),
+        }
+        for role, config in AGENT_CONFIGS.items()
+    },
+    "top_level_invocation_count": 3,
+    "retry_allowed": False,
+    "fallback_allowed": False,
+    "fork_context": False,
+    "history_message_count": 0,
+    "imported_memory_count": 0,
+    "tool_call_count": 0,
+    "descendant_agent_count": 0,
+    "response_count": 1,
+    "canary_fields": ["protocol", "role", "nonce", "status"],
+    "canary_status": "READY",
+    "host_ledger_fields": list(STAGE0_LEDGER_FIELDS_IN_ORDER),
+    "invocation_fields": list(STAGE0_INVOCATION_FIELDS_IN_ORDER),
+    "raw_response_encoding": "base64",
+    "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+}
+STAGE0_CONTRACT_SHA256 = canonical_sha256(STAGE0_CONTRACT)
+STAGE0_TRUSTED_TEMP_ROOT = Path("/tmp")
+STAGE0_PRIVATE_ROOT = STAGE0_TRUSTED_TEMP_ROOT / "hermes-router-v2-blind-v2-stage0"
+STAGE0_HOST_LEDGER_PATH = STAGE0_PRIVATE_ROOT / "host-envelope-ledger.json"
+STAGE0_RECEIPT_ROOT = STAGE0_PRIVATE_ROOT / "receipts"
+STAGE0_REQUALIFICATION_CHANGED_FILES = frozenset(
+    {
+        "artifacts/router-v2-blind-v2/preregistration.json",
+        "docs/router-v2-blind-v2-protocol.md",
+        "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/.openspec.yaml",
+        "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/design.md",
+        "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/proposal.md",
+        "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/specs/"
+        "router-v2-blind-v2-agent-runtime-requalification/spec.md",
+        "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/tasks.md",
+        "scripts/run_router_v2_blind_v2_final.py",
+        "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
+        "tests/test_router_v2_blind_v2_evaluation_runner.py",
+        "tests/test_router_v2_blind_v2_runtime_requalification.py",
+    }
+)
 SEMANTIC_MODEL_ID = "sentence-transformers/all-mpnet-base-v2"
 SEMANTIC_MODEL_REVISION = "e8c3b32edf5434bc2275fc9bab85f82640a19130"
 TOKEN_5GRAM_JACCARD_MAX = Decimal("0.80")
@@ -348,6 +490,7 @@ REVIEWER_RESPONSE_SCHEMA = {
     ],
 }
 PREREGISTRATION_SCHEMA_VERSION = "router-v2-blind-v2-agent-preregistration-v2"
+RUNTIME_PREREGISTRATION_SCHEMA_VERSION = "router-v2-blind-v2-agent-preregistration-v3"
 PREREGISTRATION_GENERATED_AT_UTC = "2026-07-18T19:53:21.592178+00:00"
 COMMIT_A_BINDING = (
     "SUPERSEDING_COMMIT_A_AGENT_BINDS_THIS_DOCUMENT_AND_ALL_CHANGED_FILES"
@@ -492,6 +635,16 @@ PREREGISTRATION_FIELD_AUTHORITY_LEDGER = MappingProxyType(
         "threshold_change_allowed": "exact_constant",
     }
 )
+RUNTIME_PREREGISTRATION_FIELDS = frozenset(
+    {*PREREGISTRATION_FIELDS, "runtime_requalification"}
+)
+RUNTIME_PREREGISTRATION_FIELD_AUTHORITY_LEDGER = MappingProxyType(
+    {
+        **PREREGISTRATION_FIELD_AUTHORITY_LEDGER,
+        "runtime_requalification": "validated_nested_exact_authority",
+    }
+)
+COMMIT_A2_PARENT = "b756a411cc8910999ae1c05d4b5c7a05868302ad"
 TASK8_RESEARCH_QUESTION = (
     "Do the unchanged Router V2 Arm C checkpoints meet the unchanged pilot-002 "
     "gate once on a preregistered 128-task Agent-constructed set accepted by two "
@@ -771,6 +924,60 @@ SemanticSimilarity = Callable[[str, str], int | float | Decimal]
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
+
+
+_MODEL_IDENTITY_EVIDENCE = "HOST_REQUEST_ENVELOPE"
+_PROVIDER_MODEL_AVAILABLE = "AVAILABLE"
+_PROVIDER_MODEL_INTERFACE_UNAVAILABLE = "INTERFACE_UNAVAILABLE"
+
+
+def _provider_model_metadata_is_valid(
+    returned_model: Any,
+    provider_status: Any,
+    *,
+    requested_model: str,
+) -> bool:
+    return (
+        returned_model is None
+        and provider_status == _PROVIDER_MODEL_INTERFACE_UNAVAILABLE
+    ) or (
+        type(returned_model) is str
+        and returned_model == requested_model
+        and provider_status == _PROVIDER_MODEL_AVAILABLE
+    )
+
+
+def _validate_provider_model_metadata(
+    value: Mapping[str, Any],
+    *,
+    requested_model: str,
+    label: str,
+) -> None:
+    _require(
+        _provider_model_metadata_is_valid(
+            value.get("returned_model"),
+            value.get("provider_returned_model_status"),
+            requested_model=requested_model,
+        ),
+        f"{label} provider returned model metadata mismatch",
+    )
+
+
+def _validate_host_lineage(
+    value: Mapping[str, Any],
+    *,
+    label: str,
+) -> None:
+    _require(value.get("lineage_observed") is True, f"{label} lineage not observed")
+    _require(
+        type(value.get("tool_call_count")) is int and value["tool_call_count"] == 0,
+        f"{label} tool call count must be integer zero",
+    )
+    _require(
+        type(value.get("descendant_agent_count")) is int
+        and value["descendant_agent_count"] == 0,
+        f"{label} descendant Agent count must be integer zero",
+    )
 
 
 def _task8_text_sha256(value: str) -> str:
@@ -1231,15 +1438,22 @@ def build_generator_request(
         "historical Commit A has been superseded and cannot authorize generation",
     )
     preregistration_sha256 = _sha256_bytes(preregistration_source)
-    receipt = validate_agent_config_smoke_receipt(
-        commit_a=commit_a,
-        preregistration_sha256=preregistration_sha256,
-    )
-    _require(
-        receipt.get("commit_a") == commit_a
-        and receipt.get("preregistration_sha256") == preregistration_sha256,
-        "Agent-config smoke receipt authority mismatch",
-    )
+    if "runtime_requalification" in preregistration:
+        receipt = validate_active_stage0_qualification_receipt(preregistration)
+        _require(
+            receipt.get("status") == "AGENT_RUNTIME_STAGE0_QUALIFIED",
+            "Stage 0 qualification receipt authority mismatch",
+        )
+    else:
+        receipt = validate_agent_config_smoke_receipt(
+            commit_a=commit_a,
+            preregistration_sha256=preregistration_sha256,
+        )
+        _require(
+            receipt.get("commit_a") == commit_a
+            and receipt.get("preregistration_sha256") == preregistration_sha256,
+            "Agent-config smoke receipt authority mismatch",
+        )
     return _build_generator_request_payload(
         canonical_skills,
         gold_skill_id=gold_skill_id,
@@ -1665,8 +1879,12 @@ def validate_agent_invocation_envelope(
         "imported_memory_count",
         "requested_model",
         "returned_model",
+        "provider_returned_model_status",
         "reasoning_effort",
         "timeout_seconds",
+        "lineage_observed",
+        "tool_call_count",
+        "descendant_agent_count",
         "transport_retry_count",
         "request_sha256",
         "response",
@@ -1699,9 +1917,10 @@ def validate_agent_invocation_envelope(
         envelope["requested_model"] == config["model"],
         "requested model mismatch",
     )
-    _require(
-        envelope["returned_model"] == config["model"],
-        "returned model mismatch",
+    _validate_provider_model_metadata(
+        envelope,
+        requested_model=cast(str, config["model"]),
+        label="agent invocation envelope",
     )
     _require(
         envelope["reasoning_effort"] == config["reasoning_effort"],
@@ -1712,6 +1931,7 @@ def validate_agent_invocation_envelope(
         and envelope["timeout_seconds"] == config["timeout_seconds"],
         "timeout mismatch",
     )
+    _validate_host_lineage(envelope, label="agent invocation envelope")
     retry_count = envelope["transport_retry_count"]
     _require(
         type(retry_count) is int and retry_count in {0, 1},
@@ -2794,6 +3014,736 @@ def _jsonl_no_duplicate_keys(payload: bytes, label: str) -> list[dict[str, Any]]
     return rows
 
 
+STAGE0_SCIENTIFIC_CONTRACT_FIELDS = frozenset(
+    PREREGISTRATION_FIELDS
+    - {
+        "commit_a_binding",
+        "commit_a_changed_files",
+        "current_git_commit_before_commit_a",
+        "evaluator",
+        "generated_at_utc",
+        "origin_main_git_commit",
+        "preexisting_main_validation",
+        "preregistration_parent_git_commit",
+        "preregistration_sha256",
+        "schema_version",
+        "supersedes_commit",
+    }
+)
+STAGE0_SCIENTIFIC_PROJECTION_SHA256 = (
+    "58a5d40fdf3b966dc3e16c81321bafe4391ffc0bb9910d8f11154b2aa5d9e866"
+)
+STAGE0_SCIENTIFIC_CONTRACT_SHA256 = (
+    "5865263ab3e63aad375a16259d5ff4391d48b011e104b8a0fb3c96b476262cc5"
+)
+
+
+def stage0_scientific_contract_sha256(
+    preregistration: Mapping[str, Any],
+) -> str:
+    """Return the frozen scientific-contract id after checking all 44 fields."""
+
+    _require(
+        len(STAGE0_SCIENTIFIC_CONTRACT_FIELDS) == 44,
+        "Stage 0 scientific-contract field count mismatch",
+    )
+    _require(
+        STAGE0_SCIENTIFIC_CONTRACT_FIELDS.issubset(preregistration),
+        "Stage 0 scientific-contract fields missing",
+    )
+    projection = {
+        field: deepcopy(preregistration[field])
+        for field in STAGE0_SCIENTIFIC_CONTRACT_FIELDS
+    }
+    _require(
+        canonical_sha256(projection) == STAGE0_SCIENTIFIC_PROJECTION_SHA256,
+        "Stage 0 scientific-contract authority drift",
+    )
+    return STAGE0_SCIENTIFIC_CONTRACT_SHA256
+
+
+STAGE0_OPEN_SPEC_PATHS = (
+    "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/.openspec.yaml",
+    "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/design.md",
+    "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/proposal.md",
+    "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/specs/"
+    "router-v2-blind-v2-agent-runtime-requalification/spec.md",
+    "openspec/changes/requalify-router-v2-blind-v2-agent-runtime/tasks.md",
+)
+STAGE0_RUNTIME_REQUALIFICATION_FIELDS = frozenset(
+    {
+        "schema_version",
+        "status",
+        "supersession_reason",
+        "classification",
+        "prior_commit_a",
+        "prior_terminal_commit",
+        "prior_terminal_artifact_commit",
+        "prior_terminal_path",
+        "prior_terminal_sha256",
+        "exact_head_before_change",
+        "legacy_v1_receipt_status",
+        "stage0_contract",
+        "stage0_contract_sha256",
+        "stage0_ledger_schema_version",
+        "stage0_receipt_schema_version",
+        "stage0_host_ledger_path",
+        "model_identity_evidence",
+        "provider_returned_model_policy",
+        "formal_agent_invocation_contract",
+        "formal_agent_invocation_contract_sha256",
+        "backend_alias_resolution_independently_proven",
+        "top_level_invocation_limit",
+        "stage0_top_level_invocations_observed",
+        "transport_retry_count",
+        "substantive_retry_count",
+        "zero_exposure_expectations",
+        "scientific_contract_sha256",
+        "scientific_projection_sha256",
+        "commit_a2_parent",
+        "commit_a2_changed_files",
+        "openspec_change_artifacts",
+        "stage0_receipt_sha256",
+        "commit_a2_preparation_authorized",
+        "commit_a2_creation_authorized",
+        "candidate_generation_authorized",
+        "model_loading_authorized",
+        "model_scoring_authorized",
+        "formal_evaluation_authorized",
+    }
+)
+
+FORMAL_AGENT_INVOCATION_CONTRACT = {
+    "schema_version": "router-v2-blind-v2-formal-agent-invocation-v2",
+    "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+    "requested_model_authority": "HOST_REQUEST_ENVELOPE",
+    "reasoning_effort_authority": "HOST_REQUEST_ENVELOPE",
+    "provider_returned_model_field": "returned_model",
+    "provider_returned_model_status_field": "provider_returned_model_status",
+    "legal_provider_metadata_combinations": [
+        {
+            "returned_model": None,
+            "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+        },
+        {
+            "returned_model": "EXACT_REQUESTED_ALIAS",
+            "provider_returned_model_status": "AVAILABLE",
+        },
+    ],
+    "required_host_lineage": {
+        "lineage_observed": True,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0,
+    },
+    "substantive_response_classification": (
+        "RESPONSE_BYTES_PRESENT_NEVER_TRANSPORT_FAILURE"
+    ),
+    "agent_response_identity_fields_authoritative": False,
+    "external_metadata_and_replay_required": True,
+    "transport_retry": {
+        "maximum_retries": 1,
+        "requires_no_response_bytes": True,
+        "identical_request_required": True,
+        "fresh_session_required": True,
+        "fallback_allowed": False,
+    },
+}
+FORMAL_AGENT_INVOCATION_CONTRACT_SHA256 = canonical_sha256(
+    FORMAL_AGENT_INVOCATION_CONTRACT
+)
+
+
+def _stage0_runtime_fixed_authority() -> dict[str, Any]:
+    return {
+        "schema_version": "router-v2-blind-v2-runtime-requalification-v1",
+        "supersession_reason": "PRE_DATA_HOST_ATTESTATION_CONTRACT_REPAIR",
+        "classification": "PRE_DATA_CONTRACT_REPAIR_NOT_A_FORMAL_ATTEMPT",
+        "prior_commit_a": PRIOR_AGENT_COMMIT_A,
+        "prior_terminal_commit": PRIOR_AGENT_TERMINAL_COMMIT,
+        "prior_terminal_artifact_commit": PRIOR_AGENT_TERMINAL_ARTIFACT_COMMIT,
+        "prior_terminal_path": PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE.as_posix(),
+        "prior_terminal_sha256": PRIOR_AGENT_SMOKE_TERMINAL_SHA256,
+        "exact_head_before_change": COMMIT_A2_PARENT,
+        "legacy_v1_receipt_status": "FAILED_AUDIT_HISTORY_ONLY",
+        "stage0_contract": deepcopy(STAGE0_CONTRACT),
+        "stage0_contract_sha256": STAGE0_CONTRACT_SHA256,
+        "stage0_ledger_schema_version": STAGE0_LEDGER_SCHEMA_VERSION,
+        "stage0_receipt_schema_version": STAGE0_RECEIPT_SCHEMA_VERSION,
+        "stage0_host_ledger_path": STAGE0_HOST_LEDGER_PATH.as_posix(),
+        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+        "provider_returned_model_policy": (
+            "NULLABLE; ABSENT_MEANS_INTERFACE_UNAVAILABLE; CONFLICT_IS_TERMINAL"
+        ),
+        "formal_agent_invocation_contract": deepcopy(FORMAL_AGENT_INVOCATION_CONTRACT),
+        "formal_agent_invocation_contract_sha256": (
+            FORMAL_AGENT_INVOCATION_CONTRACT_SHA256
+        ),
+        "backend_alias_resolution_independently_proven": False,
+        "top_level_invocation_limit": 3,
+        "transport_retry_count": 0,
+        "substantive_retry_count": 0,
+        "zero_exposure_expectations": {
+            "failure_stage": "agent_config_smoke",
+            "candidate_count": 0,
+            "commit_b_created": False,
+            "arm_a_or_c_model_loaded": False,
+            "model_scores_observed": False,
+            "formal_evaluation_started": False,
+            "attempt_marker_created": False,
+        },
+        "scientific_contract_sha256": STAGE0_SCIENTIFIC_CONTRACT_SHA256,
+        "scientific_projection_sha256": STAGE0_SCIENTIFIC_PROJECTION_SHA256,
+        "commit_a2_parent": COMMIT_A2_PARENT,
+        "commit_a2_changed_files": sorted(STAGE0_REQUALIFICATION_CHANGED_FILES),
+        "candidate_generation_authorized": False,
+        "model_loading_authorized": False,
+        "model_scoring_authorized": False,
+        "formal_evaluation_authorized": False,
+    }
+
+
+def validate_runtime_requalification_authority(
+    runtime: Any,
+    *,
+    preregistration: Mapping[str, Any],
+    repository_root: Path | None = None,
+) -> dict[str, Any]:
+    runtime = _exact_object_fields(
+        runtime,
+        STAGE0_RUNTIME_REQUALIFICATION_FIELDS,
+        "runtime requalification",
+    )
+    fixed = _stage0_runtime_fixed_authority()
+    for field, expected in fixed.items():
+        _require_exact_json_authority(
+            runtime.get(field),
+            expected,
+            message=f"runtime requalification authority mismatch: {field}",
+        )
+    _require(
+        stage0_scientific_contract_sha256(preregistration)
+        == runtime["scientific_contract_sha256"],
+        "runtime requalification scientific contract mismatch",
+    )
+
+    artifacts = runtime.get("openspec_change_artifacts")
+    _require(
+        type(artifacts) is list and len(artifacts) == len(STAGE0_OPEN_SPEC_PATHS),
+        "runtime requalification OpenSpec artifact binding mismatch",
+    )
+    expected_paths = []
+    for raw_row, expected_path in zip(
+        cast(list[Any], artifacts), STAGE0_OPEN_SPEC_PATHS, strict=True
+    ):
+        row = _exact_object_fields(
+            raw_row, {"path", "sha256"}, "runtime requalification OpenSpec artifact"
+        )
+        _require(
+            row["path"] == expected_path,
+            "runtime requalification OpenSpec artifact path mismatch",
+        )
+        _exact_lowercase_hex(
+            row["sha256"], length=64, label="runtime OpenSpec artifact SHA-256"
+        )
+        expected_paths.append(cast(str, row["path"]))
+        if repository_root is not None:
+            source = _repository_file(
+                repository_root,
+                row["path"],
+                label="runtime requalification OpenSpec artifact",
+            )
+            _require(
+                _sha256_file(source) == row["sha256"],
+                "runtime requalification OpenSpec artifact hash mismatch",
+            )
+    _require(
+        tuple(expected_paths) == STAGE0_OPEN_SPEC_PATHS,
+        "runtime requalification OpenSpec artifact order mismatch",
+    )
+
+    status = runtime.get("status")
+    if status == "PENDING_STAGE0":
+        _require(
+            runtime.get("stage0_top_level_invocations_observed") == 0
+            and runtime.get("stage0_receipt_sha256") is None
+            and runtime.get("commit_a2_preparation_authorized") is False
+            and runtime.get("commit_a2_creation_authorized") is False,
+            "pending Stage 0 authority mismatch",
+        )
+    elif status == "STAGE0_QUALIFIED_COMMIT_A2_PENDING":
+        _require(
+            runtime.get("stage0_top_level_invocations_observed") == 3
+            and type(runtime.get("stage0_receipt_sha256")) is str
+            and runtime.get("commit_a2_preparation_authorized") is True
+            and runtime.get("commit_a2_creation_authorized") is True,
+            "qualified Stage 0 authority mismatch",
+        )
+        _exact_lowercase_hex(
+            runtime["stage0_receipt_sha256"],
+            length=64,
+            label="Stage 0 qualification receipt SHA-256",
+        )
+    else:
+        raise ValueError("runtime requalification status mismatch")
+    return deepcopy(runtime)
+
+
+def validate_requalification_changed_paths(paths: list[str] | tuple[str, ...]) -> None:
+    normalized = tuple(Path(path).as_posix() for path in paths)
+    _require(
+        len(normalized) == len(set(normalized))
+        and all(path in STAGE0_REQUALIFICATION_CHANGED_FILES for path in normalized),
+        "Stage 0 requalification changed-file boundary mismatch",
+    )
+
+
+def stage0_terminal_posture(status: str) -> dict[str, Any]:
+    _require(status in STAGE0_TERMINAL_STATES, "Unknown Stage 0 terminal state")
+    return {
+        "status": status,
+        "router_decision": "KEEP_BASELINE",
+        "production_ready": False,
+        "release_authorized": False,
+        "default_router_unchanged": True,
+        "candidate_generation_authorized": False,
+        "model_loading_authorized": False,
+        "model_scoring_authorized": False,
+        "formal_evaluation_authorized": False,
+        "commit_a2_creation_authorized": False,
+    }
+
+
+def _stage0_authority_drift() -> dict[str, Any]:
+    return {
+        "eligible": False,
+        **stage0_terminal_posture("AGENT_RUNTIME_STAGE0_AUTHORITY_DRIFT"),
+    }
+
+
+def validate_stage0_requalification_eligibility(
+    terminal_path: Path | str,
+    *,
+    repository_root: Path | str,
+    canonical_path_required: bool = True,
+) -> dict[str, Any]:
+    """Fail closed unless the preserved terminal proves zero blind exposure."""
+
+    repository = Path(repository_root).resolve(strict=True)
+    path = Path(terminal_path)
+    try:
+        if path.is_symlink() or not path.is_file():
+            return _stage0_authority_drift()
+        resolved = path.resolve(strict=True)
+        canonical = (repository / PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE).resolve(
+            strict=True
+        )
+        if canonical_path_required and resolved != canonical:
+            return _stage0_authority_drift()
+        payload = resolved.read_bytes()
+        if (
+            canonical_path_required
+            and _sha256_bytes(payload) != PRIOR_AGENT_SMOKE_TERMINAL_SHA256
+        ):
+            return _stage0_authority_drift()
+        terminal = _json_no_duplicate_keys(payload, "Stage 0 prior terminal")
+    except (OSError, ValueError):
+        return _stage0_authority_drift()
+
+    expected = {
+        "failure_stage": "agent_config_smoke",
+        "commit_a": PRIOR_AGENT_COMMIT_A,
+        "candidate_count": 0,
+        "commit_b_created": False,
+        "arm_a_or_c_model_loaded": False,
+        "model_scores_observed": False,
+        "formal_evaluation_started": False,
+        "attempt_marker_created": False,
+    }
+    if any(terminal.get(field) != value for field, value in expected.items()):
+        return _stage0_authority_drift()
+
+    if canonical_path_required:
+        try:
+            for commit in (
+                PRIOR_AGENT_TERMINAL_COMMIT,
+                PRIOR_AGENT_TERMINAL_ARTIFACT_COMMIT,
+            ):
+                if (
+                    _git(
+                        repository,
+                        "merge-base",
+                        "--is-ancestor",
+                        commit,
+                        "HEAD",
+                    )
+                    != ""
+                ):
+                    return _stage0_authority_drift()
+            committed = subprocess.run(
+                [
+                    "git",
+                    "show",
+                    f"{PRIOR_AGENT_TERMINAL_ARTIFACT_COMMIT}:"
+                    f"{PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE.as_posix()}",
+                ],
+                cwd=repository,
+                check=False,
+                capture_output=True,
+            )
+            if (
+                committed.returncode != 0
+                or _sha256_bytes(committed.stdout) != PRIOR_AGENT_SMOKE_TERMINAL_SHA256
+            ):
+                return _stage0_authority_drift()
+        except ValueError:
+            return _stage0_authority_drift()
+
+    return {
+        "eligible": True,
+        "status": "AGENT_RUNTIME_STAGE0_ELIGIBLE",
+        "prior_commit_a": PRIOR_AGENT_COMMIT_A,
+        "prior_terminal_commit": PRIOR_AGENT_TERMINAL_COMMIT,
+        "prior_terminal_path": PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE.as_posix(),
+        "prior_terminal_sha256": PRIOR_AGENT_SMOKE_TERMINAL_SHA256,
+    }
+
+
+STAGE0_LEDGER_FIELDS = frozenset(STAGE0_LEDGER_FIELDS_IN_ORDER)
+STAGE0_INVOCATION_FIELDS = frozenset(STAGE0_INVOCATION_FIELDS_IN_ORDER)
+
+
+def parse_stage0_host_envelope_ledger(payload: bytes) -> dict[str, Any]:
+    ledger = _json_no_duplicate_keys(payload, "Stage 0 host-envelope ledger")
+    _exact_object_fields(ledger, STAGE0_LEDGER_FIELDS, "Stage 0 ledger")
+    return ledger
+
+
+def stage0_canary(role: str) -> dict[str, str]:
+    _require(role in AGENT_CONFIGS, "Stage 0 canary role mismatch")
+    return deepcopy(STAGE0_CANARIES[role])
+
+
+def validate_stage0_canary_response(payload: bytes, *, role: str) -> dict[str, Any]:
+    response = _json_no_duplicate_keys(payload, f"Stage 0 {role} canary")
+    _exact_object_fields(
+        response,
+        {"protocol", "role", "nonce", "status"},
+        f"Stage 0 {role} canary",
+    )
+    _require(response == stage0_canary(role), f"Stage 0 {role} canary mismatch")
+    return {
+        "canonical_response": response,
+        "canonical_response_sha256": canonical_sha256(response),
+        "raw_response_sha256": _sha256_bytes(payload),
+    }
+
+
+def _stage0_receipt_status(ledger: Mapping[str, Any]) -> str:
+    if (
+        ledger.get("schema_version") != STAGE0_LEDGER_SCHEMA_VERSION
+        or ledger.get("prior_commit_a") != PRIOR_AGENT_COMMIT_A
+        or ledger.get("prior_terminal_sha256") != PRIOR_AGENT_SMOKE_TERMINAL_SHA256
+        or ledger.get("contract_sha256") != STAGE0_CONTRACT_SHA256
+    ):
+        return "AGENT_RUNTIME_STAGE0_AUTHORITY_DRIFT"
+
+    invocations = ledger.get("invocations")
+    if type(invocations) is not list or len(invocations) != len(AGENT_CONFIGS):
+        return "AGENT_RUNTIME_STAGE0_ISOLATION_VIOLATION"
+    rows = cast(list[Any], invocations)
+    if (
+        type(ledger.get("top_level_invocation_count")) is not int
+        or ledger.get("top_level_invocation_count") != 3
+        or type(ledger.get("total_observed_agent_invocation_count")) is not int
+        or ledger.get("total_observed_agent_invocation_count") != 3
+    ):
+        return "AGENT_RUNTIME_STAGE0_ISOLATION_VIOLATION"
+
+    roles = [row.get("role") if type(row) is dict else None for row in rows]
+    if roles != list(AGENT_CONFIGS):
+        return "AGENT_RUNTIME_STAGE0_ISOLATION_VIOLATION"
+
+    agent_ids: set[str] = set()
+    for raw_row, role in zip(rows, AGENT_CONFIGS, strict=True):
+        row = _exact_object_fields(
+            raw_row, STAGE0_INVOCATION_FIELDS, "Stage 0 invocation"
+        )
+        config = AGENT_CONFIGS[role]
+        if (
+            row["role"] != role
+            or row["requested_model"] != config["model"]
+            or row["reasoning_effort"] != config["reasoning_effort"]
+            or type(row["timeout_seconds"]) is not int
+            or row["timeout_seconds"] != config["timeout_seconds"]
+        ):
+            return "AGENT_RUNTIME_STAGE0_CONFIG_UNAVAILABLE"
+        if (
+            type(row["transport_retry_count"]) is not int
+            or row["transport_retry_count"] != 0
+            or row["fallback_model_used"] is not False
+        ):
+            return "AGENT_RUNTIME_STAGE0_ISOLATION_VIOLATION"
+        if row["outcome"] == "TRANSPORT_FAILURE":
+            return "AGENT_RUNTIME_STAGE0_TRANSPORT_FAILURE"
+        if row["outcome"] == "CONFIG_UNAVAILABLE":
+            return "AGENT_RUNTIME_STAGE0_CONFIG_UNAVAILABLE"
+        if row["outcome"] != "RESPONSE":
+            return "AGENT_RUNTIME_STAGE0_CONFIG_UNAVAILABLE"
+
+        provider_model = row["provider_returned_model"]
+        provider_status = row["provider_returned_model_status"]
+        provider_available = (
+            type(provider_model) is str
+            and bool(cast(str, provider_model).strip())
+            and provider_status == "AVAILABLE"
+        )
+        provider_unavailable = (
+            provider_model is None and provider_status == "INTERFACE_UNAVAILABLE"
+        )
+        if not (provider_available or provider_unavailable):
+            return "AGENT_RUNTIME_STAGE0_CONFIG_UNAVAILABLE"
+        if provider_available and provider_model != config["model"]:
+            return "AGENT_RUNTIME_STAGE0_CONFIG_UNAVAILABLE"
+
+        if row["lineage_observed"] is not True:
+            return "AGENT_RUNTIME_STAGE0_LINEAGE_UNVERIFIABLE"
+        lineage_values = (
+            row["agent_id"],
+            row["fork_context"],
+            row["history_message_count"],
+            row["imported_memory_count"],
+            row["tool_call_count"],
+            row["descendant_agent_count"],
+            row["response_count"],
+        )
+        if any(value is None for value in lineage_values):
+            return "AGENT_RUNTIME_STAGE0_LINEAGE_UNVERIFIABLE"
+        if (
+            type(row["agent_id"]) is not str
+            or not cast(str, row["agent_id"]).strip()
+            or row["agent_id"] in agent_ids
+            or row["fork_context"] is not False
+            or type(row["history_message_count"]) is not int
+            or row["history_message_count"] != 0
+            or type(row["imported_memory_count"]) is not int
+            or row["imported_memory_count"] != 0
+            or type(row["tool_call_count"]) is not int
+            or row["tool_call_count"] != 0
+            or type(row["descendant_agent_count"]) is not int
+            or row["descendant_agent_count"] != 0
+            or type(row["response_count"]) is not int
+            or row["response_count"] != 1
+        ):
+            return "AGENT_RUNTIME_STAGE0_ISOLATION_VIOLATION"
+        agent_ids.add(cast(str, row["agent_id"]))
+        if type(row["timestamp_utc"]) is not str or not row["timestamp_utc"].strip():
+            return "AGENT_RUNTIME_STAGE0_LINEAGE_UNVERIFIABLE"
+        try:
+            timestamp = datetime.fromisoformat(cast(str, row["timestamp_utc"]))
+        except ValueError:
+            return "AGENT_RUNTIME_STAGE0_LINEAGE_UNVERIFIABLE"
+        offset = timestamp.utcoffset()
+        if timestamp.tzinfo is None or offset is None or offset.total_seconds() != 0:
+            return "AGENT_RUNTIME_STAGE0_LINEAGE_UNVERIFIABLE"
+        if type(row["response_base64"]) is not str:
+            return "AGENT_RUNTIME_STAGE0_CANARY_MISMATCH"
+        try:
+            response_payload = base64.b64decode(
+                cast(str, row["response_base64"]), validate=True
+            )
+        except (binascii.Error, ValueError):
+            return "AGENT_RUNTIME_STAGE0_CANARY_MISMATCH"
+        if row["response_sha256"] != _sha256_bytes(response_payload):
+            return "AGENT_RUNTIME_STAGE0_CANARY_MISMATCH"
+        try:
+            response_text = response_payload.decode("utf-8", errors="strict")
+            _require(
+                row["response_text"] == response_text,
+                f"Stage 0 {role} response text mismatch",
+            )
+            validate_stage0_canary_response(response_payload, role=role)
+        except (UnicodeDecodeError, ValueError):
+            return "AGENT_RUNTIME_STAGE0_CANARY_MISMATCH"
+    return "AGENT_RUNTIME_STAGE0_QUALIFIED"
+
+
+def build_stage0_qualification_receipt(
+    ledger: dict[str, Any], *, eligibility: Mapping[str, Any]
+) -> dict[str, Any]:
+    _exact_object_fields(ledger, STAGE0_LEDGER_FIELDS, "Stage 0 ledger")
+    invocations = ledger.get("invocations")
+    if type(invocations) is list:
+        for row in cast(list[Any], invocations):
+            _exact_object_fields(row, STAGE0_INVOCATION_FIELDS, "Stage 0 invocation")
+    status = (
+        "AGENT_RUNTIME_STAGE0_AUTHORITY_DRIFT"
+        if eligibility.get("eligible") is not True
+        else _stage0_receipt_status(ledger)
+    )
+    posture = stage0_terminal_posture(status)
+    document = {
+        "schema_version": STAGE0_RECEIPT_SCHEMA_VERSION,
+        **posture,
+        "prior_commit_a": PRIOR_AGENT_COMMIT_A,
+        "prior_terminal_commit": PRIOR_AGENT_TERMINAL_COMMIT,
+        "prior_terminal_path": PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE.as_posix(),
+        "prior_terminal_sha256": PRIOR_AGENT_SMOKE_TERMINAL_SHA256,
+        "contract_sha256": STAGE0_CONTRACT_SHA256,
+        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+        "backend_alias_resolution_independently_proven": False,
+        "commit_a2_preparation_authorized": (
+            status == "AGENT_RUNTIME_STAGE0_QUALIFIED"
+        ),
+        "top_level_invocation_count": ledger.get("top_level_invocation_count"),
+        "total_observed_agent_invocation_count": ledger.get(
+            "total_observed_agent_invocation_count"
+        ),
+        "invocations": deepcopy(ledger.get("invocations")),
+    }
+    return {**document, "receipt_sha256": canonical_sha256(document)}
+
+
+def _stage0_receipt_path(receipt: Mapping[str, Any]) -> Path:
+    receipt_hash = _exact_lowercase_hex(
+        receipt.get("receipt_sha256"), length=64, label="Stage 0 receipt SHA-256"
+    )
+    return STAGE0_RECEIPT_ROOT / f"{receipt_hash}.json"
+
+
+def write_stage0_qualification_receipt(
+    receipt: dict[str, Any], *, path: Path | str | None = None
+) -> Path:
+    validate_stage0_qualification_receipt_document(receipt)
+    expected = _stage0_receipt_path(receipt)
+    target = Path(path) if path is not None else expected
+    _require(
+        target == expected,
+        "Stage 0 receipt path must match the hash-bound private path",
+    )
+    _assert_stage0_private_path(target, label="Stage 0 receipt path")
+    target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    target.parent.chmod(0o700)
+    descriptor = os.open(
+        target,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+        0o600,
+    )
+    try:
+        os.fchmod(descriptor, 0o600)
+        handle = os.fdopen(descriptor, "wb")
+        descriptor = -1
+        with handle:
+            handle.write(_canonical_json_bytes(receipt))
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+    return target
+
+
+def validate_stage0_qualification_receipt_document(
+    receipt: dict[str, Any],
+) -> dict[str, Any]:
+    expected_fields = {
+        "schema_version",
+        *stage0_terminal_posture(STAGE0_TERMINAL_STATES[0]),
+        "prior_commit_a",
+        "prior_terminal_commit",
+        "prior_terminal_path",
+        "prior_terminal_sha256",
+        "contract_sha256",
+        "model_identity_evidence",
+        "backend_alias_resolution_independently_proven",
+        "commit_a2_preparation_authorized",
+        "top_level_invocation_count",
+        "total_observed_agent_invocation_count",
+        "invocations",
+        "receipt_sha256",
+    }
+    _exact_object_fields(receipt, expected_fields, "Stage 0 receipt")
+    _require(
+        receipt["schema_version"] == STAGE0_RECEIPT_SCHEMA_VERSION,
+        "Stage 0 receipt schema mismatch",
+    )
+    status = receipt.get("status")
+    _require(type(status) is str, "Stage 0 receipt status missing")
+    posture = stage0_terminal_posture(cast(str, status))
+    for field, expected in posture.items():
+        _require(receipt.get(field) == expected, "Stage 0 receipt posture mismatch")
+    _require(
+        receipt.get("commit_a2_preparation_authorized")
+        is (status == "AGENT_RUNTIME_STAGE0_QUALIFIED"),
+        "Stage 0 Commit A2 preparation authority mismatch",
+    )
+    document = {key: value for key, value in receipt.items() if key != "receipt_sha256"}
+    _require(
+        receipt.get("receipt_sha256") == canonical_sha256(document),
+        "Stage 0 receipt self-hash mismatch",
+    )
+    for field, expected in (
+        ("prior_commit_a", PRIOR_AGENT_COMMIT_A),
+        ("prior_terminal_commit", PRIOR_AGENT_TERMINAL_COMMIT),
+        ("prior_terminal_path", PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE.as_posix()),
+        ("prior_terminal_sha256", PRIOR_AGENT_SMOKE_TERMINAL_SHA256),
+        ("contract_sha256", STAGE0_CONTRACT_SHA256),
+        ("model_identity_evidence", "HOST_REQUEST_ENVELOPE"),
+        ("backend_alias_resolution_independently_proven", False),
+    ):
+        _require(
+            receipt.get(field) == expected,
+            f"Stage 0 receipt authority mismatch: {field}",
+        )
+    if status != "AGENT_RUNTIME_STAGE0_AUTHORITY_DRIFT":
+        derived_status = _stage0_receipt_status(
+            {
+                "schema_version": STAGE0_LEDGER_SCHEMA_VERSION,
+                "prior_commit_a": receipt["prior_commit_a"],
+                "prior_terminal_sha256": receipt["prior_terminal_sha256"],
+                "contract_sha256": receipt["contract_sha256"],
+                "top_level_invocation_count": receipt["top_level_invocation_count"],
+                "total_observed_agent_invocation_count": receipt[
+                    "total_observed_agent_invocation_count"
+                ],
+                "invocations": receipt["invocations"],
+            }
+        )
+        _require(
+            status == derived_status,
+            "Stage 0 receipt derived status mismatch",
+        )
+    return receipt
+
+
+def validate_stage0_qualification_receipt(path: Path | str) -> dict[str, Any]:
+    candidate = Path(path)
+    _assert_stage0_private_path(candidate, label="Stage 0 receipt path")
+    parent_metadata = candidate.parent.stat(follow_symlinks=False)
+    _require(
+        stat.S_ISDIR(parent_metadata.st_mode)
+        and stat.S_IMODE(parent_metadata.st_mode) == 0o700,
+        "Stage 0 receipt parent mode 0700 is required",
+    )
+    descriptor = os.open(candidate, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    try:
+        metadata = os.fstat(descriptor)
+        _require(
+            stat.S_ISREG(metadata.st_mode),
+            "Stage 0 receipt must be a regular file",
+        )
+        _require(
+            stat.S_IMODE(metadata.st_mode) == 0o600,
+            "Stage 0 receipt mode 0600 is required",
+        )
+        handle = os.fdopen(descriptor, "rb")
+        descriptor = -1
+        with handle:
+            receipt_bytes = handle.read()
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+    receipt = _json_no_duplicate_keys(receipt_bytes, "Stage 0 receipt")
+    return validate_stage0_qualification_receipt_document(receipt)
+
+
 def _git(repository: Path, *arguments: str) -> str:
     result = subprocess.run(
         ["git", *arguments],
@@ -2887,6 +3837,8 @@ def validate_commit_a_repository(
     repository_root: Path | str, preregistration: dict[str, Any]
 ) -> dict[str, Any]:
     repository = Path(repository_root).resolve(strict=True)
+    if "runtime_requalification" in preregistration:
+        return validate_commit_a2_repository(repository, preregistration)
     _require(
         _git(repository, "status", "--porcelain", "--untracked-files=all") == "",
         "Commit A-agent worktree must be clean",
@@ -2949,6 +3901,93 @@ def validate_commit_a_repository(
         "commit_a": head,
         "origin_main": origin_main,
         "supersedes_commit": HISTORICAL_HUMAN_COMMIT_A,
+        "changed_files": sorted(changed),
+    }
+
+
+def validate_active_stage0_qualification_receipt(
+    preregistration: Mapping[str, Any],
+) -> dict[str, Any]:
+    runtime = validate_runtime_requalification_authority(
+        preregistration.get("runtime_requalification"),
+        preregistration=preregistration,
+    )
+    _require(
+        runtime["status"] == "STAGE0_QUALIFIED_COMMIT_A2_PENDING"
+        and runtime["commit_a2_preparation_authorized"] is True
+        and runtime["commit_a2_creation_authorized"] is True,
+        "Candidate generation blocked pending qualified Stage 0 and Commit A2",
+    )
+    receipt_sha256 = _exact_lowercase_hex(
+        runtime["stage0_receipt_sha256"],
+        length=64,
+        label="active Stage 0 receipt SHA-256",
+    )
+    receipt_path = STAGE0_RECEIPT_ROOT / f"{receipt_sha256}.json"
+    receipt = validate_stage0_qualification_receipt(receipt_path)
+    _require(
+        receipt["status"] == "AGENT_RUNTIME_STAGE0_QUALIFIED"
+        and receipt["receipt_sha256"] == receipt_sha256,
+        "Candidate generation blocked by unqualified Stage 0 receipt",
+    )
+    return receipt
+
+
+def validate_commit_a2_repository(
+    repository_root: Path | str,
+    preregistration: dict[str, Any],
+) -> dict[str, Any]:
+    repository = Path(repository_root).resolve(strict=True)
+    runtime = validate_runtime_requalification_authority(
+        preregistration.get("runtime_requalification"),
+        preregistration=preregistration,
+        repository_root=repository,
+    )
+    receipt = validate_active_stage0_qualification_receipt(preregistration)
+    eligibility = validate_stage0_requalification_eligibility(
+        repository / PRIOR_AGENT_SMOKE_TERMINAL_RELATIVE,
+        repository_root=repository,
+    )
+    _require(
+        eligibility["eligible"] is True,
+        "Commit A2 blocked by Stage 0 authority drift",
+    )
+    _require(
+        _git(repository, "status", "--porcelain", "--untracked-files=all") == "",
+        "Commit A2 worktree must be clean",
+    )
+    head = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "HEAD"), length=40, label="Commit A2"
+    )
+    parent_line = _git(repository, "rev-list", "--parents", "-n", "1", head).split()
+    _require(
+        len(parent_line) == 2 and parent_line[0] == head,
+        "Commit A2 must have exactly one parent and cannot be a merge commit",
+    )
+    parent = _exact_lowercase_hex(parent_line[1], length=40, label="Commit A2 parent")
+    _require(
+        parent == COMMIT_A2_PARENT == runtime["commit_a2_parent"],
+        "Commit A2 parent authority mismatch",
+    )
+    changed = _git(
+        repository,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        f"{parent}..{head}",
+    ).splitlines()
+    validate_requalification_changed_paths(changed)
+    _require(
+        len(changed) == len(STAGE0_REQUALIFICATION_CHANGED_FILES)
+        and set(changed) == STAGE0_REQUALIFICATION_CHANGED_FILES,
+        "Commit A2 requalification changed-file boundary mismatch",
+    )
+    return {
+        "commit_a": head,
+        "commit_a2": head,
+        "parent": parent,
+        "prior_commit_a": PRIOR_AGENT_COMMIT_A,
+        "stage0_receipt_sha256": receipt["receipt_sha256"],
         "changed_files": sorted(changed),
     }
 
@@ -3194,6 +4233,12 @@ def _validated_invocation_terminal_authority(
         run_record["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE"
         and run_record["response_sha256"] is None
         and run_record["returned_model"] is None
+        and run_record["provider_returned_model_status"]
+        == _PROVIDER_MODEL_INTERFACE_UNAVAILABLE
+        and run_record["model_identity_evidence"] == _MODEL_IDENTITY_EVIDENCE
+        and run_record["lineage_observed"] is True
+        and run_record["tool_call_count"] == 0
+        and run_record["descendant_agent_count"] == 0
         and run_record["candidate_ids"] == []
         and len(run_record["session_or_thread_ids"]) == 2
         and len(set(run_record["session_or_thread_ids"])) == 2,
@@ -3252,8 +4297,15 @@ def _sanitized_agent_run_record(
                         "session_or_thread_id": identities[ordinal - 1],
                         "request_sha256": request["request_sha256"],
                         "requested_model": config["model"],
-                        "returned_model": None,
+                        "returned_model": invocation["returned_model"],
+                        "provider_returned_model_status": invocation[
+                            "provider_returned_model_status"
+                        ],
+                        "model_identity_evidence": _MODEL_IDENTITY_EVIDENCE,
                         "reasoning_effort": config["reasoning_effort"],
+                        "lineage_observed": invocation["lineage_observed"],
+                        "tool_call_count": invocation["tool_call_count"],
+                        "descendant_agent_count": invocation["descendant_agent_count"],
                         "transport_failure": True,
                         "response_bytes_present": False,
                         "response_sha256": None,
@@ -3274,7 +4326,14 @@ def _sanitized_agent_run_record(
                     "request_sha256": request["request_sha256"],
                     "requested_model": config["model"],
                     "returned_model": envelope["returned_model"],
+                    "provider_returned_model_status": envelope[
+                        "provider_returned_model_status"
+                    ],
+                    "model_identity_evidence": _MODEL_IDENTITY_EVIDENCE,
                     "reasoning_effort": config["reasoning_effort"],
+                    "lineage_observed": envelope["lineage_observed"],
+                    "tool_call_count": envelope["tool_call_count"],
+                    "descendant_agent_count": envelope["descendant_agent_count"],
                     "transport_failure": False,
                     "response_bytes_present": True,
                     "response_sha256": response_sha256,
@@ -3284,7 +4343,17 @@ def _sanitized_agent_run_record(
     if attempts:
         final_response_sha256 = attempts[-1]["response_sha256"]
         final_returned_model = attempts[-1]["returned_model"]
+        final_provider_status = attempts[-1]["provider_returned_model_status"]
         final_outcome = attempts[-1]["outcome"]
+        final_lineage_observed = all(
+            attempt["lineage_observed"] is True for attempt in attempts
+        )
+        final_tool_call_count = sum(
+            cast(int, attempt["tool_call_count"]) for attempt in attempts
+        )
+        final_descendant_agent_count = sum(
+            cast(int, attempt["descendant_agent_count"]) for attempt in attempts
+        )
     else:
         _require(
             retry_count == 0 and not identities,
@@ -3292,7 +4361,11 @@ def _sanitized_agent_run_record(
         )
         final_response_sha256 = None
         final_returned_model = None
+        final_provider_status = _PROVIDER_MODEL_INTERFACE_UNAVAILABLE
         final_outcome = "TRANSPORT_FAILURE_NO_RESPONSE"
+        final_lineage_observed = False
+        final_tool_call_count = 0
+        final_descendant_agent_count = 0
     return {
         "invocation_id": cast(str, request["request_sha256"])[:24],
         "candidate_ids": list(candidate_ids),
@@ -3300,7 +4373,12 @@ def _sanitized_agent_run_record(
         "response_sha256": final_response_sha256,
         "requested_model": config["model"],
         "returned_model": final_returned_model,
+        "provider_returned_model_status": final_provider_status,
+        "model_identity_evidence": _MODEL_IDENTITY_EVIDENCE,
         "reasoning_effort": config["reasoning_effort"],
+        "lineage_observed": final_lineage_observed,
+        "tool_call_count": final_tool_call_count,
+        "descendant_agent_count": final_descendant_agent_count,
         "session_or_thread_ids": identities,
         "transport_retry_count": retry_count,
         "outcome": final_outcome,
@@ -3315,6 +4393,8 @@ def _transport_retry_record(
         return None
     identities = cast(list[str], run_record["session_or_thread_ids"])
     _require(len(identities) == 2, "transport retry must bind two sessions")
+    attempts = cast(list[dict[str, Any]], run_record["attempts"])
+    _require(len(attempts) == 2, "transport retry must bind two attempts")
     return {
         "role": role,
         "invocation_id": run_record["invocation_id"],
@@ -3325,7 +4405,53 @@ def _transport_retry_record(
         "retry_session_or_thread_id": identities[1],
         "failed_attempt_ordinal": 1,
         "retry_attempt_ordinal": 2,
+        "failed_returned_model": attempts[0]["returned_model"],
+        "failed_provider_returned_model_status": attempts[0][
+            "provider_returned_model_status"
+        ],
+        "retry_returned_model": attempts[1]["returned_model"],
+        "retry_provider_returned_model_status": attempts[1][
+            "provider_returned_model_status"
+        ],
+        "model_identity_evidence": _MODEL_IDENTITY_EVIDENCE,
+        "failed_lineage_observed": attempts[0]["lineage_observed"],
+        "failed_tool_call_count": attempts[0]["tool_call_count"],
+        "failed_descendant_agent_count": attempts[0]["descendant_agent_count"],
+        "retry_lineage_observed": attempts[1]["lineage_observed"],
+        "retry_tool_call_count": attempts[1]["tool_call_count"],
+        "retry_descendant_agent_count": attempts[1]["descendant_agent_count"],
         "retry_count": 1,
+    }
+
+
+def _agent_role_host_metadata(
+    records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    provider_models: list[str | None] = []
+    provider_statuses: set[str] = set()
+    attempts = [
+        attempt
+        for record in records
+        for attempt in cast(list[dict[str, Any]], record["attempts"])
+    ]
+    for attempt in attempts:
+        provider_model = cast(str | None, attempt["returned_model"])
+        if provider_model not in provider_models:
+            provider_models.append(provider_model)
+        provider_statuses.add(cast(str, attempt["provider_returned_model_status"]))
+    return {
+        "model_identity_evidence": _MODEL_IDENTITY_EVIDENCE,
+        "provider_returned_models": provider_models,
+        "provider_returned_model_statuses": sorted(provider_statuses),
+        "lineage_observed": all(
+            attempt["lineage_observed"] is True for attempt in attempts
+        ),
+        "tool_call_count": sum(
+            cast(int, attempt["tool_call_count"]) for attempt in attempts
+        ),
+        "descendant_agent_count": sum(
+            cast(int, attempt["descendant_agent_count"]) for attempt in attempts
+        ),
     }
 
 
@@ -3337,8 +4463,10 @@ def _agent_role_run_evidence(
     response_schema = (
         GENERATOR_RESPONSE_SCHEMA if role == "generator" else REVIEWER_RESPONSE_SCHEMA
     )
+    host_metadata = _agent_role_host_metadata(records)
     return {
         "config": deepcopy(config),
+        **host_metadata,
         "requested_models": [config["model"]],
         "returned_models": sorted(
             {
@@ -3759,6 +4887,12 @@ def _agent_run_identity_authority(
                 "fork_context",
                 "history_message_count",
                 "imported_memory_count",
+                "model_identity_evidence",
+                "provider_returned_models",
+                "provider_returned_model_statuses",
+                "lineage_observed",
+                "tool_call_count",
+                "descendant_agent_count",
             },
             f"{role} metadata",
         )
@@ -3786,6 +4920,14 @@ def _agent_run_identity_authority(
             metadata["session_or_thread_ids"] == sessions,
             f"{role} metadata session binding mismatch",
         )
+        expected_host_metadata = _agent_role_host_metadata(records)
+        _require(
+            all(
+                metadata[field] == expected
+                for field, expected in expected_host_metadata.items()
+            ),
+            f"{role} metadata host authority mismatch",
+        )
         _require(
             len(invocation_ids) == len(set(invocation_ids)),
             f"{role} invocation identities must be unique",
@@ -3812,6 +4954,7 @@ def _agent_run_identity_authority(
             "invocation_count": len(sessions),
             "session_or_thread_ids": sessions,
             "session_or_thread_ids_sha256": canonical_sha256(sessions),
+            **deepcopy(expected_host_metadata),
         }
     _require(
         len(all_sessions) == len(set(all_sessions)),
@@ -3860,8 +5003,12 @@ _PACK_PROTOCOL_FIELDS = frozenset(
         "imported_memory_count",
         "requested_model",
         "returned_model",
+        "provider_returned_model_status",
         "reasoning_effort",
         "timeout_seconds",
+        "lineage_observed",
+        "tool_call_count",
+        "descendant_agent_count",
         "transport_retry_count",
         "request_sha256",
     }
@@ -3877,7 +5024,6 @@ def _validate_pack_protocol_fields(
     value: dict[str, Any],
     *,
     request: dict[str, Any],
-    require_returned_model: bool,
     require_transport_retry_count: bool,
     non_protocol_fields: set[str],
 ) -> set[str]:
@@ -3892,13 +5038,16 @@ def _validate_pack_protocol_fields(
         "history_message_count",
         "imported_memory_count",
         "requested_model",
+        "returned_model",
+        "provider_returned_model_status",
         "reasoning_effort",
         "timeout_seconds",
+        "lineage_observed",
+        "tool_call_count",
+        "descendant_agent_count",
         "request_sha256",
         *identity_fields,
     }
-    if require_returned_model:
-        required_fields.add("returned_model")
     if require_transport_retry_count:
         required_fields.add("transport_retry_count")
     _pack_protocol_require(
@@ -3928,12 +5077,14 @@ def _validate_pack_protocol_fields(
         value["requested_model"] == config["model"],
         "requested model mismatch",
     )
-    if "returned_model" in value:
-        _pack_protocol_require(
-            type(value["returned_model"]) is str
-            and bool(value["returned_model"].strip()),
-            "returned model must be non-empty",
-        )
+    _pack_protocol_require(
+        _provider_model_metadata_is_valid(
+            value["returned_model"],
+            value["provider_returned_model_status"],
+            requested_model=cast(str, config["model"]),
+        ),
+        "provider returned model metadata mismatch",
+    )
     _pack_protocol_require(
         value["reasoning_effort"] == config["reasoning_effort"],
         "reasoning effort mismatch",
@@ -3942,6 +5093,19 @@ def _validate_pack_protocol_fields(
         type(value["timeout_seconds"]) is int
         and value["timeout_seconds"] == config["timeout_seconds"],
         "timeout mismatch",
+    )
+    _pack_protocol_require(
+        value["lineage_observed"] is True,
+        "Agent invocation lineage must be observed",
+    )
+    _pack_protocol_require(
+        type(value["tool_call_count"]) is int and value["tool_call_count"] == 0,
+        "Agent invocation tool call count must be integer zero",
+    )
+    _pack_protocol_require(
+        type(value["descendant_agent_count"]) is int
+        and value["descendant_agent_count"] == 0,
+        "Agent invocation descendant Agent count must be integer zero",
     )
     _pack_protocol_require(
         value["request_sha256"] == request["request_sha256"],
@@ -3984,7 +5148,6 @@ def _audit_pack_invocation_protocol(
         _validate_pack_protocol_fields(
             cast(dict[str, Any], envelope),
             request=request,
-            require_returned_model=True,
             require_transport_retry_count=True,
             non_protocol_fields={"response"},
         )
@@ -3993,9 +5156,14 @@ def _audit_pack_invocation_protocol(
         _validate_pack_protocol_fields(
             invocation,
             request=request,
-            require_returned_model=False,
             require_transport_retry_count=False,
             non_protocol_fields={"transport_failure", "response_bytes_present"},
+        )
+        _pack_protocol_require(
+            invocation["returned_model"] is None
+            and invocation["provider_returned_model_status"]
+            == _PROVIDER_MODEL_INTERFACE_UNAVAILABLE,
+            "transport failure provider returned model metadata mismatch",
         )
         _pack_protocol_require(
             invocation["transport_failure"] is True,
@@ -5113,6 +6281,12 @@ def validate_agent_pack(
             "fork_context",
             "history_message_count",
             "imported_memory_count",
+            "model_identity_evidence",
+            "provider_returned_models",
+            "provider_returned_model_statuses",
+            "lineage_observed",
+            "tool_call_count",
+            "descendant_agent_count",
         }
         for role, config in AGENT_CONFIGS.items():
             role_metadata = _exact_object_fields(
@@ -5133,6 +6307,37 @@ def validate_agent_pack(
                 type(role_config["timeout_seconds"]) is int
                 and role_config["timeout_seconds"] == config["timeout_seconds"],
                 f"{role} config timeout_seconds mismatch",
+            )
+            provider_models = role_metadata["provider_returned_models"]
+            provider_statuses = role_metadata["provider_returned_model_statuses"]
+            _require(
+                role_metadata["model_identity_evidence"] == _MODEL_IDENTITY_EVIDENCE,
+                f"{role} model identity evidence mismatch",
+            )
+            _require(
+                type(provider_models) is list
+                and bool(provider_models)
+                and len(provider_models) == len(set(provider_models))
+                and all(
+                    provider_model is None or provider_model == config["model"]
+                    for provider_model in provider_models
+                ),
+                f"{role} provider returned models mismatch",
+            )
+            _require(
+                type(provider_statuses) is list
+                and bool(provider_statuses)
+                and provider_statuses == sorted(set(provider_statuses))
+                and set(provider_statuses)
+                <= {
+                    _PROVIDER_MODEL_AVAILABLE,
+                    _PROVIDER_MODEL_INTERFACE_UNAVAILABLE,
+                }
+                and (None in provider_models)
+                is (_PROVIDER_MODEL_INTERFACE_UNAVAILABLE in provider_statuses)
+                and (config["model"] in provider_models)
+                is (_PROVIDER_MODEL_AVAILABLE in provider_statuses),
+                f"{role} provider returned model statuses mismatch",
             )
             for field in ("request_count", "invocation_count"):
                 _require(
@@ -5157,6 +6362,7 @@ def validate_agent_pack(
                 and role_metadata["imported_memory_count"] == 0,
                 "memory metadata mismatch",
             )
+            _validate_host_lineage(role_metadata, label=f"{role} metadata")
         metadata_schedules = _exact_object_fields(
             metadata["review_schedule_sha256"],
             {"reviewer_a", "reviewer_b"},
@@ -5573,6 +6779,16 @@ def validate_agent_pack(
                 role_metadata["session_or_thread_ids"] == actual_sessions[role],
                 f"{role} session/thread binding mismatch",
             )
+            expected_host_metadata = _agent_role_host_metadata(
+                sanitized_run_records[role]
+            )
+            _require(
+                all(
+                    role_metadata[field] == expected
+                    for field, expected in expected_host_metadata.items()
+                ),
+                f"{role} host metadata binding mismatch",
+            )
             all_metadata_sessions.extend(role_metadata["session_or_thread_ids"])
         _require(
             len(all_metadata_sessions) == len(set(all_metadata_sessions)),
@@ -5833,7 +7049,12 @@ def _validated_agent_lineage_evidence(
         "response_sha256",
         "requested_model",
         "returned_model",
+        "provider_returned_model_status",
+        "model_identity_evidence",
         "reasoning_effort",
+        "lineage_observed",
+        "tool_call_count",
+        "descendant_agent_count",
         "session_or_thread_ids",
         "transport_retry_count",
         "outcome",
@@ -5845,7 +7066,12 @@ def _validated_agent_lineage_evidence(
         "request_sha256",
         "requested_model",
         "returned_model",
+        "provider_returned_model_status",
+        "model_identity_evidence",
         "reasoning_effort",
+        "lineage_observed",
+        "tool_call_count",
+        "descendant_agent_count",
         "transport_failure",
         "response_bytes_present",
         "response_sha256",
@@ -5908,6 +7134,16 @@ def _validated_agent_lineage_evidence(
                     "run Agent configuration mismatch",
                 )
                 _require(
+                    record["model_identity_evidence"] == _MODEL_IDENTITY_EVIDENCE,
+                    "run model identity evidence mismatch",
+                )
+                _validate_provider_model_metadata(
+                    record,
+                    requested_model=cast(str, config["model"]),
+                    label="run record",
+                )
+                _validate_host_lineage(record, label="run record")
+                _require(
                     type(identities) is list
                     and all(
                         type(identity) is str
@@ -5958,11 +7194,23 @@ def _validated_agent_lineage_evidence(
                         and attempt["reasoning_effort"] == config["reasoning_effort"],
                         "run attempt authority mismatch",
                     )
+                    _require(
+                        attempt["model_identity_evidence"] == _MODEL_IDENTITY_EVIDENCE,
+                        "run attempt model identity evidence mismatch",
+                    )
+                    _validate_provider_model_metadata(
+                        attempt,
+                        requested_model=cast(str, config["model"]),
+                        label="run attempt",
+                    )
+                    _validate_host_lineage(attempt, label="run attempt")
                     if attempt["transport_failure"] is True:
                         _require(
                             attempt["response_bytes_present"] is False
                             and attempt_response is None
                             and attempt["returned_model"] is None
+                            and attempt["provider_returned_model_status"]
+                            == _PROVIDER_MODEL_INTERFACE_UNAVAILABLE
                             and attempt["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE",
                             "transport failure attempt mismatch",
                         )
@@ -5971,17 +7219,10 @@ def _validated_agent_lineage_evidence(
                             attempt["transport_failure"] is False
                             and attempt["response_bytes_present"] is True
                             and attempt_response is not None
-                            and type(attempt["returned_model"]) is str
-                            and bool(attempt["returned_model"].strip())
                             and attempt["outcome"]
                             in {"VALID_RESPONSE", "SUBSTANTIVE_INVALID_RESPONSE"},
                             "substantive response attempt mismatch",
                         )
-                        if attempt["outcome"] == "VALID_RESPONSE":
-                            _require(
-                                attempt["returned_model"] == config["model"],
-                                "valid response model mismatch",
-                            )
                     attempts.append(
                         {**deepcopy(attempt), "response_sha256": attempt_response}
                     )
@@ -5995,13 +7236,24 @@ def _validated_agent_lineage_evidence(
                     _require(
                         record["outcome"] == final_attempt["outcome"]
                         and response_sha256 == final_attempt["response_sha256"]
-                        and record["returned_model"] == final_attempt["returned_model"],
+                        and record["returned_model"] == final_attempt["returned_model"]
+                        and record["provider_returned_model_status"]
+                        == final_attempt["provider_returned_model_status"]
+                        and record["lineage_observed"] is True
+                        and record["tool_call_count"]
+                        == sum(attempt["tool_call_count"] for attempt in attempts)
+                        and record["descendant_agent_count"]
+                        == sum(
+                            attempt["descendant_agent_count"] for attempt in attempts
+                        ),
                         "run final attempt summary mismatch",
                     )
                 else:
                     _require(
                         response_sha256 is None
                         and record["returned_model"] is None
+                        and record["provider_returned_model_status"]
+                        == _PROVIDER_MODEL_INTERFACE_UNAVAILABLE
                         and record["outcome"] == "TRANSPORT_FAILURE_NO_RESPONSE",
                         "empty run summary mismatch",
                     )
@@ -6730,6 +7982,12 @@ def _validated_agent_source_ledger_evidence(
                     "fork_context",
                     "history_message_count",
                     "imported_memory_count",
+                    "model_identity_evidence",
+                    "provider_returned_models",
+                    "provider_returned_model_statuses",
+                    "lineage_observed",
+                    "tool_call_count",
+                    "descendant_agent_count",
                 },
                 f"source {role} metadata",
             )
@@ -6746,7 +8004,11 @@ def _validated_agent_source_ledger_evidence(
                 and role_metadata["session_or_thread_ids"] == sessions
                 and role_metadata["fork_context"] is False
                 and role_metadata["history_message_count"] == 0
-                and role_metadata["imported_memory_count"] == 0,
+                and role_metadata["imported_memory_count"] == 0
+                and all(
+                    role_metadata[field] == expected
+                    for field, expected in _agent_role_host_metadata(records).items()
+                ),
                 f"source {role} metadata binding mismatch",
             )
             all_sessions.extend(sessions)
@@ -7253,6 +8515,39 @@ def _assert_no_existing_symlink_components(path: Path, *, label: str) -> None:
         )
 
 
+def _assert_stage0_private_path(path: Path, *, label: str) -> None:
+    trusted_root = STAGE0_TRUSTED_TEMP_ROOT
+    _require(
+        path.is_absolute() and trusted_root.is_absolute(),
+        f"{label} must be absolute",
+    )
+    try:
+        relative = path.relative_to(trusted_root)
+    except ValueError:
+        _assert_no_existing_symlink_components(path, label=label)
+        return
+    _require(
+        bool(relative.parts) and ".." not in relative.parts,
+        f"{label} must stay below the trusted temporary root",
+    )
+    try:
+        resolved_root = trusted_root.resolve(strict=True)
+    except OSError as error:
+        raise ValueError(f"{label} trusted temporary root is unavailable") from error
+    root_mode = stat.S_IMODE(resolved_root.stat().st_mode)
+    _require(
+        resolved_root.is_dir() and root_mode & stat.S_ISVTX == stat.S_ISVTX,
+        f"{label} trusted temporary root must be a sticky directory",
+    )
+    current = trusted_root
+    for component in relative.parts:
+        current /= component
+        _require(
+            not current.is_symlink(),
+            f"{label} path components below the trusted root must not be symlinks",
+        )
+
+
 def _canonical_repository_destination(
     requested: Path,
     repository_root: Path,
@@ -7472,12 +8767,22 @@ def validate_preregistration_authority(
     preregistration = _json_no_duplicate_keys(
         preregistration_file.read_bytes(), "preregistration"
     )
+    runtime_requalification = preregistration.get("runtime_requalification")
+    runtime_schema = runtime_requalification is not None
+    expected_fields = (
+        RUNTIME_PREREGISTRATION_FIELDS if runtime_schema else PREREGISTRATION_FIELDS
+    )
+    authority_ledger = (
+        RUNTIME_PREREGISTRATION_FIELD_AUTHORITY_LEDGER
+        if runtime_schema
+        else PREREGISTRATION_FIELD_AUTHORITY_LEDGER
+    )
     _require(
-        frozenset(preregistration) == PREREGISTRATION_FIELDS,
+        frozenset(preregistration) == expected_fields,
         "preregistration field set mismatch",
     )
     _require(
-        frozenset(PREREGISTRATION_FIELD_AUTHORITY_LEDGER) == PREREGISTRATION_FIELDS,
+        frozenset(authority_ledger) == expected_fields,
         "internal preregistration authority coverage mismatch",
     )
     semantic_sha256 = preregistration.get("preregistration_sha256")
@@ -7492,7 +8797,12 @@ def validate_preregistration_authority(
         "preregistration semantic hash mismatch",
     )
     _require(
-        preregistration.get("schema_version") == PREREGISTRATION_SCHEMA_VERSION,
+        preregistration.get("schema_version")
+        == (
+            RUNTIME_PREREGISTRATION_SCHEMA_VERSION
+            if runtime_schema
+            else PREREGISTRATION_SCHEMA_VERSION
+        ),
         "preregistration schema mismatch",
     )
     generated_at = preregistration.get("generated_at_utc")
@@ -7968,6 +9278,12 @@ def validate_preregistration_authority(
                     f"{arm}/{seed} model manifest file hash mismatch",
                 )
         _verify_task8_semantic_model_snapshot()
+    if runtime_schema:
+        validate_runtime_requalification_authority(
+            runtime_requalification,
+            preregistration=preregistration,
+            repository_root=repository,
+        )
     return {
         "status": "VALID",
         "preregistration_sha256": semantic_sha256,
@@ -9710,6 +11026,12 @@ def _validate_evaluation_agent_construction_authority(
                     "invocation_count",
                     "session_or_thread_ids",
                     "session_or_thread_ids_sha256",
+                    "model_identity_evidence",
+                    "provider_returned_models",
+                    "provider_returned_model_statuses",
+                    "lineage_observed",
+                    "tool_call_count",
+                    "descendant_agent_count",
                 },
                 f"evaluation {role} identity authority",
             )
@@ -9723,6 +11045,16 @@ def _validate_evaluation_agent_construction_authority(
                 "fork_context": False,
                 "history_message_count": 0,
                 "imported_memory_count": 0,
+                "model_identity_evidence": identity_role["model_identity_evidence"],
+                "provider_returned_models": deepcopy(
+                    identity_role["provider_returned_models"]
+                ),
+                "provider_returned_model_statuses": deepcopy(
+                    identity_role["provider_returned_model_statuses"]
+                ),
+                "lineage_observed": identity_role["lineage_observed"],
+                "tool_call_count": identity_role["tool_call_count"],
+                "descendant_agent_count": identity_role["descendant_agent_count"],
             }
 
         (
