@@ -2273,8 +2273,11 @@ def _write_agent_pack(
     else:
         grouped_specs: dict[tuple[int, str], list[dict[str, Any]]] = {}
         for spec in candidate_specs:
-            key = (cast(int, spec["generation_round"]), cast(str, spec["gold"]))
-            grouped_specs.setdefault(key, []).append(spec)
+            group_key = (
+                cast(int, spec["generation_round"]),
+                cast(str, spec["gold"]),
+            )
+            grouped_specs.setdefault(group_key, []).append(spec)
         invocation_groups = list(grouped_specs.values())
 
     candidate_by_id: dict[str, dict[str, Any]] = {}
@@ -2827,6 +2830,13 @@ def _task5_zero_semantic_similarity(_left: str, _right: str) -> float:
     return 0.0
 
 
+def _task5_record_semantic_similarity(
+    calls: list[tuple[str, str]], left: str, right: str
+) -> float:
+    calls.append((left, right))
+    return 0.0
+
+
 def _task5_build_dataset_freeze_documents(
     validation: dict[str, Any],
     *,
@@ -2932,7 +2942,7 @@ def test_task5_pipeline_outcomes_and_winners_use_shared_pure_derivation() -> Non
         "decision": "REJECT_AMBIGUOUS",
         "single_primary_skill": False,
     }
-    reviews = {
+    reviews: dict[str, dict[str, dict[str, Any] | None]] = {
         "reviewer_a": {
             candidate_ids[0]: accepted_review,
             candidate_ids[1]: rejected_review,
@@ -3085,8 +3095,8 @@ def test_task5_invalid_generator_response_never_enters_candidate_pipeline(
     result = _validate_agent_pack(
         pack,
         tmp_path / "repo",
-        semantic_similarity=lambda left, right: (
-            semantic_calls.append((left, right)) or 0.0
+        semantic_similarity=lambda left, right: _task5_record_semantic_similarity(
+            semantic_calls, left, right
         ),
     )
 
@@ -4256,8 +4266,8 @@ def test_task5_double_transport_failure_is_infrastructure_inconclusive(
     result = _validate_agent_pack(
         pack,
         tmp_path / "repo",
-        semantic_similarity=lambda left, right: (
-            semantic_calls.append((left, right)) or 0.0
+        semantic_similarity=lambda left, right: _task5_record_semantic_similarity(
+            semantic_calls, left, right
         ),
     )
 
@@ -7817,6 +7827,16 @@ class _FakeScorer:
         return [gold, *[skill_id for skill_id in skill_ids if skill_id != gold]]
 
 
+def _task5_record_scorer_factory_call(
+    factory_calls: list[tuple[str, int]],
+    rank_calls: list[str],
+    arm: str,
+    seed: int,
+) -> _FakeScorer:
+    factory_calls.append((arm, seed))
+    return _FakeScorer(rank_calls, {})
+
+
 def _task5_evaluation_route_rows(
     input_artifacts: dict[str, bytes] | None = None,
 ) -> list[dict[str, Any]]:
@@ -8220,8 +8240,8 @@ def test_task5_scoring_preflight_rejects_resynchronized_selected_task_semantic_d
         _task5_evaluate_routes_with_authority(
             inputs,
             frozen_bindings,
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, rank_calls, arm, seed
             ),
         )
 
@@ -8566,8 +8586,8 @@ def test_task5_scoring_preflight_rejects_resynchronized_reviewer_rejection_recla
         _task5_evaluate_routes_with_authority(
             inputs,
             frozen_bindings,
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, rank_calls, arm, seed
             ),
         )
 
@@ -8946,8 +8966,8 @@ def test_task5_scoring_preflight_rejects_manifest_state_before_scorer_creation(
         _task5_evaluate_routes_with_authority(
             inputs,
             frozen_bindings,
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, rank_calls, arm, seed
             ),
         )
 
@@ -8994,8 +9014,8 @@ def test_task5_scoring_preflight_rejects_missing_or_forged_authority_without_cal
             attempt_started_artifact=_task5_attempt_artifacts()[
                 "attempt-1.started.json"
             ],
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, rank_calls, arm, seed
             ),
         )
 
@@ -9187,8 +9207,8 @@ def test_task5_scoring_preflight_rejects_forged_double_transport_terminal_withou
         _task5_evaluate_routes_with_authority(
             inputs,
             frozen_bindings,
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, rank_calls, arm, seed
             ),
         )
 
@@ -9435,8 +9455,8 @@ def test_task5_scoring_preflight_rejects_resynchronized_protected_row_projection
         _task5_evaluate_routes_with_authority(
             inputs,
             frozen_bindings,
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, rank_calls, arm, seed
             ),
         )
 
@@ -9578,8 +9598,8 @@ def test_task5_scoring_preflight_rejects_fully_resynchronized_protected_semantic
         _task5_evaluate_routes_with_authority(
             inputs,
             frozen_bindings,
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer(rank_calls, {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, rank_calls, arm, seed
             ),
         )
 
@@ -10262,8 +10282,8 @@ def test_evaluate_routes_rejects_duplicate_model_binding_key(tmp_path: Path) -> 
             attempt_started_artifact=_task5_attempt_artifacts()[
                 "attempt-1.started.json"
             ],
-            scorer_factory=lambda arm, seed, _path: (
-                factory_calls.append((arm, seed)) or _FakeScorer([], {})
+            scorer_factory=lambda arm, seed, _path: _task5_record_scorer_factory_call(
+                factory_calls, [], arm, seed
             ),
         )
     assert factory_calls == []

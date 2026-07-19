@@ -618,8 +618,12 @@ Reviewer B: model=gpt-5.6-luna, reasoning=max,   fork_context=false
 - [x] 10.4 Record requested/returned model IDs, reasoning efforts, unique run/thread IDs, empty-history/no-memory declarations, request/response hashes, timestamps, and retry count. Validate with `agent-config-status`; stop at `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` plus `KEEP_BASELINE` on any mismatch.
 
 Execution terminal: the exact Agent-configuration smoke returned unavailable
-provider model metadata and non-matching dummy responses. The workflow stopped
-at `failure_stage=agent_config_smoke` with
+provider model metadata and non-matching dummy responses. In addition to the
+three intended top-level role invocations, Reviewer B triggered one unplanned
+nested generator probe, so the terminal evidence records `3 top-level + 1
+nested = 4 total observed Agent invocations`; the nested invocation is not a
+retry and is itself a fail-closed protocol violation. The workflow stopped at
+`failure_stage=agent_config_smoke` with
 `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE / KEEP_BASELINE`. Tasks 11-13 are
 therefore intentionally not executed and remain unchecked. No candidate,
 Commit B, Arm A/C load, model score, attempt marker, or formal evaluation exists.

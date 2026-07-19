@@ -1,10 +1,11 @@
 {
-  "schema_version": "router-v2-blind-v2-agent-config-smoke-terminal-v1",
+  "schema_version": "router-v2-blind-v2-agent-config-smoke-terminal-v2",
   "status": "INCONCLUSIVE",
   "failure_stage": "agent_config_smoke",
   "failure_reasons": [
     "returned_model_metadata_unavailable",
-    "dummy_response_exact_match_failed"
+    "dummy_response_exact_match_failed",
+    "unplanned_nested_agent_invocation"
   ],
   "research_conclusion": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
   "router_decision": "KEEP_BASELINE",
@@ -13,12 +14,14 @@
   "default_router_unchanged": true,
   "commit_a": "50069a124a8d129e11926e78d1bcc2388bc91a22",
   "preregistration_sha256": "73d9eec6255ce8948be9cff4c6768974a1d240465d9d98b550d5470fc7cebf27",
-  "private_agent_run_metadata_sha256": "1290b607db53ba863cc81f8610a843ec7120f06f86b992c71f625ff73cf12f34",
+  "private_agent_run_metadata_sha256": "13bd559c16c8101064b7c7d824d630e684dd0aaa1c07985cd8d974a7244306bf",
   "started_at_utc": "2026-07-19T04:14:05.548Z",
   "terminal_at_utc": "2026-07-19T04:22:13Z",
   "request_sha256": "3c267ff937e2d83c45565953f5000d1a0e68d8a525b76173c76c7be5f76d2233",
   "expected_response_sha256": "ef4378fb56721f842f3f0f1cd96df61aac1b767ff267adb7f508ba57fc5976a3",
-  "provider_invocation_count": 3,
+  "top_level_protocol_invocation_count": 3,
+  "nested_unplanned_invocation_count": 1,
+  "total_observed_agent_invocation_count": 4,
   "transport_retry_count": 0,
   "substantive_retry_count": 0,
   "invocations": [
@@ -63,6 +66,9 @@
     }
   ],
   "nested_generator_probe": {
+    "initiated_by_role": "reviewer_b",
+    "unplanned": true,
+    "included_in_total_observed_agent_invocation_count": true,
     "thread_id": "019f7898-3da1-7570-ae0a-41306421ed04",
     "requested_model": "gpt-5.6-sol",
     "returned_model": null,
