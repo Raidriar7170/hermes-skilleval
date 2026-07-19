@@ -598,16 +598,16 @@ Expected: clean worktree; HEAD is Commit A-agent and descends from `09ba4104…`
 - Create outside Git: `/Users/raidriar/.codex/private/hermes-blind-v2/${COMMIT_A_SHA}/agent-run-metadata.json`
 - Create outside Git: Commit A-agent-bound Agent configuration smoke receipt
 
-- [ ] 10.1 Confirm the active Goal still covers Tasks 1-14 and preserves all Commit A-agent/Commit B/single-attempt stop conditions and prohibited actions.
+- [x] 10.1 Confirm the active Goal still covers Tasks 1-14 and preserves all Commit A-agent/Commit B/single-attempt stop conditions and prohibited actions.
 
-- [ ] 10.2 Set `HERMES_BLIND_V2_ROOT` to the absolute private root for Commit A-agent and verify it is outside every Git worktree.
+- [x] 10.2 Set `HERMES_BLIND_V2_ROOT` to the absolute private root for Commit A-agent and verify it is outside every Git worktree.
 
 ```bash
 COMMIT_A_SHA=$(git rev-parse HEAD)
 export HERMES_BLIND_V2_ROOT="/Users/raidriar/.codex/private/hermes-blind-v2/${COMMIT_A_SHA}"
 ```
 
-- [ ] 10.3 Spawn three fresh non-forked dummy-text invocations with exact overrides:
+- [x] 10.3 Spawn three fresh non-forked dummy-text invocations with exact overrides:
 
 ```text
 Generator:  model=gpt-5.6-sol,  reasoning=max,   fork_context=false
@@ -615,7 +615,14 @@ Reviewer A: model=gpt-5.6-sol,  reasoning=ultra, fork_context=false
 Reviewer B: model=gpt-5.6-luna, reasoning=max,   fork_context=false
 ```
 
-- [ ] 10.4 Record requested/returned model IDs, reasoning efforts, unique run/thread IDs, empty-history/no-memory declarations, request/response hashes, timestamps, and retry count. Validate with `agent-config-status`; stop at `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` plus `KEEP_BASELINE` on any mismatch.
+- [x] 10.4 Record requested/returned model IDs, reasoning efforts, unique run/thread IDs, empty-history/no-memory declarations, request/response hashes, timestamps, and retry count. Validate with `agent-config-status`; stop at `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` plus `KEEP_BASELINE` on any mismatch.
+
+Execution terminal: the exact Agent-configuration smoke returned unavailable
+provider model metadata and non-matching dummy responses. The workflow stopped
+at `failure_stage=agent_config_smoke` with
+`AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE / KEEP_BASELINE`. Tasks 11-13 are
+therefore intentionally not executed and remain unchecked. No candidate,
+Commit B, Arm A/C load, model score, attempt marker, or formal evaluation exists.
 
 ### Task 11: Generate, scan, and dual-review the candidate pool
 
@@ -698,14 +705,14 @@ python scripts/run_router_v2_blind_v2_final.py evaluate
 - Conditionally modify: `README.md`, `README_EN.md`, `docs/resume.md`, `docs/interview-project-overview.html`
 - Add final result artifacts only under the canonical namespace
 
-- [ ] 14.1 Update public surfaces only for `AGENT_BLIND_V2_GATES_PASSED` or `AGENT_BLIND_V2_GATES_NOT_PASSED`; leave them unchanged for pre-evaluation terminal states. Use Agent-set-bounded language, exact model configs, raw counts, same-provider limitation, and `KEEP_BASELINE`.
+- [x] 14.1 Update public surfaces only for `AGENT_BLIND_V2_GATES_PASSED` or `AGENT_BLIND_V2_GATES_NOT_PASSED`; leave them unchanged for pre-evaluation terminal states. Use Agent-set-bounded language, exact model configs, raw counts, same-provider limitation, and `KEEP_BASELINE`.
 
-- [ ] 14.2 Run focused tests, full tests, Ruff, mypy, OpenSpec strict validation, `git diff --check`, frozen-artifact hash guards, no-training guards, one-attempt checks, and report/artifact number consistency.
+- [x] 14.2 Run focused tests, full tests, Ruff, mypy, OpenSpec strict validation, `git diff --check`, frozen-artifact hash guards, no-training guards, one-attempt checks, and report/artifact number consistency.
 
-- [ ] 14.3 Obtain final read-only Reviewer verdict. Fix only presentation or validation defects that cannot alter tasks, labels, models, checkpoints, gate, metrics, or results.
+- [x] 14.3 Obtain final read-only Reviewer verdict. Fix only presentation or validation defects that cannot alter tasks, labels, models, checkpoints, gate, metrics, or results.
 
-- [ ] 14.4 Commit terminal artifacts and any authorized result-facing documents without rewriting Commit A-agent or Commit B.
+- [x] 14.4 Commit terminal artifacts and any authorized result-facing documents without rewriting Commit A-agent or Commit B.
 
-- [ ] 14.5 Push `agent/router-v2-blind-v2-final` and open one PR. Do not merge, tag, release, deploy, archive, or change the default router.
+- [x] 14.5 Push `agent/router-v2-blind-v2-final` and open one PR. Do not merge, tag, release, deploy, archive, or change the default router.
 
-- [ ] 14.6 Report the final status, Commit A-agent, Commit B, attempt marker/terminal state, per-seed and aggregate results, statistics, gate, `KEEP_BASELINE`, validation evidence, artifact hashes, explicit non-actions, and limitations; then stop Hermes optimization permanently.
+- [x] 14.6 Report the final status, Commit A-agent, Commit B, attempt marker/terminal state, per-seed and aggregate results, statistics, gate, `KEEP_BASELINE`, validation evidence, artifact hashes, explicit non-actions, and limitations; then stop Hermes optimization permanently.
