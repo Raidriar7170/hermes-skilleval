@@ -71,6 +71,30 @@ SKILL_REPRESENTATION_BUILDER_VERSION = (
 FINAL_NAMESPACE_RELATIVE = Path(
     "artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1"
 )
+SUCCESSOR_PREFLIGHT_COMMIT = "6b6f2a5f6502bbc7a761e70cbb95d39ce38c7916"
+SUCCESSOR_PREFLIGHT_RECEIPT_SHA256 = (
+    "d852c20feea13ee7e0c4fdcd6d75f490c144db4c0dd59386d28640251e5ff291"
+)
+SUCCESSOR_PREFLIGHT_RECEIPT_FILE_SHA256 = (
+    "2b679afe989f68f43ec72120e7b59a72250b25ad01b2fe31c3a25b20756ea6aa"
+)
+SUCCESSOR_PREREGISTRATION_FILE_SHA256 = (
+    "a52e85f2b485fdbf9254b6c248f5f87fbb08db74bc473351c3e3601f3b174564"
+)
+SUCCESSOR_PREFLIGHT_RECEIPT_RELATIVE = Path(
+    "artifacts/router-v2-blind-v2-successor-preflight/preflight-receipt.json"
+)
+SUCCESSOR_NAMESPACE_RELATIVE = Path(
+    "artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-001"
+)
+SUCCESSOR_FINAL_NAMESPACE_RELATIVE = SUCCESSOR_NAMESPACE_RELATIVE
+SUCCESSOR_COMMIT_A_CHANGED_FILES = (
+    "scripts/run_router_v2_blind_v2_final.py",
+    "src/hermes_skilleval/router_v2_blind_v2_evaluation_runner.py",
+    "src/hermes_skilleval/router_v2_blind_v2_output_schema_preflight.py",
+    "tests/test_router_v2_blind_v2_evaluation_runner.py",
+    "tests/test_router_v2_blind_v2_successor_formal_adapter.py",
+)
 DATASET_FREEZE_RELATIVE = Path("data/router-v2-blind-v2")
 PREREGISTRATION_RELATIVE = Path("artifacts/router-v2-blind-v2/preregistration.json")
 DATASET_FREEZE_FILENAMES = (
@@ -106,6 +130,7 @@ EVALUATOR_SOURCE_PATHS = (
     "src/hermes_skilleval/router_v2_pilot_evaluation.py",
     "scripts/run_router_v2_blind_v2_final.py",
 )
+HISTORICAL_EVALUATOR_SOURCE_COMMIT = "080e98a6cd3c09fdb2602b3b66cdc5e83e32338b"
 EVALUATOR_FIELDS = frozenset(
     {"arms", "contract_sha256", "seeds", "source_files", "source_files_sha256"}
 )
@@ -1359,6 +1384,19 @@ def review_schedule_key(role: str, candidate_id: str) -> str:
     return hashlib.sha256(f"{prefix}:{candidate_id}".encode()).hexdigest()
 
 
+def _successor_response_schema(role: str) -> dict[str, Any]:
+    from hermes_skilleval import (  # local import avoids the historical import cycle
+        router_v2_blind_v2_output_schema_preflight as successor,
+    )
+
+    _require(role in AGENT_CONFIGS, "successor response schema role mismatch")
+    return (
+        successor.SUCCESSOR_GENERATOR_RESPONSE_SCHEMA
+        if role == "generator"
+        else successor.SUCCESSOR_REVIEWER_RESPONSE_SCHEMA
+    )
+
+
 def _build_generator_request_payload(
     canonical_skills: list[dict[str, Any]],
     *,
@@ -1366,6 +1404,7 @@ def _build_generator_request_payload(
     negative_quota: int,
     positive_only_quota: int,
     round_number: int = 1,
+    successor_output_schema: bool = False,
 ) -> dict[str, Any]:
     projected_canonical_skills = _project_canonical_skills(canonical_skills)
     canonical_ids = {cast(str, skill["id"]) for skill in projected_canonical_skills}
@@ -1392,7 +1431,11 @@ def _build_generator_request_payload(
         "reasoning_effort": config["reasoning_effort"],
         "timeout_seconds": config["timeout_seconds"],
         "system_prompt": GENERATOR_SYSTEM_PROMPT,
-        "response_schema": deepcopy(GENERATOR_RESPONSE_SCHEMA),
+        "response_schema": deepcopy(
+            _successor_response_schema("generator")
+            if successor_output_schema
+            else GENERATOR_RESPONSE_SCHEMA
+        ),
         "input": {
             "canonical_skills": projected_canonical_skills,
             "rules": deepcopy(GENERATOR_RULES),
@@ -1416,6 +1459,7 @@ def build_generator_request(
     positive_only_quota: int,
     repository_root: Path | str,
     round_number: int = 1,
+    successor_output_schema: bool = False,
 ) -> dict[str, Any]:
     repository = Path(repository_root).resolve(strict=True)
     preregistration_file = _safe_repository_regular_file(
@@ -1427,7 +1471,11 @@ def build_generator_request(
     preregistration = _json_no_duplicate_keys(
         preregistration_source, "generator preregistration"
     )
-    repository_authority = validate_commit_a_repository(repository, preregistration)
+    repository_authority = (
+        validate_successor_commit_a_repository(repository)
+        if successor_output_schema
+        else validate_commit_a_repository(repository, preregistration)
+    )
     commit_a = _exact_lowercase_hex(
         repository_authority.get("commit_a"),
         length=40,
@@ -1437,29 +1485,31 @@ def build_generator_request(
         commit_a != HISTORICAL_HUMAN_COMMIT_A,
         "historical Commit A has been superseded and cannot authorize generation",
     )
-    preregistration_sha256 = _sha256_bytes(preregistration_source)
-    if "runtime_requalification" in preregistration:
-        receipt = validate_active_stage0_qualification_receipt(preregistration)
-        _require(
-            receipt.get("status") == "AGENT_RUNTIME_STAGE0_QUALIFIED",
-            "Stage 0 qualification receipt authority mismatch",
-        )
-    else:
-        receipt = validate_agent_config_smoke_receipt(
-            commit_a=commit_a,
-            preregistration_sha256=preregistration_sha256,
-        )
-        _require(
-            receipt.get("commit_a") == commit_a
-            and receipt.get("preregistration_sha256") == preregistration_sha256,
-            "Agent-config smoke receipt authority mismatch",
-        )
+    if not successor_output_schema:
+        preregistration_sha256 = _sha256_bytes(preregistration_source)
+        if "runtime_requalification" in preregistration:
+            receipt = validate_active_stage0_qualification_receipt(preregistration)
+            _require(
+                receipt.get("status") == "AGENT_RUNTIME_STAGE0_QUALIFIED",
+                "Stage 0 qualification receipt authority mismatch",
+            )
+        else:
+            receipt = validate_agent_config_smoke_receipt(
+                commit_a=commit_a,
+                preregistration_sha256=preregistration_sha256,
+            )
+            _require(
+                receipt.get("commit_a") == commit_a
+                and receipt.get("preregistration_sha256") == preregistration_sha256,
+                "Agent-config smoke receipt authority mismatch",
+            )
     return _build_generator_request_payload(
         canonical_skills,
         gold_skill_id=gold_skill_id,
         negative_quota=negative_quota,
         positive_only_quota=positive_only_quota,
         round_number=round_number,
+        successor_output_schema=successor_output_schema,
     )
 
 
@@ -1468,6 +1518,7 @@ def build_reviewer_request(
     canonical_skills: list[dict[str, Any]],
     *,
     role: str,
+    successor_output_schema: bool = False,
 ) -> dict[str, Any]:
     _require(
         type(role) is str and role in {"reviewer_a", "reviewer_b"},
@@ -1487,7 +1538,11 @@ def build_reviewer_request(
         "reasoning_effort": config["reasoning_effort"],
         "timeout_seconds": config["timeout_seconds"],
         "system_prompt": REVIEWER_SYSTEM_PROMPT,
-        "response_schema": deepcopy(REVIEWER_RESPONSE_SCHEMA),
+        "response_schema": deepcopy(
+            _successor_response_schema(role)
+            if successor_output_schema
+            else REVIEWER_RESPONSE_SCHEMA
+        ),
         "input": {
             "task_id": candidate_id,
             "prompt_text": prompt_text,
@@ -1556,8 +1611,12 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             "generator system prompt mismatch",
         )
         _require(
-            _canonical_contract_json_equal(
-                request["response_schema"], GENERATOR_RESPONSE_SCHEMA
+            any(
+                _canonical_contract_json_equal(request["response_schema"], schema)
+                for schema in (
+                    GENERATOR_RESPONSE_SCHEMA,
+                    _successor_response_schema("generator"),
+                )
             ),
             "generator response schema mismatch",
         )
@@ -1600,8 +1659,12 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             "reviewer system prompt mismatch",
         )
         _require(
-            _canonical_contract_json_equal(
-                request["response_schema"], REVIEWER_RESPONSE_SCHEMA
+            any(
+                _canonical_contract_json_equal(request["response_schema"], schema)
+                for schema in (
+                    REVIEWER_RESPONSE_SCHEMA,
+                    _successor_response_schema(cast(str, role)),
+                )
             ),
             "reviewer response schema mismatch",
         )
@@ -1660,6 +1723,9 @@ def _validated_generation_source_row(
         negative_quota=cast(int, quota["negative_quota"]),
         positive_only_quota=cast(int, quota["positive_only_quota"]),
         round_number=cast(int, generation_round),
+        successor_output_schema=_canonical_contract_json_equal(
+            request["response_schema"], _successor_response_schema("generator")
+        ),
     )
     _require(
         _canonical_contract_json_equal(request, expected_request),
@@ -1706,7 +1772,8 @@ def _validated_reviewer_source_row(
     role: str,
     candidates: dict[str, dict[str, Any]],
     projected_skills: list[dict[str, Any]],
-    clean_candidate_ids: set[str],
+    review_candidate_ids: set[str],
+    successor_protocol_mode: bool,
     label: str,
 ) -> tuple[dict[str, Any], str, dict[str, Any]]:
     row = _exact_object_fields(
@@ -1719,12 +1786,22 @@ def _validated_reviewer_source_row(
     )
     _require(candidate_id in candidates, "review references unknown candidate")
     _require(
-        candidate_id in clean_candidate_ids,
-        "contamination-rejected candidate must not be reviewed",
+        candidate_id in review_candidate_ids,
+        "review candidate is outside the required review set",
     )
     request = validate_agent_request(row["request"])
+    request_is_successor = _canonical_contract_json_equal(
+        request["response_schema"], _successor_response_schema(role)
+    )
+    _require(
+        request_is_successor is successor_protocol_mode,
+        f"{role} response schema protocol mode must match generator mode",
+    )
     expected_request = build_reviewer_request(
-        candidates[candidate_id], projected_skills, role=role
+        candidates[candidate_id],
+        projected_skills,
+        role=role,
+        successor_output_schema=successor_protocol_mode,
     )
     _require(
         _canonical_contract_json_equal(request, expected_request),
@@ -3759,6 +3836,25 @@ def _git(repository: Path, *arguments: str) -> str:
     return result.stdout.strip()
 
 
+def _git_blob_bytes(repository: Path, commit: str, relative_path: str) -> bytes:
+    _exact_lowercase_hex(commit, length=40, label="Git blob commit")
+    _require(
+        relative_path in EVALUATOR_SOURCE_PATHS,
+        "Git blob path is outside evaluator authority",
+    )
+    result = subprocess.run(
+        ["git", "show", f"{commit}:{relative_path}"],
+        cwd=repository,
+        check=False,
+        capture_output=True,
+    )
+    _require(
+        result.returncode == 0,
+        f"git show frozen evaluator blob failed: {relative_path}",
+    )
+    return result.stdout
+
+
 def _validated_commit_a_changed_files(
     preregistration: Mapping[str, Any],
 ) -> tuple[str, ...]:
@@ -3902,6 +3998,181 @@ def validate_commit_a_repository(
         "origin_main": origin_main,
         "supersedes_commit": HISTORICAL_HUMAN_COMMIT_A,
         "changed_files": sorted(changed),
+    }
+
+
+def validate_successor_preflight_authority(
+    repository_root: Path | str,
+) -> dict[str, Any]:
+    from hermes_skilleval import (  # local import avoids the historical import cycle
+        router_v2_blind_v2_output_schema_preflight as successor,
+    )
+
+    repository = Path(repository_root).resolve(strict=True)
+    receipt_path = _safe_repository_regular_file(
+        repository,
+        SUCCESSOR_PREFLIGHT_RECEIPT_RELATIVE,
+        label="successor preflight receipt",
+    )
+    receipt_bytes = receipt_path.read_bytes()
+    _require(
+        _sha256_bytes(receipt_bytes) == SUCCESSOR_PREFLIGHT_RECEIPT_FILE_SHA256,
+        "successor preflight receipt file hash mismatch",
+    )
+    receipt = successor.validate_receipt(
+        _json_no_duplicate_keys(receipt_bytes, "successor preflight receipt")
+    )
+    _require(
+        receipt.get("receipt_sha256") == SUCCESSOR_PREFLIGHT_RECEIPT_SHA256,
+        "successor preflight receipt self-hash mismatch",
+    )
+    _require(
+        receipt.get("preflight_state") == "PREFLIGHT_READY"
+        and receipt.get("process_count") == len(AGENT_CONFIGS)
+        and receipt.get("retry_count") == 0
+        and receipt.get("fallback_used") is False,
+        "successor preflight readiness mismatch",
+    )
+    role_results = receipt.get("role_results")
+    _require(
+        type(role_results) is list
+        and [row.get("role") for row in role_results if type(row) is dict]
+        == list(AGENT_CONFIGS)
+        and all(
+            type(row) is dict
+            and row.get("validation_result") == "VALID"
+            and row.get("exit_code") == 0
+            and row.get("retry_count") == 0
+            for row in role_results
+        ),
+        "successor preflight role authority mismatch",
+    )
+    _require(
+        all(receipt.get(field) is False for field in successor.AUTHORIZATION_DENIALS),
+        "successor preflight false authorization boundary mismatch",
+    )
+    return receipt
+
+
+def validate_successor_commit_a_repository(
+    repository_root: Path | str,
+) -> dict[str, Any]:
+    repository = Path(repository_root).resolve(strict=True)
+    receipt = validate_successor_preflight_authority(repository)
+    _require(
+        _git(repository, "status", "--porcelain", "--untracked-files=all") == "",
+        "successor Commit A worktree must be clean",
+    )
+    head = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "HEAD"),
+        length=40,
+        label="successor Commit A",
+    )
+    _require(
+        head != SUCCESSOR_PREFLIGHT_COMMIT,
+        "successor Commit A must differ from the preflight commit",
+    )
+    parent_line = _git(repository, "rev-list", "--parents", "-n", "1", head).split()
+    _require(
+        len(parent_line) == 2 and parent_line[0] == head,
+        "successor Commit A must have exactly one parent",
+    )
+    parent = _exact_lowercase_hex(
+        parent_line[1], length=40, label="successor Commit A parent"
+    )
+    _require(
+        parent == SUCCESSOR_PREFLIGHT_COMMIT,
+        "successor Commit A parent authority mismatch",
+    )
+    changed = _git(
+        repository,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        f"{parent}..{head}",
+    ).splitlines()
+    _require(
+        len(changed) == len(set(changed))
+        and set(changed) == set(SUCCESSOR_COMMIT_A_CHANGED_FILES),
+        "successor Commit A changed-file authority mismatch",
+    )
+    return {
+        "commit_a": head,
+        "parent": parent,
+        "preflight_receipt_sha256": receipt["receipt_sha256"],
+        "changed_files": sorted(changed),
+    }
+
+
+def validate_successor_commit_b_repository(
+    repository_root: Path | str, *, commit_a: str
+) -> dict[str, Any]:
+    repository = Path(repository_root).resolve(strict=True)
+    _require(
+        _git(repository, "status", "--porcelain", "--untracked-files=all") == "",
+        "successor Commit B worktree must be clean",
+    )
+    commit_a = _exact_lowercase_hex(commit_a, length=40, label="successor Commit A")
+    _require(
+        commit_a != SUCCESSOR_PREFLIGHT_COMMIT,
+        "successor Commit A must differ from the preflight commit",
+    )
+    commit_a_parent_line = _git(
+        repository, "rev-list", "--parents", "-n", "1", commit_a
+    ).split()
+    _require(
+        len(commit_a_parent_line) == 2
+        and commit_a_parent_line[0] == commit_a
+        and commit_a_parent_line[1] == SUCCESSOR_PREFLIGHT_COMMIT,
+        "successor Commit A parent authority mismatch",
+    )
+    commit_a_changed = _git(
+        repository,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        f"{SUCCESSOR_PREFLIGHT_COMMIT}..{commit_a}",
+    ).splitlines()
+    _require(
+        len(commit_a_changed) == len(set(commit_a_changed))
+        and set(commit_a_changed) == set(SUCCESSOR_COMMIT_A_CHANGED_FILES),
+        "successor Commit A changed-file authority mismatch",
+    )
+    commit_b = _exact_lowercase_hex(
+        _git(repository, "rev-parse", "HEAD"),
+        length=40,
+        label="successor Commit B",
+    )
+    parent_line = _git(repository, "rev-list", "--parents", "-n", "1", commit_b).split()
+    _require(
+        len(parent_line) == 2
+        and parent_line[0] == commit_b
+        and parent_line[1] == commit_a,
+        "successor Commit B must be a direct non-merge child of Commit A",
+    )
+    _require(
+        _git(repository, "rev-list", "--count", f"{commit_a}..{commit_b}") == "1",
+        "successor Commit B must be exactly one commit above Commit A",
+    )
+    changed = _git(
+        repository,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        f"{commit_a}..{commit_b}",
+    ).splitlines()
+    expected = sorted(
+        (DATASET_FREEZE_RELATIVE / filename).as_posix()
+        for filename in DATASET_FREEZE_FILENAMES
+    )
+    _require(
+        len(changed) == len(set(changed)) and sorted(changed) == expected,
+        "successor Commit B changed-file authority mismatch",
+    )
+    return {
+        "commit_a": commit_a,
+        "commit_b": commit_b,
+        "changed_files": expected,
     }
 
 
@@ -6451,6 +6722,7 @@ def validate_agent_pack(
     }
     generation_authority_requests: list[dict[str, Any]] = []
     retry_records: list[dict[str, Any]] = []
+    successor_agent_pack: bool | None = None
     try:
         for raw_row in generation_rows:
             row, request, quota = _validated_generation_source_row(
@@ -6458,6 +6730,15 @@ def validate_agent_pack(
                 projected_skills=projected_skills,
                 canonical_ids=canonical_ids,
                 label="generation row",
+            )
+            request_is_successor = _canonical_contract_json_equal(
+                request["response_schema"], _successor_response_schema("generator")
+            )
+            if successor_agent_pack is None:
+                successor_agent_pack = request_is_successor
+            _require(
+                successor_agent_pack is request_is_successor,
+                "generator response schema mode must be consistent",
             )
             generation_round = cast(int, row["generation_round"])
             gold = cast(str, row["gold_skill_id"])
@@ -6645,6 +6926,9 @@ def validate_agent_pack(
             "contamination ledger evidence mismatch",
         )
         clean_candidate_ids = set(contamination_scan["clean_candidate_ids"])
+        required_review_candidate_ids = (
+            set(candidates) if successor_agent_pack is True else clean_candidate_ids
+        )
     except (KeyError, TypeError, ValueError) as exc:
         return _agent_pack_protocol_invalid(
             failure_stage="contamination_ledger",
@@ -6673,7 +6957,8 @@ def validate_agent_pack(
                     role=role,
                     candidates=candidates,
                     projected_skills=projected_skills,
-                    clean_candidate_ids=clean_candidate_ids,
+                    review_candidate_ids=required_review_candidate_ids,
+                    successor_protocol_mode=successor_agent_pack is True,
                     label=f"{role} row",
                 )
                 _require(
@@ -6731,8 +7016,8 @@ def validate_agent_pack(
                 valid_transport_retry_count += retry_count
                 review_responses[role][candidate_id] = response
             _require(
-                set(review_responses[role]) == clean_candidate_ids,
-                f"{role} must review every contamination-clean candidate",
+                set(review_responses[role]) == required_review_candidate_ids,
+                f"{role} must review every required candidate",
             )
         except _AgentPackProtocolViolation as exc:
             return _agent_pack_protocol_invalid(
@@ -6796,7 +7081,7 @@ def validate_agent_pack(
         )
         for role in ("reviewer_a", "reviewer_b"):
             expected_schedule_order = sorted(
-                clean_candidate_ids,
+                required_review_candidate_ids,
                 key=lambda value: review_schedule_key(role, value),
             )
             _require(
@@ -7712,12 +7997,22 @@ def _validated_agent_source_ledger_evidence(
             role: [] for role in AGENT_CONFIGS
         }
         generation_authority_requests: list[dict[str, Any]] = []
+        successor_agent_pack: bool | None = None
         for raw_row in generation_rows:
             row, request, quota = _validated_generation_source_row(
                 raw_row,
                 projected_skills=projected_skills,
                 canonical_ids=canonical_ids,
                 label="source generation row",
+            )
+            request_is_successor = _canonical_contract_json_equal(
+                request["response_schema"], _successor_response_schema("generator")
+            )
+            if successor_agent_pack is None:
+                successor_agent_pack = request_is_successor
+            _require(
+                successor_agent_pack is request_is_successor,
+                "source generator response schema mode must be consistent",
             )
             generation_round = cast(int, row["generation_round"])
             gold = cast(str, row["gold_skill_id"])
@@ -7882,6 +8177,9 @@ def _validated_agent_source_ledger_evidence(
             and set(cast(list[str], authority_clean_ids)) == clean_candidate_ids,
             "contamination clean candidate authority mismatch",
         )
+        required_review_candidate_ids = (
+            set(candidates) if successor_agent_pack is True else clean_candidate_ids
+        )
         expected_contamination_audit = _contamination_audit_document(
             {"scanner_config": scanner_config, "rows": contamination_rows},
             source_hashes=source_hashes,
@@ -7912,7 +8210,8 @@ def _validated_agent_source_ledger_evidence(
                     role=role,
                     candidates=candidates,
                     projected_skills=projected_skills,
-                    clean_candidate_ids=clean_candidate_ids,
+                    review_candidate_ids=required_review_candidate_ids,
+                    successor_protocol_mode=successor_agent_pack is True,
                     label=f"source {role} row",
                 )
                 _require(
@@ -7953,11 +8252,11 @@ def _validated_agent_source_ledger_evidence(
                 review_responses[role][candidate_id] = response
 
             expected_order = sorted(
-                clean_candidate_ids,
+                required_review_candidate_ids,
                 key=lambda candidate_id: review_schedule_key(role, candidate_id),
             )
             _require(
-                set(review_responses[role]) == clean_candidate_ids
+                set(review_responses[role]) == required_review_candidate_ids
                 and actual_review_orders[role] == expected_order,
                 f"source {role} coverage or schedule mismatch",
             )
@@ -8755,6 +9054,7 @@ def validate_preregistration_authority(
     pilot_manifest_path: Path | str,
     verify_model_files: bool = True,
     canonical_path_required: bool = True,
+    verify_evaluator_source_files: bool = True,
 ) -> dict[str, Any]:
     repository = Path(repository_root).resolve(strict=True)
     preregistration_file = Path(preregistration_path).resolve(strict=True)
@@ -9107,12 +9407,28 @@ def validate_preregistration_authority(
         and len(set(source_paths)) == len(source_paths),
         "evaluator source path sequence mismatch",
     )
-    expected_source_rows = []
-    for relative in EVALUATOR_SOURCE_PATHS:
-        source = _repository_file(repository, relative, label="evaluator source")
-        expected_source_rows.append({"path": relative, "sha256": _sha256_file(source)})
+    expected_source_rows = source_rows
+    if verify_evaluator_source_files:
+        expected_source_rows = [
+            {
+                "path": relative,
+                "sha256": _sha256_bytes(
+                    _git_blob_bytes(
+                        repository, HISTORICAL_EVALUATOR_SOURCE_COMMIT, relative
+                    )
+                ),
+            }
+            for relative in EVALUATOR_SOURCE_PATHS
+        ]
     _require(
-        source_rows == expected_source_rows,
+        source_rows == expected_source_rows
+        and all(
+            _exact_lowercase_hex(
+                row["sha256"], length=64, label="evaluator source SHA-256"
+            )
+            == row["sha256"]
+            for row in source_rows
+        ),
         "evaluator source hash mismatch",
     )
     expected_source_aggregate = canonical_sha256(expected_source_rows)
@@ -9329,6 +9645,7 @@ def build_authoritative_lineage_bindings(
     repository_root: Path | str,
     pilot_manifest_path: Path | str,
     frozen_documents: dict[str, bytes],
+    verify_evaluator_source_files: bool = True,
 ) -> dict[str, Any]:
     repository = Path(repository_root).resolve(strict=True)
     authority = validate_preregistration_authority(
@@ -9336,6 +9653,7 @@ def build_authoritative_lineage_bindings(
         repository_root=repository,
         pilot_manifest_path=pilot_manifest_path,
         verify_model_files=True,
+        verify_evaluator_source_files=verify_evaluator_source_files,
     )
     preregistration_file = Path(preregistration_path).resolve(strict=True)
     preregistration = _json_no_duplicate_keys(
@@ -11137,10 +11455,17 @@ def _validate_evaluation_agent_construction_authority(
             for candidate_id, outcome in outcomes.items()
             if outcome != "REJECTED_CONTAMINATION"
         }
+        all_candidate_ids = set(outcomes)
+        required_review_candidate_ids = (
+            all_candidate_ids
+            if reviewer_ids["reviewer_a"] == all_candidate_ids
+            and reviewer_ids["reviewer_b"] == all_candidate_ids
+            else clean_candidate_ids
+        )
         _require(
             generator_ids == set(outcomes)
-            and reviewer_ids["reviewer_a"] == clean_candidate_ids
-            and reviewer_ids["reviewer_b"] == clean_candidate_ids,
+            and reviewer_ids["reviewer_a"] == required_review_candidate_ids
+            and reviewer_ids["reviewer_b"] == required_review_candidate_ids,
             message,
         )
         for role in ("reviewer_a", "reviewer_b"):
@@ -11152,7 +11477,7 @@ def _validate_evaluation_agent_construction_authority(
             _require(
                 role_candidate_ids
                 == sorted(
-                    clean_candidate_ids,
+                    required_review_candidate_ids,
                     key=lambda candidate_id: review_schedule_key(role, candidate_id),
                 ),
                 message,
@@ -11442,12 +11767,16 @@ def build_attempt_terminal_document(artifact_count: int) -> dict[str, Any]:
 
 
 def _assert_output_safe(
-    output_root: Path, repository_root: Path, protected_roots: list[Path]
+    output_root: Path,
+    repository_root: Path,
+    protected_roots: list[Path],
+    *,
+    expected_namespace: Path = FINAL_NAMESPACE_RELATIVE,
 ) -> Path:
     output = _canonical_repository_destination(
         output_root,
         repository_root,
-        FINAL_NAMESPACE_RELATIVE,
+        expected_namespace,
         label="evaluation output canonical namespace",
     )
     resolved = output.resolve(strict=False)
@@ -11467,9 +11796,13 @@ def run_single_attempt(
     started_payload: dict[str, Any],
     evaluate: Callable[[], dict[str, bytes]],
     protected_roots: list[Path],
+    output_namespace: Path = FINAL_NAMESPACE_RELATIVE,
 ) -> dict[str, Any]:
     output = _assert_output_safe(
-        Path(output_root), Path(repository_root), protected_roots
+        Path(output_root),
+        Path(repository_root),
+        protected_roots,
+        expected_namespace=output_namespace,
     )
     output.parent.mkdir(mode=0o700, parents=False, exist_ok=True)
     output.mkdir(mode=0o700, parents=False, exist_ok=False)

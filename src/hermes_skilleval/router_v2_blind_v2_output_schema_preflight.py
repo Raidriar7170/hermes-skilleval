@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import os
 import re
+import secrets
 import stat
 import subprocess
 from pathlib import Path
@@ -1317,17 +1319,50 @@ def _argv_authority_findings() -> tuple[str, ...]:
 
 
 def _write_private_file(path: Path, payload: bytes) -> None:
-    flags = os.O_WRONLY | os.O_CREAT
-    if path.exists() or path.is_symlink():
-        flags |= os.O_TRUNC
-    else:
-        flags |= os.O_EXCL
-    flags |= getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(path, flags, 0o600)
+    if not path.is_absolute():
+        raise ValueError("private evidence path must be absolute")
+    parent = path.parent
+    _assert_no_symlink_path(parent)
+    parent_metadata = parent.stat(follow_symlinks=False)
+    if stat.S_ISLNK(parent_metadata.st_mode):
+        raise ValueError("private evidence parent must not be a symlink")
+    if not stat.S_ISDIR(parent_metadata.st_mode):
+        raise ValueError("private evidence parent must be a directory")
+    parent_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    parent_flags |= getattr(os, "O_NOFOLLOW", 0)
+    parent_descriptor = os.open(parent, parent_flags)
+    temporary_name: str | None = None
+    descriptor: int | None = None
+    replaced = False
     try:
+        temporary_name = f".{path.name}.{secrets.token_hex(16)}.tmp"
+        original_identity: tuple[int, int] | None
+        try:
+            target_metadata = os.stat(
+                path.name,
+                dir_fd=parent_descriptor,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            original_identity = None
+        else:
+            if stat.S_ISLNK(target_metadata.st_mode):
+                raise ValueError("private evidence must not be a symlink")
+            if not stat.S_ISREG(target_metadata.st_mode):
+                raise ValueError("private evidence must be a regular file")
+            original_identity = (target_metadata.st_dev, target_metadata.st_ino)
+
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        flags |= getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(
+            temporary_name,
+            flags,
+            0o600,
+            dir_fd=parent_descriptor,
+        )
         metadata = os.fstat(descriptor)
         if not stat.S_ISREG(metadata.st_mode):
-            raise ValueError("private evidence must be a regular file")
+            raise ValueError("private evidence temporary must be a regular file")
         os.fchmod(descriptor, 0o600)
         view = memoryview(payload)
         while view:
@@ -1335,8 +1370,54 @@ def _write_private_file(path: Path, payload: bytes) -> None:
             if written <= 0:
                 raise OSError("private evidence write made no progress")
             view = view[written:]
-    finally:
+        os.fsync(descriptor)
         os.close(descriptor)
+        descriptor = None
+
+        try:
+            current_metadata = os.stat(
+                path.name,
+                dir_fd=parent_descriptor,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            current_identity = None
+        else:
+            if stat.S_ISLNK(current_metadata.st_mode):
+                raise ValueError("private evidence must not be a symlink")
+            if not stat.S_ISREG(current_metadata.st_mode):
+                raise ValueError("private evidence must be a regular file")
+            current_identity = (current_metadata.st_dev, current_metadata.st_ino)
+        if current_identity != original_identity:
+            raise ValueError("private evidence target changed during atomic rewrite")
+
+        os.replace(
+            temporary_name,
+            path.name,
+            src_dir_fd=parent_descriptor,
+            dst_dir_fd=parent_descriptor,
+        )
+        replaced = True
+        try:
+            os.fsync(parent_descriptor)
+        except OSError as exc:
+            unsupported = {
+                errno.EBADF,
+                errno.EINVAL,
+                errno.ENOTSUP,
+                getattr(errno, "EOPNOTSUPP", errno.ENOTSUP),
+            }
+            if exc.errno not in unsupported:
+                raise
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        if not replaced and temporary_name is not None:
+            try:
+                os.unlink(temporary_name, dir_fd=parent_descriptor)
+            except FileNotFoundError:
+                pass
+        os.close(parent_descriptor)
 
 
 def _prepare_private_root(private_root: Path, repository_root: Path) -> None:
@@ -1931,6 +2012,208 @@ def _run_successor_preflight(
         role_results=role_results,
         process_count=sum(cast(int, row["process_count"]) for row in role_results),
     )
+
+
+def _formal_result(
+    status: str,
+    *,
+    invocation: dict[str, Any] | None = None,
+    response: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "invocation": invocation,
+        "response": response,
+        "retry_count": 0,
+        "fallback_used": False,
+        "fork_context": False,
+    }
+
+
+def _formal_stdin(request: Mapping[str, Any]) -> bytes:
+    prompt = request.get("system_prompt")
+    request_input = request.get("input")
+    if type(prompt) is not str or type(request_input) is not dict:
+        raise ValueError("formal request prompt/input mismatch")
+    return (
+        prompt
+        + "\n\nUse only the following sealed input JSON. Return only the JSON object "
+        "matching the supplied output schema.\n"
+        + json.dumps(
+            request_input,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    ).encode("utf-8")
+
+
+def _prepare_formal_invocation_root(
+    private_root: Path,
+    *,
+    repository_root: Path,
+    schema: Mapping[str, Any],
+    stdin: bytes,
+) -> None:
+    if not private_root.is_absolute():
+        raise ValueError("formal private root must be absolute")
+    repository = repository_root.resolve(strict=True)
+    unresolved = private_root.resolve(strict=False)
+    if unresolved == repository or unresolved.is_relative_to(repository):
+        raise ValueError("formal private root must remain outside repository")
+    if private_root.exists() or private_root.is_symlink():
+        raise ValueError("formal private root must be new and not a symlink")
+    _assert_no_symlink_path(private_root.parent)
+    private_root.mkdir(mode=0o700)
+    private_root.chmod(0o700)
+    _write_private_file(
+        private_root / "response-schema.json", _canonical_json_bytes(schema)
+    )
+    _write_private_file(private_root / "prompt.txt", stdin)
+
+
+def run_formal_agent_invocation(
+    *,
+    request: dict[str, Any],
+    private_root: Path,
+    repository_root: Path,
+    host_probe: HostProbe = _default_host_probe,
+    launcher: RoleLauncher = _default_launcher,
+    seen_thread_ids: set[str] | None = None,
+) -> dict[str, Any]:
+    try:
+        validated_request = historical.validate_agent_request(request)
+        role = cast(str, validated_request["role"])
+        expected_schema = _role_schema(role)
+        if not historical._canonical_contract_json_equal(
+            validated_request["response_schema"], expected_schema
+        ):
+            raise ValueError("formal request must use the successor response schema")
+        config = ROLE_CONFIGS[role]
+        if (
+            validated_request["model"] != config["model"]
+            or validated_request["reasoning_effort"] != config["reasoning_effort"]
+        ):
+            raise ValueError("formal request role authority mismatch")
+        stdin = _formal_stdin(validated_request)
+    except (KeyError, TypeError, ValueError):
+        return _formal_result("FORMAL_REQUEST_BLOCKED")
+
+    try:
+        _prepare_formal_invocation_root(
+            private_root,
+            repository_root=repository_root,
+            schema=expected_schema,
+            stdin=stdin,
+        )
+    except (OSError, ValueError):
+        return _formal_result("FORMAL_EVIDENCE_BLOCKED")
+
+    try:
+        if _argv_authority_findings():
+            raise ValueError("formal argv authority drift")
+        host = host_probe(CODEX_EXECUTABLE)
+        if (
+            host.get("version") != CODEX_CLI_VERSION
+            or host.get("executable_sha256") != CODEX_EXECUTABLE_SHA256
+            or host.get("resolved_executable")
+            not in {None, str(CODEX_EXECUTABLE_RESOLVED)}
+        ):
+            raise ValueError("formal host authority mismatch")
+    except Exception:
+        return _formal_result("FORMAL_HOST_AUTHORITY_BLOCKED")
+
+    argv = _role_argv(role, private_root)
+    timeout_seconds = cast(int, validated_request["timeout_seconds"])
+    try:
+        launched = launcher(
+            role=role,
+            argv=argv,
+            stdin=stdin,
+            cwd=private_root,
+            timeout_seconds=timeout_seconds,
+        )
+    except Exception:
+        return _formal_result("FORMAL_PROCESS_BLOCKED")
+
+    if launched.get("host_authority_valid") is not True:
+        return _formal_result("FORMAL_HOST_AUTHORITY_BLOCKED")
+    if launched.get("process_started") is not True:
+        return _formal_result("FORMAL_PROCESS_BLOCKED")
+    if launched.get("timed_out") is True:
+        return _formal_result("FORMAL_TIMEOUT_BLOCKED")
+    returncode = launched.get("returncode")
+    if type(returncode) is not int or returncode != 0:
+        return _formal_result("FORMAL_PROCESS_BLOCKED")
+    if launched.get("response_read_error") is not False:
+        return _formal_result("FORMAL_EVIDENCE_BLOCKED")
+
+    event_bytes = launched.get("event_bytes")
+    response_bytes = launched.get("response_bytes")
+    if type(event_bytes) is not bytes:
+        return _formal_result("FORMAL_ISOLATION_BLOCKED")
+    try:
+        _write_private_file(private_root / "events.jsonl", event_bytes)
+    except (OSError, ValueError):
+        return _formal_result("FORMAL_EVIDENCE_BLOCKED")
+    if type(response_bytes) is not bytes:
+        return _formal_result("FORMAL_OUTPUT_BLOCKED")
+    try:
+        _write_private_file(private_root / "response.json", response_bytes)
+    except (OSError, ValueError):
+        return _formal_result("FORMAL_EVIDENCE_BLOCKED")
+
+    thread_id, tool_call_count, event_validation, final_agent_message = (
+        _inspect_event_stream(event_bytes, available=True)
+    )
+    if (
+        event_validation != "COMPLETE"
+        or type(thread_id) is not str
+        or not thread_id
+        or tool_call_count != 0
+        or (seen_thread_ids is not None and thread_id in seen_thread_ids)
+    ):
+        return _formal_result("FORMAL_ISOLATION_BLOCKED")
+    try:
+        parsed = _json_object_no_duplicates(response_bytes)
+        response = historical.validate_agent_response(parsed, request=validated_request)
+        if final_agent_message != response:
+            raise ValueError("formal event/output mismatch")
+    except (KeyError, TypeError, UnicodeDecodeError, json.JSONDecodeError, ValueError):
+        return _formal_result("FORMAL_OUTPUT_BLOCKED")
+
+    invocation: dict[str, Any] = {
+        "transport_failure": False,
+        "response_bytes_present": True,
+        "envelope": {
+            "role": role,
+            "thread_id": thread_id,
+            "fork_context": False,
+            "history_message_count": 0,
+            "imported_memory_count": 0,
+            "requested_model": validated_request["model"],
+            "returned_model": None,
+            "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+            "reasoning_effort": validated_request["reasoning_effort"],
+            "timeout_seconds": timeout_seconds,
+            "lineage_observed": True,
+            "tool_call_count": 0,
+            "descendant_agent_count": 0,
+            "transport_retry_count": 0,
+            "request_sha256": validated_request["request_sha256"],
+            "response": response,
+        },
+    }
+    try:
+        historical.validate_agent_invocation_envelope(
+            cast(dict[str, Any], invocation["envelope"]),
+            request=validated_request,
+        )
+    except (KeyError, TypeError, ValueError):
+        return _formal_result("FORMAL_OUTPUT_BLOCKED")
+    if seen_thread_ids is not None:
+        seen_thread_ids.add(thread_id)
+    return _formal_result("VALID", invocation=invocation, response=response)
 
 
 def run_successor_preflight() -> dict[str, Any]:

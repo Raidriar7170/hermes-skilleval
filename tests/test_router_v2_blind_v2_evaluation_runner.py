@@ -11348,6 +11348,7 @@ def test_task7_final_cli_exposes_only_sealed_agent_workflow() -> None:
         "request-round-1",
         "request-reviews",
         "request-round-2",
+        "run-agent-construction",
         "pack-status",
         "freeze",
         "model-smoke",
@@ -11835,6 +11836,10 @@ def test_task7_request_commands_expose_only_frozen_stage_and_reviewer_role() -> 
         expected = {"-h", "--help"}
         if name == "request-reviews":
             expected.update({"--stage", "--role"})
+        elif name == "run-agent-construction":
+            expected.add("--max-workers")
+        elif name in {"pack-status", "freeze", "model-smoke", "evaluate"}:
+            expected.add("--successor")
         assert options == expected
 
     review_args = parser.parse_args(
@@ -13696,7 +13701,11 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
     source_files = preregistration["evaluator"]["source_files"]
     for row in source_files:
         actual_sha256 = hashlib.sha256(
-            (repository / row["path"]).read_bytes()
+            runner._git_blob_bytes(
+                repository,
+                runner.HISTORICAL_EVALUATOR_SOURCE_COMMIT,
+                row["path"],
+            )
         ).hexdigest()
         assert row["sha256"] == actual_sha256, row["path"]
     assert preregistration["evaluator"]["source_files_sha256"] == (

@@ -7,15 +7,20 @@ import math
 import os
 import stat
 import sys
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Sequence, cast
+from typing import Any, Callable, Sequence, cast
 
 from hermes_skilleval.router_v2_blind_v2_evaluation import canonical_sha256
 from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
+from hermes_skilleval import router_v2_blind_v2_output_schema_preflight as formal
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 AGENT_STAGING_ROOT = Path.home() / ".codex/private/hermes-blind-v2"
+SUCCESSOR_AGENT_STAGING_ROOT = Path.home() / ".codex/private/hermes-blind-v2-successor"
 SEMANTIC_MODEL_SNAPSHOT = (
     Path.home()
     / ".cache/huggingface/hub"
@@ -251,6 +256,92 @@ def _commit_a_context(*, require_config_smoke: bool) -> dict[str, Any]:
         "preregistration_file_sha256": preregistration_file_sha256,
         "agent_config_receipt": receipt,
         "staging_root": _canonical_agent_staging_root(repository, commit_a),
+    }
+
+
+def _canonical_successor_staging_root(repository: Path, commit_a: str) -> Path:
+    _require(
+        len(commit_a) == 40
+        and all(character in "0123456789abcdef" for character in commit_a),
+        "successor Commit A must be exactly 40 lowercase hex characters",
+    )
+    expected = SUCCESSOR_AGENT_STAGING_ROOT / commit_a
+    _require(expected.is_absolute(), "successor Agent staging root must be absolute")
+    configured = os.environ.get("HERMES_BLIND_V2_SUCCESSOR_ROOT")
+    if configured is not None:
+        configured_path = Path(configured)
+        _require(
+            configured_path.is_absolute() and configured_path == expected,
+            "HERMES_BLIND_V2_SUCCESSOR_ROOT must match successor Commit A",
+        )
+    workflow._assert_no_existing_symlink_components(
+        expected, label="successor Agent staging root"
+    )
+    resolved = expected.resolve(strict=False)
+    worktree_output = workflow._git(repository, "worktree", "list", "--porcelain")
+    worktrees = [
+        Path(line.removeprefix("worktree "))
+        for line in worktree_output.splitlines()
+        if line.startswith("worktree ")
+    ]
+    _require(bool(worktrees), "linked Git worktree authority is missing")
+    for worktree in worktrees:
+        worktree_root = worktree.resolve(strict=True)
+        _require(
+            not resolved.is_relative_to(worktree_root),
+            "successor Agent staging root must remain outside every worktree",
+        )
+    return expected
+
+
+def _successor_frozen_input_context() -> dict[str, Any]:
+    repository = REPOSITORY_ROOT.resolve(strict=True)
+    preregistration_path = _repository_file(
+        repository,
+        workflow.PREREGISTRATION_RELATIVE.as_posix(),
+        label="preregistration frozen input authority",
+    )
+    pilot_manifest_path = _repository_file(
+        repository,
+        workflow.PILOT_MANIFEST_RELATIVE.as_posix(),
+        label="pilot manifest frozen input authority",
+    )
+    _require(
+        _sha256_bytes(preregistration_path.read_bytes())
+        == workflow.SUCCESSOR_PREREGISTRATION_FILE_SHA256,
+        "successor frozen preregistration file hash mismatch",
+    )
+    workflow.validate_preregistration_authority(
+        preregistration_path,
+        repository_root=repository,
+        pilot_manifest_path=pilot_manifest_path,
+        verify_model_files=False,
+        verify_evaluator_source_files=False,
+    )
+    workflow.validate_successor_preflight_authority(repository)
+    inputs = _load_preregistered_agent_inputs(
+        preregistration_path, repository_root=repository
+    )
+    return {
+        **inputs,
+        "repository": repository,
+        "preregistration_path": preregistration_path,
+        "pilot_manifest_path": pilot_manifest_path,
+        "preregistration_file_sha256": _sha256_bytes(preregistration_path.read_bytes()),
+        "successor_authority": True,
+    }
+
+
+def _successor_commit_a_context() -> dict[str, Any]:
+    context = _successor_frozen_input_context()
+    repository = cast(Path, context["repository"])
+    state = workflow.validate_successor_commit_a_repository(repository)
+    commit_a = cast(str, state["commit_a"])
+    return {
+        **context,
+        **state,
+        "commit_a": commit_a,
+        "staging_root": _canonical_successor_staging_root(repository, commit_a),
     }
 
 
@@ -625,7 +716,8 @@ def _validate_existing_review_sequences(context: dict[str, Any], *, stage: str) 
                 role=role,
                 candidates=candidates_by_id,
                 projected_skills=projected_skills,
-                clean_candidate_ids=clean_ids,
+                review_candidate_ids=clean_ids,
+                successor_protocol_mode=False,
                 label=f"{role} staged row",
             )
             _require(
@@ -890,6 +982,649 @@ def _request_round_2(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _prepare_successor_staging_root(context: dict[str, Any]) -> Path:
+    repository = cast(Path, context["repository"]).resolve(strict=True)
+    commit_a = cast(str, context["commit_a"])
+    root = cast(Path, context["staging_root"])
+    _require(root.is_absolute(), "successor staging root must be absolute")
+    _require(root.name == commit_a, "successor staging root must be Commit A-bound")
+    workflow._assert_no_existing_symlink_components(
+        root, label="successor staging root"
+    )
+    _require(
+        not root.exists() and not root.is_symlink(),
+        "successor staging root must be new and must not exist",
+    )
+    resolved = root.resolve(strict=False)
+    _require(
+        not resolved.is_relative_to(repository),
+        "successor staging root must remain outside repository",
+    )
+    for line in workflow._git(
+        repository, "worktree", "list", "--porcelain"
+    ).splitlines():
+        if not line.startswith("worktree "):
+            continue
+        worktree = Path(line.removeprefix("worktree ")).resolve(strict=True)
+        _require(
+            not resolved.is_relative_to(worktree),
+            "successor staging root must remain outside every worktree",
+        )
+    parent_was_missing = not root.parent.exists()
+    root.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if parent_was_missing:
+        root.parent.chmod(0o700)
+    root.mkdir(mode=0o700)
+    root.chmod(0o700)
+    invocation_root = root / "invocations"
+    invocation_root.mkdir(mode=0o700)
+    invocation_root.chmod(0o700)
+    return root
+
+
+def _jsonl_bytes(rows: list[dict[str, Any]]) -> bytes:
+    return b"".join(_canonical_bytes(row) for row in rows)
+
+
+def _role_metadata(rows: list[dict[str, Any]], *, role: str) -> dict[str, Any]:
+    invocations = [
+        invocation
+        for row in rows
+        for invocation in cast(list[dict[str, Any]], row.get("invocations", []))
+    ]
+    envelopes = [
+        cast(dict[str, Any], invocation["envelope"])
+        for invocation in invocations
+        if type(invocation.get("envelope")) is dict
+    ]
+    provider_models: list[str | None] = []
+    provider_statuses: set[str] = set()
+    for envelope in envelopes:
+        model = cast(str | None, envelope.get("returned_model"))
+        if model not in provider_models:
+            provider_models.append(model)
+        status = envelope.get("provider_returned_model_status")
+        if type(status) is str:
+            provider_statuses.add(status)
+    session_ids = [
+        cast(str, envelope["thread_id"])
+        for envelope in envelopes
+        if type(envelope.get("thread_id")) is str
+    ]
+    return {
+        "config": deepcopy(workflow.AGENT_CONFIGS[role]),
+        "request_count": len(rows),
+        "invocation_count": len(invocations),
+        "session_or_thread_ids": session_ids,
+        "fork_context": False,
+        "history_message_count": 0,
+        "imported_memory_count": 0,
+        "model_identity_evidence": "HOST_REQUEST_ENVELOPE",
+        "provider_returned_models": provider_models,
+        "provider_returned_model_statuses": sorted(provider_statuses),
+        "lineage_observed": bool(envelopes)
+        and all(envelope.get("lineage_observed") is True for envelope in envelopes),
+        "tool_call_count": sum(
+            cast(int, envelope.get("tool_call_count", 0)) for envelope in envelopes
+        ),
+        "descendant_agent_count": sum(
+            cast(int, envelope.get("descendant_agent_count", 0))
+            for envelope in envelopes
+        ),
+    }
+
+
+def _persist_successor_ledgers(
+    root: Path,
+    *,
+    first_read_timestamp: str,
+    generation_rows: list[dict[str, Any]],
+    review_rows: dict[str, list[dict[str, Any]]],
+    contamination_rows: list[dict[str, Any]],
+) -> None:
+    ordered_reviews = {
+        role: sorted(
+            rows,
+            key=lambda row: workflow.review_schedule_key(
+                role, cast(str, row["candidate_id"])
+            ),
+        )
+        for role, rows in review_rows.items()
+    }
+    payloads = {
+        "blind-v2-generation.jsonl": _jsonl_bytes(generation_rows),
+        "blind-v2-review-a.jsonl": _jsonl_bytes(ordered_reviews["reviewer_a"]),
+        "blind-v2-review-b.jsonl": _jsonl_bytes(ordered_reviews["reviewer_b"]),
+        "blind-v2-contamination.jsonl": _jsonl_bytes(contamination_rows),
+    }
+    for filename, payload in payloads.items():
+        formal._write_private_file(root / filename, payload)
+    metadata = {
+        "schema_version": "router-v2-blind-v2-agent-run-metadata-v1",
+        "first_read_timestamp": first_read_timestamp,
+        "roles": {
+            "generator": _role_metadata(generation_rows, role="generator"),
+            "reviewer_a": _role_metadata(
+                ordered_reviews["reviewer_a"], role="reviewer_a"
+            ),
+            "reviewer_b": _role_metadata(
+                ordered_reviews["reviewer_b"], role="reviewer_b"
+            ),
+        },
+        "review_schedule_sha256": {
+            role: canonical_sha256(
+                [row["candidate_id"] for row in ordered_reviews[role]]
+            )
+            for role in ("reviewer_a", "reviewer_b")
+        },
+        "selection_authority": dict(workflow.SELECTION_AUTHORITY),
+        "source_file_sha256": {
+            filename: _sha256_bytes(payload) for filename, payload in payloads.items()
+        },
+    }
+    formal._write_private_file(
+        root / "agent-run-metadata.json", _canonical_bytes(metadata)
+    )
+
+
+def _invoke_formal_schedule(
+    schedule: list[dict[str, Any]],
+    *,
+    repository: Path,
+    invocation_root: Path,
+    invocation_runner: Callable[..., dict[str, Any]],
+    seen_thread_ids: set[str],
+    ordinal_state: dict[str, int],
+    max_workers: int,
+    on_batch: Callable[[list[dict[str, Any]]], None],
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    outcomes: list[dict[str, Any]] = []
+    for batch_start in range(0, len(schedule), max_workers):
+        batch = schedule[batch_start : batch_start + max_workers]
+        launched: list[tuple[dict[str, Any], Path]] = []
+        for item in batch:
+            ordinal = ordinal_state["next"]
+            ordinal_state["next"] = ordinal + 1
+            request = cast(dict[str, Any], item["request"])
+            private_root = invocation_root / (
+                f"{ordinal:06d}-{request['role']}-{request['request_sha256'][:12]}"
+            )
+            launched.append((item, private_root))
+
+        def invoke(item: dict[str, Any], private_root: Path) -> dict[str, Any]:
+            try:
+                return invocation_runner(
+                    request=item["request"],
+                    private_root=private_root,
+                    repository_root=repository,
+                    seen_thread_ids=None,
+                )
+            except Exception as exc:
+                return {
+                    "status": "FORMAL_PROCESS_BLOCKED",
+                    "invocation": None,
+                    "response": None,
+                    "retry_count": 0,
+                    "fallback_used": False,
+                    "fork_context": False,
+                    "exception_type": type(exc).__name__,
+                }
+
+        with ThreadPoolExecutor(max_workers=len(launched)) as executor:
+            futures = [
+                executor.submit(invoke, item, private_root)
+                for item, private_root in launched
+            ]
+            raw_results = [future.result() for future in futures]
+
+        batch_outcomes: list[dict[str, Any]] = []
+        batch_failure: dict[str, Any] | None = None
+        for (item, _private_root), result in zip(launched, raw_results, strict=True):
+            request = cast(dict[str, Any], item["request"])
+            invocation = result.get("invocation")
+            valid = (
+                result.get("status") == "VALID"
+                and result.get("retry_count") == 0
+                and result.get("fallback_used") is False
+                and result.get("fork_context") is False
+                and type(invocation) is dict
+            )
+            if valid:
+                try:
+                    envelope = cast(dict[str, Any], invocation)["envelope"]
+                    workflow.validate_agent_invocation_envelope(
+                        envelope,
+                        request=request,
+                        seen_session_ids=seen_thread_ids,
+                    )
+                    _require(
+                        workflow._canonical_contract_json_equal(
+                            result.get("response"), envelope["response"]
+                        ),
+                        "formal result response/envelope mismatch",
+                    )
+                except (KeyError, TypeError, ValueError):
+                    valid = False
+            outcome = {
+                **item,
+                "status": result.get("status"),
+                "invocations": [invocation] if type(invocation) is dict else [],
+                "response": result.get("response") if valid else None,
+                "valid": valid,
+            }
+            batch_outcomes.append(outcome)
+            if not valid and batch_failure is None:
+                batch_failure = outcome
+        outcomes.extend(batch_outcomes)
+        on_batch(batch_outcomes)
+        if batch_failure is not None:
+            return outcomes, batch_failure
+    return outcomes, None
+
+
+def _deficits(
+    accepted: list[dict[str, Any]], canonical_skills: list[dict[str, Any]]
+) -> dict[str, dict[str, int]]:
+    deficits: dict[str, dict[str, int]] = {}
+    for skill_id in sorted(cast(str, row["id"]) for row in canonical_skills):
+        negative_count = sum(
+            row["proposed_gold_skill_id"] == skill_id
+            and row["proposed_negative_skill_id"] is not None
+            for row in accepted
+        )
+        positive_count = sum(
+            row["proposed_gold_skill_id"] == skill_id
+            and row["proposed_negative_skill_id"] is None
+            for row in accepted
+        )
+        row_deficits = {
+            "negative": max(
+                0,
+                cast(int, workflow.SELECTION_AUTHORITY["final_negative_per_skill"])
+                - negative_count,
+            ),
+            "positive_only": max(
+                0,
+                cast(
+                    int,
+                    workflow.SELECTION_AUTHORITY["final_positive_only_per_skill"],
+                )
+                - positive_count,
+            ),
+        }
+        if any(row_deficits.values()):
+            deficits[skill_id] = row_deficits
+    return deficits
+
+
+def run_successor_agent_construction(
+    context: dict[str, Any],
+    *,
+    invocation_runner: Callable[
+        ..., dict[str, Any]
+    ] = formal.run_formal_agent_invocation,
+    contamination_scanner: Callable[[list[dict[str, Any]]], dict[str, Any]]
+    | None = None,
+    generator_request_builder: Callable[
+        ..., dict[str, Any]
+    ] = workflow.build_generator_request,
+    first_read_timestamp: str,
+    max_workers: int = 1,
+) -> dict[str, Any]:
+    _require(
+        type(max_workers) is int and 1 <= max_workers <= 8,
+        "max_workers must be an integer between 1 and 8",
+    )
+    _require(
+        context.get("successor_authority") is True,
+        "successor construction requires successor authority",
+    )
+    repository = cast(Path, context["repository"]).resolve(strict=True)
+    skills = workflow._project_canonical_skills(context["canonical_skills"])
+    root = _prepare_successor_staging_root(context)
+    generation_rows: list[dict[str, Any]] = []
+    review_rows: dict[str, list[dict[str, Any]]] = {
+        "reviewer_a": [],
+        "reviewer_b": [],
+    }
+    contamination_rows: list[dict[str, Any]] = []
+    seen_thread_ids: set[str] = set()
+    ordinal_state = {"next": 1}
+
+    def persist() -> None:
+        _persist_successor_ledgers(
+            root,
+            first_read_timestamp=first_read_timestamp,
+            generation_rows=generation_rows,
+            review_rows=review_rows,
+            contamination_rows=contamination_rows,
+        )
+
+    def blocked(stage: str, failure: dict[str, Any] | None) -> dict[str, Any]:
+        persist()
+        return {
+            "status": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+            "failure_stage": stage,
+            "failure_status": None if failure is None else failure.get("status"),
+            "commit_a": context["commit_a"],
+            "staging_root": str(root),
+            "invocation_count": len(seen_thread_ids),
+            "retry_count": 0,
+            "fallback_used": False,
+        }
+
+    persist()
+    selection = workflow.SELECTION_AUTHORITY
+    round_one_schedule = [
+        {
+            "generation_round": 1,
+            "gold_skill_id": cast(str, skill["id"]),
+            "request": generator_request_builder(
+                skills,
+                gold_skill_id=cast(str, skill["id"]),
+                negative_quota=cast(int, selection["round_1_negative_per_skill"]),
+                positive_only_quota=cast(
+                    int, selection["round_1_positive_only_per_skill"]
+                ),
+                repository_root=repository,
+                round_number=1,
+                successor_output_schema=True,
+            ),
+        }
+        for skill in sorted(skills, key=lambda row: cast(str, row["id"]))
+    ]
+
+    def append_generation(batch: list[dict[str, Any]]) -> None:
+        generation_rows.extend(
+            {
+                "generation_round": row["generation_round"],
+                "gold_skill_id": row["gold_skill_id"],
+                "request": row["request"],
+                "invocations": row["invocations"],
+            }
+            for row in batch
+        )
+        persist()
+
+    round_one_outcomes, failure = _invoke_formal_schedule(
+        round_one_schedule,
+        repository=repository,
+        invocation_root=root / "invocations",
+        invocation_runner=invocation_runner,
+        seen_thread_ids=seen_thread_ids,
+        ordinal_state=ordinal_state,
+        max_workers=max_workers,
+        on_batch=append_generation,
+    )
+    if failure is not None:
+        return blocked("round-1-generation", failure)
+    round_one_candidates = [
+        candidate
+        for outcome in round_one_outcomes
+        for candidate in workflow._derived_generator_candidates(
+            cast(dict[str, Any], outcome["response"]),
+            cast(dict[str, Any], outcome["request"]),
+        )
+    ]
+
+    if contamination_scanner is None:
+        similarity, semantic_model_authority = _semantic_validation_components(
+            cast(dict[str, Any], context["preregistration"])
+        )
+
+        def contamination_scanner(
+            candidates: list[dict[str, Any]],
+        ) -> dict[str, Any]:
+            return workflow._scan_contamination(
+                candidates,
+                protected_prompts={
+                    "train": cast(list[str], context["train_prompts"]),
+                    "pilot-002": cast(list[str], context["pilot_prompts"]),
+                    "phase16": cast(list[str], context["phase16_prompts"]),
+                    "prior_candidate": cast(
+                        list[str], context["prior_candidate_prompts"]
+                    ),
+                },
+                protected_family_ids={
+                    "train": cast(set[str], context["train_family_ids"]),
+                    "pilot-002": cast(set[str], context["pilot_family_ids"]),
+                    "phase16": cast(set[str], context["phase16_family_ids"]),
+                    "prior_candidate": cast(
+                        set[str], context["prior_candidate_family_ids"]
+                    ),
+                },
+                semantic_similarity=similarity,
+                semantic_model_authority=semantic_model_authority,
+            )
+
+    try:
+        round_one_scan = contamination_scanner(round_one_candidates)
+        contamination_rows[:] = cast(list[dict[str, Any]], round_one_scan["rows"])
+        clean_round_one = set(cast(list[str], round_one_scan["clean_candidate_ids"]))
+        _require(
+            clean_round_one
+            <= {cast(str, row["candidate_id"]) for row in round_one_candidates},
+            "contamination scanner returned unknown candidate ids",
+        )
+        persist()
+    except (KeyError, TypeError, ValueError):
+        return blocked("round-1-contamination", None)
+
+    round_one_by_id = {
+        cast(str, row["candidate_id"]): row for row in round_one_candidates
+    }
+    review_responses: dict[str, dict[str, dict[str, Any]]] = {
+        "reviewer_a": {},
+        "reviewer_b": {},
+    }
+
+    def run_reviews(
+        *, role: str, candidate_ids: set[str], stage: str
+    ) -> dict[str, Any] | None:
+        candidates_by_id = {
+            cast(str, row["candidate_id"]): row
+            for row in round_one_candidates + round_two_candidates
+        }
+        schedule = [
+            {
+                "candidate_id": candidate_id,
+                "request": workflow.build_reviewer_request(
+                    candidates_by_id[candidate_id],
+                    skills,
+                    role=role,
+                    successor_output_schema=True,
+                ),
+            }
+            for candidate_id in sorted(
+                candidate_ids,
+                key=lambda value: workflow.review_schedule_key(role, value),
+            )
+        ]
+
+        def append_reviews(batch: list[dict[str, Any]]) -> None:
+            for row in batch:
+                review_rows[role].append(
+                    {
+                        "candidate_id": row["candidate_id"],
+                        "request": row["request"],
+                        "invocations": row["invocations"],
+                    }
+                )
+                if row["valid"]:
+                    review_responses[role][cast(str, row["candidate_id"])] = cast(
+                        dict[str, Any], row["response"]
+                    )
+            persist()
+
+        _outcomes, review_failure = _invoke_formal_schedule(
+            schedule,
+            repository=repository,
+            invocation_root=root / "invocations",
+            invocation_runner=invocation_runner,
+            seen_thread_ids=seen_thread_ids,
+            ordinal_state=ordinal_state,
+            max_workers=max_workers,
+            on_batch=append_reviews,
+        )
+        if review_failure is not None:
+            return blocked(f"{stage}-{role}", review_failure)
+        return None
+
+    round_two_candidates: list[dict[str, Any]] = []
+    round_one_candidate_ids = set(round_one_by_id)
+    for reviewer_role in ("reviewer_a", "reviewer_b"):
+        review_block = run_reviews(
+            role=reviewer_role,
+            candidate_ids=round_one_candidate_ids,
+            stage="round-1-review",
+        )
+        if review_block is not None:
+            return review_block
+
+    round_one_accepted = [
+        candidate
+        for candidate_id, candidate in round_one_by_id.items()
+        if candidate_id in clean_round_one
+        and _unanimously_accepted(
+            candidate,
+            review_responses["reviewer_a"][candidate_id],
+            review_responses["reviewer_b"][candidate_id],
+        )
+    ]
+    round_one_deficits = _deficits(round_one_accepted, skills)
+    multiplier = cast(int, selection["round_2_deficit_multiplier"])
+    round_two_schedule = [
+        {
+            "generation_round": 2,
+            "gold_skill_id": skill_id,
+            "request": generator_request_builder(
+                skills,
+                gold_skill_id=skill_id,
+                negative_quota=counts["negative"] * multiplier,
+                positive_only_quota=counts["positive_only"] * multiplier,
+                repository_root=repository,
+                round_number=2,
+                successor_output_schema=True,
+            ),
+        }
+        for skill_id, counts in sorted(round_one_deficits.items())
+    ]
+    round_two_outcomes, failure = _invoke_formal_schedule(
+        round_two_schedule,
+        repository=repository,
+        invocation_root=root / "invocations",
+        invocation_runner=invocation_runner,
+        seen_thread_ids=seen_thread_ids,
+        ordinal_state=ordinal_state,
+        max_workers=max_workers,
+        on_batch=append_generation,
+    )
+    if failure is not None:
+        return blocked("round-2-generation", failure)
+    round_two_candidates = [
+        candidate
+        for outcome in round_two_outcomes
+        for candidate in workflow._derived_generator_candidates(
+            cast(dict[str, Any], outcome["response"]),
+            cast(dict[str, Any], outcome["request"]),
+        )
+    ]
+    all_candidates = round_one_candidates + round_two_candidates
+    if round_two_candidates:
+        try:
+            final_scan = contamination_scanner(all_candidates)
+            contamination_rows[:] = cast(list[dict[str, Any]], final_scan["rows"])
+            clean_final = set(cast(list[str], final_scan["clean_candidate_ids"]))
+            _require(
+                clean_final
+                <= {cast(str, row["candidate_id"]) for row in all_candidates},
+                "contamination scanner returned unknown candidate ids",
+            )
+            persist()
+        except (KeyError, TypeError, ValueError):
+            return blocked("round-2-contamination", None)
+    else:
+        clean_final = clean_round_one
+
+    round_two_candidate_ids = {
+        cast(str, row["candidate_id"]) for row in round_two_candidates
+    }
+    for reviewer_role in ("reviewer_a", "reviewer_b"):
+        review_block = run_reviews(
+            role=reviewer_role,
+            candidate_ids=round_two_candidate_ids,
+            stage="round-2-review",
+        )
+        if review_block is not None:
+            return review_block
+
+    accepted = [
+        candidate
+        for candidate in all_candidates
+        if candidate["candidate_id"] in clean_final
+        and candidate["candidate_id"] in review_responses["reviewer_a"]
+        and candidate["candidate_id"] in review_responses["reviewer_b"]
+        and _unanimously_accepted(
+            candidate,
+            review_responses["reviewer_a"][candidate["candidate_id"]],
+            review_responses["reviewer_b"][candidate["candidate_id"]],
+        )
+    ]
+    final_deficits = _deficits(accepted, skills)
+    persist()
+    return {
+        "status": (
+            "AGENT_BLIND_V2_CONSTRUCTION_COMPLETE"
+            if not final_deficits
+            else "AGENT_BLIND_V2_DATASET_INSUFFICIENT"
+        ),
+        "commit_a": context["commit_a"],
+        "staging_root": str(root),
+        "round_1_candidate_count": len(round_one_candidates),
+        "round_2_candidate_count": len(round_two_candidates),
+        "reviewed_candidate_count": len(all_candidates),
+        "final_deficits": final_deficits,
+        "invocation_count": len(seen_thread_ids),
+        "retry_count": 0,
+        "fallback_used": False,
+    }
+
+
+def _run_agent_construction(args: argparse.Namespace) -> int:
+    host_started = False
+
+    def invoke_formal_host(**kwargs: Any) -> dict[str, Any]:
+        nonlocal host_started
+        host_started = True
+        return formal.run_formal_agent_invocation(**kwargs)
+
+    try:
+        timestamp = (
+            datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        )
+        context = _successor_commit_a_context()
+        result = run_successor_agent_construction(
+            context,
+            invocation_runner=invoke_formal_host,
+            generator_request_builder=workflow.build_generator_request,
+            first_read_timestamp=timestamp,
+            max_workers=cast(int, args.max_workers),
+        )
+    except Exception as exc:
+        if host_started:
+            raise
+        result = {
+            "status": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
+            "failure_stage": "pre-data-setup",
+            "failure_status": type(exc).__name__,
+            "invocation_count": 0,
+            "retry_count": 0,
+            "fallback_used": False,
+        }
+    _write_stdout(result)
+    return 0 if result["status"] == "AGENT_BLIND_V2_CONSTRUCTION_COMPLETE" else 2
+
+
 class _SemanticSimilarity:
     def __init__(self, model_path: Path) -> None:
         try:
@@ -963,10 +1698,14 @@ def _semantic_validation_components(
     return _SemanticSimilarity(snapshot), authority
 
 
-def _validated_pack_context() -> tuple[
-    dict[str, Any], dict[str, Any], _SemanticSimilarity
-]:
-    context = _commit_a_context(require_config_smoke=True)
+def _validated_pack_context(
+    *, successor: bool = False
+) -> tuple[dict[str, Any], dict[str, Any], _SemanticSimilarity]:
+    context = (
+        _successor_commit_a_context()
+        if successor
+        else _commit_a_context(require_config_smoke=True)
+    )
     for filename in workflow.REQUIRED_AGENT_PACK_FILES:
         _agent_pack_file(context, filename)
     metadata = _json(_agent_pack_file(context, "agent-run-metadata.json"))
@@ -1002,8 +1741,13 @@ def _validated_pack_context() -> tuple[
     return context, validation, similarity
 
 
-def _pack_status(_args: argparse.Namespace) -> int:
-    context, validation, _similarity = _validated_pack_context()
+def _pack_status(args: argparse.Namespace) -> int:
+    successor = getattr(args, "successor", False)
+    context, validation, _similarity = (
+        _validated_pack_context(successor=True)
+        if successor
+        else _validated_pack_context()
+    )
     _write_stdout(
         {
             "status": validation["status"],
@@ -1021,8 +1765,13 @@ def _pack_status(_args: argparse.Namespace) -> int:
     return 0 if validation["status"] == "VALID" else 3
 
 
-def _freeze(_args: argparse.Namespace) -> int:
-    context, validation, similarity = _validated_pack_context()
+def _freeze(args: argparse.Namespace) -> int:
+    successor = getattr(args, "successor", False)
+    context, validation, similarity = (
+        _validated_pack_context(successor=True)
+        if successor
+        else _validated_pack_context()
+    )
     _require(validation["status"] == "VALID", "valid Agent pack is required")
     documents = workflow.build_dataset_freeze_documents(
         validation,
@@ -1048,8 +1797,11 @@ def _freeze(_args: argparse.Namespace) -> int:
     return 0
 
 
-def _model_smoke(_args: argparse.Namespace) -> int:
-    _commit_a_context(require_config_smoke=True)
+def _model_smoke(args: argparse.Namespace) -> int:
+    if getattr(args, "successor", False):
+        _successor_commit_b_context(require_model_smoke=False)
+    else:
+        _commit_a_context(require_config_smoke=True)
     repository = REPOSITORY_ROOT.resolve(strict=False)
     pilot_manifest_path = repository / workflow.PILOT_MANIFEST_RELATIVE
     receipt = workflow.run_model_load_smoke(
@@ -1072,6 +1824,48 @@ def _commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
     )
     state = workflow.validate_commit_b_repository(
         repository, commit_a=cast(str, blind_manifest["commit_a"])
+    )
+    preregistration_file_sha256 = _sha256_bytes(preregistration_path.read_bytes())
+    frozen_manifest_file_sha256 = _sha256_bytes(
+        frozen_documents["blind-v2-manifest.json"]
+    )
+    receipt: dict[str, Any] | None = None
+    if require_model_smoke:
+        receipt = workflow.validate_model_load_smoke_receipt(
+            commit_a=cast(str, state["commit_a"]),
+            commit_b=cast(str, state["commit_b"]),
+            preregistration_sha256=preregistration_file_sha256,
+            frozen_dataset_manifest_sha256=frozen_manifest_file_sha256,
+        )
+    return {
+        **inputs,
+        **state,
+        "repository": repository,
+        "preregistration_path": preregistration_path,
+        "pilot_manifest_path": pilot_manifest_path,
+        "frozen_documents": frozen_documents,
+        "blind_manifest": blind_manifest,
+        "preregistration_file_sha256": preregistration_file_sha256,
+        "frozen_manifest_file_sha256": frozen_manifest_file_sha256,
+        "model_smoke_receipt": receipt,
+    }
+
+
+def _successor_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
+    inputs = _successor_frozen_input_context()
+    repository = cast(Path, inputs["repository"])
+    preregistration_path = cast(Path, inputs["preregistration_path"])
+    pilot_manifest_path = cast(Path, inputs["pilot_manifest_path"])
+    frozen_documents = workflow.read_frozen_dataset_documents(repository)
+    blind_manifest = workflow._json_no_duplicate_keys(
+        frozen_documents["blind-v2-manifest.json"],
+        str(repository / workflow.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"),
+    )
+    state = workflow.validate_successor_commit_b_repository(
+        repository, commit_a=cast(str, blind_manifest["commit_a"])
+    )
+    inputs["staging_root"] = _canonical_successor_staging_root(
+        repository, cast(str, state["commit_a"])
     )
     preregistration_file_sha256 = _sha256_bytes(preregistration_path.read_bytes())
     frozen_manifest_file_sha256 = _sha256_bytes(
@@ -1147,8 +1941,13 @@ def _model_bindings(pilot: dict[str, Any]) -> list[dict[str, Any]]:
     return workflow._validated_evaluation_model_bindings(rows)
 
 
-def _evaluate(_args: argparse.Namespace) -> int:
-    context = _commit_b_context(require_model_smoke=True)
+def _evaluate(args: argparse.Namespace) -> int:
+    successor = getattr(args, "successor", False)
+    context = (
+        _successor_commit_b_context(require_model_smoke=True)
+        if successor
+        else _commit_b_context(require_model_smoke=True)
+    )
     repository = cast(Path, context["repository"])
     preregistration_path = cast(Path, context["preregistration_path"])
     pilot_manifest_path = cast(Path, context["pilot_manifest_path"])
@@ -1158,6 +1957,7 @@ def _evaluate(_args: argparse.Namespace) -> int:
         repository_root=repository,
         pilot_manifest_path=pilot_manifest_path,
         verify_model_files=True,
+        verify_evaluator_source_files=not successor,
     )
     tasks = workflow._jsonl_no_duplicate_keys(
         frozen_documents["blind-v2-tasks.jsonl"],
@@ -1170,6 +1970,7 @@ def _evaluate(_args: argparse.Namespace) -> int:
         repository_root=repository,
         pilot_manifest_path=pilot_manifest_path,
         frozen_documents=frozen_documents,
+        verify_evaluator_source_files=not successor,
     )
     attempt_token_sha256 = canonical_sha256(
         {
@@ -1178,7 +1979,11 @@ def _evaluate(_args: argparse.Namespace) -> int:
             "commit_b": context["commit_b"],
             "preregistration_sha256": authority["preregistration_sha256"],
             "blind_v2_manifest_file_sha256": context["frozen_manifest_file_sha256"],
-            "output_namespace": str(workflow.FINAL_NAMESPACE_RELATIVE),
+            "output_namespace": str(
+                workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
+                if successor
+                else workflow.FINAL_NAMESPACE_RELATIVE
+            ),
         }
     )
     started_payload = {
@@ -1238,13 +2043,28 @@ def _evaluate(_args: argparse.Namespace) -> int:
         )
 
     protected_roots = [Path(cast(str, pilot["training_execution_root"]))]
-    terminal = workflow.run_single_attempt(
-        repository / workflow.FINAL_NAMESPACE_RELATIVE,
-        repository_root=repository,
-        started_payload=started_payload,
-        evaluate=evaluate,
-        protected_roots=protected_roots,
+    output_namespace = (
+        workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
+        if successor
+        else workflow.FINAL_NAMESPACE_RELATIVE
     )
+    if successor:
+        terminal = workflow.run_single_attempt(
+            repository / output_namespace,
+            repository_root=repository,
+            started_payload=started_payload,
+            evaluate=evaluate,
+            protected_roots=protected_roots,
+            output_namespace=output_namespace,
+        )
+    else:
+        terminal = workflow.run_single_attempt(
+            repository / output_namespace,
+            repository_root=repository,
+            started_payload=started_payload,
+            evaluate=evaluate,
+            protected_roots=protected_roots,
+        )
     _write_stdout(terminal)
     return 0
 
@@ -1290,9 +2110,30 @@ def _parser() -> argparse.ArgumentParser:
     )
     round_two.set_defaults(handler=_request_round_2)
 
+    construction = commands.add_parser(
+        "run-agent-construction",
+        help=(
+            "Run the successor formal Agent construction controller with no "
+            "substantive retry or fallback."
+        ),
+    )
+    construction.add_argument(
+        "--max-workers",
+        type=int,
+        choices=range(1, 9),
+        default=1,
+        help="Bounded formal invocation concurrency (default: 1; maximum: 8).",
+    )
+    construction.set_defaults(handler=_run_agent_construction)
+
     pack_status = commands.add_parser(
         "pack-status",
         help="Validate the sealed Agent construction ledgers.",
+    )
+    pack_status.add_argument(
+        "--successor",
+        action="store_true",
+        help="Use the successor Commit A/receipt authority.",
     )
     pack_status.set_defaults(handler=_pack_status)
 
@@ -1300,17 +2141,32 @@ def _parser() -> argparse.ArgumentParser:
         "freeze",
         help="Freeze the validated Agent-selected dataset.",
     )
+    freeze.add_argument(
+        "--successor",
+        action="store_true",
+        help="Use the successor Commit A/receipt authority.",
+    )
     freeze.set_defaults(handler=_freeze)
 
     model_smoke = commands.add_parser(
         "model-smoke",
         help="Run the post-Commit-B fixed A/C model-load check.",
     )
+    model_smoke.add_argument(
+        "--successor",
+        action="store_true",
+        help="Use the successor Commit B authority.",
+    )
     model_smoke.set_defaults(handler=_model_smoke)
 
     evaluate = commands.add_parser(
         "evaluate",
         help="Consume the only preregistered formal attempt.",
+    )
+    evaluate.add_argument(
+        "--successor",
+        action="store_true",
+        help="Use the successor Commit B and output namespace authority.",
     )
     evaluate.set_defaults(handler=_evaluate)
     return parser
