@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router V2 Blind-v2 候选生成终止简报</title>
+  <style>
+    :root { color-scheme: light; --ink: #172033; --muted: #5b6473; --line: #d9dee8; --bad: #9d1c25; --soft: #f5f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eef1f6; color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(980px, calc(100% - 32px)); margin: 32px auto; padding: 32px; background: white; border: 1px solid var(--line); border-radius: 16px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin: 28px 0 10px; font-size: 20px; }
+    p { margin: 8px 0; }
+    .meta { color: var(--muted); }
+    .terminal { margin: 24px 0; padding: 18px 20px; border-left: 5px solid var(--bad); background: #fff3f3; }
+    .terminal strong { color: var(--bad); }
+    ol, ul { padding-left: 24px; }
+    li { margin: 6px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 9px 10px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { width: 31%; background: var(--soft); }
+    code { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
+    .next { margin-top: 26px; padding: 16px 18px; background: #fff8df; border: 1px solid #e8cf72; border-radius: 10px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Router V2 Blind-v2 候选生成终止简报</h1>
+    <p class="meta">2026-07-20 · Commit A2 <code>080e98a6cd3c09fdb2602b3b66cdc5e83e32338b</code></p>
+
+    <section class="terminal">
+      <strong>INVALID · AGENT_BLIND_V2_PROTOCOL_INVALID · KEEP_BASELINE</strong>
+      <p>失败阶段：<code>round_1_host_invocation</code>。生产未就绪、未授权发布、默认 router 未变。</p>
+    </section>
+
+    <h2>发生了什么</h2>
+    <ol>
+      <li>旧 <code>agent-config-smoke-terminal.json</code> 仅作为历史记录保留；它不是本次执行授权。</li>
+      <li>Stage 0 已通过独立 host-envelope 资格验证，随后 A2 从父提交 <code>b756a411…</code> 创建并推送；候选生成前 worktree 干净且 candidate/model/attempt 暴露均为零。</li>
+      <li>新的完整执行 Goal 启动后，16 个 round-1 请求被固定。第 1 个 Generator 调用返回 16 条候选；其余候选文本不在本公开简报中披露。</li>
+      <li>接下来的 3 个 host 请求均在模型调用前被 HTTP 400 拒绝：response schema 的 <code>language</code> 字段缺少 host 要求的 <code>type</code>。</li>
+      <li>剩余 12 个请求未调用，流程立即以协议无效收口。</li>
+    </ol>
+
+    <h2>为什么不能重试</h2>
+    <p>预注册只允许“无响应的 transport failure”重试。这里 host 已明确返回 HTTP 400 <code>invalid_request_error / invalid_json_schema</code>，属于 pre-model 请求协议拒绝，不是网络传输失败。三个失败调用均为 <code>retry_count=0</code>，没有合法 retry 或 fallback 路径。</p>
+
+    <h2>证据绑定</h2>
+    <table>
+      <tr><th>Stage 0 receipt self / bytes</th><td><code>9009d03fe349efcf60e4f58b0a0b63a9fcaf2a78a04b7d4d838486212bbb9118</code><br><code>d6da1fd1d2f8f8969fbde4e90d0391df2f49265426d0db1f54cf43115a91a4d1</code></td></tr>
+      <tr><th>历史 smoke terminal bytes</th><td><code>b83aea9ea8fb1bb6bfd3baa58ac23347765bc9bda48a08c20185088d45fe193e</code></td></tr>
+      <tr><th>Preregistration bytes</th><td><code>a52e85f2b485fdbf9254b6c248f5f87fbb08db74bc473351c3e3601f3b174564</code></td></tr>
+      <tr><th>Round-1 request bundle bytes</th><td><code>8c8ac8a0fb18e251f8c612191abadf4244edd4542c4d819e870e4314bea67d71</code></td></tr>
+      <tr><th>唯一 substantive response raw / canonical</th><td><code>3493436b8115972a8ea2268df39ef351ea65385699424a0912a6777ba9d5454d</code><br><code>4e2eb5f2901ba2baec35b640db4856e25032aad60a03e0d1a7fbefd94f78d1b2</code></td></tr>
+      <tr><th>三份 HTTP 400 event bytes</th><td><code>fa9d590df3179c7238d24f3018b01c30b832d2303dd9f4cd5646a8ab1310d9c6</code><br><code>836788f124b6b0ae341e8adf142e0c923cac911d254f8671a087fb37ecfde800</code><br><code>a90e3bcfe765058f241059a53a46c3481506bad2ff72e21d7a04643ce218b70b</code></td></tr>
+      <tr><th>公开 terminal self / bytes</th><td><code>0226edfb3ac0136e73638d38e95b71f0a82336b09c11845f081b64739cfc8fdd</code><br><code>4af1eed1651eba9757b7edaa64824c315c4abdaf9919ba8e0a68ff79fea64dbf</code></td></tr>
+      <tr><th>私有 evidence manifest self / bytes</th><td><code>7b10cb97dbdbbd9bced114c675a4de95f6ed3d7b8f56a54a10ff3173d3471bbc</code><br><code>8fb86f88bdc137f5aabc42335a6e674bf45f86ffeff58a48ce244d4434693194</code></td></tr>
+    </table>
+
+    <h2>明确未发生</h2>
+    <ul>
+      <li>16 条已暴露候选不会复用；没有 contamination scan、Reviewer A/B、round 2 或数据冻结。</li>
+      <li>没有 Commit B、Arm A/C 模型加载、model score、attempt marker、formal evaluation、训练、release、merge 或默认 router 变更。</li>
+      <li>没有 <code>AGENT_GENERATED</code>、<code>DUAL_AGENT_UNANIMOUS_REVIEWED</code>、human-reviewed 或 statistically-independent claim；human author/reviewer count 均为 0。</li>
+    </ul>
+
+    <h2>CI 边界</h2>
+    <p>PR #39 仍是 Draft / BLOCK_MERGE。A2 exact-head 的实验相关 integration gate、OpenSpec、Ruff non-regression 与 focused mypy 通过；最终 summary/release-check 仍被既有 README overclaim / Phase 18 基线债务阻挡，不归因于 A2。此终止步骤不修改 README 或历史 release artifact。</p>
+
+    <p class="next">下一步：需要全新预注册 successor，不能恢复本次实验。</p>
+  </main>
+</body>
+</html>
