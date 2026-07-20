@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router V2 successor blind-v2 基础设施终态简报</title>
+  <style>
+    :root { color-scheme: light; --ink: #172033; --muted: #5b6473; --line: #d9dee8; --bad: #9d1c25; --soft: #f5f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eef1f6; color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(980px, calc(100% - 32px)); margin: 32px auto; padding: 32px; background: white; border: 1px solid var(--line); border-radius: 16px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin: 28px 0 10px; font-size: 20px; }
+    p { margin: 8px 0; }
+    .meta { color: var(--muted); }
+    .terminal { margin: 24px 0; padding: 18px 20px; border-left: 5px solid var(--bad); background: #fff3f3; }
+    .terminal strong { color: var(--bad); }
+    ol, ul { padding-left: 24px; }
+    li { margin: 6px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 9px 10px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { width: 31%; background: var(--soft); }
+    code { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
+    .next { margin-top: 26px; padding: 16px 18px; background: #fff8df; border: 1px solid #e8cf72; border-radius: 10px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Router V2 successor blind-v2 基础设施终态简报</h1>
+    <p class="meta">2026-07-21 · Commit A <code>a7052b067178ddcbf60d303b7844fe5966bb2a71</code></p>
+
+    <section class="terminal">
+      <strong>AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE · KEEP_BASELINE</strong>
+      <p>失败阶段：<code>round-1-generation</code>；失败状态：<code>FORMAL_OUTPUT_BLOCKED</code>。默认 router 未变，生产与发布均未就绪。</p>
+    </section>
+
+    <h2>发生了什么</h2>
+    <ol>
+      <li>冻结 preflight commit、receipt、Codex CLI 版本、解析路径和 executable SHA-256 均在调用前复核通过。</li>
+      <li>Commit A 是 <code>6b6f2a5…</code> 的直接子提交，精确包含 5 个预数据 adapter/test 文件，并已推送到独立正式分支。</li>
+      <li>Round 1 以并发 4 启动。4 个 Generator 请求都返回了 response bytes；所有响应均为合法 JSON、通过冻结 JSON Schema，并满足 16 条与 12/4 配额。</li>
+      <li>其中 3 个响应把 <code>candidate_index</code> 写成 <code>1..16</code>，而冻结语义校验要求精确 <code>0..15</code>；只有 1 个响应通过完整语义校验。</li>
+      <li>控制器在首批结束后立即 fail closed；剩余 12 个 Generator、污染扫描、两位 Reviewer 和 supplement round 均未运行。</li>
+    </ol>
+
+    <h2>为什么不能重试</h2>
+    <p>这 3 个失败调用都已收到 substantive response bytes，因此不是“无响应 transport failure”。冻结协议禁止修补 Agent 输出、修改 schema 后续跑或发起第二次正式 generation lifecycle；<code>retry_count=0</code>、<code>fallback_used=false</code>。</p>
+
+    <h2>计数与证据</h2>
+    <table>
+      <tr><th>计划 / 已启动 / 未调用</th><td>16 / 4 / 12 个 Generator 请求</td></tr>
+      <tr><th>响应 / 完整语义有效</th><td>4 / 1；共返回 64 条候选结构，其中 16 条通过完整语义校验，但全部禁止复用</td></tr>
+      <tr><th>Reviewer A / Reviewer B</th><td>0 / 0</td></tr>
+      <tr><th>Preflight receipt self / bytes</th><td><code>d852c20feea13ee7e0c4fdcd6d75f490c144db4c0dd59386d28640251e5ff291</code><br><code>2b679afe989f68f43ec72120e7b59a72250b25ad01b2fe31c3a25b20756ea6aa</code></td></tr>
+      <tr><th>Codex CLI / executable SHA-256</th><td><code>codex-cli 0.144.5</code><br><code>5e29ab10ca1171be158f7335dd6bd8ce1aaf9af1556939db36a5ee338be6f5f2</code></td></tr>
+      <tr><th>私有 metadata / generation ledger</th><td><code>0b6c62876fe98bfea18c17a36c163f7ad0503b5e7094c72418d740b4229ad83c</code><br><code>9c7750235212055e3ffacd9e6ebce6aa758adfd04d1d6c0714e7e4cbbcac1068</code></td></tr>
+      <tr><th>公开 terminal self / bytes</th><td><code>e3bd328fb00212c60445d21603a966a53bb60666436238316ae5b2e8ea732882</code><br><code>74b8e9fb01e008ee40c1f38c65c73a9fde371c615e4689f847ab88887cefa6ea</code></td></tr>
+    </table>
+
+    <h2>明确未发生</h2>
+    <ul>
+      <li>没有污染扫描、Reviewer A/B、Round 2、数据冻结或 Commit B。</li>
+      <li>没有读取或加载 Arm A/C、没有 model score、model-load smoke、正式 attempt 或 attempt marker。</li>
+      <li>没有训练、模型 checkpoint 修改、seed/gate 修改、README/简历指标更新、发布、merge 或默认 router 变更。</li>
+      <li>没有 <code>AGENT_GENERATED</code>、<code>DUAL_AGENT_UNANIMOUS_REVIEWED</code>、human-reviewed 或 production-ready 声明。</li>
+    </ul>
+
+    <p class="next">终态：保留 baseline；不得恢复或重跑本次正式 generation lifecycle。</p>
+  </main>
+</body>
+</html>
