@@ -175,6 +175,7 @@ class _FakeConstructionRunner:
         seen_thread_ids: set[str] | None = None,
     ) -> dict[str, Any]:
         del repository_root, seen_thread_ids
+        response: dict[str, Any]
         with self._lock:
             ordinal = len(self.calls) + 1
             self.calls.append(
@@ -893,9 +894,22 @@ def test_private_checkpoint_rewrite_is_atomic_durable_and_mode_0600(
     replacements: list[tuple[object, ...]] = []
     real_replace = preflight.os.replace
 
-    def replace(*args: object, **kwargs: object) -> None:
-        replacements.append((*args, kwargs))
-        real_replace(*args, **kwargs)
+    def replace(
+        source: Any,
+        destination: Any,
+        *,
+        src_dir_fd: int | None = None,
+        dst_dir_fd: int | None = None,
+    ) -> None:
+        replacements.append(
+            (source, destination, {"src_dir_fd": src_dir_fd, "dst_dir_fd": dst_dir_fd})
+        )
+        real_replace(
+            source,
+            destination,
+            src_dir_fd=src_dir_fd,
+            dst_dir_fd=dst_dir_fd,
+        )
 
     monkeypatch.setattr(preflight.os, "replace", replace)
     preflight._write_private_file(target, b"new-checkpoint\n")
@@ -923,7 +937,9 @@ def test_private_checkpoint_failed_rewrite_preserves_old_bytes_and_cleans_temp(
     real_write = preflight.os.write
     write_count = 0
 
-    def fail_after_partial_write(descriptor: int, payload: object) -> int:
+    def fail_after_partial_write(
+        descriptor: int, payload: bytes | bytearray | memoryview
+    ) -> int:
         nonlocal write_count
         write_count += 1
         if write_count == 1:

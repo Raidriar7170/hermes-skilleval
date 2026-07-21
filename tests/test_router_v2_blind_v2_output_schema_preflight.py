@@ -33,6 +33,15 @@ def _module() -> ModuleType:
     return importlib.import_module(MODULE_NAME)
 
 
+@pytest.fixture(autouse=True)
+def _bind_frozen_repository_root_to_checkout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep the frozen checkout authority portable across macOS and Linux CI."""
+
+    monkeypatch.setattr(_module(), "FROZEN_REPOSITORY_ROOT", ROOT)
+
+
 def _findings(schema: Any) -> tuple[str, ...]:
     return _module().schema_compatibility_findings(schema)
 
@@ -682,8 +691,13 @@ def test_public_orchestration_checks_target_then_runs_and_writes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = _module()
-    calls: list[object] = []
+    calls: list[tuple[str, Any]] = []
     receipt = {"preflight_state": "PREFLIGHT_READY"}
+
+    def run_successor(**kwargs: Any) -> dict[str, str]:
+        calls.append(("run", kwargs))
+        return receipt
+
     monkeypatch.setattr(
         module,
         "_validate_public_receipt_target_at",
@@ -692,7 +706,7 @@ def test_public_orchestration_checks_target_then_runs_and_writes(
     monkeypatch.setattr(
         module,
         "_run_successor_preflight",
-        lambda **kwargs: calls.append(("run", kwargs)) or receipt,
+        run_successor,
     )
     monkeypatch.setattr(
         module,

@@ -16,6 +16,7 @@ from typing import Any, Callable, Sequence, cast
 from hermes_skilleval.router_v2_blind_v2_evaluation import canonical_sha256
 from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
 from hermes_skilleval import router_v2_blind_v2_output_schema_preflight as formal
+from hermes_skilleval import router_v2_blind_v2_run002 as run002
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +46,74 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
 
 def _write_stdout(value: Any) -> None:
     sys.stdout.write(json.dumps(value, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def run_run002_generator_canary(
+    *,
+    invocation_runner: Callable[
+        ..., dict[str, Any]
+    ] = formal.run_formal_agent_invocation,
+    authority_root: Path,
+    authority_manifest: dict[str, Any],
+    private_root: Path,
+    repository_root: Path = REPOSITORY_ROOT,
+) -> dict[str, Any]:
+    """Invoke exactly one synthetic Generator host and validate it as Run002."""
+
+    _require(
+        authority_root.is_absolute()
+        and authority_root.is_dir()
+        and not authority_root.is_symlink()
+        and private_root == authority_root / "generator-canary",
+        "Run002 canary private authority root mismatch",
+    )
+    run002.persist_authority_manifest(authority_root, authority_manifest)
+    request = run002.build_generator_canary_request()
+    result = invocation_runner(
+        request=request,
+        private_root=private_root,
+        repository_root=repository_root.resolve(strict=True),
+        seen_thread_ids=set(),
+    )
+    if result.get("status") != "VALID":
+        return {
+            "status": "RUN002_GENERATOR_CANARY_FAILED",
+            "run_id": run002.RUN_ID,
+            "failure_status": result.get("status"),
+            "host_invocation_count": 1,
+            "retry_count": 0,
+            "formal_data_written": False,
+            "router_loaded": False,
+        }
+    try:
+        receipt = run002.run_generator_canary(result.get("response"))
+    except (TypeError, ValueError):
+        return {
+            "status": "RUN002_GENERATOR_CANARY_FAILED",
+            "run_id": run002.RUN_ID,
+            "failure_status": "INVALID_SYNTHETIC_RESPONSE",
+            "host_invocation_count": 1,
+            "retry_count": 0,
+            "formal_data_written": False,
+            "router_loaded": False,
+        }
+    return {**receipt, "host_invocation_count": 1, "retry_count": 0}
+
+
+def _run002_generator_canary(_args: argparse.Namespace) -> int:
+    context = _run002_commit_a_context()
+    authority_root = cast(Path, context["staging_root"])
+    if not authority_root.exists():
+        authority_root.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        authority_root.mkdir(mode=0o700)
+    result = run_run002_generator_canary(
+        authority_root=authority_root,
+        authority_manifest=cast(dict[str, Any], context["authority_manifest"]),
+        private_root=authority_root / "generator-canary",
+        repository_root=cast(Path, context["repository"]),
+    )
+    _write_stdout(result)
+    return 0 if result["status"] == "RUN002_GENERATOR_CANARY_PASSED" else 2
 
 
 def _canonical_bytes(value: Any) -> bytes:
@@ -343,6 +412,56 @@ def _successor_commit_a_context() -> dict[str, Any]:
         "commit_a": commit_a,
         "staging_root": _canonical_successor_staging_root(repository, commit_a),
     }
+
+
+def _run002_commit_a_context() -> dict[str, Any]:
+    """Bind Run002 to a fresh Commit A without reusing Run001 authority."""
+
+    context = _successor_frozen_input_context()
+    repository = cast(Path, context["repository"])
+    terminal_path = (
+        repository
+        / run002.OUTPUT_NAMESPACE.parent
+        / (f"{run002.RUN001_RUN_ID}/candidate-generation-terminal.json")
+    )
+    _require(
+        terminal_path.is_file()
+        and _sha256_bytes(terminal_path.read_bytes()) == run002.RUN001_TERMINAL_SHA256,
+        "Run001 public terminal authority mismatch",
+    )
+    _require(
+        workflow._git(repository, "status", "--porcelain", "--untracked-files=all")
+        == "",
+        "Run002 Commit A worktree must be clean",
+    )
+    commit_a = workflow._git(repository, "rev-parse", "HEAD")
+    _require(
+        commit_a != run002.RUN001_COMMIT_A,
+        "Run002 Commit A cannot reuse Run001 authority",
+    )
+    manifest = run002.build_authority_manifest(
+        commit_a=commit_a,
+        current_git_commit=commit_a,
+    )
+    return {
+        **context,
+        "run002_authority": True,
+        "commit_a": commit_a,
+        "staging_root": run002.private_evidence_root(commit_a),
+        "authority_manifest": manifest,
+    }
+
+
+def _selected_authority(args: argparse.Namespace) -> str:
+    authority = getattr(args, "authority", None)
+    successor = bool(getattr(args, "successor", False))
+    _require(
+        not (successor and authority is not None),
+        "--successor and --authority are mutually exclusive",
+    )
+    if authority is not None:
+        return cast(str, authority)
+    return "run001" if successor else "legacy"
 
 
 def _agent_config_status(_args: argparse.Namespace) -> int:
@@ -1022,6 +1141,39 @@ def _prepare_successor_staging_root(context: dict[str, Any]) -> Path:
     return root
 
 
+def _prepare_run002_staging_root(context: dict[str, Any]) -> Path:
+    """Create or resume the canary-only Run002 root under sealed authority."""
+
+    root = cast(Path, context["staging_root"])
+    manifest = run002.validate_authority_manifest(
+        context.get("authority_manifest"), expected_root=root
+    )
+    if not root.exists() and not root.is_symlink():
+        _prepare_successor_staging_root(context)
+    else:
+        _require(
+            root.is_absolute() and root.is_dir() and not root.is_symlink(),
+            "Run002 staging root mismatch",
+        )
+        allowed = {
+            run002.AUTHORITY_MANIFEST_FILENAME,
+            "generator-canary",
+        }
+        _require(
+            {path.name for path in root.iterdir()} <= allowed,
+            "Run002 construction cannot overwrite existing formal evidence",
+        )
+    run002.persist_authority_manifest(root, manifest)
+    invocation_root = root / "invocations"
+    if not invocation_root.exists():
+        invocation_root.mkdir(mode=0o700)
+    _require(
+        invocation_root.is_dir() and not invocation_root.is_symlink(),
+        "Run002 invocation root mismatch",
+    )
+    return root
+
+
 def _jsonl_bytes(rows: list[dict[str, Any]]) -> bytes:
     return b"".join(_canonical_bytes(row) for row in rows)
 
@@ -1081,6 +1233,7 @@ def _persist_successor_ledgers(
     generation_rows: list[dict[str, Any]],
     review_rows: dict[str, list[dict[str, Any]]],
     contamination_rows: list[dict[str, Any]],
+    run002_authority_manifest: dict[str, Any] | None = None,
 ) -> None:
     ordered_reviews = {
         role: sorted(
@@ -1122,6 +1275,20 @@ def _persist_successor_ledgers(
             filename: _sha256_bytes(payload) for filename, payload in payloads.items()
         },
     }
+    if run002_authority_manifest is not None:
+        validated_manifest = run002.validate_authority_manifest(
+            run002_authority_manifest, expected_root=root
+        )
+        metadata.update(
+            {
+                "schema_version": "router-v2-run002-agent-run-metadata-v1",
+                "run_id": run002.RUN_ID,
+                "commit_a": validated_manifest["commit_a"],
+                "authority_manifest_sha256": _sha256_bytes(
+                    (root / run002.AUTHORITY_MANIFEST_FILENAME).read_bytes()
+                ),
+            }
+        )
     formal._write_private_file(
         root / "agent-run-metadata.json", _canonical_bytes(metadata)
     )
@@ -1137,8 +1304,11 @@ def _invoke_formal_schedule(
     ordinal_state: dict[str, int],
     max_workers: int,
     on_batch: Callable[[list[dict[str, Any]]], None],
+    run002_retry: bool = False,
+    continue_on_failure: bool = False,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
     outcomes: list[dict[str, Any]] = []
+    schedule_failure: dict[str, Any] | None = None
     for batch_start in range(0, len(schedule), max_workers):
         batch = schedule[batch_start : batch_start + max_workers]
         launched: list[tuple[dict[str, Any], Path]] = []
@@ -1151,24 +1321,86 @@ def _invoke_formal_schedule(
             )
             launched.append((item, private_root))
 
-        def invoke(item: dict[str, Any], private_root: Path) -> dict[str, Any]:
-            try:
-                return invocation_runner(
-                    request=item["request"],
-                    private_root=private_root,
-                    repository_root=repository,
-                    seen_thread_ids=None,
+        def invoke(
+            item: dict[str, Any], private_root: Path
+        ) -> tuple[
+            dict[str, Any],
+            list[dict[str, Any]],
+            list[str],
+            list[dict[str, Any]],
+            int,
+        ]:
+            request = cast(dict[str, Any], item["request"])
+            invocations: list[dict[str, Any]] = []
+            statuses: list[str] = []
+            attempt_records: list[dict[str, Any]] = []
+            retry_count = 0
+            while True:
+                attempt_root = (
+                    private_root
+                    if retry_count == 0
+                    else private_root.with_name(f"{private_root.name}-retry-1")
                 )
-            except Exception as exc:
-                return {
-                    "status": "FORMAL_PROCESS_BLOCKED",
-                    "invocation": None,
-                    "response": None,
-                    "retry_count": 0,
-                    "fallback_used": False,
-                    "fork_context": False,
-                    "exception_type": type(exc).__name__,
-                }
+                try:
+                    result = invocation_runner(
+                        request=request,
+                        private_root=attempt_root,
+                        repository_root=repository,
+                        seen_thread_ids=None,
+                    )
+                except Exception as exc:
+                    result = {
+                        "status": "FORMAL_PROCESS_BLOCKED",
+                        "failure_kind": "UNCLASSIFIED_EXCEPTION",
+                        "transport_failure_no_response": False,
+                        "invocation": None,
+                        "response": None,
+                        "retry_count": 0,
+                        "fallback_used": False,
+                        "fork_context": False,
+                        "exception_type": type(exc).__name__,
+                    }
+                statuses.append(str(result.get("status")))
+                invocation = result.get("invocation")
+                if type(invocation) is dict:
+                    invocations.append(cast(dict[str, Any], invocation))
+                failure_kind = result.get("failure_kind")
+                transport_failure_no_response = (
+                    result.get("transport_failure_no_response") is True
+                )
+                syntactically_valid_response = type(result.get("response")) is dict
+                retry_authorized = (
+                    run002_retry
+                    and type(failure_kind) is str
+                    and run002.retry_allowed(
+                        failure_kind,
+                        retry_count=retry_count,
+                        transport_failure_no_response=transport_failure_no_response,
+                        syntactically_valid_response=syntactically_valid_response,
+                    )
+                )
+                attempt_records.append(
+                    {
+                        "attempt_ordinal": retry_count + 1,
+                        "status": result.get("status"),
+                        "failure_kind": failure_kind,
+                        "request_sha256": request["request_sha256"],
+                        "transport_failure_no_response": (
+                            transport_failure_no_response
+                        ),
+                        "syntactically_valid_response": (syntactically_valid_response),
+                        "retry_authorized": retry_authorized,
+                    }
+                )
+                if not retry_authorized:
+                    return (
+                        result,
+                        invocations,
+                        statuses,
+                        attempt_records,
+                        retry_count,
+                    )
+                retry_count += 1
 
         with ThreadPoolExecutor(max_workers=len(launched)) as executor:
             futures = [
@@ -1179,7 +1411,16 @@ def _invoke_formal_schedule(
 
         batch_outcomes: list[dict[str, Any]] = []
         batch_failure: dict[str, Any] | None = None
-        for (item, _private_root), result in zip(launched, raw_results, strict=True):
+        for (item, _private_root), raw_result in zip(
+            launched, raw_results, strict=True
+        ):
+            (
+                result,
+                invocations,
+                attempt_statuses,
+                attempt_records,
+                controller_retry_count,
+            ) = raw_result
             request = cast(dict[str, Any], item["request"])
             invocation = result.get("invocation")
             valid = (
@@ -1208,9 +1449,12 @@ def _invoke_formal_schedule(
             outcome = {
                 **item,
                 "status": result.get("status"),
-                "invocations": [invocation] if type(invocation) is dict else [],
+                "invocations": invocations,
                 "response": result.get("response") if valid else None,
                 "valid": valid,
+                "retry_count": controller_retry_count,
+                "attempt_statuses": attempt_statuses,
+                "attempt_records": attempt_records,
             }
             batch_outcomes.append(outcome)
             if not valid and batch_failure is None:
@@ -1218,8 +1462,11 @@ def _invoke_formal_schedule(
         outcomes.extend(batch_outcomes)
         on_batch(batch_outcomes)
         if batch_failure is not None:
-            return outcomes, batch_failure
-    return outcomes, None
+            if schedule_failure is None:
+                schedule_failure = batch_failure
+            if not continue_on_failure:
+                return outcomes, batch_failure
+    return outcomes, schedule_failure
 
 
 def _deficits(
@@ -1270,18 +1517,30 @@ def run_successor_agent_construction(
     ] = workflow.build_generator_request,
     first_read_timestamp: str,
     max_workers: int = 1,
+    run002_mode: bool = False,
 ) -> dict[str, Any]:
+    if run002_mode:
+        _require(
+            max_workers == run002.FORMAL_GENERATOR_MAX_CONCURRENCY,
+            "Run002 formal construction concurrency must be exactly 4",
+        )
+    else:
+        _require(
+            type(max_workers) is int and 1 <= max_workers <= 8,
+            "max_workers must be an integer between 1 and 8",
+        )
+    expected_context_flag = "run002_authority" if run002_mode else "successor_authority"
     _require(
-        type(max_workers) is int and 1 <= max_workers <= 8,
-        "max_workers must be an integer between 1 and 8",
-    )
-    _require(
-        context.get("successor_authority") is True,
-        "successor construction requires successor authority",
+        context.get(expected_context_flag) is True,
+        f"successor construction requires {expected_context_flag}",
     )
     repository = cast(Path, context["repository"]).resolve(strict=True)
     skills = workflow._project_canonical_skills(context["canonical_skills"])
-    root = _prepare_successor_staging_root(context)
+    root = (
+        _prepare_run002_staging_root(context)
+        if run002_mode
+        else _prepare_successor_staging_root(context)
+    )
     generation_rows: list[dict[str, Any]] = []
     review_rows: dict[str, list[dict[str, Any]]] = {
         "reviewer_a": [],
@@ -1298,11 +1557,17 @@ def run_successor_agent_construction(
             generation_rows=generation_rows,
             review_rows=review_rows,
             contamination_rows=contamination_rows,
+            run002_authority_manifest=(
+                cast(dict[str, Any], context["authority_manifest"])
+                if run002_mode
+                else None
+            ),
         )
 
     def blocked(stage: str, failure: dict[str, Any] | None) -> dict[str, Any]:
         persist()
         return {
+            **(deepcopy(run002.TERMINAL_TRUTH) if run002_mode else {}),
             "status": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
             "failure_stage": stage,
             "failure_status": None if failure is None else failure.get("status"),
@@ -1315,35 +1580,89 @@ def run_successor_agent_construction(
 
     persist()
     selection = workflow.SELECTION_AUTHORITY
-    round_one_schedule = [
-        {
-            "generation_round": 1,
-            "gold_skill_id": cast(str, skill["id"]),
-            "request": generator_request_builder(
-                skills,
-                gold_skill_id=cast(str, skill["id"]),
-                negative_quota=cast(int, selection["round_1_negative_per_skill"]),
-                positive_only_quota=cast(
-                    int, selection["round_1_positive_only_per_skill"]
+    if run002_mode:
+        round_one_schedule = [
+            {
+                "generation_round": 1,
+                "gold_skill_id": row["gold_skill_id"],
+                "request": run002.build_formal_generator_request(
+                    skills,
+                    commit_a=cast(str, context["commit_a"]),
+                    gold_skill_id=cast(str, row["gold_skill_id"]),
+                    negative_quota=cast(int, row["negative_quota"]),
+                    positive_only_quota=cast(int, row["positive_only_quota"]),
+                    round_number=1,
                 ),
-                repository_root=repository,
-                round_number=1,
-                successor_output_schema=True,
-            ),
-        }
-        for skill in sorted(skills, key=lambda row: cast(str, row["id"]))
-    ]
+            }
+            for row in run002.round_one_quota_plan(
+                sorted(cast(str, skill["id"]) for skill in skills)
+            )
+        ]
+    else:
+        round_one_schedule = [
+            {
+                "generation_round": 1,
+                "gold_skill_id": cast(str, skill["id"]),
+                "request": generator_request_builder(
+                    skills,
+                    gold_skill_id=cast(str, skill["id"]),
+                    negative_quota=cast(int, selection["round_1_negative_per_skill"]),
+                    positive_only_quota=cast(
+                        int, selection["round_1_positive_only_per_skill"]
+                    ),
+                    repository_root=repository,
+                    round_number=1,
+                    successor_output_schema=True,
+                ),
+            }
+            for skill in sorted(skills, key=lambda row: cast(str, row["id"]))
+        ]
 
     def append_generation(batch: list[dict[str, Any]]) -> None:
-        generation_rows.extend(
-            {
+        rows: list[dict[str, Any]] = []
+        canonical_skill_ids = {cast(str, skill["id"]) for skill in skills}
+        for row in batch:
+            persisted_row = {
                 "generation_round": row["generation_round"],
                 "gold_skill_id": row["gold_skill_id"],
                 "request": row["request"],
                 "invocations": row["invocations"],
             }
-            for row in batch
-        )
+            if run002_mode:
+                imported = (
+                    run002.import_generator_response(
+                        row["response"],
+                        run_id=run002.RUN_ID,
+                        request_id=cast(str, row["request"]["request_sha256"]),
+                        expected_gold_skill_id=cast(str, row["gold_skill_id"]),
+                        expected_negative_quota=cast(
+                            int, row["request"]["input"]["quota"]["negative_quota"]
+                        ),
+                        expected_positive_only_quota=cast(
+                            int,
+                            row["request"]["input"]["quota"]["positive_only_quota"],
+                        ),
+                        canonical_skill_ids=canonical_skill_ids,
+                    )
+                    if row["valid"]
+                    else {
+                        "request_outcome": row["status"],
+                        "candidate_outcomes": [],
+                    }
+                )
+                persisted_row.update(
+                    {
+                        "request_outcome": imported["request_outcome"],
+                        "candidate_outcomes": imported["candidate_outcomes"],
+                        "status": row["status"],
+                        "valid": row["valid"],
+                        "retry_count": row["retry_count"],
+                        "attempt_statuses": row["attempt_statuses"],
+                        "attempt_records": row["attempt_records"],
+                    }
+                )
+            rows.append(persisted_row)
+        generation_rows.extend(rows)
         persist()
 
     round_one_outcomes, failure = _invoke_formal_schedule(
@@ -1355,17 +1674,57 @@ def run_successor_agent_construction(
         ordinal_state=ordinal_state,
         max_workers=max_workers,
         on_batch=append_generation,
+        run002_retry=run002_mode,
+        continue_on_failure=run002_mode,
     )
-    if failure is not None:
+    if failure is not None and not run002_mode:
         return blocked("round-1-generation", failure)
-    round_one_candidates = [
-        candidate
-        for outcome in round_one_outcomes
-        for candidate in workflow._derived_generator_candidates(
-            cast(dict[str, Any], outcome["response"]),
-            cast(dict[str, Any], outcome["request"]),
-        )
-    ]
+
+    def derived_candidates(outcomes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if not run002_mode:
+            return [
+                candidate
+                for outcome in outcomes
+                for candidate in workflow._derived_generator_candidates(
+                    cast(dict[str, Any], outcome["response"]),
+                    cast(dict[str, Any], outcome["request"]),
+                )
+            ]
+        candidates: list[dict[str, Any]] = []
+        canonical_skill_ids = {cast(str, skill["id"]) for skill in skills}
+        for outcome in outcomes:
+            if outcome["valid"] is not True:
+                continue
+            imported = run002.import_generator_response(
+                outcome["response"],
+                run_id=run002.RUN_ID,
+                request_id=cast(str, outcome["request"]["request_sha256"]),
+                expected_gold_skill_id=cast(str, outcome["gold_skill_id"]),
+                expected_negative_quota=cast(
+                    int, outcome["request"]["input"]["quota"]["negative_quota"]
+                ),
+                expected_positive_only_quota=cast(
+                    int,
+                    outcome["request"]["input"]["quota"]["positive_only_quota"],
+                ),
+                canonical_skill_ids=canonical_skill_ids,
+            )
+            for candidate in cast(
+                list[dict[str, Any]], imported["accepted_candidates"]
+            ):
+                prompt_text = cast(str, candidate["prompt_text"])
+                candidates.append(
+                    {
+                        **candidate,
+                        "generation_round": outcome["generation_round"],
+                        "prompt_text_sha256": _sha256_bytes(
+                            prompt_text.encode("utf-8")
+                        ),
+                    }
+                )
+        return candidates
+
+    round_one_candidates = derived_candidates(round_one_outcomes)
 
     if contamination_scanner is None:
         similarity, semantic_model_authority = _semantic_validation_components(
@@ -1428,11 +1787,20 @@ def run_successor_agent_construction(
         schedule = [
             {
                 "candidate_id": candidate_id,
-                "request": workflow.build_reviewer_request(
-                    candidates_by_id[candidate_id],
-                    skills,
-                    role=role,
-                    successor_output_schema=True,
+                "request": (
+                    run002.build_reviewer_request(
+                        candidates_by_id[candidate_id],
+                        skills,
+                        role=role,
+                        commit_a=cast(str, context["commit_a"]),
+                    )
+                    if run002_mode
+                    else workflow.build_reviewer_request(
+                        candidates_by_id[candidate_id],
+                        skills,
+                        role=role,
+                        successor_output_schema=True,
+                    )
                 ),
             }
             for candidate_id in sorted(
@@ -1443,13 +1811,22 @@ def run_successor_agent_construction(
 
         def append_reviews(batch: list[dict[str, Any]]) -> None:
             for row in batch:
-                review_rows[role].append(
-                    {
-                        "candidate_id": row["candidate_id"],
-                        "request": row["request"],
-                        "invocations": row["invocations"],
-                    }
-                )
+                persisted_row = {
+                    "candidate_id": row["candidate_id"],
+                    "request": row["request"],
+                    "invocations": row["invocations"],
+                }
+                if run002_mode:
+                    persisted_row.update(
+                        {
+                            "valid": row["valid"],
+                            "status": row["status"],
+                            "retry_count": row["retry_count"],
+                            "attempt_statuses": row["attempt_statuses"],
+                            "attempt_records": row["attempt_records"],
+                        }
+                    )
+                review_rows[role].append(persisted_row)
                 if row["valid"]:
                     review_responses[role][cast(str, row["candidate_id"])] = cast(
                         dict[str, Any], row["response"]
@@ -1465,17 +1842,18 @@ def run_successor_agent_construction(
             ordinal_state=ordinal_state,
             max_workers=max_workers,
             on_batch=append_reviews,
+            run002_retry=run002_mode,
+            continue_on_failure=run002_mode,
         )
-        if review_failure is not None:
+        if review_failure is not None and not run002_mode:
             return blocked(f"{stage}-{role}", review_failure)
         return None
 
     round_two_candidates: list[dict[str, Any]] = []
-    round_one_candidate_ids = set(round_one_by_id)
     for reviewer_role in ("reviewer_a", "reviewer_b"):
         review_block = run_reviews(
             role=reviewer_role,
-            candidate_ids=round_one_candidate_ids,
+            candidate_ids=clean_round_one if run002_mode else set(round_one_by_id),
             stage="round-1-review",
         )
         if review_block is not None:
@@ -1485,6 +1863,8 @@ def run_successor_agent_construction(
         candidate
         for candidate_id, candidate in round_one_by_id.items()
         if candidate_id in clean_round_one
+        and candidate_id in review_responses["reviewer_a"]
+        and candidate_id in review_responses["reviewer_b"]
         and _unanimously_accepted(
             candidate,
             review_responses["reviewer_a"][candidate_id],
@@ -1492,23 +1872,43 @@ def run_successor_agent_construction(
         )
     ]
     round_one_deficits = _deficits(round_one_accepted, skills)
-    multiplier = cast(int, selection["round_2_deficit_multiplier"])
-    round_two_schedule = [
-        {
-            "generation_round": 2,
-            "gold_skill_id": skill_id,
-            "request": generator_request_builder(
-                skills,
-                gold_skill_id=skill_id,
-                negative_quota=counts["negative"] * multiplier,
-                positive_only_quota=counts["positive_only"] * multiplier,
-                repository_root=repository,
-                round_number=2,
-                successor_output_schema=True,
-            ),
-        }
-        for skill_id, counts in sorted(round_one_deficits.items())
-    ]
+    if run002_mode:
+        round_two_schedule = [
+            {
+                "generation_round": 2,
+                "gold_skill_id": row["gold_skill_id"],
+                "request": run002.build_formal_generator_request(
+                    skills,
+                    commit_a=cast(str, context["commit_a"]),
+                    gold_skill_id=cast(str, row["gold_skill_id"]),
+                    negative_quota=cast(int, row["negative_quota"]),
+                    positive_only_quota=cast(int, row["positive_only_quota"]),
+                    round_number=2,
+                ),
+            }
+            for row in run002.supplement_quota_plan(
+                round_one_deficits,
+                canonical_skill_ids={cast(str, skill["id"]) for skill in skills},
+            )
+        ]
+    else:
+        multiplier = cast(int, selection["round_2_deficit_multiplier"])
+        round_two_schedule = [
+            {
+                "generation_round": 2,
+                "gold_skill_id": skill_id,
+                "request": generator_request_builder(
+                    skills,
+                    gold_skill_id=skill_id,
+                    negative_quota=counts["negative"] * multiplier,
+                    positive_only_quota=counts["positive_only"] * multiplier,
+                    repository_root=repository,
+                    round_number=2,
+                    successor_output_schema=True,
+                ),
+            }
+            for skill_id, counts in sorted(round_one_deficits.items())
+        ]
     round_two_outcomes, failure = _invoke_formal_schedule(
         round_two_schedule,
         repository=repository,
@@ -1518,17 +1918,12 @@ def run_successor_agent_construction(
         ordinal_state=ordinal_state,
         max_workers=max_workers,
         on_batch=append_generation,
+        run002_retry=run002_mode,
+        continue_on_failure=run002_mode,
     )
-    if failure is not None:
+    if failure is not None and not run002_mode:
         return blocked("round-2-generation", failure)
-    round_two_candidates = [
-        candidate
-        for outcome in round_two_outcomes
-        for candidate in workflow._derived_generator_candidates(
-            cast(dict[str, Any], outcome["response"]),
-            cast(dict[str, Any], outcome["request"]),
-        )
-    ]
+    round_two_candidates = derived_candidates(round_two_outcomes)
     all_candidates = round_one_candidates + round_two_candidates
     if round_two_candidates:
         try:
@@ -1552,7 +1947,11 @@ def run_successor_agent_construction(
     for reviewer_role in ("reviewer_a", "reviewer_b"):
         review_block = run_reviews(
             role=reviewer_role,
-            candidate_ids=round_two_candidate_ids,
+            candidate_ids=(
+                round_two_candidate_ids & clean_final
+                if run002_mode
+                else round_two_candidate_ids
+            ),
             stage="round-2-review",
         )
         if review_block is not None:
@@ -1571,8 +1970,15 @@ def run_successor_agent_construction(
         )
     ]
     final_deficits = _deficits(accepted, skills)
+    controller_retry_count = sum(
+        cast(int, row.get("retry_count", 0))
+        for row in generation_rows
+        + review_rows["reviewer_a"]
+        + review_rows["reviewer_b"]
+    )
     persist()
     return {
+        **(deepcopy(run002.TERMINAL_TRUTH) if run002_mode else {}),
         "status": (
             "AGENT_BLIND_V2_CONSTRUCTION_COMPLETE"
             if not final_deficits
@@ -1582,10 +1988,12 @@ def run_successor_agent_construction(
         "staging_root": str(root),
         "round_1_candidate_count": len(round_one_candidates),
         "round_2_candidate_count": len(round_two_candidates),
-        "reviewed_candidate_count": len(all_candidates),
+        "reviewed_candidate_count": (
+            len(clean_final) if run002_mode else len(all_candidates)
+        ),
         "final_deficits": final_deficits,
         "invocation_count": len(seen_thread_ids),
-        "retry_count": 0,
+        "retry_count": controller_retry_count,
         "fallback_used": False,
     }
 
@@ -1602,18 +2010,33 @@ def _run_agent_construction(args: argparse.Namespace) -> int:
         timestamp = (
             datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         )
-        context = _successor_commit_a_context()
-        result = run_successor_agent_construction(
-            context,
-            invocation_runner=invoke_formal_host,
-            generator_request_builder=workflow.build_generator_request,
-            first_read_timestamp=timestamp,
-            max_workers=cast(int, args.max_workers),
+        authority = cast(str, getattr(args, "authority", "run001"))
+        _require(
+            authority in {"run001", "run002"},
+            "Agent construction requires a successor run authority",
         )
+        run002_mode = authority == "run002"
+        context = (
+            _run002_commit_a_context() if run002_mode else _successor_commit_a_context()
+        )
+        construction_kwargs: dict[str, Any] = {
+            "invocation_runner": invoke_formal_host,
+            "generator_request_builder": workflow.build_generator_request,
+            "first_read_timestamp": timestamp,
+            "max_workers": cast(int, args.max_workers),
+        }
+        if run002_mode:
+            construction_kwargs["run002_mode"] = True
+        result = run_successor_agent_construction(context, **construction_kwargs)
     except Exception as exc:
         if host_started:
             raise
         result = {
+            **(
+                deepcopy(run002.TERMINAL_TRUTH)
+                if getattr(args, "authority", "run001") == "run002"
+                else {}
+            ),
             "status": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
             "failure_stage": "pre-data-setup",
             "failure_status": type(exc).__name__,
@@ -1699,12 +2122,20 @@ def _semantic_validation_components(
 
 
 def _validated_pack_context(
-    *, successor: bool = False
+    *, authority: str = "legacy"
 ) -> tuple[dict[str, Any], dict[str, Any], _SemanticSimilarity]:
+    _require(
+        authority in {"legacy", "run001", "run002"},
+        "unknown blind-v2 authority",
+    )
     context = (
-        _successor_commit_a_context()
-        if successor
-        else _commit_a_context(require_config_smoke=True)
+        _run002_commit_a_context()
+        if authority == "run002"
+        else (
+            _successor_commit_a_context()
+            if authority == "run001"
+            else _commit_a_context(require_config_smoke=True)
+        )
     )
     for filename in workflow.REQUIRED_AGENT_PACK_FILES:
         _agent_pack_file(context, filename)
@@ -1717,37 +2148,67 @@ def _validated_pack_context(
     similarity, semantic_model_authority = _semantic_validation_components(
         cast(dict[str, Any], context["preregistration"])
     )
-    validation = workflow.validate_agent_pack(
-        cast(Path, context["staging_root"]),
-        repository_root=cast(Path, context["repository"]),
-        canonical_skills=cast(list[dict[str, Any]], context["canonical_skills"]),
-        train_prompts=cast(list[str], context["train_prompts"]),
-        pilot_prompts=cast(list[str], context["pilot_prompts"]),
-        phase16_prompts=cast(list[str], context["phase16_prompts"]),
-        train_family_ids=cast(set[str], context["train_family_ids"]),
-        pilot_family_ids=cast(set[str], context["pilot_family_ids"]),
-        phase16_family_ids=cast(set[str], context["phase16_family_ids"]),
-        prior_candidate_prompts=cast(list[str], context["prior_candidate_prompts"]),
-        prior_candidate_family_ids=cast(
-            set[str], context["prior_candidate_family_ids"]
-        ),
-        first_read_timestamp=cast(str, first_read_timestamp),
-        semantic_similarity=similarity,
-        semantic_model_authority=semantic_model_authority,
-        construction_input_bindings=cast(
-            dict[str, Any], context["construction_input_bindings"]
-        ),
-    )
+    if authority == "run002":
+
+        def replay_run002_contamination(
+            candidates: list[dict[str, Any]],
+        ) -> dict[str, Any]:
+            return workflow._scan_contamination(
+                candidates,
+                protected_prompts={
+                    "train": cast(list[str], context["train_prompts"]),
+                    "pilot-002": cast(list[str], context["pilot_prompts"]),
+                    "phase16": cast(list[str], context["phase16_prompts"]),
+                    "prior_candidate": cast(
+                        list[str], context["prior_candidate_prompts"]
+                    ),
+                },
+                protected_family_ids={
+                    "train": cast(set[str], context["train_family_ids"]),
+                    "pilot-002": cast(set[str], context["pilot_family_ids"]),
+                    "phase16": cast(set[str], context["phase16_family_ids"]),
+                    "prior_candidate": cast(
+                        set[str], context["prior_candidate_family_ids"]
+                    ),
+                },
+                semantic_similarity=similarity,
+                semantic_model_authority=semantic_model_authority,
+            )
+
+        validation = run002.validate_agent_pack(
+            cast(Path, context["staging_root"]),
+            canonical_skills=cast(list[dict[str, Any]], context["canonical_skills"]),
+            contamination_replayer=replay_run002_contamination,
+            expected_commit_a=cast(str, context["commit_a"]),
+        )
+    else:
+        validation = workflow.validate_agent_pack(
+            cast(Path, context["staging_root"]),
+            repository_root=cast(Path, context["repository"]),
+            canonical_skills=cast(list[dict[str, Any]], context["canonical_skills"]),
+            train_prompts=cast(list[str], context["train_prompts"]),
+            pilot_prompts=cast(list[str], context["pilot_prompts"]),
+            phase16_prompts=cast(list[str], context["phase16_prompts"]),
+            train_family_ids=cast(set[str], context["train_family_ids"]),
+            pilot_family_ids=cast(set[str], context["pilot_family_ids"]),
+            phase16_family_ids=cast(set[str], context["phase16_family_ids"]),
+            prior_candidate_prompts=cast(list[str], context["prior_candidate_prompts"]),
+            prior_candidate_family_ids=cast(
+                set[str], context["prior_candidate_family_ids"]
+            ),
+            first_read_timestamp=cast(str, first_read_timestamp),
+            semantic_similarity=similarity,
+            semantic_model_authority=semantic_model_authority,
+            construction_input_bindings=cast(
+                dict[str, Any], context["construction_input_bindings"]
+            ),
+        )
     return context, validation, similarity
 
 
 def _pack_status(args: argparse.Namespace) -> int:
-    successor = getattr(args, "successor", False)
-    context, validation, _similarity = (
-        _validated_pack_context(successor=True)
-        if successor
-        else _validated_pack_context()
-    )
+    authority = _selected_authority(args)
+    context, validation, _similarity = _validated_pack_context(authority=authority)
     _write_stdout(
         {
             "status": validation["status"],
@@ -1766,24 +2227,34 @@ def _pack_status(args: argparse.Namespace) -> int:
 
 
 def _freeze(args: argparse.Namespace) -> int:
-    successor = getattr(args, "successor", False)
-    context, validation, similarity = (
-        _validated_pack_context(successor=True)
-        if successor
-        else _validated_pack_context()
-    )
+    authority = _selected_authority(args)
+    context, validation, similarity = _validated_pack_context(authority=authority)
     _require(validation["status"] == "VALID", "valid Agent pack is required")
-    documents = workflow.build_dataset_freeze_documents(
-        validation,
-        commit_a=cast(str, context["commit_a"]),
-        semantic_similarity=similarity,
-    )
-    output_dir = cast(Path, context["repository"]) / workflow.DATASET_FREEZE_RELATIVE
-    workflow.write_dataset_freeze(
-        documents,
-        output_dir,
-        repository_root=cast(Path, context["repository"]),
-    )
+    if authority == "run002":
+        documents = run002.build_dataset_freeze_documents(
+            validation,
+            commit_a=cast(str, context["commit_a"]),
+        )
+        output_dir = cast(Path, context["repository"]) / run002.DATASET_FREEZE_RELATIVE
+        run002.write_dataset_freeze(
+            documents,
+            output_dir,
+            repository_root=cast(Path, context["repository"]),
+        )
+    else:
+        documents = workflow.build_dataset_freeze_documents(
+            validation,
+            commit_a=cast(str, context["commit_a"]),
+            semantic_similarity=similarity,
+        )
+        output_dir = (
+            cast(Path, context["repository"]) / workflow.DATASET_FREEZE_RELATIVE
+        )
+        workflow.write_dataset_freeze(
+            documents,
+            output_dir,
+            repository_root=cast(Path, context["repository"]),
+        )
     _write_stdout(
         {
             "status": "AGENT_BLIND_V2_DATASET_FROZEN",
@@ -1798,18 +2269,71 @@ def _freeze(args: argparse.Namespace) -> int:
 
 
 def _model_smoke(args: argparse.Namespace) -> int:
-    if getattr(args, "successor", False):
+    authority = _selected_authority(args)
+    run002_context: dict[str, Any] | None = None
+    if authority == "run002":
+        run002_context = _run002_commit_b_context(require_model_smoke=False)
+    elif authority == "run001":
         _successor_commit_b_context(require_model_smoke=False)
     else:
         _commit_a_context(require_config_smoke=True)
     repository = REPOSITORY_ROOT.resolve(strict=False)
     pilot_manifest_path = repository / workflow.PILOT_MANIFEST_RELATIVE
-    receipt = workflow.run_model_load_smoke(
-        pilot_manifest_path, repository_root=repository
+    receipt = (
+        run_run002_model_load_smoke(cast(dict[str, Any], run002_context))
+        if run002_context is not None
+        else workflow.run_model_load_smoke(
+            pilot_manifest_path, repository_root=repository
+        )
     )
     receipt_path = workflow.write_model_load_smoke_receipt(receipt)
     _write_stdout({**receipt, "receipt_path": str(receipt_path)})
     return 0
+
+
+def run_run002_model_load_smoke(
+    context: dict[str, Any],
+    *,
+    smoke_runner: Callable[..., dict[str, Any]] = workflow._run_model_load_smoke,
+) -> dict[str, Any]:
+    """Run the unchanged model smoke against the Run002 dataset authority."""
+
+    repository = cast(Path, context["repository"])
+    commit_b = cast(str, context["commit_b"])
+
+    def authority_validator(
+        preregistration_path: Path | str,
+        *,
+        repository_root: Path | str,
+        pilot_manifest_path: Path | str,
+        verify_model_files: bool,
+    ) -> dict[str, Any]:
+        return workflow.validate_preregistration_authority(
+            preregistration_path,
+            repository_root=repository_root,
+            pilot_manifest_path=pilot_manifest_path,
+            verify_model_files=verify_model_files,
+            verify_evaluator_source_files=False,
+        )
+
+    def commit_b_validator(
+        repository_root: Path | str, *, commit_a: str
+    ) -> dict[str, Any]:
+        _require(
+            Path(repository_root).resolve(strict=True) == repository,
+            "Run002 repository mismatch",
+        )
+        _require(commit_a == context["commit_a"], "Run002 smoke Commit A mismatch")
+        return {"commit_a": commit_a, "commit_b": commit_b}
+
+    return smoke_runner(
+        cast(Path, context["pilot_manifest_path"]),
+        repository_root=repository,
+        encoder_factory=None,
+        authority_validator=authority_validator,
+        commit_b_validator=commit_b_validator,
+        dataset_freeze_relative=run002.DATASET_FREEZE_RELATIVE,
+    )
 
 
 def _commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
@@ -1893,6 +2417,83 @@ def _successor_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
     }
 
 
+def _require_run002_clean_worktree(repository: Path) -> None:
+    _require(
+        workflow._git(repository, "status", "--porcelain", "--untracked-files=all")
+        == "",
+        "Run002 post-Commit-B operations require a clean worktree",
+    )
+
+
+def _run002_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
+    inputs = _successor_frozen_input_context()
+    repository = cast(Path, inputs["repository"])
+    _require_run002_clean_worktree(repository)
+    preregistration_path = cast(Path, inputs["preregistration_path"])
+    pilot_manifest_path = cast(Path, inputs["pilot_manifest_path"])
+    frozen_documents = run002.read_frozen_dataset_documents(repository)
+    blind_manifest = workflow._json_no_duplicate_keys(
+        frozen_documents["blind-v2-manifest.json"],
+        str(repository / run002.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"),
+    )
+    commit_a = cast(str, blind_manifest["commit_a"])
+    _require(
+        blind_manifest.get("run_id") == run002.RUN_ID,
+        "Run002 frozen run authority mismatch",
+    )
+    commit_b = workflow._git(repository, "rev-parse", "HEAD")
+    _require(commit_b != commit_a, "Run002 Commit B must differ from Commit A")
+    parent_line = workflow._git(
+        repository, "rev-list", "--parents", "-n", "1", commit_b
+    ).split()
+    _require(
+        parent_line == [commit_b, commit_a],
+        "Run002 Commit B must be a direct non-merge child of Commit A",
+    )
+    changed = workflow._git(
+        repository,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        f"{commit_a}..{commit_b}",
+    ).splitlines()
+    expected_changed = {
+        (run002.DATASET_FREEZE_RELATIVE / filename).as_posix()
+        for filename in run002.DATASET_FREEZE_FILENAMES
+    }
+    _require(
+        len(changed) == len(set(changed)) and set(changed) == expected_changed,
+        "Run002 Commit B changed-file authority mismatch",
+    )
+    preregistration_file_sha256 = _sha256_bytes(preregistration_path.read_bytes())
+    frozen_manifest_file_sha256 = _sha256_bytes(
+        frozen_documents["blind-v2-manifest.json"]
+    )
+    receipt: dict[str, Any] | None = None
+    if require_model_smoke:
+        receipt = workflow.validate_model_load_smoke_receipt(
+            commit_a=commit_a,
+            commit_b=commit_b,
+            preregistration_sha256=preregistration_file_sha256,
+            frozen_dataset_manifest_sha256=frozen_manifest_file_sha256,
+        )
+    return {
+        **inputs,
+        "run002_authority": True,
+        "commit_a": commit_a,
+        "commit_b": commit_b,
+        "staging_root": run002.private_evidence_root(commit_a),
+        "repository": repository,
+        "preregistration_path": preregistration_path,
+        "pilot_manifest_path": pilot_manifest_path,
+        "frozen_documents": frozen_documents,
+        "blind_manifest": blind_manifest,
+        "preregistration_file_sha256": preregistration_file_sha256,
+        "frozen_manifest_file_sha256": frozen_manifest_file_sha256,
+        "model_smoke_receipt": receipt,
+    }
+
+
 def _model_bindings(pilot: dict[str, Any]) -> list[dict[str, Any]]:
     raw_artifacts = pilot.get("training_artifacts")
     _require(
@@ -1942,11 +2543,16 @@ def _model_bindings(pilot: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _evaluate(args: argparse.Namespace) -> int:
-    successor = getattr(args, "successor", False)
+    authority_name = _selected_authority(args)
+    successor = authority_name in {"run001", "run002"}
     context = (
-        _successor_commit_b_context(require_model_smoke=True)
-        if successor
-        else _commit_b_context(require_model_smoke=True)
+        _run002_commit_b_context(require_model_smoke=True)
+        if authority_name == "run002"
+        else (
+            _successor_commit_b_context(require_model_smoke=True)
+            if authority_name == "run001"
+            else _commit_b_context(require_model_smoke=True)
+        )
     )
     repository = cast(Path, context["repository"])
     preregistration_path = cast(Path, context["preregistration_path"])
@@ -1965,12 +2571,23 @@ def _evaluate(args: argparse.Namespace) -> int:
     )
     pilot = _json(pilot_manifest_path)
     bindings = _model_bindings(pilot)
-    lineage_bindings = workflow.build_authoritative_lineage_bindings(
-        preregistration_path,
-        repository_root=repository,
-        pilot_manifest_path=pilot_manifest_path,
-        frozen_documents=frozen_documents,
-        verify_evaluator_source_files=not successor,
+    lineage_bindings = (
+        run002.build_evaluation_bindings(
+            preregistration=_json(preregistration_path),
+            preregistration_bytes=preregistration_path.read_bytes(),
+            canonical_skills=cast(list[dict[str, Any]], context["canonical_skills"]),
+            model_bindings=bindings,
+            frozen_documents=frozen_documents,
+            commit_a=cast(str, context["commit_a"]),
+        )
+        if authority_name == "run002"
+        else workflow.build_authoritative_lineage_bindings(
+            preregistration_path,
+            repository_root=repository,
+            pilot_manifest_path=pilot_manifest_path,
+            frozen_documents=frozen_documents,
+            verify_evaluator_source_files=not successor,
+        )
     )
     attempt_token_sha256 = canonical_sha256(
         {
@@ -1980,9 +2597,13 @@ def _evaluate(args: argparse.Namespace) -> int:
             "preregistration_sha256": authority["preregistration_sha256"],
             "blind_v2_manifest_file_sha256": context["frozen_manifest_file_sha256"],
             "output_namespace": str(
-                workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
-                if successor
-                else workflow.FINAL_NAMESPACE_RELATIVE
+                run002.OUTPUT_NAMESPACE
+                if authority_name == "run002"
+                else (
+                    workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
+                    if authority_name == "run001"
+                    else workflow.FINAL_NAMESPACE_RELATIVE
+                )
             ),
         }
     )
@@ -2007,19 +2628,50 @@ def _evaluate(args: argparse.Namespace) -> int:
         "blind-v2-manifest.json": frozen_documents["blind-v2-manifest.json"],
         "review-summary.json": frozen_documents["blind-v2-review-summary.json"],
     }
-    tasks, validated_skills, bindings = workflow._validated_pre_scoring_authority(
-        tasks=cast(list[dict[str, Any]], tasks),
-        skills=cast(list[dict[str, Any]], context["canonical_skills"]),
-        model_bindings=bindings,
-        commit_a=cast(str, context["commit_a"]),
-        commit_b=cast(str, context["commit_b"]),
-        attempt_token_sha256=attempt_token_sha256,
-        frozen_bindings=lineage_bindings,
-        input_artifacts=input_artifacts,
-        attempt_started_artifact=attempt_artifacts["attempt-1.started.json"],
-    )
+    if authority_name == "run002":
+        tasks, validated_skills, bindings = run002.validate_evaluation_inputs(
+            commit_a=cast(str, context["commit_a"]),
+            commit_b=cast(str, context["commit_b"]),
+            attempt_token_sha256=attempt_token_sha256,
+            frozen_bindings=lineage_bindings,
+            input_artifacts=input_artifacts,
+            attempt_started_artifact=attempt_artifacts["attempt-1.started.json"],
+        )
+    else:
+        tasks, validated_skills, bindings = workflow._validated_pre_scoring_authority(
+            tasks=cast(list[dict[str, Any]], tasks),
+            skills=cast(list[dict[str, Any]], context["canonical_skills"]),
+            model_bindings=bindings,
+            commit_a=cast(str, context["commit_a"]),
+            commit_b=cast(str, context["commit_b"]),
+            attempt_token_sha256=attempt_token_sha256,
+            frozen_bindings=lineage_bindings,
+            input_artifacts=input_artifacts,
+            attempt_started_artifact=attempt_artifacts["attempt-1.started.json"],
+        )
 
     def evaluate() -> dict[str, bytes]:
+        if authority_name == "run002":
+            routes = workflow._evaluate_routes_validated(
+                tasks,
+                validated_skills,
+                bindings,
+            )
+            run002.validate_evaluation_routes(
+                routes,
+                tasks=tasks,
+                model_bindings=bindings,
+            )
+            return workflow._build_evaluation_documents_validated(
+                routes,
+                commit_a=cast(str, context["commit_a"]),
+                commit_b=cast(str, context["commit_b"]),
+                evaluator_commit=cast(str, context["commit_a"]),
+                attempt_token_sha256=attempt_token_sha256,
+                frozen_bindings=lineage_bindings,
+                input_artifacts=input_artifacts,
+                attempt_artifacts=attempt_artifacts,
+            )
         routes = workflow.evaluate_routes(
             tasks,
             validated_skills,
@@ -2044,9 +2696,13 @@ def _evaluate(args: argparse.Namespace) -> int:
 
     protected_roots = [Path(cast(str, pilot["training_execution_root"]))]
     output_namespace = (
-        workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
-        if successor
-        else workflow.FINAL_NAMESPACE_RELATIVE
+        run002.OUTPUT_NAMESPACE
+        if authority_name == "run002"
+        else (
+            workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
+            if authority_name == "run001"
+            else workflow.FINAL_NAMESPACE_RELATIVE
+        )
     )
     if successor:
         terminal = workflow.run_single_attempt(
@@ -2074,6 +2730,18 @@ def _parser() -> argparse.ArgumentParser:
         description="Run the sealed Router V2 Agent-only final blind-v2 workflow."
     )
     commands = parser.add_subparsers(dest="command", required=True)
+
+    run002_canary = commands.add_parser(
+        "run002-generator-canary",
+        help=(
+            "Invoke one real Generator host on synthetic input with the Run002 "
+            "schema; writes no formal data and loads no Router."
+        ),
+    )
+    run002_canary.set_defaults(
+        handler=_run002_generator_canary,
+        authority="run002",
+    )
 
     status = commands.add_parser(
         "agent-config-status",
@@ -2122,7 +2790,16 @@ def _parser() -> argparse.ArgumentParser:
         type=int,
         choices=range(1, 9),
         default=1,
-        help="Bounded formal invocation concurrency (default: 1; maximum: 8).",
+        help=(
+            "Bounded formal invocation concurrency (legacy default: 1; Run002 "
+            "requires exactly --max-workers 4)."
+        ),
+    )
+    construction.add_argument(
+        "--authority",
+        choices=("run001", "run002"),
+        default="run001",
+        help="Select the immutable successor run authority.",
     )
     construction.set_defaults(handler=_run_agent_construction)
 
@@ -2135,6 +2812,11 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Use the successor Commit A/receipt authority.",
     )
+    pack_status.add_argument(
+        "--authority",
+        choices=("run001", "run002"),
+        help="Select Run001 or the independent Run002 authority.",
+    )
     pack_status.set_defaults(handler=_pack_status)
 
     freeze = commands.add_parser(
@@ -2145,6 +2827,11 @@ def _parser() -> argparse.ArgumentParser:
         "--successor",
         action="store_true",
         help="Use the successor Commit A/receipt authority.",
+    )
+    freeze.add_argument(
+        "--authority",
+        choices=("run001", "run002"),
+        help="Select Run001 or the independent Run002 authority.",
     )
     freeze.set_defaults(handler=_freeze)
 
@@ -2157,6 +2844,11 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Use the successor Commit B authority.",
     )
+    model_smoke.add_argument(
+        "--authority",
+        choices=("run001", "run002"),
+        help="Select Run001 or the independent Run002 authority.",
+    )
     model_smoke.set_defaults(handler=_model_smoke)
 
     evaluate = commands.add_parser(
@@ -2167,6 +2859,11 @@ def _parser() -> argparse.ArgumentParser:
         "--successor",
         action="store_true",
         help="Use the successor Commit B and output namespace authority.",
+    )
+    evaluate.add_argument(
+        "--authority",
+        choices=("run001", "run002"),
+        help="Select Run001 or the independent Run002 authority.",
     )
     evaluate.set_defaults(handler=_evaluate)
     return parser

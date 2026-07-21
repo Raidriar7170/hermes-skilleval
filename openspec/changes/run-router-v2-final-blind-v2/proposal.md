@@ -2,6 +2,8 @@
 
 Router V2 pilot-002 improved internal held-out ranking and negative-skill risk, but it used only 16 positive tasks, 9 supported negative labels, and model-only review. The original final blind-v2 plan required an external human-authored 64/48 pack; the user has now explicitly replaced that blocked plan with a larger, fully agent-generated protocol using two role-isolated reviewers and unanimous acceptance, while preserving the frozen Arm A/C models, gate, and one-attempt boundary.
 
+The first successor execution, Run 001, later stopped before dataset construction because model-authored candidate indexes used `1..16`. Run 002 preserves the Run 001 terminal, reuses none of its responses, removes candidate identity from Generator output, and assigns every index and opaque ID deterministically in the host before continuing the same 128/96 research contract.
+
 ## What Changes
 
 - Supersede the human-pack preregistration with a new authoritative `Commit A-agent` before any candidate generation, while retaining the existing human-protocol commit as non-authoritative history.

@@ -11343,6 +11343,7 @@ def test_task7_final_cli_exposes_only_sealed_agent_workflow() -> None:
 
     assert result.returncode == 0
     subcommands = (
+        "run002-generator-canary",
         "agent-config-status",
         "runtime-qualification-status",
         "request-round-1",
@@ -11837,9 +11838,9 @@ def test_task7_request_commands_expose_only_frozen_stage_and_reviewer_role() -> 
         if name == "request-reviews":
             expected.update({"--stage", "--role"})
         elif name == "run-agent-construction":
-            expected.add("--max-workers")
+            expected.update({"--max-workers", "--authority"})
         elif name in {"pack-status", "freeze", "model-smoke", "evaluate"}:
-            expected.add("--successor")
+            expected.update({"--successor", "--authority"})
         assert options == expected
 
     review_args = parser.parse_args(
@@ -12884,7 +12885,11 @@ def test_task7_pack_status_handler_reports_only_validated_pack_summary(
     monkeypatch.setattr(
         cli,
         "_validated_pack_context",
-        lambda: (context, validation, object()),
+        lambda *, authority: (
+            (context, validation, object())
+            if authority == "legacy"
+            else pytest.fail("pack-status authority drift")
+        ),
     )
 
     assert cli._pack_status(SimpleNamespace()) == 0
@@ -12923,7 +12928,11 @@ def test_task7_freeze_handler_uses_validated_pack_and_fixed_output(
     monkeypatch.setattr(
         cli,
         "_validated_pack_context",
-        lambda: (context, validation, similarity),
+        lambda *, authority: (
+            (context, validation, similarity)
+            if authority == "legacy"
+            else pytest.fail("freeze authority drift")
+        ),
     )
     monkeypatch.setattr(
         cli.workflow,

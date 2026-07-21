@@ -1555,19 +1555,35 @@ def build_reviewer_request(
 
 
 def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
+    from hermes_skilleval import router_v2_blind_v2_run002 as run002
+
+    request_fields = {
+        "schema_version",
+        "role",
+        "model",
+        "reasoning_effort",
+        "timeout_seconds",
+        "system_prompt",
+        "response_schema",
+        "input",
+        "request_sha256",
+    }
+    if (
+        request.get("schema_version")
+        in {
+            "router-v2-run002-generation-request-v1",
+            "router-v2-run002-review-request-v1",
+        }
+        and type(request.get("input")) is dict
+        and (
+            request["input"].get("formal_data") is True
+            or request.get("role") in {"reviewer_a", "reviewer_b"}
+        )
+    ):
+        request_fields.add("authority")
     request = _exact_object_fields(
         request,
-        {
-            "schema_version",
-            "role",
-            "model",
-            "reasoning_effort",
-            "timeout_seconds",
-            "system_prompt",
-            "response_schema",
-            "input",
-            "request_sha256",
-        },
+        request_fields,
         "request",
     )
     _require(
@@ -1591,17 +1607,114 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
         and request["timeout_seconds"] == config["timeout_seconds"],
         "request timeout mismatch",
     )
+    request_is_run002 = role == "generator" and _canonical_contract_json_equal(
+        request["response_schema"], run002.GENERATOR_RESPONSE_SCHEMA
+    )
+    raw_request_input = request["input"]
+    request_is_run002_formal = (
+        request_is_run002
+        and type(raw_request_input) is dict
+        and raw_request_input.get("formal_data") is True
+    )
+    request_is_run002_reviewer = (
+        role in {"reviewer_a", "reviewer_b"}
+        and request["schema_version"] == "router-v2-run002-review-request-v1"
+    )
+    if request_is_run002:
+        request_input_fields = {
+            "run_id",
+            "synthetic_canary",
+            "formal_data",
+            "canonical_skills",
+            "quota",
+        }
+        if request_is_run002_formal:
+            request_input_fields.add("rules")
+    elif role == "generator":
+        request_input_fields = {"canonical_skills", "rules", "quota"}
+    else:
+        request_input_fields = {
+            "task_id",
+            "prompt_text",
+            "canonical_skills",
+            "rubric",
+        }
     request_input = _exact_object_fields(
-        request["input"],
-        (
-            {"canonical_skills", "rules", "quota"}
-            if role == "generator"
-            else {"task_id", "prompt_text", "canonical_skills", "rubric"}
-        ),
+        raw_request_input,
+        request_input_fields,
         "generator input" if role == "generator" else "reviewer input",
     )
     canonical_ids = _canonical_skill_ids(request_input["canonical_skills"])
     if role == "generator":
+        if request_is_run002:
+            _require(
+                request["schema_version"] == "router-v2-run002-generation-request-v1",
+                "Run002 generator request schema mismatch",
+            )
+            synthetic_canary = request_input["synthetic_canary"]
+            formal_data = request_input["formal_data"]
+            _require(
+                request_input["run_id"] == run002.RUN_ID
+                and type(synthetic_canary) is bool
+                and type(formal_data) is bool
+                and formal_data is (not synthetic_canary),
+                "Run002 generator request authority mismatch",
+            )
+            _require(
+                request["system_prompt"]
+                == (
+                    run002.GENERATOR_SYSTEM_PROMPT
+                    if synthetic_canary
+                    else run002.FORMAL_GENERATOR_SYSTEM_PROMPT
+                ),
+                "Run002 generator system prompt mismatch",
+            )
+            if not synthetic_canary:
+                _require(
+                    request_input["rules"] == run002.GENERATOR_RULES,
+                    "Run002 generator rules mismatch",
+                )
+                expected_authority = run002._request_authority(
+                    role="generator",
+                    commit_a=cast(str, request["authority"].get("commit_a"))
+                    if type(request["authority"]) is dict
+                    else "",
+                    system_prompt=run002.FORMAL_GENERATOR_SYSTEM_PROMPT,
+                    response_schema=run002.GENERATOR_RESPONSE_SCHEMA,
+                )
+                _require(
+                    request["authority"] == expected_authority,
+                    "Run002 generator Commit A authority mismatch",
+                )
+            quota = _exact_object_fields(
+                request_input["quota"],
+                {
+                    "gold_skill_id",
+                    "negative_quota",
+                    "positive_only_quota",
+                    "response_candidate_count",
+                    "round_number",
+                },
+                "Run002 generator quota",
+            )
+            round_number = quota["round_number"]
+            _require(
+                quota["gold_skill_id"] in canonical_ids
+                and type(quota["negative_quota"]) is int
+                and quota["negative_quota"] >= 0
+                and type(quota["positive_only_quota"]) is int
+                and quota["positive_only_quota"] >= 0
+                and quota["negative_quota"] + quota["positive_only_quota"]
+                == run002.GENERATOR_RESPONSE_SIZE
+                and quota["response_candidate_count"] == run002.GENERATOR_RESPONSE_SIZE
+                and type(round_number) is int
+                and (
+                    (synthetic_canary and round_number == 0)
+                    or (not synthetic_canary and round_number in {1, 2})
+                ),
+                "Run002 generator quota mismatch",
+            )
+            return request
         _require(
             request["schema_version"] == "router-v2-blind-v2-generation-request-v1",
             "generator request schema mismatch",
@@ -1651,7 +1764,11 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
         )
     else:
         _require(
-            request["schema_version"] == "router-v2-blind-v2-review-request-v1",
+            request["schema_version"]
+            in {
+                "router-v2-blind-v2-review-request-v1",
+                "router-v2-run002-review-request-v1",
+            },
             "reviewer request schema mismatch",
         )
         _require(
@@ -1669,6 +1786,19 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             "reviewer response schema mismatch",
         )
         _require(request_input["rubric"] == REVIEW_RUBRIC, "review rubric mismatch")
+        if request_is_run002_reviewer:
+            expected_authority = run002._request_authority(
+                role=cast(str, role),
+                commit_a=cast(str, request["authority"].get("commit_a"))
+                if type(request["authority"]) is dict
+                else "",
+                system_prompt=REVIEWER_SYSTEM_PROMPT,
+                response_schema=cast(dict[str, Any], request["response_schema"]),
+            )
+            _require(
+                request["authority"] == expected_authority,
+                "Run002 reviewer Commit A authority mismatch",
+            )
         _exact_lowercase_hex(request_input["task_id"], length=24, label="candidate id")
         _nonempty_string(request_input["prompt_text"], "reviewer prompt text")
     return request
@@ -1932,6 +2062,12 @@ def validate_agent_response(
 ) -> dict[str, Any]:
     request = validate_agent_request(request)
     if request["role"] == "generator":
+        from hermes_skilleval import router_v2_blind_v2_run002 as run002
+
+        if _canonical_contract_json_equal(
+            request["response_schema"], run002.GENERATOR_RESPONSE_SCHEMA
+        ):
+            return run002.validate_generator_response_structure(response)
         return _validate_generator_response(response, request)
     return _validate_reviewer_response(response, request)
 
@@ -9975,11 +10111,12 @@ def _run_model_load_smoke(
     encoder_factory: EncoderFactory | None,
     authority_validator: AuthorityValidator,
     commit_b_validator: CommitBValidator,
+    dataset_freeze_relative: Path = DATASET_FREEZE_RELATIVE,
 ) -> dict[str, Any]:
     repository = Path(repository_root).resolve(strict=True)
     frozen_manifest_path = _safe_repository_regular_file(
         repository,
-        DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json",
+        dataset_freeze_relative / "blind-v2-manifest.json",
         label="model-load smoke frozen dataset manifest",
     )
     frozen_manifest_source = frozen_manifest_path.read_bytes()
@@ -10631,6 +10768,25 @@ def evaluate_routes(
         input_artifacts=input_artifacts,
         attempt_started_artifact=attempt_started_artifact,
     )
+    return _evaluate_routes_validated(
+        tasks,
+        skills,
+        model_bindings,
+        scorer_factory=scorer_factory,
+        clock_ns=clock_ns,
+    )
+
+
+def _evaluate_routes_validated(
+    tasks: list[dict[str, Any]],
+    skills: list[dict[str, Any]],
+    model_bindings: list[dict[str, Any]],
+    *,
+    scorer_factory: ScorerFactory | None = None,
+    clock_ns: Callable[[], int] = time.perf_counter_ns,
+) -> list[dict[str, Any]]:
+    """Run the unchanged route kernel after an authority adapter validates inputs."""
+
     _require(
         len(tasks) == POSITIVE_TASK_COUNT,
         f"evaluation requires {POSITIVE_TASK_COUNT} tasks",
@@ -11682,6 +11838,31 @@ def build_evaluation_documents(
     _validate_evaluation_agent_construction_authority(
         frozen_bindings, input_artifacts, frozen_task_rows
     )
+    return _build_evaluation_documents_validated(
+        route_rows,
+        commit_a=commit_a,
+        commit_b=commit_b,
+        evaluator_commit=evaluator_commit,
+        attempt_token_sha256=attempt_token_sha256,
+        frozen_bindings=frozen_bindings,
+        input_artifacts=input_artifacts,
+        attempt_artifacts=attempt_artifacts,
+    )
+
+
+def _build_evaluation_documents_validated(
+    route_rows: list[dict[str, Any]],
+    *,
+    commit_a: str,
+    commit_b: str,
+    evaluator_commit: str,
+    attempt_token_sha256: str,
+    frozen_bindings: dict[str, Any],
+    input_artifacts: dict[str, bytes],
+    attempt_artifacts: dict[str, bytes],
+) -> dict[str, bytes]:
+    """Build unchanged metrics, gate, reports, and lineage after adapter validation."""
+
     per_seed = [
         build_per_seed_result(
             [row for row in route_rows if row["arm"] == arm and row["seed"] == seed]

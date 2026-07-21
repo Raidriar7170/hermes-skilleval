@@ -2019,8 +2019,10 @@ def _formal_result(
     *,
     invocation: dict[str, Any] | None = None,
     response: dict[str, Any] | None = None,
+    failure_kind: str | None = None,
+    transport_failure_no_response: bool = False,
 ) -> dict[str, Any]:
-    return {
+    result = {
         "status": status,
         "invocation": invocation,
         "response": response,
@@ -2028,6 +2030,10 @@ def _formal_result(
         "fallback_used": False,
         "fork_context": False,
     }
+    if failure_kind is not None:
+        result["failure_kind"] = failure_kind
+        result["transport_failure_no_response"] = transport_failure_no_response
+    return result
 
 
 def _formal_stdin(request: Mapping[str, Any]) -> bytes:
@@ -2084,7 +2090,18 @@ def run_formal_agent_invocation(
     try:
         validated_request = historical.validate_agent_request(request)
         role = cast(str, validated_request["role"])
-        expected_schema = _role_schema(role)
+        from hermes_skilleval import router_v2_blind_v2_run002 as run002
+
+        request_uses_run002_schema = role == "generator" and (
+            historical._canonical_contract_json_equal(
+                validated_request["response_schema"], run002.GENERATOR_RESPONSE_SCHEMA
+            )
+        )
+        expected_schema = (
+            run002.GENERATOR_RESPONSE_SCHEMA
+            if request_uses_run002_schema
+            else _role_schema(role)
+        )
         if not historical._canonical_contract_json_equal(
             validated_request["response_schema"], expected_schema
         ):
@@ -2134,19 +2151,29 @@ def run_formal_agent_invocation(
             timeout_seconds=timeout_seconds,
         )
     except Exception:
-        return _formal_result("FORMAL_PROCESS_BLOCKED")
+        return _formal_result(
+            "FORMAL_PROCESS_BLOCKED", failure_kind="UNCLASSIFIED_EXCEPTION"
+        )
 
     if launched.get("host_authority_valid") is not True:
         return _formal_result("FORMAL_HOST_AUTHORITY_BLOCKED")
     if launched.get("process_started") is not True:
-        return _formal_result("FORMAL_PROCESS_BLOCKED")
+        return _formal_result(
+            "FORMAL_PROCESS_BLOCKED",
+            failure_kind="TRANSPORT_FAILURE",
+            transport_failure_no_response=True,
+        )
     if launched.get("timed_out") is True:
-        return _formal_result("FORMAL_TIMEOUT_BLOCKED")
+        return _formal_result(
+            "FORMAL_TIMEOUT_BLOCKED",
+            failure_kind="TRANSPORT_FAILURE",
+            transport_failure_no_response=True,
+        )
     returncode = launched.get("returncode")
     if type(returncode) is not int or returncode != 0:
-        return _formal_result("FORMAL_PROCESS_BLOCKED")
+        return _formal_result("FORMAL_PROCESS_BLOCKED", failure_kind="PROCESS_EXIT")
     if launched.get("response_read_error") is not False:
-        return _formal_result("FORMAL_EVIDENCE_BLOCKED")
+        return _formal_result("FORMAL_EVIDENCE_BLOCKED", failure_kind="EVIDENCE_ERROR")
 
     event_bytes = launched.get("event_bytes")
     response_bytes = launched.get("response_bytes")
@@ -2157,11 +2184,21 @@ def run_formal_agent_invocation(
     except (OSError, ValueError):
         return _formal_result("FORMAL_EVIDENCE_BLOCKED")
     if type(response_bytes) is not bytes:
-        return _formal_result("FORMAL_OUTPUT_BLOCKED")
+        return _formal_result(
+            "FORMAL_OUTPUT_BLOCKED",
+            failure_kind="TRANSPORT_FAILURE",
+            transport_failure_no_response=True,
+        )
     try:
         _write_private_file(private_root / "response.json", response_bytes)
     except (OSError, ValueError):
         return _formal_result("FORMAL_EVIDENCE_BLOCKED")
+    try:
+        parsed = _json_object_no_duplicates(response_bytes)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return _formal_result("FORMAL_OUTPUT_BLOCKED", failure_kind="INVALID_JSON")
+    except ValueError:
+        return _formal_result("FORMAL_OUTPUT_BLOCKED", failure_kind="SCHEMA_INVALID")
 
     thread_id, tool_call_count, event_validation, final_agent_message = (
         _inspect_event_stream(event_bytes, available=True)
@@ -2175,12 +2212,11 @@ def run_formal_agent_invocation(
     ):
         return _formal_result("FORMAL_ISOLATION_BLOCKED")
     try:
-        parsed = _json_object_no_duplicates(response_bytes)
         response = historical.validate_agent_response(parsed, request=validated_request)
         if final_agent_message != response:
             raise ValueError("formal event/output mismatch")
-    except (KeyError, TypeError, UnicodeDecodeError, json.JSONDecodeError, ValueError):
-        return _formal_result("FORMAL_OUTPUT_BLOCKED")
+    except (KeyError, TypeError, ValueError):
+        return _formal_result("FORMAL_OUTPUT_BLOCKED", failure_kind="SCHEMA_INVALID")
 
     invocation: dict[str, Any] = {
         "transport_failure": False,
@@ -2210,7 +2246,7 @@ def run_formal_agent_invocation(
             request=validated_request,
         )
     except (KeyError, TypeError, ValueError):
-        return _formal_result("FORMAL_OUTPUT_BLOCKED")
+        return _formal_result("FORMAL_OUTPUT_BLOCKED", failure_kind="SCHEMA_INVALID")
     if seen_thread_ids is not None:
         seen_thread_ids.add(thread_id)
     return _formal_result("VALID", invocation=invocation, response=response)

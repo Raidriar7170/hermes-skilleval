@@ -22,7 +22,7 @@ The repository is OpenSpec-managed. This remains the only change. The user forbi
 
 - Human authoring, human review, adjudication, majority vote, reviewer feedback, relabeling, confidence-based selection, or retry after a substantive Agent response.
 - Training, mining, threshold changes, seed selection, model/checkpoint changes, Arm B decision use, release, default-router promotion, production/SOTA claims, merge, archive, tag, or deploy.
-- Reusing old Phase 16 or pilot-002 tasks, creating pilot-003, attempt-2, blind-v2-002, or blind-v3.
+- Reusing old Phase 16 or pilot-002 tasks, creating pilot-003, a replacement Run 002 attempt, blind-v2-003, or blind-v3.
 - Repairing the pre-existing failing Validate workflow at `origin/main` unless this change introduces the failure.
 
 ## Decisions
@@ -47,9 +47,11 @@ These controls justify the phrase “role-isolated dual-Agent unanimous review,�
 
 ### Candidate generation has two bounded rounds
 
-Round 1 produces exactly 256 candidates: 16 per gold skill, with 12 negative-labeled proposals and four positive-only proposals per skill. Every record contains an opaque candidate ID, generation round, prompt, declared semantic family, proposed gold, proposed negative/none, language, and concise rationale.
+Run 001 started exactly four Generator requests: all four responses were present and schema-valid, one used `candidate_index=0..15`, and three used model-authored indexes `1..16`, so the controller stopped before contamination scan, review, or dataset construction. Its public terminal remains immutable with SHA-256 `74b8e9fb01e008ee40c1f38c65c73a9fde371c615e4689f847ab88887cefa6ea`; no Run 001 response, model score, or private authority is reusable. Run 002 (`router-v2-v4-successor-blind-v2-002`) records replacement reason `HOST_ASSIGNED_CANDIDATE_IDENTITY`.
 
-After deterministic filtering and dual review, the controller computes deficits only by gold skill and negative/positive-only stratum. If any final stratum is short, one and only one round-2 request asks for exactly twice each outstanding deficit. The generator receives only those numeric deficits; it never receives rejected prompts, rejection reasons, reviewer labels, contamination scores, or Arm A/C output. Every round-2 candidate traverses the same complete contamination scan, fresh Reviewer A session, fresh Reviewer B session, dual `ACCEPT`, and exact three-way agreement path as round 1. If the accepted pool still cannot satisfy every stratum after round 2, the workflow stops at `AGENT_BLIND_V2_DATASET_INSUFFICIENT` before Commit B and before model scoring.
+Round 1 issues 16 requests, one per gold skill, and every successful response contains exactly 16 candidates with 12 negative-labeled proposals and four positive-only proposals. A Generator candidate contains only prompt, declared semantic family, proposed gold, proposed negative/none, language, and concise rationale. The host assigns position `0..15` and an opaque ID derived from Run 002 ID, request SHA-256, position, and prompt; model-authored identity, order, round, and hash fields are prohibited.
+
+After deterministic filtering and dual review, the controller computes deficits only by gold skill and negative/positive-only stratum. If any final stratum is short, one and only one round-2 request is issued for each deficient gold skill. Each response remains fixed at 16 candidates, with its negative/positive-only quota split deterministically in proportion to the two deficits. The generator receives only those numeric deficits; it never receives rejected prompts, rejection reasons, reviewer labels, contamination scores, or Arm A/C output. Every round-2 candidate traverses the same complete contamination scan, fresh Reviewer A session, fresh Reviewer B session, dual `ACCEPT`, and exact three-way agreement path as round 1. If the accepted pool still cannot satisfy every stratum after round 2, the workflow stops at `AGENT_BLIND_V2_DATASET_INSUFFICIENT` before Commit B and before model scoring.
 
 Alternative rejected: open-ended replenishment. It would permit iterative adaptation to reviewer behavior and turn the blind set into a tuned artifact.
 
@@ -65,17 +67,17 @@ Alternative rejected: an additional LLM contamination judge. That would create a
 
 After exact three-way agreement, select eight tasks per gold skill—six negative-labeled and two positive-only—by ascending lexicographic `sha256("7170:" + candidate_id)` within each stratum. Confidence and rationale never affect selection. The 128 selected tasks must have unique task IDs, prompt bytes, normalized prompts, and semantic-family IDs. If deterministic selection cannot satisfy these constraints, the dataset is insufficient rather than manually repaired.
 
-Raw generation, reviews, and contamination ledgers remain under an absolute private `HERMES_BLIND_V2_ROOT` outside every Git worktree. The staging contract contains `blind-v2-generation.jsonl`, `blind-v2-review-a.jsonl`, `blind-v2-review-b.jsonl`, `blind-v2-contamination.jsonl`, and `agent-run-metadata.json`. Commit B publishes the final task prompts and labels plus canonical review/config/run hashes and summaries, but not hidden reasoning or unsanitized Agent traces.
+Raw generation, reviews, and contamination ledgers remain under an absolute private Run 002 root outside every Git worktree. Before the synthetic canary or any formal call, that root contains an immutable `run002-authority-manifest.json` binding Commit A, Run 002, prompt/schema/config hashes, retry rules, and selection authority. The complete private staging contract then contains that manifest plus `blind-v2-generation.jsonl`, `blind-v2-review-a.jsonl`, `blind-v2-review-b.jsonl`, `blind-v2-contamination.jsonl`, and `agent-run-metadata.json`. Pack validation replays exact schedules, request quotas, host identities, retry records, globally unique sessions, frozen contamination results, clean-only reviewer schedules, and deterministic selection from source responses; ledger decisions are not accepted as authority. Commit B publishes the final task prompts and labels plus canonical review/config/run hashes and summaries, but not hidden reasoning or unsanitized Agent traces.
 
-### Retry is transport-only and fail-closed
+### Retry is limited to transport failure or invalid JSON and remains fail-closed
 
-An Agent call may be retried once only if no syntactically valid response was received because of a recorded transport failure. The retry must use byte-identical input, model alias, reasoning effort, and prompt hash. A returned model mismatch, invalid structured response, label disagreement, refusal, or rubric failure is substantive and receives no retry. No fallback model or lower reasoning effort is allowed.
+An Agent call may be retried once only if no syntactically valid response was received because of a recorded transport failure or invalid JSON. The retry must use byte-identical input, model alias, reasoning effort, and prompt hash. A returned model mismatch, wrong candidate count, valid-JSON schema/semantic failure, label disagreement, refusal, or rubric failure is substantive and receives no retry. No fallback model or lower reasoning effort is allowed.
 
 Before generation, dummy non-evaluation text must prove all three exact Agent configurations are callable. Failure stops without candidate generation and records `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` with `failure_stage=agent_config_smoke`. The A/C fixed-string model-load smoke is deliberately deferred until after Commit B so no Arm A/C model is loaded before the dataset freeze.
 
 ### Commit B is a byte-bound 128/96 dataset freeze
 
-After all static checks pass, create exactly `blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` under `data/router-v2-blind-v2/`. The manifest binds Commit A-agent, source-ledger hashes, prompt/schema/config hashes, requested and returned model IDs, reasoning efforts, run/thread IDs, retry records, contamination evidence, candidate/rejection/acceptance counts, selection seed/order, `task_count=128`, `negative_labeled_task_count=96`, `family_count=128`, `human_author_count=0`, `human_reviewer_count=0`, `model_scores_observed=false`, and `evaluation_started=false`.
+After all static checks pass, create exactly `blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` under `data/router-v2-blind-v2-successor-002/`. The manifest binds Run 002 Commit A, source-ledger hashes, prompt/schema/config hashes, requested and returned model IDs, reasoning efforts, run/thread IDs, retry records, contamination evidence, candidate/rejection/acceptance counts, selection seed/order, `task_count=128`, `negative_labeled_task_count=96`, `family_count=128`, `human_author_count=0`, `human_reviewer_count=0`, `model_scores_observed=false`, and `evaluation_started=false`.
 
 Commit B precedes all Arm A/C scoring and is a direct child of Commit A-agent containing only the canonical three dataset files. After Commit B, tasks, labels, review decisions, gate, model, query builder, skill builder, and checkpoints are immutable.
 
@@ -85,7 +87,7 @@ The Agent-configuration smoke runs after Commit A-agent but before generation, u
 
 ### One exclusive terminal evaluation attempt
 
-From clean Commit B, create a fresh worktree and the unique namespace `artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1`. Write the exclusive started marker before inference. Once it exists, every exit writes or preserves a terminal artifact and consumes the attempt; there is no automatic rerun, replacement namespace, or failed-seed retry.
+From clean Run 002 Commit B, create a fresh worktree and the unique namespace `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-002/`. Write the exclusive started marker before inference. Once it exists, every exit writes or preserves a terminal artifact and consumes the attempt; there is no automatic rerun, replacement namespace, or failed-seed retry.
 
 Only Arm A and Arm C seeds participate. Each task receives one untimed warm-up immediately before its timed pass, and scores use pilot-002's eight-decimal `ROUND_HALF_EVEN` quantization before skill-ID tie breaking. Any infrastructure failure after the marker yields `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` and requires a separately preregistered future experiment rather than mutation of this run.
 

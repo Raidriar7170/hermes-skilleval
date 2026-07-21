@@ -31,15 +31,15 @@ The system SHALL run two non-benchmark smokes bound to Commit A-agent: an Agent-
 - **THEN** the system records `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` with `failure_stage=ac_model_smoke`, keeps `KEEP_BASELINE`, and stops before the formal attempt without changing Commit B
 
 ### Requirement: Candidate generation is sealed and bounded to two rounds
-The system SHALL use Generator `gpt-5.6-sol` with reasoning effort `max`. Round 1 SHALL contain exactly 256 candidates: 16 per gold skill, comprising 12 negative-labeled proposals and four positive-only proposals per skill. The generator SHALL receive only canonical skill definitions, naturalness/single-primary-skill/leakage rules, and frozen quotas, and MUST NOT receive train, pilot-002, Phase 16, Arm A/C, review, contamination, or model-result content.
+The system SHALL use Generator `gpt-5.6-sol` with reasoning effort `max` under replacement run `router-v2-v4-successor-blind-v2-002`. Round 1 SHALL issue 16 requests, one per gold skill, and each successful response SHALL contain exactly 16 candidates comprising 12 negative-labeled proposals and four positive-only proposals. Each Generator candidate SHALL contain only `prompt_text`, `semantic_family_id`, `proposed_gold_skill_id`, `proposed_negative_skill_id`, `language`, and `rationale`. The host SHALL assign `candidate_index=0..15` from response position and an opaque deterministic ID from Run 002 ID, request SHA-256, position, and prompt. The generator SHALL receive only canonical skill definitions, naturalness/single-primary-skill/leakage rules, and frozen quotas, and MUST NOT receive train, pilot-002, Phase 16, Arm A/C, review, contamination, or model-result content.
 
 #### Scenario: First-round generation succeeds
 - **WHEN** the generator returns a syntactically valid structured response under the frozen model and prompt hashes
-- **THEN** the controller seals exactly 256 candidate records with opaque IDs, round, prompt, semantic family, proposed gold, proposed negative/none, language, concise rationale, requested/returned model identity, reasoning effort, run ID, and response hash
+- **THEN** the controller seals up to 256 candidate records with host-assigned opaque IDs and positions plus round, prompt, semantic family, proposed gold, proposed negative/none, language, concise rationale, requested/returned model identity, reasoning effort, Run 002 ID, and response hash; one semantically invalid candidate is discarded without invalidating other candidates or requests
 
 #### Scenario: Accepted strata remain short after round 1
 - **WHEN** deterministic filtering and unanimous review leave one or more gold-skill and negative/positive-only strata below final quota
-- **THEN** the system permits exactly one round-2 request for twice each numeric stratum deficit and reveals no rejected prompt, rejection reason, reviewer label, contamination score, or Arm A/C output
+- **THEN** the system permits exactly one deficit-only round-2 request for each deficient gold skill; every response still requests exactly 16 candidates, with its negative/positive-only split derived deterministically from the two deficits, and reveals no rejected prompt, rejection reason, reviewer label, contamination score, or Arm A/C output
 
 #### Scenario: A second replenishment is requested
 - **WHEN** round 2 has already produced a syntactically valid response
@@ -60,11 +60,15 @@ The system SHALL review each contamination-clean candidate in two separate fresh
 - **WHEN** a review request includes generator labels, another review, quota state, prior candidate context, contamination output, or Router results
 - **THEN** the system globally terminates at `AGENT_BLIND_V2_PROTOCOL_INVALID`, records `KEEP_BASELINE`, and forbids Commit B and all model scoring
 
-### Requirement: Agent retries are transport-only
-The system SHALL permit at most one retry for an Agent invocation only when no syntactically valid response was received because of a recorded transport failure. The retry SHALL use byte-identical input, prompt hash, model alias, and reasoning effort.
+### Requirement: Agent retries are limited to transport failure or invalid JSON
+The system SHALL permit at most one retry for an Agent invocation only when no syntactically valid response was received because of a recorded transport failure or invalid JSON. The retry SHALL use byte-identical input, prompt hash, model alias, and reasoning effort. Wrong candidate count, valid-JSON schema/semantic failure, refusal, or reviewer disagreement SHALL NOT be retried.
 
 #### Scenario: Transport fails before a response
 - **WHEN** a call ends with a recorded transport failure and no valid response bytes
+- **THEN** exactly one identical retry is allowed and both attempts are recorded in lineage
+
+#### Scenario: Response bytes are invalid JSON
+- **WHEN** a call returns response bytes that cannot be parsed as JSON
 - **THEN** exactly one identical retry is allowed and both attempts are recorded in lineage
 
 #### Scenario: A substantive response is invalid or rejected
@@ -102,7 +106,7 @@ The system SHALL derive the final set only from contamination-clean, three-way-u
 - **THEN** the workflow reports `AGENT_BLIND_V2_PROTOCOL_INVALID` and freezes no dataset
 
 ### Requirement: Commit B freezes Agent-reviewed data and sanitized lineage before scoring
-The system SHALL read raw construction evidence only from an absolute `HERMES_BLIND_V2_ROOT` outside every Git worktree containing `blind-v2-generation.jsonl`, `blind-v2-review-a.jsonl`, `blind-v2-review-b.jsonl`, `blind-v2-contamination.jsonl`, and `agent-run-metadata.json`. After static validation it SHALL create `blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` under `data/router-v2-blind-v2/`, then create Commit B as a direct child of Commit A-agent before Arm A/C scoring.
+The system SHALL read raw construction evidence only from the independent absolute Run 002 private root outside every Git worktree containing `run002-authority-manifest.json`, `blind-v2-generation.jsonl`, `blind-v2-review-a.jsonl`, `blind-v2-review-b.jsonl`, `blind-v2-contamination.jsonl`, and `agent-run-metadata.json`. The private authority manifest SHALL exist before the synthetic canary or any formal call and SHALL bind Run 002, Commit A, prompts, schemas, Agent configurations, retry rules, and selection authority. Pack validation and freeze SHALL reconstruct the exact round-1 and deficit-only schedules, retry/session lineage, contamination decisions, clean-only review schedules, and deterministic selection from those private sources and the frozen contamination checker rather than trusting ledger decisions. It SHALL NOT read or reuse Run 001 candidate responses. After static validation it SHALL create `blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` under `data/router-v2-blind-v2-successor-002/`, then create Run 002 Commit B as a direct child of Run 002 Commit A before Arm A/C scoring.
 
 #### Scenario: Dataset freeze succeeds
 - **WHEN** the selected set and all source/config/run hashes validate
@@ -117,7 +121,7 @@ The system SHALL read raw construction evidence only from an absolute `HERMES_BL
 - **THEN** the evaluation refuses to start
 
 ### Requirement: Exactly one terminal blind-v2 attempt is permitted
-The system SHALL run only `router-v2-v4-final-blind-v2-001/attempt-1` from a fresh clean Commit B worktree after revalidating every Commit A-agent/Commit B hash, count, smoke receipt, namespace, marker, and worktree condition. Caller-supplied alternate task, model, hash, commit, evaluator, token, or output-root authorities SHALL NOT be accepted.
+The system SHALL run only `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-002/` from a fresh clean Run 002 Commit B worktree after revalidating every Run 002 Commit A/Commit B hash, count, smoke receipt, namespace, marker, and worktree condition. Caller-supplied alternate task, model, hash, commit, evaluator, token, or output-root authorities SHALL NOT be accepted. The Run 001 terminal SHALL remain byte-for-byte preserved with SHA-256 `74b8e9fb01e008ee40c1f38c65c73a9fde371c615e4689f847ab88887cefa6ea` and no Run 001 model score shall be imported.
 
 #### Scenario: Attempt starts
 - **WHEN** all preflight checks pass and the output namespace does not exist

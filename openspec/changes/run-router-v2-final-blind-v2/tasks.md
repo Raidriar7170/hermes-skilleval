@@ -33,7 +33,7 @@ The user preselected Goal mode. Immediately after this plan passes self-review, 
 - Modify `docs/router-v2-blind-v2-protocol.md`: executable Agent-only protocol and exact prompts/schemas.
 - Modify `artifacts/router-v2-blind-v2/preregistration.json`: machine-readable Agent-only freeze and regenerated canonical hash.
 - Keep the four approved OpenSpec files under `openspec/changes/run-router-v2-final-blind-v2/` consistent.
-- Conditionally create only `data/router-v2-blind-v2/blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` in Commit B.
+- Conditionally create only `data/router-v2-blind-v2-successor-002/blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` in Run 002 Commit B.
 - Conditionally create only the existing final artifact namespace after the formal attempt.
 
 ### Task 0: Preserve verified historical groundwork
@@ -592,51 +592,45 @@ git rev-parse HEAD
 
 Expected: clean worktree; HEAD is Commit A-agent and descends from `09ba4104…`.
 
-### Task 10: Run the Agent-configuration smoke under the active Goal
+### Task 10: Preserve the immutable Run 001 terminal and prepare Run 002
 
 **Files:**
-- Create outside Git: `/Users/raidriar/.codex/private/hermes-blind-v2/${COMMIT_A_SHA}/agent-run-metadata.json`
-- Create outside Git: Commit A-agent-bound Agent configuration smoke receipt
+- Read only: `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-001/candidate-generation-terminal.json`
+- Create outside Git for Run 002 only: `run002-authority-manifest.json` plus the five construction ledgers under the independent Commit A-bound private root
 
-- [x] 10.1 Confirm the active Goal still covers Tasks 1-14 and preserves all Commit A-agent/Commit B/single-attempt stop conditions and prohibited actions.
+- [x] 10.1 Verify the immutable Run 001 public terminal SHA-256 is `74b8e9fb01e008ee40c1f38c65c73a9fde371c615e4689f847ab88887cefa6ea` and preserve its `KEEP_BASELINE` decision.
 
-- [x] 10.2 Set `HERMES_BLIND_V2_ROOT` to the absolute private root for Commit A-agent and verify it is outside every Git worktree.
+- [x] 10.2 Record the actual Run 001 terminal history: 16 round-1 Generator requests were planned, exactly four Generator host requests started, all four response files were present and JSON-schema-valid, one response used `candidate_index=0..15`, and three used model-authored `candidate_index=1..16`.
 
-```bash
-COMMIT_A_SHA=$(git rev-parse HEAD)
-export HERMES_BLIND_V2_ROOT="/Users/raidriar/.codex/private/hermes-blind-v2/${COMMIT_A_SHA}"
-```
+- [x] 10.3 Preserve the fail-closed stop at `failure_stage=round-1-generation`, with zero reviewer calls, no contamination scan, no round 2, no Commit B, no Arm A/C load, no model score, no attempt marker, and no formal evaluation. Do not rewrite or reuse any Run 001 response or private authority.
 
-- [x] 10.3 Spawn three fresh non-forked dummy-text invocations with exact overrides:
+- [x] 10.4 Bind the replacement to independent Run 002 authority with replacement reason `HOST_ASSIGNED_CANDIDATE_IDENTITY`; persist and validate the private authority manifest before the synthetic canary or formal construction call.
 
-```text
-Generator:  model=gpt-5.6-sol,  reasoning=max,   fork_context=false
-Reviewer A: model=gpt-5.6-sol,  reasoning=ultra, fork_context=false
-Reviewer B: model=gpt-5.6-luna, reasoning=max,   fork_context=false
-```
+Run 002 recovery preparation (2026-07-21): Run 001 remains immutable at
+`router-v2-v4-successor-blind-v2-001`; its public terminal SHA-256 is
+`74b8e9fb01e008ee40c1f38c65c73a9fde371c615e4689f847ab88887cefa6ea`,
+and it contains no model score or formal attempt. The active replacement run is
+`router-v2-v4-successor-blind-v2-002` with replacement reason
+`HOST_ASSIGNED_CANDIDATE_IDENTITY`. Run 001 responses and private authority are
+not reusable.
 
-- [x] 10.4 Record requested/returned model IDs, reasoning efforts, unique run/thread IDs, empty-history/no-memory declarations, request/response hashes, timestamps, and retry count. Validate with `agent-config-status`; stop at `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` plus `KEEP_BASELINE` on any mismatch.
+- [x] 10.5 Replace model-authored `candidate_index` with a six-semantic-field Generator response and host-assigned positions `0..15` plus deterministic opaque IDs bound to Run 002, request hash, position, and prompt.
 
-Execution terminal: the exact Agent-configuration smoke returned unavailable
-provider model metadata and non-matching dummy responses. In addition to the
-three intended top-level role invocations, Reviewer B triggered one unplanned
-nested generator probe, so the terminal evidence records `3 top-level + 1
-nested = 4 total observed Agent invocations`; the nested invocation is not a
-retry and is itself a fail-closed protocol violation. The workflow stopped at
-`failure_stage=agent_config_smoke` with
-`AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE / KEEP_BASELINE`. Tasks 11-13 are
-therefore intentionally not executed and remain unchecked. No candidate,
-Commit B, Arm A/C load, model score, attempt marker, or formal evaluation exists.
+- [x] 10.6 Add a one-host synthetic `run002-generator-canary` command and focused fake-host coverage without running the real canary, loading Router models, or writing formal blind data in this preparation phase.
+
+- [x] 10.7 Add explicit Run 002 authority routing for construction, pack validation, freeze, post-Commit-B smoke, and evaluation while preserving the legacy and Run 001 selectors.
+
+- [x] 10.8 Add Run 002 ledger reconstruction and an independent exact-three-file freeze target at `data/router-v2-blind-v2-successor-002/`; focused tests prove `128/96`, `16 x 8`, per-skill `6 + 2`, and 128-family invariants. No dataset files have been generated in the repository and no Commit B exists yet.
 
 ### Task 11: Generate, scan, and dual-review the candidate pool
 
 **Files:**
-- Create outside Git: the five required `HERMES_BLIND_V2_ROOT` ledger files
+- Create outside Git: the Run 002 authority manifest plus five required private construction ledger files
 - No repository or Arm A/C file access beyond frozen skill/reference inputs
 
-- [ ] 11.1 Use `request-round-1` to produce 16 sealed generator requests, one per gold skill, each requesting 12 negative-labeled plus four positive-only candidates. Spawn each with `gpt-5.6-sol/max`, `fork_context=false`, and no thread history.
+- [ ] 11.1 Run the single synthetic `run002-generator-canary`, then use `run-agent-construction --authority run002 --max-workers 4` for 16 sealed Generator requests, one per gold skill, each requesting exactly 12 negative-labeled plus four positive-only candidates. Spawn each with `gpt-5.6-sol/max`, `fork_context=false`, and no thread history.
 
-- [ ] 11.2 Canonicalize and hash exactly 256 returned candidate rows; reject malformed outputs without a substantive retry and record transport-only retries exactly.
+- [ ] 11.2 Require exactly 16 rows per response. Reject a wrong-count request without stopping other requests; discard only semantically invalid candidates; allow at most one byte-identical retry only for transport failure or invalid JSON; and record every request/candidate outcome under the independent Run 002 root.
 
 - [ ] 11.3 Run static/lexical/all-mpnet contamination scanning against train, pilot-002, Phase 16, and within-pool candidates. Seal `blind-v2-contamination.jsonl`; never send scan results or rejection reasons to an Agent.
 
@@ -644,22 +638,22 @@ Commit B, Arm A/C load, model score, attempt marker, or formal evaluation exists
 
 - [ ] 11.5 Seal both review ledgers before comparison. Mechanically compute exact three-way agreement and dual `ACCEPT`; do not adjudicate, relabel, or select by confidence.
 
-- [ ] 11.6 If any `(gold skill, negative/positive-only)` stratum is short, use `request-round-2` once for exactly twice the deficit. Send every new candidate through the complete scan and two-new-reviewer-session path. If any stratum remains short, write `AGENT_BLIND_V2_DATASET_INSUFFICIENT` plus `KEEP_BASELINE` and stop before Commit B.
+- [ ] 11.6 If any `(gold skill, negative/positive-only)` stratum is short, run one deficit-only supplement request for each deficient gold skill. Every supplement response still contains exactly 16 candidates, with its 16-row quota split deterministically in proportion to the two deficits. Send every new candidate through the complete scan and two-new-reviewer-session path. If any stratum remains short, write `AGENT_BLIND_V2_DATASET_INSUFFICIENT` plus `KEEP_BASELINE` and stop before Commit B.
 
 - [ ] 11.7 Run `pack-status` and verify exactly 128 selected tasks, 96 negatives, 128 families, zero human counts, expected Agent configs, no protocol leak, and no Arm A/C score/model load.
 
 ### Task 12: Freeze and commit the selected dataset as Commit B
 
 **Files:**
-- Create: `data/router-v2-blind-v2/blind-v2-tasks.jsonl`
-- Create: `data/router-v2-blind-v2/blind-v2-review-summary.json`
-- Create: `data/router-v2-blind-v2/blind-v2-manifest.json`
+- Create: `data/router-v2-blind-v2-successor-002/blind-v2-tasks.jsonl`
+- Create: `data/router-v2-blind-v2-successor-002/blind-v2-review-summary.json`
+- Create: `data/router-v2-blind-v2-successor-002/blind-v2-manifest.json`
 
 - [ ] 12.1 Run `freeze` from clean Commit A-agent and verify exact-byte regeneration twice.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
-python scripts/run_router_v2_blind_v2_final.py freeze
+python scripts/run_router_v2_blind_v2_final.py freeze --authority run002
 ```
 
 - [ ] 12.2 Verify Commit B content contains only the canonical three files, all final prompts, sanitized Agent evidence/hashes, `model_scores_observed=false`, `evaluation_started=false`, and no raw hidden reasoning.
@@ -667,8 +661,8 @@ python scripts/run_router_v2_blind_v2_final.py freeze
 - [ ] 12.3 Commit the byte-bound dataset and record Commit B SHA.
 
 ```bash
-git add data/router-v2-blind-v2
-git commit -m "data(router): freeze dual-agent-reviewed Router V2 blind-v2"
+git add data/router-v2-blind-v2-successor-002
+git commit -m "data(router): freeze successor blind-v2 dataset"
 git diff --name-only HEAD^..HEAD
 git status --short
 git rev-parse HEAD
@@ -680,7 +674,7 @@ Expected: exactly three changed paths and a clean worktree.
 
 **Files:**
 - Create worktree: `/Users/raidriar/dev/hermes-skilleval-worktrees/router-v2-blind-v2-attempt-1`
-- Create: `artifacts/router-v2-blind-v2/router-v2-v4-final-blind-v2-001/attempt-1/**`
+- Create: `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-002/**`
 
 - [ ] 13.1 Create a fresh detached worktree at Commit B and verify clean status, Commit A-agent/Commit B ancestry, dataset hash, namespace absence, and marker absence.
 
@@ -694,7 +688,7 @@ git worktree add --detach \
 
 - [ ] 13.3 Revalidate every hash, count, smoke receipt, output namespace, protected root, seed, gate, and clean-worktree condition before writing the exclusive started marker.
 
-- [ ] 13.4 Run `evaluate` once. Never create attempt-2, retry a seed, delete a marker, replace a task, or alter a gate after the marker.
+- [ ] 13.4 Run `evaluate --authority run002` once. Never create a replacement Run 002 attempt, retry a seed, delete a marker, replace a task, or alter a gate after the marker.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
