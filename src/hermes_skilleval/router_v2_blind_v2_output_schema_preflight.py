@@ -81,6 +81,28 @@ ALLOWED_EVENT_TYPES = (
     "turn.completed",
 )
 ALLOWED_EVENT_ITEM_TYPES = ("reasoning", "agent_message")
+RUN002_EVENT_POLICY_VERSION = "router-v2-run002-strict-event-policy-v1"
+RUN003_EVENT_POLICY_VERSION = (
+    "router-v2-run003-validated-transient-transport-diagnostics-v1"
+)
+_EVENT_POLICY_VERSIONS = frozenset(
+    {RUN002_EVENT_POLICY_VERSION, RUN003_EVENT_POLICY_VERSION}
+)
+_TRANSPORT_DIAGNOSTIC_DENIAL_TERMS = (
+    "application",
+    "auth",
+    "billing",
+    "business",
+    "content",
+    "forbidden",
+    "invalid request",
+    "permission",
+    "policy",
+    "quota",
+    "unauthorized",
+    "unknown",
+    "validation",
+)
 PRIVATE_EVIDENCE_ROOT = (
     Path("/Users/raidriar/.codex/private/hermes-blind-v2-successor-preflight")
     / HISTORICAL_TERMINAL_COMMIT
@@ -1617,11 +1639,60 @@ def _json_object_no_duplicates(payload: bytes) -> dict[str, Any]:
     return cast(dict[str, Any], value)
 
 
-def _inspect_event_stream(
-    event_bytes: bytes, *, available: bool
-) -> tuple[str | None, int | None, str, dict[str, Any] | None]:
+def _run003_transport_diagnostic_type(event: dict[str, Any]) -> str | None:
+    if set(event) != {"type", "message"} or event.get("type") != "error":
+        return None
+    message = event.get("message")
+    if type(message) is not str or not message.strip():
+        return None
+    lowered = message.casefold()
+    if any(term in lowered for term in _TRANSPORT_DIAGNOSTIC_DENIAL_TERMS):
+        return None
+    if "timed out" in lowered or "timeout" in lowered:
+        return "TEMPORARY_TRANSPORT_TIMEOUT"
+    if "connection reset" in lowered or "reset by peer" in lowered:
+        return "TEMPORARY_CONNECTION_RESET"
+    recovery_observed = any(
+        term in lowered
+        for term in ("reconnect", "retrying", "stream disconnected", "temporary")
+    )
+    if not recovery_observed:
+        return None
+    if "tls" in lowered and any(
+        term in lowered
+        for term in (
+            "close_notify",
+            "handshake eof",
+            "peer closed",
+            "stream disconnected",
+            "unexpected-eof",
+        )
+    ):
+        return "TEMPORARY_TLS_DISCONNECT"
+    if "stream disconnected" in lowered:
+        return "TEMPORARY_STREAM_DISCONNECTED"
+    if "transport" in lowered and ("reconnect" in lowered or "retrying" in lowered):
+        return "TEMPORARY_TRANSPORT_RETRY"
+    return None
+
+
+def _inspect_event_stream_for_policy(
+    event_bytes: bytes,
+    *,
+    available: bool,
+    event_policy_version: str,
+) -> tuple[
+    str | None,
+    int | None,
+    str,
+    dict[str, Any] | None,
+    int,
+    list[str],
+]:
     if not available:
-        return None, None, "UNAVAILABLE", None
+        return None, None, "UNAVAILABLE", None, 0, []
+    if event_policy_version not in _EVENT_POLICY_VERSIONS:
+        return None, None, "INVALID", None, 0, []
     thread_ids: list[str] = []
     turn_started = 0
     turn_completed = 0
@@ -1629,6 +1700,7 @@ def _inspect_event_stream(
     tool_items: set[str] = set()
     violated = False
     unknown_event = False
+    transport_diagnostic_types: list[str] = []
     lifecycle_state = "EXPECT_THREAD"
     allowed_event_types = set(ALLOWED_EVENT_TYPES)
     allowed_item_types = set(ALLOWED_EVENT_ITEM_TYPES)
@@ -1637,6 +1709,21 @@ def _inspect_event_stream(
         for index, line in enumerate(lines):
             event = _json_object_no_duplicates(line)
             event_type = event.get("type")
+            if (
+                event_type == "error"
+                and event_policy_version == RUN003_EVENT_POLICY_VERSION
+            ):
+                diagnostic_type = _run003_transport_diagnostic_type(event)
+                if (
+                    lifecycle_state != "IN_TURN"
+                    or completed_agent_messages
+                    or diagnostic_type is None
+                ):
+                    violated = True
+                    unknown_event = True
+                else:
+                    transport_diagnostic_types.append(diagnostic_type)
+                continue
             if event_type not in allowed_event_types:
                 violated = True
                 unknown_event = True
@@ -1689,7 +1776,7 @@ def _inspect_event_stream(
         if len(thread_ids) > 1 or turn_started > 1 or turn_completed > 1:
             violated = True
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
-        return None, None, "INVALID", None
+        return None, None, "INVALID", None, 0, []
     final_message: dict[str, Any] | None = None
     if len(completed_agent_messages) > 1:
         violated = True
@@ -1710,10 +1797,42 @@ def _inspect_event_stream(
     )
     tool_call_count = None if unknown_event else len(tool_items)
     if violated:
-        return thread_id, tool_call_count, "ISOLATION_VIOLATION", final_message
+        return (
+            thread_id,
+            tool_call_count,
+            "ISOLATION_VIOLATION",
+            final_message,
+            len(transport_diagnostic_types),
+            sorted(set(transport_diagnostic_types)),
+        )
     if not complete:
-        return thread_id, tool_call_count, "INCOMPLETE", final_message
-    return thread_id, tool_call_count, "COMPLETE", final_message
+        return (
+            thread_id,
+            tool_call_count,
+            "INCOMPLETE",
+            final_message,
+            len(transport_diagnostic_types),
+            sorted(set(transport_diagnostic_types)),
+        )
+    return (
+        thread_id,
+        tool_call_count,
+        "COMPLETE",
+        final_message,
+        len(transport_diagnostic_types),
+        sorted(set(transport_diagnostic_types)),
+    )
+
+
+def _inspect_event_stream(
+    event_bytes: bytes, *, available: bool
+) -> tuple[str | None, int | None, str, dict[str, Any] | None]:
+    inspection = _inspect_event_stream_for_policy(
+        event_bytes,
+        available=available,
+        event_policy_version=RUN002_EVENT_POLICY_VERSION,
+    )
+    return inspection[:4]
 
 
 def _empty_role_result(
@@ -2086,21 +2205,38 @@ def run_formal_agent_invocation(
     host_probe: HostProbe = _default_host_probe,
     launcher: RoleLauncher = _default_launcher,
     seen_thread_ids: set[str] | None = None,
+    event_policy_version: str = RUN002_EVENT_POLICY_VERSION,
 ) -> dict[str, Any]:
+    if event_policy_version not in _EVENT_POLICY_VERSIONS:
+        return _formal_result("FORMAL_REQUEST_BLOCKED")
     try:
         validated_request = historical.validate_agent_request(request)
         role = cast(str, validated_request["role"])
         from hermes_skilleval import router_v2_blind_v2_run002 as run002
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
 
+        request_is_run003 = validated_request["schema_version"] in {
+            "router-v2-run003-generation-request-v1",
+            "router-v2-run003-review-request-v1",
+        }
+        if (event_policy_version == RUN003_EVENT_POLICY_VERSION) is not (
+            request_is_run003
+        ):
+            raise ValueError("Run003 event policy requires explicit Run003 authority")
         request_uses_run002_schema = role == "generator" and (
-            historical._canonical_contract_json_equal(
+            not request_is_run003
+            and historical._canonical_contract_json_equal(
                 validated_request["response_schema"], run002.GENERATOR_RESPONSE_SCHEMA
             )
         )
         expected_schema = (
-            run002.GENERATOR_RESPONSE_SCHEMA
-            if request_uses_run002_schema
-            else _role_schema(role)
+            run003.GENERATOR_RESPONSE_SCHEMA
+            if request_is_run003 and role == "generator"
+            else (
+                run002.GENERATOR_RESPONSE_SCHEMA
+                if request_uses_run002_schema
+                else _role_schema(role)
+            )
         )
         if not historical._canonical_contract_json_equal(
             validated_request["response_schema"], expected_schema
@@ -2200,8 +2336,17 @@ def run_formal_agent_invocation(
     except ValueError:
         return _formal_result("FORMAL_OUTPUT_BLOCKED", failure_kind="SCHEMA_INVALID")
 
-    thread_id, tool_call_count, event_validation, final_agent_message = (
-        _inspect_event_stream(event_bytes, available=True)
+    (
+        thread_id,
+        tool_call_count,
+        event_validation,
+        final_agent_message,
+        transport_diagnostic_count,
+        transport_diagnostic_types,
+    ) = _inspect_event_stream_for_policy(
+        event_bytes,
+        available=True,
+        event_policy_version=event_policy_version,
     )
     if (
         event_validation != "COMPLETE"
@@ -2218,27 +2363,37 @@ def run_formal_agent_invocation(
     except (KeyError, TypeError, ValueError):
         return _formal_result("FORMAL_OUTPUT_BLOCKED", failure_kind="SCHEMA_INVALID")
 
+    envelope: dict[str, Any] = {
+        "role": role,
+        "thread_id": thread_id,
+        "fork_context": False,
+        "history_message_count": 0,
+        "imported_memory_count": 0,
+        "requested_model": validated_request["model"],
+        "returned_model": None,
+        "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
+        "reasoning_effort": validated_request["reasoning_effort"],
+        "timeout_seconds": timeout_seconds,
+        "lineage_observed": True,
+        "tool_call_count": 0,
+        "descendant_agent_count": 0,
+        "transport_retry_count": 0,
+        "request_sha256": validated_request["request_sha256"],
+        "response": response,
+    }
+    if event_policy_version == RUN003_EVENT_POLICY_VERSION:
+        envelope.update(
+            {
+                "event_policy_version": RUN003_EVENT_POLICY_VERSION,
+                "transport_diagnostic_count": transport_diagnostic_count,
+                "transport_diagnostic_types": transport_diagnostic_types,
+                "transport_diagnostics_observed": transport_diagnostic_count > 0,
+            }
+        )
     invocation: dict[str, Any] = {
         "transport_failure": False,
         "response_bytes_present": True,
-        "envelope": {
-            "role": role,
-            "thread_id": thread_id,
-            "fork_context": False,
-            "history_message_count": 0,
-            "imported_memory_count": 0,
-            "requested_model": validated_request["model"],
-            "returned_model": None,
-            "provider_returned_model_status": "INTERFACE_UNAVAILABLE",
-            "reasoning_effort": validated_request["reasoning_effort"],
-            "timeout_seconds": timeout_seconds,
-            "lineage_observed": True,
-            "tool_call_count": 0,
-            "descendant_agent_count": 0,
-            "transport_retry_count": 0,
-            "request_sha256": validated_request["request_sha256"],
-            "response": response,
-        },
+        "envelope": envelope,
     }
     try:
         historical.validate_agent_invocation_envelope(

@@ -14,6 +14,8 @@ import pytest
 
 from hermes_skilleval import router_v2_blind_v2_evaluation_runner as runner
 from hermes_skilleval import router_v2_blind_v2_output_schema_preflight as preflight
+from hermes_skilleval import router_v2_blind_v2_run002 as run002
+from hermes_skilleval import router_v2_blind_v2_run003 as run003
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +68,33 @@ def _generator_response() -> dict[str, Any]:
                 "rationale": f"Synthetic rationale {index}",
             }
             for index in range(3)
+        ]
+    }
+
+
+def _run003_generator_request() -> dict[str, Any]:
+    return run003.build_formal_generator_request(
+        _skills(),
+        commit_a="8a34995f85954777b1130c4be8c94a2e5e3e950b",
+        gold_skill_id="test-skill-00",
+        negative_quota=12,
+        positive_only_quota=4,
+        round_number=1,
+    )
+
+
+def _run003_generator_response() -> dict[str, Any]:
+    return {
+        "candidates": [
+            {
+                "prompt_text": f"Natural Run003 synthetic request {index}",
+                "semantic_family_id": f"run003-family-{index}",
+                "proposed_gold_skill_id": "test-skill-00",
+                "proposed_negative_skill_id": ("test-skill-01" if index < 12 else None),
+                "language": "en",
+                "rationale": f"Run003 synthetic rationale {index}",
+            }
+            for index in range(16)
         ]
     }
 
@@ -157,6 +186,101 @@ class _FakeFormalHost:
             "process_started": True,
             "host_authority_valid": True,
         }
+
+
+RUN002_RECONNECT_MESSAGES = (
+    "Reconnecting... 2/5 (stream disconnected before completion: tls handshake eof)",
+    "Reconnecting... 3/5 (stream disconnected before completion: IO error: peer "
+    "closed connection without sending TLS close_notify: "
+    "https://docs.rs/rustls/latest/rustls/manual/_03_howto/index.html#unexpected-eof)",
+    "Reconnecting... 4/5 (stream disconnected before completion: IO error: peer "
+    "closed connection without sending TLS close_notify: "
+    "https://docs.rs/rustls/latest/rustls/manual/_03_howto/index.html#unexpected-eof)",
+    "Reconnecting... 5/5 (request timed out)",
+)
+
+
+class _EventPolicyHost(_FakeFormalHost):
+    def __init__(
+        self,
+        response: dict[str, Any],
+        *,
+        diagnostics: tuple[dict[str, Any], ...] = (),
+        extra_items: tuple[dict[str, Any], ...] = (),
+        final_messages: tuple[str, ...] | None = None,
+        returncode: int = 0,
+    ) -> None:
+        super().__init__(response)
+        self.diagnostics = diagnostics
+        self.extra_items = extra_items
+        self.final_messages = final_messages
+        self.returncode = returncode
+
+    def launch(
+        self,
+        *,
+        role: str,
+        argv: tuple[str, ...],
+        stdin: bytes,
+        cwd: Path,
+        timeout_seconds: int,
+    ) -> dict[str, object]:
+        result = super().launch(
+            role=role,
+            argv=argv,
+            stdin=stdin,
+            cwd=cwd,
+            timeout_seconds=timeout_seconds,
+        )
+        response_text = json.dumps(
+            self.response,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        messages = self.final_messages or (response_text,)
+        events = [
+            {"type": "thread.started", "thread_id": self.thread_id},
+            {"type": "turn.started"},
+            *self.diagnostics,
+            *self.extra_items,
+            *(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "id": f"message-{index}",
+                        "type": "agent_message",
+                        "text": message,
+                    },
+                }
+                for index, message in enumerate(messages, start=1)
+            ),
+            {"type": "turn.completed"},
+        ]
+        result["event_bytes"] = b"".join(
+            json.dumps(event, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+            for event in events
+        )
+        result["returncode"] = self.returncode
+        return result
+
+
+def _run_with_event_policy(
+    tmp_path: Path,
+    host: _EventPolicyHost,
+    *,
+    event_policy_version: str,
+) -> dict[str, Any]:
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    return preflight.run_formal_agent_invocation(
+        request=_run003_generator_request(),
+        private_root=tmp_path / "formal-invocation",
+        repository_root=ROOT,
+        host_probe=host.probe,
+        launcher=host.launch,
+        seen_thread_ids=set(),
+        event_policy_version=event_policy_version,
+    )
 
 
 class _FakeConstructionRunner:
@@ -757,6 +881,321 @@ def test_formal_invocation_reuses_exact_host_transport_and_private_modes(
     assert envelope["descendant_agent_count"] == 0
     assert envelope["transport_retry_count"] == 0
     assert envelope["response"] == _generator_response()
+
+
+def test_run003_policy_accepts_real_run002_reconnect_diagnostics_only_after_valid_completion(
+    tmp_path: Path,
+) -> None:
+    host = _EventPolicyHost(
+        _run003_generator_response(),
+        diagnostics=tuple(
+            {"type": "error", "message": message}
+            for message in RUN002_RECONNECT_MESSAGES
+        ),
+    )
+
+    result = _run_with_event_policy(
+        tmp_path,
+        host,
+        event_policy_version=preflight.RUN003_EVENT_POLICY_VERSION,
+    )
+
+    assert result["status"] == "VALID"
+    assert result["retry_count"] == 0
+    envelope = result["invocation"]["envelope"]
+    assert envelope["transport_retry_count"] == 0
+    assert envelope["event_policy_version"] == preflight.RUN003_EVENT_POLICY_VERSION
+    assert envelope["transport_diagnostic_count"] == 4
+    assert envelope["transport_diagnostic_types"] == [
+        "TEMPORARY_TLS_DISCONNECT",
+        "TEMPORARY_TRANSPORT_TIMEOUT",
+    ]
+    assert envelope["transport_diagnostics_observed"] is True
+
+
+@pytest.mark.parametrize(
+    ("message", "diagnostic_type"),
+    [
+        ("request timed out", "TEMPORARY_TRANSPORT_TIMEOUT"),
+        ("connection reset by peer", "TEMPORARY_CONNECTION_RESET"),
+        (
+            "stream disconnected before completion",
+            "TEMPORARY_STREAM_DISCONNECTED",
+        ),
+        (
+            "transport retrying after disconnect",
+            "TEMPORARY_TRANSPORT_RETRY",
+        ),
+        (
+            "Reconnecting after TLS peer closed without close_notify",
+            "TEMPORARY_TLS_DISCONNECT",
+        ),
+    ],
+)
+def test_run003_policy_accepts_exact_transient_transport_diagnostic_classes(
+    tmp_path: Path, message: str, diagnostic_type: str
+) -> None:
+    host = _EventPolicyHost(
+        _run003_generator_response(),
+        diagnostics=({"type": "error", "message": message},),
+    )
+
+    result = _run_with_event_policy(
+        tmp_path / diagnostic_type,
+        host,
+        event_policy_version=preflight.RUN003_EVENT_POLICY_VERSION,
+    )
+
+    assert result["status"] == "VALID"
+    envelope = result["invocation"]["envelope"]
+    assert envelope["transport_retry_count"] == 0
+    assert envelope["transport_diagnostic_count"] == 1
+    assert envelope["transport_diagnostic_types"] == [diagnostic_type]
+
+
+@pytest.mark.parametrize(
+    ("case", "host"),
+    [
+        (
+            "invalid-final",
+            _EventPolicyHost(
+                _run003_generator_response(),
+                diagnostics=tuple(
+                    {"type": "error", "message": message}
+                    for message in RUN002_RECONNECT_MESSAGES
+                ),
+                final_messages=("not-json",),
+            ),
+        ),
+        (
+            "nonzero",
+            _EventPolicyHost(
+                _run003_generator_response(),
+                diagnostics=tuple(
+                    {"type": "error", "message": message}
+                    for message in RUN002_RECONNECT_MESSAGES
+                ),
+                returncode=1,
+            ),
+        ),
+        (
+            "tool",
+            _EventPolicyHost(
+                _run003_generator_response(),
+                diagnostics=tuple(
+                    {"type": "error", "message": message}
+                    for message in RUN002_RECONNECT_MESSAGES
+                ),
+                extra_items=(
+                    {
+                        "type": "item.completed",
+                        "item": {
+                            "id": "tool-1",
+                            "type": "command_execution",
+                            "command": "pwd",
+                        },
+                    },
+                ),
+            ),
+        ),
+        (
+            "nested-agent",
+            _EventPolicyHost(
+                _run003_generator_response(),
+                diagnostics=tuple(
+                    {"type": "error", "message": message}
+                    for message in RUN002_RECONNECT_MESSAGES
+                ),
+                extra_items=(
+                    {
+                        "type": "item.completed",
+                        "item": {
+                            "id": "agent-1",
+                            "type": "collab_tool_call",
+                            "tool": "spawn_agent",
+                        },
+                    },
+                ),
+            ),
+        ),
+        (
+            "multiple-final",
+            _EventPolicyHost(
+                _run003_generator_response(),
+                diagnostics=tuple(
+                    {"type": "error", "message": message}
+                    for message in RUN002_RECONNECT_MESSAGES
+                ),
+                final_messages=(
+                    json.dumps(_generator_response()),
+                    json.dumps(_run003_generator_response()),
+                ),
+            ),
+        ),
+    ],
+)
+def test_run003_policy_keeps_diagnostic_stream_fail_closed_for_invalid_invocations(
+    tmp_path: Path,
+    case: str,
+    host: _EventPolicyHost,
+) -> None:
+    result = _run_with_event_policy(
+        tmp_path / case,
+        host,
+        event_policy_version=preflight.RUN003_EVENT_POLICY_VERSION,
+    )
+
+    assert result["status"] != "VALID"
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Temporary issue while retrying",
+        "Authentication failed while reconnecting to the service",
+        "Application error while retrying the request",
+        "Business rule rejected the request after reconnecting",
+        "An unknown error occurred while reconnecting",
+    ],
+)
+def test_run003_policy_rejects_non_transport_error_messages(
+    tmp_path: Path,
+    message: str,
+) -> None:
+    host = _EventPolicyHost(
+        _run003_generator_response(),
+        diagnostics=({"type": "error", "message": message},),
+    )
+
+    result = _run_with_event_policy(
+        tmp_path,
+        host,
+        event_policy_version=preflight.RUN003_EVENT_POLICY_VERSION,
+    )
+
+    assert result["status"] == "FORMAL_ISOLATION_BLOCKED"
+
+
+def test_run003_policy_rejects_error_event_extra_fields(tmp_path: Path) -> None:
+    host = _EventPolicyHost(
+        _run003_generator_response(),
+        diagnostics=(
+            {
+                "type": "error",
+                "message": RUN002_RECONNECT_MESSAGES[0],
+                "code": "extra-not-authorized",
+            },
+        ),
+    )
+
+    result = _run_with_event_policy(
+        tmp_path,
+        host,
+        event_policy_version=preflight.RUN003_EVENT_POLICY_VERSION,
+    )
+
+    assert result["status"] == "FORMAL_ISOLATION_BLOCKED"
+
+
+@pytest.mark.parametrize("placement", ["outside-turn", "incomplete-lifecycle"])
+def test_run003_policy_rejects_diagnostics_outside_complete_single_turn_lifecycle(
+    placement: str,
+) -> None:
+    response_text = json.dumps(_run003_generator_response())
+    diagnostic = {"type": "error", "message": "request timed out"}
+    if placement == "outside-turn":
+        events = [
+            {"type": "thread.started", "thread_id": "thread-001"},
+            diagnostic,
+            {"type": "turn.started"},
+            {
+                "type": "item.completed",
+                "item": {"type": "agent_message", "text": response_text},
+            },
+            {"type": "turn.completed"},
+        ]
+    else:
+        events = [
+            {"type": "thread.started", "thread_id": "thread-001"},
+            {"type": "turn.started"},
+            diagnostic,
+            {
+                "type": "item.completed",
+                "item": {"type": "agent_message", "text": response_text},
+            },
+        ]
+    event_bytes = b"".join(
+        json.dumps(event, separators=(",", ":")).encode() + b"\n" for event in events
+    )
+
+    inspection = preflight._inspect_event_stream_for_policy(
+        event_bytes,
+        available=True,
+        event_policy_version=preflight.RUN003_EVENT_POLICY_VERSION,
+    )
+
+    assert inspection[2] != "COMPLETE"
+
+
+def test_run002_and_default_policies_still_reject_real_reconnect_events(
+    tmp_path: Path,
+) -> None:
+    diagnostics = tuple(
+        {"type": "error", "message": message} for message in RUN002_RECONNECT_MESSAGES
+    )
+
+    default_result = preflight.run_formal_agent_invocation(
+        request=_successor_generator_request(),
+        private_root=tmp_path / "default",
+        repository_root=ROOT,
+        host_probe=_EventPolicyHost(
+            _generator_response(), diagnostics=diagnostics
+        ).probe,
+        launcher=_EventPolicyHost(
+            _generator_response(), diagnostics=diagnostics
+        ).launch,
+        seen_thread_ids=set(),
+    )
+    run002_host = _EventPolicyHost(
+        _run003_generator_response(), diagnostics=diagnostics
+    )
+    run002_result = preflight.run_formal_agent_invocation(
+        request=run002.build_formal_generator_request(
+            _skills(),
+            commit_a="8a34995f85954777b1130c4be8c94a2e5e3e950b",
+            gold_skill_id="test-skill-00",
+            negative_quota=12,
+            positive_only_quota=4,
+            round_number=1,
+        ),
+        private_root=tmp_path / "run002",
+        repository_root=ROOT,
+        host_probe=run002_host.probe,
+        launcher=run002_host.launch,
+        seen_thread_ids=set(),
+        event_policy_version=preflight.RUN002_EVENT_POLICY_VERSION,
+    )
+
+    assert default_result["status"] == "FORMAL_ISOLATION_BLOCKED"
+    assert run002_result["status"] == "FORMAL_ISOLATION_BLOCKED"
+
+
+def test_run003_policy_is_rejected_without_explicit_run003_request_authority(
+    tmp_path: Path,
+) -> None:
+    host = _EventPolicyHost(_generator_response())
+
+    result = preflight.run_formal_agent_invocation(
+        request=_successor_generator_request(),
+        private_root=tmp_path / "run003-policy-without-run003-authority",
+        repository_root=ROOT,
+        host_probe=host.probe,
+        launcher=host.launch,
+        seen_thread_ids=set(),
+        event_policy_version=preflight.RUN003_EVENT_POLICY_VERSION,
+    )
+
+    assert result["status"] == "FORMAL_REQUEST_BLOCKED"
 
 
 def test_formal_reviewer_stdin_is_blind_and_uses_exact_successor_schema(

@@ -405,20 +405,22 @@ def _candidate_rejection_reasons(
     return reasons
 
 
-def import_generator_response(
+def _import_generator_response_for_run(
     response: object,
     *,
     run_id: str,
+    expected_run_id: str,
+    schema_version: str,
     request_id: str,
     expected_gold_skill_id: str,
     expected_negative_quota: int,
     expected_positive_only_quota: int,
     canonical_skill_ids: set[str],
 ) -> dict[str, Any]:
-    """Import one response without allowing one bad candidate to abort Run002."""
+    """Pure host importer shared by separately bound successor runs."""
 
-    if run_id != RUN_ID:
-        raise ValueError("Run002 import requires the frozen run_id")
+    if run_id != expected_run_id:
+        raise ValueError("successor import requires the frozen run_id")
     if not _lowercase_sha256(request_id):
         raise ValueError("request_id must be a lowercase SHA-256")
     if (
@@ -441,7 +443,7 @@ def import_generator_response(
 
     if type(response) is not dict or set(response) != {"candidates"}:
         return {
-            "schema_version": GENERATOR_RESPONSE_SCHEMA_VERSION,
+            "schema_version": schema_version,
             "run_id": run_id,
             "request_id": request_id,
             "request_outcome": "REJECTED_RESPONSE_SCHEMA",
@@ -454,7 +456,7 @@ def import_generator_response(
     if type(candidates) is not list or len(candidates) != GENERATOR_RESPONSE_SIZE:
         observed_count = len(candidates) if type(candidates) is list else None
         return {
-            "schema_version": GENERATOR_RESPONSE_SCHEMA_VERSION,
+            "schema_version": schema_version,
             "run_id": run_id,
             "request_id": request_id,
             "request_outcome": "REJECTED_CANDIDATE_COUNT",
@@ -474,7 +476,7 @@ def import_generator_response(
         or positive_only_count != expected_positive_only_quota
     ):
         return {
-            "schema_version": GENERATOR_RESPONSE_SCHEMA_VERSION,
+            "schema_version": schema_version,
             "run_id": run_id,
             "request_id": request_id,
             "request_outcome": "REJECTED_QUOTA_STRATA",
@@ -528,7 +530,7 @@ def import_generator_response(
         )
 
     return {
-        "schema_version": GENERATOR_RESPONSE_SCHEMA_VERSION,
+        "schema_version": schema_version,
         "run_id": run_id,
         "request_id": request_id,
         "request_outcome": (
@@ -541,6 +543,31 @@ def import_generator_response(
         "candidate_outcomes": candidate_outcomes,
         "retry_allowed": False,
     }
+
+
+def import_generator_response(
+    response: object,
+    *,
+    run_id: str,
+    request_id: str,
+    expected_gold_skill_id: str,
+    expected_negative_quota: int,
+    expected_positive_only_quota: int,
+    canonical_skill_ids: set[str],
+) -> dict[str, Any]:
+    """Import one response without allowing one bad candidate to abort Run002."""
+
+    return _import_generator_response_for_run(
+        response,
+        run_id=run_id,
+        expected_run_id=RUN_ID,
+        schema_version=GENERATOR_RESPONSE_SCHEMA_VERSION,
+        request_id=request_id,
+        expected_gold_skill_id=expected_gold_skill_id,
+        expected_negative_quota=expected_negative_quota,
+        expected_positive_only_quota=expected_positive_only_quota,
+        canonical_skill_ids=canonical_skill_ids,
+    )
 
 
 def retry_allowed(
@@ -857,10 +884,20 @@ def _validated_ledger_attempts(
     role: str,
     commit_a: str,
     seen_thread_ids: set[str],
+    run003_mode: bool = False,
 ) -> tuple[dict[str, Any] | None, list[dict[str, Any]], dict[str, Any]]:
     """Replay one sealed request, its retry authority, and host lineage."""
 
     from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
+
+    if run003_mode:
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
+
+        active_run_id = run003.RUN_ID
+        active_agent_configs = run003.AGENT_CONFIGS
+    else:
+        active_run_id = RUN_ID
+        active_agent_configs = AGENT_CONFIGS
 
     retry_count = row.get("retry_count")
     statuses = row.get("attempt_statuses")
@@ -946,16 +983,45 @@ def _validated_ledger_attempts(
         raise ValueError("Run002 rejected response lineage mismatch")
     evidence = {
         "role": role,
-        "run_id": RUN_ID,
+        "run_id": active_run_id,
         "commit_a": commit_a,
         "request_sha256": request["request_sha256"],
         "response_sha256": None if response is None else canonical_sha256(response),
         "system_prompt_sha256": canonical_sha256(request["system_prompt"]),
         "response_schema_sha256": canonical_sha256(request["response_schema"]),
-        "agent_config_sha256": canonical_sha256(AGENT_CONFIGS[role]),
+        "agent_config_sha256": canonical_sha256(active_agent_configs[role]),
         "session_or_thread_ids": threads,
         "retry_count": retry_count,
     }
+    if run003_mode:
+        diagnostic_count = sum(
+            cast(
+                int,
+                cast(dict[str, Any], invocation["envelope"])[
+                    "transport_diagnostic_count"
+                ],
+            )
+            for invocation in invocations
+        )
+        evidence.update(
+            {
+                "event_policy_version": run003.EVENT_POLICY_VERSION,
+                "transport_diagnostic_count": diagnostic_count,
+                "transport_diagnostic_types": sorted(
+                    {
+                        cast(str, diagnostic_type)
+                        for invocation in invocations
+                        for diagnostic_type in cast(
+                            list[str],
+                            cast(dict[str, Any], invocation["envelope"])[
+                                "transport_diagnostic_types"
+                            ],
+                        )
+                    }
+                ),
+                "transport_diagnostics_observed": diagnostic_count > 0,
+            }
+        )
     retry_records = [
         attempt for attempt in normalized_attempts if attempt["retry_authorized"]
     ]
@@ -968,10 +1034,28 @@ def validate_agent_pack(
     canonical_skills: list[dict[str, Any]],
     contamination_replayer: Any,
     expected_commit_a: str,
+    run003_mode: bool = False,
 ) -> dict[str, Any]:
-    """Rebuild the Run002 selection only from sealed Agent ledgers."""
+    """Rebuild the sealed Run002 or explicit Run003 selection from ledgers."""
 
     from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
+
+    if run003_mode:
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
+
+        active_run_id = run003.RUN_ID
+        active_manifest_filename = run003.AUTHORITY_MANIFEST_FILENAME
+        active_generator_schema = run003.GENERATOR_RESPONSE_SCHEMA
+        active_agent_configs = run003.AGENT_CONFIGS
+        active_metadata_schema = "router-v2-run003-agent-run-metadata-v1"
+        active_manifest_validator = run003.validate_authority_manifest
+    else:
+        active_run_id = RUN_ID
+        active_manifest_filename = AUTHORITY_MANIFEST_FILENAME
+        active_generator_schema = GENERATOR_RESPONSE_SCHEMA
+        active_agent_configs = AGENT_CONFIGS
+        active_metadata_schema = "router-v2-run002-agent-run-metadata-v1"
+        active_manifest_validator = validate_authority_manifest
 
     if not root.is_absolute() or not root.is_dir() or root.is_symlink():
         raise ValueError("Run002 Agent pack root mismatch")
@@ -981,7 +1065,7 @@ def validate_agent_pack(
         "blind-v2-review-b.jsonl",
         "blind-v2-contamination.jsonl",
         "agent-run-metadata.json",
-        AUTHORITY_MANIFEST_FILENAME,
+        active_manifest_filename,
     }
     actual = {path.name for path in root.iterdir() if path.is_file()}
     if actual != required:
@@ -995,8 +1079,8 @@ def validate_agent_pack(
         filename: hashlib.sha256((root / filename).read_bytes()).hexdigest()
         for filename in sorted(required)
     }
-    authority_manifest = validate_authority_manifest(
-        _json_object(root / AUTHORITY_MANIFEST_FILENAME), expected_root=root
+    authority_manifest = active_manifest_validator(
+        _json_object(root / active_manifest_filename), expected_root=root
     )
     if (
         authority_manifest["commit_a"] != expected_commit_a
@@ -1034,7 +1118,7 @@ def validate_agent_pack(
         }:
             raise ValueError("Run002 generation ledger row fields mismatch")
         request = workflow.validate_agent_request(cast(dict[str, Any], row["request"]))
-        if request["response_schema"] != GENERATOR_RESPONSE_SCHEMA:
+        if request["response_schema"] != active_generator_schema:
             raise ValueError("Run002 generation ledger schema mismatch")
         quota = cast(dict[str, Any], cast(dict[str, Any], request["input"])["quota"])
         if (
@@ -1045,7 +1129,12 @@ def validate_agent_pack(
         round_number = cast(int, quota["round_number"])
         gold_skill_id = cast(str, quota["gold_skill_id"])
         generation_keys.append((round_number, gold_skill_id))
-        expected_request = build_formal_generator_request(
+        request_builder = (
+            run003.build_formal_generator_request
+            if run003_mode
+            else build_formal_generator_request
+        )
+        expected_request = request_builder(
             skills,
             commit_a=expected_commit_a,
             gold_skill_id=gold_skill_id,
@@ -1061,6 +1150,7 @@ def validate_agent_pack(
             role="generator",
             commit_a=expected_commit_a,
             seen_thread_ids=seen_thread_ids,
+            run003_mode=run003_mode,
         )
         retry_records.extend({"role": "generator", **item} for item in row_retries)
         agent_run_evidence.append(lineage)
@@ -1071,14 +1161,25 @@ def validate_agent_pack(
             ):
                 raise ValueError("Run002 rejected Generator outcome mismatch")
             continue
-        imported = import_generator_response(
-            response,
-            run_id=RUN_ID,
-            request_id=cast(str, request["request_sha256"]),
-            expected_gold_skill_id=cast(str, quota["gold_skill_id"]),
-            expected_negative_quota=cast(int, quota["negative_quota"]),
-            expected_positive_only_quota=cast(int, quota["positive_only_quota"]),
-            canonical_skill_ids=canonical_ids,
+        imported = (
+            run003.import_generator_response(
+                response,
+                request_id=cast(str, request["request_sha256"]),
+                expected_gold_skill_id=cast(str, quota["gold_skill_id"]),
+                expected_negative_quota=cast(int, quota["negative_quota"]),
+                expected_positive_only_quota=cast(int, quota["positive_only_quota"]),
+                canonical_skill_ids=canonical_ids,
+            )
+            if run003_mode
+            else import_generator_response(
+                response,
+                run_id=RUN_ID,
+                request_id=cast(str, request["request_sha256"]),
+                expected_gold_skill_id=cast(str, quota["gold_skill_id"]),
+                expected_negative_quota=cast(int, quota["negative_quota"]),
+                expected_positive_only_quota=cast(int, quota["positive_only_quota"]),
+                canonical_skill_ids=canonical_ids,
+            )
         )
         if row.get("candidate_outcomes") != imported["candidate_outcomes"]:
             raise ValueError("Run002 candidate import outcome mismatch")
@@ -1161,7 +1262,10 @@ def validate_agent_pack(
             ):
                 raise ValueError("Run002 quarantined or duplicate review candidate")
             candidate = candidates[cast(str, review_candidate_id)]
-            expected = build_reviewer_request(
+            reviewer_builder = (
+                run003.build_reviewer_request if run003_mode else build_reviewer_request
+            )
+            expected = reviewer_builder(
                 candidate,
                 skills,
                 role=role,
@@ -1178,6 +1282,7 @@ def validate_agent_pack(
                 role=role,
                 commit_a=expected_commit_a,
                 seen_thread_ids=seen_thread_ids,
+                run003_mode=run003_mode,
             )
             retry_records.extend({"role": role, **item} for item in row_retries)
             agent_run_evidence.append(lineage)
@@ -1204,6 +1309,15 @@ def validate_agent_pack(
         "commit_a",
         "authority_manifest_sha256",
     }
+    if run003_mode:
+        metadata_fields.update(
+            {
+                "event_policy_version",
+                "transport_diagnostic_count",
+                "transport_diagnostic_types",
+                "transport_diagnostics_observed",
+            }
+        )
     if set(metadata) != metadata_fields:
         raise ValueError("Run002 Agent metadata fields mismatch")
     source_ledger_names = {
@@ -1216,11 +1330,11 @@ def validate_agent_pack(
         filename: source_file_sha256[filename] for filename in source_ledger_names
     }
     if (
-        metadata["schema_version"] != "router-v2-run002-agent-run-metadata-v1"
-        or metadata["run_id"] != RUN_ID
+        metadata["schema_version"] != active_metadata_schema
+        or metadata["run_id"] != active_run_id
         or metadata["commit_a"] != expected_commit_a
         or metadata["authority_manifest_sha256"]
-        != source_file_sha256[AUTHORITY_MANIFEST_FILENAME]
+        != source_file_sha256[active_manifest_filename]
         or metadata["source_file_sha256"] != expected_source_hashes
         or metadata["selection_authority"] != workflow.SELECTION_AUTHORITY
     ):
@@ -1231,12 +1345,15 @@ def validate_agent_pack(
     }
     evidence_by_role = {
         role: [item for item in agent_run_evidence if item["role"] == role]
-        for role in AGENT_CONFIGS
+        for role in active_agent_configs
     }
     metadata_roles = metadata.get("roles")
-    if type(metadata_roles) is not dict or set(metadata_roles) != set(AGENT_CONFIGS):
+    if type(metadata_roles) is not dict or set(metadata_roles) != set(
+        active_agent_configs
+    ):
         raise ValueError("Run002 Agent role metadata mismatch")
-    for role in AGENT_CONFIGS:
+    all_envelopes: list[dict[str, Any]] = []
+    for role in active_agent_configs:
         role_metadata = metadata_roles[role]
         if type(role_metadata) is not dict:
             raise ValueError("Run002 Agent role metadata must be an object")
@@ -1250,13 +1367,14 @@ def validate_agent_pack(
             for row in role_rows_by_name[role]
             for invocation in cast(list[dict[str, Any]], row["invocations"])
         ]
+        all_envelopes.extend(envelopes)
         provider_models: list[str | None] = []
         for envelope in envelopes:
             model = cast(str | None, envelope["returned_model"])
             if model not in provider_models:
                 provider_models.append(model)
         expected_role_metadata = {
-            "config": deepcopy(AGENT_CONFIGS[role]),
+            "config": deepcopy(active_agent_configs[role]),
             "request_count": len(role_rows_by_name[role]),
             "invocation_count": len(envelopes),
             "session_or_thread_ids": expected_threads,
@@ -1280,8 +1398,50 @@ def validate_agent_pack(
                 cast(int, envelope["descendant_agent_count"]) for envelope in envelopes
             ),
         }
+        if run003_mode:
+            role_diagnostic_count = sum(
+                cast(int, envelope["transport_diagnostic_count"])
+                for envelope in envelopes
+            )
+            expected_role_metadata.update(
+                {
+                    "event_policy_version": run003.EVENT_POLICY_VERSION,
+                    "transport_diagnostic_count": role_diagnostic_count,
+                    "transport_diagnostic_types": sorted(
+                        {
+                            cast(str, diagnostic_type)
+                            for envelope in envelopes
+                            for diagnostic_type in cast(
+                                list[str], envelope["transport_diagnostic_types"]
+                            )
+                        }
+                    ),
+                    "transport_diagnostics_observed": role_diagnostic_count > 0,
+                }
+            )
         if role_metadata != expected_role_metadata:
             raise ValueError("Run002 Agent role metadata binding mismatch")
+    if run003_mode:
+        diagnostic_count = sum(
+            cast(int, envelope["transport_diagnostic_count"])
+            for envelope in all_envelopes
+        )
+        if (
+            metadata["event_policy_version"] != run003.EVENT_POLICY_VERSION
+            or metadata["transport_diagnostic_count"] != diagnostic_count
+            or metadata["transport_diagnostic_types"]
+            != sorted(
+                {
+                    cast(str, diagnostic_type)
+                    for envelope in all_envelopes
+                    for diagnostic_type in cast(
+                        list[str], envelope["transport_diagnostic_types"]
+                    )
+                }
+            )
+            or metadata["transport_diagnostics_observed"] is not (diagnostic_count > 0)
+        ):
+            raise ValueError("Run003 Agent diagnostic metadata mismatch")
     schedules = metadata.get("review_schedule_sha256")
     if type(schedules) is not dict or schedules != {
         role: canonical_sha256(
@@ -1372,9 +1532,9 @@ def validate_agent_pack(
             [row["candidate_id"] for row in selected]
         ),
     }
-    return {
+    validation = {
         "status": "VALID",
-        "run_id": RUN_ID,
+        "run_id": active_run_id,
         "first_read_timestamp": first_read_timestamp,
         "tasks": selected,
         "task_count": 128,
@@ -1400,15 +1560,45 @@ def validate_agent_pack(
         "retry_records": retry_records,
         "agent_run_evidence": agent_run_evidence,
         "authority_manifest": authority_manifest,
-        "authority_manifest_sha256": source_file_sha256[AUTHORITY_MANIFEST_FILENAME],
+        "authority_manifest_sha256": source_file_sha256[active_manifest_filename],
         "deterministic_selection_authority": deterministic_selection_authority,
         "candidate_outcomes": dict(sorted(outcomes.items())),
         "source_file_sha256": source_file_sha256,
         "source_skill_index_sha256": canonical_sha256(skills),
-        "agent_configs": deepcopy(AGENT_CONFIGS),
+        "agent_configs": deepcopy(active_agent_configs),
+        "system_prompt_sha256": {
+            role: canonical_sha256(
+                role_rows_by_name[role][0]["request"]["system_prompt"]
+            )
+            for role in active_agent_configs
+        },
+        "response_schema_sha256": {
+            role: canonical_sha256(
+                role_rows_by_name[role][0]["request"]["response_schema"]
+            )
+            for role in active_agent_configs
+        },
+        "agent_config_sha256": {
+            role: canonical_sha256(active_agent_configs[role])
+            for role in active_agent_configs
+        },
         "contamination_checked_candidate_count": len(contamination_rows),
         "duplicate_and_contamination_checks_passed": True,
     }
+    if run003_mode:
+        validation.update(
+            {
+                "event_policy_version": run003.EVENT_POLICY_VERSION,
+                "transport_diagnostic_count": metadata["transport_diagnostic_count"],
+                "transport_diagnostic_types": deepcopy(
+                    metadata["transport_diagnostic_types"]
+                ),
+                "transport_diagnostics_observed": metadata[
+                    "transport_diagnostics_observed"
+                ],
+            }
+        )
+    return validation
 
 
 def _canonical_json_bytes(value: object) -> bytes:
@@ -1563,9 +1753,18 @@ def read_frozen_dataset_documents(repository_root: Path) -> dict[str, bytes]:
 
 
 def _validated_evaluation_tasks(
-    frozen_documents: dict[str, bytes], *, commit_a: str
+    frozen_documents: dict[str, bytes], *, commit_a: str, run003_mode: bool = False
 ) -> list[dict[str, Any]]:
     from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
+
+    if run003_mode:
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
+
+        active_run_id = run003.RUN_ID
+        active_manifest_schema = "router-v2-run003-dataset-manifest-v1"
+    else:
+        active_run_id = RUN_ID
+        active_manifest_schema = "router-v2-run002-dataset-manifest-v1"
 
     if set(frozen_documents) != set(DATASET_FREEZE_FILENAMES):
         raise ValueError("Run002 evaluation dataset file set mismatch")
@@ -1648,8 +1847,8 @@ def _validated_evaluation_tasks(
         frozen_documents["blind-v2-review-summary.json"]
     ).hexdigest()
     if (
-        manifest.get("schema_version") != "router-v2-run002-dataset-manifest-v1"
-        or manifest.get("run_id") != RUN_ID
+        manifest.get("schema_version") != active_manifest_schema
+        or manifest.get("run_id") != active_run_id
         or manifest.get("commit_a") != commit_a
         or manifest.get("task_count") != 128
         or manifest.get("negative_labeled_task_count") != 96
@@ -1676,7 +1875,33 @@ def _validated_evaluation_tasks(
         or type(manifest.get("deterministic_selection_authority")) is not dict
         or not _lowercase_sha256(manifest.get("authority_manifest_sha256"))
     ):
-        raise ValueError("Run002 evaluation manifest mismatch")
+        raise ValueError(
+            f"{'Run003' if run003_mode else 'Run002'} evaluation manifest mismatch"
+        )
+    if run003_mode:
+        diagnostic_count = manifest.get("transport_diagnostic_count")
+        diagnostic_types = manifest.get("transport_diagnostic_types")
+        if (
+            manifest.get("run001_terminal_sha256") != run003.RUN001_TERMINAL_SHA256
+            or manifest.get("run002_terminal_evidence_bundle_sha256")
+            != run003.RUN002_TERMINAL_EVIDENCE_BUNDLE_SHA256
+            or manifest.get("replacement_reason") != run003.REPLACEMENT_REASON
+            or manifest.get("run001_candidates_reused") is not False
+            or manifest.get("run002_candidates_reused") is not False
+            or manifest.get("run001_model_scores_observed") is not False
+            or manifest.get("run002_model_scores_observed") is not False
+            or manifest.get("model_scores_observed") is not False
+            or manifest.get("event_policy_version") != run003.EVENT_POLICY_VERSION
+            or type(diagnostic_count) is not int
+            or diagnostic_count < 0
+            or type(diagnostic_types) is not list
+            or any(type(value) is not str or not value for value in diagnostic_types)
+            or diagnostic_types != sorted(set(diagnostic_types))
+            or type(manifest.get("transport_diagnostics_observed")) is not bool
+            or manifest.get("transport_diagnostics_observed")
+            is not (diagnostic_count > 0)
+        ):
+            raise ValueError("Run003 evaluation diagnostic manifest mismatch")
     workflow._jsonl_no_duplicate_keys(
         frozen_documents["blind-v2-tasks.jsonl"], "Run002 blind-v2 tasks"
     )
@@ -1691,8 +1916,20 @@ def build_evaluation_bindings(
     model_bindings: list[dict[str, Any]],
     frozen_documents: dict[str, bytes],
     commit_a: str,
+    run003_mode: bool = False,
 ) -> dict[str, Any]:
     from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
+
+    if run003_mode:
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
+
+        active_run_id = run003.RUN_ID
+        active_schema = "router-v2-run003-evaluation-bindings-v1"
+        active_output_namespace = run003.OUTPUT_NAMESPACE
+    else:
+        active_run_id = RUN_ID
+        active_schema = "router-v2-run002-evaluation-bindings-v1"
+        active_output_namespace = OUTPUT_NAMESPACE
 
     if not _lowercase_commit(commit_a):
         raise ValueError("Run002 evaluation Commit A mismatch")
@@ -1705,7 +1942,9 @@ def build_evaluation_bindings(
         raise ValueError("Run002 preregistration semantic hash mismatch")
     skills = workflow._project_canonical_skills(canonical_skills)
     models = workflow._validated_evaluation_model_bindings(model_bindings)
-    tasks = _validated_evaluation_tasks(frozen_documents, commit_a=commit_a)
+    tasks = _validated_evaluation_tasks(
+        frozen_documents, commit_a=commit_a, run003_mode=run003_mode
+    )
     manifest = cast(
         dict[str, Any],
         json.loads(
@@ -1714,8 +1953,8 @@ def build_evaluation_bindings(
         ),
     )
     return {
-        "schema_version": "router-v2-run002-evaluation-bindings-v1",
-        "run_id": RUN_ID,
+        "schema_version": active_schema,
+        "run_id": active_run_id,
         "commit_a": commit_a,
         "preregistration_file_sha256": hashlib.sha256(
             preregistration_bytes
@@ -1746,7 +1985,7 @@ def build_evaluation_bindings(
         "evaluator": deepcopy(preregistration["evaluator"]),
         "router_decision": "KEEP_BASELINE",
         "default_router_unchanged": True,
-        "output_namespace": OUTPUT_NAMESPACE.as_posix(),
+        "output_namespace": active_output_namespace.as_posix(),
         "evaluation_kernel": "UNCHANGED_ROUTER_V2_BLIND_V2",
     }
 
@@ -1759,8 +1998,20 @@ def validate_evaluation_inputs(
     frozen_bindings: dict[str, Any],
     input_artifacts: dict[str, bytes],
     attempt_started_artifact: bytes,
+    run003_mode: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
+
+    if run003_mode:
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
+
+        active_run_id = run003.RUN_ID
+        active_schema = "router-v2-run003-evaluation-bindings-v1"
+        active_output_namespace = run003.OUTPUT_NAMESPACE
+    else:
+        active_run_id = RUN_ID
+        active_schema = "router-v2-run002-evaluation-bindings-v1"
+        active_output_namespace = OUTPUT_NAMESPACE
 
     if (
         not _lowercase_commit(commit_a)
@@ -1774,13 +2025,12 @@ def validate_evaluation_inputs(
             "blind-v2-manifest.json",
             "review-summary.json",
         }
-        or frozen_bindings.get("schema_version")
-        != "router-v2-run002-evaluation-bindings-v1"
-        or frozen_bindings.get("run_id") != RUN_ID
+        or frozen_bindings.get("schema_version") != active_schema
+        or frozen_bindings.get("run_id") != active_run_id
         or frozen_bindings.get("commit_a") != commit_a
         or frozen_bindings.get("router_decision") != "KEEP_BASELINE"
         or frozen_bindings.get("default_router_unchanged") is not True
-        or frozen_bindings.get("output_namespace") != OUTPUT_NAMESPACE.as_posix()
+        or frozen_bindings.get("output_namespace") != active_output_namespace.as_posix()
         or frozen_bindings.get("evaluation_kernel") != "UNCHANGED_ROUTER_V2_BLIND_V2"
     ):
         raise ValueError("Run002 pre-scoring authority mismatch")
@@ -1789,7 +2039,9 @@ def validate_evaluation_inputs(
         "blind-v2-manifest.json": input_artifacts["blind-v2-manifest.json"],
         "blind-v2-review-summary.json": input_artifacts["review-summary.json"],
     }
-    tasks = _validated_evaluation_tasks(frozen_documents, commit_a=commit_a)
+    tasks = _validated_evaluation_tasks(
+        frozen_documents, commit_a=commit_a, run003_mode=run003_mode
+    )
     dataset = cast(dict[str, Any], frozen_bindings["blind_v2_dataset"])
     preregistration = cast(
         dict[str, Any],

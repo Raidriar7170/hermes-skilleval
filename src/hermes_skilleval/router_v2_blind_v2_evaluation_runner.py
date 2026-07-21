@@ -1556,6 +1556,7 @@ def build_reviewer_request(
 
 def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
     from hermes_skilleval import router_v2_blind_v2_run002 as run002
+    from hermes_skilleval import router_v2_blind_v2_run003 as run003
 
     request_fields = {
         "schema_version",
@@ -1573,6 +1574,8 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
         in {
             "router-v2-run002-generation-request-v1",
             "router-v2-run002-review-request-v1",
+            "router-v2-run003-generation-request-v1",
+            "router-v2-run003-review-request-v1",
         }
         and type(request.get("input")) is dict
         and (
@@ -1607,8 +1610,16 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
         and request["timeout_seconds"] == config["timeout_seconds"],
         "request timeout mismatch",
     )
-    request_is_run002 = role == "generator" and _canonical_contract_json_equal(
-        request["response_schema"], run002.GENERATOR_RESPONSE_SCHEMA
+    request_is_run003 = request["schema_version"] in {
+        "router-v2-run003-generation-request-v1",
+        "router-v2-run003-review-request-v1",
+    }
+    request_is_run002 = (
+        not request_is_run003
+        and role == "generator"
+        and _canonical_contract_json_equal(
+            request["response_schema"], run002.GENERATOR_RESPONSE_SCHEMA
+        )
     )
     raw_request_input = request["input"]
     request_is_run002_formal = (
@@ -1616,11 +1627,21 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
         and type(raw_request_input) is dict
         and raw_request_input.get("formal_data") is True
     )
+    request_is_run003_formal = (
+        request_is_run003
+        and role == "generator"
+        and type(raw_request_input) is dict
+        and raw_request_input.get("formal_data") is True
+    )
     request_is_run002_reviewer = (
         role in {"reviewer_a", "reviewer_b"}
         and request["schema_version"] == "router-v2-run002-review-request-v1"
     )
-    if request_is_run002:
+    request_is_run003_reviewer = (
+        role in {"reviewer_a", "reviewer_b"}
+        and request["schema_version"] == "router-v2-run003-review-request-v1"
+    )
+    if request_is_run002 or (request_is_run003 and role == "generator"):
         request_input_fields = {
             "run_id",
             "synthetic_canary",
@@ -1628,7 +1649,7 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             "canonical_skills",
             "quota",
         }
-        if request_is_run002_formal:
+        if request_is_run002_formal or request_is_run003_formal:
             request_input_fields.add("rules")
     elif role == "generator":
         request_input_fields = {"canonical_skills", "rules", "quota"}
@@ -1646,6 +1667,81 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
     )
     canonical_ids = _canonical_skill_ids(request_input["canonical_skills"])
     if role == "generator":
+        if request_is_run003:
+            _require(
+                request["schema_version"] == "router-v2-run003-generation-request-v1",
+                "Run003 generator request schema mismatch",
+            )
+            synthetic_canary = request_input["synthetic_canary"]
+            formal_data = request_input["formal_data"]
+            _require(
+                request_input["run_id"] == run003.RUN_ID
+                and type(synthetic_canary) is bool
+                and type(formal_data) is bool
+                and formal_data is (not synthetic_canary),
+                "Run003 generator request authority mismatch",
+            )
+            _require(
+                request["system_prompt"]
+                == (
+                    run003.GENERATOR_SYSTEM_PROMPT
+                    if synthetic_canary
+                    else run003.FORMAL_GENERATOR_SYSTEM_PROMPT
+                ),
+                "Run003 generator system prompt mismatch",
+            )
+            _require(
+                _canonical_contract_json_equal(
+                    request["response_schema"], run003.GENERATOR_RESPONSE_SCHEMA
+                ),
+                "Run003 generator response schema mismatch",
+            )
+            if not synthetic_canary:
+                _require(
+                    request_input["rules"] == run003.GENERATOR_RULES,
+                    "Run003 generator rules mismatch",
+                )
+                expected_authority = run003._request_authority(
+                    role="generator",
+                    commit_a=cast(str, request["authority"].get("commit_a"))
+                    if type(request["authority"]) is dict
+                    else "",
+                    system_prompt=run003.FORMAL_GENERATOR_SYSTEM_PROMPT,
+                    response_schema=run003.GENERATOR_RESPONSE_SCHEMA,
+                )
+                _require(
+                    request["authority"] == expected_authority,
+                    "Run003 generator Commit A authority mismatch",
+                )
+            quota = _exact_object_fields(
+                request_input["quota"],
+                {
+                    "gold_skill_id",
+                    "negative_quota",
+                    "positive_only_quota",
+                    "response_candidate_count",
+                    "round_number",
+                },
+                "Run003 generator quota",
+            )
+            round_number = quota["round_number"]
+            _require(
+                quota["gold_skill_id"] in canonical_ids
+                and type(quota["negative_quota"]) is int
+                and quota["negative_quota"] >= 0
+                and type(quota["positive_only_quota"]) is int
+                and quota["positive_only_quota"] >= 0
+                and quota["negative_quota"] + quota["positive_only_quota"]
+                == run003.GENERATOR_RESPONSE_SIZE
+                and quota["response_candidate_count"] == run003.GENERATOR_RESPONSE_SIZE
+                and type(round_number) is int
+                and (
+                    (synthetic_canary and round_number == 0)
+                    or (not synthetic_canary and round_number in {1, 2})
+                ),
+                "Run003 generator quota mismatch",
+            )
+            return request
         if request_is_run002:
             _require(
                 request["schema_version"] == "router-v2-run002-generation-request-v1",
@@ -1768,6 +1864,7 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             in {
                 "router-v2-blind-v2-review-request-v1",
                 "router-v2-run002-review-request-v1",
+                "router-v2-run003-review-request-v1",
             },
             "reviewer request schema mismatch",
         )
@@ -1798,6 +1895,19 @@ def validate_agent_request(request: dict[str, Any]) -> dict[str, Any]:
             _require(
                 request["authority"] == expected_authority,
                 "Run002 reviewer Commit A authority mismatch",
+            )
+        elif request_is_run003_reviewer:
+            expected_authority = run003._request_authority(
+                role=cast(str, role),
+                commit_a=cast(str, request["authority"].get("commit_a"))
+                if type(request["authority"]) is dict
+                else "",
+                system_prompt=REVIEWER_SYSTEM_PROMPT,
+                response_schema=cast(dict[str, Any], request["response_schema"]),
+            )
+            _require(
+                request["authority"] == expected_authority,
+                "Run003 reviewer Commit A authority mismatch",
             )
         _exact_lowercase_hex(request_input["task_id"], length=24, label="candidate id")
         _nonempty_string(request_input["prompt_text"], "reviewer prompt text")
@@ -2063,6 +2173,10 @@ def validate_agent_response(
     request = validate_agent_request(request)
     if request["role"] == "generator":
         from hermes_skilleval import router_v2_blind_v2_run002 as run002
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
+
+        if request["schema_version"] == "router-v2-run003-generation-request-v1":
+            return run003.validate_generator_response_structure(response)
 
         if _canonical_contract_json_equal(
             request["response_schema"], run002.GENERATOR_RESPONSE_SCHEMA
@@ -2079,6 +2193,10 @@ def validate_agent_invocation_envelope(
     seen_session_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     request = validate_agent_request(request)
+    request_is_run003 = request["schema_version"] in {
+        "router-v2-run003-generation-request-v1",
+        "router-v2-run003-review-request-v1",
+    }
     _require(type(envelope) is dict, "agent invocation envelope must be an object")
     identity_fields = {"session_id", "thread_id"}.intersection(envelope)
     _require(
@@ -2103,6 +2221,15 @@ def validate_agent_invocation_envelope(
         "response",
         *identity_fields,
     }
+    if request_is_run003:
+        expected_fields.update(
+            {
+                "event_policy_version",
+                "transport_diagnostic_count",
+                "transport_diagnostic_types",
+                "transport_diagnostics_observed",
+            }
+        )
     envelope = _exact_object_fields(
         envelope, expected_fields, "agent invocation envelope"
     )
@@ -2145,6 +2272,33 @@ def validate_agent_invocation_envelope(
         "timeout mismatch",
     )
     _validate_host_lineage(envelope, label="agent invocation envelope")
+    if request_is_run003:
+        from hermes_skilleval import router_v2_blind_v2_run003 as run003
+
+        diagnostic_count = envelope["transport_diagnostic_count"]
+        diagnostic_types = envelope["transport_diagnostic_types"]
+        _require(
+            envelope["event_policy_version"] == run003.EVENT_POLICY_VERSION
+            and type(diagnostic_count) is int
+            and diagnostic_count >= 0
+            and type(diagnostic_types) is list
+            and all(
+                type(value) is str
+                and value
+                in {
+                    "TEMPORARY_CONNECTION_RESET",
+                    "TEMPORARY_STREAM_DISCONNECTED",
+                    "TEMPORARY_TLS_DISCONNECT",
+                    "TEMPORARY_TRANSPORT_RETRY",
+                    "TEMPORARY_TRANSPORT_TIMEOUT",
+                }
+                for value in diagnostic_types
+            )
+            and diagnostic_types == sorted(set(diagnostic_types))
+            and type(envelope["transport_diagnostics_observed"]) is bool
+            and envelope["transport_diagnostics_observed"] is (diagnostic_count > 0),
+            "Run003 transport diagnostic envelope mismatch",
+        )
     retry_count = envelope["transport_retry_count"]
     _require(
         type(retry_count) is int and retry_count in {0, 1},

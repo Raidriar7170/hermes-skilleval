@@ -39,7 +39,17 @@ def _bind_frozen_repository_root_to_checkout(
 ) -> None:
     """Keep the frozen checkout authority portable across macOS and Linux CI."""
 
-    monkeypatch.setattr(_module(), "FROZEN_REPOSITORY_ROOT", ROOT)
+    module = _module()
+    assert module.canonical_sha256(module._authority_document()) == (
+        module.FROZEN_SUCCESSOR_AUTHORITY_SHA256
+    )
+    monkeypatch.setattr(module, "FROZEN_REPOSITORY_ROOT", ROOT)
+    test_root_authority_sha256 = module.canonical_sha256(module._authority_document())
+    monkeypatch.setattr(
+        module,
+        "FROZEN_SUCCESSOR_AUTHORITY_SHA256",
+        test_root_authority_sha256,
+    )
 
 
 def _findings(schema: Any) -> tuple[str, ...]:
@@ -119,6 +129,32 @@ def test_successor_authority_constants_are_frozen() -> None:
         "reviewer_b": "59e5ad63b57a7a6d0f519368faf3db6564e786a7320f91e71c08904af6699b8b",
     }
     assert module.historical_authority_findings() == ()
+
+
+def test_portability_fixture_checks_production_oracle_before_monkeypatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _module()
+    monkeypatch.setattr(
+        module,
+        "FIXED_EXEC_FLAGS",
+        (*module.FIXED_EXEC_FLAGS, "--protected-field-drift"),
+    )
+
+    class RecordingMonkeyPatch:
+        def __init__(self) -> None:
+            self.calls: list[tuple[object, str, object]] = []
+
+        def setattr(self, target: object, name: str, value: object) -> None:
+            self.calls.append((target, name, value))
+
+    recording = RecordingMonkeyPatch()
+    fixture_implementation = inspect.unwrap(_bind_frozen_repository_root_to_checkout)
+
+    with pytest.raises(AssertionError):
+        fixture_implementation(recording)
+
+    assert recording.calls == []
 
 
 def test_recursive_validator_reports_nested_untyped_const_path() -> None:
@@ -754,6 +790,8 @@ def test_preflight_rejects_host_version_drift_before_any_launch(
 
 def test_default_host_probe_accepts_and_binds_pinned_codex_symlink() -> None:
     module = _module()
+    if not module.CODEX_EXECUTABLE.exists():
+        pytest.skip("pinned macOS Codex executable is unavailable on this host")
     assert module.CODEX_EXECUTABLE.is_symlink()
     probe = module._default_host_probe(module.CODEX_EXECUTABLE)
     assert probe == {

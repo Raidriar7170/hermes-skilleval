@@ -2,7 +2,7 @@
 
 Router V2 pilot-002 improved internal held-out ranking and negative-skill risk, but it used only 16 positive tasks, 9 supported negative labels, and model-only review. The original final blind-v2 plan required an external human-authored 64/48 pack; the user has now explicitly replaced that blocked plan with a larger, fully agent-generated protocol using two role-isolated reviewers and unanimous acceptance, while preserving the frozen Arm A/C models, gate, and one-attempt boundary.
 
-The first successor execution, Run 001, later stopped before dataset construction because model-authored candidate indexes used `1..16`. Run 002 preserves the Run 001 terminal, reuses none of its responses, removes candidate identity from Generator output, and assigns every index and opaque ID deterministically in the host before continuing the same 128/96 research contract.
+The first successor execution, Run 001, later stopped before dataset construction because model-authored candidate indexes used `1..16`. Run 002 preserved the Run 001 terminal, reused none of its responses, removed candidate identity from Generator output, and assigned every index and opaque ID deterministically in the host. Its single synthetic canary then ended fail-closed because the otherwise complete invocation contained four reconnect diagnostics that the frozen event validator treated as fatal. Run 003 is a new pre-data authority that preserves the Run 001 terminal and the exact Run 002 private evidence bundle, reuses no predecessor candidate, and accepts only specifically validated transient transport diagnostics inside an otherwise complete, zero-tool, zero-descendant invocation. It does not invent a standalone Run 002 terminal.
 
 ## What Changes
 
@@ -14,6 +14,7 @@ The first successor execution, Run 001, later stopped before dataset constructio
 - Apply preregistered deterministic contamination checks and hash-based selection without loading Arm A/C; keep raw generation/review ledgers outside Git and bind their hashes, prompts, model configurations, and run lineage in Commit B.
 - Run one terminal Arm A versus Arm C evaluation for seeds `7170`, `7171`, and `7172`, retain complete failure evidence, apply the unchanged pilot-002 gate mechanically, and return `KEEP_BASELINE` regardless of outcome.
 - Restrict every result claim to the agent-constructed, dual-agent-unanimous blind set; never describe it as human-reviewed, statistically independent, or proof of generalization to human-authored real-world tasks.
+- Route the still-pending construction, freeze, model-smoke, and single evaluation lifecycle through `router-v2-v4-successor-blind-v2-003`, with diagnostic counts/types preserved in private metadata and the frozen manifest; this preparation performs no real Agent call, dataset freeze, model load, or evaluation.
 
 ## Capabilities
 

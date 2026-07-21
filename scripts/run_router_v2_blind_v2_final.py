@@ -17,6 +17,7 @@ from hermes_skilleval.router_v2_blind_v2_evaluation import canonical_sha256
 from hermes_skilleval import router_v2_blind_v2_evaluation_runner as workflow
 from hermes_skilleval import router_v2_blind_v2_output_schema_preflight as formal
 from hermes_skilleval import router_v2_blind_v2_run002 as run002
+from hermes_skilleval import router_v2_blind_v2_run003 as run003
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -114,6 +115,84 @@ def _run002_generator_canary(_args: argparse.Namespace) -> int:
     )
     _write_stdout(result)
     return 0 if result["status"] == "RUN002_GENERATOR_CANARY_PASSED" else 2
+
+
+def run_run003_generator_canary(
+    *,
+    invocation_runner: Callable[
+        ..., dict[str, Any]
+    ] = formal.run_formal_agent_invocation,
+    authority_root: Path,
+    authority_manifest: dict[str, Any],
+    private_root: Path,
+    repository_root: Path = REPOSITORY_ROOT,
+) -> dict[str, Any]:
+    """Invoke one synthetic Generator host under the explicit Run003 policy."""
+
+    _require(
+        authority_root.is_absolute()
+        and authority_root.is_dir()
+        and not authority_root.is_symlink()
+        and private_root == authority_root / "generator-canary",
+        "Run003 canary private authority root mismatch",
+    )
+    run003.persist_authority_manifest(authority_root, authority_manifest)
+    result = invocation_runner(
+        request=run003.build_generator_canary_request(),
+        private_root=private_root,
+        repository_root=repository_root.resolve(strict=True),
+        seen_thread_ids=set(),
+        event_policy_version=run003.EVENT_POLICY_VERSION,
+    )
+    if result.get("status") != "VALID":
+        return {
+            "status": "RUN003_GENERATOR_CANARY_FAILED",
+            "run_id": run003.RUN_ID,
+            "failure_status": result.get("status"),
+            "host_invocation_count": 1,
+            "retry_count": 0,
+            "formal_data_written": False,
+            "router_loaded": False,
+        }
+    try:
+        receipt = run003.run_generator_canary(result.get("response"))
+    except (TypeError, ValueError):
+        return {
+            "status": "RUN003_GENERATOR_CANARY_FAILED",
+            "run_id": run003.RUN_ID,
+            "failure_status": "INVALID_SYNTHETIC_RESPONSE",
+            "host_invocation_count": 1,
+            "retry_count": 0,
+            "formal_data_written": False,
+            "router_loaded": False,
+        }
+    envelope = cast(
+        dict[str, Any], cast(dict[str, Any], result["invocation"])["envelope"]
+    )
+    return {
+        **receipt,
+        "host_invocation_count": 1,
+        "retry_count": 0,
+        "transport_diagnostic_count": envelope["transport_diagnostic_count"],
+        "transport_diagnostic_types": envelope["transport_diagnostic_types"],
+        "transport_diagnostics_observed": envelope["transport_diagnostics_observed"],
+    }
+
+
+def _run003_generator_canary(_args: argparse.Namespace) -> int:
+    context = _run003_commit_a_context()
+    authority_root = cast(Path, context["staging_root"])
+    if not authority_root.exists():
+        authority_root.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        authority_root.mkdir(mode=0o700)
+    result = run_run003_generator_canary(
+        authority_root=authority_root,
+        authority_manifest=cast(dict[str, Any], context["authority_manifest"]),
+        private_root=authority_root / "generator-canary",
+        repository_root=cast(Path, context["repository"]),
+    )
+    _write_stdout(result)
+    return 0 if result["status"] == "RUN003_GENERATOR_CANARY_PASSED" else 2
 
 
 def _canonical_bytes(value: Any) -> bytes:
@@ -448,6 +527,67 @@ def _run002_commit_a_context() -> dict[str, Any]:
         "run002_authority": True,
         "commit_a": commit_a,
         "staging_root": run002.private_evidence_root(commit_a),
+        "authority_manifest": manifest,
+    }
+
+
+def _run003_commit_a_context() -> dict[str, Any]:
+    """Bind Run003 to the immutable predecessor evidence and current Git commit."""
+
+    context = _successor_frozen_input_context()
+    repository = cast(Path, context["repository"])
+    run001_terminal = (
+        repository
+        / run003.OUTPUT_NAMESPACE.parent
+        / f"{run003.RUN001_RUN_ID}/candidate-generation-terminal.json"
+    )
+    run002_terminal = (
+        repository
+        / run003.OUTPUT_NAMESPACE.parent
+        / f"{run003.RUN002_RUN_ID}/candidate-generation-terminal.json"
+    )
+    _require(
+        run001_terminal.is_file()
+        and _sha256_bytes(run001_terminal.read_bytes())
+        == run003.RUN001_TERMINAL_SHA256,
+        "Run003 Run001 terminal authority mismatch",
+    )
+    _require(
+        not run002_terminal.exists() and not run002_terminal.is_symlink(),
+        "Run003 forbids an invented Run002 standalone terminal",
+    )
+    _require(
+        workflow._git(repository, "status", "--porcelain", "--untracked-files=all")
+        == "",
+        "Run003 Commit A worktree must be clean",
+    )
+    commit_a_lineage = workflow._git(
+        repository, "rev-list", "--parents", "-n", "1", "HEAD"
+    ).split()
+    _require(
+        len(commit_a_lineage) == 2,
+        "Run003 Commit A must be a direct non-merge child with one single parent",
+    )
+    commit_a = commit_a_lineage[0]
+    commit_a_parents = commit_a_lineage[1:]
+    _require(
+        commit_a_parents == [run003.RUN002_TERMINAL_GIT_COMMIT],
+        "Run003 Commit A single parent authority mismatch",
+    )
+    _require(
+        commit_a != run003.RUN002_TERMINAL_GIT_COMMIT,
+        "Run003 current Git authority mismatch",
+    )
+    manifest = run003.build_authority_manifest(
+        commit_a=commit_a,
+        current_git_commit=commit_a,
+        commit_a_parent_git_commits=commit_a_parents,
+    )
+    return {
+        **context,
+        "run003_authority": True,
+        "commit_a": commit_a,
+        "staging_root": run003.private_evidence_root(commit_a),
         "authority_manifest": manifest,
     }
 
@@ -1174,11 +1314,46 @@ def _prepare_run002_staging_root(context: dict[str, Any]) -> Path:
     return root
 
 
+def _prepare_run003_staging_root(context: dict[str, Any]) -> Path:
+    """Create or resume the canary-only Run003 root under sealed authority."""
+
+    root = cast(Path, context["staging_root"])
+    manifest = run003.validate_authority_manifest(
+        context.get("authority_manifest"), expected_root=root
+    )
+    if not root.exists() and not root.is_symlink():
+        _prepare_successor_staging_root(context)
+    else:
+        _require(
+            root.is_absolute() and root.is_dir() and not root.is_symlink(),
+            "Run003 staging root mismatch",
+        )
+        allowed = {
+            run003.AUTHORITY_MANIFEST_FILENAME,
+            "generator-canary",
+        }
+        _require(
+            {path.name for path in root.iterdir()} <= allowed,
+            "Run003 construction cannot overwrite existing formal evidence",
+        )
+    run003.persist_authority_manifest(root, manifest)
+    invocation_root = root / "invocations"
+    if not invocation_root.exists():
+        invocation_root.mkdir(mode=0o700)
+    _require(
+        invocation_root.is_dir() and not invocation_root.is_symlink(),
+        "Run003 invocation root mismatch",
+    )
+    return root
+
+
 def _jsonl_bytes(rows: list[dict[str, Any]]) -> bytes:
     return b"".join(_canonical_bytes(row) for row in rows)
 
 
-def _role_metadata(rows: list[dict[str, Any]], *, role: str) -> dict[str, Any]:
+def _role_metadata(
+    rows: list[dict[str, Any]], *, role: str, run003_mode: bool = False
+) -> dict[str, Any]:
     invocations = [
         invocation
         for row in rows
@@ -1203,7 +1378,7 @@ def _role_metadata(rows: list[dict[str, Any]], *, role: str) -> dict[str, Any]:
         for envelope in envelopes
         if type(envelope.get("thread_id")) is str
     ]
-    return {
+    metadata: dict[str, Any] = {
         "config": deepcopy(workflow.AGENT_CONFIGS[role]),
         "request_count": len(rows),
         "invocation_count": len(invocations),
@@ -1224,6 +1399,27 @@ def _role_metadata(rows: list[dict[str, Any]], *, role: str) -> dict[str, Any]:
             for envelope in envelopes
         ),
     }
+    if run003_mode:
+        diagnostic_count = sum(
+            cast(int, envelope["transport_diagnostic_count"]) for envelope in envelopes
+        )
+        metadata.update(
+            {
+                "event_policy_version": run003.EVENT_POLICY_VERSION,
+                "transport_diagnostic_count": diagnostic_count,
+                "transport_diagnostic_types": sorted(
+                    {
+                        cast(str, diagnostic_type)
+                        for envelope in envelopes
+                        for diagnostic_type in cast(
+                            list[str], envelope["transport_diagnostic_types"]
+                        )
+                    }
+                ),
+                "transport_diagnostics_observed": diagnostic_count > 0,
+            }
+        )
+    return metadata
 
 
 def _persist_successor_ledgers(
@@ -1234,7 +1430,16 @@ def _persist_successor_ledgers(
     review_rows: dict[str, list[dict[str, Any]]],
     contamination_rows: list[dict[str, Any]],
     run002_authority_manifest: dict[str, Any] | None = None,
+    run003_authority_manifest: dict[str, Any] | None = None,
 ) -> None:
+    _require(
+        not (
+            run002_authority_manifest is not None
+            and run003_authority_manifest is not None
+        ),
+        "successor ledgers require one run authority",
+    )
+    run003_mode = run003_authority_manifest is not None
     ordered_reviews = {
         role: sorted(
             rows,
@@ -1252,16 +1457,22 @@ def _persist_successor_ledgers(
     }
     for filename, payload in payloads.items():
         formal._write_private_file(root / filename, payload)
-    metadata = {
+    metadata: dict[str, Any] = {
         "schema_version": "router-v2-blind-v2-agent-run-metadata-v1",
         "first_read_timestamp": first_read_timestamp,
         "roles": {
-            "generator": _role_metadata(generation_rows, role="generator"),
+            "generator": _role_metadata(
+                generation_rows, role="generator", run003_mode=run003_mode
+            ),
             "reviewer_a": _role_metadata(
-                ordered_reviews["reviewer_a"], role="reviewer_a"
+                ordered_reviews["reviewer_a"],
+                role="reviewer_a",
+                run003_mode=run003_mode,
             ),
             "reviewer_b": _role_metadata(
-                ordered_reviews["reviewer_b"], role="reviewer_b"
+                ordered_reviews["reviewer_b"],
+                role="reviewer_b",
+                run003_mode=run003_mode,
             ),
         },
         "review_schedule_sha256": {
@@ -1289,6 +1500,37 @@ def _persist_successor_ledgers(
                 ),
             }
         )
+    elif run003_authority_manifest is not None:
+        validated_manifest = run003.validate_authority_manifest(
+            run003_authority_manifest, expected_root=root
+        )
+        role_metadata = cast(dict[str, dict[str, Any]], metadata["roles"])
+        diagnostic_count = sum(
+            cast(int, row["transport_diagnostic_count"])
+            for row in role_metadata.values()
+        )
+        metadata.update(
+            {
+                "schema_version": "router-v2-run003-agent-run-metadata-v1",
+                "run_id": run003.RUN_ID,
+                "commit_a": validated_manifest["commit_a"],
+                "authority_manifest_sha256": _sha256_bytes(
+                    (root / run003.AUTHORITY_MANIFEST_FILENAME).read_bytes()
+                ),
+                "event_policy_version": run003.EVENT_POLICY_VERSION,
+                "transport_diagnostic_count": diagnostic_count,
+                "transport_diagnostic_types": sorted(
+                    {
+                        cast(str, diagnostic_type)
+                        for row in role_metadata.values()
+                        for diagnostic_type in cast(
+                            list[str], row["transport_diagnostic_types"]
+                        )
+                    }
+                ),
+                "transport_diagnostics_observed": diagnostic_count > 0,
+            }
+        )
     formal._write_private_file(
         root / "agent-run-metadata.json", _canonical_bytes(metadata)
     )
@@ -1306,6 +1548,7 @@ def _invoke_formal_schedule(
     on_batch: Callable[[list[dict[str, Any]]], None],
     run002_retry: bool = False,
     continue_on_failure: bool = False,
+    event_policy_version: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
     outcomes: list[dict[str, Any]] = []
     schedule_failure: dict[str, Any] | None = None
@@ -1342,11 +1585,16 @@ def _invoke_formal_schedule(
                     else private_root.with_name(f"{private_root.name}-retry-1")
                 )
                 try:
+                    invocation_kwargs: dict[str, Any] = {
+                        "request": request,
+                        "private_root": attempt_root,
+                        "repository_root": repository,
+                        "seen_thread_ids": None,
+                    }
+                    if event_policy_version is not None:
+                        invocation_kwargs["event_policy_version"] = event_policy_version
                     result = invocation_runner(
-                        request=request,
-                        private_root=attempt_root,
-                        repository_root=repository,
-                        seen_thread_ids=None,
+                        **invocation_kwargs,
                     )
                 except Exception as exc:
                     result = {
@@ -1518,29 +1766,41 @@ def run_successor_agent_construction(
     first_read_timestamp: str,
     max_workers: int = 1,
     run002_mode: bool = False,
+    run003_mode: bool = False,
 ) -> dict[str, Any]:
-    if run002_mode:
+    _require(
+        not (run002_mode and run003_mode),
+        "successor construction requires one sealed run mode",
+    )
+    sealed_mode = run002_mode or run003_mode
+    sealed_run = run003 if run003_mode else run002
+    if sealed_mode:
         _require(
-            max_workers == run002.FORMAL_GENERATOR_MAX_CONCURRENCY,
-            "Run002 formal construction concurrency must be exactly 4",
+            max_workers == sealed_run.FORMAL_GENERATOR_MAX_CONCURRENCY,
+            "sealed formal construction concurrency must be exactly 4",
         )
     else:
         _require(
             type(max_workers) is int and 1 <= max_workers <= 8,
             "max_workers must be an integer between 1 and 8",
         )
-    expected_context_flag = "run002_authority" if run002_mode else "successor_authority"
+    expected_context_flag = (
+        "run003_authority"
+        if run003_mode
+        else ("run002_authority" if run002_mode else "successor_authority")
+    )
     _require(
         context.get(expected_context_flag) is True,
         f"successor construction requires {expected_context_flag}",
     )
     repository = cast(Path, context["repository"]).resolve(strict=True)
     skills = workflow._project_canonical_skills(context["canonical_skills"])
-    root = (
-        _prepare_run002_staging_root(context)
-        if run002_mode
-        else _prepare_successor_staging_root(context)
-    )
+    if run003_mode:
+        root = _prepare_run003_staging_root(context)
+    elif run002_mode:
+        root = _prepare_run002_staging_root(context)
+    else:
+        root = _prepare_successor_staging_root(context)
     generation_rows: list[dict[str, Any]] = []
     review_rows: dict[str, list[dict[str, Any]]] = {
         "reviewer_a": [],
@@ -1562,12 +1822,17 @@ def run_successor_agent_construction(
                 if run002_mode
                 else None
             ),
+            run003_authority_manifest=(
+                cast(dict[str, Any], context["authority_manifest"])
+                if run003_mode
+                else None
+            ),
         )
 
     def blocked(stage: str, failure: dict[str, Any] | None) -> dict[str, Any]:
         persist()
         return {
-            **(deepcopy(run002.TERMINAL_TRUTH) if run002_mode else {}),
+            **(deepcopy(sealed_run.TERMINAL_TRUTH) if sealed_mode else {}),
             "status": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
             "failure_stage": stage,
             "failure_status": None if failure is None else failure.get("status"),
@@ -1580,12 +1845,12 @@ def run_successor_agent_construction(
 
     persist()
     selection = workflow.SELECTION_AUTHORITY
-    if run002_mode:
+    if sealed_mode:
         round_one_schedule = [
             {
                 "generation_round": 1,
                 "gold_skill_id": row["gold_skill_id"],
-                "request": run002.build_formal_generator_request(
+                "request": sealed_run.build_formal_generator_request(
                     skills,
                     commit_a=cast(str, context["commit_a"]),
                     gold_skill_id=cast(str, row["gold_skill_id"]),
@@ -1594,7 +1859,7 @@ def run_successor_agent_construction(
                     round_number=1,
                 ),
             }
-            for row in run002.round_one_quota_plan(
+            for row in sealed_run.round_one_quota_plan(
                 sorted(cast(str, skill["id"]) for skill in skills)
             )
         ]
@@ -1628,21 +1893,39 @@ def run_successor_agent_construction(
                 "request": row["request"],
                 "invocations": row["invocations"],
             }
-            if run002_mode:
+            if sealed_mode:
                 imported = (
-                    run002.import_generator_response(
-                        row["response"],
-                        run_id=run002.RUN_ID,
-                        request_id=cast(str, row["request"]["request_sha256"]),
-                        expected_gold_skill_id=cast(str, row["gold_skill_id"]),
-                        expected_negative_quota=cast(
-                            int, row["request"]["input"]["quota"]["negative_quota"]
-                        ),
-                        expected_positive_only_quota=cast(
-                            int,
-                            row["request"]["input"]["quota"]["positive_only_quota"],
-                        ),
-                        canonical_skill_ids=canonical_skill_ids,
+                    (
+                        run003.import_generator_response(
+                            row["response"],
+                            request_id=cast(str, row["request"]["request_sha256"]),
+                            expected_gold_skill_id=cast(str, row["gold_skill_id"]),
+                            expected_negative_quota=cast(
+                                int,
+                                row["request"]["input"]["quota"]["negative_quota"],
+                            ),
+                            expected_positive_only_quota=cast(
+                                int,
+                                row["request"]["input"]["quota"]["positive_only_quota"],
+                            ),
+                            canonical_skill_ids=canonical_skill_ids,
+                        )
+                        if run003_mode
+                        else run002.import_generator_response(
+                            row["response"],
+                            run_id=run002.RUN_ID,
+                            request_id=cast(str, row["request"]["request_sha256"]),
+                            expected_gold_skill_id=cast(str, row["gold_skill_id"]),
+                            expected_negative_quota=cast(
+                                int,
+                                row["request"]["input"]["quota"]["negative_quota"],
+                            ),
+                            expected_positive_only_quota=cast(
+                                int,
+                                row["request"]["input"]["quota"]["positive_only_quota"],
+                            ),
+                            canonical_skill_ids=canonical_skill_ids,
+                        )
                     )
                     if row["valid"]
                     else {
@@ -1674,14 +1957,15 @@ def run_successor_agent_construction(
         ordinal_state=ordinal_state,
         max_workers=max_workers,
         on_batch=append_generation,
-        run002_retry=run002_mode,
-        continue_on_failure=run002_mode,
+        run002_retry=sealed_mode,
+        continue_on_failure=sealed_mode,
+        event_policy_version=(run003.EVENT_POLICY_VERSION if run003_mode else None),
     )
-    if failure is not None and not run002_mode:
+    if failure is not None and not sealed_mode:
         return blocked("round-1-generation", failure)
 
     def derived_candidates(outcomes: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        if not run002_mode:
+        if not sealed_mode:
             return [
                 candidate
                 for outcome in outcomes
@@ -1695,19 +1979,37 @@ def run_successor_agent_construction(
         for outcome in outcomes:
             if outcome["valid"] is not True:
                 continue
-            imported = run002.import_generator_response(
-                outcome["response"],
-                run_id=run002.RUN_ID,
-                request_id=cast(str, outcome["request"]["request_sha256"]),
-                expected_gold_skill_id=cast(str, outcome["gold_skill_id"]),
-                expected_negative_quota=cast(
-                    int, outcome["request"]["input"]["quota"]["negative_quota"]
-                ),
-                expected_positive_only_quota=cast(
-                    int,
-                    outcome["request"]["input"]["quota"]["positive_only_quota"],
-                ),
-                canonical_skill_ids=canonical_skill_ids,
+            imported = (
+                run003.import_generator_response(
+                    outcome["response"],
+                    request_id=cast(str, outcome["request"]["request_sha256"]),
+                    expected_gold_skill_id=cast(str, outcome["gold_skill_id"]),
+                    expected_negative_quota=cast(
+                        int,
+                        outcome["request"]["input"]["quota"]["negative_quota"],
+                    ),
+                    expected_positive_only_quota=cast(
+                        int,
+                        outcome["request"]["input"]["quota"]["positive_only_quota"],
+                    ),
+                    canonical_skill_ids=canonical_skill_ids,
+                )
+                if run003_mode
+                else run002.import_generator_response(
+                    outcome["response"],
+                    run_id=run002.RUN_ID,
+                    request_id=cast(str, outcome["request"]["request_sha256"]),
+                    expected_gold_skill_id=cast(str, outcome["gold_skill_id"]),
+                    expected_negative_quota=cast(
+                        int,
+                        outcome["request"]["input"]["quota"]["negative_quota"],
+                    ),
+                    expected_positive_only_quota=cast(
+                        int,
+                        outcome["request"]["input"]["quota"]["positive_only_quota"],
+                    ),
+                    canonical_skill_ids=canonical_skill_ids,
+                )
             )
             for candidate in cast(
                 list[dict[str, Any]], imported["accepted_candidates"]
@@ -1788,13 +2090,13 @@ def run_successor_agent_construction(
             {
                 "candidate_id": candidate_id,
                 "request": (
-                    run002.build_reviewer_request(
+                    sealed_run.build_reviewer_request(
                         candidates_by_id[candidate_id],
                         skills,
                         role=role,
                         commit_a=cast(str, context["commit_a"]),
                     )
-                    if run002_mode
+                    if sealed_mode
                     else workflow.build_reviewer_request(
                         candidates_by_id[candidate_id],
                         skills,
@@ -1816,7 +2118,7 @@ def run_successor_agent_construction(
                     "request": row["request"],
                     "invocations": row["invocations"],
                 }
-                if run002_mode:
+                if sealed_mode:
                     persisted_row.update(
                         {
                             "valid": row["valid"],
@@ -1842,10 +2144,11 @@ def run_successor_agent_construction(
             ordinal_state=ordinal_state,
             max_workers=max_workers,
             on_batch=append_reviews,
-            run002_retry=run002_mode,
-            continue_on_failure=run002_mode,
+            run002_retry=sealed_mode,
+            continue_on_failure=sealed_mode,
+            event_policy_version=(run003.EVENT_POLICY_VERSION if run003_mode else None),
         )
-        if review_failure is not None and not run002_mode:
+        if review_failure is not None and not sealed_mode:
             return blocked(f"{stage}-{role}", review_failure)
         return None
 
@@ -1853,7 +2156,7 @@ def run_successor_agent_construction(
     for reviewer_role in ("reviewer_a", "reviewer_b"):
         review_block = run_reviews(
             role=reviewer_role,
-            candidate_ids=clean_round_one if run002_mode else set(round_one_by_id),
+            candidate_ids=clean_round_one if sealed_mode else set(round_one_by_id),
             stage="round-1-review",
         )
         if review_block is not None:
@@ -1872,12 +2175,12 @@ def run_successor_agent_construction(
         )
     ]
     round_one_deficits = _deficits(round_one_accepted, skills)
-    if run002_mode:
+    if sealed_mode:
         round_two_schedule = [
             {
                 "generation_round": 2,
                 "gold_skill_id": row["gold_skill_id"],
-                "request": run002.build_formal_generator_request(
+                "request": sealed_run.build_formal_generator_request(
                     skills,
                     commit_a=cast(str, context["commit_a"]),
                     gold_skill_id=cast(str, row["gold_skill_id"]),
@@ -1886,7 +2189,7 @@ def run_successor_agent_construction(
                     round_number=2,
                 ),
             }
-            for row in run002.supplement_quota_plan(
+            for row in sealed_run.supplement_quota_plan(
                 round_one_deficits,
                 canonical_skill_ids={cast(str, skill["id"]) for skill in skills},
             )
@@ -1918,10 +2221,11 @@ def run_successor_agent_construction(
         ordinal_state=ordinal_state,
         max_workers=max_workers,
         on_batch=append_generation,
-        run002_retry=run002_mode,
-        continue_on_failure=run002_mode,
+        run002_retry=sealed_mode,
+        continue_on_failure=sealed_mode,
+        event_policy_version=(run003.EVENT_POLICY_VERSION if run003_mode else None),
     )
-    if failure is not None and not run002_mode:
+    if failure is not None and not sealed_mode:
         return blocked("round-2-generation", failure)
     round_two_candidates = derived_candidates(round_two_outcomes)
     all_candidates = round_one_candidates + round_two_candidates
@@ -1949,7 +2253,7 @@ def run_successor_agent_construction(
             role=reviewer_role,
             candidate_ids=(
                 round_two_candidate_ids & clean_final
-                if run002_mode
+                if sealed_mode
                 else round_two_candidate_ids
             ),
             stage="round-2-review",
@@ -1978,7 +2282,7 @@ def run_successor_agent_construction(
     )
     persist()
     return {
-        **(deepcopy(run002.TERMINAL_TRUTH) if run002_mode else {}),
+        **(deepcopy(sealed_run.TERMINAL_TRUTH) if sealed_mode else {}),
         "status": (
             "AGENT_BLIND_V2_CONSTRUCTION_COMPLETE"
             if not final_deficits
@@ -1989,7 +2293,7 @@ def run_successor_agent_construction(
         "round_1_candidate_count": len(round_one_candidates),
         "round_2_candidate_count": len(round_two_candidates),
         "reviewed_candidate_count": (
-            len(clean_final) if run002_mode else len(all_candidates)
+            len(clean_final) if sealed_mode else len(all_candidates)
         ),
         "final_deficits": final_deficits,
         "invocation_count": len(seen_thread_ids),
@@ -2000,10 +2304,13 @@ def run_successor_agent_construction(
 
 def _run_agent_construction(args: argparse.Namespace) -> int:
     host_started = False
+    event_policy_version: str | None = None
 
     def invoke_formal_host(**kwargs: Any) -> dict[str, Any]:
         nonlocal host_started
         host_started = True
+        if event_policy_version is not None:
+            kwargs.setdefault("event_policy_version", event_policy_version)
         return formal.run_formal_agent_invocation(**kwargs)
 
     try:
@@ -2012,13 +2319,18 @@ def _run_agent_construction(args: argparse.Namespace) -> int:
         )
         authority = cast(str, getattr(args, "authority", "run001"))
         _require(
-            authority in {"run001", "run002"},
+            authority in {"run001", "run002", "run003"},
             "Agent construction requires a successor run authority",
         )
         run002_mode = authority == "run002"
-        context = (
-            _run002_commit_a_context() if run002_mode else _successor_commit_a_context()
-        )
+        run003_mode = authority == "run003"
+        if run003_mode:
+            event_policy_version = run003.EVENT_POLICY_VERSION
+            context = _run003_commit_a_context()
+        elif run002_mode:
+            context = _run002_commit_a_context()
+        else:
+            context = _successor_commit_a_context()
         construction_kwargs: dict[str, Any] = {
             "invocation_runner": invoke_formal_host,
             "generator_request_builder": workflow.build_generator_request,
@@ -2027,14 +2339,20 @@ def _run_agent_construction(args: argparse.Namespace) -> int:
         }
         if run002_mode:
             construction_kwargs["run002_mode"] = True
+        elif run003_mode:
+            construction_kwargs["run003_mode"] = True
         result = run_successor_agent_construction(context, **construction_kwargs)
     except Exception as exc:
         if host_started:
             raise
         result = {
             **(
-                deepcopy(run002.TERMINAL_TRUTH)
-                if getattr(args, "authority", "run001") == "run002"
+                deepcopy(
+                    run003.TERMINAL_TRUTH
+                    if getattr(args, "authority", "run001") == "run003"
+                    else run002.TERMINAL_TRUTH
+                )
+                if getattr(args, "authority", "run001") in {"run002", "run003"}
                 else {}
             ),
             "status": "AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE",
@@ -2125,18 +2443,17 @@ def _validated_pack_context(
     *, authority: str = "legacy"
 ) -> tuple[dict[str, Any], dict[str, Any], _SemanticSimilarity]:
     _require(
-        authority in {"legacy", "run001", "run002"},
+        authority in {"legacy", "run001", "run002", "run003"},
         "unknown blind-v2 authority",
     )
-    context = (
-        _run002_commit_a_context()
-        if authority == "run002"
-        else (
-            _successor_commit_a_context()
-            if authority == "run001"
-            else _commit_a_context(require_config_smoke=True)
-        )
-    )
+    if authority == "run003":
+        context = _run003_commit_a_context()
+    elif authority == "run002":
+        context = _run002_commit_a_context()
+    elif authority == "run001":
+        context = _successor_commit_a_context()
+    else:
+        context = _commit_a_context(require_config_smoke=True)
     for filename in workflow.REQUIRED_AGENT_PACK_FILES:
         _agent_pack_file(context, filename)
     metadata = _json(_agent_pack_file(context, "agent-run-metadata.json"))
@@ -2148,9 +2465,9 @@ def _validated_pack_context(
     similarity, semantic_model_authority = _semantic_validation_components(
         cast(dict[str, Any], context["preregistration"])
     )
-    if authority == "run002":
+    if authority in {"run002", "run003"}:
 
-        def replay_run002_contamination(
+        def replay_sealed_contamination(
             candidates: list[dict[str, Any]],
         ) -> dict[str, Any]:
             return workflow._scan_contamination(
@@ -2178,8 +2495,9 @@ def _validated_pack_context(
         validation = run002.validate_agent_pack(
             cast(Path, context["staging_root"]),
             canonical_skills=cast(list[dict[str, Any]], context["canonical_skills"]),
-            contamination_replayer=replay_run002_contamination,
+            contamination_replayer=replay_sealed_contamination,
             expected_commit_a=cast(str, context["commit_a"]),
+            run003_mode=authority == "run003",
         )
     else:
         validation = workflow.validate_agent_pack(
@@ -2230,7 +2548,18 @@ def _freeze(args: argparse.Namespace) -> int:
     authority = _selected_authority(args)
     context, validation, similarity = _validated_pack_context(authority=authority)
     _require(validation["status"] == "VALID", "valid Agent pack is required")
-    if authority == "run002":
+    if authority == "run003":
+        documents = run003.build_dataset_freeze_documents(
+            validation,
+            commit_a=cast(str, context["commit_a"]),
+        )
+        output_dir = cast(Path, context["repository"]) / run003.DATASET_FREEZE_RELATIVE
+        run003.write_dataset_freeze(
+            documents,
+            output_dir,
+            repository_root=cast(Path, context["repository"]),
+        )
+    elif authority == "run002":
         documents = run002.build_dataset_freeze_documents(
             validation,
             commit_a=cast(str, context["commit_a"]),
@@ -2270,9 +2599,11 @@ def _freeze(args: argparse.Namespace) -> int:
 
 def _model_smoke(args: argparse.Namespace) -> int:
     authority = _selected_authority(args)
-    run002_context: dict[str, Any] | None = None
-    if authority == "run002":
-        run002_context = _run002_commit_b_context(require_model_smoke=False)
+    sealed_context: dict[str, Any] | None = None
+    if authority == "run003":
+        sealed_context = _run003_commit_b_context(require_model_smoke=False)
+    elif authority == "run002":
+        sealed_context = _run002_commit_b_context(require_model_smoke=False)
     elif authority == "run001":
         _successor_commit_b_context(require_model_smoke=False)
     else:
@@ -2280,8 +2611,12 @@ def _model_smoke(args: argparse.Namespace) -> int:
     repository = REPOSITORY_ROOT.resolve(strict=False)
     pilot_manifest_path = repository / workflow.PILOT_MANIFEST_RELATIVE
     receipt = (
-        run_run002_model_load_smoke(cast(dict[str, Any], run002_context))
-        if run002_context is not None
+        (
+            run_run003_model_load_smoke(cast(dict[str, Any], sealed_context))
+            if authority == "run003"
+            else run_run002_model_load_smoke(cast(dict[str, Any], sealed_context))
+        )
+        if sealed_context is not None
         else workflow.run_model_load_smoke(
             pilot_manifest_path, repository_root=repository
         )
@@ -2295,11 +2630,17 @@ def run_run002_model_load_smoke(
     context: dict[str, Any],
     *,
     smoke_runner: Callable[..., dict[str, Any]] = workflow._run_model_load_smoke,
+    run003_mode: bool = False,
 ) -> dict[str, Any]:
-    """Run the unchanged model smoke against the Run002 dataset authority."""
+    """Run the unchanged model smoke against a sealed dataset authority."""
 
     repository = cast(Path, context["repository"])
     commit_b = cast(str, context["commit_b"])
+    dataset_freeze_relative = (
+        run003.DATASET_FREEZE_RELATIVE
+        if run003_mode
+        else run002.DATASET_FREEZE_RELATIVE
+    )
 
     def authority_validator(
         preregistration_path: Path | str,
@@ -2321,9 +2662,9 @@ def run_run002_model_load_smoke(
     ) -> dict[str, Any]:
         _require(
             Path(repository_root).resolve(strict=True) == repository,
-            "Run002 repository mismatch",
+            "sealed repository mismatch",
         )
-        _require(commit_a == context["commit_a"], "Run002 smoke Commit A mismatch")
+        _require(commit_a == context["commit_a"], "sealed smoke Commit A mismatch")
         return {"commit_a": commit_a, "commit_b": commit_b}
 
     return smoke_runner(
@@ -2332,7 +2673,19 @@ def run_run002_model_load_smoke(
         encoder_factory=None,
         authority_validator=authority_validator,
         commit_b_validator=commit_b_validator,
-        dataset_freeze_relative=run002.DATASET_FREEZE_RELATIVE,
+        dataset_freeze_relative=dataset_freeze_relative,
+    )
+
+
+def run_run003_model_load_smoke(
+    context: dict[str, Any],
+    *,
+    smoke_runner: Callable[..., dict[str, Any]] = workflow._run_model_load_smoke,
+) -> dict[str, Any]:
+    return run_run002_model_load_smoke(
+        context,
+        smoke_runner=smoke_runner,
+        run003_mode=True,
     )
 
 
@@ -2425,21 +2778,24 @@ def _require_run002_clean_worktree(repository: Path) -> None:
     )
 
 
-def _run002_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
+def _run002_commit_b_context(
+    *, require_model_smoke: bool, run003_mode: bool = False
+) -> dict[str, Any]:
     inputs = _successor_frozen_input_context()
     repository = cast(Path, inputs["repository"])
     _require_run002_clean_worktree(repository)
     preregistration_path = cast(Path, inputs["preregistration_path"])
     pilot_manifest_path = cast(Path, inputs["pilot_manifest_path"])
-    frozen_documents = run002.read_frozen_dataset_documents(repository)
+    sealed_run = run003 if run003_mode else run002
+    frozen_documents = sealed_run.read_frozen_dataset_documents(repository)
     blind_manifest = workflow._json_no_duplicate_keys(
         frozen_documents["blind-v2-manifest.json"],
-        str(repository / run002.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"),
+        str(repository / sealed_run.DATASET_FREEZE_RELATIVE / "blind-v2-manifest.json"),
     )
     commit_a = cast(str, blind_manifest["commit_a"])
     _require(
-        blind_manifest.get("run_id") == run002.RUN_ID,
-        "Run002 frozen run authority mismatch",
+        blind_manifest.get("run_id") == sealed_run.RUN_ID,
+        "sealed frozen run authority mismatch",
     )
     commit_b = workflow._git(repository, "rev-parse", "HEAD")
     _require(commit_b != commit_a, "Run002 Commit B must differ from Commit A")
@@ -2458,8 +2814,8 @@ def _run002_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
         f"{commit_a}..{commit_b}",
     ).splitlines()
     expected_changed = {
-        (run002.DATASET_FREEZE_RELATIVE / filename).as_posix()
-        for filename in run002.DATASET_FREEZE_FILENAMES
+        (sealed_run.DATASET_FREEZE_RELATIVE / filename).as_posix()
+        for filename in sealed_run.DATASET_FREEZE_FILENAMES
     }
     _require(
         len(changed) == len(set(changed)) and set(changed) == expected_changed,
@@ -2479,10 +2835,10 @@ def _run002_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
         )
     return {
         **inputs,
-        "run002_authority": True,
+        ("run003_authority" if run003_mode else "run002_authority"): True,
         "commit_a": commit_a,
         "commit_b": commit_b,
-        "staging_root": run002.private_evidence_root(commit_a),
+        "staging_root": sealed_run.private_evidence_root(commit_a),
         "repository": repository,
         "preregistration_path": preregistration_path,
         "pilot_manifest_path": pilot_manifest_path,
@@ -2492,6 +2848,13 @@ def _run002_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
         "frozen_manifest_file_sha256": frozen_manifest_file_sha256,
         "model_smoke_receipt": receipt,
     }
+
+
+def _run003_commit_b_context(*, require_model_smoke: bool) -> dict[str, Any]:
+    return _run002_commit_b_context(
+        require_model_smoke=require_model_smoke,
+        run003_mode=True,
+    )
 
 
 def _model_bindings(pilot: dict[str, Any]) -> list[dict[str, Any]]:
@@ -2544,16 +2907,15 @@ def _model_bindings(pilot: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _evaluate(args: argparse.Namespace) -> int:
     authority_name = _selected_authority(args)
-    successor = authority_name in {"run001", "run002"}
-    context = (
-        _run002_commit_b_context(require_model_smoke=True)
-        if authority_name == "run002"
-        else (
-            _successor_commit_b_context(require_model_smoke=True)
-            if authority_name == "run001"
-            else _commit_b_context(require_model_smoke=True)
-        )
-    )
+    successor = authority_name in {"run001", "run002", "run003"}
+    if authority_name == "run003":
+        context = _run003_commit_b_context(require_model_smoke=True)
+    elif authority_name == "run002":
+        context = _run002_commit_b_context(require_model_smoke=True)
+    elif authority_name == "run001":
+        context = _successor_commit_b_context(require_model_smoke=True)
+    else:
+        context = _commit_b_context(require_model_smoke=True)
     repository = cast(Path, context["repository"])
     preregistration_path = cast(Path, context["preregistration_path"])
     pilot_manifest_path = cast(Path, context["pilot_manifest_path"])
@@ -2565,14 +2927,23 @@ def _evaluate(args: argparse.Namespace) -> int:
         verify_model_files=True,
         verify_evaluator_source_files=not successor,
     )
+    active_dataset_relative = (
+        run003.DATASET_FREEZE_RELATIVE
+        if authority_name == "run003"
+        else (
+            run002.DATASET_FREEZE_RELATIVE
+            if authority_name == "run002"
+            else workflow.DATASET_FREEZE_RELATIVE
+        )
+    )
     tasks = workflow._jsonl_no_duplicate_keys(
         frozen_documents["blind-v2-tasks.jsonl"],
-        str(repository / workflow.DATASET_FREEZE_RELATIVE / "blind-v2-tasks.jsonl"),
+        str(repository / active_dataset_relative / "blind-v2-tasks.jsonl"),
     )
     pilot = _json(pilot_manifest_path)
     bindings = _model_bindings(pilot)
-    lineage_bindings = (
-        run002.build_evaluation_bindings(
+    if authority_name == "run003":
+        lineage_bindings = run003.build_evaluation_bindings(
             preregistration=_json(preregistration_path),
             preregistration_bytes=preregistration_path.read_bytes(),
             canonical_skills=cast(list[dict[str, Any]], context["canonical_skills"]),
@@ -2580,15 +2951,31 @@ def _evaluate(args: argparse.Namespace) -> int:
             frozen_documents=frozen_documents,
             commit_a=cast(str, context["commit_a"]),
         )
-        if authority_name == "run002"
-        else workflow.build_authoritative_lineage_bindings(
+    elif authority_name == "run002":
+        lineage_bindings = run002.build_evaluation_bindings(
+            preregistration=_json(preregistration_path),
+            preregistration_bytes=preregistration_path.read_bytes(),
+            canonical_skills=cast(list[dict[str, Any]], context["canonical_skills"]),
+            model_bindings=bindings,
+            frozen_documents=frozen_documents,
+            commit_a=cast(str, context["commit_a"]),
+        )
+    else:
+        lineage_bindings = workflow.build_authoritative_lineage_bindings(
             preregistration_path,
             repository_root=repository,
             pilot_manifest_path=pilot_manifest_path,
             frozen_documents=frozen_documents,
             verify_evaluator_source_files=not successor,
         )
-    )
+    if authority_name == "run003":
+        output_namespace = run003.OUTPUT_NAMESPACE
+    elif authority_name == "run002":
+        output_namespace = run002.OUTPUT_NAMESPACE
+    elif authority_name == "run001":
+        output_namespace = workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
+    else:
+        output_namespace = workflow.FINAL_NAMESPACE_RELATIVE
     attempt_token_sha256 = canonical_sha256(
         {
             "schema_version": "router-v2-blind-v2-attempt-token-v1",
@@ -2596,15 +2983,7 @@ def _evaluate(args: argparse.Namespace) -> int:
             "commit_b": context["commit_b"],
             "preregistration_sha256": authority["preregistration_sha256"],
             "blind_v2_manifest_file_sha256": context["frozen_manifest_file_sha256"],
-            "output_namespace": str(
-                run002.OUTPUT_NAMESPACE
-                if authority_name == "run002"
-                else (
-                    workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
-                    if authority_name == "run001"
-                    else workflow.FINAL_NAMESPACE_RELATIVE
-                )
-            ),
+            "output_namespace": str(output_namespace),
         }
     )
     started_payload = {
@@ -2628,8 +3007,9 @@ def _evaluate(args: argparse.Namespace) -> int:
         "blind-v2-manifest.json": frozen_documents["blind-v2-manifest.json"],
         "review-summary.json": frozen_documents["blind-v2-review-summary.json"],
     }
-    if authority_name == "run002":
-        tasks, validated_skills, bindings = run002.validate_evaluation_inputs(
+    if authority_name in {"run002", "run003"}:
+        sealed_run = run003 if authority_name == "run003" else run002
+        tasks, validated_skills, bindings = sealed_run.validate_evaluation_inputs(
             commit_a=cast(str, context["commit_a"]),
             commit_b=cast(str, context["commit_b"]),
             attempt_token_sha256=attempt_token_sha256,
@@ -2651,13 +3031,13 @@ def _evaluate(args: argparse.Namespace) -> int:
         )
 
     def evaluate() -> dict[str, bytes]:
-        if authority_name == "run002":
+        if authority_name in {"run002", "run003"}:
             routes = workflow._evaluate_routes_validated(
                 tasks,
                 validated_skills,
                 bindings,
             )
-            run002.validate_evaluation_routes(
+            sealed_run.validate_evaluation_routes(
                 routes,
                 tasks=tasks,
                 model_bindings=bindings,
@@ -2695,15 +3075,6 @@ def _evaluate(args: argparse.Namespace) -> int:
         )
 
     protected_roots = [Path(cast(str, pilot["training_execution_root"]))]
-    output_namespace = (
-        run002.OUTPUT_NAMESPACE
-        if authority_name == "run002"
-        else (
-            workflow.SUCCESSOR_FINAL_NAMESPACE_RELATIVE
-            if authority_name == "run001"
-            else workflow.FINAL_NAMESPACE_RELATIVE
-        )
-    )
     if successor:
         terminal = workflow.run_single_attempt(
             repository / output_namespace,
@@ -2741,6 +3112,18 @@ def _parser() -> argparse.ArgumentParser:
     run002_canary.set_defaults(
         handler=_run002_generator_canary,
         authority="run002",
+    )
+
+    run003_canary = commands.add_parser(
+        "run003-generator-canary",
+        help=(
+            "Invoke one Generator host on synthetic input under the explicit "
+            "Run003 transient-transport diagnostic policy; writes no formal data."
+        ),
+    )
+    run003_canary.set_defaults(
+        handler=_run003_generator_canary,
+        authority="run003",
     )
 
     status = commands.add_parser(
@@ -2797,7 +3180,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     construction.add_argument(
         "--authority",
-        choices=("run001", "run002"),
+        choices=("run001", "run002", "run003"),
         default="run001",
         help="Select the immutable successor run authority.",
     )
@@ -2814,7 +3197,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     pack_status.add_argument(
         "--authority",
-        choices=("run001", "run002"),
+        choices=("run001", "run002", "run003"),
         help="Select Run001 or the independent Run002 authority.",
     )
     pack_status.set_defaults(handler=_pack_status)
@@ -2830,7 +3213,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     freeze.add_argument(
         "--authority",
-        choices=("run001", "run002"),
+        choices=("run001", "run002", "run003"),
         help="Select Run001 or the independent Run002 authority.",
     )
     freeze.set_defaults(handler=_freeze)
@@ -2846,7 +3229,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     model_smoke.add_argument(
         "--authority",
-        choices=("run001", "run002"),
+        choices=("run001", "run002", "run003"),
         help="Select Run001 or the independent Run002 authority.",
     )
     model_smoke.set_defaults(handler=_model_smoke)
@@ -2862,7 +3245,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     evaluate.add_argument(
         "--authority",
-        choices=("run001", "run002"),
+        choices=("run001", "run002", "run003"),
         help="Select Run001 or the independent Run002 authority.",
     )
     evaluate.set_defaults(handler=_evaluate)

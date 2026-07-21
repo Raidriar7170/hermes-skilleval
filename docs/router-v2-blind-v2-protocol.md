@@ -14,6 +14,62 @@ Active pre-data truth:
 - `human_reviewer_count=0`
 - `router_decision=KEEP_BASELINE` on every terminal path
 
+## Run 003 pre-data authority (prepared; not invoked)
+
+Run 001 remains immutable at
+`artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-001/candidate-generation-terminal.json`
+with SHA-256
+`74b8e9fb01e008ee40c1f38c65c73a9fde371c615e4689f847ab88887cefa6ea`.
+Run 002 has no standalone terminal JSON. Its terminal evidence is the exact
+private five-file canary bundle bound to Git commit
+`8a34995f85954777b1130c4be8c94a2e5e3e950b`; the canonical bundle SHA-256 is
+`ca1c9c4b6b908d62442dd64f2a9b1b9891182662a29e1824c91c15b7416971b5`.
+No Run 001 or Run 002 candidate response is reusable.
+
+The Run 002 terminal Git commit is predecessor evidence only; it is not the
+Run 003 Commit A. Every Run 003 authority build requires `commit_a` to equal
+the live clean `HEAD`, and requires the complete Git parent list to equal
+exactly `[8a34995f85954777b1130c4be8c94a2e5e3e950b]`. A mismatched live HEAD,
+wrong parent, zero-parent commit, or merge commit fails closed before any Agent
+invocation, including a merge whose first parent is the expected predecessor.
+
+The active future execution ID is
+`router-v2-v4-successor-blind-v2-003`, with replacement reason
+`ALLOW_VALIDATED_TRANSIENT_TRANSPORT_DIAGNOSTICS`. Its private root,
+`run003-authority-manifest.json`, dataset destination
+`data/router-v2-blind-v2-successor-003/`, and evaluation namespace
+`artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-003/` are distinct
+from both predecessors. Construction, pack validation, freeze, model-smoke, and
+evaluation require the explicit `run003` selector.
+
+Run 003 alone uses event policy
+`router-v2-run003-validated-transient-transport-diagnostics-v1`. An event with
+exact fields `{type,message}` may be recorded as a non-fatal diagnostic only
+when its message is classified as a known transient TLS disconnect, transport
+timeout, connection reset, stream disconnect, or transport retry and the same
+invocation still proves one unique thread, one completed turn, exit code zero,
+zero tools, zero descendants, one final Agent message identical to the response
+file, and a schema-valid response. Authentication, application, business,
+unknown, extra-field, incomplete, multiple-final, tool, descendant, nonzero-exit,
+and invalid-response cases remain fail-closed. Diagnostic count, sorted unique
+types, and observed status are carried through the invocation envelope, role and
+top-level construction metadata, pack replay, review summary, and dataset
+manifest. A validated diagnostic is not a retry and does not relax the existing
+one-byte-identical-retry rule for failures with no valid response.
+
+Authority, freeze, and evaluation replay preserve the predecessor lineage as
+separate exact truths: `run001_candidates_reused=false`,
+`run002_candidates_reused=false`, `run001_model_scores_observed=false`,
+`run002_model_scores_observed=false`, and Run 003
+`model_scores_observed=false`. Diagnostic counts never increment the controller
+retry count.
+
+This update is pre-data implementation only: no real Run 003 Agent call has
+occurred; no formal candidate, Reviewer response, contamination ledger, dataset,
+Commit B, Arm A/C load, model score, attempt marker, or evaluation artifact has
+been created. `KEEP_BASELINE`, `production_ready=false`,
+`release_authorized=false`, and `default_router_unchanged=true` remain fixed.
+
 ## Stage 0 Agent-runtime requalification (qualified; Commit A2 pending)
 
 The prior configuration smoke is immutable failed audit history. Commit A-agent

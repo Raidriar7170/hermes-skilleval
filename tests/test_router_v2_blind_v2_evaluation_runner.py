@@ -26,6 +26,7 @@ from typing import Any, Callable, cast
 import pytest
 
 from hermes_skilleval import router_v2_blind_v2_evaluation_runner as runner
+from hermes_skilleval import router_v2_blind_v2_run003 as run003
 
 
 PREFIX = "TEST_ONLY_DO_NOT_USE"
@@ -11344,6 +11345,7 @@ def test_task7_final_cli_exposes_only_sealed_agent_workflow() -> None:
     assert result.returncode == 0
     subcommands = (
         "run002-generator-canary",
+        "run003-generator-canary",
         "agent-config-status",
         "runtime-qualification-status",
         "request-round-1",
@@ -13513,6 +13515,10 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
         return protocol.split(start, maxsplit=1)[1].split(end, maxsplit=1)[0]
 
     sections = {
+        "run003": section(
+            "## Run 003 pre-data authority (prepared; not invoked)",
+            "## Stage 0 Agent-runtime requalification (qualified; Commit A2 pending)",
+        ),
         "stage0": section(
             "## Stage 0 Agent-runtime requalification (qualified; Commit A2 pending)",
             "## Frozen repository and evaluation authority",
@@ -13676,6 +13682,26 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
     for rendered_label, semantic_label, expected in stage0_authority:
         bind_line("stage0", rendered_label, semantic_label, expected)
 
+    run001_terminal_matches = re.findall(
+        r"with SHA-256\s+`([0-9a-f]{64})`",
+        sections["run003"],
+    )
+    assert run001_terminal_matches == [run003.RUN001_TERMINAL_SHA256]
+    parsed.append(("run003.run001_terminal_sha256", run001_terminal_matches[0]))
+    run002_evidence_bundle_matches = re.findall(
+        r"canonical bundle SHA-256 is\s+`([0-9a-f]{64})`",
+        sections["run003"],
+    )
+    assert run002_evidence_bundle_matches == [
+        run003.RUN002_TERMINAL_EVIDENCE_BUNDLE_SHA256
+    ]
+    parsed.append(
+        (
+            "run003.run002_terminal_evidence_bundle_sha256",
+            run002_evidence_bundle_matches[0],
+        )
+    )
+
     selection_matches = re.findall(
         r'(?m)^  "selection_key_rule_sha256": "([0-9a-f]{64})",$',
         sections["selection"],
@@ -13725,7 +13751,7 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
         r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])",
         protocol,
     )
-    assert len(parsed) == 69
+    assert len(parsed) == 71
     assert len({label for label, _ in parsed}) == len(parsed)
     assert Counter(protocol_hashes) == Counter(digest for _, digest in parsed)
 

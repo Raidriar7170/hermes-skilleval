@@ -33,7 +33,7 @@ The user preselected Goal mode. Immediately after this plan passes self-review, 
 - Modify `docs/router-v2-blind-v2-protocol.md`: executable Agent-only protocol and exact prompts/schemas.
 - Modify `artifacts/router-v2-blind-v2/preregistration.json`: machine-readable Agent-only freeze and regenerated canonical hash.
 - Keep the four approved OpenSpec files under `openspec/changes/run-router-v2-final-blind-v2/` consistent.
-- Conditionally create only `data/router-v2-blind-v2-successor-002/blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` in Run 002 Commit B.
+- Conditionally create only `data/router-v2-blind-v2-successor-003/blind-v2-tasks.jsonl`, `blind-v2-review-summary.json`, and `blind-v2-manifest.json` in Run 003 Commit B.
 - Conditionally create only the existing final artifact namespace after the formal attempt.
 
 ### Task 0: Preserve verified historical groundwork
@@ -592,11 +592,12 @@ git rev-parse HEAD
 
 Expected: clean worktree; HEAD is Commit A-agent and descends from `09ba4104…`.
 
-### Task 10: Preserve the immutable Run 001 terminal and prepare Run 002
+### Task 10: Preserve predecessor evidence and prepare the active successor
 
 **Files:**
 - Read only: `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-001/candidate-generation-terminal.json`
-- Create outside Git for Run 002 only: `run002-authority-manifest.json` plus the five construction ledgers under the independent Commit A-bound private root
+- Preserve outside Git: the Run 002 canary authority/evidence bundle under its immutable private root
+- Prepare outside Git for future execution only: `run003-authority-manifest.json` plus the five construction ledgers under the independent Run 003 Commit A-bound private root
 
 - [x] 10.1 Verify the immutable Run 001 public terminal SHA-256 is `74b8e9fb01e008ee40c1f38c65c73a9fde371c615e4689f847ab88887cefa6ea` and preserve its `KEEP_BASELINE` decision.
 
@@ -636,15 +637,30 @@ generation, Reviewer call, contamination scan, supplement, Commit B, Arm A/C
 load, model score, formal attempt marker, or evaluation artifact exists. Tasks
 11-13 remain unchecked.
 
+- [x] 10.9 Bind the pre-data replacement Run 003 authority to the immutable Run 001 terminal plus the exact five-file Run 002 private evidence bundle. Record `standalone_terminal_json_present=false`, replacement reason `ALLOW_VALIDATED_TRANSIENT_TRANSPORT_DIAGNOSTICS`, and no predecessor candidate reuse; do not create a Run 002 terminal.
+
+- [x] 10.10 Add the explicit Run 003-only validated transient transport diagnostic policy and carry count/types/observed through invocation envelopes, construction metadata, pack replay, freeze, model-smoke, and evaluation selectors. Focused fake lifecycle tests cover every selector; this preparation invoked no real Agent, wrote no dataset, loaded no model, and started no evaluation.
+
+- [x] 10.11 Correct Run 003 pre-data authority so its future clean live `HEAD` is Commit A and its complete parent list is exactly the singleton Run 002 terminal commit; reject merge commits even when that predecessor is first parent. Persist and replay separate Run 001, Run 002, and Run 003 no-score flags plus both predecessor no-candidate-reuse flags. Focused fake-only integration exercises construction, pack replay, and freeze without mocking those cores; diagnostics remain separate from controller retries.
+
+Run 003 preparation (2026-07-21): the active future execution authority is
+`router-v2-v4-successor-blind-v2-003`. Only exact `{type,message}` diagnostics
+classified as transient TLS/timeout/reset/stream/retry conditions may coexist
+with an otherwise complete, exit-zero, unique-thread, zero-tool, zero-descendant,
+single-final, schema-valid invocation. Authentication, application/business,
+unknown, extra-field, incomplete, multi-final, tool, descendant, nonzero-exit,
+or invalid-response cases remain fail-closed. No Run 003 host invocation has
+occurred and Tasks 11-13 remain unchecked.
+
 ### Task 11: Generate, scan, and dual-review the candidate pool
 
 **Files:**
-- Create outside Git: the Run 002 authority manifest plus five required private construction ledger files
+- Create outside Git: the Run 003 authority manifest plus five required private construction ledger files
 - No repository or Arm A/C file access beyond frozen skill/reference inputs
 
-- [ ] 11.1 Run the single synthetic `run002-generator-canary`, then use `run-agent-construction --authority run002 --max-workers 4` for 16 sealed Generator requests, one per gold skill, each requesting exactly 12 negative-labeled plus four positive-only candidates. Spawn each with `gpt-5.6-sol/max`, `fork_context=false`, and no thread history.
+- [ ] 11.1 Run the single synthetic `run003-generator-canary`, then use `run-agent-construction --authority run003 --max-workers 4` for 16 sealed Generator requests, one per gold skill, each requesting exactly 12 negative-labeled plus four positive-only candidates. Spawn each with `gpt-5.6-sol/max`, `fork_context=false`, and no thread history.
 
-- [ ] 11.2 Require exactly 16 rows per response. Reject a wrong-count request without stopping other requests; discard only semantically invalid candidates; allow at most one byte-identical retry only for transport failure or invalid JSON; and record every request/candidate outcome under the independent Run 002 root.
+- [ ] 11.2 Require exactly 16 rows per response. Reject a wrong-count request without stopping other requests; discard only semantically invalid candidates; allow at most one byte-identical retry only for transport failure or invalid JSON; and record every request/candidate/diagnostic outcome under the independent Run 003 root.
 
 - [ ] 11.3 Run static/lexical/all-mpnet contamination scanning against train, pilot-002, Phase 16, and within-pool candidates. Seal `blind-v2-contamination.jsonl`; never send scan results or rejection reasons to an Agent.
 
@@ -659,15 +675,15 @@ load, model score, formal attempt marker, or evaluation artifact exists. Tasks
 ### Task 12: Freeze and commit the selected dataset as Commit B
 
 **Files:**
-- Create: `data/router-v2-blind-v2-successor-002/blind-v2-tasks.jsonl`
-- Create: `data/router-v2-blind-v2-successor-002/blind-v2-review-summary.json`
-- Create: `data/router-v2-blind-v2-successor-002/blind-v2-manifest.json`
+- Create: `data/router-v2-blind-v2-successor-003/blind-v2-tasks.jsonl`
+- Create: `data/router-v2-blind-v2-successor-003/blind-v2-review-summary.json`
+- Create: `data/router-v2-blind-v2-successor-003/blind-v2-manifest.json`
 
 - [ ] 12.1 Run `freeze` from clean Commit A-agent and verify exact-byte regeneration twice.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
-python scripts/run_router_v2_blind_v2_final.py freeze --authority run002
+python scripts/run_router_v2_blind_v2_final.py freeze --authority run003
 ```
 
 - [ ] 12.2 Verify Commit B content contains only the canonical three files, all final prompts, sanitized Agent evidence/hashes, `model_scores_observed=false`, `evaluation_started=false`, and no raw hidden reasoning.
@@ -675,7 +691,7 @@ python scripts/run_router_v2_blind_v2_final.py freeze --authority run002
 - [ ] 12.3 Commit the byte-bound dataset and record Commit B SHA.
 
 ```bash
-git add data/router-v2-blind-v2-successor-002
+git add data/router-v2-blind-v2-successor-003
 git commit -m "data(router): freeze successor blind-v2 dataset"
 git diff --name-only HEAD^..HEAD
 git status --short
@@ -688,7 +704,7 @@ Expected: exactly three changed paths and a clean worktree.
 
 **Files:**
 - Create worktree: `/Users/raidriar/dev/hermes-skilleval-worktrees/router-v2-blind-v2-attempt-1`
-- Create: `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-002/**`
+- Create: `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-003/**`
 
 - [ ] 13.1 Create a fresh detached worktree at Commit B and verify clean status, Commit A-agent/Commit B ancestry, dataset hash, namespace absence, and marker absence.
 
@@ -698,15 +714,15 @@ git worktree add --detach \
   "$(git rev-parse HEAD)"
 ```
 
-- [ ] 13.2 Run `model-smoke` only now. It must bind Commit A-agent and Commit B, load one A plus three C models on CPU, encode only fixed synthetic strings, remove temporary files, and emit no benchmark metric.
+- [ ] 13.2 Run `model-smoke --authority run003` only now. It must bind Commit A-agent and Commit B, load one A plus three C models on CPU, encode only fixed synthetic strings, remove temporary files, and emit no benchmark metric.
 
 - [ ] 13.3 Revalidate every hash, count, smoke receipt, output namespace, protected root, seed, gate, and clean-worktree condition before writing the exclusive started marker.
 
-- [ ] 13.4 Run `evaluate --authority run002` once. Never create a replacement Run 002 attempt, retry a seed, delete a marker, replace a task, or alter a gate after the marker.
+- [ ] 13.4 Run `evaluate --authority run003` once. Never create a replacement Run 003 attempt, retry a seed, delete a marker, replace a task, or alter a gate after the marker.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
-python scripts/run_router_v2_blind_v2_final.py evaluate
+python scripts/run_router_v2_blind_v2_final.py evaluate --authority run003
 ```
 
 - [ ] 13.5 Verify all result documents, raw counts over 128/96, per-seed/aggregate/statistical consistency, lineage self-hash, and exactly one terminal status. Every path must contain `KEEP_BASELINE` and unchanged production/release/default fields.
