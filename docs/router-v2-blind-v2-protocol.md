@@ -6,15 +6,16 @@ Do the unchanged Router V2 Arm C checkpoints meet the unchanged pilot-002 gate o
 
 This is one preregistered Agent-constructed evaluation, not a training or model-development phase. All conclusions are bounded to this 128-task Agent-generated set; same-provider role isolation is not statistical independence and is not evidence of human-task generalization.
 
-Active pre-data truth:
+Run 003 terminal truth:
 
-- `blind_v2_candidate_data_seen=false`
-- `blind_v2_data_seen=false` only as `LEGACY_PRE_DATA_TRUTH_ONLY` compatibility truth
+- `research_conclusion=AGENT_BLIND_V2_DATASET_INSUFFICIENT`
+- `router_decision=KEEP_BASELINE`
 - `human_author_count=0`
 - `human_reviewer_count=0`
-- `router_decision=KEEP_BASELINE` on every terminal path
+- `model_scores_observed=false`
+- `evaluation_started=false`
 
-## Run 003 pre-data authority (prepared; not invoked)
+## Run 003 Agent construction closeout (executed; stopped before Commit B)
 
 Run 001 remains immutable at
 `artifacts/router-v2-blind-v2/router-v2-v4-successor-blind-v2-001/candidate-generation-terminal.json`
@@ -27,13 +28,11 @@ private five-file canary bundle bound to Git commit
 No Run 001 or Run 002 candidate response is reusable.
 
 The Run 002 terminal Git commit is predecessor evidence only; it is not the
-Run 003 Commit A. Every Run 003 authority build requires `commit_a` to equal
-the live clean `HEAD`, and requires the complete Git parent list to equal
-exactly `[8a34995f85954777b1130c4be8c94a2e5e3e950b]`. A mismatched live HEAD,
-wrong parent, zero-parent commit, or merge commit fails closed before any Agent
-invocation, including a merge whose first parent is the expected predecessor.
+Run 003 Commit A. Run 003 executed from Commit A
+`2d326d95eeb6b545295d55ac937cfbf902a0d956`, whose sole parent is the Run 002
+terminal commit. No Run 001 or Run 002 candidate was reused.
 
-The active future execution ID is
+The executed authority ID is
 `router-v2-v4-successor-blind-v2-003`, with replacement reason
 `ALLOW_VALIDATED_TRANSIENT_TRANSPORT_DIAGNOSTICS`. Its private root,
 `run003-authority-manifest.json`, dataset destination
@@ -57,18 +56,77 @@ top-level construction metadata, pack replay, review summary, and dataset
 manifest. A validated diagnostic is not a retry and does not relax the existing
 one-byte-identical-retry rule for failures with no valid response.
 
-Authority, freeze, and evaluation replay preserve the predecessor lineage as
-separate exact truths: `run001_candidates_reused=false`,
+Authority replay preserves `run001_candidates_reused=false`,
 `run002_candidates_reused=false`, `run001_model_scores_observed=false`,
 `run002_model_scores_observed=false`, and Run 003
-`model_scores_observed=false`. Diagnostic counts never increment the controller
-retry count.
+`model_scores_observed=false`. Diagnostic counts never incremented the
+controller retry count.
 
-This update is pre-data implementation only: no real Run 003 Agent call has
-occurred; no formal candidate, Reviewer response, contamination ledger, dataset,
-Commit B, Arm A/C load, model score, attempt marker, or evaluation artifact has
-been created. `KEEP_BASELINE`, `production_ready=false`,
-`release_authorized=false`, and `default_router_unchanged=true` remain fixed.
+The synthetic canary completed one successful Generator invocation, returned
+16 candidates, recorded zero diagnostics, wrote no formal candidate data, and
+loaded no Router model. Formal round 1 then issued 16 requests and produced 256
+candidates; the single allowed supplement issued another 16 requests and
+produced 256 candidates. The fixed configurations were Generator
+`gpt-5.6-sol/max`, Reviewer A `gpt-5.6-sol/ultra`, and Reviewer B
+`gpt-5.6-luna/max`. Controller retry count was zero and no fallback was used.
+
+Across all 512 candidates, contamination filtering recorded
+`398 PASS / 114 REJECT`. Reviewer A processed all 398 clean candidates: 397 were valid
+`ACCEPT` responses and one invocation was invalid as
+`FORMAL_ISOLATION_BLOCKED`. Reviewer B also processed all 398: 397 were valid
+`ACCEPT` responses and one invocation was invalid as
+`FORMAL_OUTPUT_BLOCKED / SCHEMA_INVALID`. Three-way gold agreement was 396;
+exact three-way gold+negative/none agreement was 99. Deterministic deduplication
+and quota selection retained 87 tasks—85 negative-labeled and two
+positive-only—across 87 distinct semantic families. Twelve otherwise eligible
+candidates were not selected.
+
+| Candidate outcome | Count |
+|---|---:|
+| selected | 87 |
+| not_selected | 12 |
+| rejected_contamination | 114 |
+| rejected_invocation | 2 |
+| rejected_review | 297 |
+| total | 512 |
+
+The remaining negative / positive-only deficits were:
+
+| Gold skill | Negative deficit | Positive-only deficit |
+|---|---:|---:|
+| accessibility | 0 | 2 |
+| apply-patch | 2 | 2 |
+| browser-smoke | 3 | 2 |
+| evidence-backed | 0 | 2 |
+| form-interaction | 0 | 2 |
+| plan-mode | 0 | 2 |
+| slash-command | 1 | 2 |
+| subagent-worker | 5 | 2 |
+| systematic-debugging | 0 | 2 |
+| task-tool-delegation | 0 | 2 |
+| TDD | 0 | 2 |
+| worktrees | 0 | 2 |
+| verification | 0 | 2 |
+| visual-regression | 0 | 2 |
+| workspace-git | 0 | 2 |
+
+`mcp-tool-routing` had no deficit. The deficits total 11 negative tasks and 30
+positive-only tasks, so the frozen `128 tasks / 96 negatives / 128 families`
+contract could not be satisfied. The workflow therefore terminalized exactly
+as preregistered at `AGENT_BLIND_V2_DATASET_INSUFFICIENT / KEEP_BASELINE`; it
+did not lower quotas or add another generation round.
+
+Construction metadata recorded 27 classified transport diagnostics: Generator
+5, Reviewer A 9, and Reviewer B 13. Their only types were
+`TEMPORARY_TLS_DISCONNECT` and `TEMPORARY_TRANSPORT_TIMEOUT`. They satisfied the
+Run 003 diagnostic policy and did not become retries.
+
+No Commit B exists. No Arm A/C model was loaded or scored; no formal attempt
+marker, per-seed result, aggregate/statistical result, or gate metric exists.
+`production_ready=false`, `release_authorized=false`, and
+`default_router_unchanged=true` remain fixed. This is an Agent-only dataset
+construction terminal, not human-reviewed evidence, a public benchmark result,
+a SOTA claim, production readiness, or router promotion.
 
 ## Stage 0 Agent-runtime requalification (qualified; Commit A2 pending)
 

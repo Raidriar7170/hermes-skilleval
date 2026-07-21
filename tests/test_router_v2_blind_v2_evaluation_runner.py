@@ -13516,7 +13516,7 @@ def test_task8_protocol_headline_hashes_bind_every_authority() -> None:
 
     sections = {
         "run003": section(
-            "## Run 003 pre-data authority (prepared; not invoked)",
+            "## Run 003 Agent construction closeout (executed; stopped before Commit B)",
             "## Stage 0 Agent-runtime requalification (qualified; Commit A2 pending)",
         ),
         "stage0": section(

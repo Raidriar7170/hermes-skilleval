@@ -240,8 +240,8 @@
         <p>Phase 17 选择继续使用 <code>baseline-minilm</code>，没有把候选微调路由器设为默认。</p>
       </div>
       <div class="card warning">
-        <span class="metric">INFRASTRUCTURE_INCONCLUSIVE</span>
-        <p>Run 002 的唯一 synthetic Generator canary 返回了符合 6 字段 / 16 行 schema 的 payload，但同一 host event stream 含 4 个 reconnect error events，严格隔离校验 fail closed；未启动正式生成、Reviewer、Commit B、模型加载或评分。</p>
+        <span class="metric">87 / 128</span>
+        <p>Run 003 两轮共生成 512 个候选，冻结选择得到 85 个 negative-labeled 与 2 个 positive-only 任务；配额不足，终态为 <code>AGENT_BLIND_V2_DATASET_INSUFFICIENT</code>。</p>
       </div>
       <div class="card">
         <span class="metric">PASS</span>
@@ -315,18 +315,18 @@
 
   <section>
     <h2>不要过度声明</h2>
-    <p>这个项目应该表述为 self-built Hermes-style skill-routing benchmark 和 release-gate harness。It is not a standard public benchmark, not a SOTA claim, and not production readiness. Run 002 只证明新的 host-assigned candidate identity payload shape 可被 Generator 返回；host isolation canary 的终态是 <code>AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE</code>，不是正式 blind-v2 结果。最强的求职叙事是：我不仅会做指标提升，也会在盲测或基础设施证据不满足预注册边界时拒绝上线。</p>
+    <p>这个项目应该表述为 self-built Hermes-style skill-routing benchmark 和 release-gate harness。It is not a standard public benchmark, not a SOTA claim, and not production readiness. Run 003 证明的是一条 fail-closed 的 Agent-only 数据构造与审核流水线：当两轮后的确定性选择只有 <code>87/128</code> 时，系统保留配额并停止，而不是把不完整数据集包装成正式 blind-v2 模型结果。最强的求职叙事是：我不仅会做指标提升，也会在预注册数据或证据边界不满足时拒绝上线。</p>
   </section>
 
-  <section id="run002-evidence">
-    <h2>Run 002 evidence map 与面试审计</h2>
+  <section id="run003-evidence">
+    <h2>Run 003 evidence map 与面试审计</h2>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Claim</th><th>Label</th><th>Evidence</th><th>Safe wording</th><th>Risk</th></tr></thead>
         <tbody>
-          <tr><td>新 Generator payload schema 可被真实模型返回</td><td><code>verified</code></td><td>Commit A <code>4b1e122</code>；private response SHA-256 <code>65bab0ff…</code></td><td>单次 synthetic response 含 16 行、6 个允许字段、12 negative + 4 positive-only；host 分配 positions 0..15。</td><td>只证明 synthetic payload shape，不证明正式数据质量。</td></tr>
-          <tr><td>真实 canary 通过</td><td><code>do-not-say-yet</code></td><td>private events SHA-256 <code>a1d17f4e…</code>；4 个 reconnect <code>error</code> events</td><td>schema 层可校验，但 host isolation canary fail closed 为 <code>FORMAL_ISOLATION_BLOCKED</code>。</td><td>不能把最终收到 JSON 改写成端到端 canary PASS。</td></tr>
-          <tr><td>Router V2 在 blind-v2 上改进</td><td><code>do-not-say-yet</code></td><td>没有 Commit B、模型加载、score 或 formal attempt artifact</td><td>Run 002 没有产生模型质量结论，仍为 <code>KEEP_BASELINE</code>。</td><td>不得引用 pilot-002 指标代替 blind-v2 结果。</td></tr>
+          <tr><td>冻结的两轮 Agent-only 构造已执行</td><td><code>verified</code></td><td>Commit A <code>2d326d9</code>；16 个 round-1 请求与 16 个 supplement 请求</td><td>共生成 512 个候选；controller retry=0，fallback=false。</td><td>执行数据构造不等于完成模型评测。</td></tr>
+          <tr><td>角色隔离审核与污染过滤产生可审计计数</td><td><code>verified</code></td><td>污染检查 398 PASS / 114 REJECT；Reviewer A/B 各审核 398</td><td>三方 gold agreement 为 396，gold+negative exact agreement 为 99；A/B 各有一个无效调用。</td><td>三个角色均来自同一 provider，不能称为人类审核或统计独立。</td></tr>
+          <tr><td>Router V2 在 blind-v2 上改进</td><td><code>do-not-say-yet</code></td><td>只有 87/128 被选中；没有 Commit B、模型加载、score 或 formal attempt artifact</td><td>Run 003 的模型质量结论不存在，终态是 <code>AGENT_BLIND_V2_DATASET_INSUFFICIENT / KEEP_BASELINE</code>。</td><td>不得引用 pilot-002 指标代替 blind-v2 结果。</td></tr>
         </tbody>
       </table>
     </div>
@@ -334,10 +334,10 @@
       <table>
         <thead><tr><th>Question</th><th>Category</th><th>Coverage</th><th>Evidence / source</th><th>Risk</th><th>Severity</th><th>Recommended answer</th></tr></thead>
         <tbody>
-          <tr><td>为什么模型返回了正确 JSON，实验仍停止？</td><td>Reliability</td><td><code>covered</code></td><td>严格 event whitelist 与 private canary hashes</td><td>忽略 reconnect events 会放宽预注册隔离边界。</td><td>None</td><td>payload schema 通过不等于 host event stream 通过；后者出现 4 个未知 error events，所以 fail closed。</td></tr>
-          <tr><td>为什么不重试？</td><td>Protocol</td><td><code>covered</code></td><td>Run 002 retry contract</td><td>重试会在已收到有效响应后改变一次性 canary 边界。</td><td>None</td><td>只允许“无有效响应”的 transport failure 或 invalid JSON 重试；本次已收到 syntactically valid JSON。</td></tr>
-          <tr><td>这证明模型更好吗？</td><td>Evaluation</td><td><code>covered</code></td><td>formal generation / evaluation 均未启动</td><td>把 schema compatibility 与模型质量混为一谈。</td><td>None</td><td>不证明；它只暴露了 host isolation 基础设施问题，模型决策保持 <code>KEEP_BASELINE</code>。</td></tr>
-          <tr><td>公开仓库能否独立复核完整 canary trace？</td><td>Evidence</td><td><code>partial</code></td><td>sanitized truth surfaces；raw trace 保留在 Git 外</td><td>公开文档只有哈希与摘要，没有 raw private trace。</td><td>Should Fix only if public trace publication is later authorized</td><td>当前可安全陈述终态与哈希；不要声称仓库已发布完整 trace。</td></tr>
+          <tr><td>为什么 99 个 exact agreements 最终只有 87 个任务？</td><td>Protocol</td><td><code>covered</code></td><td>冻结的 per-skill 6 negative + 2 positive-only 配额与 hash-order selection</td><td>把总量足够误解为每个 stratum 都足够。</td><td>None</td><td>12 个候选未被配额选择；最终 87 个任务分属 87 个 family，仍有 11 个 negative 与 30 个 positive-only stratum 缺口。</td></tr>
+          <tr><td>27 个 transport diagnostics 是否触发了重试？</td><td>Reliability</td><td><code>covered</code></td><td>Generator 5、Reviewer A 9、Reviewer B 13</td><td>把合规诊断误报为失败或 controller retry。</td><td>None</td><td>类型仅为 <code>TEMPORARY_TLS_DISCONNECT</code> 与 <code>TEMPORARY_TRANSPORT_TIMEOUT</code>；调用仍满足冻结生命周期，controller retry 保持 0。</td></tr>
+          <tr><td>这证明模型更好吗？</td><td>Evaluation</td><td><code>covered</code></td><td>没有 Commit B、Arm A/C load、score、attempt marker 或 gate metrics</td><td>把数据构造终态与模型质量混为一谈。</td><td>None</td><td>不证明；Run 003 在模型评测前因数据集不足停止，决策保持 <code>KEEP_BASELINE</code>。</td></tr>
+          <tr><td>公开仓库能否独立复核完整 Agent trace？</td><td>Evidence</td><td><code>partial</code></td><td>sanitized truth surfaces；raw trace 保留在 Git 外</td><td>公开文档只有摘要，没有 raw private trace。</td><td>Should Fix only if public trace publication is later authorized</td><td>当前可安全陈述有界终态与计数；不要声称仓库已发布完整 trace。</td></tr>
         </tbody>
       </table>
     </div>

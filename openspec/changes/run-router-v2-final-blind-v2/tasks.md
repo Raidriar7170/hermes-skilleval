@@ -16,11 +16,11 @@ The user preselected Goal mode. Immediately after this plan passes self-review, 
 
 ## Assumptions and protected boundaries
 
-- The current branch is `agent/router-v2-blind-v2-final`; historical commit `09ba4104a147a2f740ef69283c850f40e78a0b15` remains immutable audit history.
+- The current branch is `agent/router-v2-blind-v2-successor-run`; historical commit `09ba4104a147a2f740ef69283c850f40e78a0b15` remains immutable audit history.
 - Current OpenSpec edits stay uncommitted until the final preregistration commit so Commit A-agent contains the approved contract.
 - Implementation may use small intermediate source/test commits before Commit A-agent. No candidate generation is allowed until the final Commit A-agent SHA exists and all pre-generation checks pass.
 - Raw Agent prompts, responses, run metadata, and contamination ledgers live under `/Users/raidriar/.codex/private/hermes-blind-v2/${COMMIT_A_SHA}/`, exported as `HERMES_BLIND_V2_ROOT`; only the canonical Commit B files enter Git.
-- Existing explicit authorization covers implementation, Commit A-agent, Agent construction/review, Commit B, the unique formal attempt, final result commit, branch push, and one PR. It does not authorize merge, tag, release, deploy, archive, training, checkpoint mutation, or default-router promotion.
+- Existing explicit authorization covers implementation, Commit A-agent, Agent construction/review, Commit B when quotas pass, the unique formal attempt when Commit B exists, terminal documentation, branch push, and updating existing Draft PR #40. It does not authorize a new PR, merge, tag, release, deploy, archive, training, checkpoint mutation, or default-router promotion.
 - No Human Brief is created because the original task explicitly forbids it.
 
 ## File map
@@ -658,19 +658,47 @@ occurred and Tasks 11-13 remain unchecked.
 - Create outside Git: the Run 003 authority manifest plus five required private construction ledger files
 - No repository or Arm A/C file access beyond frozen skill/reference inputs
 
-- [ ] 11.1 Run the single synthetic `run003-generator-canary`, then use `run-agent-construction --authority run003 --max-workers 4` for 16 sealed Generator requests, one per gold skill, each requesting exactly 12 negative-labeled plus four positive-only candidates. Spawn each with `gpt-5.6-sol/max`, `fork_context=false`, and no thread history.
+- [x] 11.1 Run the single synthetic `run003-generator-canary`, then use `run-agent-construction --authority run003 --max-workers 4` for 16 sealed Generator requests, one per gold skill, each requesting exactly 12 negative-labeled plus four positive-only candidates. Spawn each with `gpt-5.6-sol/max`, `fork_context=false`, and no thread history.
 
-- [ ] 11.2 Require exactly 16 rows per response. Reject a wrong-count request without stopping other requests; discard only semantically invalid candidates; allow at most one byte-identical retry only for transport failure or invalid JSON; and record every request/candidate/diagnostic outcome under the independent Run 003 root.
+- [x] 11.2 Require exactly 16 rows per response. Reject a wrong-count request without stopping other requests; discard only semantically invalid candidates; allow at most one byte-identical retry only for transport failure or invalid JSON; and record every request/candidate/diagnostic outcome under the independent Run 003 root.
 
-- [ ] 11.3 Run static/lexical/all-mpnet contamination scanning against train, pilot-002, Phase 16, and within-pool candidates. Seal `blind-v2-contamination.jsonl`; never send scan results or rejection reasons to an Agent.
+- [x] 11.3 Run static/lexical/all-mpnet contamination scanning against train, pilot-002, Phase 16, and within-pool candidates. Seal `blind-v2-contamination.jsonl`; never send scan results or rejection reasons to an Agent.
 
-- [ ] 11.4 For every clean candidate, call `request-reviews` and spawn Reviewer A and Reviewer B as separate one-candidate, non-forked, empty-history sessions in their independently hashed schedules. Never fork, reuse, or resume a reviewer session.
+- [x] 11.4 For every clean candidate, call `request-reviews` and spawn Reviewer A and Reviewer B as separate one-candidate, non-forked, empty-history sessions in their independently hashed schedules. Never fork, reuse, or resume a reviewer session.
 
-- [ ] 11.5 Seal both review ledgers before comparison. Mechanically compute exact three-way agreement and dual `ACCEPT`; do not adjudicate, relabel, or select by confidence.
+- [x] 11.5 Seal both review ledgers before comparison. Mechanically compute exact three-way agreement and dual `ACCEPT`; do not adjudicate, relabel, or select by confidence.
 
-- [ ] 11.6 If any `(gold skill, negative/positive-only)` stratum is short, run one deficit-only supplement request for each deficient gold skill. Every supplement response still contains exactly 16 candidates, with its 16-row quota split deterministically in proportion to the two deficits. Send every new candidate through the complete scan and two-new-reviewer-session path. If any stratum remains short, write `AGENT_BLIND_V2_DATASET_INSUFFICIENT` plus `KEEP_BASELINE` and stop before Commit B.
+- [x] 11.6 If any `(gold skill, negative/positive-only)` stratum is short, run one deficit-only supplement request for each deficient gold skill. Every supplement response still contains exactly 16 candidates, with its 16-row quota split deterministically in proportion to the two deficits. Send every new candidate through the complete scan and two-new-reviewer-session path. If any stratum remains short, write `AGENT_BLIND_V2_DATASET_INSUFFICIENT` plus `KEEP_BASELINE` and stop before Commit B.
 
-- [ ] 11.7 Run `pack-status` and verify exactly 128 selected tasks, 96 negatives, 128 families, zero human counts, expected Agent configs, no protocol leak, and no Arm A/C score/model load.
+- [ ] 11.7 Run `pack-status` and verify exactly 128 selected tasks, 96 negatives, 128 families, zero human counts, expected Agent configs, no protocol leak, and no Arm A/C score/model load. This check failed by design because deterministic selection produced only `87/128` tasks and `85/96` negative labels; it MUST remain unchecked and MUST NOT be repaired by lowering quotas.
+
+Run 003 execution evidence (2026-07-21): Commit A was
+`2d326d95eeb6b545295d55ac937cfbf902a0d956`. The canary completed one
+successful invocation with 16 candidates and zero diagnostics, wrote no formal
+data, and loaded no model. Round 1 issued 16 requests / 256 candidates; the
+single supplement issued 16 requests / 256 candidates. Controller retries were
+zero and no fallback was used. Contamination results were
+`398 PASS / 114 REJECT`. Reviewer A processed 398 candidates with 397 valid `ACCEPT` responses
+and one `FORMAL_ISOLATION_BLOCKED` invalid invocation; Reviewer B processed 398
+with 397 valid `ACCEPT` responses and one `FORMAL_OUTPUT_BLOCKED /
+SCHEMA_INVALID` invalid invocation. Three-way gold agreement was 396 and exact
+gold+negative/none agreement was 99. Deterministic selection retained 87 tasks
+(`85` negative-labeled, `2` positive-only) across 87 families. Candidate
+outcomes were `selected=87`, `not_selected=12`,
+`rejected_contamination=114`, `rejected_invocation=2`, and
+`rejected_review=297`. The 27 validated transport diagnostics were Generator
+5, Reviewer A 9, Reviewer B 13, with types only
+`TEMPORARY_TLS_DISCONNECT` and `TEMPORARY_TRANSPORT_TIMEOUT`.
+
+The remaining negative / positive-only deficits were: `accessibility 0/2`,
+`apply-patch 2/2`, `browser-smoke 3/2`, `evidence-backed 0/2`,
+`form-interaction 0/2`, `plan-mode 0/2`, `slash-command 1/2`,
+`subagent-worker 5/2`, `systematic-debugging 0/2`,
+`task-tool-delegation 0/2`, `TDD 0/2`, `worktrees 0/2`, `verification 0/2`,
+`visual-regression 0/2`, and `workspace-git 0/2`; `mcp-tool-routing` had no
+deficit. The exact terminal is `AGENT_BLIND_V2_DATASET_INSUFFICIENT /
+KEEP_BASELINE`. No Commit B, Arm A/C load, score, formal attempt marker,
+per-seed/aggregate/statistical result, or gate metric exists.
 
 ### Task 12: Freeze and commit the selected dataset as Commit B
 
@@ -727,20 +755,20 @@ python scripts/run_router_v2_blind_v2_final.py evaluate --authority run003
 
 - [ ] 13.5 Verify all result documents, raw counts over 128/96, per-seed/aggregate/statistical consistency, lineage self-hash, and exactly one terminal status. Every path must contain `KEEP_BASELINE` and unchanged production/release/default fields.
 
-### Task 14: Close out, review, commit, push, and open one PR
+### Task 14: Close out, review, commit, push, and update Draft PR #40
 
 **Files:**
 - Conditionally modify: `README.md`, `README_EN.md`, `docs/resume.md`, `docs/interview-project-overview.html`
 - Add final result artifacts only under the canonical namespace
 
-- [x] 14.1 Update public surfaces only for `AGENT_BLIND_V2_GATES_PASSED` or `AGENT_BLIND_V2_GATES_NOT_PASSED`; leave them unchanged for pre-evaluation terminal states. Use Agent-set-bounded language, exact model configs, raw counts, same-provider limitation, and `KEEP_BASELINE`.
+- [x] 14.1 Update public surfaces with bounded terminal wording. For the actual pre-evaluation `AGENT_BLIND_V2_DATASET_INSUFFICIENT` state, disclose the 512-candidate construction counts, `87/128` selection shortfall, exact Agent configurations, same-provider limitation, absence of model/gate metrics, and `KEEP_BASELINE`; do not imply human review, benchmark improvement, production readiness, or promotion.
 
-- [x] 14.2 Run focused tests, full tests, Ruff, mypy, OpenSpec strict validation, `git diff --check`, frozen-artifact hash guards, no-training guards, one-attempt checks, and report/artifact number consistency.
+- [x] 14.2 Run focused tests, full tests, Ruff, mypy, OpenSpec strict validation, `git diff --check`, frozen-artifact hash guards, no-training guards, one-attempt checks, and report/artifact number consistency. Final evidence: focused `204 passed` plus two Task 7/8 exact-oracle tests passed; full suite `2289 passed, 25 failed`, matching the exact historical README/release baseline with zero Run 003 regression; Ruff, format, mypy, OpenSpec `37/37`, HTML parse, and diff checks passed.
 
-- [x] 14.3 Obtain final read-only Reviewer verdict. Fix only presentation or validation defects that cannot alter tasks, labels, models, checkpoints, gate, metrics, or results.
+- [x] 14.3 Obtain final read-only Reviewer verdict. Fix only presentation or validation defects that cannot alter tasks, labels, models, checkpoints, gate, metrics, or results. Final read-only verdict: `Pass`, with no Must Fix, Should Fix, Nice to Have, or re-plan requirement.
 
-- [x] 14.4 Commit terminal artifacts and any authorized result-facing documents without rewriting Commit A-agent or Commit B.
+- [ ] 14.4 Commit the authorized dataset-insufficiency documentation without inventing terminal evaluation artifacts or rewriting Commit A. Commit B does not exist. Main-thread closeout pending; this documentation worker created no commit.
 
-- [x] 14.5 Push `agent/router-v2-blind-v2-final` and open one PR. Do not merge, tag, release, deploy, archive, or change the default router.
+- [ ] 14.5 Push `agent/router-v2-blind-v2-successor-run` and update the existing Draft PR #40; do not create a new PR. Do not merge, tag, release, deploy, archive, or change the default router. Main-thread closeout pending.
 
-- [x] 14.6 Report the final status, Commit A-agent, Commit B, attempt marker/terminal state, per-seed and aggregate results, statistics, gate, `KEEP_BASELINE`, validation evidence, artifact hashes, explicit non-actions, and limitations; then stop Hermes optimization permanently.
+- [ ] 14.6 Report the final status, actual absence of Commit B and attempt/model/gate results, terminal state, `KEEP_BASELINE`, validation evidence, artifact hashes, explicit non-actions, and limitations; then stop Hermes optimization permanently. Main-thread final report pending.
