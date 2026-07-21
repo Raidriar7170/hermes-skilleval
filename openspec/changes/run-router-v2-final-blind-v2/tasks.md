@@ -767,8 +767,8 @@ python scripts/run_router_v2_blind_v2_final.py evaluate --authority run003
 
 - [x] 14.3 Obtain final read-only Reviewer verdict. Fix only presentation or validation defects that cannot alter tasks, labels, models, checkpoints, gate, metrics, or results. Final read-only verdict: `Pass`, with no Must Fix, Should Fix, Nice to Have, or re-plan requirement.
 
-- [ ] 14.4 Commit the authorized dataset-insufficiency documentation without inventing terminal evaluation artifacts or rewriting Commit A. Commit B does not exist. Main-thread closeout pending; this documentation worker created no commit.
+- [x] 14.4 Commit the authorized dataset-insufficiency documentation without inventing terminal evaluation artifacts or rewriting Commit A. Commit B does not exist. Status commit: `eeca17293e69eb4a0e79b3da1e01207842b5232c` (`docs(router): record Run 003 dataset insufficiency`).
 
-- [ ] 14.5 Push `agent/router-v2-blind-v2-successor-run` and update the existing Draft PR #40; do not create a new PR. Do not merge, tag, release, deploy, archive, or change the default router. Main-thread closeout pending.
+- [x] 14.5 Push `agent/router-v2-blind-v2-successor-run` and update the existing Draft PR #40; do not create a new PR. Do not merge, tag, release, deploy, archive, or change the default router. Main-thread closeout performs only this authorized push and existing-PR update.
 
 - [ ] 14.6 Report the final status, actual absence of Commit B and attempt/model/gate results, terminal state, `KEEP_BASELINE`, validation evidence, artifact hashes, explicit non-actions, and limitations; then stop Hermes optimization permanently. Main-thread final report pending.
