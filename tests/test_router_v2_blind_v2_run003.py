@@ -223,15 +223,17 @@ class _FakeRun003ConstructionRunner:
         else:
             candidate_id = cast(str, request["input"]["task_id"])
             with self._lock:
-                gold, negative = self._candidate_labels[candidate_id]
+                reviewed_gold, reviewed_negative = self._candidate_labels[candidate_id]
             response = {
                 "decision": "ACCEPT",
-                "reviewed_gold_skill_id": gold,
-                "reviewed_negative_skill_id": negative,
+                "reviewed_gold_skill_id": reviewed_gold,
+                "reviewed_negative_skill_id": reviewed_negative,
                 "natural": True,
                 "single_primary_skill": True,
                 "no_label_leakage": True,
-                "negative_confusable": True if negative is not None else None,
+                "negative_confusable": (
+                    True if reviewed_negative is not None else None
+                ),
                 "confidence": "HIGH",
                 "reason": "Synthetic fake-only integration acceptance.",
             }
