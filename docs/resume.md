@@ -14,8 +14,11 @@ metrics, blind-validation evidence, and a conservative default-router decision.
   `16/16`, reduced Negative Hit Rate@1 from `1/9` to `0/9`, and reduced
   Negative Hit Rate@5 from `24/27` to `18/27` across paired seeds, with all
   unchanged gates passing. `human_reviewer_count=0`; non-SOTA,
-  non-production, not release eligible, blind-v2 not run, and router promotion
-  remains `KEEP_BASELINE`.
+  non-production, and not release eligible. A single synthetic Generator canary
+  validated the Run 002 six-field / 16-row payload shape but stopped fail-closed
+  on host-event isolation after reconnect errors; formal blind-v2, Reviewer
+  calls, Commit B, and model scoring were not run, and router promotion remains
+  `KEEP_BASELINE`.
 
 - Built `Hermes SkillEval`, a 419-test Python CLI harness for benchmarking
   Hermes-style agent skill routing over an 80-task / 45-skill self-built corpus,
@@ -59,6 +62,12 @@ release gate refused to promote `finetuned-embedding` as the default.
 - **Phase 18 reproducibility:** The release-check command reruns the selector
   and public artifact guard, then writes a manifest with artifact hashes so the
   default-router decision can be reproduced locally and in CI shape.
+- **Run 002 fail-closed boundary:** Replaced model-authored candidate indexes
+  with host-assigned positions and deterministic IDs. The only synthetic
+  Generator canary returned the required 16-row, six-field payload, but four
+  reconnect error events invalidated the host event stream. The workflow
+  recorded `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE / KEEP_BASELINE` and did
+  not start formal generation, review, dataset freeze, model load, or scoring.
 - **Engineering depth:** The project covers offline baselines, optional neural
   retrieval, verifier-gated reranking, cross-encoder reranking, calibration,
   failure analysis, regression guards, static HTML inspection, and public

@@ -622,6 +622,20 @@ not reusable.
 
 - [x] 10.8 Add Run 002 ledger reconstruction and an independent exact-three-file freeze target at `data/router-v2-blind-v2-successor-002/`; focused tests prove `128/96`, `16 x 8`, per-skill `6 + 2`, and 128-family invariants. No dataset files have been generated in the repository and no Commit B exists yet.
 
+Run 002 canary terminal (2026-07-21): Commit A
+`4b1e1221ac548a4a0b465c2fbe47833c16e358b0` consumed exactly one synthetic
+Generator host invocation with no retry. The returned JSON locally satisfied the
+six-field schema, contained exactly 16 candidates with `12 negative + 4
+positive-only`, and produced host-assigned positions `0..15`. The host event
+stream also contained four TLS / timeout reconnect `error` events, so the frozen
+event validator returned `FORMAL_ISOLATION_BLOCKED` even though a syntactically
+valid response was eventually received. A retry was therefore not permitted.
+The workflow stopped at
+`AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE / KEEP_BASELINE`: no formal candidate
+generation, Reviewer call, contamination scan, supplement, Commit B, Arm A/C
+load, model score, formal attempt marker, or evaluation artifact exists. Tasks
+11-13 remain unchecked.
+
 ### Task 11: Generate, scan, and dual-review the candidate pool
 
 **Files:**

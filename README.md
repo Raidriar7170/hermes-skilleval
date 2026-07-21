@@ -30,7 +30,7 @@ Hermes SkillEval 解决一个具体问题：当 Claude Code、Codex、Cursor 一
 | 我实现了什么？ | `SKILL.md` 解析与索引、带 gold/negative 标签的 benchmark、五类 router、混淆挖掘、难负样本审核与训练包、SentenceTransformer 训练、配对评测、证据链和可复用 GitHub Action。 |
 | Router V2 怎么训练？ | 基于冻结的 MiniLM，使用 64 个正样本与 52 个审核后 hard negatives；正样本用 `MultipleNegativesRankingLoss`，难负样本用 `ContrastiveLoss`，三臂、三随机种子、预注册门禁。 |
 | 结果如何？ | Arm A → C 的 Recall@1 从 `12/16` 提升到 `16/16`，Recall@5 保持 `16/16`，Negative Hit Rate@1 从 `1/9` 降到 `0/9`，三组配对运行的 Negative Hit Rate@5 从 `24/27` 降到 `18/27`。 |
-| 最终结论是什么？ | Pilot 内部结论为 `ROUTER_V2_PILOT_IMPROVED`；但 blind-v2 未运行，因此路由器决策仍为 `KEEP_BASELINE`，不可发布或升级默认路由器。 |
+| 最终结论是什么？ | Pilot 内部结论为 `ROUTER_V2_PILOT_IMPROVED`。Run 002 的单次 synthetic Generator canary 返回了符合新 6 字段 / 16 行 schema 的 payload，但 host event stream 出现 4 个 reconnect error events，严格隔离校验因此以 `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE` 停止；正式 blind-v2 未运行，路由器决策仍为 `KEEP_BASELINE`。 |
 
 ## 关键量化结果
 
@@ -62,8 +62,13 @@ Recall@5、MRR、NDCG@5、Negative Hit Rate@5 与 p95 latency 的预注册门限
   这是自建 Hermes-style benchmark，不是公开标准 benchmark、排行榜或 SOTA 证据。
 - Arm C 虽然 top-1 指标改善，但每个 seed 仍有 `5–7/9` 个 Negative Hit@5，且
   各有 `7/16` 个任务触发至少一个诊断 flag；结果不能解释为“混淆问题已经解决”。
-- pilot-002 只进行一次预注册评测，没有 best-seed selection、重跑或事后调参；
-  blind-v2 未运行，`release_eligible=false`，默认决策仍为 `KEEP_BASELINE`。
+- pilot-002 只进行一次预注册评测，没有 best-seed selection、重跑或事后调参。
+  Run 002 只消费了一次 synthetic Generator canary host 调用；返回 payload 本地校验为
+  16 条、`12 negative + 4 positive-only`、host positions `0..15`，但同一 event
+  stream 含 4 个 TLS / timeout reconnect error events，最终状态为
+  `FORMAL_ISOLATION_BLOCKED / AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE`。
+  没有正式候选生成、Reviewer 调用、Commit B、Arm A/C 加载或模型评分；
+  `release_eligible=false`，默认决策仍为 `KEEP_BASELINE`。
 - 冻结的 canonical pilot manifest 缺少四个 model-only truth fields；仓库保留原始
   manifest，并通过自封存的
   [`truth-erratum.json`](artifacts/router-v2-v4/internal-training-pilot/router-v2-v4-confusion-mined-pilot-002-eval-replay/truth-erratum.json)

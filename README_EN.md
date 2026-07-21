@@ -32,7 +32,7 @@ routing regression before it becomes the default?
 | What did I build? | A `SKILL.md` parser and index, gold/negative-labeled benchmarks, five router families, confusion mining, hard-negative review and packaging, SentenceTransformer training, paired evaluation, evidence lineage, and a reusable GitHub Action. |
 | How was Router V2 trained? | Starting from a frozen MiniLM model, it used 64 positives and 52 reviewed hard negatives. Positives used `MultipleNegativesRankingLoss`; hard negatives used `ContrastiveLoss`, with three arms, three random seeds, and preregistered gates. |
 | What were the results? | Arm A → C Recall@1 improved from `12/16` to `16/16`; Recall@5 stayed at `16/16`; Negative Hit Rate@1 dropped from `1/9` to `0/9`; and Negative Hit Rate@5 fell from `24/27` to `18/27` across three paired runs. |
-| What is the final decision? | The internal conclusion is `ROUTER_V2_PILOT_IMPROVED`. Because blind-v2 was not run, the router decision remains `KEEP_BASELINE`; the candidate is not release- or promotion-eligible. |
+| What is the final decision? | The internal conclusion is `ROUTER_V2_PILOT_IMPROVED`. Run 002's single synthetic Generator canary returned a payload matching the new six-field / 16-row schema, but four reconnect error events made the host event stream fail strict isolation as `AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE`. Formal blind-v2 was not run, so the router decision remains `KEEP_BASELINE`. |
 
 ## Key quantitative results
 
@@ -67,8 +67,14 @@ for per-seed metrics, paired wins/losses, failure slices, and lineage.
   cases and `7/16` tasks with at least one diagnostic flag. The confusion problem
   is not solved.
 - Pilot-002 used one preregistered attempt with no best-seed selection, rerun, or
-  post-hoc tuning. Blind-v2 was not run, `release_eligible=false`, and the router
-  decision remains `KEEP_BASELINE`.
+  post-hoc tuning. Run 002 consumed exactly one synthetic Generator canary host
+  invocation. Its payload locally validated as 16 candidates, `12 negative + 4
+  positive-only`, with host positions `0..15`; however, the same event stream
+  contained four TLS / timeout reconnect error events and terminated as
+  `FORMAL_ISOLATION_BLOCKED / AGENT_BLIND_V2_INFRASTRUCTURE_INCONCLUSIVE`.
+  No formal candidate generation, Reviewer call, Commit B, Arm A/C load, or model
+  score occurred. `release_eligible=false`, and the router decision remains
+  `KEEP_BASELINE`.
 - The frozen canonical pilot manifest omitted four model-only truth fields. The
   repository preserves that manifest and adds a self-sealed
   [`truth-erratum.json`](artifacts/router-v2-v4/internal-training-pilot/router-v2-v4-confusion-mined-pilot-002-eval-replay/truth-erratum.json)
