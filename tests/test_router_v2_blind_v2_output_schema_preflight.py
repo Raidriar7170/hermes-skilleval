@@ -724,11 +724,13 @@ def test_public_entrypoints_expose_no_path_or_host_injection() -> None:
 
 
 def test_public_orchestration_checks_target_then_runs_and_writes(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = _module()
     calls: list[tuple[str, Any]] = []
     receipt = {"preflight_state": "PREFLIGHT_READY"}
+    private_root = tmp_path.resolve() / "successor-private"
 
     def run_successor(**kwargs: Any) -> dict[str, str]:
         calls.append(("run", kwargs))
@@ -749,11 +751,12 @@ def test_public_orchestration_checks_target_then_runs_and_writes(
         "write_public_receipt",
         lambda value: calls.append(("write", value)),
     )
+    monkeypatch.setattr(module, "PRIVATE_EVIDENCE_ROOT", private_root)
 
     assert module.run_successor_preflight() == receipt
     assert calls[0] == ("target", module.FROZEN_REPOSITORY_ROOT)
     assert calls[1][0] == "run"
-    assert calls[1][1]["private_root"] == module.PRIVATE_EVIDENCE_ROOT
+    assert calls[1][1]["private_root"] == private_root
     assert calls[1][1]["repository_root"] == module.FROZEN_REPOSITORY_ROOT
     assert calls[2] == ("write", receipt)
 
