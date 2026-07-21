@@ -14,8 +14,13 @@ metrics, blind-validation evidence, and a conservative default-router decision.
   `16/16`, reduced Negative Hit Rate@1 from `1/9` to `0/9`, and reduced
   Negative Hit Rate@5 from `24/27` to `18/27` across paired seeds, with all
   unchanged gates passing. `human_reviewer_count=0`; non-SOTA,
-  non-production, not release eligible, blind-v2 not run, and router promotion
-  remains `KEEP_BASELINE`.
+  non-production, and not release eligible. Built a fail-closed Agent-only
+  blind-set pipeline whose Run 003 generated 512 candidates over two rounds,
+  rejected 114 for contamination, reached 99 exact three-way gold+negative
+  agreements, and deterministically selected 87 tasks (85 negative-labeled,
+  2 positive-only). Because the frozen 128/96/128 quota was not met, it stopped
+  at `AGENT_BLIND_V2_DATASET_INSUFFICIENT` before Commit B or model scoring;
+  router promotion remains `KEEP_BASELINE`.
 
 - Built `Hermes SkillEval`, a 419-test Python CLI harness for benchmarking
   Hermes-style agent skill routing over an 80-task / 45-skill self-built corpus,
@@ -59,6 +64,13 @@ release gate refused to promote `finetuned-embedding` as the default.
 - **Phase 18 reproducibility:** The release-check command reruns the selector
   and public artifact guard, then writes a manifest with artifact hashes so the
   default-router decision can be reproduced locally and in CI shape.
+- **Run 003 fail-closed boundary:** Completed the allowed canary, 16-request
+  first round, and 16-request supplement with no controller retry or fallback.
+  From 512 candidates, 398 passed contamination and 99 reached exact three-way
+  gold+negative agreement; deterministic quota selection retained 87 across 87
+  families. The remaining per-skill negative/positive-only deficits forced
+  `AGENT_BLIND_V2_DATASET_INSUFFICIENT / KEEP_BASELINE` before dataset freeze,
+  model load, scoring, or a formal attempt.
 - **Engineering depth:** The project covers offline baselines, optional neural
   retrieval, verifier-gated reranking, cross-encoder reranking, calibration,
   failure analysis, regression guards, static HTML inspection, and public

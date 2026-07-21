@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Router V2 Blind-v2 Successor Schema Preflight 简报</title>
+  <style>
+    :root { color-scheme: light; --ink: #172033; --muted: #5b6473; --line: #d9dee8; --good: #176b45; --good-bg: #edf9f2; --warn: #8a5b00; --warn-bg: #fff8df; --soft: #f5f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eef1f6; color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(1040px, calc(100% - 32px)); margin: 32px auto; padding: 32px; background: white; border: 1px solid var(--line); border-radius: 16px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin: 28px 0 10px; font-size: 20px; }
+    p { margin: 8px 0; }
+    .meta { color: var(--muted); }
+    .terminal { margin: 24px 0; padding: 18px 20px; border-left: 5px solid var(--good); background: var(--good-bg); }
+    .terminal strong { color: var(--good); font-size: 18px; }
+    .boundary { margin-top: 26px; padding: 16px 18px; background: var(--warn-bg); border: 1px solid #e8cf72; border-radius: 10px; color: var(--warn); font-weight: 700; }
+    ol, ul { padding-left: 24px; }
+    li { margin: 6px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 9px 10px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: var(--soft); }
+    td:first-child, th:first-child { width: 22%; }
+    code { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
+    .ok { color: var(--good); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Router V2 Blind-v2 Successor Schema Preflight 简报</h1>
+    <p class="meta">2026-07-20 · 新 worktree / 新 OpenSpec change · 预检产出时本地未提交</p>
+
+    <section class="terminal">
+      <strong>PREFLIGHT_READY · KEEP_BASELINE</strong>
+      <p>三角色固定 schema/host transport canary 全部通过。本结论仅表示 preflight 兼容；<code>production_ready=false</code>，默认 Router 未变。</p>
+      <p>旧实验继续保持 <code>AGENT_BLIND_V2_PROTOCOL_INVALID / KEEP_BASELINE</code>，已暴露的 16 个候选未读取、未复用、未重试。</p>
+    </section>
+
+    <h2>为什么需要 successor</h2>
+    <p>旧实验在不完整的 Round-1 生成阶段终止：第一个 Generator 响应暴露了 16 个候选，后续 exact-host 请求因历史 strict output schema 不兼容而失败；在数据集构建、Reviewer、评分和正式评估之前即停止。历史 Generator schema 的嵌套 <code>const</code> 缺少显式 <code>type</code>，历史 Reviewer schema 还包含未显式类型化的 enum/const 与 provider strict subset 不接受的条件组合。</p>
+    <p>本阶段没有修补或重解释旧 schema；它建立了版本化 successor schema、递归 fail-closed validator、一次性 synthetic canary 和新的公开收据。</p>
+
+    <h2>实现与隔离门</h2>
+    <ul>
+      <li>所有 <code>const</code> 与 enum 节点显式声明兼容类型；对象闭合并全量 required；递归检查 properties、items 与每个 <code>anyOf[index]</code>。</li>
+      <li>拒绝 <code>allOf</code>、<code>oneOf</code>、<code>not</code>、<code>if/then/else</code>、<code>$defs</code>、<code>minLength/maxLength</code> 及未知或畸形 keyword 值。</li>
+      <li>公开入口不接受 private root、repository root、host probe 或 launcher 注入；公开收据目标在 host 调用前检查为 absent、非 symlink。</li>
+      <li>实际 argv 直接执行 hash-pinned resolved binary；每个角色 process 前后复核 binary authority。</li>
+      <li>JSONL 事件必须严格按 <code>thread.started → turn.started → items → turn.completed</code> 排序，只允许 reasoning/agent_message；每角色恰好一个 final agent message，其 canonical JSON 必须等于 response，三个 thread ID 必须互异。</li>
+      <li><code>launch_attempt_count</code> 与确认启动的 <code>process_count</code> 分开记录；不可用的 tool/process truth 使用显式 null/status，不伪造为零。</li>
+    </ul>
+
+    <h2>一次性 exact-host 结果</h2>
+    <table>
+      <thead><tr><th>角色</th><th>固定配置</th><th>结果</th><th>事件 / 工具</th><th>Successor schema SHA-256</th></tr></thead>
+      <tbody>
+        <tr><td>Generator</td><td><code>gpt-5.6-sol / max</code></td><td class="ok">VALID · exit 0</td><td><code>COMPLETE</code> · tool 0</td><td><code>2df2ed8493e6a6bcbbcd86b1efc0b1d2a9c76debec6032aa5b65e838ad03717c</code></td></tr>
+        <tr><td>Reviewer A</td><td><code>gpt-5.6-sol / ultra</code></td><td class="ok">VALID · exit 0</td><td><code>COMPLETE</code> · tool 0</td><td><code>91bfa4018c88aefbbaffb1cd5ab19f622aa216ed6029a3defeea70fc39c735de</code></td></tr>
+        <tr><td>Reviewer B</td><td><code>gpt-5.6-luna / max</code></td><td class="ok">VALID · exit 0</td><td><code>COMPLETE</code> · tool 0</td><td><code>91bfa4018c88aefbbaffb1cd5ab19f622aa216ed6029a3defeea70fc39c735de</code></td></tr>
+      </tbody>
+    </table>
+    <p>总计：<code>launch_attempt_count=3</code>、<code>process_count=3</code>、<code>retry_count=0</code>、无 fallback、无 fork。每角色的 final-message、parsed-object 与 response hash 一致。</p>
+
+    <h2>冻结证据</h2>
+    <table>
+      <tr><th>历史 terminal commit</th><td><code>aff4e569e90fa30f5a96b212970ad1331d5c7c6e</code></td></tr>
+      <tr><th>CLI / resolved binary</th><td><code>codex-cli 0.144.5</code><br><code>/Users/raidriar/.codex/packages/standalone/releases/0.144.5-aarch64-apple-darwin/bin/codex</code></td></tr>
+      <tr><th>Binary SHA-256</th><td><code>5e29ab10ca1171be158f7335dd6bd8ce1aaf9af1556939db36a5ee338be6f5f2</code></td></tr>
+      <tr><th>Successor authority SHA-256</th><td><code>78689960afca96437e0295fca35fa944effb6026b8f33835a6d3382cc230e0f4</code></td></tr>
+      <tr><th>Public receipt self SHA-256</th><td><code>d852c20feea13ee7e0c4fdcd6d75f490c144db4c0dd59386d28640251e5ff291</code></td></tr>
+      <tr><th>Public receipt</th><td><code>artifacts/router-v2-blind-v2-successor-preflight/preflight-receipt.json</code> · regular <code>0644</code> · exclusive creation</td></tr>
+      <tr><th>Private evidence</th><td>仓库外目录与角色目录 <code>0700</code>；schema、prompt、events、response 均为 regular <code>0600</code>；hash/权限复核通过，公开收据不含 raw payload。</td></tr>
+    </table>
+
+    <h2>验证与审查</h2>
+    <ul>
+      <li>新增 malformed supported-keyword RED：<code>8 failed</code>；实现后对应 GREEN：<code>8 passed</code>。</li>
+      <li>Focused successor suite：<code>90 passed</code>。</li>
+      <li>适用 blind-v2 回归：<code>265 passed</code>；historical runner schema/terminal 子集：<code>39 passed, 716 deselected</code>。</li>
+      <li>Ruff check / format、focused mypy、<code>git diff --check</code> 全部通过。</li>
+      <li><code>openspec validate --all --strict</code>：<code>37 passed, 0 failed</code>。</li>
+      <li>独立 pre-host Reviewer：Must Fix / Should Fix / Nice to Have 均为 None，Verdict = Pass。</li>
+    </ul>
+
+    <h2>限制与明确未授权</h2>
+    <ul>
+      <li>该结果只证明记录时刻的 schema/CLI/argv transport compatibility，不证明正式 prompt 质量、候选质量、Router 指标、Reviewer 科学独立性或 backend alias 独立性。</li>
+      <li>没有正式候选生成、Arm A/C 加载、候选 review、评分、Commit B、正式评估、训练、数据挖掘、模型更新或 Router promotion。</li>
+      <li>预检执行本身没有 commit、push、PR、merge、archive、release 或 deploy；本简报与公开成果随后仅依据单独的本地 commit-only 授权冻结，该授权不包含 push、PR、merge、archive、release 或 deploy。</li>
+      <li>收据记录的候选生成、评估、训练、Git 与发布权限仍为 <code>false</code>；本地冻结 commit 的权限来自预检之外的单独授权。</li>
+    </ul>
+
+    <p class="boundary">下一步边界：如要生成任何正式 successor 候选，必须另建阶段并获得新的明确授权；本次 PREFLIGHT_READY 不提供该授权。</p>
+  </main>
+</body>
+</html>

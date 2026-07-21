@@ -30,7 +30,7 @@ Hermes SkillEval 解决一个具体问题：当 Claude Code、Codex、Cursor 一
 | 我实现了什么？ | `SKILL.md` 解析与索引、带 gold/negative 标签的 benchmark、五类 router、混淆挖掘、难负样本审核与训练包、SentenceTransformer 训练、配对评测、证据链和可复用 GitHub Action。 |
 | Router V2 怎么训练？ | 基于冻结的 MiniLM，使用 64 个正样本与 52 个审核后 hard negatives；正样本用 `MultipleNegativesRankingLoss`，难负样本用 `ContrastiveLoss`，三臂、三随机种子、预注册门禁。 |
 | 结果如何？ | Arm A → C 的 Recall@1 从 `12/16` 提升到 `16/16`，Recall@5 保持 `16/16`，Negative Hit Rate@1 从 `1/9` 降到 `0/9`，三组配对运行的 Negative Hit Rate@5 从 `24/27` 降到 `18/27`。 |
-| 最终结论是什么？ | Pilot 内部结论为 `ROUTER_V2_PILOT_IMPROVED`；但 blind-v2 未运行，因此路由器决策仍为 `KEEP_BASELINE`，不可发布或升级默认路由器。 |
+| 最终结论是什么？ | Pilot 内部结论仍为 `ROUTER_V2_PILOT_IMPROVED`；后续 Run 003 完成两轮 Agent-only 候选构造，但只选出 `87/128` 个满足冻结条件的任务（`85` 个 negative-labeled、`2` 个 positive-only），因此以 `AGENT_BLIND_V2_DATASET_INSUFFICIENT / KEEP_BASELINE` 停止。没有 Commit B、Arm A/C 评分或 blind-v2 门禁结果。 |
 
 ## 关键量化结果
 
@@ -62,8 +62,14 @@ Recall@5、MRR、NDCG@5、Negative Hit Rate@5 与 p95 latency 的预注册门限
   这是自建 Hermes-style benchmark，不是公开标准 benchmark、排行榜或 SOTA 证据。
 - Arm C 虽然 top-1 指标改善，但每个 seed 仍有 `5–7/9` 个 Negative Hit@5，且
   各有 `7/16` 个任务触发至少一个诊断 flag；结果不能解释为“混淆问题已经解决”。
-- pilot-002 只进行一次预注册评测，没有 best-seed selection、重跑或事后调参；
-  blind-v2 未运行，`release_eligible=false`，默认决策仍为 `KEEP_BASELINE`。
+- pilot-002 只进行一次预注册评测，没有 best-seed selection、重跑或事后调参。
+  后续 Run 003 使用固定的 Generator `gpt-5.6-sol/max`、Reviewer A
+  `gpt-5.6-sol/ultra` 与 Reviewer B `gpt-5.6-luna/max`：两轮共生成 `512`
+  个候选，污染检查 `398 PASS / 114 REJECT`，三方 gold agreement 为 `396`，
+  gold+negative exact agreement 为 `99`，最终按冻结规则选出 `87` 个任务。
+  这不足以满足 `128 tasks / 96 negatives / 128 families`；工作流没有降低配额，
+  而是在 Commit B、Arm A/C 加载、模型评分和 formal attempt 前停止。三者均为
+  OpenAI Agent，角色隔离不等于统计独立或人类审核。
 - 冻结的 canonical pilot manifest 缺少四个 model-only truth fields；仓库保留原始
   manifest，并通过自封存的
   [`truth-erratum.json`](artifacts/router-v2-v4/internal-training-pilot/router-v2-v4-confusion-mined-pilot-002-eval-replay/truth-erratum.json)
