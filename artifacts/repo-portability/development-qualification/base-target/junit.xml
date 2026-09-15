@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="6" time="0.063" timestamp="2026-09-15T01:34:53.330692+00:00" hostname="35ded61fef28"><testcase classname="test_behavior" name="test_ndjson_api[ndjson]" time="0.000"><failure message="AssertionError: assert None == 'ndjson'&#10; +  where None = guess_format(('records.' + 'ndjson'))">extension = 'ndjson'
+
+    @pytest.mark.parametrize('extension', ['ndjson', 'jsonl', 'jl'])
+    def test_ndjson_api(extension):
+&gt;       assert guess_format('records.' + extension) == 'ndjson'
+E       AssertionError: assert None == 'ndjson'
+E        +  where None = guess_format(('records.' + 'ndjson'))
+
+/trusted/test_behavior.py:9: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_ndjson_api[jsonl]" time="0.000"><failure message="AssertionError: assert None == 'ndjson'&#10; +  where None = guess_format(('records.' + 'jsonl'))">extension = 'jsonl'
+
+    @pytest.mark.parametrize('extension', ['ndjson', 'jsonl', 'jl'])
+    def test_ndjson_api(extension):
+&gt;       assert guess_format('records.' + extension) == 'ndjson'
+E       AssertionError: assert None == 'ndjson'
+E        +  where None = guess_format(('records.' + 'jsonl'))
+
+/trusted/test_behavior.py:9: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_ndjson_api[jl]" time="0.000"><failure message="AssertionError: assert None == 'ndjson'&#10; +  where None = guess_format(('records.' + 'jl'))">extension = 'jl'
+
+    @pytest.mark.parametrize('extension', ['ndjson', 'jsonl', 'jl'])
+    def test_ndjson_api(extension):
+&gt;       assert guess_format('records.' + extension) == 'ndjson'
+E       AssertionError: assert None == 'ndjson'
+E        +  where None = guess_format(('records.' + 'jl'))
+
+/trusted/test_behavior.py:9: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_ndjson_cli[ndjson]" time="0.001"><failure message="SystemExit: 2">extension = 'ndjson'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_ndjson_cli_ndjson_0')
+
+    @pytest.mark.parametrize('extension', ['ndjson', 'jsonl', 'jl'])
+    def test_ndjson_cli(extension, tmp_path):
+        source = tmp_path / ('records.' + extension)
+        source.write_text('{"name":"a","value":1}\n{"name":"b","value":2}\n')
+        output = io.StringIO()
+&gt;       In2CSV([str(source)], output_file=output).main()
+
+/trusted/test_behavior.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/csvkit/utilities/in2csv.py:102: in main
+    self.argparser.error('Unable to automatically determine the format of the input file. Try specifying '
+/usr/local/lib/python3.12/argparse.py:2650: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='in2csv', usage=None, description='Convert common, but less awesome, tabular data formats to CSV.', formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2
+message = 'in2csv: error: Unable to automatically determine the format of the input file. Try specifying a format with --format.\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+/usr/local/lib/python3.12/argparse.py:2637: SystemExit</failure></testcase><testcase classname="test_behavior" name="test_ndjson_cli[jsonl]" time="0.001"><failure message="SystemExit: 2">extension = 'jsonl'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_ndjson_cli_jsonl_0')
+
+    @pytest.mark.parametrize('extension', ['ndjson', 'jsonl', 'jl'])
+    def test_ndjson_cli(extension, tmp_path):
+        source = tmp_path / ('records.' + extension)
+        source.write_text('{"name":"a","value":1}\n{"name":"b","value":2}\n')
+        output = io.StringIO()
+&gt;       In2CSV([str(source)], output_file=output).main()
+
+/trusted/test_behavior.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/csvkit/utilities/in2csv.py:102: in main
+    self.argparser.error('Unable to automatically determine the format of the input file. Try specifying '
+/usr/local/lib/python3.12/argparse.py:2650: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='in2csv', usage=None, description='Convert common, but less awesome, tabular data formats to CSV.', formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2
+message = 'in2csv: error: Unable to automatically determine the format of the input file. Try specifying a format with --format.\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+/usr/local/lib/python3.12/argparse.py:2637: SystemExit</failure></testcase><testcase classname="test_behavior" name="test_ndjson_cli[jl]" time="0.001"><failure message="SystemExit: 2">extension = 'jl'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_ndjson_cli_jl_0')
+
+    @pytest.mark.parametrize('extension', ['ndjson', 'jsonl', 'jl'])
+    def test_ndjson_cli(extension, tmp_path):
+        source = tmp_path / ('records.' + extension)
+        source.write_text('{"name":"a","value":1}\n{"name":"b","value":2}\n')
+        output = io.StringIO()
+&gt;       In2CSV([str(source)], output_file=output).main()
+
+/trusted/test_behavior.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/csvkit/utilities/in2csv.py:102: in main
+    self.argparser.error('Unable to automatically determine the format of the input file. Try specifying '
+/usr/local/lib/python3.12/argparse.py:2650: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='in2csv', usage=None, description='Convert common, but less awesome, tabular data formats to CSV.', formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2
+message = 'in2csv: error: Unable to automatically determine the format of the input file. Try specifying a format with --format.\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+/usr/local/lib/python3.12/argparse.py:2637: SystemExit</failure></testcase></testsuite></testsuites>

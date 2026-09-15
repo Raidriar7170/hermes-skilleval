@@ -272,6 +272,12 @@ See [`docs/experiment-timeline.md`](docs/experiment-timeline.md) for the histori
 experiment chain and [`docs/release-notes/v0.3.0.md`](docs/release-notes/v0.3.0.md)
 for the current release notes.
 
+## Current-task assistance and historical replay
+
+The installable `hermes-maintain assist` supports current csvkit and sqlite-utils workspaces: preflight, isolated source snapshot, real patch capture and predeclared checks. N is default; F is explicit. It requires no reference patch or historical qualification, never applies changes to the source repository, and leaves uncovered requirements unknown. See [assist usage](docs/product-closeout/usage.md) and the [current review index](docs/product-closeout/review-index.md). The [historical maintenance index](docs/repo-portability/review-index.md) retains N/F/S records and both UNKNOWN outcomes. Software smokes do not establish algorithmic gains or upstream adoption.
+
+[Failure gallery](docs/failure-gallery.md) · [Current CI](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml)
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).

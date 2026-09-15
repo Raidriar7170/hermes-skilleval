@@ -1,0 +1,143 @@
+{
+  "task_id": "sqlite-utils-781-783",
+  "repository": "simonw/sqlite-utils",
+  "family_id": "rowid-conflict-reporting",
+  "split": "confirmation",
+  "base_commit": "d314d04215f7337d42c847214861ec7ffe0bf757",
+  "arm": "F",
+  "attempt": 1,
+  "run_id": "confirm-sqlite-utils-781-783-F-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 1642225,
+        "cached_input_tokens": 1548672,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 16330,
+        "reasoning_output_tokens": 6955
+      }
+    ],
+    "input_tokens": 1642225,
+    "cached_input_tokens": 1548672,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 16330,
+    "reasoning_output_tokens": 6955
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": null,
+  "policy_rejected": false,
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_insert_ignore_hash_id_reports_pk",
+      "test_behavior::test_insert_ignore_reports_existing_row",
+      "test_behavior::test_insert_ignore_reports_existing_row_compound_pk",
+      "test_behavior::test_insert_ignore_reports_existing_row_list_mode",
+      "test_behavior::test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-oid]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-oid]",
+      "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-rowid]"
+    ],
+    "regression": [
+      "test_behavior::test_create_table",
+      "test_behavior::test_create_table_column_order[False]",
+      "test_behavior::test_create_table_column_order[True]",
+      "test_behavior::test_create_table_compound_primary_key",
+      "test_behavior::test_create_table_from_example[example0-expected_columns0]",
+      "test_behavior::test_create_table_from_example[example1-expected_columns1]",
+      "test_behavior::test_create_table_from_example[example2-expected_columns2]",
+      "test_behavior::test_create_table_from_example[example3-expected_columns3]",
+      "test_behavior::test_create_table_from_example[example4-expected_columns4]",
+      "test_behavior::test_create_table_from_example[example5-expected_columns5]",
+      "test_behavior::test_create_table_from_example[example6-expected_columns6]",
+      "test_behavior::test_create_table_from_example[example7-expected_columns7]",
+      "test_behavior::test_create_table_from_example_with_compound_primary_keys",
+      "test_behavior::test_create_table_numpy",
+      "test_behavior::test_create_table_sql[columns0-\"id\" INTEGER]",
+      "test_behavior::test_create_table_sql[columns1-\"col\" TEXT]",
+      "test_behavior::test_create_table_sql[columns2-\"col\" TEXT]",
+      "test_behavior::test_create_table_sql[columns3-\"col\" TEXT]",
+      "test_behavior::test_create_table_strict[False]",
+      "test_behavior::test_create_table_strict[True]",
+      "test_behavior::test_create_table_with_bad_not_null",
+      "test_behavior::test_create_table_with_custom_columns[False-insert]",
+      "test_behavior::test_create_table_with_custom_columns[False-insert_all]",
+      "test_behavior::test_create_table_with_custom_columns[False-upsert]",
+      "test_behavior::test_create_table_with_custom_columns[False-upsert_all]",
+      "test_behavior::test_create_table_with_custom_columns[True-insert]",
+      "test_behavior::test_create_table_with_custom_columns[True-insert_all]",
+      "test_behavior::test_create_table_with_custom_columns[True-upsert]",
+      "test_behavior::test_create_table_with_custom_columns[True-upsert_all]",
+      "test_behavior::test_create_table_with_defaults",
+      "test_behavior::test_create_table_with_not_null",
+      "test_behavior::test_create_table_with_single_primary_key[id]",
+      "test_behavior::test_create_table_with_single_primary_key[pk1]",
+      "test_behavior::test_create_table_with_special_column_characters",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification0-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification1-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification2-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification3-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification4-NoObviousTable]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification5-ValueError]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification6-AlterError]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification7-ValueError]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification0-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification1-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification2-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification3-False]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification4-NoObviousTable]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification5-ValueError]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification6-AlterError]",
+      "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification7-ValueError]"
+    ]
+  },
+  "selected_ids": [
+    "cli-api-regression",
+    "systematic-debugging"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "confirm-sqlite-utils-781-783-F-001/candidate.patch",
+      "sha256": "6d232968ea8ed45d50444488169351bc1134dc833a613ecf8f28709123a788e7",
+      "original_sha256": "6d232968ea8ed45d50444488169351bc1134dc833a613ecf8f28709123a788e7"
+    },
+    "target": {
+      "path": "confirm-sqlite-utils-781-783-F-001/target.xml",
+      "sha256": "356ecdfdcba90e6676f1fa6ce4bf42d3b8cab0015e2e17db2da97d9e180b7329",
+      "original_sha256": "356ecdfdcba90e6676f1fa6ce4bf42d3b8cab0015e2e17db2da97d9e180b7329"
+    },
+    "regression": {
+      "path": "confirm-sqlite-utils-781-783-F-001/regression.xml",
+      "sha256": "944086525dc5214a742ac2438f8c8c2dbd41f8a0d02ab4092532879efdfbe233",
+      "original_sha256": "944086525dc5214a742ac2438f8c8c2dbd41f8a0d02ab4092532879efdfbe233"
+    },
+    "binding": {
+      "path": "confirm-sqlite-utils-781-783-F-001/verification.json",
+      "sha256": "932d00fe09f993161e1ad79ad7b7cde3ba10e8cf944d68979bb2d5bb0967f6b0"
+    },
+    "events": {
+      "path": "confirm-sqlite-utils-781-783-F-001/events.json",
+      "sha256": "a412634b43f1e3bbca7f17c73cfa89b8b18fb3114258047ba7d8d8e43a267637"
+    }
+  },
+  "timing": {
+    "execution_seconds": 517.7826747079962,
+    "package_prepare_seconds": 0.01848737502587028,
+    "capture_seconds": 0.3006779169954825,
+    "finalize_seconds": 5.04336950002471,
+    "pipeline_wall_seconds": 522.9245003750257
+  },
+  "skill_file_reference_commands": 1,
+  "observed_skill_read_commands": 1
+}

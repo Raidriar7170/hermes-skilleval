@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from collections import Counter
 from pathlib import Path
+
+from hermes_skilleval.historical_outputs import protect_historical_output
 from typing import Any
 
 
@@ -87,6 +89,7 @@ def write_release_decision(
     output_dir: Path | str,
     policy: dict[str, float | int] | None = None,
 ) -> dict[str, Any]:
+    protect_historical_output(output_dir)
     decision = select_release_router(
         summary=regression_summary_path,
         route_diffs=route_diffs_path,
@@ -167,7 +170,11 @@ def _validation_reasons(summary: dict[str, Any], route_diffs: list[Any]) -> list
         reasons.append("guard_status must be a non-empty string")
 
     task_count = summary.get("task_count")
-    if isinstance(task_count, bool) or not isinstance(task_count, int) or task_count <= 0:
+    if (
+        isinstance(task_count, bool)
+        or not isinstance(task_count, int)
+        or task_count <= 0
+    ):
         reasons.append("task_count must be a positive integer")
 
     blind_task_ids = summary.get("blind_task_ids")
@@ -178,7 +185,11 @@ def _validation_reasons(summary: dict[str, Any], route_diffs: list[Any]) -> list
         blind_task_ids = []
     if len(set(blind_task_ids)) != len(blind_task_ids):
         reasons.append("duplicate task ids in blind_task_ids")
-    if isinstance(task_count, int) and task_count > 0 and len(blind_task_ids) != task_count:
+    if (
+        isinstance(task_count, int)
+        and task_count > 0
+        and len(blind_task_ids) != task_count
+    ):
         reasons.append("task_count does not match blind_task_ids")
 
     metric_deltas = summary.get("metric_deltas")
@@ -223,8 +234,14 @@ def _validation_reasons(summary: dict[str, Any], route_diffs: list[Any]) -> list
         task_id for task_id, count in Counter(diff_task_ids).items() if count > 1
     )
     if duplicate_diff_ids:
-        reasons.append("duplicate task ids in route diffs: " + ", ".join(duplicate_diff_ids))
-    if isinstance(task_count, int) and task_count > 0 and len(diff_task_ids) != task_count:
+        reasons.append(
+            "duplicate task ids in route diffs: " + ", ".join(duplicate_diff_ids)
+        )
+    if (
+        isinstance(task_count, int)
+        and task_count > 0
+        and len(diff_task_ids) != task_count
+    ):
         reasons.append("task_count does not match route diffs")
     if blind_task_ids and set(diff_task_ids) != set(blind_task_ids):
         reasons.append("task ids mismatch between summary and route diffs")

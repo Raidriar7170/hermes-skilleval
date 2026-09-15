@@ -6,6 +6,7 @@ import os
 import re
 import signal
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -45,6 +46,8 @@ class LiveAgentSkill:
     name: str
     body: str
     description: str | None = None
+    package_root: Path | str | None = None
+    package_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -142,14 +145,12 @@ class VerifierResult:
 
 @runtime_checkable
 class AgentRunner(Protocol):
-    def run(self, request: AgentRequest) -> RunnerOutput:
-        ...
+    def run(self, request: AgentRequest) -> RunnerOutput: ...
 
 
 @runtime_checkable
 class AgentVerifier(Protocol):
-    def verify(self, request: AgentRequest, output: RunnerOutput) -> VerifierResult:
-        ...
+    def verify(self, request: AgentRequest, output: RunnerOutput) -> VerifierResult: ...
 
 
 class FakeAgentRunner:
@@ -211,6 +212,11 @@ class CodexCliRunnerConfig:
     max_stderr_chars: int = 4000
     max_event_chars: int = 4000
     terminate_grace_seconds: float = 2.0
+    model: str | None = None
+    reasoning_effort: str | None = None
+    restrict_reads: bool = False
+    readable_roots: list[Path | str] = field(default_factory=list)
+    shell_path: str = "/usr/bin:/bin:/usr/sbin:/sbin"
 
 
 class CodexCliRunner:
@@ -289,7 +295,9 @@ class CodexCliRunner:
                 stderr=subprocess.PIPE,
                 start_new_session=True,
             )
-            stdout_raw, stderr_raw = process.communicate(timeout=request.timeout_seconds)
+            stdout_raw, stderr_raw = process.communicate(
+                timeout=request.timeout_seconds
+            )
             stdout, stdout_truncated = _truncate(
                 _redact(stdout_raw),
                 self.config.max_stdout_chars,
@@ -334,14 +342,20 @@ class CodexCliRunner:
                 timed_out=True,
                 stdout=stdout,
                 stderr=stderr,
-                events=[preflight, {"type": "codex_timeout"}],
+                events=[
+                    preflight,
+                    *self._parse_jsonl_events(stdout_raw),
+                    {"type": "codex_timeout"},
+                ],
             )
 
     def _preflight(self, request: AgentRequest) -> dict[str, Any]:
         self._validate_config(request)
         inventory = self._global_capability_inventory(request)
         version = self._check_output((str(self.config.codex_binary), "--version"))
-        help_text = self._check_output((str(self.config.codex_binary), "exec", "--help"))
+        help_text = self._check_output(
+            (str(self.config.codex_binary), "exec", "--help")
+        )
         missing = [flag for flag in self.REQUIRED_EXEC_FLAGS if flag not in help_text]
         if missing:
             raise ValueError(
@@ -358,18 +372,50 @@ class CodexCliRunner:
                 if self.config.codex_home_mode == "inherit"
                 else "final-evidence"
             ),
-            "sandbox": self.config.sandbox,
+            "sandbox": "permission-profile:hermes-task"
+            if self.config.restrict_reads
+            else self.config.sandbox,
             "approval_policy": self.config.approval_policy,
             "supports_skip_git_repo_check": supports_skip_git_repo_check,
             "global_capability_inventory": inventory,
             "skill_inventory": inventory,
+            "read_scope": "task-and-runtime-only"
+            if self.config.restrict_reads
+            else "host-readable",
+            "requested_model": self.config.model,
+            "requested_reasoning_effort": self.config.reasoning_effort,
         }
 
     def _validate_config(self, request: AgentRequest) -> None:
+        if self.config.reasoning_effort not in {
+            None,
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+        }:
+            raise ValueError("invalid reasoning effort")
+        if self.config.restrict_reads:
+            if (
+                self.config.codex_home_mode != "isolated"
+                or self.config.codex_home_base is None
+            ):
+                raise ValueError(
+                    "restricted reads require external isolated CODEX_HOME"
+                )
+            if (
+                Path(self.config.codex_home_base)
+                .resolve()
+                .is_relative_to(request.workspace_path.resolve())
+            ):
+                raise ValueError("CODEX_HOME must be outside the task workspace")
         if request.condition == "no-skill" and request.mounted_skills:
             raise ValueError("no-skill condition leaked mounted skills")
         if self.config.sandbox == "danger-full-access":
-            raise ValueError("danger-full-access is not allowed for live-agent evidence")
+            raise ValueError(
+                "danger-full-access is not allowed for live-agent evidence"
+            )
         if self.config.sandbox != "workspace-write":
             raise ValueError("CodexCliRunner requires workspace-write sandbox")
         if self.config.approval_policy != "never":
@@ -412,7 +458,9 @@ class CodexCliRunner:
             raise ValueError("global Codex leakage detected: " + ", ".join(leaked))
 
     def _global_capability_inventory(self, request: AgentRequest) -> dict[str, Any]:
-        user_skill_dir = Path(os.environ.get("HOME", Path.home())) / ".agents" / "skills"
+        user_skill_dir = (
+            Path(os.environ.get("HOME", Path.home())) / ".agents" / "skills"
+        )
         home_isolated = (
             self.config.codex_home_mode == "isolated" and self.config.isolate_home
         )
@@ -425,7 +473,9 @@ class CodexCliRunner:
         else:
             user_entries = _visible_child_count(user_skill_dir)
             if user_entries:
-                raise ValueError("user skill leakage detected under HOME/.agents/skills")
+                raise ValueError(
+                    "user skill leakage detected under HOME/.agents/skills"
+                )
             user_status = "CLEAR" if user_skill_dir.exists() else "ABSENT"
 
         admin_inventory = []
@@ -495,7 +545,7 @@ class CodexCliRunner:
             "--sandbox",
             self.config.sandbox,
             "--config",
-            "approval_policy=\"never\"",
+            'approval_policy="never"',
             "--cd",
             str(request.workspace_path),
             "--output-last-message",
@@ -506,8 +556,57 @@ class CodexCliRunner:
             and preflight.get("supports_skip_git_repo_check") is True
         ):
             command.append("--skip-git-repo-check")
+        if self.config.restrict_reads:
+            index = command.index("--sandbox")
+            del command[index : index + 2]
+            for value in self.permission_overrides(request):
+                command.extend(["--config", value])
+        if self.config.model:
+            command.extend(["--model", self.config.model])
+        if self.config.reasoning_effort:
+            command.extend(
+                [
+                    "--config",
+                    "model_reasoning_effort="
+                    + json.dumps(self.config.reasoning_effort),
+                ]
+            )
         command.extend([*self.config.extra_args, "--", request.prompt])
         return command, output_path
+
+    def permission_overrides(self, request: AgentRequest) -> list[str]:
+        if sys.platform == "darwin":
+            raise ValueError(
+                "MACOS_READ_ISOLATION_UNSUPPORTED: use the qualified container runner"
+            )
+        if self.config.codex_home_base is None:
+            raise ValueError("read isolation requires an external codex_home_base")
+        roots = {
+            ":root": "deny",
+            ":minimal": "read",
+            ":tmpdir": "deny",
+            ":slash_tmp": "deny",
+            "/private/tmp": "deny",
+            str(request.workspace_path.parent.resolve()): "deny",
+            str(request.workspace_path.resolve()): "write",
+        }
+        roots.update(
+            {str(Path(p).resolve()): "read" for p in self.config.readable_roots}
+        )
+        roots[str(Path(self.config.codex_home_base).resolve())] = "deny"
+        mapping = ", ".join(
+            json.dumps(k) + "=" + json.dumps(v) for k, v in roots.items()
+        )
+        return [
+            'default_permissions="hermes-task"',
+            "permissions.hermes-task.filesystem={" + mapping + "}",
+            "permissions.hermes-task.network.enabled=false",
+            'shell_environment_policy.inherit="none"',
+            "shell_environment_policy.set={PATH="
+            + json.dumps(self.config.shell_path)
+            + "}",
+            'web_search="disabled"',
+        ]
 
     def _runner_output_dir(self, request: AgentRequest) -> Path:
         base = (
@@ -523,7 +622,11 @@ class CodexCliRunner:
         *,
         extra_env: dict[str, str] | None = None,
     ) -> dict[str, str]:
-        env = os.environ.copy()
+        env = {
+            key: os.environ[key]
+            for key in ("PATH", "LANG", "LC_ALL", "TERM", "SYSTEMROOT")
+            if key in os.environ
+        }
         if extra_env:
             env.update(extra_env)
         if self.config.codex_home_mode == "isolated":
@@ -539,6 +642,10 @@ class CodexCliRunner:
                 isolated_home = home / "home"
                 isolated_home.mkdir(parents=True, exist_ok=True)
                 env["HOME"] = str(isolated_home)
+            if self.config.restrict_reads:
+                tmp = request.workspace_path / ".tmp"
+                tmp.mkdir(exist_ok=True)
+                env["TMPDIR"] = str(tmp)
         else:
             env["CODEX_HOME"] = str(self._inherited_home())
         return env
@@ -702,8 +809,19 @@ def prepare_live_agent_workspace(
     skill_dir = root / ".agents" / "skills"
     for skill, record in zip(mounted_skills, records, strict=True):
         path = root / record["relative_path"]
-        path.parent.mkdir(parents=True, exist_ok=False)
-        path.write_text(_codex_skill_text(skill), encoding="utf-8")
+        if skill.package_root is not None:
+            from hermes_skilleval.skill_package import copy_skill_package
+
+            if not skill.package_sha256:
+                raise ValueError(
+                    "SKILL_PACKAGE_UNAVAILABLE: expected package digest required"
+                )
+            record["package"] = copy_skill_package(
+                skill.package_root, path.parent, skill.package_sha256
+            )
+        else:
+            path.parent.mkdir(parents=True, exist_ok=False)
+            path.write_text(_codex_skill_text(skill), encoding="utf-8")
         record["sha256"] = sha256_file(path)
     return WorkspaceState(
         workspace_path=root,
@@ -718,8 +836,7 @@ def _validate_workspace_matches_condition(
 ) -> None:
     condition_skill_ids = [skill.skill_id for skill in condition.mounted_skills]
     workspace_skill_ids = [
-        str(record.get("skill_id", ""))
-        for record in workspace.mounted_skills
+        str(record.get("skill_id", "")) for record in workspace.mounted_skills
     ]
     if condition_skill_ids != workspace_skill_ids:
         raise ValueError(
@@ -743,7 +860,9 @@ def _mounted_skill_records(
         if skill.name in seen_skill_names:
             raise ValueError(f"duplicate skill name in mounted skills: {skill.name}")
         seen_skill_names.add(skill.name)
-        relative_path = Path(".agents") / "skills" / _skill_mount_dirname(skill) / "SKILL.md"
+        relative_path = (
+            Path(".agents") / "skills" / _skill_mount_dirname(skill) / "SKILL.md"
+        )
         relative_path_text = relative_path.as_posix()
         if relative_path_text in seen_relative_paths:
             raise ValueError(f"duplicate mounted skill path: {relative_path_text}")
@@ -787,9 +906,28 @@ def execute_live_agent(
         events=events,
         skill_use=skill_use,
         final_message=final_message,
-        usage=None,
+        usage=parse_codex_usage(output.events),
         cost=None,
     )
+
+
+def parse_codex_usage(events: list[Any]) -> dict[str, Any] | None:
+    """Keep provider fields and source; cached tokens are a subset of input tokens."""
+    turns = [
+        e["usage"]
+        for e in events
+        if isinstance(e, dict)
+        and e.get("type") == "turn.completed"
+        and isinstance(e.get("usage"), dict)
+    ]
+    if not turns:
+        return None
+    totals: dict[str, int] = {}
+    for usage in turns:
+        for key, value in usage.items():
+            if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                totals[key] = totals.get(key, 0) + value
+    return {"source": "codex-jsonl:turn.completed", "raw_turn_usage": turns, **totals}
 
 
 def _parse_events(
@@ -797,10 +935,7 @@ def _parse_events(
     request: AgentRequest,
 ) -> tuple[list[dict[str, Any]], dict[str, dict[str, str]], str | None]:
     mounted = {record["skill_id"] for record in request.mounted_skills}
-    skill_use = {
-        skill_id: {"state": "MOUNTED_ONLY"}
-        for skill_id in sorted(mounted)
-    }
+    skill_use = {skill_id: {"state": "MOUNTED_ONLY"} for skill_id in sorted(mounted)}
     events = []
     final_message = None
     for raw in raw_events:
@@ -824,9 +959,9 @@ def _parse_events(
         elif event_type == "preflight":
             events.append({"type": "preflight", **_redact_value(raw)})
         else:
-            skill_id = raw.get("skill_id")
-            if isinstance(skill_id, str) and skill_id.strip():
-                _set_skill_state(skill_use, mounted, skill_id, "UNKNOWN")
+            unknown_skill_id = raw.get("skill_id")
+            if isinstance(unknown_skill_id, str) and unknown_skill_id.strip():
+                _set_skill_state(skill_use, mounted, unknown_skill_id, "UNKNOWN")
             events.append(
                 {
                     "type": "unknown",
@@ -865,20 +1000,14 @@ def _redact_value(value: Any) -> Any:
     if isinstance(value, str):
         return _redact(value)
     if isinstance(value, dict):
-        return {
-            _redact(str(key)): _redact_value(item)
-            for key, item in value.items()
-        }
+        return {_redact(str(key)): _redact_value(item) for key, item in value.items()}
     if isinstance(value, list):
         return [_redact_value(item) for item in value]
     return value
 
 
 def _redact_mapping_keys(value: dict[str, Any]) -> dict[str, Any]:
-    return {
-        _redact(str(key)): _redact_value(item)
-        for key, item in value.items()
-    }
+    return {_redact(str(key)): _redact_value(item) for key, item in value.items()}
 
 
 def _redact(text: str) -> str:

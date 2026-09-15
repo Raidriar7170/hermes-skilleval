@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.023" timestamp="2026-09-15T01:31:42.633521+00:00" hostname="2dd335f81173"><testcase classname="test_behavior" name="test_number_with_date_format[5.5]" time="0.005"><failure message="AssertionError: assert 'DateTime' == 'Number'&#10;  &#10;  - Number&#10;  + DateTime">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_number_with_date_format_50')
+number = '5.5'
+
+    @pytest.mark.parametrize("number", ["5.5", "4.4"])
+    def test_number_with_date_format(tmp_path, number):
+        source = tmp_path / "data.csv"
+        source.write_text("day,amount\n13/12/2024," + number + "\n")
+        output = io.StringIO()
+        CSVStat(
+            ["--json", "--date-format", "%d/%m/%Y", str(source)], output_file=output
+        ).run()
+        rows = json.loads(output.getvalue())
+        assert rows[0]["type"] == "Date"
+&gt;       assert rows[1]["type"] == "Number"
+E       AssertionError: assert 'DateTime' == 'Number'
+E         
+E         - Number
+E         + DateTime
+
+/trusted/test_behavior.py:17: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_number_with_date_format[4.4]" time="0.001"><failure message="AssertionError: assert 'DateTime' == 'Number'&#10;  &#10;  - Number&#10;  + DateTime">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_number_with_date_format_40')
+number = '4.4'
+
+    @pytest.mark.parametrize("number", ["5.5", "4.4"])
+    def test_number_with_date_format(tmp_path, number):
+        source = tmp_path / "data.csv"
+        source.write_text("day,amount\n13/12/2024," + number + "\n")
+        output = io.StringIO()
+        CSVStat(
+            ["--json", "--date-format", "%d/%m/%Y", str(source)], output_file=output
+        ).run()
+        rows = json.loads(output.getvalue())
+        assert rows[0]["type"] == "Date"
+&gt;       assert rows[1]["type"] == "Number"
+E       AssertionError: assert 'DateTime' == 'Number'
+E         
+E         - Number
+E         + DateTime
+
+/trusted/test_behavior.py:17: AssertionError</failure></testcase></testsuite></testsuites>

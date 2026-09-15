@@ -1,0 +1,67 @@
+diff --git a/sqlite_utils/utils.py b/sqlite_utils/utils.py
+index ee6695b55447155c1dbcb0ea23c8b33bdb50a803..b9a7a48bc4703c3db75fc2f43b67fa69b94449be 100644
+--- a/sqlite_utils/utils.py
++++ b/sqlite_utils/utils.py
+@@ -577,9 +577,15 @@ def chunks(sequence: Iterable[T], size: int) -> Iterable[Iterable[T]]:
+     :param sequence: Any Python iterator
+     :param size: The size of each chunk
+     """
+-    iterator = iter(sequence)
+-    for item in iterator:
+-        yield itertools.chain([item], itertools.islice(iterator, size - 1))
++    if size <= 0:
++        raise ValueError("size must be positive")
++
++    def iterate_chunks() -> Iterable[Iterable[T]]:
++        iterator = iter(sequence)
++        for item in iterator:
++            yield itertools.chain([item], itertools.islice(iterator, size - 1))
++
++    return iterate_chunks()
+ 
+ 
+ def hash_record(record: dict[str, Any], keys: Iterable[str] | None = None) -> str:
+diff --git a/tests/test_utils.py b/tests/test_utils.py
+index 360a4436a99fbaf93f5beb10144ce07cf4ab9cb8..de353326ed4f533d50adc22ff971e346f4410c6e 100644
+--- a/tests/test_utils.py
++++ b/tests/test_utils.py
+@@ -41,6 +41,39 @@ def test_chunks(size, expected):
+     assert chunks == expected
+ 
+ 
++@pytest.mark.parametrize("size", (0, -1))
++@pytest.mark.parametrize("input", ([], iter(("a", "b"))))
++def test_chunks_size_must_be_positive(size, input):
++    with pytest.raises(ValueError, match="size must be positive"):
++        utils.chunks(input, size)
++
++
++def test_chunks_invalid_size_does_not_consume_iterable():
++    consumed = False
++
++    def input():
++        nonlocal consumed
++        consumed = True
++        yield "a"
++
++    with pytest.raises(ValueError, match="size must be positive"):
++        utils.chunks(input(), 0)
++    assert consumed is False
++
++
++def test_chunks_positive_size_remains_lazy():
++    consumed = False
++
++    def input():
++        nonlocal consumed
++        consumed = True
++        yield from ("a", "b")
++
++    chunks = utils.chunks(input(), 2)
++    assert consumed is False
++    assert list(map(list, chunks)) == [["a", "b"]]
++
++
+ def test_hash_record():
+     expected = "d383e7c0ba88f5ffcdd09be660de164b3847401a"
+     assert utils.hash_record({"name": "Cleo", "twitter": "CleoPaws"}) == expected

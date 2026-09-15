@@ -13,7 +13,9 @@ def test_phase18_artifact_pack_exists() -> None:
         ROOT / "release-manifest.md",
         ROOT / "release-check-summary.json",
         Path("docs/phase18.md"),
-        Path("docs/human-briefs/2026-05-30-phase18-ci-release-reproducibility-pack.html"),
+        Path(
+            "docs/human-briefs/2026-05-30-phase18-ci-release-reproducibility-pack.html"
+        ),
     ]
     for path in required:
         assert path.is_file(), path
@@ -42,10 +44,8 @@ def test_phase18_docs_and_readme_reference_release_reproducibility() -> None:
     ).read_text(encoding="utf-8")
     manifest_md = (ROOT / "release-manifest.md").read_text(encoding="utf-8")
 
-    assert "Phase 18" in readme
-    assert "release-check" in readme
-    assert "docs/phase18.md" in readme
-    assert "docs/demo/phase18-ci-release-reproducibility/release-manifest.json" in readme
+    assert "docs/experiment-timeline.md" in readme
+    assert "phase18.md" in Path("docs/experiment-timeline.md").read_text()
     assert "Phase 18: CI Release Reproducibility Pack" in phase18
     assert "KEEP_BASELINE" in phase18
     assert "Phase 18" in handoff

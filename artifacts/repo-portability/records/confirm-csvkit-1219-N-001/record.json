@@ -1,0 +1,86 @@
+{
+  "task_id": "csvkit-1219",
+  "repository": "wireservice/csvkit",
+  "family_id": "dictreader-field-limit",
+  "split": "confirmation",
+  "base_commit": "78c5bb29f7d8f35caf2bb0bf3e946fb8f71e9de0",
+  "arm": "N",
+  "attempt": 1,
+  "run_id": "confirm-csvkit-1219-N-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 921952,
+        "cached_input_tokens": 862208,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 12345,
+        "reasoning_output_tokens": 6351
+      }
+    ],
+    "input_tokens": 921952,
+    "cached_input_tokens": 862208,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 12345,
+    "reasoning_output_tokens": 6351
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": null,
+  "policy_rejected": false,
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_fieldsize_option[140000]",
+      "test_behavior::test_fieldsize_option[32]"
+    ],
+    "regression": [
+      "test_behavior::test_ordinary_stack[values0]",
+      "test_behavior::test_ordinary_stack[values1]"
+    ]
+  },
+  "selected_ids": [
+    "systematic-debugging",
+    "verification-before-completion",
+    "cli-api-regression",
+    "schema-change-regression",
+    "import-data-regression"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "confirm-csvkit-1219-N-001/candidate.patch",
+      "sha256": "c91fd9f2823944365b67254cab97316f88cabe5663433639e7946faf333bb2a2",
+      "original_sha256": "c91fd9f2823944365b67254cab97316f88cabe5663433639e7946faf333bb2a2"
+    },
+    "target": {
+      "path": "confirm-csvkit-1219-N-001/target.xml",
+      "sha256": "cbf81df25b3c250a1c36854f8960b4036b122f4b43e5f407161f41185f7f8bd8",
+      "original_sha256": "cbf81df25b3c250a1c36854f8960b4036b122f4b43e5f407161f41185f7f8bd8"
+    },
+    "regression": {
+      "path": "confirm-csvkit-1219-N-001/regression.xml",
+      "sha256": "9264ca9be2779a4e45e587654d8e66999b84a1422ec314e9045862a37e3c7d36",
+      "original_sha256": "9264ca9be2779a4e45e587654d8e66999b84a1422ec314e9045862a37e3c7d36"
+    },
+    "binding": {
+      "path": "confirm-csvkit-1219-N-001/verification.json",
+      "sha256": "ab1d0c47d472a9e1fe9b479975f3feff645a01409647513e252882a1c6271673"
+    },
+    "events": {
+      "path": "confirm-csvkit-1219-N-001/events.json",
+      "sha256": "05cfb562e6d2d02e25ed826bc55d9d73159ca470d79d4f78529c672560898c38"
+    }
+  },
+  "timing": {
+    "execution_seconds": 338.9132399579976,
+    "package_prepare_seconds": 0.03531183302402496,
+    "capture_seconds": 0.30442687499453314,
+    "finalize_seconds": 4.29781233301037,
+    "pipeline_wall_seconds": 343.3341416659823
+  },
+  "skill_file_reference_commands": 1,
+  "observed_skill_read_commands": 1
+}

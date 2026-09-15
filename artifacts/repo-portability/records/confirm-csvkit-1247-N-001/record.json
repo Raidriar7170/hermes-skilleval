@@ -1,0 +1,79 @@
+{
+  "task_id": "csvkit-1247",
+  "repository": "wireservice/csvkit",
+  "family_id": "timedelta-json",
+  "split": "confirmation",
+  "base_commit": "b36512a17f237866645bbb37f2f4ccff73cb0a49",
+  "arm": "N",
+  "attempt": 1,
+  "run_id": "confirm-csvkit-1247-N-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 1055462,
+        "cached_input_tokens": 981760,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7186,
+        "reasoning_output_tokens": 1554
+      }
+    ],
+    "input_tokens": 1055462,
+    "cached_input_tokens": 981760,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 7186,
+    "reasoning_output_tokens": 1554
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": null,
+  "policy_rejected": true,
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_timedelta_cli",
+      "test_behavior::test_timedelta_json[-90]",
+      "test_behavior::test_timedelta_json[0]",
+      "test_behavior::test_timedelta_json[3600.5]",
+      "test_behavior::test_timedelta_json[60]"
+    ],
+    "regression": [
+      "test_behavior::test_existing_json[value0-2.5]",
+      "test_behavior::test_existing_json[value1-2024-01-02]"
+    ]
+  },
+  "selected_ids": [
+    "systematic-debugging",
+    "verification-before-completion",
+    "cli-api-regression",
+    "schema-change-regression",
+    "import-data-regression"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "confirm-csvkit-1247-N-001/candidate.patch",
+      "sha256": "fcccf68543d3f4c1304113c5428c5da724e92f4b1b6d17cc1aeb90d1c1aa4378",
+      "original_sha256": "fcccf68543d3f4c1304113c5428c5da724e92f4b1b6d17cc1aeb90d1c1aa4378"
+    },
+    "binding": {
+      "path": "confirm-csvkit-1247-N-001/verification.json",
+      "sha256": "878bff3695e2debbcfbd101f5cc76994985f66874564193b93e4bbbbd5b807b4"
+    },
+    "events": {
+      "path": "confirm-csvkit-1247-N-001/events.json",
+      "sha256": "1ee6eada27606f87e2b97029bd4843542474b48f937d2f9f32a2f942485c4f31"
+    }
+  },
+  "timing": {
+    "execution_seconds": 216.75176829201519,
+    "package_prepare_seconds": 0.028190750017529353,
+    "capture_seconds": 0.30306987499352545,
+    "finalize_seconds": 0.3405800000182353,
+    "pipeline_wall_seconds": 217.21333420902374
+  },
+  "skill_file_reference_commands": 2,
+  "observed_skill_read_commands": 1
+}

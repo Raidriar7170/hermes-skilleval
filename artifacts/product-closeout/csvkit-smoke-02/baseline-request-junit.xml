@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.017" timestamp="2026-09-15T04:57:28.217351+00:00" hostname="6fac871ded04"><testcase classname="test_assist_smoke" name="test_requirement_null_and_mixed_properties" time="0.000"><failure message="AttributeError: 'NoneType' object has no attribute 'keys'">def test_requirement_null_and_mixed_properties():
+&gt;       rows = convert(
+            [
+                {"type": "Feature", "id": "empty", "properties": None, "geometry": None},
+                {
+                    "type": "Feature",
+                    "id": "full",
+                    "properties": {"label": "point"},
+                    "geometry": {"type": "Point", "coordinates": [12, 34]},
+                },
+            ]
+        )
+
+/trusted/test_assist_smoke.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/trusted/test_assist_smoke.py:13: in convert
+    geojson2csv(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = &lt;_io.StringIO object at 0xffff7a28ea40&gt;, key = None, kwargs = {}
+js = OrderedDict({'type': 'FeatureCollection', 'features': [OrderedDict({'type': 'Feature', 'id': 'empty', 'properties': No...'properties': OrderedDict({'label': 'point'}), 'geometry': OrderedDict({'type': 'Point', 'coordinates': [12, 34]})})]})
+features = [OrderedDict({'type': 'Feature', 'id': 'empty', 'properties': None, 'geometry': None}), OrderedDict({'type': 'Feature'..., 'properties': OrderedDict({'label': 'point'}), 'geometry': OrderedDict({'type': 'Point', 'coordinates': [12, 34]})})]
+features_parsed = [], property_fields = []
+feature = OrderedDict({'type': 'Feature', 'id': 'empty', 'properties': None, 'geometry': None})
+properties = None
+
+    def geojson2csv(f, key=None, **kwargs):
+        """
+        Convert a GeoJSON document into CSV format.
+        """
+        js = json.load(f, object_pairs_hook=OrderedDict)
+    
+        if not isinstance(js, dict):
+            raise TypeError('JSON document is not valid GeoJSON: Root element is not an object.')
+    
+        if 'type' not in js:
+            raise TypeError('JSON document is not valid GeoJSON: No top-level "type" key.')
+    
+        if js['type'] != 'FeatureCollection':
+            raise TypeError(f"Only GeoJSON with root FeatureCollection type is supported. Not {js['type']}")
+    
+        if 'features' not in js:
+            raise TypeError('JSON document is not a valid FeatureCollection: No top-level "features" key.')
+    
+        features = js['features']
+    
+        features_parsed = []    # tuples in the format (id, properties, geometry)
+        property_fields = []
+    
+        for feature in features:
+            properties = feature.get('properties', {})
+    
+&gt;           for prop in properties.keys():
+E           AttributeError: 'NoneType' object has no attribute 'keys'
+
+/input/csvkit/convert/geojs.py:36: AttributeError</failure></testcase><testcase classname="test_assist_smoke" name="test_requirement_all_null_properties" time="0.000"><failure message="AttributeError: 'NoneType' object has no attribute 'keys'">def test_requirement_all_null_properties():
+&gt;       rows = convert([{"id": "a", "properties": None, "geometry": None}])
+
+/trusted/test_assist_smoke.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/trusted/test_assist_smoke.py:13: in convert
+    geojson2csv(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = &lt;_io.StringIO object at 0xffff7a28ee00&gt;, key = None, kwargs = {}
+js = OrderedDict({'type': 'FeatureCollection', 'features': [OrderedDict({'id': 'a', 'properties': None, 'geometry': None})]})
+features = [OrderedDict({'id': 'a', 'properties': None, 'geometry': None})]
+features_parsed = [], property_fields = []
+feature = OrderedDict({'id': 'a', 'properties': None, 'geometry': None})
+properties = None
+
+    def geojson2csv(f, key=None, **kwargs):
+        """
+        Convert a GeoJSON document into CSV format.
+        """
+        js = json.load(f, object_pairs_hook=OrderedDict)
+    
+        if not isinstance(js, dict):
+            raise TypeError('JSON document is not valid GeoJSON: Root element is not an object.')
+    
+        if 'type' not in js:
+            raise TypeError('JSON document is not valid GeoJSON: No top-level "type" key.')
+    
+        if js['type'] != 'FeatureCollection':
+            raise TypeError(f"Only GeoJSON with root FeatureCollection type is supported. Not {js['type']}")
+    
+        if 'features' not in js:
+            raise TypeError('JSON document is not a valid FeatureCollection: No top-level "features" key.')
+    
+        features = js['features']
+    
+        features_parsed = []    # tuples in the format (id, properties, geometry)
+        property_fields = []
+    
+        for feature in features:
+            properties = feature.get('properties', {})
+    
+&gt;           for prop in properties.keys():
+E           AttributeError: 'NoneType' object has no attribute 'keys'
+
+/input/csvkit/convert/geojs.py:36: AttributeError</failure></testcase></testsuite></testsuites>

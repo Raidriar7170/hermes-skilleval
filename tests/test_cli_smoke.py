@@ -368,9 +368,7 @@ def test_cli_compare_supports_labeled_embedding_backend_specs(tmp_path, monkeypa
     )
 
     hashing_record = json.loads(
-        (output_dir / "embedding-hashing" / "results.jsonl").read_text(
-            encoding="utf-8"
-        )
+        (output_dir / "embedding-hashing" / "results.jsonl").read_text(encoding="utf-8")
     )
     fake_record = json.loads(
         (output_dir / "embedding-fake" / "results.jsonl").read_text(encoding="utf-8")
@@ -1017,7 +1015,9 @@ def test_cli_improve_skills_writes_patch_outputs(tmp_path):
 
     assert result == 0
     assert payload["patch_count"] >= 1
-    assert any(patch["skill_id"] == "test-driven-development" for patch in payload["patches"])
+    assert any(
+        patch["skill_id"] == "test-driven-development" for patch in payload["patches"]
+    )
     assert any("refactor" in skill["trigger_terms"] for skill in patched)
     assert "# Hermes SkillEval Self-Improvement Patches" in report
 
@@ -1090,17 +1090,15 @@ def test_cli_eval_missing_index_returns_error_without_traceback(tmp_path, capsys
     assert "Traceback" not in captured.err
 
 
-def test_cli_index_malformed_skill_frontmatter_returns_error_without_traceback(tmp_path, capsys):
+def test_cli_index_malformed_skill_frontmatter_returns_error_without_traceback(
+    tmp_path, capsys
+):
     skills_root = tmp_path / "skills"
     skill_dir = skills_root / "coding" / "bad-skill"
     skill_dir.mkdir(parents=True)
     skill_path = skill_dir / "SKILL.md"
     skill_path.write_text(
-        "---\n"
-        "name: Bad Skill\n"
-        "description: [unterminated\n"
-        "---\n"
-        "# Bad Skill\n",
+        "---\nname: Bad Skill\ndescription: [unterminated\n---\n# Bad Skill\n",
         encoding="utf-8",
     )
 
@@ -1878,9 +1876,7 @@ def test_cli_write_finetuned_provenance_writes_pack(tmp_path):
                 "model_dir": "/mnt/data/minghongsun/hermes-skilleval-phase14/models/minilm-skill-router",
                 "file_count": 1,
                 "total_size_bytes": 2,
-                "files": [
-                    {"path": "config.json", "size_bytes": 2, "sha256": "0" * 64}
-                ],
+                "files": [{"path": "config.json", "size_bytes": 2, "sha256": "0" * 64}],
             }
         ),
         encoding="utf-8",
@@ -2186,21 +2182,22 @@ def test_cli_release_check_forces_final_manifest_guard_with_custom_paths(tmp_pat
     guarded_paths = {
         match["path"] for match in release_summary["matches"]["overclaims"]
     }
-    assert str(phase18_output / "release-manifest.json") in guarded_paths or str(
-        phase18_output / "release-manifest.md"
-    ) in guarded_paths
-
-
-def test_cli_release_check_default_config_succeeds_in_repo_context():
-    result = main(["release-check"])
-
-    assert result == 0
-    manifest = json.loads(
-        Path(
-            "docs/demo/phase18-ci-release-reproducibility/release-manifest.json"
-        ).read_text()
+    assert (
+        str(phase18_output / "release-manifest.json") in guarded_paths
+        or str(phase18_output / "release-manifest.md") in guarded_paths
     )
+
+
+def test_cli_release_check_default_config_succeeds_in_repo_context(
+    tmp_path, monkeypatch
+):
+    # Current generator uses a fresh location; frozen Phase 18 remains input only.
+    monkeypatch.setattr(cli_module.tempfile, "mkdtemp", lambda **kwargs: str(tmp_path))
+    result = main(["release-check"])
+    assert result == 0
+    manifest = json.loads((tmp_path / "report/release-manifest.json").read_text())
     assert manifest["status"] == "PASS"
+    assert manifest["release_decision"]["decision"] == "KEEP_BASELINE"
 
 
 def test_cli_release_check_default_required_path_missing_returns_error(

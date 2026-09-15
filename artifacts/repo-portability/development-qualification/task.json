@@ -1,0 +1,35 @@
+{
+  "task_id": "csvkit-1345-ndjson",
+  "repository": "wireservice/csvkit",
+  "source_url": "https://github.com/wireservice/csvkit/pull/1345",
+  "export_exclusions": [
+    "examples/realdata/"
+  ],
+  "split": "dev",
+  "family_id": "ndjson-extension-detection",
+  "base_commit": "2a40ee24bf405a4a007fe822850fb3ee75fb21bf",
+  "reference_fix_commit": "aa4d9ce318c7da5a963a338baf9b9f6bffcd4c70",
+  "profile": {
+    "repository": "wireservice/csvkit",
+    "packages": {
+      "csvkit": "."
+    },
+    "cli_module": "csvkit.utilities.in2csv",
+    "cli_callable": "launch_new_instance",
+    "cli_name": "in2csv",
+    "image": "hermes-two-repo:v1",
+    "writable_roots": [
+      "csvkit",
+      "tests",
+      "docs",
+      "man",
+      "README.md",
+      "README.rst",
+      "CHANGELOG.rst"
+    ]
+  },
+  "target_selector": "ndjson",
+  "regression_selector": "existing_formats",
+  "trusted_test_file": "test_behavior.py",
+  "public_request_sha256": "3d748236777e3af3589e0556a5d2eb6c011b5db814b24efe577aad76d79931da"
+}

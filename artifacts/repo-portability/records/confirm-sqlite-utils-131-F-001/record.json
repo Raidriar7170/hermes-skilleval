@@ -1,0 +1,85 @@
+{
+  "task_id": "sqlite-utils-131",
+  "repository": "simonw/sqlite-utils",
+  "family_id": "explicit-insert-types",
+  "split": "confirmation",
+  "base_commit": "092f0919c3c254de0801dda60e7bbf8b73818c6c",
+  "arm": "F",
+  "attempt": 1,
+  "run_id": "confirm-sqlite-utils-131-F-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 1987422,
+        "cached_input_tokens": 1913728,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 11829,
+        "reasoning_output_tokens": 4540
+      }
+    ],
+    "input_tokens": 1987422,
+    "cached_input_tokens": 1913728,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 11829,
+    "reasoning_output_tokens": 4540
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": null,
+  "policy_rejected": false,
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[insert-extra_args0-zipcode,score\\n01234,9.5\\n-expected_row0]",
+      "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[upsert-extra_args1-id,zipcode,score\\n1,01234,9.5\\n-expected_row1]"
+    ],
+    "regression": [
+      "test_behavior::test_insert_csv_detect_types_leaves_existing_table_alone",
+      "test_behavior::test_insert_csv_detect_types_new_table",
+      "test_behavior::test_insert_from_stdin",
+      "test_behavior::test_insert_simple"
+    ]
+  },
+  "selected_ids": [
+    "cli-api-regression",
+    "systematic-debugging"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "confirm-sqlite-utils-131-F-001/candidate.patch",
+      "sha256": "8fe0b15f4ca0494845151e4e399cbf22f813082a682e7b41dbfabd2fba1f44e1",
+      "original_sha256": "8fe0b15f4ca0494845151e4e399cbf22f813082a682e7b41dbfabd2fba1f44e1"
+    },
+    "target": {
+      "path": "confirm-sqlite-utils-131-F-001/target.xml",
+      "sha256": "a7b6837e96ab3f3ab532d04e0a5c364625143fa910e0c0e2d1738aa943a044da",
+      "original_sha256": "a7b6837e96ab3f3ab532d04e0a5c364625143fa910e0c0e2d1738aa943a044da"
+    },
+    "regression": {
+      "path": "confirm-sqlite-utils-131-F-001/regression.xml",
+      "sha256": "168f01605ad5c9efd2a7d5f24cae6af270c73780af60bf7725fe577f0b4b48a9",
+      "original_sha256": "168f01605ad5c9efd2a7d5f24cae6af270c73780af60bf7725fe577f0b4b48a9"
+    },
+    "binding": {
+      "path": "confirm-sqlite-utils-131-F-001/verification.json",
+      "sha256": "0c4f0589e9c6a3cc3f5a2f9176a034c1dddaeede612ed2b9c0412e7507bcfb48"
+    },
+    "events": {
+      "path": "confirm-sqlite-utils-131-F-001/events.json",
+      "sha256": "688272bfc7a49adffffb31554c01224b0a74bf9bf1019f753940d04f8ddb906b"
+    }
+  },
+  "timing": {
+    "execution_seconds": 320.49286262498936,
+    "package_prepare_seconds": 0.01846770799602382,
+    "capture_seconds": 0.2894443749974016,
+    "finalize_seconds": 4.773309791984502,
+    "pipeline_wall_seconds": 325.3623167909973
+  },
+  "skill_file_reference_commands": 3,
+  "observed_skill_read_commands": 3
+}

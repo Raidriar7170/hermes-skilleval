@@ -26,6 +26,7 @@ embedding = [
 
 [project.scripts]
 skilleval = "hermes_skilleval.cli:main"
+hermes-maintain = "hermes_skilleval.maintenance_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -36,4 +37,18 @@ pythonpath = ["src"]
 
 [[tool.mypy.overrides]]
 module = "yaml"
+ignore_missing_imports = true
+
+[tool.setuptools.package-data]
+"hermes_skilleval._maintenance" = ["docker-seccomp-userns.json"]
+"hermes_skilleval.vendor" = ["SkillRouter-LICENSE"]
+
+[tool.ruff]
+# Byte-preserved upstream trusted tests are evidence, not project Python sources.
+extend-exclude = ["artifacts/repo-portability/**/trusted/**", "configs/product-assist/sqlite-utils/trusted/test_utils.py", "configs/product-assist/csvkit/trusted/test_cleanup.py"]
+force-exclude = true
+
+[[tool.mypy.overrides]]
+# Optional strong-retrieval extra is intentionally absent in lightweight CI.
+module = ["torch", "torch.*", "transformers", "transformers.*"]
 ignore_missing_imports = true

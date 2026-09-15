@@ -1,0 +1,86 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index a0d54c26f84cac66374b42b90b0603cff32742c7..a22915a750b84bbce4f6b429acebe576eb994f46 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -436,6 +436,8 @@ def isatty(f):
+ 
+ 
+ def default_str_decimal(obj):
++    if isinstance(obj, datetime.timedelta):
++        return obj.total_seconds()
+     if isinstance(obj, (datetime.date, datetime.datetime)):
+         return obj.isoformat()
+     if isinstance(obj, decimal.Decimal):
+diff --git a/docs/scripts/csvstat.rst b/docs/scripts/csvstat.rst
+index 259d2cf0c1bef4e1c7d0702c09e7f253797c6a6a..17b6cc74489238b71586cd5fa1d28deaea90b47c 100644
+--- a/docs/scripts/csvstat.rst
++++ b/docs/scripts/csvstat.rst
+@@ -101,3 +101,5 @@ If a single stat *and* a single column are requested, only a value will be retur
+ 
+    $ csvstat -c 4 --mean examples/realdata/FY09_EDU_Recipients_by_State.csv
+    6,263.904
++
++In JSON output, time delta values are represented as numeric total seconds.
+diff --git a/examples/timedelta.csv b/examples/timedelta.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..c07ab9e3bf0eb3df764ef8d9d0c9b76a346ebcbc
+--- /dev/null
++++ b/examples/timedelta.csv
+@@ -0,0 +1,4 @@
++duration
++0:00:00
++-0:00:01.5
++0:01:00.25
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..bdc636a8ea77e133b5937bd062a6074fffea35b8 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,8 @@
+ import unittest
++from datetime import date, datetime, timedelta
++from decimal import Decimal
+ 
+-from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.cli import default_float_decimal, default_str_decimal, match_column_identifier, parse_column_identifiers
+ 
+ 
+ class TestCli(unittest.TestCase):
+@@ -43,3 +45,15 @@ class TestCli(unittest.TestCase):
+         self.assertEqual(target, parse_column_identifiers('1,4:', self.headers))
+ 
+         self.assertEqual(list(range(0, len(self.headers))), parse_column_identifiers('1:', self.headers))
++
++    def test_json_serialization_helpers(self):
++        for helper in (default_str_decimal, default_float_decimal):
++            with self.subTest(helper=helper.__name__):
++                self.assertEqual(0.0, helper(timedelta(0)))
++                self.assertEqual(-1.5, helper(timedelta(seconds=-1.5)))
++                self.assertEqual(60.25, helper(timedelta(seconds=60.25)))
++
++        self.assertEqual('1.25', default_str_decimal(Decimal('1.25')))
++        self.assertEqual(1.25, default_float_decimal(Decimal('1.25')))
++        self.assertEqual('2020-01-02', default_str_decimal(date(2020, 1, 2)))
++        self.assertEqual('2020-01-02T03:04:05', default_float_decimal(datetime(2020, 1, 2, 3, 4, 5)))
+diff --git a/tests/test_utilities/test_csvstat.py b/tests/test_utilities/test_csvstat.py
+index d55e0f9cc08487756e37493b4e680a9b3a3ae400..f53cdb4a4564ff356e4c08a12cd180d75214b086 100644
+--- a/tests/test_utilities/test_csvstat.py
++++ b/tests/test_utilities/test_csvstat.py
+@@ -153,6 +153,18 @@ class TestCSVStat(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+         self.assertNotIn('min', data[0])
+         self.assertEqual(row[-2], 16.0)
+ 
++    def test_json_timedelta(self):
++        output = self.get_output_as_io(['--json', '--snifflimit', '0', 'examples/timedelta.csv'])
++
++        data = json.load(output)
++
++        self.assertEqual(data[0]['type'], 'TimeDelta')
++        self.assertEqual(data[0]['min'], -1.5)
++        self.assertEqual(data[0]['max'], 60.25)
++        self.assertEqual(data[0]['sum'], 58.75)
++        self.assertEqual(data[0]['mean'], 19.583333)
++        self.assertEqual([item['value'] for item in data[0]['freq']], [0.0, -1.5, 60.25])
++
+     def test_decimal_format(self):
+         output = self.get_output(['-c', 'TOTAL', '--mean', 'examples/realdata/FY09_EDU_Recipients_by_State.csv'])
+ 

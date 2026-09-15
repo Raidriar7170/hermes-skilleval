@@ -1,0 +1,88 @@
+{
+  "task_id": "csvkit-1270",
+  "repository": "wireservice/csvkit",
+  "family_id": "numeric-date-inference",
+  "split": "confirmation",
+  "base_commit": "0095bed9fc51f27482d439c9e83f78f255fe6bf1",
+  "arm": "S",
+  "attempt": 1,
+  "run_id": "confirm-csvkit-1270-S-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 536825,
+        "cached_input_tokens": 492160,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8157,
+        "reasoning_output_tokens": 3462
+      }
+    ],
+    "input_tokens": 536825,
+    "cached_input_tokens": 492160,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 8157,
+    "reasoning_output_tokens": 3462
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": null,
+  "policy_rejected": false,
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_number_with_date_format[4.4]",
+      "test_behavior::test_number_with_date_format[5.5]"
+    ],
+    "regression": [
+      "test_behavior::test_explicit_datetime",
+      "test_behavior::test_ordinary_numeric"
+    ]
+  },
+  "selected_ids": [
+    "schema-change-regression",
+    "cli-api-regression"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "confirm-csvkit-1270-S-001/candidate.patch",
+      "sha256": "2c1cc01161bfcdf8e5bcccf80d736accfe789d08336b2ee2b0a8a7bc8a549a5e",
+      "original_sha256": "2c1cc01161bfcdf8e5bcccf80d736accfe789d08336b2ee2b0a8a7bc8a549a5e"
+    },
+    "target": {
+      "path": "confirm-csvkit-1270-S-001/target.xml",
+      "sha256": "0d552b8f959940bba60a2e369e5e398b60b268d63c25f066de755834b4378e8c",
+      "original_sha256": "0d552b8f959940bba60a2e369e5e398b60b268d63c25f066de755834b4378e8c"
+    },
+    "regression": {
+      "path": "confirm-csvkit-1270-S-001/regression.xml",
+      "sha256": "3c447e80cbf6fc5252051f4a6444869dab855e7303e8ba85f35396512fb1e1ac",
+      "original_sha256": "3c447e80cbf6fc5252051f4a6444869dab855e7303e8ba85f35396512fb1e1ac"
+    },
+    "binding": {
+      "path": "confirm-csvkit-1270-S-001/verification.json",
+      "sha256": "b62bc6842deee270956be9c66b0d064ecc08e6ea5c8af1e655f1c585ee79dd11"
+    },
+    "events": {
+      "path": "confirm-csvkit-1270-S-001/events.json",
+      "sha256": "19b39d78e7a471467436be4fa512e4223c43d4bcab4860672c22fd560fe2af0e"
+    },
+    "route": {
+      "path": "confirm-csvkit-1270-S-001/route.json",
+      "sha256": "ff2145ad29320e2e9b411300fc2ea6e3ada201ab6102f4c50b573828fa808dc1",
+      "original_sha256": "09d522569a86c8798e51485ba9b299945dd45b989b05f8b8f5ee70c23bd0bc2b"
+    }
+  },
+  "timing": {
+    "execution_seconds": 181.46222133401898,
+    "package_prepare_seconds": 0.024662125011673197,
+    "capture_seconds": 0.4913557500112802,
+    "finalize_seconds": 5.307024125009775,
+    "pipeline_wall_seconds": 193.18525079201208
+  },
+  "skill_file_reference_commands": 1,
+  "observed_skill_read_commands": 1
+}

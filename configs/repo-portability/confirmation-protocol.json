@@ -1,0 +1,114 @@
+{
+  "schema": "two-repo-confirmation-v1",
+  "frozen_at_utc": "2026-09-15T01:32:42.604073+00:00",
+  "source_commit": "31ebf2456381df2cff80725f9b9bc187d41021d2",
+  "wheel_sha256": "8ad48e228deb8028b39a3d106a3903d273542029e1660cc9e96a76be97421ec7",
+  "registry_sha256": "0f6e9838c15a5c07d1eedd6670565c92ef0b1b0485f20bb5cc2d1fd362f9fbd3",
+  "fixed_config_sha256": "150489095017f5eba4a3e5e04afaa1e5d5b8c258a7db370243dc0cf3c3e68b85",
+  "images": {
+    "hermes-two-repo-clean:v3": "sha256:5bd5455d39cce90ab5f22e09c5b79bf1b79a4ab39b98a8e332ac17df4642209f"
+  },
+  "tasks": [
+    {
+      "task_id": "csvkit-1219",
+      "repository": "wireservice/csvkit",
+      "family_id": "dictreader-field-limit",
+      "qualification_sha256": "5f074a13c28e77eb3442b31d0a5c07691f0d132a57a52a356881a1b982af33de",
+      "task_sha256": "e3df3a6a7799afbb4655c826cb8eb21632baa732ca9eaa1fbaccdff41e91c7f0",
+      "public_request_sha256": "2ef09c06207ab75ee3e98cb49041b8b938caa1e433fefa561faf9c55d524453c",
+      "arm_order": [
+        "N",
+        "F",
+        "S"
+      ]
+    },
+    {
+      "task_id": "csvkit-1247",
+      "repository": "wireservice/csvkit",
+      "family_id": "timedelta-json",
+      "qualification_sha256": "60c951e6ff0ebb963acfe2d7315102a6b86d6a307b1ac423d1d76b1a303e8232",
+      "task_sha256": "6cbdce687ae24f36085bb1b2dd5135b479ea7fe6f2b8d3d3c0e8f5dcd13293a4",
+      "public_request_sha256": "2fb2d0959cb97ba55997a3329d8af64fdc4ff0381e24e633eadc0015cca5ce4d",
+      "arm_order": [
+        "F",
+        "S",
+        "N"
+      ]
+    },
+    {
+      "task_id": "csvkit-1270",
+      "repository": "wireservice/csvkit",
+      "family_id": "numeric-date-inference",
+      "qualification_sha256": "d9626b37981a51223297e7368330532e2cc2a89315408cc51e113a845ad81cdf",
+      "task_sha256": "66c699ddeb610021717daaf09d3d04b4b74e485f3cfb90fce6a91f2bbe28558d",
+      "public_request_sha256": "e37377eec54c4c9a9d7098e4eda725405a841d2bccc3ef77ec577a611f848eae",
+      "arm_order": [
+        "S",
+        "N",
+        "F"
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-131",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "explicit-insert-types",
+      "qualification_sha256": "c2a4f07e4293420d79c39ab1b8d97558fab743a1df9aa6e7c53ecf8b869466ca",
+      "task_sha256": "81af35347305b733cea22ad38e8124b16a63a63d91b02598cf66da3ab5349b54",
+      "public_request_sha256": "9741e9c4220b2385a5d910026f479d7b177d268edf6fd8b40dbbfe737d080978",
+      "arm_order": [
+        "N",
+        "F",
+        "S"
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-781-783",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "rowid-conflict-reporting",
+      "qualification_sha256": "794c3f14336d8fdee7cd43c4b21808c5c68bff30a6a3cc4d35236e7059e365f9",
+      "task_sha256": "a052ec919376b60857cead4540889e1e0acaefd7985301af1c73d98c8f55dc7b",
+      "public_request_sha256": "11f901b9da11899ffa7eec6eccc6313f412f3803e1aa7b50094e28897fa92b83",
+      "arm_order": [
+        "F",
+        "S",
+        "N"
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-828",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "fts-tokenizer-escaping",
+      "qualification_sha256": "293ccf7bf0da1e2ee86c2ce9ea1ef74bffe7c2e44563f7c53c2ee07edd05ce77",
+      "task_sha256": "0a3e0233520048f20e096593dbfa0bfb3033b57c8906d73552f6490aa38b43e0",
+      "public_request_sha256": "9069748be712655c384ad1d7d5627071fd4a86979989d3e68c8ab8e0db6152d1",
+      "arm_order": [
+        "S",
+        "N",
+        "F"
+      ]
+    }
+  ],
+  "arms": [
+    "N",
+    "F",
+    "S"
+  ],
+  "attempts_per_task_arm": 1,
+  "planned_agent_starts": 18,
+  "max_parallel_executions": 2,
+  "schedule": "Task order then rotated arm order; at most two starts in a wave. Online S invocations serialized to avoid overlapping retrieval models. All starts retained. No outcome-adaptive retry.",
+  "model": "gpt-5.6-sol",
+  "reasoning_effort": "medium",
+  "timeout_seconds": 600,
+  "native": "all five complete packages, optional reads",
+  "F_S": "K=2 complete packages, same registry order, optional reads",
+  "strong_profile": {
+    "encoder_revision": "c03c9bcee9fce92ab0262bb6dcf54d174a8ba558",
+    "reranker_revision": "78986e1142d12857cfd85b8005e62902cd42d858",
+    "device": "mps",
+    "dtype": "float32"
+  },
+  "study_scope": "exploratory; one trial per condition; no equivalence or causal claim from ties",
+  "comments": "body only; original public hints preserved, explicit requirements equal across arms",
+  "failure_policy": "Keep all started attempts including timeout and unknown verifier. Preparation failures listed separately, never treated as Agent successes."
+}

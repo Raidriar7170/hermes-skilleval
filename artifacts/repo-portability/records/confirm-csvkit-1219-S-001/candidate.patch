@@ -1,0 +1,121 @@
+diff --git a/CHANGELOG.rst b/CHANGELOG.rst
+index fdd0d1a903a6c355e198c1ba5b1f50ea0da22292..eec0bfbb73b0243d0832743da480c9bdc692e2ef 100644
+--- a/CHANGELOG.rst
++++ b/CHANGELOG.rst
+@@ -10,6 +10,7 @@ Unreleased
+ * feat: :doc:`/scripts/csvpy` removes the ``--linenumbers`` and ``--zero`` output options, which had no effect.
+ * feat: :doc:`/scripts/in2csv` adds a :code:`--reset-dimensions` option to `recalculate <https://openpyxl.readthedocs.io/en/stable/optimized.html#worksheet-dimensions>`_ the dimensions of an XLSX file, instead of trusting the file's metadata. csvkit's dependency `agate-excel <https://agate-excel.readthedocs.io/en/latest/>`_ 0.4.0 automatically recalculates the dimensions if the file's metadata expresses dimensions of "A1:A1" (a single cell).
+ * fix: :doc:`/scripts/csvlook` only reads up to :code:`--max-rows` rows instead of the entire file.
++* fix: :doc:`/scripts/csvstack` and :doc:`/scripts/csvpy` accept :code:`--maxfieldsize` when using a dictionary reader.
+ * fix: :doc:`/scripts/csvpy` supports the existing input options:
+ 
+    * :code:`--locale`
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4c3d1bdf25852c19abae995b147d7435b4c36ac1..859b5b98f717bcc7e133d982c69e94e228728a83 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -2,6 +2,7 @@
+ 
+ import argparse
+ import bz2
++import csv
+ import datetime
+ import decimal
+ import gzip
+@@ -75,6 +76,9 @@ class CSVKitUtility:
+         else:
+             self.output_file = output_file
+ 
++        if self.args.field_size_limit:
++            csv.field_size_limit(self.args.field_size_limit)
++
+         self.reader_kwargs = self._extract_csv_reader_kwargs()
+         self.writer_kwargs = self._extract_csv_writer_kwargs()
+ 
+@@ -269,7 +273,7 @@ class CSVKitUtility:
+         elif self.args.delimiter:
+             kwargs['delimiter'] = self.args.delimiter
+ 
+-        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'field_size_limit', 'skipinitialspace'):
++        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'skipinitialspace'):
+             value = getattr(self.args, arg)
+             if value is not None:
+                 kwargs[arg] = value
+diff --git a/tests/test_utilities/test_csvpy.py b/tests/test_utilities/test_csvpy.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..b643e3e1e0b8b846b0e4613655c3c2cfc5f4fe32
+--- /dev/null
++++ b/tests/test_utilities/test_csvpy.py
+@@ -0,0 +1,35 @@
++import code
++import csv
++import os
++import tempfile
++from unittest.mock import patch
++
++from csvkit.utilities.csvpy import CSVPy
++from tests.utils import CSVKitTestCase
++
++
++class TestCSVPy(CSVKitTestCase):
++    Utility = CSVPy
++
++    def test_dict_field_size_limit(self):
++        default_limit = csv.field_size_limit()
++        value = 'a' * (default_limit + 1)
++
++        try:
++            with tempfile.TemporaryDirectory() as directory:
++                path = os.path.join(directory, 'test.csv')
++                with open(path, 'w', newline='') as f:
++                    f.write(f'header\n{value}\n')
++
++                def interact_with_reader(*args, **kwargs):
++                    reader = kwargs['local']['reader']
++                    self.assertEqual(next(reader), {'header': value})
++
++                with patch.dict('sys.modules', {'IPython.frontend.terminal.embed': None}), \
++                        patch.object(code, 'interact', side_effect=interact_with_reader) as interact:
++                    utility = self.Utility(['--dict', '-z', str(len(value)), path])
++                    utility.run()
++
++                interact.assert_called_once()
++        finally:
++            csv.field_size_limit(default_limit)
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 7187971a6eb32374fe6b038f4fd57009a2564ac4..1f084e8beda006c175bc402ecbc4e595c67bff10 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,3 +1,5 @@
++import csv
++import io
+ import sys
+ from unittest.mock import patch
+ 
+@@ -41,6 +43,26 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_field_size_limit(self):
++        default_limit = csv.field_size_limit()
++
++        try:
++            self.assertRows(['-z', '100', 'examples/dummy.csv'], [
++                ['a', 'b', 'c'],
++                ['1', '2', '3'],
++            ])
++
++            value = 'a' * (default_limit + 1)
++            input_file = io.BytesIO(f'header\n{value}\n'.encode())
++
++            with stdin_as_string(input_file):
++                self.assertRows(['--maxfieldsize', str(len(value)), '-'], [
++                    ['header'],
++                    [value],
++                ])
++        finally:
++            csv.field_size_limit(default_limit)
++
+     def test_multiple_file_stack_col(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy_col_shuffled.csv'], [
+             ['a', 'b', 'c'],

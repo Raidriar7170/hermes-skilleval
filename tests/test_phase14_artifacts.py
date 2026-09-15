@@ -58,58 +58,19 @@ def test_phase14_real_eval_artifacts_pass_hard_negative_guard():
     assert summary["guard_status"] == "PASS"
     assert summary["regression_count"] == 0
     assert summary["metric_deltas"]["negative_hit_rate"] < 0
-    assert "- [x] Fine-tuned embedding router" in readme
+    assert "docs/experiment-timeline.md" in readme
+    assert "phase14.md" in Path("docs/experiment-timeline.md").read_text()
     assert "regression guard is `PASS`" in phase14
     assert "browser-local-dashboard" in phase14
 
 
-def test_readme_test_counts_match_verified_suite_size():
-    readme = README.read_text(encoding="utf-8")
-
-    assert "| Test cases | 698 |" in readme
-    assert "698 passed" in readme
-    assert "| Test cases | 399 |" not in readme
-    assert "399 passed" not in readme
-    assert "| Test cases | 386 |" not in readme
-    assert "386 passed" not in readme
-    assert "| Test cases | 384 |" not in readme
-    assert "384 passed" not in readme
-    assert "| Test cases | 381 |" not in readme
-    assert "381 passed" not in readme
-    assert "| Test cases | 378 |" not in readme
-    assert "378 passed" not in readme
-    assert "| Test cases | 372 |" not in readme
-    assert "372 passed" not in readme
-    assert "| Test cases | 365 |" not in readme
-    assert "365 passed" not in readme
-    assert "| Test cases | 361 |" not in readme
-    assert "361 passed" not in readme
-    assert "| Test cases | 354 |" not in readme
-    assert "354 passed" not in readme
-    assert "| Test cases | 351 |" not in readme
-    assert "351 passed" not in readme
-    assert "| Test cases | 347 |" not in readme
-    assert "347 passed" not in readme
-    assert "| Test cases | 346 |" not in readme
-    assert "346 passed" not in readme
-    assert "| Test cases | 314 |" not in readme
-    assert "314 passed" not in readme
-    assert "| Test cases | 312 |" not in readme
-    assert "312 passed" not in readme
-    assert "| Test cases | 311 |" not in readme
-    assert "311 passed" not in readme
-    assert "211 passed" not in readme
-    assert "214 passed" not in readme
-    assert "217 passed" not in readme
-    assert "218 passed" not in readme
-    assert "228 passed" not in readme
-    assert "240 passed" not in readme
-    assert "244 passed" not in readme
-    assert "274 passed" not in readme
-    assert "296 passed" not in readme
-    assert "296 pytest cases" not in readme
-    assert "296 unit and smoke tests" not in readme
-    assert "| Test cases | 199 |" not in readme
+def test_readme_validation_links_replace_unversioned_suite_totals():
+    # Counts belong to versioned run evidence, not an immutable homepage total.
+    for name in ("README.md", "README_EN.md"):
+        readme = Path(name).read_text(encoding="utf-8")
+        assert "actions/workflows/validate.yml" in readme
+        assert "docs/evidence-map.md" in readme
+        assert "| Test cases |" not in readme
 
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:

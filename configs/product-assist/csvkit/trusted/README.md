@@ -1,0 +1,1 @@
+The test_cleanup.py file is copied unchanged from the public upstream source recorded in ../upstream.json, under that project's license. test_assist_smoke.py is controller-authored before execution from ../request.md. pytest.ini fixes the test discovery boundary. Only configured selectors run.

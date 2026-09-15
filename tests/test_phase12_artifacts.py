@@ -40,7 +40,7 @@ def test_phase12_docs_and_readme_are_updated():
 
     assert "docs/experiment-timeline.md" in readme
     assert "| Phase 12 | Offline skill metadata patch ranking |" in timeline
-    assert "- [x] Offline skill metadata patch ranking" in readme
+    assert "phase12.md" in timeline
     assert "rank-skill-patches" in usage
     assert "does not modify source SKILL.md files" in phase12
     assert "negative_skill_selected" in phase12

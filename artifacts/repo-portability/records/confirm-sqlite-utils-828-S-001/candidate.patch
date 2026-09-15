@@ -1,0 +1,38 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 2e9b570cce0ecc1f3a4a9f3ea4b4374c905ee802..45482f3906a73e9fd787242355e32ee340e2aea4 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -3514,7 +3514,9 @@ class Table(Queryable):
+                 table_fts=quote_identifier(self.name + "_fts"),
+                 columns=", ".join(quote_identifier(c) for c in columns),
+                 fts_version=fts_version,
+-                tokenize=f"\n    tokenize='{tokenize}'," if tokenize else "",
++                tokenize=(
++                    f"\n    tokenize={self.db.quote(tokenize)}," if tokenize else ""
++                ),
+             )
+         )
+         should_recreate = False
+diff --git a/tests/test_fts.py b/tests/test_fts.py
+index 50c1770b8c58a13390a07a10349b761fccb3dd25..ffde980f79e61926a9ef1b8ea03efb5bb38871b5 100644
+--- a/tests/test_fts.py
++++ b/tests/test_fts.py
+@@ -252,6 +252,18 @@ def test_fts_tokenize(fresh_db, fts_version):
+     }.items() <= rows[0].items()
+ 
+ 
++def test_fts_tokenize_escaped(fresh_db):
++    table = fresh_db["articles"]
++    table.insert({"text": "hello"})
++    with pytest.raises(sqlite3.OperationalError):
++        table.enable_fts(
++            ["text"],
++            tokenize="porter'); CREATE TABLE injected (id INTEGER); /*",
++        )
++    assert fresh_db.table_names() == ["articles"]
++    assert list(table.rows) == [{"text": "hello"}]
++
++
+ def test_optimize_fts(fresh_db):
+     for fts_version in ("4", "5"):
+         table_name = f"searchable_{fts_version}"

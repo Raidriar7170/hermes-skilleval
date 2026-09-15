@@ -1,0 +1,76 @@
+{
+  "task_id": "csvkit-1247",
+  "repository": "wireservice/csvkit",
+  "family_id": "timedelta-json",
+  "split": "confirmation",
+  "base_commit": "b36512a17f237866645bbb37f2f4ccff73cb0a49",
+  "arm": "F",
+  "attempt": 1,
+  "run_id": "confirm-csvkit-1247-F-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 779104,
+        "cached_input_tokens": 723456,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8115,
+        "reasoning_output_tokens": 2838
+      }
+    ],
+    "input_tokens": 779104,
+    "cached_input_tokens": 723456,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 8115,
+    "reasoning_output_tokens": 2838
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": null,
+  "policy_rejected": true,
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_timedelta_cli",
+      "test_behavior::test_timedelta_json[-90]",
+      "test_behavior::test_timedelta_json[0]",
+      "test_behavior::test_timedelta_json[3600.5]",
+      "test_behavior::test_timedelta_json[60]"
+    ],
+    "regression": [
+      "test_behavior::test_existing_json[value0-2.5]",
+      "test_behavior::test_existing_json[value1-2024-01-02]"
+    ]
+  },
+  "selected_ids": [
+    "cli-api-regression",
+    "systematic-debugging"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "confirm-csvkit-1247-F-001/candidate.patch",
+      "sha256": "f6d4b55bcf65d1dbd17bd4f6683e7411abac610a0ad08bdc0409a647b100877d",
+      "original_sha256": "f6d4b55bcf65d1dbd17bd4f6683e7411abac610a0ad08bdc0409a647b100877d"
+    },
+    "binding": {
+      "path": "confirm-csvkit-1247-F-001/verification.json",
+      "sha256": "04cadee31d1fb0c9d9e07647685663fb001db5474642215415e3c62804519491"
+    },
+    "events": {
+      "path": "confirm-csvkit-1247-F-001/events.json",
+      "sha256": "0157956aaf63425cf0bed5e568b3c1d0f9cfa13f7c71e4615ebf2b2c50b0b443"
+    }
+  },
+  "timing": {
+    "execution_seconds": 200.52178408400505,
+    "package_prepare_seconds": 0.02729066601023078,
+    "capture_seconds": 0.32751166698290035,
+    "finalize_seconds": 0.36541166598908603,
+    "pipeline_wall_seconds": 200.9918247089954
+  },
+  "skill_file_reference_commands": 1,
+  "observed_skill_read_commands": 1
+}

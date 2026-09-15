@@ -1,0 +1,134 @@
+{
+  "task_id": "sqlite-utils-828",
+  "repository": "simonw/sqlite-utils",
+  "family_id": "fts-tokenizer-escaping",
+  "split": "confirmation",
+  "base_commit": "b37b8cf8c83515a022e7ec0b1599004bb2f7eb55",
+  "arm": "N",
+  "attempt": 1,
+  "run_id": "confirm-sqlite-utils-828-N-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 490279,
+        "cached_input_tokens": 448000,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6346,
+        "reasoning_output_tokens": 2214
+      }
+    ],
+    "input_tokens": 490279,
+    "cached_input_tokens": 448000,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 6346,
+    "reasoning_output_tokens": 2214
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": null,
+  "policy_rejected": false,
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_fts_tokenize_escaped"
+    ],
+    "regression": [
+      "test_behavior::test_disable_fts[False]",
+      "test_behavior::test_disable_fts[True]",
+      "test_behavior::test_enable_fts",
+      "test_behavior::test_enable_fts_cli_on_view_errors",
+      "test_behavior::test_enable_fts_escape_table_names",
+      "test_behavior::test_enable_fts_replace[kwargs0]",
+      "test_behavior::test_enable_fts_replace[kwargs1]",
+      "test_behavior::test_enable_fts_replace[kwargs2]",
+      "test_behavior::test_enable_fts_replace[kwargs3]",
+      "test_behavior::test_enable_fts_replace_does_nothing_if_args_the_same",
+      "test_behavior::test_enable_fts_replace_handles_legacy_bracket_quoted_content_table",
+      "test_behavior::test_enable_fts_table_names_containing_spaces",
+      "test_behavior::test_enable_fts_with_triggers",
+      "test_behavior::test_fts_tokenize[4]",
+      "test_behavior::test_fts_tokenize[5]",
+      "test_behavior::test_optimize_and_rebuild_fts_commit[optimize]",
+      "test_behavior::test_optimize_and_rebuild_fts_commit[rebuild_fts]",
+      "test_behavior::test_optimize_fts",
+      "test_behavior::test_populate_fts",
+      "test_behavior::test_populate_fts_escape_table_names",
+      "test_behavior::test_quote_fts_query[\"cat dog\" \"fish-\"cat dog\" \"fish\"]",
+      "test_behavior::test_quote_fts_query[\"cat dog\" fish-\"cat dog\" \"fish\"]",
+      "test_behavior::test_quote_fts_query[\"cat dog\"-\"cat dog\"]",
+      "test_behavior::test_quote_fts_query[cat dog-\"cat\" \"dog\"]",
+      "test_behavior::test_quote_fts_query[cat\"-\"cat\"]",
+      "test_behavior::test_quote_fts_query[cat's-\"cat's\"]",
+      "test_behavior::test_quote_fts_query[cat,-\"cat,\"]",
+      "test_behavior::test_quote_fts_query[dog-\"dog\"]",
+      "test_behavior::test_quote_fts_query[dog.-\"dog.\"]",
+      "test_behavior::test_rebuild_fts",
+      "test_behavior::test_rebuild_fts_invalid[does_not_exist]",
+      "test_behavior::test_rebuild_fts_invalid[not_searchable]",
+      "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS4]",
+      "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS5]",
+      "test_behavior::test_search_duplicate_columns_are_deduped",
+      "test_behavior::test_search_include_rank",
+      "test_behavior::test_search_limit_offset",
+      "test_behavior::test_search_quote",
+      "test_behavior::test_search_sql[kwargs0-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+      "test_behavior::test_search_sql[kwargs1-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rowid\\nlimit 10]",
+      "test_behavior::test_search_sql[kwargs2-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+      "test_behavior::test_search_sql[kwargs3-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+      "test_behavior::test_search_sql[kwargs4-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 1 offset 1]",
+      "test_behavior::test_search_sql[kwargs5-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 2]",
+      "test_behavior::test_search_sql[kwargs6-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+      "test_behavior::test_search_sql[kwargs7-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    \"books_fts\".rank rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+      "test_behavior::test_search_sql[kwargs8-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx')) rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+      "test_behavior::test_search_where[FTS4]",
+      "test_behavior::test_search_where[FTS5]",
+      "test_behavior::test_search_where_args_disallows_query",
+      "test_behavior::test_view_has_no_enable_fts"
+    ]
+  },
+  "selected_ids": [
+    "systematic-debugging",
+    "verification-before-completion",
+    "cli-api-regression",
+    "schema-change-regression",
+    "import-data-regression"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "confirm-sqlite-utils-828-N-001/candidate.patch",
+      "sha256": "02676eb81e8fc54234127bd4a3f61e99afdc153f2a8261b47dde695a9739010b",
+      "original_sha256": "02676eb81e8fc54234127bd4a3f61e99afdc153f2a8261b47dde695a9739010b"
+    },
+    "target": {
+      "path": "confirm-sqlite-utils-828-N-001/target.xml",
+      "sha256": "e1b6a4a53d195de9f78cd7b57bcef56e48cd628804d2ac5bf2a0fe33b5383050",
+      "original_sha256": "e1b6a4a53d195de9f78cd7b57bcef56e48cd628804d2ac5bf2a0fe33b5383050"
+    },
+    "regression": {
+      "path": "confirm-sqlite-utils-828-N-001/regression.xml",
+      "sha256": "1b2d30e4c5b7acb8da52eb225ccaf23df3e881dc0b82bfa3723950fec4ecf436",
+      "original_sha256": "1b2d30e4c5b7acb8da52eb225ccaf23df3e881dc0b82bfa3723950fec4ecf436"
+    },
+    "binding": {
+      "path": "confirm-sqlite-utils-828-N-001/verification.json",
+      "sha256": "cb95d3e6f0069900e72aee034b71026990b81bcd60dcc2242f0575f3fa583333"
+    },
+    "events": {
+      "path": "confirm-sqlite-utils-828-N-001/events.json",
+      "sha256": "5def70c1cbb7b2f8d35d34b1bc5f8d8af34077ba8052e754a66626272d7db6f8"
+    }
+  },
+  "timing": {
+    "execution_seconds": 193.70314575001248,
+    "package_prepare_seconds": 0.02498912499868311,
+    "capture_seconds": 0.2463974170095753,
+    "finalize_seconds": 4.824246250005672,
+    "pipeline_wall_seconds": 198.635802875011
+  },
+  "skill_file_reference_commands": 3,
+  "observed_skill_read_commands": 3
+}

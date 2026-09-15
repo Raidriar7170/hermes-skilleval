@@ -1,0 +1,243 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index 5d1816a039794e094402f4088bb86dbec883f51d..8932b0267fbddffe0a1c616ee466da11bfddb434 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -9,6 +9,7 @@
+ Unreleased
+ ----------
+ 
++- ``sqlite-utils insert`` and ``sqlite-utils upsert`` now accept repeatable ``--type COLUMN TYPE`` options for explicitly setting column types. Supported types are ``text``, ``integer``, ``float`` and ``blob``. Explicit types take precedence over detected types and apply to both new and existing tables. (:issue:`131`)
+ - ``sqlite-utils query`` can now read the SQL query from standard input by passing ``-`` in place of the query, for example ``echo "select * from dogs" | sqlite-utils query dogs.db -``. (:issue:`765`)
+ - ``sqlite-utils insert`` and ``sqlite-utils upsert`` now accept a ``--code`` option for :ref:`providing a block of Python code <cli_insert_code>` (or a path to a ``.py`` file) that defines a ``rows()`` function or ``rows`` iterable of rows to insert, as an alternative to importing from a file. (:issue:`684`)
+ 
+diff --git a/docs/cli-reference.rst b/docs/cli-reference.rst
+index 57988092b0fc5dd0a57460e4cae882e714a9d65b..1c4416778d167a0a1612b1318b7b1253d691b1ea 100644
+--- a/docs/cli-reference.rst
++++ b/docs/cli-reference.rst
+@@ -306,6 +306,7 @@ See :ref:`cli_inserting_data`, :ref:`cli_insert_csv_tsv`, :ref:`cli_insert_unstr
+       --alter                   Alter existing table to add any missing columns
+       --not-null TEXT           Columns that should be created as NOT NULL
+       --default <TEXT TEXT>...  Default value that should be set for a column
++      --type <TEXT CHOICE>...   Specify column type: text, integer, float, or blob
+       --no-detect-types         Treat all CSV/TSV columns as TEXT
+       --analyze                 Run ANALYZE at the end of this operation
+       --load-extension TEXT     Path to SQLite extension, with optional :entrypoint
+@@ -366,6 +367,7 @@ See :ref:`cli_upsert`.
+       --alter                   Alter existing table to add any missing columns
+       --not-null TEXT           Columns that should be created as NOT NULL
+       --default <TEXT TEXT>...  Default value that should be set for a column
++      --type <TEXT CHOICE>...   Specify column type: text, integer, float, or blob
+       --no-detect-types         Treat all CSV/TSV columns as TEXT
+       --analyze                 Run ANALYZE at the end of this operation
+       --load-extension TEXT     Path to SQLite extension, with optional :entrypoint
+diff --git a/docs/cli.rst b/docs/cli.rst
+index 4ed92edb02d4ef4d9bd4ea7bc8a9ec2161c4802f..482e0cc9fef9ef241e56bf999b1baf71d1e4476b 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1338,6 +1338,16 @@ By default, column types are automatically detected for CSV or TSV files - resul
+ 
+ Detected types are only applied when the table is created by the command. Inserting CSV or TSV data into a table that already exists leaves the existing column types unchanged - values are inserted using the table's existing schema.
+ 
++You can explicitly set a column type using ``--type COLUMN TYPE``. This option can be repeated, and the supported types are ``text``, ``integer``, ``float`` and ``blob``:
++
++.. code-block:: bash
++
++    sqlite-utils insert creatures.db creatures creatures.csv --csv \
++        --type age integer \
++        --type weight float
++
++Explicit types take precedence over automatically detected types. Unlike detected types, explicit types are also applied to tables that already exist. The same option is available on ``sqlite-utils upsert``.
++
+ For example, given a ``creatures.csv`` file containing this:
+ 
+ .. code-block::
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 4eefc709d9057ce55f3b4218d3f53400726dd8c9..f860c0696b50a2a1c71b833e05543aaecad766e5 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -980,6 +980,19 @@ def insert_upsert_options(*, require_pk=False):
+                     type=(str, str),
+                     help="Default value that should be set for a column",
+                 ),
++                click.option(
++                    "--type",
++                    "types",
++                    multiple=True,
++                    type=(
++                        str,
++                        click.Choice(
++                            ["text", "integer", "float", "blob"],
++                            case_sensitive=False,
++                        ),
++                    ),
++                    help="Specify column type: text, integer, float, or blob",
++                ),
+                 click.option(
+                     "--no-detect-types",
+                     is_flag=True,
+@@ -1034,6 +1047,7 @@ def insert_upsert_implementation(
+     truncate=False,
+     not_null=None,
+     default=None,
++    types=None,
+     no_detect_types=False,
+     analyze=False,
+     load_extension=None,
+@@ -1049,6 +1063,7 @@ def insert_upsert_implementation(
+     _maybe_register_functions(db, functions)
+ 
+     def _insert_docs(docs, tracker=None):
++        explicit_types = dict(types or ())
+         extra_kwargs = {
+             "ignore": ignore,
+             "replace": replace,
+@@ -1112,15 +1127,17 @@ def insert_upsert_implementation(
+                 )
+             else:
+                 raise
++        types_to_apply = {}
+         # Apply detected types only to a table this command created -
+         # transforming a pre-existing table would rewrite its column types
+         # and corrupt values such as TEXT zip codes with leading zeros
+-        if (
+-            tracker is not None
+-            and not table_existed_before_insert
+-            and db.table(table).exists()
+-        ):
+-            db.table(table).transform(types=tracker.types)
++        if tracker is not None and not table_existed_before_insert:
++            types_to_apply.update(tracker.types)
++        # Explicit types apply to both new and existing tables, and take
++        # precedence over any automatically detected types.
++        types_to_apply.update(explicit_types)
++        if types_to_apply and db.table(table).exists():
++            db.table(table).transform(types=types_to_apply)
+ 
+     if code is not None:
+         if file is not None:
+@@ -1330,6 +1347,7 @@ def insert(
+     truncate,
+     not_null,
+     default,
++    types,
+     strict,
+ ):
+     """
+@@ -1420,6 +1438,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            types=types,
+             strict=strict,
+             code=code,
+         )
+@@ -1454,6 +1473,7 @@ def upsert(
+     alter,
+     not_null,
+     default,
++    types,
+     no_detect_types,
+     analyze,
+     load_extension,
+@@ -1501,6 +1521,7 @@ def upsert(
+             upsert=True,
+             not_null=not_null,
+             default=default,
++            types=types,
+             no_detect_types=no_detect_types,
+             analyze=analyze,
+             load_extension=load_extension,
+diff --git a/tests/test_cli_insert.py b/tests/test_cli_insert.py
+index e290f9715cba02b10a194af9924eb6726060fc58..73218243ea0793f1ac4831757c144394b60a844d 100644
+--- a/tests/test_cli_insert.py
++++ b/tests/test_cli_insert.py
+@@ -664,6 +664,89 @@ def test_insert_csv_detect_types_new_table(db_path):
+     assert db["data"].columns_dict == {"name": str, "age": int, "weight": float}
+ 
+ 
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++@pytest.mark.parametrize("table_exists", (False, True))
++def test_insert_upsert_explicit_types(db_path, command, table_exists):
++    db = Database(db_path)
++    if table_exists:
++        db["data"].create(
++            {
++                "id": str,
++                "as_text": str,
++                "as_integer": str,
++                "as_float": str,
++                "as_blob": str,
++            },
++            pk="id",
++        )
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            command,
++            db_path,
++            "data",
++            "-",
++            "--csv",
++            "--pk",
++            "id",
++            "--type",
++            "as_text",
++            "text",
++            "--type",
++            "as_integer",
++            "integer",
++            "--type",
++            "as_float",
++            "float",
++            "--type",
++            "as_blob",
++            "blob",
++        ],
++        catch_exceptions=False,
++        input="id,as_text,as_integer,as_float,as_blob\n1,123,42,5,hello",
++    )
++    assert result.exit_code == 0, result.output
++    assert db["data"].columns_dict == {
++        "id": str if table_exists else int,
++        "as_text": str,
++        "as_integer": int,
++        "as_float": float,
++        "as_blob": bytes,
++    }
++
++
++def test_explicit_types_with_no_detect_types(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "data",
++            "-",
++            "--csv",
++            "--no-detect-types",
++            "--type",
++            "value",
++            "integer",
++        ],
++        catch_exceptions=False,
++        input="id,value\n1,42",
++    )
++    assert result.exit_code == 0, result.output
++    assert Database(db_path)["data"].columns_dict == {"id": str, "value": int}
++
++
++def test_explicit_type_rejects_unsupported_type(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "data", "-", "--type", "id", "varchar"],
++        input='{"id": 1}',
++    )
++    assert result.exit_code == 2
++    assert "Invalid value for '--type'" in result.output
++    assert "varchar" in result.output
++
++
+ def test_upsert_csv_detect_types_leaves_existing_table_alone(db_path):
+     db = Database(db_path)
+     db["places"].insert({"id": 1, "name": "Boston", "zip": "01234"}, pk="id")

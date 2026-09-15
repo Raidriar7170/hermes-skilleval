@@ -1,0 +1,39 @@
+{
+  "task_id": "sqlite-utils-781-783",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/issues/781",
+  "family_id": "rowid-conflict-reporting",
+  "split": "confirmation",
+  "reference_fix_commit": "60811e730509667f702bc08f9bf5fc3fe13b7f45",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-two-repo-clean:v3",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "man",
+      "README.md",
+      "README.rst",
+      "CHANGELOG.rst"
+    ]
+  },
+  "public_request": "sqlite-utils-781-783-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_create.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_pk_rowid_alias_on_rowid_table or test_insert_ignore_reports_existing_row or test_insert_ignore_hash_id_reports_pk or test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+  "regression_selector": "test_create_table or test_insert_and_upsert",
+  "export_exclusions": [],
+  "comment_extraction_rule": "Issue/PR body only, plus explicitly named related issue; no comments. Current fetched body; edit history unknown.",
+  "base_commit": "d314d04215f7337d42c847214861ec7ffe0bf757",
+  "public_request_sha256": "11f901b9da11899ffa7eec6eccc6313f412f3803e1aa7b50094e28897fa92b83"
+}

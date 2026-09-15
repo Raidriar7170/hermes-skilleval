@@ -1,0 +1,294 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index 0943dca974da097822ebdf7b0b2e736208cde319..7627228dcf525b0e244eeae52cbd13b8d23a04c6 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -9,6 +9,10 @@
+ 4.0rc4 (2026-07-06)
+ -------------------
+ 
++- Rowid aliases such as ``rowid``, ``_rowid_`` and ``oid`` can be passed as
++  ``pk=`` when upserting into rowid tables again. Ignored single-row inserts
++  now populate ``last_rowid`` and ``last_pk`` from the existing row when its
++  identifiers can be resolved. (:issue:`781`, :issue:`783`)
+ - **Breaking change**: ``table.extract()`` - and the ``sqlite-utils extract`` command - no longer extract rows where every extracted column is ``null``. Those rows now keep a ``null`` value in the new foreign key column instead of pointing at an all-``null`` record in the lookup table. When extracting multiple columns, rows are still extracted if at least one of the columns has a value. (:issue:`186`)
+ - The ``extracts=`` option to ``table.insert()`` and friends no longer creates a lookup table record for ``None`` values - the column value stays ``null``. Previously every batch of inserted rows containing a ``None`` value would add a duplicate ``null`` record to the lookup table.
+ - Fixed a bug where ``table.lookup()`` inserted a duplicate row on every call if any of the lookup values were ``None``. Lookup values are now compared using ``IS`` so that ``None`` values match existing rows correctly.
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index bec68fc89c0da54ba54c002c3722809d6268804c..d84f70919df95128de589e3950feab90f448a995 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2229,6 +2229,89 @@ class Table(Queryable):
+         "Does this table use ``rowid`` for its primary key (no other primary keys are specified)?"
+         return not any(column for column in self.columns if column.is_pk)
+ 
++    def _is_hidden_rowid_alias(self, column: str) -> bool:
++        """Is column an unshadowed alias for this table's hidden rowid?"""
++        if fold_identifier_case(column) not in {"rowid", "_rowid_", "oid"}:
++            return False
++        if re.search(r"\bWITHOUT\s+ROWID\b", self.schema, re.IGNORECASE):
++            return False
++        return resolve_casing(column, self.columns_dict) not in self.columns_dict
++
++    def _hidden_rowid_alias(self) -> Optional[str]:
++        """Return an unshadowed name that can be used to select the hidden rowid."""
++        for alias in ("rowid", "_rowid_", "oid"):
++            if self._is_hidden_rowid_alias(alias):
++                return alias
++        return None
++
++    def _set_last_identifiers_for_ignored_insert(
++        self,
++        record: Dict[str, Any],
++        pk: Optional[Any],
++        hash_id: Optional[str],
++        hash_id_columns: Optional[Iterable[str]],
++    ) -> None:
++        """Populate last_rowid and last_pk if the ignored row can be found."""
++        if hash_id:
++            pk_columns = [hash_id]
++            pk_values = [hash_record(record, hash_id_columns)]
++        else:
++            if pk:
++                pk_columns = [pk] if isinstance(pk, str) else list(pk)
++            else:
++                pk_columns = [column.name for column in self.columns if column.is_pk]
++                if not pk_columns:
++                    # An implicit rowid can only identify the existing row if
++                    # the record supplied one of its unshadowed aliases.
++                    pk_columns = [
++                        column
++                        for column in record
++                        if self._is_hidden_rowid_alias(column)
++                    ][:1]
++                    if not pk_columns:
++                        return
++            try:
++                record_pk_columns = [
++                    resolve_casing(column, record) for column in pk_columns
++                ]
++                pk_values = [record[column] for column in record_pk_columns]
++            except KeyError:
++                return
++
++        select_parts = []
++        rowid_alias = self._hidden_rowid_alias()
++        if rowid_alias:
++            select_parts.append(
++                "{} as {}".format(
++                    quote_identifier(rowid_alias),
++                    quote_identifier("_sqlite_utils_rowid"),
++                )
++            )
++        select_parts.extend(
++            "{} as {}".format(
++                quote_identifier(column),
++                quote_identifier("_sqlite_utils_pk_{}".format(index)),
++            )
++            for index, column in enumerate(pk_columns)
++        )
++        where = " AND ".join(
++            "{} IS ?".format(quote_identifier(column)) for column in pk_columns
++        )
++        row = self.db.execute(
++            "SELECT {} FROM {} WHERE {} LIMIT 1".format(
++                ", ".join(select_parts), quote_identifier(self.name), where
++            ),
++            pk_values,
++        ).fetchone()
++        if row is None:
++            return
++        offset = 0
++        if rowid_alias:
++            self.last_rowid = row[0]
++            offset = 1
++        resolved_pk = tuple(row[offset:])
++        self.last_pk = resolved_pk[0] if len(resolved_pk) == 1 else resolved_pk
++
+     def get(self, pk_values: Union[list, tuple, str, int]) -> dict:
+         """
+         Return row (as dictionary) for the specified primary key.
+@@ -4347,6 +4430,7 @@ class Table(Queryable):
+                 col
+                 for col in pk_cols
+                 if resolve_casing(col, existing_columns) not in existing_columns
++                and not self._is_hidden_rowid_alias(col)
+             ]
+             if missing_pk_cols:
+                 invalid_pk_error = InvalidColumns(
+@@ -4514,35 +4598,12 @@ class Table(Queryable):
+                 if ignored_insert:
+                     if list_mode:
+                         first_record_list = cast(Sequence[Any], first_record)
+-                        if hash_id:
+-                            pass
+-                        elif isinstance(pk, str):
+-                            pk_index = column_names.index(
+-                                resolve_casing(pk, column_names)
+-                            )
+-                            self.last_pk = first_record_list[pk_index]
+-                        elif pk:
+-                            self.last_pk = tuple(
+-                                first_record_list[
+-                                    column_names.index(resolve_casing(p, column_names))
+-                                ]
+-                                for p in pk
+-                            )
++                        ignored_record = dict(zip(column_names, first_record_list))
+                     else:
+-                        first_record_dict = cast(Dict[str, Any], first_record)
+-                        if hash_id:
+-                            self.last_pk = hash_record(
+-                                first_record_dict, hash_id_columns
+-                            )
+-                        elif isinstance(pk, str):
+-                            self.last_pk = first_record_dict[
+-                                resolve_casing(pk, first_record_dict)
+-                            ]
+-                        elif pk:
+-                            self.last_pk = tuple(
+-                                first_record_dict[resolve_casing(p, first_record_dict)]
+-                                for p in pk
+-                            )
++                        ignored_record = cast(Dict[str, Any], first_record)
++                    self._set_last_identifiers_for_ignored_insert(
++                        ignored_record, pk, hash_id, hash_id_columns
++                    )
+                 else:
+                     self.last_rowid = result.lastrowid
+                     if (hash_id or pk) and self.last_rowid:
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 42fa1c4222e2597a6a303480eb1b71841f924ddc..5d175e91dbcee9108fd9205cab66b7d68bb926fc 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -1008,6 +1008,81 @@ def test_insert_ignore_with_pk_after_other_table_insert(fresh_db):
+     assert list(fresh_db["users"].rows) == [user]
+ 
+ 
++def test_insert_ignore_infers_existing_primary_key(fresh_db):
++    fresh_db.execute("create table docs (id integer primary key, title text)")
++    table = fresh_db["docs"]
++    table.insert({"id": 1, "title": "Exists"}, pk="id")
++
++    table.insert({"id": 1, "title": "Ignored"}, ignore=True)
++
++    assert table.last_rowid == 1
++    assert table.last_pk == 1
++
++
++def test_insert_ignore_resolves_compound_primary_key(fresh_db):
++    table = fresh_db["items"]
++    table.insert(
++        {"category": "dog", "id": 1, "name": "Cleo"},
++        pk=("category", "id"),
++    )
++
++    table.insert({"category": "dog", "id": 1, "name": "Ignored"}, ignore=True)
++
++    assert table.last_rowid == 1
++    assert table.last_pk == ("dog", 1)
++
++
++def test_insert_ignore_resolves_hash_id(fresh_db):
++    table = fresh_db["items"]
++    table.insert({"name": "Cleo"}, hash_id="id")
++    expected_hash = table.last_pk
++
++    table.insert({"name": "Cleo"}, hash_id="id", ignore=True)
++
++    assert table.last_rowid == 1
++    assert table.last_pk == expected_hash
++
++
++@pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
++def test_insert_ignore_resolves_rowid_alias(fresh_db, rowid_alias):
++    table = fresh_db["items"]
++    table.insert({"name": "Cleo"})
++
++    table.insert(
++        {rowid_alias: 1, "name": "Ignored"},
++        pk=rowid_alias,
++        ignore=True,
++    )
++
++    assert table.last_rowid == 1
++    assert table.last_pk == 1
++
++
++def test_insert_ignore_unresolvable_conflict_leaves_identifiers_unset(fresh_db):
++    fresh_db.execute("create table items (id integer primary key, name text unique)")
++    table = fresh_db["items"]
++    table.insert({"id": 1, "name": "Cleo"})
++
++    table.insert({"id": 2, "name": "Cleo"}, ignore=True)
++
++    assert table.last_rowid is None
++    assert table.last_pk is None
++
++
++def test_insert_ignore_without_rowid_resolves_primary_key(fresh_db):
++    fresh_db.execute(
++        "create table items (category text, id integer, name text, "
++        "primary key (category, id)) without rowid"
++    )
++    table = fresh_db["items"]
++    table.insert({"category": "dog", "id": 1, "name": "Cleo"})
++
++    table.insert({"category": "dog", "id": 1, "name": "Ignored"}, ignore=True)
++
++    assert table.last_rowid is None
++    assert table.last_pk == ("dog", 1)
++
++
+ def test_insert_hash_id(fresh_db):
+     dogs = fresh_db["dogs"]
+     id = dogs.insert({"name": "Cleo", "twitter": "cleopaws"}, hash_id="id").last_pk
+diff --git a/tests/test_list_mode.py b/tests/test_list_mode.py
+index 746c9c17601247988bf9b737f972e489a6188b94..845e8f05add9b35a1092515b47fa95f0b638919a 100644
+--- a/tests/test_list_mode.py
++++ b/tests/test_list_mode.py
+@@ -286,3 +286,21 @@ def test_list_mode_single_record_upsert_last_pk():
+ 
+     # Verify last_pk is populated correctly
+     assert table.last_pk == 1
++
++
++def test_list_mode_single_ignored_insert_compound_identifiers():
++    db = Database(memory=True)
++    db.execute(
++        "create table data (kind text, id integer, name text, "
++        "primary key (kind, id))"
++    )
++    table = db["data"]
++    table.insert({"kind": "person", "id": 1, "name": "Alice"})
++
++    table.insert_all(
++        (["kind", "id", "name"], ["person", 1, "Ignored"]),
++        ignore=True,
++    )
++
++    assert table.last_rowid == 1
++    assert table.last_pk == ("person", 1)
+diff --git a/tests/test_upsert.py b/tests/test_upsert.py
+index a782b260dbd94d610f2a993f934205499c839270..aedcab3c301fc1d5a3d139f50f82dcdcb6a23f28 100644
+--- a/tests/test_upsert.py
++++ b/tests/test_upsert.py
+@@ -13,6 +13,19 @@ def test_upsert(use_old_upsert):
+     assert table.last_pk == 1
+ 
+ 
++@pytest.mark.parametrize("use_old_upsert", (False, True))
++@pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
++def test_upsert_rowid_alias(use_old_upsert, rowid_alias):
++    db = Database(memory=True, use_old_upsert=use_old_upsert)
++    table = db["table"]
++    table.insert({"name": "Cleo"})
++
++    table.upsert({rowid_alias: 1, "name": "Nixie"}, pk=rowid_alias)
++
++    assert list(table.rows) == [{"name": "Nixie"}]
++    assert table.last_pk == 1
++
++
+ def test_upsert_all(fresh_db):
+     table = fresh_db["table"]
+     table.upsert_all([{"id": 1, "name": "Cleo"}, {"id": 2, "name": "Nixie"}], pk="id")

@@ -261,6 +261,12 @@ closeout；其最终状态为 `REVIEW_REQUIRED / KEEP_BASELINE`，不是 benchma
 历史实验脉络见 [`docs/experiment-timeline.md`](docs/experiment-timeline.md)，当前发布
 说明见 [`docs/release-notes/v0.3.0.md`](docs/release-notes/v0.3.0.md)。
 
+## 当前任务维护与历史回放
+
+本分支提供可安装的 `hermes-maintain assist`：支持 csvkit 与 sqlite-utils 当前工作区，先 preflight，再在独立副本生成补丁并执行预置检查。默认 N，F 显式可选；无需参考补丁或历史 qualification，不自动修改源仓库，未验证要求保持未知。见 [assist 使用说明](docs/product-closeout/usage.md) 与 [本轮审阅入口](docs/product-closeout/review-index.md)。历史 N/F/S 记录与两条 UNKNOWN 保留在 [维护回放索引](docs/repo-portability/review-index.md)；软件 smoke 不代表算法收益或上游采用。
+
+[Failure gallery](docs/failure-gallery.md) · [Current CI](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml)
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).

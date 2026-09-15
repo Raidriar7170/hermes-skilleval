@@ -1,0 +1,68 @@
+{
+  "version": "assist-checks-v1",
+  "requirements": [
+    {
+      "id": "behavior",
+      "description": "The specific behavior in request.md is exercised by predeclared checks."
+    },
+    {
+      "id": "broader-compatibility",
+      "description": "Behavior outside the selected cases has not been verified."
+    }
+  ],
+  "checks": [
+    {
+      "id": "existing",
+      "kind": "existing",
+      "requirements": [],
+      "trusted_dir": "trusted",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "test_utils.py",
+        "-k",
+        "test_chunks"
+      ],
+      "cwd": "/tmp",
+      "env": {},
+      "timeout": 180
+    },
+    {
+      "id": "regression",
+      "kind": "requirement",
+      "requirements": [],
+      "trusted_dir": "trusted",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "test_assist_smoke.py",
+        "-k",
+        "regression"
+      ],
+      "cwd": "/tmp",
+      "env": {},
+      "timeout": 180
+    },
+    {
+      "id": "request",
+      "kind": "requirement",
+      "requirements": [
+        "behavior"
+      ],
+      "trusted_dir": "trusted",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "test_assist_smoke.py",
+        "-k",
+        "requirement"
+      ],
+      "cwd": "/tmp",
+      "env": {},
+      "timeout": 180
+    }
+  ]
+}
