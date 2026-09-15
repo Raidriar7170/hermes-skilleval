@@ -1,0 +1,99 @@
+diff --git a/csvkit/convert/geojs.py b/csvkit/convert/geojs.py
+index 28d2583a596d2dd9508995c07603fc4a3c0194c9..dfe3a52f508d7c1310744b7bcfe91420b7e5a9d7 100644
+--- a/csvkit/convert/geojs.py
++++ b/csvkit/convert/geojs.py
+@@ -31,7 +31,9 @@ def geojson2csv(f, key=None, **kwargs):
+     property_fields = []
+ 
+     for feature in features:
+-        properties = feature.get('properties', {})
++        properties = feature.get('properties')
++        if properties is None:
++            properties = {}
+ 
+         for prop in properties.keys():
+             if prop not in property_fields:
+diff --git a/examples/assist_null_properties.json b/examples/assist_null_properties.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..31276643161bf4d8219927285eeacb4889f8d912
+--- /dev/null
++++ b/examples/assist_null_properties.json
+@@ -0,0 +1,29 @@
++{
++  "type": "FeatureCollection",
++  "features": [
++    {
++      "type": "Feature",
++      "id": "null-point",
++      "properties": null,
++      "geometry": {
++        "type": "Point",
++        "coordinates": [12.5, -4.25]
++      }
++    },
++    {
++      "type": "Feature",
++      "id": "normal-point",
++      "properties": {
++        "name": "kept",
++        "count": 2,
++        "metadata": {
++          "active": true
++        }
++      },
++      "geometry": {
++        "type": "Point",
++        "coordinates": [1, 2]
++      }
++    }
++  ]
++}
+diff --git a/tests/test_convert/test_geojs.py b/tests/test_convert/test_geojs.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..526edf27372593535012df18a905c91cc269180a
+--- /dev/null
++++ b/tests/test_convert/test_geojs.py
+@@ -0,0 +1,24 @@
++import io
++import unittest
++
++from csvkit.convert.geojs import geojson2csv
++
++
++class TestGeoJSON(unittest.TestCase):
++
++    def test_null_properties(self):
++        with open('examples/assist_null_properties.json') as f:
++            output = geojson2csv(f)
++
++        reader = io.StringIO(output)
++        self.assertEqual(reader.readline(), 'id,name,count,metadata,geojson,type,longitude,latitude\n')
++        self.assertEqual(
++            reader.readline(),
++            'null-point,,,,"{""type"": ""Point"", ""coordinates"": [12.5, -4.25]}",Point,12.5,-4.25\n',
++        )
++        self.assertEqual(
++            reader.readline(),
++            'normal-point,kept,2,"{""active"": true}",'
++            '"{""type"": ""Point"", ""coordinates"": [1, 2]}",Point,1,2\n',
++        )
++        self.assertEqual(reader.read(), '')
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index 6c9e60fd4ee6ca15fe87f0db39bcc755dec7572a..e2411ced77b2fe26d2a48e36a78671975effda2b 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -134,6 +134,14 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_convert_geojson(self):
+         self.assertConverted('geojson', 'examples/test_geojson.json', 'examples/test_geojson.csv')
+ 
++    def test_convert_geojson_with_null_properties(self):
++        self.assertLines(['-f', 'geojson', 'examples/assist_null_properties.json'], [
++            'id,name,count,metadata,geojson,type,longitude,latitude',
++            'null-point,,,,"{""type"": ""Point"", ""coordinates"": [12.5, -4.25]}",Point,12.5,-4.25',
++            'normal-point,kept,2,"{""active"": true}",'
++            '"{""type"": ""Point"", ""coordinates"": [1, 2]}",Point,1,2',
++        ])
++
+     def test_convert_ndjson(self):
+         self.assertConverted('ndjson', 'examples/testjson_multiline.json', 'examples/testjson_multiline_converted.csv')
+ 

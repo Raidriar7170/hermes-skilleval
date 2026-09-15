@@ -1,0 +1,245 @@
+{
+  "run_id": "assist-95a4697e6f354e24b6035a29b8196673",
+  "engineering": "COMPLETE",
+  "resolved": null,
+  "source_unchanged": true,
+  "policy_status": "ACCEPTED",
+  "rebuild": "MATCHED_CAPTURE",
+  "patch": {
+    "path": "candidate.patch",
+    "sha256": "7f8632e5105522667160be88de42456f0d08a001829ecdb2d1da0c7a4263abdd",
+    "changed_files": [
+      "csvkit/convert/geojs.py",
+      "examples/assist_null_properties.json",
+      "tests/test_convert/test_geojs.py",
+      "tests/test_utilities/test_in2csv.py"
+    ]
+  },
+  "checks": {
+    "existing": {
+      "kind": "existing",
+      "valid_comparison": true,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "pre_existing_failures": [],
+      "new_failures": [],
+      "unknown": false,
+      "baseline_cases": {
+        "test_cleanup.TestCleanup::test_fix_rows": "passed",
+        "test_cleanup.TestCleanup::test_real_world_join_fail": "passed"
+      },
+      "candidate_cases": {
+        "test_cleanup.TestCleanup::test_fix_rows": "passed",
+        "test_cleanup.TestCleanup::test_real_world_join_fail": "passed"
+      }
+    },
+    "regression": {
+      "kind": "requirement",
+      "valid_comparison": true,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "pre_existing_failures": [],
+      "new_failures": [],
+      "unknown": false,
+      "baseline_cases": {
+        "test_assist_smoke::test_regression_absent_properties": "passed",
+        "test_assist_smoke::test_regression_non_null_nested_properties": "passed"
+      },
+      "candidate_cases": {
+        "test_assist_smoke::test_regression_absent_properties": "passed",
+        "test_assist_smoke::test_regression_non_null_nested_properties": "passed"
+      }
+    },
+    "request": {
+      "kind": "requirement",
+      "valid_comparison": true,
+      "baseline_passed": false,
+      "candidate_passed": true,
+      "pre_existing_failures": [
+        "test_assist_smoke::test_requirement_all_null_properties",
+        "test_assist_smoke::test_requirement_null_and_mixed_properties"
+      ],
+      "new_failures": [],
+      "unknown": false,
+      "baseline_cases": {
+        "test_assist_smoke::test_requirement_null_and_mixed_properties": "failed",
+        "test_assist_smoke::test_requirement_all_null_properties": "failed"
+      },
+      "candidate_cases": {
+        "test_assist_smoke::test_requirement_null_and_mixed_properties": "passed",
+        "test_assist_smoke::test_requirement_all_null_properties": "passed"
+      }
+    }
+  },
+  "requirements": {
+    "behavior": {
+      "description": "The specific behavior in request.md is exercised by predeclared checks.",
+      "status": "CHECKED_PASS",
+      "checks": [
+        "request"
+      ]
+    },
+    "broader-compatibility": {
+      "description": "Behavior outside the selected cases has not been verified.",
+      "status": "NOT_VERIFIED",
+      "checks": []
+    },
+    "fixture": {
+      "description": "Add a normal examples JSON fixture; observed patch and policy acceptance, not a model-quality claim.",
+      "status": "NOT_VERIFIED",
+      "checks": []
+    }
+  },
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 333780,
+        "cached_input_tokens": 300416,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4227,
+        "reasoning_output_tokens": 746
+      }
+    ],
+    "input_tokens": 333780,
+    "cached_input_tokens": 300416,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 4227,
+    "reasoning_output_tokens": 746
+  },
+  "timing": {
+    "preflight_seconds": 1.1774300840042997,
+    "snapshot_and_checks_seconds": 0.22946270799729973,
+    "canary_seconds": 0.33522479198290966,
+    "baseline_checks_seconds": 6.0397694160055835,
+    "skill_prepare_seconds": 0.038866749993758276,
+    "agent_seconds": 111.14843958299025,
+    "capture_seconds": 0.3568573340016883,
+    "rebuild_seconds": 0.0865310000081081,
+    "candidate_checks_seconds": 6.197259166016011,
+    "request_wall_seconds": 125.85806570900604,
+    "worker_seconds": null,
+    "selection_seconds": null
+  },
+  "dollar_cost": null,
+  "errors": [],
+  "input": {
+    "upstream": {
+      "repository": "wireservice/csvkit",
+      "source_head": "ba8033dcbb2c72089e88f38a1a50ddfc8e5ac3df",
+      "kind": "developer-defined smoke; current source copied without Git history"
+    },
+    "source_snapshot_sha256": "a6dde53f717e49dd96384000e1ace89d671c72e76ac4e7ec7bf4291670381d09",
+    "source_git": {
+      "head": "b94dbca263ead217bcded0c5d4b7b7461835f04e",
+      "branch": "main",
+      "index_sha256": "bb3c1a5390c4032a970ebf2f988acf8277d68e916b7bec8d6d8fa09610f3fcd9",
+      "status": ""
+    },
+    "request_sha256": "4ad1e072ff683344f287669cf6bd9c98cb6c497e8e0fb3a9425292ea409e8ef3",
+    "profile": {
+      "repository": "wireservice/csvkit",
+      "packages": {
+        "csvkit": "."
+      },
+      "cli_module": "csvkit.utilities.in2csv",
+      "cli_callable": "launch_new_instance",
+      "cli_name": "in2csv",
+      "image": "sha256:5bd5455d39cce90ab5f22e09c5b79bf1b79a4ab39b98a8e332ac17df4642209f",
+      "writable_roots": [
+        "csvkit",
+        "tests"
+      ],
+      "file_policy": {
+        "version": "operations-v1",
+        "rules": [
+          {
+            "path": "csvkit",
+            "operations": [
+              "add",
+              "modify",
+              "delete"
+            ]
+          },
+          {
+            "path": "tests",
+            "operations": [
+              "add",
+              "modify"
+            ]
+          },
+          {
+            "path": "examples",
+            "operations": [
+              "add"
+            ],
+            "data_only": true,
+            "max_bytes": 100000
+          }
+        ]
+      }
+    },
+    "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+    "selected_ids": [
+      "cli-api-regression",
+      "systematic-debugging"
+    ],
+    "model_requested": "gpt-5.6-sol",
+    "effort_requested": "medium",
+    "codex_version": "codex-cli 0.154.0",
+    "image_id": "sha256:5bd5455d39cce90ab5f22e09c5b79bf1b79a4ab39b98a8e332ac17df4642209f"
+  },
+  "execution": {
+    "execution_status": "STARTED",
+    "exit_code": 0,
+    "timed_out": false,
+    "cleanup_confirmed": true,
+    "mounted_skills": [
+      {
+        "skill_id": "systematic-debugging",
+        "name": "systematic-debugging",
+        "relative_path": ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md",
+        "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787"
+      },
+      {
+        "skill_id": "cli-api-regression",
+        "name": "cli-api-regression",
+        "relative_path": ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md",
+        "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640"
+      }
+    ],
+    "prompt_sha256": "6256fd01fadb5c20a3bf38c9408a57c348f35f9fbca28739ce1a08681bca4c2d",
+    "source_sha256": {
+      "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+      "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+      "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+    }
+  },
+  "source_coverage": "Current tracked bytes plus explicit includes; source branch/index/status/content compared before and after; raw source retained privately.",
+  "raw_result_sha256": "6bcb1e87ba3b9c91b4f9c715b1d1705ce50883ef860f84abdac85ea2de305186",
+  "executed_source_sha256": {
+    "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b",
+    "hermes_skilleval/maintenance_cli.py": "a5fca8ee6e3b271df30e588e53fbf52d886882dbd43d669208d3b8934de638e1",
+    "hermes_skilleval/repository_profile.py": "56560cb39cedcfc95e00f77e3ece440e7fffc007ab1abe7a968ce1c00b893d83",
+    "hermes_skilleval/file_policy.py": "fb594c8bf7e219b05f083d82cc86f71590ec4ea5f62f6e5f20f73c35bc06d254",
+    "hermes_skilleval/_maintenance/container_runner.py": "0545e9431768c7ff970dfb449cc0fe145bba0121670a810b96e2e03bf267c11d",
+    "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+    "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+    "hermes_skilleval/_maintenance/canary.py": "632fb63d1c00392c7f44dd4107635750bf68cc6698670ed1ab79cd3c2af33dc7",
+    "hermes_skilleval/_maintenance/execute.py": "59652b1826517fe6eba96fe0f9ff472565a31800b6944cc947e8a8f6dfca6134",
+    "hermes_skilleval/_maintenance/trusted_harness.py": "400e4a6e1ca1c94fc59720a1444b561eecf3871f044ac8db8cb44b62e05b7f52",
+    "hermes_skilleval/_maintenance/__init__.py": "ddd21abb6f717a2e05ba2e81923d2ad7915b5ea43da34c9e4933a4b799083d42",
+    "hermes_skilleval/_maintenance/finalize.py": "e031c46ec2f22d7168ed8eaa19866cfc39fbac065c6badf6378b9e8999df287f",
+    "hermes_skilleval/_maintenance/assist.py": "55f36092c5bbe42ff0172082b76ca0ed26bc327b3b265033eab11804b9f01419",
+    "hermes_skilleval/_maintenance/prompts.py": "a4cd2f1076f528aed566ec1559bad3bae3628030b8310b50bd485d5d7cd4a185",
+    "hermes_skilleval/_maintenance/test_ids.py": "6cac4326ceaaa4af8d3bde06c24d14fa9e0f14d4cd33eff13a9609bc5aba6fb4",
+    "hermes_skilleval/_maintenance/assist_snapshot.py": "b1b5c7b4e4a6c9ecbbc4d7307d8f029146bef2597c633f318f0159a2bb83d6c0",
+    "hermes_skilleval/_maintenance/verify_patch.py": "34b5ba56d2c54ae1e7fe8c7f21f10e55b87854324aa87ef44b4ae8a2effec662",
+    "hermes_skilleval/_maintenance/prepare_spec.py": "1a882dbaa028e9bcdcd2407b378f9545b8b21dd1d77c4a168697c9e75af07776",
+    "hermes_skilleval/_maintenance/environment.py": "d82987b564604d5e89c8c70a8f9217bd86ce7836fdfc2ace17c1b102059581e9",
+    "hermes_skilleval/_maintenance/prepare_smoke.py": "9b81a404c5029c1d15e41671448a7de66a61c3162462970490ecdb468ec95c2e",
+    "hermes_skilleval/_maintenance/assist_checks.py": "ab127c4d0c0bc4eadc497a02c90f7a4ba8a85f05adf36c98046432e8bef63dac",
+    "hermes_skilleval/_maintenance/prepare_task.py": "e18c079f16d2ea7fc3e59b70c8fcca6b47135adacaa67ae8c379fdb65a98f90b",
+    "hermes_skilleval/_maintenance/qualify.py": "55ed345bb3b3b17db4f3e7989494ba1737cbde9d577917a8826eb4d0d0d3fa30"
+  }
+}

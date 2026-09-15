@@ -2,6 +2,8 @@
 
 Active contract: [CI, file policy and assist Goal](../goals/Hermes_PR47_CI_Fixture_Assist_Codex_Goal.md).
 
+- [Local validation and historical compatibility](../../artifacts/product-closeout/validation.json) · [before](../../artifacts/product-closeout/pytest-before.txt) / [after](../../artifacts/product-closeout/pytest-after.txt)
+- [Wheel acceptance](../../artifacts/product-closeout/wheel-acceptance.json)
 - [Usage and supported configuration](usage.md)
 - [CI root causes and preserved assertions](ci-migration.md)
 - [Real smoke results and limits](smoke-results.md)

@@ -17,7 +17,7 @@
 
 ## 4. Delivery
 
-- [ ] 4.1 Publish minimal sanitized smoke evidence, usage, migration map and one-page retrospective; complete risk review.
+- [x] 4.1 Publish minimal sanitized smoke evidence, usage, migration map and one-page retrospective; complete risk review.
 - [ ] 4.2 Push same Draft PR and verify final HEAD CI and public files, preserving historical research.
 
 Task 4.2 is a post-commit boundary. Its final exact-HEAD outcome is recorded in PR #47 body; updating this checkbox after that read would create a different HEAD. No archive is performed in this Goal.

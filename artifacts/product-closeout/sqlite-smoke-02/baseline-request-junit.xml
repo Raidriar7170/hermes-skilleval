@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="7" skipped="0" tests="7" time="0.026" timestamp="2026-09-15T04:52:09.558210+00:00" hostname="6f02fa276f1b"><testcase classname="test_assist_smoke" name="test_requirement_invalid_size[values0-0]" time="0.000"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">values = [], size = 0
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+&gt;       with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+/trusted/test_assist_smoke.py:9: Failed</failure></testcase><testcase classname="test_assist_smoke" name="test_requirement_invalid_size[values0--1]" time="0.000"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">values = [], size = -1
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+&gt;       with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+/trusted/test_assist_smoke.py:9: Failed</failure></testcase><testcase classname="test_assist_smoke" name="test_requirement_invalid_size[values0--10]" time="0.000"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">values = [], size = -10
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+&gt;       with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+/trusted/test_assist_smoke.py:9: Failed</failure></testcase><testcase classname="test_assist_smoke" name="test_requirement_invalid_size[values1-0]" time="0.000"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: '(?i)(positive|greater than zero|greater than 0|at least 1)'&#10; Input: 'Stop argument for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.'">values = [1, 2], size = 0
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+        with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+&gt;           list(chunks(values, size))
+
+/trusted/test_assist_smoke.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sequence = [1, 2], size = 0
+
+    def chunks(sequence: Iterable[T], size: int) -&gt; Iterable[Iterable[T]]:
+        """
+        Iterate over chunks of the sequence of the given size.
+    
+        :param sequence: Any Python iterator
+        :param size: The size of each chunk
+        """
+        iterator = iter(sequence)
+        for item in iterator:
+&gt;           yield itertools.chain([item], itertools.islice(iterator, size - 1))
+E           ValueError: Stop argument for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.
+
+/input/sqlite_utils/utils.py:582: ValueError
+
+During handling of the above exception, another exception occurred:
+
+values = [1, 2], size = 0
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+&gt;       with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+E       AssertionError: Regex pattern did not match.
+E        Regex: '(?i)(positive|greater than zero|greater than 0|at least 1)'
+E        Input: 'Stop argument for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.'
+
+/trusted/test_assist_smoke.py:9: AssertionError</failure></testcase><testcase classname="test_assist_smoke" name="test_requirement_invalid_size[values1--1]" time="0.000"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: '(?i)(positive|greater than zero|greater than 0|at least 1)'&#10; Input: 'Indices for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.'">values = [1, 2], size = -1
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+        with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+&gt;           list(chunks(values, size))
+
+/trusted/test_assist_smoke.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sequence = [1, 2], size = -1
+
+    def chunks(sequence: Iterable[T], size: int) -&gt; Iterable[Iterable[T]]:
+        """
+        Iterate over chunks of the sequence of the given size.
+    
+        :param sequence: Any Python iterator
+        :param size: The size of each chunk
+        """
+        iterator = iter(sequence)
+        for item in iterator:
+&gt;           yield itertools.chain([item], itertools.islice(iterator, size - 1))
+E           ValueError: Indices for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.
+
+/input/sqlite_utils/utils.py:582: ValueError
+
+During handling of the above exception, another exception occurred:
+
+values = [1, 2], size = -1
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+&gt;       with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+E       AssertionError: Regex pattern did not match.
+E        Regex: '(?i)(positive|greater than zero|greater than 0|at least 1)'
+E        Input: 'Indices for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.'
+
+/trusted/test_assist_smoke.py:9: AssertionError</failure></testcase><testcase classname="test_assist_smoke" name="test_requirement_invalid_size[values1--10]" time="0.000"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: '(?i)(positive|greater than zero|greater than 0|at least 1)'&#10; Input: 'Indices for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.'">values = [1, 2], size = -10
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+        with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+&gt;           list(chunks(values, size))
+
+/trusted/test_assist_smoke.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sequence = [1, 2], size = -10
+
+    def chunks(sequence: Iterable[T], size: int) -&gt; Iterable[Iterable[T]]:
+        """
+        Iterate over chunks of the sequence of the given size.
+    
+        :param sequence: Any Python iterator
+        :param size: The size of each chunk
+        """
+        iterator = iter(sequence)
+        for item in iterator:
+&gt;           yield itertools.chain([item], itertools.islice(iterator, size - 1))
+E           ValueError: Indices for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.
+
+/input/sqlite_utils/utils.py:582: ValueError
+
+During handling of the above exception, another exception occurred:
+
+values = [1, 2], size = -10
+
+    @pytest.mark.parametrize('size', [0, -1, -10])
+    @pytest.mark.parametrize('values', [[], [1, 2]])
+    def test_requirement_invalid_size(values, size):
+&gt;       with pytest.raises(ValueError, match='(?i)(positive|greater than zero|greater than 0|at least 1)'):
+E       AssertionError: Regex pattern did not match.
+E        Regex: '(?i)(positive|greater than zero|greater than 0|at least 1)'
+E        Input: 'Indices for islice() must be None or an integer: 0 &lt;= x &lt;= sys.maxsize.'
+
+/trusted/test_assist_smoke.py:9: AssertionError</failure></testcase><testcase classname="test_assist_smoke" name="test_requirement_no_input_consumption" time="0.000"><failure message="assert [True] == []&#10;  &#10;  Left contains one more item: True&#10;  Use -v to get more diff">def test_requirement_no_input_consumption():
+        consumed = []
+        def values():
+            consumed.append(True)
+            yield 1
+        with pytest.raises(ValueError):
+            list(chunks(values(), 0))
+&gt;       assert consumed == []
+E       assert [True] == []
+E         
+E         Left contains one more item: True
+E         Use -v to get more diff
+
+/trusted/test_assist_smoke.py:20: AssertionError</failure></testcase></testsuite></testsuites>

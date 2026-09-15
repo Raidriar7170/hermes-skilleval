@@ -1,0 +1,271 @@
+{
+  "run_id": "assist-2ba6b4ba9a85402c9491b43d8526c942",
+  "engineering": "COMPLETE",
+  "resolved": null,
+  "source_unchanged": true,
+  "policy_status": "ACCEPTED",
+  "rebuild": "MATCHED_CAPTURE",
+  "patch": {
+    "path": "candidate.patch",
+    "sha256": "766bebae76ffc3d7d4257cfb00998202ae03fbdf48de70a5fe1599c8f86b6e90",
+    "changed_files": [
+      "sqlite_utils/utils.py",
+      "tests/test_utils.py"
+    ]
+  },
+  "checks": {
+    "existing": {
+      "kind": "existing",
+      "valid_comparison": true,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "pre_existing_failures": [],
+      "new_failures": [],
+      "unknown": false,
+      "baseline_cases": {
+        "test_utils::test_chunks[1-expected0]": "passed",
+        "test_utils::test_chunks[2-expected1]": "passed",
+        "test_utils::test_chunks[3-expected2]": "passed",
+        "test_utils::test_chunks[4-expected3]": "passed"
+      },
+      "candidate_cases": {
+        "test_utils::test_chunks[1-expected0]": "passed",
+        "test_utils::test_chunks[2-expected1]": "passed",
+        "test_utils::test_chunks[3-expected2]": "passed",
+        "test_utils::test_chunks[4-expected3]": "passed"
+      }
+    },
+    "regression": {
+      "kind": "requirement",
+      "valid_comparison": true,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "pre_existing_failures": [],
+      "new_failures": [],
+      "unknown": false,
+      "baseline_cases": {
+        "test_assist_smoke::test_regression_positive_sizes[values0-2-expected0]": "passed",
+        "test_assist_smoke::test_regression_positive_sizes[values1-2-expected1]": "passed",
+        "test_assist_smoke::test_regression_positive_sizes[values2-1-expected2]": "passed"
+      },
+      "candidate_cases": {
+        "test_assist_smoke::test_regression_positive_sizes[values0-2-expected0]": "passed",
+        "test_assist_smoke::test_regression_positive_sizes[values1-2-expected1]": "passed",
+        "test_assist_smoke::test_regression_positive_sizes[values2-1-expected2]": "passed"
+      }
+    },
+    "request": {
+      "kind": "requirement",
+      "valid_comparison": true,
+      "baseline_passed": false,
+      "candidate_passed": true,
+      "pre_existing_failures": [
+        "test_assist_smoke::test_requirement_invalid_size[values0--10]",
+        "test_assist_smoke::test_requirement_invalid_size[values0--1]",
+        "test_assist_smoke::test_requirement_invalid_size[values0-0]",
+        "test_assist_smoke::test_requirement_invalid_size[values1--10]",
+        "test_assist_smoke::test_requirement_invalid_size[values1--1]",
+        "test_assist_smoke::test_requirement_invalid_size[values1-0]",
+        "test_assist_smoke::test_requirement_no_input_consumption"
+      ],
+      "new_failures": [],
+      "unknown": false,
+      "baseline_cases": {
+        "test_assist_smoke::test_requirement_invalid_size[values0-0]": "failed",
+        "test_assist_smoke::test_requirement_invalid_size[values0--1]": "failed",
+        "test_assist_smoke::test_requirement_invalid_size[values0--10]": "failed",
+        "test_assist_smoke::test_requirement_invalid_size[values1-0]": "failed",
+        "test_assist_smoke::test_requirement_invalid_size[values1--1]": "failed",
+        "test_assist_smoke::test_requirement_invalid_size[values1--10]": "failed",
+        "test_assist_smoke::test_requirement_no_input_consumption": "failed"
+      },
+      "candidate_cases": {
+        "test_assist_smoke::test_requirement_invalid_size[values0-0]": "passed",
+        "test_assist_smoke::test_requirement_invalid_size[values0--1]": "passed",
+        "test_assist_smoke::test_requirement_invalid_size[values0--10]": "passed",
+        "test_assist_smoke::test_requirement_invalid_size[values1-0]": "passed",
+        "test_assist_smoke::test_requirement_invalid_size[values1--1]": "passed",
+        "test_assist_smoke::test_requirement_invalid_size[values1--10]": "passed",
+        "test_assist_smoke::test_requirement_no_input_consumption": "passed"
+      }
+    }
+  },
+  "requirements": {
+    "behavior": {
+      "description": "The specific behavior in request.md is exercised by predeclared checks.",
+      "status": "CHECKED_PASS",
+      "checks": [
+        "request"
+      ]
+    },
+    "broader-compatibility": {
+      "description": "Behavior outside the selected cases has not been verified.",
+      "status": "NOT_VERIFIED",
+      "checks": []
+    }
+  },
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 274303,
+        "cached_input_tokens": 243072,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5170,
+        "reasoning_output_tokens": 1785
+      }
+    ],
+    "input_tokens": 274303,
+    "cached_input_tokens": 243072,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 5170,
+    "reasoning_output_tokens": 1785
+  },
+  "timing": {
+    "preflight_seconds": 0.7350603340019006,
+    "snapshot_and_checks_seconds": 0.19537999999010935,
+    "canary_seconds": 0.3692197500204202,
+    "baseline_checks_seconds": 6.727277208992746,
+    "skill_prepare_seconds": 0.02543608398991637,
+    "agent_seconds": 141.8014380419918,
+    "capture_seconds": 0.2853052909777034,
+    "rebuild_seconds": 0.07427029198152013,
+    "candidate_checks_seconds": 6.715247874992201,
+    "request_wall_seconds": 157.1395057500049,
+    "worker_seconds": null,
+    "selection_seconds": null
+  },
+  "dollar_cost": null,
+  "errors": [],
+  "input": {
+    "upstream": {
+      "repository": "simonw/sqlite-utils",
+      "source_head": "85b1be10c81d9dd3567e36faf8dd411e4a8789bd",
+      "kind": "developer-defined smoke; current source copied without Git history"
+    },
+    "source_snapshot_sha256": "d038d92a8fa3ece5e9ce369c85df76982f514dd007b5421bbbf8f365139e9717",
+    "source_git": {
+      "head": "40999b2372f0e5d0fc901c9b5fec056c3ea86a4b",
+      "branch": "main",
+      "index_sha256": "0ac24f0112be31b8e768e891ea242ddf8a7dbb835ed5ce6776638ef7f6244b4e",
+      "status": ""
+    },
+    "request_sha256": "1ef187776314fd52c904ce03bf91e3ea309e96f0a0a3f2838acdcb864704d57d",
+    "profile": {
+      "repository": "simonw/sqlite-utils",
+      "packages": {
+        "sqlite_utils": "."
+      },
+      "cli_module": "sqlite_utils.cli",
+      "cli_callable": "cli",
+      "cli_name": "sqlite-utils",
+      "image": "sha256:5bd5455d39cce90ab5f22e09c5b79bf1b79a4ab39b98a8e332ac17df4642209f",
+      "writable_roots": [
+        "sqlite_utils",
+        "tests"
+      ],
+      "file_policy": {
+        "version": "operations-v1",
+        "rules": [
+          {
+            "path": "sqlite_utils",
+            "operations": [
+              "add",
+              "modify",
+              "delete"
+            ]
+          },
+          {
+            "path": "tests",
+            "operations": [
+              "add",
+              "modify"
+            ]
+          }
+        ]
+      }
+    },
+    "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+    "selected_ids": [
+      "systematic-debugging",
+      "verification-before-completion",
+      "cli-api-regression",
+      "schema-change-regression",
+      "import-data-regression"
+    ],
+    "model_requested": "gpt-5.6-sol",
+    "effort_requested": "medium",
+    "codex_version": "codex-cli 0.154.0",
+    "image_id": "sha256:5bd5455d39cce90ab5f22e09c5b79bf1b79a4ab39b98a8e332ac17df4642209f"
+  },
+  "execution": {
+    "execution_status": "STARTED",
+    "exit_code": 0,
+    "timed_out": false,
+    "cleanup_confirmed": true,
+    "mounted_skills": [
+      {
+        "skill_id": "systematic-debugging",
+        "name": "systematic-debugging",
+        "relative_path": ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md",
+        "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787"
+      },
+      {
+        "skill_id": "verification-before-completion",
+        "name": "verification-before-completion",
+        "relative_path": ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md",
+        "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3"
+      },
+      {
+        "skill_id": "cli-api-regression",
+        "name": "cli-api-regression",
+        "relative_path": ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md",
+        "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640"
+      },
+      {
+        "skill_id": "schema-change-regression",
+        "name": "schema-change-regression",
+        "relative_path": ".agents/skills/schema-change-regression--681422ea7bd7/SKILL.md",
+        "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332"
+      },
+      {
+        "skill_id": "import-data-regression",
+        "name": "import-data-regression",
+        "relative_path": ".agents/skills/import-data-regression--e013e6d8b3f2/SKILL.md",
+        "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04"
+      }
+    ],
+    "prompt_sha256": "d8bd1a69f6dde60964c0145e68f6771d2e15a9045e24555538892a6783db0597",
+    "source_sha256": {
+      "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+      "hermes_skilleval/_maintenance/check.py": "a2141aadae5c2e5231f53cb7afbead9ec5f380b6cabb9eeeb6442a9adf521c0f",
+      "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+    }
+  },
+  "source_coverage": "Current tracked bytes plus explicit includes; source branch/index/status/content compared before and after; raw source retained privately.",
+  "raw_result_sha256": "52744f57286800c0cdd696cc8d5b5cddcd635ada7059e95e0854ac96c3ff7835",
+  "executed_source_sha256": {
+    "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b",
+    "hermes_skilleval/maintenance_cli.py": "379e2e16534b659d2cc495f7d975f1db58c2245854ab8fafa048cee0f2a7e8ad",
+    "hermes_skilleval/repository_profile.py": "56560cb39cedcfc95e00f77e3ece440e7fffc007ab1abe7a968ce1c00b893d83",
+    "hermes_skilleval/file_policy.py": "fb594c8bf7e219b05f083d82cc86f71590ec4ea5f62f6e5f20f73c35bc06d254",
+    "hermes_skilleval/_maintenance/container_runner.py": "0545e9431768c7ff970dfb449cc0fe145bba0121670a810b96e2e03bf267c11d",
+    "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+    "hermes_skilleval/_maintenance/check.py": "a2141aadae5c2e5231f53cb7afbead9ec5f380b6cabb9eeeb6442a9adf521c0f",
+    "hermes_skilleval/_maintenance/canary.py": "632fb63d1c00392c7f44dd4107635750bf68cc6698670ed1ab79cd3c2af33dc7",
+    "hermes_skilleval/_maintenance/execute.py": "59652b1826517fe6eba96fe0f9ff472565a31800b6944cc947e8a8f6dfca6134",
+    "hermes_skilleval/_maintenance/trusted_harness.py": "41f67c8b56d7bab9e86f369e8bc47de6dca93fd84279cf7c48e7eae547a97255",
+    "hermes_skilleval/_maintenance/__init__.py": "ddd21abb6f717a2e05ba2e81923d2ad7915b5ea43da34c9e4933a4b799083d42",
+    "hermes_skilleval/_maintenance/finalize.py": "12a1c4ec800ea6edb28848d0745eb7c592e31b3a12f2256d562573aea63486ba",
+    "hermes_skilleval/_maintenance/assist.py": "7cfb244c5803fb853dacd083d61cd14a6c3d78e0ec73f491a31bfe62515bd4e4",
+    "hermes_skilleval/_maintenance/prompts.py": "a035804ce3a835bcc490aa484ed901bf70d577b26399e049e5eabaaa4834bdae",
+    "hermes_skilleval/_maintenance/assist_snapshot.py": "b1b5c7b4e4a6c9ecbbc4d7307d8f029146bef2597c633f318f0159a2bb83d6c0",
+    "hermes_skilleval/_maintenance/verify_patch.py": "f295f6e0a39db50c8e81dda4d366408742db433e08f083dfb198f38f800e0b69",
+    "hermes_skilleval/_maintenance/prepare_spec.py": "1a882dbaa028e9bcdcd2407b378f9545b8b21dd1d77c4a168697c9e75af07776",
+    "hermes_skilleval/_maintenance/environment.py": "d82987b564604d5e89c8c70a8f9217bd86ce7836fdfc2ace17c1b102059581e9",
+    "hermes_skilleval/_maintenance/prepare_smoke.py": "9b81a404c5029c1d15e41671448a7de66a61c3162462970490ecdb468ec95c2e",
+    "hermes_skilleval/_maintenance/assist_checks.py": "ab127c4d0c0bc4eadc497a02c90f7a4ba8a85f05adf36c98046432e8bef63dac",
+    "hermes_skilleval/_maintenance/prepare_task.py": "e18c079f16d2ea7fc3e59b70c8fcca6b47135adacaa67ae8c379fdb65a98f90b",
+    "hermes_skilleval/_maintenance/qualify.py": "55ed345bb3b3b17db4f3e7989494ba1737cbde9d577917a8826eb4d0d0d3fa30"
+  }
+}

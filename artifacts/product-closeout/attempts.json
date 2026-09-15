@@ -1,0 +1,85 @@
+{
+  "scope": "Two developer-defined tasks, two real model starts; two earlier pre-model failures retained. No historical matrix rerun.",
+  "attempts": [
+    {
+      "attempt": "sqlite-smoke-01",
+      "engineering": "PARTIAL",
+      "execution_status": "EXECUTOR_ERROR",
+      "model_started": false,
+      "usage": null,
+      "errors": [
+        "workspace parent skill leakage detected"
+      ],
+      "raw_result_sha256": "2295ff1cf218dfed31a73ff0d85fca252ef01a36d0b419814dbf70cefd692b45",
+      "policy_status": "ACCEPTED",
+      "source_unchanged": true
+    },
+    {
+      "attempt": "sqlite-smoke-02",
+      "engineering": "COMPLETE",
+      "execution_status": "STARTED",
+      "model_started": true,
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 274303,
+            "cached_input_tokens": 243072,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 5170,
+            "reasoning_output_tokens": 1785
+          }
+        ],
+        "input_tokens": 274303,
+        "cached_input_tokens": 243072,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5170,
+        "reasoning_output_tokens": 1785
+      },
+      "errors": [],
+      "raw_result_sha256": "52744f57286800c0cdd696cc8d5b5cddcd635ada7059e95e0854ac96c3ff7835",
+      "policy_status": "ACCEPTED",
+      "source_unchanged": true
+    },
+    {
+      "attempt": "csvkit-smoke-01",
+      "engineering": "PARTIAL",
+      "execution_status": "NOT_STARTED",
+      "model_started": false,
+      "usage": null,
+      "errors": [
+        "ValueError: baseline trusted loading/collection invalid; Agent not started"
+      ],
+      "raw_result_sha256": "33e3717d30b4454d8ad866d0dba8ebc0ff3024e03fd465056b986a001c41b161",
+      "policy_status": "NOT_CHECKED",
+      "source_unchanged": true
+    },
+    {
+      "attempt": "csvkit-smoke-02",
+      "engineering": "COMPLETE",
+      "execution_status": "STARTED",
+      "model_started": true,
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 333780,
+            "cached_input_tokens": 300416,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 4227,
+            "reasoning_output_tokens": 746
+          }
+        ],
+        "input_tokens": 333780,
+        "cached_input_tokens": 300416,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4227,
+        "reasoning_output_tokens": 746
+      },
+      "errors": [],
+      "raw_result_sha256": "6bcb1e87ba3b9c91b4f9c715b1d1705ce50883ef860f84abdac85ea2de305186",
+      "policy_status": "ACCEPTED",
+      "source_unchanged": true
+    }
+  ]
+}
