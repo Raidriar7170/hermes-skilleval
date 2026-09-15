@@ -1,0 +1,1 @@
+Match public Python API column names against the schema case-insensitively, as SQLite does. Inserting with a differently cased primary-key name should populate last_pk correctly; preserve exact-case inserts.

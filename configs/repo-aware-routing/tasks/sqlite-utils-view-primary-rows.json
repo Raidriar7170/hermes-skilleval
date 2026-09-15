@@ -1,0 +1,35 @@
+{
+  "task_id": "sqlite-utils-view-primary-rows",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/commit/1ed95e4ad2676b7f2f0725919bba9c4b051456c4",
+  "family_id": "view-primary-rows",
+  "split": "final-test",
+  "reference_fix_commit": "1ed95e4ad2676b7f2f0725919bba9c4b051456c4",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "README.md"
+    ]
+  },
+  "public_request": "sqlite-utils-view-primary-rows-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_rows.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_pks_and_rows_where_view",
+  "regression_selector": "test_rows_where",
+  "export_exclusions": [],
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements.",
+  "license": "Apache-2.0"
+}

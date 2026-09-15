@@ -1,0 +1,35 @@
+{
+  "task_id": "sqlite-utils-convert-multi-dryrun",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/commit/751ab205ac1f6bcd1b31449d2aca4734abca16c8",
+  "family_id": "convert-multi-dryrun",
+  "split": "gate-fit",
+  "reference_fix_commit": "751ab205ac1f6bcd1b31449d2aca4734abca16c8",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "README.md"
+    ]
+  },
+  "public_request": "sqlite-utils-convert-multi-dryrun-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_cli_convert.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_convert_multi_dryrun",
+  "regression_selector": "test_convert_code and not errors",
+  "export_exclusions": [],
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements.",
+  "license": "Apache-2.0"
+}

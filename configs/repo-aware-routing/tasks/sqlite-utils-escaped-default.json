@@ -1,0 +1,35 @@
+{
+  "task_id": "sqlite-utils-escaped-default",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/commit/6a456830ca33eb5edaa634a9b0febe5d71bea2be",
+  "family_id": "escaped-default",
+  "split": "rank-train",
+  "reference_fix_commit": "6a456830ca33eb5edaa634a9b0febe5d71bea2be",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "README.md"
+    ]
+  },
+  "public_request": "sqlite-utils-escaped-default-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_introspect.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_table_default_values_escaped_quotes",
+  "regression_selector": "test_table_names",
+  "export_exclusions": [],
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements.",
+  "license": "Apache-2.0"
+}
