@@ -6,6 +6,6 @@
 - [x] 1.4 M3 Train real reranker, verify gradients/parameter changes and clean reload.
 - [x] 1.5 M4 Validate exact selection and development ablations; freeze R.
 - [x] 1.6 M5 Collect real N/F/R feedback; fit and independently calibrate gate.
-- [ ] 1.7 M6 Integrate replay/assist and execute real R/auto.
-- [ ] 1.8 M7 Execute frozen five-arm and unseen-repository confirmation.
-- [ ] 1.9 M8 Review, clean wheel, CI same HEAD, records evidence, Draft PR and retrospective.
+- [x] 1.7 M6 Integrate replay/assist and execute real R/auto.
+- [x] 1.8 M7 Execute frozen five-arm and unseen-repository confirmation.
+- [x] 1.9 M8 Review, clean wheel, CI same HEAD, records evidence, Draft PR and retrospective.

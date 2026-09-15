@@ -1,12 +1,15 @@
 """Recompute every committed execution table without models or private assets."""
 
+import argparse
 import json
 from pathlib import Path
 
 from recompute_execution import recompute
 from report import analyze
 
-root = Path("artifacts/repo-aware-routing")
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--root", type=Path, default=Path("artifacts/repo-aware-routing"))
+root = parser.parse_args().root
 checked = []
 for index in sorted(root.glob("*/index.json")):
     data = json.loads(index.read_text())
@@ -82,7 +85,14 @@ if (gate_root / "model.json").exists():
 
         for cell in final["cells"]:
             if cell["policy"] == "auto" and cell["execution_status"] == "STARTED":
-                decision = decide(cell["features"], model, final["expected_r_version"])
+                if type(cell.get("context_supported")) is not bool:
+                    raise ValueError("Missing actual context support state")
+                decision = decide(
+                    cell["features"],
+                    model,
+                    final["expected_r_version"],
+                    supported=cell["context_supported"] is True,
+                )
                 if (
                     decision["action"] != cell["action"]
                     or decision["fallback_reason"] != cell["fallback_reason"]
@@ -131,3 +141,8 @@ if (gate_root / "model.json").exists():
             ):
                 raise ValueError("Gate feedback inputs/costs disagree with execution")
     print(json.dumps({"gate_recomputed": True, "r_version": model["r_version"]}))
+
+if (root / "assist/record.json").exists():
+    from check_assist import check_assist
+
+    print(json.dumps(check_assist(root)))

@@ -1,0 +1,93 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..f6ca05383e99087e6a3d531dfd9960ce1eb6a9cf 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -57,12 +57,26 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            d = list(diff(previous[id], current[id], ignore=ignore_columns))
++            if ignore_columns is None:
++                ignored_paths = None
++            else:
++                ignored_paths = {(column,) for column in ignore_columns}
++            d = list(
++                diff(
++                    previous[id],
++                    current[id],
++                    ignore=ignored_paths,
++                    dot_notation=False,
++                )
++            )
+             if d:
+                 changes = {
+                     "key": id,
+                     "changes": {
+-                        field: [prev_value, current_value]
++                        (field[0] if isinstance(field, list) else field): [
++                            prev_value,
++                            current_value,
++                        ]
+                         for _, field, (prev_value, current_value) in d
+                     },
+                 }
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..778a2992c4d756596c2df9d4ff56fc594d6617cb 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -57,6 +57,28 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_row_changed_with_dots_in_column_names():
++    previous = """item.id,profile.name
++1,Cleo"""
++    current = """item.id,profile.name
++1,Pancakes"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="item.id"),
++        load_csv(io.StringIO(current), key="item.id"),
++    )
++
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {"key": "1", "changes": {"profile.name": ["Cleo", "Pancakes"]}}
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")
+@@ -96,6 +118,26 @@ def test_columns_changed():
+     } == diff
+ 
+ 
++def test_dotted_columns_changed():
++    previous = """id,old.value
++1,Cleo"""
++    current = """id,new.value
++1,Pancakes"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++    )
++
++    assert {
++        "changed": [],
++        "removed": [],
++        "added": [],
++        "columns_added": ["new.value"],
++        "columns_removed": ["old.value"],
++    } == diff
++
++
+ def test_tsv():
+     diff = compare(
+         load_csv(io.StringIO(ONE), key="id"), load_csv(io.StringIO(TWO_TSV), key="id")

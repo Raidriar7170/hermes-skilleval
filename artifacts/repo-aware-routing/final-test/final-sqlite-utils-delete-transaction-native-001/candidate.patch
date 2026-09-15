@@ -1,0 +1,62 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index ae99322b518731d615ff7871bce346061e49a028..82878d909a8381a87bb88e1b06fb971da0a7d9e2 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2966,9 +2966,10 @@ class Table(Queryable):
+         sql = "delete from {}".format(quote_identifier(self.name))
+         if where is not None:
+             sql += " where " + where
+-        self.db.execute(sql, where_args or [])
+-        if analyze:
+-            self.analyze()
++        with self.db.atomic():
++            self.db.execute(sql, where_args or [])
++            if analyze:
++                self.analyze()
+         return self
+ 
+     def update(
+diff --git a/tests/test_delete.py b/tests/test_delete.py
+index 652096ce43007d05361319fa4bb36c68d91daca1..d18f78bf38478d9d9896d5531801e9b0bf21bf21 100644
+--- a/tests/test_delete.py
++++ b/tests/test_delete.py
+@@ -1,3 +1,8 @@
++import pytest
++
++from sqlite_utils import Database
++
++
+ def test_delete_rowid_table(fresh_db):
+     table = fresh_db["table"]
+     table.insert({"foo": 1}).last_pk
+@@ -23,6 +28,30 @@ def test_delete_where(fresh_db):
+     assert table.count == 5
+ 
+ 
++def test_delete_where_persists_after_close(tmpdir):
++    path = tmpdir / "data.db"
++    db = Database(str(path))
++    db["table"].insert_all(({"id": i} for i in range(1, 4)), pk="id")
++
++    db["table"].delete_where("id > ?", [1])
++    db.close()
++
++    reopened_db = Database(str(path))
++    assert list(reopened_db["table"].rows) == [{"id": 1}]
++
++
++def test_delete_where_rolls_back_with_atomic(fresh_db):
++    table = fresh_db["table"]
++    table.insert_all(({"id": i} for i in range(1, 4)), pk="id")
++
++    with pytest.raises(RuntimeError):
++        with fresh_db.atomic():
++            table.delete_where("id > ?", [1])
++            raise RuntimeError
++
++    assert list(table.rows) == [{"id": 1}, {"id": 2}, {"id": 3}]
++
++
+ def test_delete_where_all(fresh_db):
+     table = fresh_db["table"]
+     for i in range(1, 11):

@@ -49,7 +49,7 @@ hermes-maintain route --repo /absolute/path/to/source \
 No model weights or full upstream datasets are committed. The current trained adapter is retained locally by the study owner. Public users must acquire the exact public base revisions and retrain; retraining does not automatically reproduce an identical adapter or authorize reusing the old gate with a different R.
 
 1. Follow [task preparation and qualification](../../configs/repo-aware-routing/tasks/README.md). Keep reference/target data outside Agent and routing inputs.
-2. Use an isolated training environment: `pip install -e '.[repo-routing-train]'`. Recorded local versions are Torch 2.14.0, Transformers 5.17.0 and PEFT 0.21.0; CPU is supported as an explicit slower configuration. No CUDA was used in this study.
+2. Use an isolated training environment: `pip install -e '.[repo-routing-train]' torch==2.14.0 transformers==5.17.0 peft==0.21.0 tokenizers==0.23.2 huggingface-hub==1.31.0`. These are the observed local versions; CPU is supported as an explicit slower configuration. No CUDA was used in this study.
 3. Put pinned encoder/reranker assets beneath `local-assets/`, outside tracked files. Do not commit that directory.
 4. Run the real training and independent reload commands below. Paths in train.json resolve from the process working directory; routing model paths resolve from the routing configuration directory.
 
@@ -95,6 +95,9 @@ No model, Docker or credentials are needed to recompute published qualification:
 
 ```sh
 python scripts/repo_aware/recompute_qualification.py
+python scripts/repo_aware/check_public.py
 ```
 
 Execution exports use `export_execution.py --protocol PRIVATE_PROTOCOL --output NEW_PUBLIC_DIR`; public results use `recompute_execution.py --index PUBLIC_DIR/index.json --output RESULT.json` and `report.py` with the same arguments. These commands recompute outcomes from bound JUnit artifacts; they do not re-execute third-party code or prove behaviors outside the frozen checks.
+
+`check_public.py` also binds complete fit/calibration inputs and costs, refits the lightweight gate, verifies the gate was sealed before final launches, and compares actual H predictions/fallbacks. The standalone per-index recomputer establishes bounded patch/check outcomes; use the complete checker for policy-freeze claims.

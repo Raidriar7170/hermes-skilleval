@@ -1,0 +1,413 @@
+{
+  "started_at": 1789506817.267371,
+  "finished_at": 1789506817.437383,
+  "script_sha256": "8531d6787107429c633c33bc339ce2c5fc36d10b9c6f60850a51aaf5411eaf78",
+  "evidence_scope": "ENGINEERING_COMPONENT_PROFILE_NOT_MAIN_COMPARISON",
+  "profiler": "cProfile",
+  "policy": "auto",
+  "limitations": "Inclusive function timings overlap and must not be summed. Profiling adds overhead. Warm process reloads models; no persistent model service or physical cold-disk claim. No Agent was run.",
+  "phases": [
+    {
+      "phase": "cold_process",
+      "action": "N",
+      "decision_reason": "gate_data_signal_insufficient",
+      "calls": {
+        "heavy_constructors": 0,
+        "encoder_queries": 0,
+        "reranker_forwards": 0
+      },
+      "route_timing": {
+        "route_wall_seconds": 0.08773008399293758
+      },
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "context_cache_hit": false,
+      "functions": [
+        {
+          "source": "repo_routing/context.py",
+          "line": 29,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.584e-06,
+          "inclusive_seconds": 1.7e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 30,
+          "function": "<genexpr>",
+          "calls": 8,
+          "own_seconds": 5.830000000000001e-07,
+          "inclusive_seconds": 5.830000000000001e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 34,
+          "function": "digest",
+          "calls": 4,
+          "own_seconds": 9.417e-06,
+          "inclusive_seconds": 0.000171876
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 40,
+          "function": "extract",
+          "calls": 1,
+          "own_seconds": 0.009966999,
+          "inclusive_seconds": 0.083899
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 75,
+          "function": "<lambda>",
+          "calls": 200,
+          "own_seconds": 7.536e-06,
+          "inclusive_seconds": 7.536e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 96,
+          "function": "<lambda>",
+          "calls": 49,
+          "own_seconds": 7.476700000000001e-05,
+          "inclusive_seconds": 0.004878368
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 204,
+          "function": "<genexpr>",
+          "calls": 483,
+          "own_seconds": 5.5412000000000004e-05,
+          "inclusive_seconds": 8.7954e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 229,
+          "function": "<lambda>",
+          "calls": 77,
+          "own_seconds": 7.206e-06,
+          "inclusive_seconds": 7.206e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 243,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 1.5830000000000001e-06,
+          "inclusive_seconds": 2.0000000000000003e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 245,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 7.09e-07,
+          "inclusive_seconds": 9.59e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 282,
+          "function": "shared_prompt",
+          "calls": 1,
+          "own_seconds": 5.000000000000001e-07,
+          "inclusive_seconds": 5.000000000000001e-07
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 22,
+          "function": "features",
+          "calls": 2,
+          "own_seconds": 5.211000000000001e-06,
+          "inclusive_seconds": 6.375000000000001e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 41,
+          "function": "sigmoid",
+          "calls": 3,
+          "own_seconds": 2.0840000000000003e-06,
+          "inclusive_seconds": 3.7080000000000003e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 45,
+          "function": "dot",
+          "calls": 9,
+          "own_seconds": 3.041e-06,
+          "inclusive_seconds": 1.3458e-05
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 46,
+          "function": "<genexpr>",
+          "calls": 108,
+          "own_seconds": 4.7080000000000005e-06,
+          "inclusive_seconds": 4.7080000000000005e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 49,
+          "function": "normalize",
+          "calls": 1,
+          "own_seconds": 3.168e-06,
+          "inclusive_seconds": 8.125000000000001e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 50,
+          "function": "<genexpr>",
+          "calls": 11,
+          "own_seconds": 2.6700000000000003e-06,
+          "inclusive_seconds": 3.418e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 168,
+          "function": "predict",
+          "calls": 1,
+          "own_seconds": 6.167e-06,
+          "inclusive_seconds": 3.2250000000000005e-05
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 222,
+          "function": "decide",
+          "calls": 1,
+          "own_seconds": 3.999e-06,
+          "inclusive_seconds": 3.7916e-05
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 237,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 5.000000000000001e-07,
+          "inclusive_seconds": 5.000000000000001e-07
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 27,
+          "function": "routing_version",
+          "calls": 1,
+          "own_seconds": 2.7831000000000002e-05,
+          "inclusive_seconds": 0.0034355830000000003
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 61,
+          "function": "route",
+          "calls": 1,
+          "own_seconds": 8.279e-05,
+          "inclusive_seconds": 0.08778754200000001
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 94,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 2.877e-06,
+          "inclusive_seconds": 3.6168e-05
+        }
+      ]
+    },
+    {
+      "phase": "warm_process_model_reloaded",
+      "action": "N",
+      "decision_reason": "gate_data_signal_insufficient",
+      "calls": {
+        "heavy_constructors": 0,
+        "encoder_queries": 0,
+        "reranker_forwards": 0
+      },
+      "route_timing": {
+        "route_wall_seconds": 0.08129687499604188
+      },
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "context_cache_hit": false,
+      "functions": [
+        {
+          "source": "repo_routing/context.py",
+          "line": 29,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.083e-06,
+          "inclusive_seconds": 1.2208e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 30,
+          "function": "<genexpr>",
+          "calls": 8,
+          "own_seconds": 5.43e-07,
+          "inclusive_seconds": 5.43e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 34,
+          "function": "digest",
+          "calls": 4,
+          "own_seconds": 6.999e-06,
+          "inclusive_seconds": 0.000142041
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 40,
+          "function": "extract",
+          "calls": 1,
+          "own_seconds": 0.009600129,
+          "inclusive_seconds": 0.08069733300000001
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 75,
+          "function": "<lambda>",
+          "calls": 200,
+          "own_seconds": 6.421e-06,
+          "inclusive_seconds": 6.421e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 96,
+          "function": "<lambda>",
+          "calls": 49,
+          "own_seconds": 8.0531e-05,
+          "inclusive_seconds": 0.004813535000000001
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 204,
+          "function": "<genexpr>",
+          "calls": 483,
+          "own_seconds": 5.3934e-05,
+          "inclusive_seconds": 8.3967e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 229,
+          "function": "<lambda>",
+          "calls": 77,
+          "own_seconds": 7.464000000000001e-06,
+          "inclusive_seconds": 7.464000000000001e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 243,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 1.209e-06,
+          "inclusive_seconds": 1.709e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 245,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 4.1700000000000004e-07,
+          "inclusive_seconds": 6.25e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 282,
+          "function": "shared_prompt",
+          "calls": 1,
+          "own_seconds": 4.59e-07,
+          "inclusive_seconds": 4.59e-07
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 22,
+          "function": "features",
+          "calls": 2,
+          "own_seconds": 4.9170000000000005e-06,
+          "inclusive_seconds": 6.126e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 41,
+          "function": "sigmoid",
+          "calls": 3,
+          "own_seconds": 1.751e-06,
+          "inclusive_seconds": 3.2910000000000003e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 45,
+          "function": "dot",
+          "calls": 9,
+          "own_seconds": 2.5810000000000004e-06,
+          "inclusive_seconds": 1.1749e-05
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 46,
+          "function": "<genexpr>",
+          "calls": 108,
+          "own_seconds": 3.7070000000000003e-06,
+          "inclusive_seconds": 3.7070000000000003e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 49,
+          "function": "normalize",
+          "calls": 1,
+          "own_seconds": 2.334e-06,
+          "inclusive_seconds": 7.25e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 50,
+          "function": "<genexpr>",
+          "calls": 11,
+          "own_seconds": 2.5010000000000003e-06,
+          "inclusive_seconds": 3.334e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 168,
+          "function": "predict",
+          "calls": 1,
+          "own_seconds": 4.585e-06,
+          "inclusive_seconds": 2.7792e-05
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 222,
+          "function": "decide",
+          "calls": 1,
+          "own_seconds": 2.6250000000000003e-06,
+          "inclusive_seconds": 3.1875e-05
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 237,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 3.75e-07,
+          "inclusive_seconds": 3.75e-07
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 27,
+          "function": "routing_version",
+          "calls": 1,
+          "own_seconds": 1.6873000000000003e-05,
+          "inclusive_seconds": 0.000373375
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 61,
+          "function": "route",
+          "calls": 1,
+          "own_seconds": 6.2124e-05,
+          "inclusive_seconds": 0.08135225
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 94,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 2.374e-06,
+          "inclusive_seconds": 3.3291000000000004e-05
+        }
+      ]
+    }
+  ]
+}

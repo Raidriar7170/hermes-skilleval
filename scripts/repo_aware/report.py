@@ -44,6 +44,11 @@ def analyze(index):
     auto = [r for r in raw["cells"] if r["policy"] == "auto"]
     gate = {
         "actions": dict(Counter(r["action"] for r in auto)),
+        "fallback_reasons": dict(
+            Counter(r.get("fallback_reason") or "none" for r in auto)
+        ),
+        "unsupported_context": sum(r.get("context_supported") is False for r in auto),
+        "gate_predictions_observed": sum(bool(r.get("gate_predictions")) for r in auto),
         "cheap_branches": sum(r["action"] in ("N", "F") for r in auto),
         "cheap_zero_heavy": sum(
             r["action"] in ("N", "F")
@@ -54,8 +59,53 @@ def analyze(index):
             for r in auto
         ),
     }
+    unseen_ids = {
+        r["family_id"]
+        for r in result["rows"]
+        if r.get("repository") == "simonw/csv-diff"
+    }
+    unseen = {}
+    interventions = {}
+    for policy in ("native", "fixed", "strong", "repo-aware", "auto"):
+        families = [
+            r
+            for r in result["families"]
+            if r["family_id"] in unseen_ids and r["policy"] == policy
+        ]
+
+        def average(key):
+            values = [r[key] for r in families if r[key] is not None]
+            return statistics.mean(values) if values else None
+
+        unseen[policy] = {
+            "families": len(families),
+            "known_attempts": sum(r["known"] for r in families),
+            "unknown_attempts": sum(r["unknown"] for r in families),
+            "quality_lower": average("quality_lower"),
+            "quality_upper": average("quality_upper"),
+            "mean_elapsed_seconds": average("elapsed_seconds"),
+            "mean_total_tokens": average("total_tokens"),
+        }
+        actual = [
+            r
+            for r in raw["cells"]
+            if r["policy"] == policy and r["execution_status"] == "STARTED"
+        ]
+        interventions[policy] = {
+            "started": len(actual),
+            "realized_actions": dict(Counter(r["action"] for r in actual)),
+            "mounted_package_counts": dict(
+                Counter(str(len(r["mounted_packages"])) for r in actual)
+            ),
+            "unsupported_set_fallbacks": sum(
+                r.get("fallback_reason") == "no_positive_feasible_supported_set"
+                for r in actual
+            ),
+        }
     return {
         **result,
+        "unseen_repository": {"repository": "simonw/csv-diff", "summary": unseen},
+        "actual_interventions": interventions,
         "paired_bootstrap": pairs,
         "gate": gate,
         "noninferiority_margin": 0.05,

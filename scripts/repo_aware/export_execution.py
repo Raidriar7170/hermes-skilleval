@@ -230,6 +230,13 @@ def export(protocol, output):
             "features": [number(x) for x in routing.get("features", [])],
             "adapter_sha256": digest(routing.get("adapter_sha256")),
             "context_digest": digest(routing.get("context_digest")),
+            "context_supported": routing.get("context", {}).get("supported"),
+            "context_wall_seconds": number(
+                routing.get("context", {}).get("cost", {}).get("wall_seconds")
+            ),
+            "context_cache_hit": routing.get("context", {})
+            .get("cost", {})
+            .get("cache_hit"),
             "selected_ids": [
                 identifier(x) for x in metadata.get("selected_ids", []) if identifier(x)
             ],

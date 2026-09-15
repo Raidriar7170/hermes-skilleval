@@ -1,0 +1,125 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..9f4c3026176d6bef8173e607c0e42758e5025d0e 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -57,12 +57,19 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            d = list(diff(previous[id], current[id], ignore=ignore_columns))
++            d = list(
++                diff(
++                    previous[id],
++                    current[id],
++                    ignore=ignore_columns,
++                    dot_notation=False,
++                )
++            )
+             if d:
+                 changes = {
+                     "key": id,
+                     "changes": {
+-                        field: [prev_value, current_value]
++                        field[0]: [prev_value, current_value]
+                         for _, field, (prev_value, current_value) in d
+                     },
+                 }
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 11b4eef1bba305732e6e39e0e1f73673ef6d5bf0..6a69efc86a9226d5e264732eea4255cf128ca837 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,7 +1,16 @@
+ from click.testing import CliRunner
+ from csv_diff import cli
+ import pytest
+-from .test_csv_diff import ONE, ONE_TSV, TWO, TWO_TSV, THREE, FIVE
++from .test_csv_diff import (
++    DOTTED_ONE,
++    DOTTED_TWO,
++    FIVE,
++    ONE,
++    ONE_TSV,
++    THREE,
++    TWO,
++    TWO_TSV,
++)
+ import json
+ from textwrap import dedent
+ 
+@@ -120,3 +129,21 @@ def test_format_overrides_sniff(tsv_files):
+         cli.cli, [one, two, "--key", "id", "--json", "--format", "csv"]
+     )
+     assert 1 == result.exit_code
++
++
++def test_json_cli_with_dotted_column_name(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write(DOTTED_ONE)
++    two = tmpdir / "two.csv"
++    two.write(DOTTED_TWO)
++    result = CliRunner().invoke(
++        cli.cli, [str(one), str(two), "--key", "person.id", "--json"]
++    )
++    assert 0 == result.exit_code
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": "1", "changes": {"stats.age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == json.loads(result.output.strip())
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..543622ed94b791ff9331c3c620ef5f6e4b461a67 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -43,6 +43,12 @@ EIGHT = """id,name,age,length
+ 3,Bailee,1,100
+ 4,Bob,7,422"""
+ 
++DOTTED_ONE = """person.id,name,stats.age
++1,Cleo,4"""
++
++DOTTED_TWO = """person.id,name,stats.age
++1,Cleo,5"""
++
+ 
+ def test_row_changed():
+     diff = compare(
+@@ -107,3 +113,37 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_dotted_column_name():
++    diff = compare(
++        load_csv(io.StringIO(DOTTED_ONE), key="person.id"),
++        load_csv(io.StringIO(DOTTED_TWO), key="person.id"),
++    )
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": "1", "changes": {"stats.age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
++def test_dotted_column_names_with_columns_added_and_removed():
++    previous = """id,profile.name,score.old
++1,Cleo,4"""
++    current = """id,profile.name,score.new
++1,Clio,5"""
++    diff = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++    )
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {"key": "1", "changes": {"profile.name": ["Cleo", "Clio"]}}
++        ],
++        "columns_added": ["score.new"],
++        "columns_removed": ["score.old"],
++    } == diff

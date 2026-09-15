@@ -1,0 +1,69 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index e620f9e3ec9911d1d7234c8e18bab65704e22463..7c018d0e4b6a88dbdb3a00ee44dac9544776a6d9 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -20,7 +20,9 @@ def load_csv(fp, key=None, dialect=None):
+     if key:
+         keyfn = lambda r: r[key]
+     else:
+-        keyfn = lambda r: hashlib.sha1(json.dumps(r, sort_keys=True).encode("utf8"))
++        keyfn = lambda r: hashlib.sha1(
++            json.dumps(r, sort_keys=True).encode("utf8")
++        ).hexdigest()
+     return {keyfn(r): r for r in rows}
+ 
+ 
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index bdaa47c53d24e459589e7a6b998e26a517a7a4da..1a0a4f32c566c847e8025096a6024764963b90d6 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -86,6 +86,24 @@ def test_human_cli_json(tmpdir):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_cli_json_without_key_compares_rows_by_contents(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write(ONE)
++    two = tmpdir / "two.csv"
++    two.write(TWO)
++
++    result = CliRunner().invoke(cli.cli, [str(one), str(two), "--json"])
++
++    assert 0 == result.exit_code
++    assert {
++        "added": [{"id": "1", "name": "Cleo", "age": "5"}],
++        "removed": [{"id": "1", "name": "Cleo", "age": "4"}],
++        "changed": [],
++        "columns_added": [],
++        "columns_removed": [],
++    } == json.loads(result.output.strip())
++
++
+ def test_tsv_files(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..a8c1268ce5e2cf289a39bd07eb4588666ad19dfe 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -107,3 +107,20 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_rows_compared_by_contents_without_key():
++    previous = """id,name,age
++1,Cleo,5
++2,Pancakes,2"""
++    current = """id,name,age
++1,Cleo,5
++3,Bailey,1"""
++
++    assert {
++        "added": [{"id": "3", "name": "Bailey", "age": "1"}],
++        "removed": [{"id": "2", "name": "Pancakes", "age": "2"}],
++        "changed": [],
++        "columns_added": [],
++        "columns_removed": [],
++    } == compare(load_csv(io.StringIO(previous)), load_csv(io.StringIO(current)))
