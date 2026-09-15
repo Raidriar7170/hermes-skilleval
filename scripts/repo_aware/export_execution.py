@@ -224,6 +224,7 @@ def export(protocol, output):
                 and digest(value)
             },
             "action": identifier(routing.get("action") or metadata.get("arm")),
+            "features": [number(x) for x in routing.get("features", [])],
             "adapter_sha256": digest(routing.get("adapter_sha256")),
             "context_digest": digest(routing.get("context_digest")),
             "selected_ids": [

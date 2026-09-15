@@ -1,0 +1,406 @@
+{
+  "schema": "repo-aware-public-execution-v1",
+  "protocol_sha256": "ea581d02a95bd30037ec9748755aa4618f268648519c41ced35831264d89a3a1",
+  "routing_config_sha256": "0fb279c73610575f174627bdae5a6742802a86860563c783eb6a286f8b0a9423",
+  "registry_sha256": "0f6e9838c15a5c07d1eedd6670565c92ef0b1b0485f20bb5cc2d1fd362f9fbd3",
+  "ledger_sha256": "7a0eae85a932e093da54d2f63d1da11a89cb6af7d979b11dbc2f1771a7c4e275",
+  "protocol_lock_matches": true,
+  "dollars": null,
+  "cells": [
+    {
+      "run_id": "dev-csvkit-empty-stack-learned-top2-001",
+      "actual_run_id": "dev-csvkit-empty-stack-learned-top2-001",
+      "actual_arm": "R",
+      "routing_skill_ids": [
+        "schema-change-regression",
+        "cli-api-regression"
+      ],
+      "task_id": "csvkit-empty-stack",
+      "repository": "wireservice/csvkit",
+      "family_id": "empty-stack",
+      "family_source": "qualification",
+      "policy": "repo-aware",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "d0d6d5f0c08d112b705773fa1500f033ac14854de855bba202c28ef237ce1094",
+      "executor_sha256": "0ebb5c53499eb34f32ee957ddb5136cafd3e531117d8fa92cd8ab9c22b16f943",
+      "routing_sha256": "f72cfbeeab96322e9467af3c9bb237d8748f9c8d1a5784ac1bee3d63d06566f7",
+      "qualification_sha256": "5af5393a60735f67d80b6092d28626440627ecaad0fcf180d4924f78f389bef3",
+      "base_commit": "95b0672e29f36d016dd855a1b5d95b88a5c3a714",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "e2a983176e54d44db41aa971cac0df8bea0ed4eeabdba10faf2b03440ef5b40a",
+      "routing_policy": "repo-aware",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "R",
+      "adapter_sha256": "b254f34cfbc25a93435563773bd12155b206118e0f438e9c27704c234044a774",
+      "context_digest": "13ad888bb72c190ed5a1c3f0da211c5c77767a75584edace9713e276bbe4ec7d",
+      "selected_ids": [
+        "schema-change-regression",
+        "cli-api-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 134.60023966699373,
+        "execution_seconds": 124.19583333400078,
+        "package_prepare_seconds": 0.025431415997445583,
+        "capture_seconds": 0.46444725000765175,
+        "finalize_seconds": 5.147428875003243
+      },
+      "calls": {
+        "heavy_constructors": 2,
+        "encoder_queries": 1,
+        "reranker_forwards": 10
+      },
+      "usage": {
+        "input_tokens": 285159,
+        "cached_input_tokens": 258816,
+        "output_tokens": 4278,
+        "reasoning_output_tokens": 1552
+      },
+      "patch": {
+        "sha256": "050129bb96b2f235fe1baaf9469f674b5a7b09b01d8572db2a5ce9f7b321ea75",
+        "path": "dev-csvkit-empty-stack-learned-top2-001/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-learned-top2-001/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "2d12114cf32a70caf1108ac1075880ee5a17922ec238f6cf6c761fc1959f5deb",
+          "result_sha256": "a9520b18f6b44741b0650366a2a13d3e591bb4d77f04e2c6db4ddb12eac8799e",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-learned-top2-001/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "844ddc9b1160191ad422fa17758ad02f7197e057da0914106a8cc96fc099fdd1",
+          "result_sha256": "2488f6df4c513afa619b8979d7c30045317913da75188298fbe00c77b90d4bf2",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "constructor_index_seconds": 1.0886016669974197,
+        "retrieval_seconds": 0.5079077080008574,
+        "reranker_selection_seconds": 2.019551083998522,
+        "route_wall_seconds": 5.015106500010006
+      },
+      "fallback_reason": null
+    },
+    {
+      "run_id": "dev-csvkit-sql-length-defaults-learned-top2-001",
+      "actual_run_id": "dev-csvkit-sql-length-defaults-learned-top2-001",
+      "actual_arm": "R",
+      "routing_skill_ids": [
+        "cli-api-regression",
+        "verification-before-completion"
+      ],
+      "task_id": "csvkit-sql-length-defaults",
+      "repository": "wireservice/csvkit",
+      "family_id": "sql-length-defaults",
+      "family_source": "qualification",
+      "policy": "repo-aware",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "a9e16f29e1589fc311ac0296167e76d7cc01e1f1e55a9e0a5b15c5c086c3ffad",
+      "executor_sha256": "8b4f76f9a4f19af1af278cc198f86d7a6e134ffc9b5d290e4aa5131de218aff6",
+      "routing_sha256": "88ab70406507c9755355915a81b7dfdb63d504545bf5929e6f407c0e030ebe84",
+      "qualification_sha256": "abfc89993ccbddf6482b55aca14100c4b70ba12e0862ac80523248c690ae2244",
+      "base_commit": "9c0f91bedcb9c741311dc1c4d98a9bb6ccb49c2a",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "e2a983176e54d44db41aa971cac0df8bea0ed4eeabdba10faf2b03440ef5b40a",
+      "routing_policy": "repo-aware",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "R",
+      "adapter_sha256": "b254f34cfbc25a93435563773bd12155b206118e0f438e9c27704c234044a774",
+      "context_digest": "d5f33a14b65cdb88dd4d2bd11553f8c510e152cabe6a638d4b98dbfd64db22d6",
+      "selected_ids": [
+        "cli-api-regression",
+        "verification-before-completion"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 154.08059308299562,
+        "execution_seconds": 142.34984620800242,
+        "package_prepare_seconds": 0.025919957988662645,
+        "capture_seconds": 0.48678591698990203,
+        "finalize_seconds": 5.716531000012765
+      },
+      "calls": {
+        "heavy_constructors": 2,
+        "encoder_queries": 1,
+        "reranker_forwards": 15
+      },
+      "usage": {
+        "input_tokens": 513523,
+        "cached_input_tokens": 468992,
+        "output_tokens": 5378,
+        "reasoning_output_tokens": 1512
+      },
+      "patch": {
+        "sha256": "26a9219224d8d81ca7728d0fe04c84904a0d4d8f90863cb730d53a28825ac423",
+        "path": "dev-csvkit-sql-length-defaults-learned-top2-001/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-learned-top2-001/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "ea0225f301e0609df5bfe4c21d1a57f81dda2ceaa1b4c2595e97f7c5b30ecd45",
+          "result_sha256": "58d362fd521c4a34d247795bd26989168a12dabbc12829e3bd91c019e6c04407",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-learned-top2-001/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "c0a87749e7a602e5d4523e09f349fbe63b51641662c457d525724ced9079b0f2",
+          "result_sha256": "6d00b9b127c6cb2113de3a479f73e246839b1d79da81e3994849e5c29e031d32",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 7,
+          "referenced_skill_paths": [
+            ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        },
+        {
+          "event_ordinal": 9,
+          "referenced_skill_paths": [
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "constructor_index_seconds": 1.1028547919995617,
+        "retrieval_seconds": 0.5113071670057252,
+        "reranker_selection_seconds": 2.7414699170039967,
+        "route_wall_seconds": 5.770186333014863
+      },
+      "fallback_reason": null
+    }
+  ],
+  "events": [
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-empty-stack-learned-top2-001",
+      "time": 1789499073.36765,
+      "exit_code": null,
+      "protocol_sha256": "ea581d02a95bd30037ec9748755aa4618f268648519c41ced35831264d89a3a1"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-empty-stack-learned-top2-001",
+      "time": 1789499208.2770061,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-sql-length-defaults-learned-top2-001",
+      "time": 1789499208.277215,
+      "exit_code": null,
+      "protocol_sha256": "ea581d02a95bd30037ec9748755aa4618f268648519c41ced35831264d89a3a1"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-sql-length-defaults-learned-top2-001",
+      "time": 1789499362.711116,
+      "exit_code": 0,
+      "protocol_sha256": null
+    }
+  ],
+  "privacy": "Allowlisted metadata; raw patches withheld on sensitive-pattern detection; JUnit stack bodies omitted.",
+  "expected_r_version": null,
+  "expected_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+  "version_scope": "DEVELOPMENT_UNFROZEN",
+  "expected_packages": {
+    "systematic-debugging": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+    "verification-before-completion": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+    "cli-api-regression": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+    "schema-change-regression": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+    "import-data-regression": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37"
+  }
+}
