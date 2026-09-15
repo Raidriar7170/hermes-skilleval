@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="0.027" timestamp="2026-09-15T18:37:56.239926+00:00"><testcase classname="test_behavior" name="test_detect_fts_similar_tables[True]" time="0.001"><failure message="AssertionError: assert 'demo2_fts' == 'demo_fts'&#10;  &#10;  - demo_fts&#10;  + demo2_fts&#10;  ?     +">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff8beed3f0&gt;&gt;
+reverse_order = True
+
+    @pytest.mark.parametrize("reverse_order", (True, False))
+    def test_detect_fts_similar_tables(fresh_db, reverse_order):
+        # https://github.com/simonw/sqlite-utils/issues/434
+        table1, table2 = ("demo", "demo2")
+        if reverse_order:
+            table1, table2 = table2, table1
+    
+        fresh_db[table1].insert({"title": "Hello"}).enable_fts(
+            ["title"], fts_version="FTS4"
+        )
+        fresh_db[table2].insert({"title": "Hello"}).enable_fts(
+            ["title"], fts_version="FTS4"
+        )
+        assert fresh_db[table1].detect_fts() == "{}_fts".format(table1)
+&gt;       assert fresh_db[table2].detect_fts() == "{}_fts".format(table2)
+E       AssertionError: assert 'demo2_fts' == 'demo_fts'
+E         
+E         - demo_fts
+E         + demo2_fts
+E         ?     +
+
+/trusted/test_behavior.py:53: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_detect_fts_similar_tables[False]" time="0.001" /></testsuite></testsuites>

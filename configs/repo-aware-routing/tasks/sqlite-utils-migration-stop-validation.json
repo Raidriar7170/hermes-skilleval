@@ -1,0 +1,35 @@
+{
+  "task_id": "sqlite-utils-migration-stop-validation",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/commit/0bad21280fc29e42a58358a68f702cd270bb9094",
+  "family_id": "migration-stop-validation",
+  "split": "final-test",
+  "reference_fix_commit": "0bad21280fc29e42a58358a68f702cd270bb9094",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "README.md"
+    ]
+  },
+  "public_request": "sqlite-utils-migration-stop-validation-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_cli_migrate.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_stop_before_unknown_name_errors or test_stop_before_with_legacy_migrations_class or test_stop_before_multiple_values_for_legacy_set_errors",
+  "regression_selector": "test_basic",
+  "export_exclusions": [],
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements.",
+  "license": "Apache-2.0"
+}

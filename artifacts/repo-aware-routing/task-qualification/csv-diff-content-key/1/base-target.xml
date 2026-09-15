@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.019" timestamp="2026-09-15T18:39:47.305797+00:00"><testcase classname="test_behavior" name="test_target" time="0.001"><failure message="AssertionError: assert [{'id': '1', ...me': 'Alice'}] == [{'id': '2', 'name': 'Alice'}]&#10;  &#10;  At index 0 diff: {'id': '1', 'name': 'Cleo'} != {'id': '2', 'name': 'Alice'}&#10;  Left contains one more item: {'id': '2', 'name': 'Alice'}&#10;  Use -v to get more diff">def test_target():
+        old=load_csv(io.StringIO("id,name\n1,Cleo\n2,Bob\n"))
+        new=load_csv(io.StringIO("id,name\n1,Cleo\n2,Alice\n"))
+        result=compare(old,new)
+&gt;       assert result["added"] == [{"id":"2","name":"Alice"}]
+E       AssertionError: assert [{'id': '1', ...me': 'Alice'}] == [{'id': '2', 'name': 'Alice'}]
+E         
+E         At index 0 diff: {'id': '1', 'name': 'Cleo'} != {'id': '2', 'name': 'Alice'}
+E         Left contains one more item: {'id': '2', 'name': 'Alice'}
+E         Use -v to get more diff
+
+/trusted/test_behavior.py:15: AssertionError</failure></testcase></testsuite></testsuites>

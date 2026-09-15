@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.029" timestamp="2026-09-15T18:38:05.142126+00:00"><testcase classname="test_behavior" name="test_convert_multi_dryrun" time="0.002"><failure message="AssertionError: assert 1 == 0&#10; +  where 1 = &lt;Result OperationalError('user-defined function raised exception')&gt;.exit_code">test_db_and_path = (&lt;Database &lt;sqlite3.Connection object at 0xffff780c5c60&gt;&gt;, '/tmp/pytest-of-root/pytest-0/test_convert_multi_dryrun0/data.db')
+
+    def test_convert_multi_dryrun(test_db_and_path):
+        db_path = test_db_and_path[1]
+        result = CliRunner().invoke(
+            cli.cli,
+            [
+                "convert",
+                db_path,
+                "example",
+                "dt",
+                "{'foo': 'bar', 'baz': 1}",
+                "--dry-run",
+                "--multi",
+            ],
+        )
+&gt;       assert result.exit_code == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = &lt;Result OperationalError('user-defined function raised exception')&gt;.exit_code
+
+/trusted/test_behavior.py:196: AssertionError</failure></testcase></testsuite></testsuites>

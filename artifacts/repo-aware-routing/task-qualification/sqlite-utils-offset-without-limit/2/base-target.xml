@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="0.132" timestamp="2026-09-15T18:38:46.162227+00:00"><testcase classname="test_behavior" name="test_rows_where_offset_limit[None-3-expected0]" time="0.001" /><testcase classname="test_behavior" name="test_rows_where_offset_limit[0-3-expected1]" time="0.000" /><testcase classname="test_behavior" name="test_rows_where_offset_limit[3-3-expected2]" time="0.000" /><testcase classname="test_behavior" name="test_rows_where_offset_limit[97-None-expected3]" time="0.000"><failure message="sqlite3.OperationalError: near &quot;offset&quot;: syntax error">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff79ea7790&gt;&gt;, offset = 97
+limit = None, expected = [98, 99, 100]
+
+    @pytest.mark.parametrize(
+        "offset,limit,expected",
+        [
+            (None, 3, [1, 2, 3]),
+            (0, 3, [1, 2, 3]),
+            (3, 3, [4, 5, 6]),
+            # offset without limit should return every remaining row
+            (97, None, [98, 99, 100]),
+            (0, None, list(range(1, 101))),
+        ],
+    )
+    def test_rows_where_offset_limit(fresh_db, offset, limit, expected):
+        table = fresh_db["rows"]
+        table.insert_all([{"id": id} for id in range(1, 101)], pk="id")
+        assert table.count == 100
+        assert expected == [
+&gt;           r["id"] for r in table.rows_where(offset=offset, limit=limit, order_by="id")
+        ]
+
+/trusted/test_behavior.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:2068: in rows_where
+    cursor = self.db.execute(sql, where_args or [])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Database &lt;sqlite3.Connection object at 0xffff79ea7790&gt;&gt;
+sql = 'select * from "rows" order by id offset 97', parameters = []
+
+    def execute(
+        self, sql: str, parameters: Sequence | dict[str, Any] | None = None
+    ) -&gt; sqlite3.Cursor:
+        """
+        Execute SQL query and return a ``sqlite3.Cursor``.
+    
+        A write statement - ``INSERT``, ``UPDATE``, ``CREATE TABLE`` and so on -
+        is committed automatically, unless a transaction is already open, in
+        which case it becomes part of that transaction. See
+        :ref:`python_api_transactions`.
+    
+        :param sql: SQL query to execute
+        :param parameters: Parameters to use in that query - an iterable for ``where id = ?``
+          parameters, or a dictionary for ``where id = :id``
+        """
+        if self._tracer:
+            self._tracer(sql, parameters)
+        was_in_transaction = self.conn.in_transaction
+        try:
+            if parameters is not None:
+&gt;               cursor = self.conn.execute(sql, parameters)
+E               sqlite3.OperationalError: near "offset": syntax error
+
+/input/sqlite_utils/db.py:936: OperationalError</failure></testcase><testcase classname="test_behavior" name="test_rows_where_offset_limit[0-None-expected4]" time="0.001"><failure message="sqlite3.OperationalError: near &quot;offset&quot;: syntax error">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff79ea7e20&gt;&gt;, offset = 0
+limit = None, expected = [1, 2, 3, 4, 5, 6, ...]
+
+    @pytest.mark.parametrize(
+        "offset,limit,expected",
+        [
+            (None, 3, [1, 2, 3]),
+            (0, 3, [1, 2, 3]),
+            (3, 3, [4, 5, 6]),
+            # offset without limit should return every remaining row
+            (97, None, [98, 99, 100]),
+            (0, None, list(range(1, 101))),
+        ],
+    )
+    def test_rows_where_offset_limit(fresh_db, offset, limit, expected):
+        table = fresh_db["rows"]
+        table.insert_all([{"id": id} for id in range(1, 101)], pk="id")
+        assert table.count == 100
+        assert expected == [
+&gt;           r["id"] for r in table.rows_where(offset=offset, limit=limit, order_by="id")
+        ]
+
+/trusted/test_behavior.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:2068: in rows_where
+    cursor = self.db.execute(sql, where_args or [])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Database &lt;sqlite3.Connection object at 0xffff79ea7e20&gt;&gt;
+sql = 'select * from "rows" order by id offset 0', parameters = []
+
+    def execute(
+        self, sql: str, parameters: Sequence | dict[str, Any] | None = None
+    ) -&gt; sqlite3.Cursor:
+        """
+        Execute SQL query and return a ``sqlite3.Cursor``.
+    
+        A write statement - ``INSERT``, ``UPDATE``, ``CREATE TABLE`` and so on -
+        is committed automatically, unless a transaction is already open, in
+        which case it becomes part of that transaction. See
+        :ref:`python_api_transactions`.
+    
+        :param sql: SQL query to execute
+        :param parameters: Parameters to use in that query - an iterable for ``where id = ?``
+          parameters, or a dictionary for ``where id = :id``
+        """
+        if self._tracer:
+            self._tracer(sql, parameters)
+        was_in_transaction = self.conn.in_transaction
+        try:
+            if parameters is not None:
+&gt;               cursor = self.conn.execute(sql, parameters)
+E               sqlite3.OperationalError: near "offset": syntax error
+
+/input/sqlite_utils/db.py:936: OperationalError</failure></testcase><testcase classname="test_behavior" name="test_pks_and_rows_where_offset_without_limit" time="0.000"><failure message="sqlite3.OperationalError: near &quot;offset&quot;: syntax error">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff79e90130&gt;&gt;
+
+    def test_pks_and_rows_where_offset_without_limit(fresh_db):
+        table = fresh_db["rows"]
+        table.insert_all([{"id": id} for id in range(1, 6)], pk="id")
+&gt;       assert [pk for pk, _ in table.pks_and_rows_where(offset=3, order_by="id")] == [4, 5]
+
+/trusted/test_behavior.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:2108: in pks_and_rows_where
+    for row in self.rows_where(
+/input/sqlite_utils/db.py:2068: in rows_where
+    cursor = self.db.execute(sql, where_args or [])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Database &lt;sqlite3.Connection object at 0xffff79e90130&gt;&gt;
+sql = 'select "id" from "rows" order by id offset 3', parameters = []
+
+    def execute(
+        self, sql: str, parameters: Sequence | dict[str, Any] | None = None
+    ) -&gt; sqlite3.Cursor:
+        """
+        Execute SQL query and return a ``sqlite3.Cursor``.
+    
+        A write statement - ``INSERT``, ``UPDATE``, ``CREATE TABLE`` and so on -
+        is committed automatically, unless a transaction is already open, in
+        which case it becomes part of that transaction. See
+        :ref:`python_api_transactions`.
+    
+        :param sql: SQL query to execute
+        :param parameters: Parameters to use in that query - an iterable for ``where id = ?``
+          parameters, or a dictionary for ``where id = :id``
+        """
+        if self._tracer:
+            self._tracer(sql, parameters)
+        was_in_transaction = self.conn.in_transaction
+        try:
+            if parameters is not None:
+&gt;               cursor = self.conn.execute(sql, parameters)
+E               sqlite3.OperationalError: near "offset": syntax error
+
+/input/sqlite_utils/db.py:936: OperationalError</failure></testcase></testsuite></testsuites>

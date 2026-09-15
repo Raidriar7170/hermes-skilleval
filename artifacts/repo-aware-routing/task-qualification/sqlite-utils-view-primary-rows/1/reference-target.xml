@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.018" timestamp="2026-09-15T18:38:27.648831+00:00"><testcase classname="test_behavior" name="test_pks_and_rows_where_view" time="0.001"><failure message="Failed: DID NOT RAISE &lt;class 'sqlite3.OperationalError'&gt;">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff888998a0&gt;&gt;
+
+    def test_pks_and_rows_where_view(fresh_db):
+        # pks_and_rows_where() lives on Queryable so views expose it, but
+        # SQLite views have no rowid - it has always failed with an
+        # OperationalError from the generated SQL. Guard against it failing
+        # earlier with an AttributeError from View lacking Table properties
+        from sqlite_utils.utils import sqlite3
+    
+        fresh_db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")
+        fresh_db.create_view("dog_names", "select name from dogs")
+&gt;       with pytest.raises(sqlite3.OperationalError):
+E       Failed: DID NOT RAISE &lt;class 'sqlite3.OperationalError'&gt;
+
+/trusted/test_behavior.py:125: Failed</failure></testcase></testsuite></testsuites>

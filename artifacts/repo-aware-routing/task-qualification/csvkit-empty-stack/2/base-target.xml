@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.020" timestamp="2026-09-15T18:41:01.654258+00:00"><testcase classname="test_behavior" name="test_target" time="0.001"><failure message="TypeError: 'NoneType' object is not iterable">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target0')
+
+    def test_target(tmp_path):
+        empty = tmp_path / "empty.csv"
+        empty.write_text("")
+        normal = tmp_path / "normal.csv"
+        normal.write_text("name,count\nCleo,2\n")
+&gt;       text = run(CSVStack, [str(empty), str(normal)])
+
+/trusted/test_behavior.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/trusted/test_behavior.py:9: in run
+    klass(args, output_file=output).run()
+/input/csvkit/cli.py:146: in run
+    self.main()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;csvkit.utilities.csvstack.CSVStack object at 0xffff5e3fa480&gt;
+
+    def main(self):
+        if isatty(sys.stdin) and self.args.input_paths == ['-']:
+            sys.stderr.write('No input file or piped data provided. Waiting for standard input:\n')
+    
+        has_groups = self.args.groups is not None or self.args.group_by_filenames
+    
+        if self.args.groups is not None and not self.args.group_by_filenames:
+            groups = self.args.groups.split(',')
+    
+            if len(groups) != len(self.args.input_paths):
+                self.argparser.error(
+                    'The number of grouping values must be equal to the number of CSV files being stacked.')
+        else:
+            groups = None
+    
+        group_name = self.args.group_name if self.args.group_name else 'group'
+        use_fieldnames = not self.args.no_header_row
+    
+        if use_fieldnames:
+            Reader = agate.csv.DictReader
+        else:
+            Reader = agate.csv.reader
+    
+        headers = []
+        stdin_fieldnames = []
+        stdin_first_row = []
+    
+        for path in self.args.input_paths:
+            f = self._open_input_file(path)
+            file_is_stdin = path == '-'
+    
+            _skip_lines(f, self.args)
+            rows = Reader(f, **self.reader_kwargs)
+    
+            if use_fieldnames:
+&gt;               for field in rows.fieldnames:
+E               TypeError: 'NoneType' object is not iterable
+
+/input/csvkit/utilities/csvstack.py:78: TypeError</failure></testcase></testsuite></testsuites>

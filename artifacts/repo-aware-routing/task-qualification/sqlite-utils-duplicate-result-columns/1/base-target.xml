@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.022" timestamp="2026-09-15T18:37:19.340024+00:00"><testcase classname="test_behavior" name="test_query_duplicate_column_names_are_deduped" time="0.001"><failure message="AssertionError: assert [{'id': 2, 'value': 'right'}] == [{'id': 1, 'i..._2': 'right'}]&#10;  &#10;  At index 0 diff: {'id': 2, 'value': 'right'} != {'id': 1, 'id_2': 2, 'value': 'left', 'value_2': 'right'}&#10;  Use -v to get more diff">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff7cb897b0&gt;&gt;
+
+    def test_query_duplicate_column_names_are_deduped(fresh_db):
+        # https://github.com/simonw/sqlite-utils/issues/624
+        fresh_db["one"].insert({"id": 1, "value": "left"})
+        fresh_db["two"].insert({"id": 2, "value": "right"})
+        rows = list(
+            fresh_db.query("select one.id, two.id, one.value, two.value from one, two")
+        )
+&gt;       assert rows == [{"id": 1, "id_2": 2, "value": "left", "value_2": "right"}]
+E       AssertionError: assert [{'id': 2, 'value': 'right'}] == [{'id': 1, 'i..._2': 'right'}]
+E         
+E         At index 0 diff: {'id': 2, 'value': 'right'} != {'id': 1, 'id_2': 2, 'value': 'left', 'value_2': 'right'}
+E         Use -v to get more diff
+
+/trusted/test_behavior.py:228: AssertionError</failure></testcase></testsuite></testsuites>

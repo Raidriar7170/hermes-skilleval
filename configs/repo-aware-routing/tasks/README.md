@@ -1,8 +1,10 @@
 # Public repair-family pilot candidates
 
-These 20 candidates were chosen using public maintenance behavior, installation
+The initial 20 candidates were chosen using public maintenance behavior, installation
 scope and licenses before any Agent condition ran. They are not 20 established
-algorithm observations. The initial allocation is 8 rank-train, 2 rank-dev,
+algorithm observations. One final-test candidate failed reference qualification and was replaced by a
+new public CLI family before any Agent results were observed; all 21 candidate
+records remain. The intended qualified allocation is 8 rank-train, 2 rank-dev,
 4 gate-fit, 2 gate-calibration and 4 final-test families. `simonw/csv-diff` appears
 only in final-test (2 families). Prior repo-portability tasks are excluded.
 
@@ -63,3 +65,15 @@ Explicit profile for the held-out repository: package `csv_diff` at `.`, console
 entry point `csv_diff.cli:cli`, console name `csv-diff`. The generic profile and
 trusted harness already support this shape; product layout validation may need
 to admit this supported profile explicitly.
+
+## Public evidence recomputation
+
+```sh
+python scripts/repo_aware/recompute_qualification.py
+```
+
+This recomputes verdicts from exported JUnit case outcomes, collection IDs and
+build/canary facts. It validates archive integrity and arithmetic; it does not
+re-run upstream source or prove source identity independently. Full qualification
+reproduction uses the existing controller commands above. Exported JUnit removes
+container hostnames; raw JUnit SHA-256 is retained separately.

@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.129" timestamp="2026-09-15T18:39:28.130615+00:00"><testcase classname="test_behavior" name="test_target" time="0.001"><failure message="assert '&quot;name&quot;,&quot;count&quot;\n&quot;Cleo&quot;,&quot;2&quot;\n' == '&quot;name&quot;,&quot;count&quot;\n&quot;Cleo&quot;,2\n'&#10;  &#10;    &quot;name&quot;,&quot;count&quot;&#10;  - &quot;Cleo&quot;,2&#10;  + &quot;Cleo&quot;,&quot;2&quot;&#10;  ?        + +">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target0')
+
+    def test_target(tmp_path):
+        source=tmp_path / "data.csv"; source.write_text("name,count\nCleo,2\n")
+        text=run(CSVFormat,["-U","2",str(source)])
+&gt;       assert text.replace("\r\n","\n") == '"name","count"\n"Cleo",2\n'
+E       assert '"name","count"\n"Cleo","2"\n' == '"name","count"\n"Cleo",2\n'
+E         
+E           "name","count"
+E         - "Cleo",2
+E         + "Cleo","2"
+E         ?        + +
+
+/trusted/test_behavior.py:21: AssertionError</failure></testcase></testsuite></testsuites>

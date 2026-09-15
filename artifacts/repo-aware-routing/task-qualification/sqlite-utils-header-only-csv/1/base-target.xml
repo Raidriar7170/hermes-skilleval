@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.099" timestamp="2026-09-15T18:37:37.470185+00:00"><testcase classname="test_behavior" name="test_insert_csv_headers_only" time="0.002"><failure message="AssertionError: Cannot transform a table that doesn't exist yet">tmpdir = local('/tmp/pytest-of-root/pytest-0/test_insert_csv_headers_only0')
+
+    def test_insert_csv_headers_only(tmpdir):
+        """Test that CSV with only header row (no data) works with --detect-types (issue #702)"""
+        db_path = str(tmpdir / "test.db")
+        csv_path = str(tmpdir / "headers_only.csv")
+        with open(csv_path, "w") as fp:
+            fp.write("id,name,age\n")
+        # Should not crash with --detect-types (which is now the default)
+&gt;       result = CliRunner().invoke(
+            cli.cli,
+            ["insert", db_path, "data", csv_path, "--csv"],
+            catch_exceptions=False,
+        )
+
+/trusted/test_behavior.py:609: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.12/site-packages/click/testing.py:687: in invoke
+    return_value = cli.main(args=args or (), prog_name=prog_name, **extra)
+/usr/local/lib/python3.12/site-packages/click/core.py:1490: in main
+    rv = self.invoke(ctx)
+/usr/local/lib/python3.12/site-packages/click/core.py:1970: in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+/usr/local/lib/python3.12/site-packages/click/core.py:1353: in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+/usr/local/lib/python3.12/site-packages/click/core.py:907: in invoke
+    return callback(*args, **kwargs)
+/input/sqlite_utils/cli.py:1298: in insert
+    insert_upsert_implementation(
+/input/sqlite_utils/cli.py:1181: in insert_upsert_implementation
+    db.table(table).transform(types=tracker.types)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;[ProgrammingError('Cannot operate on a closed database.') raised in repr()] Table object at 0xffff7d1e1eb0&gt;
+
+    def transform(
+        self,
+        *,
+        types: Optional[dict] = None,
+        rename: Optional[dict] = None,
+        drop: Optional[Iterable] = None,
+        pk: Optional[Any] = DEFAULT,
+        not_null: Optional[Iterable[str]] = None,
+        defaults: Optional[Dict[str, Any]] = None,
+        drop_foreign_keys: Optional[Iterable[str]] = None,
+        add_foreign_keys: Optional[ForeignKeysType] = None,
+        foreign_keys: Optional[ForeignKeysType] = None,
+        column_order: Optional[List[str]] = None,
+        keep_table: Optional[str] = None,
+    ) -&gt; "Table":
+        """
+        Apply an advanced alter table, including operations that are not supported by
+        ``ALTER TABLE`` in SQLite itself.
+    
+        See :ref:`python_api_transform` for full details.
+    
+        :param types: Columns that should have their type changed, for example ``{"weight": float}``
+        :param rename: Columns to rename, for example ``{"headline": "title"}``
+        :param drop: Columns to drop
+        :param pk: New primary key for the table
+        :param not_null: Columns to set as ``NOT NULL``
+        :param defaults: Default values for columns
+        :param drop_foreign_keys: Names of columns that should have their foreign key constraints removed
+        :param add_foreign_keys: List of foreign keys to add to the table
+        :param foreign_keys: List of foreign keys to set for the table, replacing any existing foreign keys
+        :param column_order: List of strings specifying a full or partial column order
+          to use when creating the table
+        :param keep_table: If specified, the existing table will be renamed to this and will not be
+          dropped
+        """
+&gt;       assert self.exists(), "Cannot transform a table that doesn't exist yet"
+E       AssertionError: Cannot transform a table that doesn't exist yet
+
+/input/sqlite_utils/db.py:1949: AssertionError</failure></testcase></testsuite></testsuites>
