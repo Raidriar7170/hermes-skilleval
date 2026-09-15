@@ -9,6 +9,7 @@ import subprocess
 import time
 from pathlib import Path
 from hermes_skilleval._maintenance import container_runner
+from hermes_skilleval._maintenance.prompts import maintenance_prompt
 from hermes_skilleval.live_agent_runtime import (
     AgentRequest,
     CodexCliRunnerConfig,
@@ -160,10 +161,9 @@ ws = prepare_live_agent_workspace(
     base_dir=a.workspace_root.resolve(), run_id=a.run_id, mounted_skills=mounted
 )
 shutil.copytree(a.task_root / "base", ws.workspace_path, dirs_exist_ok=True)
-prompt = (
-    a.public_request.read_text()
-    + "\n\nImplement this request in the current repository. All source and public project documentation are from the provided base. Python dependencies are preinstalled; run Python from this directory. Network is disabled. Do not install globally, publish or use external resources. Skills are optional local workflow guidance; read relevant skills as needed. Leave your actual code changes in the workspace. Verify behavior using local tests. No external messages or subagents. No hidden tests are available."
-)
+
+prompt = maintenance_prompt(a.public_request.read_text(), profile_for(task))
+
 condition = build_condition(
     task_id=task["task_id"],
     prompt=prompt,

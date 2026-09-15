@@ -45,3 +45,16 @@ assert not any(n in sys.modules for n in ['torch','transformers','sentence_trans
         "PYTHONPATH": str(Path(hermes_skilleval.__file__).parent.parent),
     }
     subprocess.run([sys.executable, "-c", code], check=True, env=env)
+
+
+def test_replay_prompt_discloses_configured_write_boundary():
+    from hermes_skilleval._maintenance.prompts import maintenance_prompt
+
+    profile = RepositoryProfile(
+        **{**CSVKIT.to_dict(), "writable_roots": ["csvkit", "tests"]}
+    )
+    prompt = maintenance_prompt("Public request with original hint", profile)
+    assert prompt.startswith("Public request with original hint")
+    assert "csvkit, tests" in prompt
+    assert "also applies to added test data" in prompt
+    assert "Skills are optional" in prompt

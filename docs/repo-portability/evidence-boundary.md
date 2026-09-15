@@ -99,3 +99,11 @@ suffixes. Eligible entire original patches are rebuilt against the same base,
 image and trusted checks in separate audit outputs. No Agent rerun, patch edit,
 primary-row replacement or denominator change is permitted. Results answer only
 whether removing this fixture path gate changes the specified functional checks.
+
+The later delivery CLI fixes the information defect by explicitly appending the
+configured write roots (including their application to fixtures) to its common
+Agent prompt. This prompt fix was not used by the frozen campaign: all 18
+attempts continue through the original wheel/source `31ebf2456381df2cff80725f9b9bc187d41021d2`.
+No result is relabelled as if it had run the repaired prompt, and no campaign is
+repeated. Exact replication of the original presentation requires that source
+commit; new CLI use benefits from the disclosed constraint.

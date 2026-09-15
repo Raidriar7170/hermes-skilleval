@@ -105,3 +105,21 @@ Replay `run.json` is private raw evidence. Public export is an allowlisted
 derivative: patch, JUnit, bound record, timing, usage and structured skill-read
 observations. Public digests detect inconsistency; they are not signatures or
 independent proof against a controller that fabricates its entire evidence set.
+
+## Delivery checks and known policy limit
+
+`scripts/repo_workflow/check_install.sh /absolute/fresh/directory` executes the
+wheel/offline smoke separately. Existing pytest CI includes the public records
+consistency test; no new Actions workflow or broader GitHub scope is required.
+
+The frozen csvkit profile does not allow `examples/` modifications. This limit
+was not disclosed to the campaign Agent and caused ordinary fixture additions
+to be rejected. Consult the [evidence boundary](evidence-boundary.md) before
+interpreting those outcomes. The published frozen profiles are retained for
+review, not silently relaxed into a revised primary experiment.
+
+The final delivery CLI discloses `writable_roots` directly to the Agent,
+including the restriction on fixtures. The frozen confirmation used the earlier
+wheel without that disclosure. Reproducing that original presentation requires
+source commit `31ebf2456381df2cff80725f9b9bc187d41021d2`; the modern entrypoint is
+not silently claimed to have generated the historical records.
