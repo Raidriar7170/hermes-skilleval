@@ -126,7 +126,14 @@ def test_committed_public_tables_recompute():
 
 
 def test_task_difficulty_without_action_contrast_keeps_native():
-    from scripts.repo_aware.gate_recipe import train
+    recipe_spec = importlib.util.spec_from_file_location(
+        "gate_recipe_test",
+        Path(__file__).parents[1] / "scripts/repo_aware/gate_recipe.py",
+    )
+    assert recipe_spec is not None and recipe_spec.loader is not None
+    recipe = importlib.util.module_from_spec(recipe_spec)
+    recipe_spec.loader.exec_module(recipe)
+    train = recipe.train
     from hermes_skilleval.repo_routing.gate import FEATURES, decide
 
     def rows(split, families):
