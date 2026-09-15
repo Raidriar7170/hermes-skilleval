@@ -3,12 +3,74 @@
 from collections import defaultdict
 import hashlib
 import json
+import math
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def aggregate_costs(rows):
+    """Sum observed values only; subsets and missing usage remain explicit."""
+    grouped = defaultdict(list)
+    for row in rows:
+        grouped[(row["split"], row["repository"], row["arm"])].append(row)
+    result = []
+    for (split, repository, arm), items in sorted(grouped.items()):
+        measures = {}
+        for field in [
+            "input_tokens",
+            "cached_input_tokens",
+            "cache_write_input_tokens",
+            "output_tokens",
+            "reasoning_output_tokens",
+            "uncached_input_tokens",
+            "execution_seconds",
+            "pipeline_wall_seconds",
+            "recommend_wall_seconds",
+        ]:
+            values = []
+            for row in items:
+                usage = row.get("usage") or {}
+                if field == "uncached_input_tokens":
+                    value = (
+                        usage.get("input_tokens") - usage.get("cached_input_tokens")
+                        if all(
+                            isinstance(usage.get(k), (int, float))
+                            for k in ["input_tokens", "cached_input_tokens"]
+                        )
+                        else None
+                    )
+                elif field.endswith("_tokens"):
+                    value = usage.get(field)
+                elif field == "recommend_wall_seconds":
+                    value = row.get(field)
+                else:
+                    value = (row.get("timing") or {}).get(field)
+                if (
+                    isinstance(value, (int, float))
+                    and not isinstance(value, bool)
+                    and math.isfinite(value)
+                    and value >= 0
+                ):
+                    values.append(value)
+            measures[field] = {
+                "sum_known": sum(values) if values else None,
+                "known_attempts": len(values),
+                "total_attempts": len(items),
+            }
+        result.append(
+            {
+                "split": split,
+                "repository": repository,
+                "arm": arm,
+                "measures": measures,
+                "cost_usd": None,
+            }
+        )
+    return result
 
 
 def recompute(index, output):
@@ -56,6 +118,10 @@ def recompute(index, output):
                 if sha(path) != item["sha256"]:
                     raise ValueError("evidence missing or changed: " + label)
                 files[label] = path
+            if "route" in files:
+                route = json.loads(files["route"].read_text())
+                row["recommend_wall_seconds"] = route.get("recommend_wall_seconds")
+                row["route_timing"] = route.get("timing")
             if "patch" not in files:
                 raise ValueError("patch missing")
             if "binding" not in files:
@@ -120,6 +186,7 @@ def recompute(index, output):
         "records_only": True,
         "rows": rows,
         "summary": summary,
+        "cost_summary": aggregate_costs(rows),
         "limitations": [
             "Selected target and related regressions only.",
             "Repeated attempts are not independent tasks.",

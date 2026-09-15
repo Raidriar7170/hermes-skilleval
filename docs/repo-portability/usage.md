@@ -123,3 +123,8 @@ including the restriction on fixtures. The frozen confirmation used the earlier
 wheel without that disclosure. Reproducing that original presentation requires
 source commit `31ebf2456381df2cff80725f9b9bc187d41021d2`; the modern entrypoint is
 not silently claimed to have generated the historical records.
+
+The records output's `summary.json` also contains `cost_summary`: sums of known
+input/cached/output/reasoning tokens and timings, with coverage counts. Cached
+input and reasoning output remain subsets; unknown values and dollar cost are
+not replaced by zero. Validated route files provide the online S timing detail.

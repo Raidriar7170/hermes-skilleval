@@ -72,3 +72,31 @@ def test_skip_never_certifies_pass(tmp_path):
     p = tmp_path / "index.json"
     p.write_text(json.dumps({"runs": [r]}))
     assert recompute(p, tmp_path / "out")["rows"][0]["resolved"] is None
+
+
+def test_cost_subsets_and_missing_usage_are_not_double_counted():
+    from hermes_skilleval.maintenance_records import aggregate_costs
+
+    common = {"split": "confirmation", "repository": "r", "arm": "N"}
+    rows = [
+        {
+            **common,
+            "usage": {
+                "input_tokens": 100,
+                "cached_input_tokens": 70,
+                "output_tokens": 20,
+                "reasoning_output_tokens": 4,
+            },
+        },
+        {**common, "usage": None},
+    ]
+    costs = aggregate_costs(rows)[0]
+    assert costs["measures"]["input_tokens"] == {
+        "sum_known": 100,
+        "known_attempts": 1,
+        "total_attempts": 2,
+    }
+    assert costs["measures"]["uncached_input_tokens"]["sum_known"] == 30
+    assert costs["measures"]["output_tokens"]["sum_known"] == 20
+    assert costs["measures"]["execution_seconds"]["sum_known"] is None
+    assert costs["cost_usd"] is None
