@@ -187,3 +187,31 @@ def test_records_binds_structured_read_observations(tmp_path):
     result = recompute(tmp_path / "index.json", tmp_path / "recomputed")
     assert result["rows"][0]["resolved"] is None
     assert "changed: events" in result["rows"][0]["error"]
+
+
+def test_reference_is_not_counted_as_successful_read(tmp_path):
+    run, task, q = fixture(tmp_path)
+    commands = [
+        ("ls .agents/skills/debug/SKILL.md", 0),
+        ("cat .agents/skills/debug/SKILL.md", 1),
+        ("head .agents/skills/debug/SKILL.md", 0),
+    ]
+    (run / "events.jsonl").write_text(
+        "".join(
+            json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": command,
+                        "exit_code": code,
+                    },
+                }
+            )
+            + "\n"
+            for command, code in commands
+        )
+    )
+    row = export_run(run, task, q, tmp_path / "public")
+    assert row["skill_file_reference_commands"] == 3
+    assert row["observed_skill_read_commands"] == 1

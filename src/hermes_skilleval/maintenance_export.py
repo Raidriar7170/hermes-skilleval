@@ -237,8 +237,12 @@ def export_run(run_dir, task_root, qualification, destination, attempt=1):
         "path": destination.name + "/events.json",
         "sha256": digest((destination / "events.json").read_bytes()),
     }
-    row["observed_skill_read_commands"] = len(
-        [e for e in events if e["type"] == "item.completed"]
+    row["skill_file_reference_commands"] = sum(
+        e["type"] == "item.completed" for e in events
+    )
+    row["observed_skill_read_commands"] = sum(
+        e.get("read_command_observed") is True and e.get("exit_code") == 0
+        for e in events
     )
     if (run_dir / "route.json").exists():
         route = json.loads((run_dir / "route.json").read_text())
