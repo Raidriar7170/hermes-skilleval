@@ -30,6 +30,17 @@ from hermes_skilleval._maintenance import container_runner
 from hermes_skilleval.runtime_utility import load_registry
 
 
+CSV_DIFF = RepositoryProfile(
+    "simonw/csv-diff",
+    {"csv_diff": "."},
+    "csv_diff.cli",
+    "cli",
+    "csv-diff",
+    "hermes-repo-aware-data:v1",
+    ("csv_diff", "tests"),
+)
+
+
 def write(path, value):
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n")
 
@@ -77,14 +88,14 @@ def preflight(args):
     ):
         raise ValueError("unsupported repository configuration")
     profile = RepositoryProfile(**config["profile"])
-    known = {p.repository: p for p in (CSVKIT, SQLITE_UTILS)}
+    known = {p.repository: p for p in (CSVKIT, SQLITE_UTILS, CSV_DIFF)}
     expected = known.get(profile.repository)
     if not expected or any(
         getattr(profile, k) != getattr(expected, k)
         for k in ("packages", "cli_module", "cli_callable", "cli_name")
     ):
         raise ValueError(
-            "assist supports the declared csvkit/sqlite-utils layouts only"
+            "assist supports the declared csvkit/sqlite-utils/csv-diff layouts only"
         )
     if profile.file_policy is None:
         raise ValueError("assist requires an explicit operations-v1 file policy")
@@ -111,7 +122,10 @@ def preflight(args):
             raise ValueError("candidate package missing from source snapshot")
     registry, skills = load_registry(args.registry, args.skill_assets)
     ids = [s.id for s in skills]
-    if args.arm == "F":
+    if getattr(args, "policy", None):
+        if not args.routing_config:
+            raise ValueError("new policy requires --routing-config")
+    elif args.arm == "F":
         from hermes_skilleval.fixed_baseline import fixed_ids
 
         if args.fixed_config is None:
@@ -155,6 +169,8 @@ def preflight(args):
             if profile.repository == CSVKIT.repository
             else "pytest,click,sqlite_fts4,tabulate"
         )
+        if profile.repository == CSV_DIFF.repository:
+            dependencies = "pytest,click,dictdiffer"
         resource_probe(
             profile.image,
             [
@@ -271,10 +287,38 @@ def execute(args):
             raise ValueError(
                 "baseline trusted loading/collection invalid; Agent not started"
             )
+        routing = None
+        public_request = (output / "request.md").read_text()
+        if getattr(args, "policy", None):
+            from hermes_skilleval.repo_routing.policy import route, read_config
+
+            routing = route(
+                base,
+                public_request,
+                {"network": "disabled", "python": "executor image " + profile.image},
+                registry,
+                args.policy,
+                read_config(args.routing_config),
+                repository=profile.repository,
+            )
+            write(output / "routing.json", routing)
+            info["selected_ids"] = routing["skill_ids"]
+            public_request = routing["agent_public_request"]
+            result["routing"] = {
+                k: routing[k]
+                for k in (
+                    "action",
+                    "requested_policy",
+                    "calls",
+                    "timing",
+                    "decision",
+                    "context_digest",
+                )
+            }
         container_runner.IMAGE = profile.image
         executor = run_agent(
             base=base,
-            public_request=(output / "request.md").read_text(),
+            public_request=public_request,
             profile=profile,
             registry=registry,
             ids=info["selected_ids"],
@@ -284,7 +328,7 @@ def execute(args):
             private_root=output / "private",
             run_id=run_id,
             task_id=run_id,
-            arm=args.arm,
+            arm=routing["action"] if routing else args.arm,
             timeout=args.timeout,
             model=args.model,
             effort=args.effort,

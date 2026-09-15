@@ -130,6 +130,10 @@ def main():
         "output",
     ):
         assist.add_argument("--" + name, type=Path, required=True)
+    assist.add_argument(
+        "--policy", choices=["native", "fixed", "strong", "repo-aware", "auto"]
+    )
+    assist.add_argument("--routing-config", type=Path)
     assist.add_argument("--fixed-config", type=Path)
     assist.add_argument("--arm", choices=["N", "F"], default="N")
     assist.add_argument("--model", default="gpt-5.6-sol")
@@ -141,6 +145,23 @@ def main():
         "--plan-only",
         action="store_true",
         help="Inspect inputs/resources without model calls or source writes",
+    )
+    route_parser = sub.add_parser(
+        "route", help="Experimental sourced repository routing"
+    )
+    for name in (
+        "repo",
+        "request",
+        "registry",
+        "skill-assets",
+        "routing-config",
+        "output",
+    ):
+        route_parser.add_argument("--" + name, type=Path, required=True)
+    route_parser.add_argument(
+        "--policy",
+        choices=["native", "fixed", "strong", "repo-aware", "auto"],
+        required=True,
     )
     records = sub.add_parser("records", help="Recompute public records offline")
     records.add_argument("--index", type=Path, required=True)
@@ -155,6 +176,28 @@ def main():
         rec.add_argument("--" + name, type=Path)
     rec.add_argument("--repository")
     args = parser.parse_args()
+    if args.command == "route":
+        from hermes_skilleval.repo_routing.policy import route, read_config
+        from hermes_skilleval.runtime_utility import load_registry
+
+        registry, _ = load_registry(args.registry, args.skill_assets)
+        result = route(
+            args.repo,
+            args.request.read_text(),
+            {"network": "unknown", "python": sys.version.split()[0]},
+            registry,
+            args.policy,
+            read_config(args.routing_config),
+        )
+        with args.output.open("x") as stream:
+            json.dump(result, stream, indent=2)
+        print(
+            json.dumps(
+                {k: result[k] for k in ("action", "skill_ids", "calls", "timing")},
+                indent=2,
+            )
+        )
+        return 0
     if args.command == "assist":
         from hermes_skilleval._maintenance.assist import execute
 

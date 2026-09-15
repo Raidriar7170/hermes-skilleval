@@ -24,6 +24,8 @@ embedding = [
   "socksio>=1.0.0",
 ]
 
+repo-routing-train = ["torch>=2.6", "transformers>=5.0", "peft>=0.18"]
+
 [project.scripts]
 skilleval = "hermes_skilleval.cli:main"
 hermes-maintain = "hermes_skilleval.maintenance_cli:main"
@@ -50,5 +52,5 @@ force-exclude = true
 
 [[tool.mypy.overrides]]
 # Optional strong-retrieval extra is intentionally absent in lightweight CI.
-module = ["torch", "torch.*", "transformers", "transformers.*"]
+module = ["torch", "torch.*", "transformers", "transformers.*", "peft", "peft.*"]
 ignore_missing_imports = true
