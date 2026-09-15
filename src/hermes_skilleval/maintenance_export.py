@@ -108,6 +108,7 @@ def export_run(run_dir, task_root, qualification, destination, attempt=1):
         exit_code=record.get("exit_code"),
         timeout_seconds=record.get("timeout"),
         cost_usd=None,
+        reverification=record.get("reverification"),
         expected_test_ids=q["test_ids"],
         selected_ids=record.get("selected_ids"),
         derivation="SANITIZED_DERIVATIVE",

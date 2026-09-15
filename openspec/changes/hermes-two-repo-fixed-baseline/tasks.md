@@ -6,13 +6,13 @@
 
 ## 2. Usability and fixed baseline
 
-- [ ] 2.1 Provide wheel-installed replay and offline doctor/records commands.
-- [ ] 2.2 Freeze natural per-repository F pairs and verify N/F/S fairness.
-- [ ] 2.3 Verify assist smoke and scope its acceptance claims.
+- [x] 2.1 Provide wheel-installed replay and offline doctor/records commands.
+- [x] 2.2 Freeze natural per-repository F pairs and verify N/F/S fairness.
+- [ ] 2.3 DEFERRED under Goal section 8.2: assist is not implemented; no assist smoke or adoption claim.
 
 ## 3. Study and delivery
 
-- [ ] 3.1 Qualify new independent families and freeze confirmation protocol.
+- [x] 3.1 Qualify new independent families and freeze confirmation protocol.
 - [ ] 3.2 Execute rotated N/F/S attempts retaining failures, costs and usage.
 - [ ] 3.3 Produce public patches, trusted tests and offline recomputable records.
 - [ ] 3.4 Complete focused checks, evidence/privacy review and final scope verification.

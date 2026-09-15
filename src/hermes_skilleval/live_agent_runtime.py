@@ -959,9 +959,9 @@ def _parse_events(
         elif event_type == "preflight":
             events.append({"type": "preflight", **_redact_value(raw)})
         else:
-            skill_id = raw.get("skill_id")
-            if isinstance(skill_id, str) and skill_id.strip():
-                _set_skill_state(skill_use, mounted, skill_id, "UNKNOWN")
+            unknown_skill_id = raw.get("skill_id")
+            if isinstance(unknown_skill_id, str) and unknown_skill_id.strip():
+                _set_skill_state(skill_use, mounted, unknown_skill_id, "UNKNOWN")
             events.append(
                 {
                     "type": "unknown",

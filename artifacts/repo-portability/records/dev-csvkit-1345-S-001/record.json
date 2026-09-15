@@ -1,0 +1,90 @@
+{
+  "task_id": "csvkit-1345-ndjson",
+  "repository": "wireservice/csvkit",
+  "family_id": "ndjson-extension-detection",
+  "split": "dev",
+  "base_commit": "2a40ee24bf405a4a007fe822850fb3ee75fb21bf",
+  "arm": "S",
+  "attempt": 1,
+  "run_id": "dev-csvkit-1345-S-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 374922,
+        "cached_input_tokens": 333696,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4538,
+        "reasoning_output_tokens": 1108
+      }
+    ],
+    "input_tokens": 374922,
+    "cached_input_tokens": 333696,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 4538,
+    "reasoning_output_tokens": 1108
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": {
+    "original_run_sha256": "04996b4b845f38c46017b7c181fab4f528018059d49ae0a4420e76f9bcd69d0b",
+    "reason": "Verifier evidence binding repair; identical saved patch, no new Agent invocation",
+    "original_resolved": true
+  },
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_ndjson_api[jl]",
+      "test_behavior::test_ndjson_api[jsonl]",
+      "test_behavior::test_ndjson_api[ndjson]",
+      "test_behavior::test_ndjson_cli[jl]",
+      "test_behavior::test_ndjson_cli[jsonl]",
+      "test_behavior::test_ndjson_cli[ndjson]"
+    ],
+    "regression": [
+      "test_behavior::test_existing_formats[csv-csv]",
+      "test_behavior::test_existing_formats[dbf-dbf]",
+      "test_behavior::test_existing_formats[invalid-None]",
+      "test_behavior::test_existing_formats[js-json]",
+      "test_behavior::test_existing_formats[json-json]",
+      "test_behavior::test_existing_formats[xls-xls]",
+      "test_behavior::test_existing_formats[xlsx-xlsx]"
+    ]
+  },
+  "selected_ids": [
+    "cli-api-regression",
+    "import-data-regression"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "dev-csvkit-1345-S-001/candidate.patch",
+      "sha256": "b818ce1afc07cf788dcac1e31240146fa16b706a6a823176f5e9708070589b90",
+      "original_sha256": "b818ce1afc07cf788dcac1e31240146fa16b706a6a823176f5e9708070589b90"
+    },
+    "target": {
+      "path": "dev-csvkit-1345-S-001/target.xml",
+      "sha256": "1d80dd6f780d5e9aff677085d01f755f9eceb7a526339524f525e8e98cc01aa0",
+      "original_sha256": "1d80dd6f780d5e9aff677085d01f755f9eceb7a526339524f525e8e98cc01aa0"
+    },
+    "regression": {
+      "path": "dev-csvkit-1345-S-001/regression.xml",
+      "sha256": "e296c947f17691b81369c1c37506e7235c41a6184989ba3b22e06a4bc3a1d8ba",
+      "original_sha256": "e296c947f17691b81369c1c37506e7235c41a6184989ba3b22e06a4bc3a1d8ba"
+    },
+    "binding": {
+      "path": "dev-csvkit-1345-S-001/verification.json",
+      "sha256": "bad76584675ee78d79040a44ba8a44508235c73cc5884540c642694fff81c680"
+    }
+  },
+  "timing": {
+    "execution_seconds": 112.24760925001465,
+    "package_prepare_seconds": null,
+    "capture_seconds": 0.03991270900587551,
+    "finalize_seconds": 4.286522832990158,
+    "pipeline_wall_seconds": null
+  },
+  "observed_skill_read_commands": 1
+}

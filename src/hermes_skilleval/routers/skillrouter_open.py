@@ -121,7 +121,7 @@ class SkillRouterOpen:
                 tok.pad_token = tok.eos_token
         self.model = None
         self.kind = None
-        self.load_seconds = {}
+        self.load_seconds: dict[str, float] = {}
 
     def _metadata(self):
         return [

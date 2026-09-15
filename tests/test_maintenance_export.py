@@ -143,3 +143,35 @@ def test_records_rejects_conclusion_mismatch(tmp_path):
     assert result["rows"][0]["resolved"] is None
     assert result["rows"][0]["verifier_valid"] is False
     assert "conclusion mismatch" in result["rows"][0]["error"]
+
+
+@pytest.mark.parametrize(
+    "xml,reason",
+    [
+        (
+            '<testsuite><testcase classname="a" name="b"><skipped/></testcase></testsuite>',
+            "skip/error",
+        ),
+        (
+            '<testsuite><testcase classname="a" name="b"><error/></testcase></testsuite>',
+            "skip/error",
+        ),
+        ("<testsuite/>", "collection mismatch"),
+    ],
+)
+def test_records_reaches_mandatory_test_validation(tmp_path, xml, reason):
+    run, task, q = fixture(tmp_path)
+    row = export_run(run, task, q, tmp_path / "public")
+    target = tmp_path / "public/target.xml"
+    target.write_text(xml)
+    digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    row["files"]["target"]["sha256"] = digest
+    binding = tmp_path / "public/verification.json"
+    data = json.loads(binding.read_text())
+    data["test_files"]["target"] = digest
+    write(binding, data)
+    row["files"]["binding"]["sha256"] = hashlib.sha256(binding.read_bytes()).hexdigest()
+    write(tmp_path / "index.json", {"runs": [row]})
+    result = recompute(tmp_path / "index.json", tmp_path / "recomputed")
+    assert result["rows"][0]["resolved"] is None
+    assert reason in result["rows"][0]["error"]

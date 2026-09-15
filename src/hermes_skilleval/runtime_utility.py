@@ -122,13 +122,15 @@ def recommend(
     model = SentenceTransformerEmbeddingModel(
         str(model_path), device="cpu", local_files_only=True
     )
-    router = EmbeddingRouter(model=model, cache_path=cache_path)
-    router._skill_vectors(skills)  # Build outside the measured per-request route.
+    embedding_router = EmbeddingRouter(model=model, cache_path=cache_path)
+    embedding_router._skill_vectors(
+        skills
+    )  # Build outside the measured per-request route.
     index_seconds = time.perf_counter() - started
     task = BenchmarkTask(
         "request", "unspecified", "unspecified", prompt, [], [], "external"
     )
-    result = router.route(task, skills, top_k)
+    result = embedding_router.route(task, skills, top_k)
     token_lengths = {
         s.id: len(model.model.tokenizer.encode(_skill_text(s), truncation=False))
         for s in skills

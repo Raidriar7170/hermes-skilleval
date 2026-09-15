@@ -137,7 +137,7 @@ def select(
     chosen = ids[:count]
     fallback = None
     reasons = []
-    skipped = []
+    skipped: list[dict] = []
     relations = {}
 
     def rel(a, b):

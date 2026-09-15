@@ -1,0 +1,90 @@
+diff --git a/csvkit/convert/__init__.py b/csvkit/convert/__init__.py
+index c8beefc8aeef5945b677f17d3cd1ccbbbe8ba00b..3559c8ec05263b2f45297d0d92393b13c782f67d 100644
+--- a/csvkit/convert/__init__.py
++++ b/csvkit/convert/__init__.py
+@@ -17,5 +17,7 @@ def guess_format(filename):
+         return extension
+     if extension in ('json', 'js'):
+         return 'json'
++    if extension in ('ndjson', 'jsonl', 'jl'):
++        return 'ndjson'
+ 
+     return None
+diff --git a/docs/scripts/in2csv.rst b/docs/scripts/in2csv.rst
+index de89522be0c2f890bc257d529521eddb2f5b2d7d..2b8b9b83a5de831ccabf2759da35af009cf21821 100644
+--- a/docs/scripts/in2csv.rst
++++ b/docs/scripts/in2csv.rst
+@@ -71,7 +71,8 @@ See also: :doc:`../common_arguments`.
+ 
+ .. note::
+ 
+-    The "ndjson" format refers to "newline delimited JSON", as used by many streaming APIs.
++    The "ndjson" format refers to "newline delimited JSON", as used by many streaming APIs. It is inferred from files
++    with a ``.ndjson``, ``.jsonl`` or ``.jl`` extension.
+ 
+ .. note::
+ 
+diff --git a/man/in2csv.1 b/man/in2csv.1
+index 56e5a51beaa67145116691c1eb9518c0a0e8af1d..9032ca0c63910b4ae2152beadc42a7f86b54941e 100644
+--- a/man/in2csv.1
++++ b/man/in2csv.1
+@@ -111,7 +111,7 @@ See also: \fI\%Arguments common to all tools\fP\&.
+ \fBNOTE:\fP
+ .INDENT 0.0
+ .INDENT 3.5
+-The \(dqndjson\(dq format refers to \(dqnewline delimited JSON\(dq, as used by many streaming APIs.
++The \(dqndjson\(dq format refers to \(dqnewline delimited JSON\(dq, as used by many streaming APIs. It is inferred from files with a \fB\&.ndjson\fP, \fB\&.jsonl\fP or \fB\&.jl\fP extension.
+ .UNINDENT
+ .UNINDENT
+ .sp
+diff --git a/tests/test_convert/test_convert.py b/tests/test_convert/test_convert.py
+index eb17845f3c026ec1394c6436d1ec9863c4f21511..832c94f32fd9ff92d46665bfbf28e84c65f09c21 100644
+--- a/tests/test_convert/test_convert.py
++++ b/tests/test_convert/test_convert.py
+@@ -26,5 +26,13 @@ class TestConvert(unittest.TestCase):
+     def test_guess_json(self):
+         self.assertEqual('json', convert.guess_format('testdata.json'))
+ 
++    def test_guess_ndjson(self):
++        for extension in ('ndjson', 'jsonl', 'jl'):
++            with self.subTest(extension=extension):
++                self.assertEqual('ndjson', convert.guess_format(f'testdata.{extension}'))
++
++    def test_guess_ndjson_uppercase(self):
++        self.assertEqual('ndjson', convert.guess_format('testdata.NDJSON'))
++
+     def test_guess_invalid(self):
+         self.assertEqual(None, convert.guess_format('testdata.invalid'))
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index 6c9e60fd4ee6ca15fe87f0db39bcc755dec7572a..09dbfed15a86380fa244d1a5334b83bffe19ff96 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -1,6 +1,7 @@
+ import io
+ import os
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.in2csv import In2CSV, launch_new_instance
+@@ -137,6 +138,20 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_convert_ndjson(self):
+         self.assertConverted('ndjson', 'examples/testjson_multiline.json', 'examples/testjson_multiline_converted.csv')
+ 
++    def test_convert_ndjson_inferred(self):
++        with open('examples/testjson_multiline.json', 'rb') as f:
++            content = f.read()
++        with open('examples/testjson_multiline_converted.csv') as f:
++            expected = f.read()
++
++        for extension in ('ndjson', 'jsonl', 'jl'):
++            with self.subTest(extension=extension):
++                with tempfile.TemporaryDirectory() as directory:
++                    path = os.path.join(directory, f'test.{extension}')
++                    with open(path, 'wb') as f:
++                        f.write(content)
++                    self.assertEqual(self.get_output([path]), expected)
++
+     def test_convert_nested_json(self):
+         self.assertConverted('json', 'examples/testjson_nested.json', 'examples/testjson_nested_converted.csv')
+ 

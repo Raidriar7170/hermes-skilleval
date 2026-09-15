@@ -1,0 +1,93 @@
+{
+  "task_id": "csvkit-1345-ndjson",
+  "repository": "wireservice/csvkit",
+  "family_id": "ndjson-extension-detection",
+  "split": "dev",
+  "base_commit": "2a40ee24bf405a4a007fe822850fb3ee75fb21bf",
+  "arm": "N",
+  "attempt": 1,
+  "run_id": "dev-csvkit-1345-N-001",
+  "execution_status": "STARTED",
+  "usage": {
+    "source": "codex-jsonl:turn.completed",
+    "raw_turn_usage": [
+      {
+        "input_tokens": 422340,
+        "cached_input_tokens": 385152,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4659,
+        "reasoning_output_tokens": 1311
+      }
+    ],
+    "input_tokens": 422340,
+    "cached_input_tokens": 385152,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 4659,
+    "reasoning_output_tokens": 1311
+  },
+  "timed_out": false,
+  "exit_code": 0,
+  "timeout_seconds": 600,
+  "cost_usd": null,
+  "reverification": {
+    "original_run_sha256": "b8f1b5528820ca5454c322c0b43bcb62c377a39d5a0ed12338bfa86fc888a78f",
+    "reason": "Verifier evidence binding repair; identical saved patch, no new Agent invocation",
+    "original_resolved": true
+  },
+  "expected_test_ids": {
+    "target": [
+      "test_behavior::test_ndjson_api[jl]",
+      "test_behavior::test_ndjson_api[jsonl]",
+      "test_behavior::test_ndjson_api[ndjson]",
+      "test_behavior::test_ndjson_cli[jl]",
+      "test_behavior::test_ndjson_cli[jsonl]",
+      "test_behavior::test_ndjson_cli[ndjson]"
+    ],
+    "regression": [
+      "test_behavior::test_existing_formats[csv-csv]",
+      "test_behavior::test_existing_formats[dbf-dbf]",
+      "test_behavior::test_existing_formats[invalid-None]",
+      "test_behavior::test_existing_formats[js-json]",
+      "test_behavior::test_existing_formats[json-json]",
+      "test_behavior::test_existing_formats[xls-xls]",
+      "test_behavior::test_existing_formats[xlsx-xlsx]"
+    ]
+  },
+  "selected_ids": [
+    "systematic-debugging",
+    "verification-before-completion",
+    "cli-api-regression",
+    "schema-change-regression",
+    "import-data-regression"
+  ],
+  "derivation": "SANITIZED_DERIVATIVE",
+  "files": {
+    "patch": {
+      "path": "dev-csvkit-1345-N-001/candidate.patch",
+      "sha256": "be33cfe7380f92bd643b339f8bbb65473e7d98e895414b2a9baf724a93935d9b",
+      "original_sha256": "be33cfe7380f92bd643b339f8bbb65473e7d98e895414b2a9baf724a93935d9b"
+    },
+    "target": {
+      "path": "dev-csvkit-1345-N-001/target.xml",
+      "sha256": "f81c7f757712936019e853d162f812edebb6c8783ae7b8b7c9be1792c95e2e51",
+      "original_sha256": "f81c7f757712936019e853d162f812edebb6c8783ae7b8b7c9be1792c95e2e51"
+    },
+    "regression": {
+      "path": "dev-csvkit-1345-N-001/regression.xml",
+      "sha256": "5cfc65f2e5b7aad72776fe4250560aa8850c568481a7b1dd2f8b169f08834b95",
+      "original_sha256": "5cfc65f2e5b7aad72776fe4250560aa8850c568481a7b1dd2f8b169f08834b95"
+    },
+    "binding": {
+      "path": "dev-csvkit-1345-N-001/verification.json",
+      "sha256": "8263e4a1f8611b9e2709a8c895add320b5faee03ac7b0acd2dd3aaad9a5cb12f"
+    }
+  },
+  "timing": {
+    "execution_seconds": 130.8941938339849,
+    "package_prepare_seconds": null,
+    "capture_seconds": 0.034699083014857024,
+    "finalize_seconds": 4.373379124997882,
+    "pipeline_wall_seconds": null
+  },
+  "observed_skill_read_commands": 1
+}
