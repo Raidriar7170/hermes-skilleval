@@ -1,0 +1,11 @@
+{
+  "status": "POST_HOC_SENSITIVITY",
+  "trigger": "First observed csvkit-1247 F attempt rejected for examples/test_timedelta.csv; functional checks did not run. Frozen Agent prompt omitted the writable-root restriction.",
+  "cohort": "All 18 frozen confirmation attempts, all N/F/S arms; no outcome-based selection within this eligibility rule.",
+  "eligible": "Original policy-rejected attempts whose only disallowed changed files are added non-executable ordinary data fixtures under examples/.",
+  "allowed_suffixes": [".csv", ".tsv", ".json", ".ndjson", ".jsonl", ".txt"],
+  "max_fixture_bytes": 1048576,
+  "checks": "Use identical entire saved patch, original base, image, trusted tests and expected collection IDs. Fresh rebuild then original target/regression checks. No candidate edits, no Agent calls, no source/qualification/run mutation.",
+  "report": "Independent audit row with original patch/task/qualification and rule digests; original main rows and denominator unchanged. Audit resolves only the effect of the fixture path gate, not complete issue correctness or skill causality.",
+  "noneligible": "Any other illegal path, executable bit, symlink, non-added data file or size violation remains rejected and is not relaxed."
+}

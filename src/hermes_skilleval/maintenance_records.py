@@ -45,6 +45,7 @@ def recompute(index, output):
             timeout_seconds=entry.get("timeout_seconds"),
             timing=entry.get("timing"),
             cost_usd=entry.get("cost_usd"),
+            policy_rejected=entry.get("policy_rejected", False),
         )
         try:
             files = {}
@@ -105,6 +106,7 @@ def recompute(index, output):
                 "repository": repo,
                 "arm": arm,
                 "attempts": len(items),
+                "policy_rejected": sum(r.get("policy_rejected") is True for r in items),
                 "timeouts": sum(r.get("timed_out") is True for r in items),
                 "tasks": len({r["task_id"] for r in items}),
                 "resolved": sum(r["resolved"] is True for r in items),

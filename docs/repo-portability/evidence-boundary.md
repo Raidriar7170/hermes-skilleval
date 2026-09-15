@@ -82,3 +82,20 @@ are exported. A path mention or mounted package alone does not prove reading;
 a shell read operation is observable, but full comprehension and causal utility
 are not. Raw conversations, full shell commands, home paths, credentials,
 private history and model weights are not published.
+
+## Discovered fixture-path policy defect
+
+The frozen csvkit profile omitted `examples/`, although that repository uses it
+for test data. The Agent request did not disclose the write-root restriction.
+The first observed case, #1247 F, added a four-line CSV fixture and was rejected
+before trusted functional tests. The main raw outcome remains mechanically
+rejected; public recomputation reports functional unknown and `policy_rejected`.
+This defect limits functional-rate and F/S difference interpretations.
+
+The [post-hoc rule](../../configs/repo-portability/post-hoc-fixture-audit.json)
+applies uniformly to all N/F/S confirmation attempts. It admits only added,
+ordinary, non-executable data fixtures under `examples/`, with bounded size and
+suffixes. Eligible entire original patches are rebuilt against the same base,
+image and trusted checks in separate audit outputs. No Agent rerun, patch edit,
+primary-row replacement or denominator change is permitted. Results answer only
+whether removing this fixture path gate changes the specified functional checks.
