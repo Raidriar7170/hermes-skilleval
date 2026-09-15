@@ -108,10 +108,7 @@ def test_phase9_migrated_skill_corpus_preserves_source_metadata():
 def test_phase9_migration_tasks_cover_sources_and_evidence_dimensions():
     task_files = sorted(MIGRATION_TASKS.rglob("task.yaml"))
     loaded_tasks = load_tasks(MIGRATION_TASKS)
-    skill_ids = {
-        path.parent.name
-        for path in MIGRATED_SKILLS.rglob("SKILL.md")
-    }
+    skill_ids = {path.parent.name for path in MIGRATED_SKILLS.rglob("SKILL.md")}
 
     assert len(task_files) == 12
     assert len(loaded_tasks) == 12
@@ -136,7 +133,9 @@ def test_phase9_migration_tasks_cover_sources_and_evidence_dimensions():
 
 def test_phase9_demo_artifacts_are_committed_and_auditable():
     skills = json.loads((PHASE9_ROOT / "skills.json").read_text(encoding="utf-8"))
-    summary = json.loads((PHASE9_ROOT / "migration-summary.json").read_text(encoding="utf-8"))
+    summary = json.loads(
+        (PHASE9_ROOT / "migration-summary.json").read_text(encoding="utf-8")
+    )
     dashboard = (PHASE9_ROOT / "dashboard.html").read_text(encoding="utf-8")
     failure_analysis = (PHASE9_ROOT / "failure-analysis.md").read_text(encoding="utf-8")
     comparison = (PHASE9_ROOT / "comparison.md").read_text(encoding="utf-8")
@@ -157,12 +156,8 @@ def test_phase9_demo_artifacts_are_committed_and_auditable():
     assert "instruction_drift" in summary["failure_taxonomy"]
     assert "evidence_gap" in summary["failure_taxonomy"]
     assert len(summary["per_task_routes"]) == 12
-    assert {
-        route["task_id"]
-        for route in summary["per_task_routes"]
-    } == {
-        path.parent.name
-        for path in MIGRATION_TASKS.rglob("task.yaml")
+    assert {route["task_id"] for route in summary["per_task_routes"]} == {
+        path.parent.name for path in MIGRATION_TASKS.rglob("task.yaml")
     }
 
     for router in ("hybrid", "embedding-hashing", "gated-hashing-selective"):
@@ -178,8 +173,13 @@ def test_phase9_demo_artifacts_are_committed_and_auditable():
         for route in summary["per_task_routes"]:
             route_record = records_by_task[route["task_id"]]
             route_router = route["routers"][router]
-            assert route_router["selected_skill_ids"] == route_record["selected_skill_ids"][:5]
-            assert route_router["recall_at_5"] == round(float(route_record["recall_at_5"]), 3)
+            assert (
+                route_router["selected_skill_ids"]
+                == route_record["selected_skill_ids"][:5]
+            )
+            assert route_router["recall_at_5"] == round(
+                float(route_record["recall_at_5"]), 3
+            )
             assert route_router["negative_hit_rate"] == round(
                 float(route_record["negative_hit_rate"]),
                 3,
@@ -212,7 +212,7 @@ def test_phase9_is_documented_in_readme_and_phase_notes():
 
     assert "docs/experiment-timeline.md" in readme
     assert "| Phase 9 | Real skill-library migration evaluation |" in timeline
-    assert "- [x] Real skill-library migration test protocol" in readme
+    assert "phase9.md" in timeline
     assert "docs/demo/phase9-real-skill-library-migration" in usage
     assert "12 migration tasks" in phase9
     assert "16 migrated skills" in phase9

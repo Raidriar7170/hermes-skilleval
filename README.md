@@ -265,6 +265,8 @@ closeout；其最终状态为 `REVIEW_REQUIRED / KEEP_BASELINE`，不是 benchma
 
 本分支提供可安装的 `hermes-maintain` 入口，在 csvkit 与 sqlite-utils 的历史任务上生成补丁并独立检查所选目标与回归。N/F/S 比较、公开 records 重算、安装命令和验收限制见 [维护回放审阅索引](docs/repo-portability/review-index.md)。这是小样本探索性工作；当前任务 assist 未实现，也不代表上游采用或算法收益。
 
+[Failure gallery](docs/failure-gallery.md) · [Current CI](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml)
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).

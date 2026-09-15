@@ -26,17 +26,11 @@ def test_v0_2_0_post_release_files_exist() -> None:
 
 
 def test_readme_surfaces_v0_2_0_post_release_evidence() -> None:
-    readme = README.read_text(encoding="utf-8")
-
-    for phrase in [
-        "docs/demo/v0.2.0-post-release/post-release.md",
-        "post-release facts after human GO",
-        "Published `true`",
-        "GitHub Release created `true`",
-        "Marketplace published `false`",
-        "Published: `true`; tag and GitHub Release created",
-    ]:
-        assert phrase in readme
+    # Navigation is current; publication facts remain asserted against the frozen JSON below.
+    assert "docs/evidence-map.md" in README.read_text(encoding="utf-8")
+    evidence_map = (ROOT / "docs/evidence-map.md").read_text(encoding="utf-8")
+    assert "demo/v0.2.0-post-release/post-release.md" in evidence_map
+    assert "demo/v0.2.0-post-release/post-release.json" in evidence_map
 
 
 def test_v0_2_0_post_release_json_records_github_release_facts() -> None:
@@ -62,7 +56,10 @@ def test_v0_2_0_post_release_json_records_github_release_facts() -> None:
     notes = evidence["release_notes_source"]
     assert isinstance(notes, dict)
     assert notes["path"] == "docs/release-notes/v0.2.0.md"
-    assert notes["sha256"] == "bb16523a16b22b79a925d5d55c7f55935cf2b2229023c30d557e3732b3ad128e"
+    assert (
+        notes["sha256"]
+        == "bb16523a16b22b79a925d5d55c7f55935cf2b2229023c30d557e3732b3ad128e"
+    )
     assert notes["size_bytes"] == 2934
 
 

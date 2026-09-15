@@ -38,7 +38,10 @@ def test_phase16_artifact_pack_exists_and_is_blind_only() -> None:
         record["task_id"] for record in candidate
     }
     assert {record["split"] for record in baseline + candidate} == {"test"}
-    assert all("blind-validation" in record["robustness_tags"] for record in baseline + candidate)
+    assert all(
+        "blind-validation" in record["robustness_tags"]
+        for record in baseline + candidate
+    )
 
 
 def test_phase16_summary_shape_and_review_required_result() -> None:
@@ -93,33 +96,6 @@ def test_phase16_docs_and_release_handoff_exist() -> None:
     assert "REVIEW_REQUIRED" in phase_text
     assert "Phase 9" in handoff_text and "Phase 16" in handoff_text
     assert "REVIEW_REQUIRED" in handoff_text
-    assert "docs/phase16.md" in readme_text
-    assert "docs/release-handoff.md" in readme_text
-    assert "| Test cases | 698 |" in readme_text
-    assert "698 passed" in readme_text
-    assert "| Test cases | 399 |" not in readme_text
-    assert "399 passed" not in readme_text
-    assert "| Test cases | 386 |" not in readme_text
-    assert "386 passed" not in readme_text
-    assert "| Test cases | 384 |" not in readme_text
-    assert "384 passed" not in readme_text
-    assert "| Test cases | 381 |" not in readme_text
-    assert "381 passed" not in readme_text
-    assert "| Test cases | 378 |" not in readme_text
-    assert "378 passed" not in readme_text
-    assert "| Test cases | 372 |" not in readme_text
-    assert "372 passed" not in readme_text
-    assert "| Test cases | 365 |" not in readme_text
-    assert "365 passed" not in readme_text
-    assert "| Test cases | 361 |" not in readme_text
-    assert "361 passed" not in readme_text
-    assert "| Test cases | 354 |" not in readme_text
-    assert "354 passed" not in readme_text
-    assert "| Test cases | 351 |" not in readme_text
-    assert "351 passed" not in readme_text
-    assert "| Test cases | 347 |" not in readme_text
-    assert "347 passed" not in readme_text
-    assert "| Test cases | 346 |" not in readme_text
-    assert "346 passed" not in readme_text
-    assert "| Test cases | 314 |" not in readme_text
-    assert "314 passed" not in readme_text
+    assert "release-handoff.md" in Path("docs/evidence-map.md").read_text()
+    assert "docs/experiment-timeline.md" in readme_text
+    assert "phase16.md" in Path("docs/experiment-timeline.md").read_text()

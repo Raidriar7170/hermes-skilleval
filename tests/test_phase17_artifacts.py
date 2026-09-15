@@ -47,7 +47,10 @@ def test_phase17_task_decisions_match_task_count_and_include_keep_baseline() -> 
 
     assert len(task_decisions) == decision["task_count"]
     assert any(record["decision"] == "KEEP_BASELINE" for record in task_decisions)
-    assert all(record["aggregate_decision"] == decision["decision"] for record in task_decisions)
+    assert all(
+        record["aggregate_decision"] == decision["decision"]
+        for record in task_decisions
+    )
 
 
 def test_phase17_docs_and_handoff_reference_release_selector() -> None:
@@ -56,10 +59,12 @@ def test_phase17_docs_and_handoff_reference_release_selector() -> None:
     handoff = Path("docs/release-handoff.md").read_text(encoding="utf-8")
     usage = Path("docs/usage.md").read_text(encoding="utf-8")
 
-    assert "Phase 17" in readme
     assert "select-release-router" in usage
-    assert "docs/phase17.md" in readme
-    assert "docs/demo/phase17-calibrated-release-selector/release-decision.json" in usage
+    assert (
+        "docs/demo/phase17-calibrated-release-selector/release-decision.json" in usage
+    )
+    assert "docs/experiment-timeline.md" in readme
+    assert "phase17.md" in Path("docs/experiment-timeline.md").read_text()
     assert "Phase 17: Calibrated Release Selector" in phase17
     assert "KEEP_BASELINE" in phase17
     assert "selected default router remains `baseline-minilm`" in phase17

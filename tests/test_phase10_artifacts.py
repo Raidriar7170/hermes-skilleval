@@ -30,27 +30,32 @@ def test_phase10_agent_loop_artifacts_cover_three_conditions():
         assert summary["task_count"] == 12
         assert report.startswith("# Phase 10 Agent-in-the-loop Report")
         assert {record["execution_condition"] for record in results} == {condition}
-        assert all(isinstance(record.get("prompt"), str) and record["prompt"] for record in results)
+        assert all(
+            isinstance(record.get("prompt"), str) and record["prompt"]
+            for record in results
+        )
         assert {trace["execution_condition"] for trace in traces} == {condition}
-        assert all(isinstance(trace.get("prompt"), str) and trace["prompt"] for trace in traces)
-        assert {
-            trace["trace_schema_version"]
-            for trace in traces
-        } == {
+        assert all(
+            isinstance(trace.get("prompt"), str) and trace["prompt"] for trace in traces
+        )
+        assert {trace["trace_schema_version"] for trace in traces} == {
             "phase10.agent-loop.v1"
         }
 
     no_skill = json.loads(
-        (PHASE10_ROOT / "agent-loop-no-skill-hybrid" / "agent-loop-summary.json")
-        .read_text(encoding="utf-8")
+        (
+            PHASE10_ROOT / "agent-loop-no-skill-hybrid" / "agent-loop-summary.json"
+        ).read_text(encoding="utf-8")
     )
     oracle = json.loads(
-        (PHASE10_ROOT / "agent-loop-oracle-skill-hybrid" / "agent-loop-summary.json")
-        .read_text(encoding="utf-8")
+        (
+            PHASE10_ROOT / "agent-loop-oracle-skill-hybrid" / "agent-loop-summary.json"
+        ).read_text(encoding="utf-8")
     )
     routed = json.loads(
-        (PHASE10_ROOT / "agent-loop-hybrid" / "agent-loop-summary.json")
-        .read_text(encoding="utf-8")
+        (PHASE10_ROOT / "agent-loop-hybrid" / "agent-loop-summary.json").read_text(
+            encoding="utf-8"
+        )
     )
 
     assert no_skill["agent_success_rate"] == 0.0
@@ -85,7 +90,7 @@ def test_phase10_is_documented_in_readme_and_phase_notes():
 
     assert "docs/experiment-timeline.md" in readme
     assert "| Phase 10 | Agent-in-the-loop migration evaluation |" in timeline
-    assert "- [x] Agent-in-the-loop skill routing evaluation" in readme
+    assert "phase10.md" in timeline
     assert "run-agent-loop" in usage
     assert "three execution conditions" in phase10
     assert "agent-traces.jsonl" in phase10

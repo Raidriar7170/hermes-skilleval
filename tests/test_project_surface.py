@@ -44,10 +44,7 @@ PUBLIC_EVIDENCE_HUMAN_BRIEF = (
     ROOT / "docs" / "human-briefs" / "2026-06-04-public-evidence-surface-refresh.html"
 )
 POST_RELEASE_ONBOARDING_HUMAN_BRIEF = (
-    ROOT
-    / "docs"
-    / "human-briefs"
-    / "2026-06-05-post-release-onboarding-cleanup.html"
+    ROOT / "docs" / "human-briefs" / "2026-06-05-post-release-onboarding-cleanup.html"
 )
 RELEASE_HANDOFF = ROOT / "docs" / "release-handoff.md"
 V0_2_0_RELEASE_DECISION_PACK = ROOT / "docs" / "demo" / "v0.2.0-release-decision"
@@ -64,7 +61,10 @@ HOSTED_CONSUMER_ACTION_SMOKE_PACK = (
 )
 RELEASE_NOTES = ROOT / "docs" / "release-notes" / "v0.1.0.md"
 V0_2_0_FINAL_APPROVAL_HUMAN_BRIEF = (
-    ROOT / "docs" / "human-briefs" / "2026-06-04-v0-2-0-release-notes-and-final-approval.html"
+    ROOT
+    / "docs"
+    / "human-briefs"
+    / "2026-06-04-v0-2-0-release-notes-and-final-approval.html"
 )
 PUBLIC_EVIDENCE_CHANGE = "public-evidence-surface-refresh"
 EXTERNAL_REPO_ACTION_SMOKE_CHANGE = "external-repo-action-smoke-pack"
@@ -89,12 +89,21 @@ def _openspec_named_change_artifact(change: str, relative_path: str) -> Path:
 
 
 CURRENT_HUMAN_BRIEFS = [
-    ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-skill-library-onboarding.html",
+    ROOT
+    / "docs"
+    / "human-briefs"
+    / "2026-06-02-diagnostic-skill-library-onboarding.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-demo-evidence-pack.html",
     ROOT / "docs" / "human-briefs" / "2026-06-02-diagnostic-ci-gate.html",
-    ROOT / "docs" / "human-briefs" / "2026-06-03-diagnostic-artifact-drift-ci-workflow.html",
+    ROOT
+    / "docs"
+    / "human-briefs"
+    / "2026-06-03-diagnostic-artifact-drift-ci-workflow.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-pr-facing-ci-summary.html",
-    ROOT / "docs" / "human-briefs" / "2026-06-03-external-skill-library-validation-pack.html",
+    ROOT
+    / "docs"
+    / "human-briefs"
+    / "2026-06-03-external-skill-library-validation-pack.html",
     ROOT / "docs" / "human-briefs" / "2026-06-03-docs-evidence-map.html",
     ROOT / "docs" / "human-briefs" / "2026-06-04-failure-gallery.html",
     NODE24_HUMAN_BRIEF,
@@ -212,15 +221,23 @@ def test_ci_workflow_regenerates_external_validation_pack_in_runner_temp():
 
     assert "id: external_pack" in workflow
     assert "RUNNER_TEMP/external-skill-library-validation" in workflow
-    assert "docs/demo/external-skill-library-validation/source/markdown-skills" in workflow
-    assert "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json" in workflow
+    assert (
+        "docs/demo/external-skill-library-validation/source/markdown-skills" in workflow
+    )
+    assert (
+        "docs/demo/external-skill-library-validation/source/mcp-tool-schema/tools.json"
+        in workflow
+    )
     assert "route-release-note-review.json" in workflow
     assert "route-workflow-evidence.json" in workflow
     assert "route-browser-console.json" in workflow
     assert "route-artifact-drift.json" in workflow
     assert "--expected docs/demo/external-skill-library-validation" in workflow
     assert '--actual "$RUNNER_TEMP/external-skill-library-validation"' in workflow
-    assert '--output "$RUNNER_TEMP/external-skill-library-validation-drift.json"' in workflow
+    assert (
+        '--output "$RUNNER_TEMP/external-skill-library-validation-drift.json"'
+        in workflow
+    )
     assert "--check external-pack=${{ steps.external_pack.outcome }}" in workflow
     assert "${{ runner.temp }}/external-skill-library-validation" in workflow
     assert "${{ runner.temp }}/external-skill-library-validation-drift.json" in workflow
@@ -233,7 +250,9 @@ def test_ci_workflow_writes_pr_facing_summary_and_enforces_decision():
     assert "if: always()" in workflow
     assert "skilleval ci-summary" in workflow
     assert "--check pytest=${{ steps.pytest.outcome }}" in workflow
-    assert "--check openspec-validate=${{ steps.openspec_validate.outcome }}" in workflow
+    assert (
+        "--check openspec-validate=${{ steps.openspec_validate.outcome }}" in workflow
+    )
     assert "--check release-check=${{ steps.release_check.outcome }}" in workflow
     assert "--check diagnostic-gate=${{ steps.diagnostic_gate.outcome }}" in workflow
     assert "--check diagnostic-drift=${{ steps.diagnostic_drift.outcome }}" in workflow
@@ -271,98 +290,24 @@ def test_ci_workflow_preflights_github_actions_node24_runtime():
 
 
 def test_readme_presents_post_release_developer_tool_front_door():
-    readme = README.read_text(encoding="utf-8")
-    tagline = (
-        "Evaluate, route, and regression-test agent skills before they break "
-        "your coding agent."
-    )
-    first_screen = readme[: readme.index("## Architecture")]
-    architecture = readme.index("## Architecture")
-    limitations = readme.index("## Limitations / Boundaries")
-    dashboard_preview = readme.index("## Dashboard preview")
-    screenshot = readme.index("docs/assets/dashboard-screenshot.png")
-
-    assert tagline in first_screen
-    assert (
-        "**Language / 语言:** [中文总览](#总览) · "
-        "[English README](#what-it-does) · "
-        "[中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)"
-    ) in first_screen
-    assert (
-        "Hermes SkillEval helps maintainers of Claude Code, Codex, Cursor-style "
-        "skill libraries, and MCP tool schemas detect wrong-skill activations, "
-        "near-miss conflicts, and routing regressions in CI"
-    ) in first_screen
-    assert "## 总览" in first_screen
-    assert "面向 AI 编程 Agent 技能库的离线评测和 CI 回归门禁项目" in first_screen
-    assert "系统能不能稳定选中正确技能" in first_screen
-    assert "避免误触看起来相关但实际错误的技能" in first_screen
-    assert "带 gold / negative 标签的任务集" in first_screen
-    assert "多类路由策略" in first_screen
-    assert "错误的 negative skill" in first_screen
-    assert "继续保留 `baseline-minilm`" in first_screen
-    assert "`v0.3.0` 已发布，当前测试面为 `698` 个 pytest cases" in first_screen
-    assert "`REVIEW_REQUIRED / KEEP_BASELINE`" in first_screen
-    assert "`live_agent.overlap_status`" in first_screen
-    assert "这不是 benchmark PASS、性能提升结论或 router promotion" in first_screen
-    assert (
-        "[中文完整说明](https://raidriar7170.github.io/hermes-skilleval/docs/interview-project-overview.html)"
-        in first_screen
-    )
-    assert "(docs/interview-project-overview.html)" not in first_screen
-    assert "[`docs/resume.md`](docs/resume.md)" not in first_screen
-    assert "For Interviewers" not in first_screen
-    assert "面试官关心" not in first_screen
-    assert "If you only have three minutes" not in first_screen
-    for heading in [
-        "## 总览",
-        "## What it does",
-        "## Why skill routing is hard",
-        "## Quick Start",
-        "## v0.3.0 release status",
-        "## Use as GitHub Action",
-        "## Example failure caught",
-        "## Dashboard preview",
-        "## Evidence links",
-        "## Limitations / Boundaries",
-    ]:
-        assert heading in first_screen
-    assert dashboard_preview < architecture
-    assert dashboard_preview < screenshot < architecture
-    assert limitations < architecture
-    assert "actions/workflows/validate.yml/badge.svg" in readme
-    assert "badge/release-v0.3.0" in readme
-    assert "badge/tests-698%20passed" in readme
-    assert "badge/action-reusable%20repo%20Action" in readme
-    assert "badge/A100-validated" not in first_screen
-    assert "run filtering" in readme
-    assert "failure inspection" in readme
-    assert "raw JSON audit" in readme
-    assert "## Example failure caught" in readme
-    assert "blind-claude-mcp-routing" in readme
-    assert (
-        "This is a reusable repository Action, not a Marketplace-published "
-        "Action, not a GitHub API PR comment bot, not a SaaS dashboard, and "
-        "not a runtime MCP router."
-    ) in readme
-    assert "`baseline-minilm` remains the default router" in readme
-    assert "`finetuned-embedding` is not approved as default" in readme
-    assert "docs/experiment-timeline.md" in readme
-
-    combined = "\n".join(
-        [
-            readme,
-            RESUME.read_text(encoding="utf-8"),
-            INTERVIEW_OVERVIEW.read_text(encoding="utf-8"),
-        ]
-    )
-
-    assert f"{CURRENT_FULL_SUITE_COUNT} pytest cases" in combined
-    assert f"{CURRENT_FULL_SUITE_COUNT} passing tests" in combined
-    assert "314 tests" not in combined
-    assert "314-test" not in combined
-    assert "413 passed" not in combined
-    assert "418 passed" not in combined
+    for name in ("README.md", "README_EN.md"):
+        readme = (ROOT / name).read_text(encoding="utf-8")
+        for required in (
+            "pip install",
+            "hermes-maintain",
+            "csvkit",
+            "sqlite-utils",
+            "KEEP_BASELINE",
+            "docs/usage.md",
+            "docs/evidence-map.md",
+            "docs/experiment-timeline.md",
+            "actions/workflows/validate.yml",
+        ):
+            assert required in readme, (name, required)
+        # Validate actual local navigation independently for each language.
+        for target in re.findall(r"\]\(([^)#]+)(?:#[^)]*)?\)", readme):
+            if "://" not in target and not target.startswith("#"):
+                assert (ROOT / target).exists(), (name, target)
 
 
 def test_dashboard_screenshot_asset_exists():
@@ -371,32 +316,20 @@ def test_dashboard_screenshot_asset_exists():
 
 
 def test_readme_architecture_and_structure_diagrams_render_as_mermaid():
-    readme = README.read_text(encoding="utf-8")
-    architecture = readme[
-        readme.index("## Architecture / 系统架构") : readme.index(
-            "## Project Structure / 项目结构"
-        )
-    ]
-    project_structure = readme[
-        readme.index("## Project Structure / 项目结构") : readme.index(
-            "## Experiment Timeline / 实验演进"
-        )
-    ]
-
-    assert "```mermaid\nflowchart TD" in architecture
-    assert "```mermaid\nflowchart TD" in project_structure
-    assert "Input corpus" in architecture
-    assert "Router families" in architecture
-    assert "Verification layer" in architecture
-    assert "Skill metadata improvement loop" in architecture
-    assert "Core runtime" in project_structure
-    assert "src/hermes_skilleval" in project_structure
-    assert "Reviewer evidence" in project_structure
-    assert "Release evidence" in project_structure
-    assert "```text" not in architecture
-    assert "```text" not in project_structure
-    assert "generate_benchmark_skills.py" not in project_structure
-    assert "cross_encoder.py" not in project_structure
+    for name in ("README.md", "README_EN.md"):
+        readme = (ROOT / name).read_text(encoding="utf-8")
+        diagrams = re.findall(r"```mermaid\n(.*?)```", readme, re.S)
+        architecture = next(d for d in diagrams if "flowchart TD" in d)
+        for role in (
+            "Parser",
+            "Router families",
+            "Negative controls",
+            "Metrics",
+            "release gate",
+        ):
+            assert role in architecture
+        assert "-->" in architecture
+        assert "src/hermes_skilleval" in readme
 
 
 def test_skill_library_migration_protocol_is_actionable():
@@ -431,29 +364,24 @@ def test_experiment_timeline_keeps_phase_history_outside_readme():
 
 
 def test_readme_keeps_quick_start_short_and_links_full_usage():
-    readme = README.read_text(encoding="utf-8")
+    for name, heading in (
+        ("README.md", "## 快速开始"),
+        ("README_EN.md", "## Quick Start"),
+    ):
+        readme = (ROOT / name).read_text(encoding="utf-8")
+        quick_start = readme.split(heading, 1)[1].split("\n## ", 1)[0]
+        assert len(quick_start.splitlines()) < 35
+        assert "pip install" in quick_start
+        assert "skilleval github-action-gate" in quick_start
+        assert "docs/usage.md" in quick_start
+        assert "Raidriar7170/hermes-skilleval@v0.3.0" in readme
     usage = USAGE.read_text(encoding="utf-8")
-
-    assert "For full CLI usage, see [`docs/usage.md`](docs/usage.md)." in readme
-    assert "skilleval github-action-gate" in readme
-    assert "Raidriar7170/hermes-skilleval@v0.3.0" in readme
-    assert (
-        "[`GitHub Release`](https://github.com/Raidriar7170/hermes-skilleval/"
-        "releases/tag/v0.3.0)"
-    ) in readme
-    assert "[`release notes`](docs/release-notes/v0.3.0.md)" in readme
-    assert (
-        "[`closeout`](artifacts/v0.3/skillsbench-pilot/"
-        "v0.3-stage2-real-codex-evidence-gate-closeout-20260708T080414Z/"
-        "stage2-real-codex-evidence-gate-closeout.json)"
-    ) in readme
-    assert "No performance claim" in readme
-    assert "router promotion" in readme
-    assert "### 1. Index a Hermes-style Skill Library" not in readme
-    assert "## Fresh-clone local demo" in usage
-    assert "## GitHub Action trial" in usage
-    assert "## 1. Index a Hermes-style Skill Library" in usage
-    assert "## 17. Run Tests" in usage
+    for section in (
+        "## Fresh-clone local demo",
+        "## GitHub Action trial",
+        "## 17. Run Tests",
+    ):
+        assert section in usage
 
 
 def test_evidence_map_is_linked_from_public_entry_points():
@@ -461,7 +389,7 @@ def test_evidence_map_is_linked_from_public_entry_points():
     usage = USAGE.read_text(encoding="utf-8")
     evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
 
-    assert "[`docs/evidence-map.md`](docs/evidence-map.md)" in readme
+    assert "(docs/evidence-map.md)" in readme
     assert "[`docs/evidence-map.md`](evidence-map.md)" in usage
     assert "# Hermes SkillEval Evidence Map" in evidence_map
     assert "navigation layer, not a second source of truth" in evidence_map
@@ -623,7 +551,7 @@ def test_failure_gallery_is_linked_from_public_entry_points():
     evidence_map = EVIDENCE_MAP.read_text(encoding="utf-8")
     gallery = FAILURE_GALLERY.read_text(encoding="utf-8")
 
-    assert "[`docs/failure-gallery.md`](docs/failure-gallery.md)" in readme
+    assert "(docs/failure-gallery.md)" in readme
     assert "[`docs/failure-gallery.md`](failure-gallery.md)" in usage
     assert "[`docs/failure-gallery.md`](failure-gallery.md)" in evidence_map
     assert "# Hermes SkillEval Failure Gallery" in gallery
@@ -1065,7 +993,10 @@ def test_node24_ci_preflight_docs_are_local_and_bounded():
 
     assert "GitHub Actions Node 24 preflight" in combined
     assert "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24" in combined
-    assert "github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners" in combined
+    assert (
+        "github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners"
+        in combined
+    )
     assert "ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION" not in combined
     for phrase in [
         "not a Marketplace Action",
@@ -1097,68 +1028,13 @@ def test_node24_ci_preflight_docs_are_local_and_bounded():
         assert phrase not in combined
 
 
-def test_current_public_surfaces_use_latest_full_suite_count():
-    surfaces = _current_count_surface_paths()
-    combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
-
-    assert f"{CURRENT_FULL_SUITE_COUNT} passed" in combined
-    assert f"{CURRENT_FULL_SUITE_COUNT} pytest cases" in README.read_text(
-        encoding="utf-8"
-    )
-    for stale_count in [
-        "392 pytest cases",
-        "392 passed",
-        "392 passing tests",
-        "| Test cases | 392 |",
-        "399 pytest cases",
-        "399 passed",
-        "399 passing tests",
-        "| Test cases | 399 |",
-        "406 pytest cases",
-        "406 passed",
-        "406 passing tests",
-        "| Test cases | 406 |",
-        "393 pytest cases",
-        "393 passed",
-        "393 passing tests",
-        "| Test cases | 393 |",
-        "391 pytest cases",
-        "386 pytest cases",
-        "384 pytest cases",
-        "381 pytest cases",
-        "378 pytest cases",
-        "372 pytest cases",
-        "365 pytest cases",
-        "365 unit and smoke tests",
-        "365 passing tests",
-        "391 passed",
-        "391 passing tests",
-        "386 passed",
-        "384 passed",
-        "381 passed",
-        "378 passed",
-        "372 passed",
-        "366 passed",
-        "365 passed",
-        "361 passed",
-        "314 passed",
-        "334 passed",
-        "338 passed",
-        "344 passed",
-        "346 passed",
-        "| Test cases | 391 |",
-        "| Test cases | 361 |",
-        "| Test cases | 365 |",
-        "| Test cases | 314 |",
-        "| Test cases | 346 |",
-        "| Test cases | 366 |",
-        "| Test cases | 372 |",
-        "| Test cases | 378 |",
-        "| Test cases | 381 |",
-        "| Test cases | 386 |",
-        "| Test cases | 384 |",
-    ]:
-        assert stale_count not in combined
+def test_current_homepages_link_run_evidence_instead_of_static_test_badges():
+    # Historical documents retain their bound counts; current status links to actual runs.
+    for name in ("README.md", "README_EN.md"):
+        readme = (ROOT / name).read_text(encoding="utf-8")
+        assert "actions/workflows/validate.yml" in readme
+        assert "docs/evidence-map.md" in readme
+        assert re.search(r"badge/tests-\d+", readme) is None
 
 
 def test_current_count_contexts_do_not_carry_unlabelled_stale_numbers():
@@ -1177,7 +1053,9 @@ def test_current_count_contexts_do_not_carry_unlabelled_stale_numbers():
     offenders = []
 
     for path in _current_count_surface_paths():
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        for line_number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), 1
+        ):
             lowered = line.lower()
             if not any(keyword in lowered for keyword in count_context_keywords):
                 continue

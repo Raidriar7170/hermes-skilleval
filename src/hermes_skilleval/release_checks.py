@@ -6,6 +6,8 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+from hermes_skilleval.historical_outputs import protect_historical_output
+
 
 PASS = "PASS"
 REVIEW_REQUIRED = "REVIEW_REQUIRED"
@@ -43,6 +45,7 @@ class TextMatch:
     path: Path
     line_number: int
     text: str
+    status: str = FAIL
 
 
 @dataclass(frozen=True)
@@ -62,12 +65,76 @@ def find_sensitive_matches(paths: list[Path]) -> list[TextMatch]:
     return _find_text_matches(paths, SENSITIVE_RE)
 
 
-def find_overclaim_matches(paths: list[Path]) -> list[TextMatch]:
-    return _find_text_matches(
-        paths,
-        OVERCLAIM_RE,
-        ignore_line_re=NEGATIVE_DISCLAIMER_RE,
+def find_overclaim_matches(
+    paths: list[Path],
+    *,
+    ignored_paths: list[Path] | None = None,
+) -> list[TextMatch]:
+    """Inspect claim clauses, joining line wraps but never unrelated paragraphs."""
+    matches = []
+    boundary = re.compile(
+        r"[.。！？!?;；,，]|\n\s*\n|\b(?:but|however|yet)\b|但是|然而|"
+        r"\band(?=\s+(?:(?:this|it|we)\s+)?(?:is|are|has|have|achieves)\b)",
+        re.I,
     )
+    for path in _iter_text_files(paths, ignored_paths=ignored_paths or []):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        lines = text.splitlines()
+        line_statuses: dict[int, list[str]] = {}
+        start = 0
+        ends = [(m.start(), m.end(), m.group()) for m in boundary.finditer(text)]
+        ends.append((len(text), len(text), ""))
+        for end, following, delimiter in ends:
+            clause = text[start:end].replace("\n", " ")
+            claims = list(OVERCLAIM_RE.finditer(clause))
+            if claims:
+                question = delimiter in {"?", "？"} or bool(
+                    re.search(r"是否|难道", clause)
+                )
+                uncertain = question or bool(
+                    re.search(
+                        r"\b(?:if|unless|not impossible|not unlikely)\b|不能说不",
+                        clause,
+                        re.I,
+                    )
+                )
+                positive = bool(
+                    re.search(
+                        r"已经|已达到|超过|优于|\b(?:achieved|exceeds|surpasses)\b|not only",
+                        clause,
+                        re.I,
+                    )
+                )
+                negative = bool(
+                    NEGATIVE_DISCLAIMER_RE.search(clause)
+                    or re.search(
+                        r"(?:不是|并非|不构成|不代表|不证明|未达到)|\b(?:is|are) not (?:a |an )?(?:sota|production-ready|state-of-the-art)",
+                        clause,
+                        re.I,
+                    )
+                )
+                quoted = bool(re.search(r'["“”「」]', clause))
+                if uncertain or (quoted and not negative):
+                    status = REVIEW_REQUIRED
+                elif positive or not negative:
+                    status = FAIL
+                else:
+                    status = PASS
+                if status != PASS:
+                    for claim in claims:
+                        number = text.count("\n", 0, start + claim.start()) + 1
+                        line_statuses.setdefault(number, []).append(status)
+            start = following
+        for number, statuses in sorted(line_statuses.items()):
+            matches.append(
+                TextMatch(
+                    path,
+                    number,
+                    lines[number - 1],
+                    FAIL if FAIL in statuses else REVIEW_REQUIRED,
+                )
+            )
+    return matches
 
 
 def find_checkpoint_files(root: Path) -> list[Path]:
@@ -109,10 +176,8 @@ def run_release_checks(
         SENSITIVE_RE,
         ignored_paths=ignored_paths,
     )
-    overclaim_matches = _find_text_matches(
+    overclaim_matches = find_overclaim_matches(
         existing_public_roots,
-        OVERCLAIM_RE,
-        ignore_line_re=NEGATIVE_DISCLAIMER_RE,
         ignored_paths=ignored_paths,
     )
     checkpoint_files = _find_checkpoint_files(existing_public_roots, ignored_paths)
@@ -141,7 +206,9 @@ def run_release_checks(
         ),
         "checks": [_result_record(check) for check in checks],
         "matches": {
-            "sensitive": [_match_record(match, redact=True) for match in sensitive_matches],
+            "sensitive": [
+                _match_record(match, redact=True) for match in sensitive_matches
+            ],
             "overclaims": [_match_record(match) for match in overclaim_matches],
             "checkpoints": [str(path) for path in checkpoint_files],
         },
@@ -153,6 +220,7 @@ def write_release_check_summary(
     required_paths: list[Path],
     output_path: Path,
 ) -> dict[str, object]:
+    protect_historical_output(output_path)
     summary = run_release_checks(
         public_roots=public_roots,
         required_paths=required_paths,
@@ -253,12 +321,10 @@ def _content_result(
 ) -> ReleaseCheckResult:
     if not matches:
         return _result(name, PASS, f"no {label}")
-    details = tuple(
-        f"{match.path}:{match.line_number}" for match in matches
-    )
+    details = tuple(f"{match.path}:{match.line_number}" for match in matches)
     return _result(
         name,
-        FAIL,
+        FAIL if any(match.status == FAIL for match in matches) else REVIEW_REQUIRED,
         f"{len(matches)} {label} found",
         details,
     )
@@ -315,6 +381,7 @@ def _match_record(match: TextMatch, *, redact: bool = False) -> dict[str, object
         "path": str(match.path),
         "line_number": match.line_number,
         "text": "[redacted]" if redact else match.text,
+        "classification": match.status,
     }
 
 

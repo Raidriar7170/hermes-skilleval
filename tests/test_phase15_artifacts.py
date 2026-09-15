@@ -58,7 +58,9 @@ def test_phase15_provenance_pack_is_sanitized_and_checkpoint_free():
     assert provenance["model_checkpoint_committed"] is False
     assert manifest["model_checkpoint_committed"] is False
     assert manifest["file_count"] > 0
-    assert not any(path.suffix in CHECKPOINT_SUFFIXES for path in PHASE15_ROOT.iterdir())
+    assert not any(
+        path.suffix in CHECKPOINT_SUFFIXES for path in PHASE15_ROOT.iterdir()
+    )
     assert all(marker not in text for marker in SENSITIVE_MARKERS)
     assert CREDENTIAL_RE.search(text) is None
     assert OPENAI_KEY_RE.search(text) is None
@@ -76,34 +78,8 @@ def test_phase15_docs_and_readme_reference_the_pack_without_overclaiming():
     assert "does not establish SOTA" in phase15
     assert "standard external benchmark" in phase15
     assert "production readiness" in phase15
-    assert "| Test cases | 698 |" in readme
-    assert "698 passed" in readme
-    assert "| Test cases | 399 |" not in readme
-    assert "399 passed" not in readme
-    assert "| Test cases | 386 |" not in readme
-    assert "386 passed" not in readme
-    assert "| Test cases | 384 |" not in readme
-    assert "384 passed" not in readme
-    assert "| Test cases | 381 |" not in readme
-    assert "381 passed" not in readme
-    assert "| Test cases | 378 |" not in readme
-    assert "378 passed" not in readme
-    assert "| Test cases | 372 |" not in readme
-    assert "372 passed" not in readme
-    assert "| Test cases | 365 |" not in readme
-    assert "365 passed" not in readme
-    assert "| Test cases | 361 |" not in readme
-    assert "361 passed" not in readme
-    assert "| Test cases | 354 |" not in readme
-    assert "354 passed" not in readme
-    assert "| Test cases | 351 |" not in readme
-    assert "351 passed" not in readme
-    assert "| Test cases | 347 |" not in readme
-    assert "347 passed" not in readme
-    assert "| Test cases | 346 |" not in readme
-    assert "346 passed" not in readme
-    assert "| Test cases | 314 |" not in readme
-    assert "314 passed" not in readme
+    assert "docs/experiment-timeline.md" in readme
+    assert "phase15.md" in Path("docs/experiment-timeline.md").read_text()
 
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:

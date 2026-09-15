@@ -4,10 +4,12 @@ import argparse
 import json
 import re
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
+from hermes_skilleval.historical_outputs import protect_historical_output
 from hermes_skilleval.agent_judge import judge_agent_loop
 from hermes_skilleval.agent_loop import run_agent_loop
 from hermes_skilleval.blind_validation import write_blind_validation_summary
@@ -233,9 +235,15 @@ def _build_parser() -> argparse.ArgumentParser:
     diagnostic_ci_gate_parser.add_argument("--output", required=True)
     diagnostic_ci_gate_parser.add_argument("--markdown-output", default=None)
     diagnostic_ci_gate_parser.add_argument("--max-lint-findings", type=int, default=0)
-    diagnostic_ci_gate_parser.add_argument("--max-conflict-clusters", type=int, default=0)
-    diagnostic_ci_gate_parser.add_argument("--max-route-risk-flags", type=int, default=0)
-    diagnostic_ci_gate_parser.add_argument("--min-route-candidates", type=int, default=1)
+    diagnostic_ci_gate_parser.add_argument(
+        "--max-conflict-clusters", type=int, default=0
+    )
+    diagnostic_ci_gate_parser.add_argument(
+        "--max-route-risk-flags", type=int, default=0
+    )
+    diagnostic_ci_gate_parser.add_argument(
+        "--min-route-candidates", type=int, default=1
+    )
     diagnostic_ci_gate_parser.add_argument(
         "--allow-missing-route-evidence",
         action="store_true",
@@ -260,7 +268,9 @@ def _build_parser() -> argparse.ArgumentParser:
     diagnostic_artifact_drift_parser.add_argument("--actual", required=True)
     diagnostic_artifact_drift_parser.add_argument("--output", required=True)
     diagnostic_artifact_drift_parser.add_argument("--markdown-output", required=True)
-    diagnostic_artifact_drift_parser.set_defaults(handler=_run_diagnostic_artifact_drift_check)
+    diagnostic_artifact_drift_parser.set_defaults(
+        handler=_run_diagnostic_artifact_drift_check
+    )
 
     ci_summary_parser = subparsers.add_parser(
         "ci-summary",
@@ -282,8 +292,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     github_action_gate_parser.add_argument("--skill-path", required=True)
     github_action_gate_parser.add_argument("--benchmark-path", required=True)
-    github_action_gate_parser.add_argument("--min-recall-at-k", type=float, required=True)
-    github_action_gate_parser.add_argument("--max-negative-hit-rate", type=float, required=True)
+    github_action_gate_parser.add_argument(
+        "--min-recall-at-k", type=float, required=True
+    )
+    github_action_gate_parser.add_argument(
+        "--max-negative-hit-rate", type=float, required=True
+    )
     github_action_gate_parser.add_argument("--output-dir", required=True)
     github_action_gate_parser.add_argument("--top-k", type=int, default=5)
     github_action_gate_parser.set_defaults(handler=_run_github_action_gate)
@@ -373,7 +387,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     external_plan_parser.add_argument("--matrix-output", default=None)
     external_plan_parser.add_argument("--bootstrap-iterations", type=int, default=10000)
-    external_plan_parser.add_argument("--bootstrap-confidence", type=float, default=0.95)
+    external_plan_parser.add_argument(
+        "--bootstrap-confidence", type=float, default=0.95
+    )
     external_plan_parser.set_defaults(handler=_run_external_plan)
 
     external_matrix_parser = subparsers.add_parser(
@@ -426,8 +442,12 @@ def _build_parser() -> argparse.ArgumentParser:
         default="sentence-transformers/all-MiniLM-L6-v2",
     )
     prediction_export_parser.add_argument("--baseline-minilm-revision", default=None)
-    prediction_export_parser.add_argument("--finetuned-embedding-checkpoint", default=None)
-    prediction_export_parser.add_argument("--finetuned-embedding-revision", default=None)
+    prediction_export_parser.add_argument(
+        "--finetuned-embedding-checkpoint", default=None
+    )
+    prediction_export_parser.add_argument(
+        "--finetuned-embedding-revision", default=None
+    )
     prediction_export_parser.add_argument("--finetuned-embedding-sha256", default=None)
     prediction_export_parser.set_defaults(handler=_run_external_export_predictions)
 
@@ -446,7 +466,9 @@ def _build_parser() -> argparse.ArgumentParser:
         help="export Stage 2 pilot routed predictions without running live agents",
     )
     skillsbench_export_routed_parser.add_argument("--tasks-manifest", required=True)
-    skillsbench_export_routed_parser.add_argument("--global-skill-registry", required=True)
+    skillsbench_export_routed_parser.add_argument(
+        "--global-skill-registry", required=True
+    )
     skillsbench_export_routed_parser.add_argument("--output", required=True)
     skillsbench_export_routed_parser.add_argument("--manifest-output", required=True)
     skillsbench_export_routed_parser.add_argument(
@@ -479,8 +501,12 @@ def _build_parser() -> argparse.ArgumentParser:
     skillsbench_plan_parser.add_argument("--upstream-ref", required=True)
     skillsbench_plan_parser.add_argument("--license-note", required=True)
     skillsbench_plan_parser.add_argument("--run-id", required=True)
-    skillsbench_plan_parser.add_argument("--mode", choices=("pilot", "frozen"), required=True)
-    skillsbench_plan_parser.add_argument("--selected-task-id", action="append", default=[])
+    skillsbench_plan_parser.add_argument(
+        "--mode", choices=("pilot", "frozen"), required=True
+    )
+    skillsbench_plan_parser.add_argument(
+        "--selected-task-id", action="append", default=[]
+    )
     skillsbench_plan_parser.add_argument("--routed-predictions", required=True)
     skillsbench_plan_parser.add_argument("--oracle-qualification", default=None)
     skillsbench_plan_parser.add_argument("--matrix-output", default=None)
@@ -785,11 +811,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     release_check_parser.add_argument(
         "--phase17-output-dir",
-        default="docs/demo/phase17-calibrated-release-selector",
+        default=None,
+        help="new output directory (default: a fresh temporary release run)",
     )
     release_check_parser.add_argument(
         "--release-output-dir",
-        default="docs/demo/phase18-ci-release-reproducibility",
+        default=None,
+        help="new output directory (historical evidence paths are protected)",
     )
     release_check_parser.add_argument("--public-root", action="append", default=None)
     release_check_parser.add_argument("--required-path", action="append", default=None)
@@ -1019,17 +1047,23 @@ def _run_dashboard(args: argparse.Namespace) -> None:
 
 def _run_diagnostic_scan(args: argparse.Namespace) -> None:
     artifact = write_scan_artifact(args.source, args.output)
-    print(f"Wrote {artifact['summary']['skill_count']} diagnostic skills to {args.output}")
+    print(
+        f"Wrote {artifact['summary']['skill_count']} diagnostic skills to {args.output}"
+    )
 
 
 def _run_diagnostic_lint(args: argparse.Namespace) -> None:
     artifact = write_lint_artifact(args.index, args.output)
-    print(f"Wrote {artifact['summary']['finding_count']} lint findings to {args.output}")
+    print(
+        f"Wrote {artifact['summary']['finding_count']} lint findings to {args.output}"
+    )
 
 
 def _run_diagnostic_inspect(args: argparse.Namespace) -> None:
     artifact = write_inspect_artifact(args.index, args.output)
-    print(f"Wrote {artifact['summary']['cluster_count']} conflict risk clusters to {args.output}")
+    print(
+        f"Wrote {artifact['summary']['cluster_count']} conflict risk clusters to {args.output}"
+    )
 
 
 def _run_diagnostic_route(args: argparse.Namespace) -> None:
@@ -1040,7 +1074,9 @@ def _run_diagnostic_route(args: argparse.Namespace) -> None:
         top_k=args.top_k,
         inspect_path=args.inspect,
     )
-    print(f"Wrote {artifact['summary']['candidate_count']} route candidates to {args.output}")
+    print(
+        f"Wrote {artifact['summary']['candidate_count']} route candidates to {args.output}"
+    )
 
 
 def _run_diagnostic_dashboard(args: argparse.Namespace) -> None:
@@ -1099,8 +1135,12 @@ def _run_ci_summary(args: argparse.Namespace) -> None:
         checks=_parse_ci_checks(args.check),
         changed_files_path=Path(args.changed_files) if args.changed_files else None,
         release_check_path=Path(args.release_check) if args.release_check else None,
-        diagnostic_gate_path=Path(args.diagnostic_gate) if args.diagnostic_gate else None,
-        diagnostic_drift_path=Path(args.diagnostic_drift) if args.diagnostic_drift else None,
+        diagnostic_gate_path=Path(args.diagnostic_gate)
+        if args.diagnostic_gate
+        else None,
+        diagnostic_drift_path=Path(args.diagnostic_drift)
+        if args.diagnostic_drift
+        else None,
         overclaim_roots=[Path(path) for path in args.overclaim_root],
         output_path=Path(args.output),
         markdown_output_path=Path(args.markdown_output),
@@ -1152,9 +1192,7 @@ def _run_external_score(args: argparse.Namespace) -> None:
         tiers=tuple(args.tiers) if args.tiers else None,
     )
     print(
-        "External score "
-        f"{report['mode']}: {args.output} "
-        f"({report['task_count']} tasks)"
+        f"External score {report['mode']}: {args.output} ({report['task_count']} tasks)"
     )
 
 
@@ -1168,7 +1206,9 @@ def _run_external_plan(args: argparse.Namespace) -> None:
         license_note=args.license_note,
         run_id=args.run_id,
         routers=[_parse_external_router_config(value) for value in args.router_config],
-        field_views=tuple(args.field_view) if args.field_view else (
+        field_views=tuple(args.field_view)
+        if args.field_view
+        else (
             "name_only",
             "metadata",
             "full_body",
@@ -1207,11 +1247,7 @@ def _run_external_export_predictions(args: argparse.Namespace) -> None:
         for value in args.router_config
     ]
     _validate_prediction_export_cli_configs(configs, args)
-    model = (
-        HashingEmbeddingModel()
-        if args.embedding_backend == "hashing"
-        else None
-    )
+    model = HashingEmbeddingModel() if args.embedding_backend == "hashing" else None
     manifest = write_skillrouter_prediction_artifacts(
         data_root=args.data_root,
         output_dir=args.output_dir,
@@ -1449,7 +1485,10 @@ def _validate_prediction_export_cli_configs(
     args: argparse.Namespace,
 ) -> None:
     for config in configs:
-        if args.embedding_backend == "hashing" and config.router_id == "baseline-minilm":
+        if (
+            args.embedding_backend == "hashing"
+            and config.router_id == "baseline-minilm"
+        ):
             raise ValueError(
                 "CLI hashing backend cannot export baseline-minilm prediction artifacts"
             )
@@ -1689,14 +1728,29 @@ def _run_select_release_router(args: argparse.Namespace) -> None:
         policy=policy,
     )
     print(
-        "Wrote Phase 17 release decision to "
-        f"{args.output_dir}: {decision['decision']}"
+        f"Wrote Phase 17 release decision to {args.output_dir}: {decision['decision']}"
     )
 
 
 def _run_release_check(args: argparse.Namespace) -> None:
-    phase17_output = Path(args.phase17_output_dir)
-    release_output = ensure_dir(args.release_output_dir)
+    run_root = (
+        Path(tempfile.mkdtemp(prefix="hermes-release-"))
+        if (args.phase17_output_dir is None or args.release_output_dir is None)
+        else Path(".")
+    )
+    phase17_output = (
+        Path(args.phase17_output_dir)
+        if args.phase17_output_dir
+        else run_root / "selection"
+    )
+    release_output = (
+        Path(args.release_output_dir)
+        if args.release_output_dir
+        else run_root / "report"
+    )
+    protect_historical_output(phase17_output)
+    protect_historical_output(release_output)
+    release_output = ensure_dir(release_output)
     release_summary_path = release_output / "release-check-summary.json"
 
     write_release_decision(
@@ -1910,7 +1964,8 @@ def _run_calibrate_cross_encoder(args: argparse.Namespace) -> None:
                 router=args.router_label,
             )
             for record in records
-            if args.apply_split == "all" or record.get("split", "dev") == args.apply_split
+            if args.apply_split == "all"
+            or record.get("split", "dev") == args.apply_split
         ]
         if not output_records:
             raise ValueError(f"no records matched apply split: {args.apply_split}")
@@ -1918,8 +1973,7 @@ def _run_calibrate_cross_encoder(args: argparse.Namespace) -> None:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(
             "".join(
-                json.dumps(record, sort_keys=True) + "\n"
-                for record in output_records
+                json.dumps(record, sort_keys=True) + "\n" for record in output_records
             ),
             encoding="utf-8",
         )
@@ -1999,12 +2053,12 @@ def _cross_encoder_router(args: argparse.Namespace | None) -> CrossEncoderRerank
     )
 
 
-def _cross_encoder_thresholds(args: argparse.Namespace | None) -> tuple[float | None, float]:
+def _cross_encoder_thresholds(
+    args: argparse.Namespace | None,
+) -> tuple[float | None, float]:
     calibration_path = getattr(args, "cross_encoder_calibration", None)
     calibration = (
-        read_cross_encoder_calibration(calibration_path)
-        if calibration_path
-        else None
+        read_cross_encoder_calibration(calibration_path) if calibration_path else None
     )
     score_threshold = getattr(args, "cross_encoder_score_threshold", None)
     margin_threshold = getattr(args, "cross_encoder_margin_threshold", None)

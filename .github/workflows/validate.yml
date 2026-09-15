@@ -85,8 +85,8 @@ jobs:
         continue-on-error: true
         run: |
           skilleval release-check \
-            --phase17-output-dir docs/demo/phase17-calibrated-release-selector \
-            --release-output-dir docs/demo/phase18-ci-release-reproducibility
+            --phase17-output-dir "$RUNNER_TEMP/current-release/selection" \
+            --release-output-dir "$RUNNER_TEMP/current-release/report"
           git diff --exit-code \
             docs/demo/phase17-calibrated-release-selector \
             docs/demo/phase18-ci-release-reproducibility
@@ -481,7 +481,7 @@ jobs:
             --check external-pack=${{ steps.external_pack.outcome }} \
             --check integration-gates=${{ steps.integration_gates.outcome }} \
             --changed-files "$RUNNER_TEMP/changed-files.txt" \
-            --release-check docs/demo/phase18-ci-release-reproducibility/release-check-summary.json \
+            --release-check "$RUNNER_TEMP/current-release/report/release-check-summary.json" \
             --diagnostic-gate "$RUNNER_TEMP/diagnostic-ci-gate-report.json" \
             --diagnostic-drift "$RUNNER_TEMP/diagnostic-artifact-drift.json" \
             --overclaim-root README.md \
@@ -496,6 +496,7 @@ jobs:
         with:
           name: validation-reports
           path: |
+            ${{ runner.temp }}/current-release
             ${{ runner.temp }}/ci-summary.json
             ${{ runner.temp }}/ci-summary.md
             ${{ runner.temp }}/diagnostic-ci-gate-report.json

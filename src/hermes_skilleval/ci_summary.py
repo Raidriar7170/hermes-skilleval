@@ -21,7 +21,15 @@ FAIL_STATUSES = {
     "MISSING",
     "REVIEW_REQUIRED",
 }
-GROUP_ORDER = ("workflow", "source", "tests", "docs", "openspec", "diagnostics", "other")
+GROUP_ORDER = (
+    "workflow",
+    "source",
+    "tests",
+    "docs",
+    "openspec",
+    "diagnostics",
+    "other",
+)
 
 
 def write_ci_summary(
@@ -98,9 +106,7 @@ def render_markdown(summary: dict[str, object]) -> str:
     ]
     for check in checks:
         assert isinstance(check, dict)
-        lines.append(
-            "| {name} | {normalized_status} | {raw_status} |".format(**check)
-        )
+        lines.append("| {name} | {normalized_status} | {raw_status} |".format(**check))
 
     lines.extend(
         [
@@ -218,7 +224,11 @@ def _group_for_path(path: str) -> str:
 def _overclaim_scan(roots: list[Path]) -> dict[str, object]:
     matches = find_overclaim_matches(roots) if roots else []
     return {
-        "status": "FAIL" if matches else "PASS",
+        "status": (
+            "FAIL" if any(m.status == "FAIL" for m in matches) else "REVIEW_REQUIRED"
+        )
+        if matches
+        else "PASS",
         "match_count": len(matches),
         "roots": [str(path) for path in roots],
         "matches": [_match_record(match) for match in matches],
@@ -230,6 +240,7 @@ def _match_record(match: TextMatch) -> dict[str, object]:
         "path": str(match.path),
         "line_number": match.line_number,
         "text": match.text.strip(),
+        "classification": match.status,
     }
 
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+
+from hermes_skilleval.historical_outputs import protect_historical_output
 from typing import Any
 
 
@@ -59,7 +61,9 @@ def build_release_manifest(
         "commands": command_records,
         "artifacts": [_artifact_record(path) for path in artifact_paths],
         "reasons": reasons
-        or ["release decision, public release check, and artifact hashes are reproducible"],
+        or [
+            "release decision, public release check, and artifact hashes are reproducible"
+        ],
     }
 
 
@@ -71,6 +75,7 @@ def write_release_manifest(
     command_records: list[dict[str, Any]],
     output_dir: Path | str,
 ) -> dict[str, Any]:
+    protect_historical_output(output_dir)
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     manifest = build_release_manifest(
@@ -108,15 +113,21 @@ def _manifest_reasons(
     if decision.get("_missing_path"):
         reasons.append(f"missing release decision: {decision['_missing_path']}")
     if release_summary.get("_missing_path"):
-        reasons.append(f"missing release check summary: {release_summary['_missing_path']}")
+        reasons.append(
+            f"missing release check summary: {release_summary['_missing_path']}"
+        )
     if decision.get("artifact_type") != PHASE17_ARTIFACT_TYPE:
-        reasons.append("decision artifact_type is not phase17-calibrated-release-selector")
+        reasons.append(
+            "decision artifact_type is not phase17-calibrated-release-selector"
+        )
     if decision.get("decision") not in {
         "APPROVE_CANDIDATE",
         "KEEP_BASELINE",
         "REVIEW_REQUIRED",
     }:
-        reasons.append("decision must be APPROVE_CANDIDATE, KEEP_BASELINE, or REVIEW_REQUIRED")
+        reasons.append(
+            "decision must be APPROVE_CANDIDATE, KEEP_BASELINE, or REVIEW_REQUIRED"
+        )
     if decision.get("decision") != "KEEP_BASELINE":
         reasons.append("decision must remain KEEP_BASELINE for Phase 18")
     if not isinstance(decision.get("selected_router"), str) or not decision.get(
