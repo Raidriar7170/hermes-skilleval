@@ -175,3 +175,15 @@ def test_records_reaches_mandatory_test_validation(tmp_path, xml, reason):
     result = recompute(tmp_path / "index.json", tmp_path / "recomputed")
     assert result["rows"][0]["resolved"] is None
     assert reason in result["rows"][0]["error"]
+
+
+def test_records_binds_structured_read_observations(tmp_path):
+    run, task, q = fixture(tmp_path)
+    row = export_run(run, task, q, tmp_path / "public")
+    (tmp_path / "public/events.json").write_text(
+        '{"events": [{"read_command_observed": true}]}'
+    )
+    write(tmp_path / "index.json", {"runs": [row]})
+    result = recompute(tmp_path / "index.json", tmp_path / "recomputed")
+    assert result["rows"][0]["resolved"] is None
+    assert "changed: events" in result["rows"][0]["error"]

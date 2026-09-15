@@ -43,6 +43,25 @@ def validate_originals(run_dir, task_root, qualification, record, task, q):
         (task_root / "task.json").read_bytes()
     ):
         raise ValueError("original task digest mismatch")
+    if (
+        task.get("public_request_sha256")
+        and digest((task_root / "public.md").read_bytes())
+        != task["public_request_sha256"]
+    ):
+        raise ValueError("original public request digest mismatch")
+    route_path = run_dir / "route.json"
+    if route_path.exists():
+        route = json.loads(route_path.read_text())
+        if (
+            record["arm"] not in ["S", "T"]
+            or route.get("registry_id") != record.get("registry_id")
+            or route.get("skill_ids") != record.get("selected_ids")
+        ):
+            raise ValueError("original route selection mismatch")
+        if route.get("input_prompt_hash") != digest(
+            (task_root / "public.md").read_text().encode()
+        ):
+            raise ValueError("original route request mismatch")
     launch = json.loads((run_dir / "started.json").read_text())
     if any(
         record.get(k) != launch.get(k)
@@ -214,6 +233,10 @@ def export_run(run_dir, task_root, qualification, destination, attempt=1):
         )
         + "\n"
     )
+    row["files"]["events"] = {
+        "path": destination.name + "/events.json",
+        "sha256": digest((destination / "events.json").read_bytes()),
+    }
     row["observed_skill_read_commands"] = len(
         [e for e in events if e["type"] == "item.completed"]
     )
@@ -238,5 +261,10 @@ def export_run(run_dir, task_root, qualification, destination, attempt=1):
         }
         public_check(json.dumps(route).encode())
         (destination / "route.json").write_text(json.dumps(route, indent=2) + "\n")
+        row["files"]["route"] = {
+            "path": destination.name + "/route.json",
+            "sha256": digest((destination / "route.json").read_bytes()),
+            "original_sha256": digest((run_dir / "route.json").read_bytes()),
+        }
     (destination / "record.json").write_text(json.dumps(row, indent=2) + "\n")
     return row
