@@ -27,3 +27,8 @@ the repair.
 The final result index links the original candidate patch, sanitized JUnit,
 structured skill-read observations and token/timing record by this run ID:
 `confirm-csvkit-1219-F-001`.
+
+Read the [saved patch](../../artifacts/repo-portability/records/confirm-csvkit-1219-F-001/candidate.patch),
+[target JUnit](../../artifacts/repo-portability/records/confirm-csvkit-1219-F-001/target.xml),
+[related regression JUnit](../../artifacts/repo-portability/records/confirm-csvkit-1219-F-001/regression.xml),
+and [bound record](../../artifacts/repo-portability/records/confirm-csvkit-1219-F-001/record.json).

@@ -38,6 +38,15 @@ separately from Agent execution. Serialized S calls avoid simultaneous host
 retrieval models; two candidate containers may overlap, as may controller checks.
 Wall times are observations under this schedule, not isolated latency benchmarks.
 
+The five-package registry describes the controlled experimental skills, not a
+claim that the client has no other built-in guidance. All arms use the same
+Codex CLI version and fresh-home provisioning. The client can populate its own
+bundled skill/plugin metadata; that complete client-provided context and the
+backend model snapshot were not independently frozen or audited. Their influence
+is **UNKNOWN**. Public read observations cover explicit experimental skill paths
+only. Temporary authentication JSON was removed after each run; other private
+client state remains local and is excluded from publication.
+
 All started attempts, including timeouts or failed patches, remain in the
 public denominator. There is one attempt per arm/family: no best-of selection,
 no confidence or equivalence claim, no causal attribution to skill selection

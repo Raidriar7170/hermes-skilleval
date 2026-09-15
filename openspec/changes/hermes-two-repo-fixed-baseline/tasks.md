@@ -15,5 +15,7 @@
 - [x] 3.1 Qualify new independent families and freeze confirmation protocol.
 - [x] 3.2 Execute rotated N/F/S attempts retaining failures, costs and usage.
 - [x] 3.3 Produce public patches, trusted tests and offline recomputable records.
-- [ ] 3.4 Complete focused checks, evidence/privacy review and final scope verification.
-- [ ] 3.5 Push inspected commits, maintain draft PR and verify remote HEAD/CI.
+- [x] 3.4 Complete focused checks, evidence/privacy review and final scope verification.
+- [x] 3.5 Push inspected commits, maintain draft PR and verify remote HEAD/CI.
+
+Final delivery retains Draft/BLOCK_MERGE and assist deferral. Final HEAD and CI are reported in PR #47 after the closing push; no merge, archive or new campaign is part of this change.
