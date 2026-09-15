@@ -53,22 +53,6 @@ if (gate_root / "model.json").exists():
             != digest
         ):
             raise ValueError("Gate training recipe changed after freeze")
-    final_index = root / "final-test/index.json"
-    if final_index.exists():
-        final = json.loads(final_index.read_text())
-        launches = [
-            event["time"] for event in final["events"] if event["event"] == "launch"
-        ]
-        if not launches or seal["frozen_at"] >= min(launches):
-            raise ValueError("Gate not frozen before final execution")
-        from hermes_skilleval.repo_routing.gate import decide
-
-        for cell in final["cells"]:
-            if cell["policy"] == "auto" and cell["execution_status"] == "STARTED":
-                decision = decide(cell["features"], model, final["expected_r_version"])
-                if decision["action"] != cell["action"]:
-                    raise ValueError("Actual auto action disagrees with frozen gate")
-    actual = train(fit_rows, calibration_rows, model["r_version"])
 
     def equivalent(a, b):
         if isinstance(a, dict) and isinstance(b, dict):
@@ -79,6 +63,36 @@ if (gate_root / "model.json").exists():
             return math.isclose(a, b, rel_tol=1e-10, abs_tol=1e-10)
         return a == b
 
+    final_index = root / "final-test/index.json"
+    if final_index.exists():
+        final = json.loads(final_index.read_text())
+        launches = [
+            event["time"] for event in final["events"] if event["event"] == "launch"
+        ]
+        if not launches or seal["frozen_at"] >= min(launches):
+            raise ValueError("Gate not frozen before final execution")
+        for event in final["events"]:
+            if event["event"] == "launch" and (
+                event.get("gate_sha256") != seal["gate_sha256"]
+                or event.get("routing_config_sha256") != final["routing_config_sha256"]
+                or event.get("r_version") != seal["r_version"]
+            ):
+                raise ValueError("Final launch did not bind the frozen gate/config")
+        from hermes_skilleval.repo_routing.gate import decide
+
+        for cell in final["cells"]:
+            if cell["policy"] == "auto" and cell["execution_status"] == "STARTED":
+                decision = decide(cell["features"], model, final["expected_r_version"])
+                if (
+                    decision["action"] != cell["action"]
+                    or decision["fallback_reason"] != cell["fallback_reason"]
+                    or not equivalent(
+                        decision["predictions"], cell.get("gate_predictions")
+                    )
+                ):
+                    raise ValueError("Actual auto action disagrees with frozen gate")
+    actual = train(fit_rows, calibration_rows, model["r_version"])
+
     if not equivalent(actual, model):
         raise ValueError("Published gate does not match fit/calibration recipe")
     for phase, feedback in (
@@ -86,7 +100,34 @@ if (gate_root / "model.json").exists():
         ("gate-calibration", calibration_rows),
     ):
         records = recompute(root / phase / "index.json")
-        qualities = {row["run_id"]: row["quality"] for row in records["rows"]}
-        if any(row["quality"] != qualities[row["run_id"]] for row in feedback):
-            raise ValueError("Gate feedback disagrees with independent verification")
+        by_id = {row["run_id"]: row for row in records["rows"]}
+        cells = {
+            row["run_id"]: row
+            for row in json.loads((root / phase / "index.json").read_text())["cells"]
+        }
+        if len(feedback) != len(by_id) or {row["run_id"] for row in feedback} != set(
+            by_id
+        ):
+            raise ValueError("Missing or duplicate gate feedback")
+        for row in feedback:
+            record, cell = by_id[row["run_id"]], cells[row["run_id"]]
+            expected = {
+                "quality": record["quality"],
+                "action": {"native": "N", "fixed": "F", "repo-aware": "R"}[
+                    cell["policy"]
+                ],
+                "realized_action": cell["action"],
+                "repair_family": cell["family_id"],
+                "repository": cell["repository"],
+                "split": phase,
+                "features": cell["features"],
+                "seconds": record["elapsed_seconds"],
+                "tokens": record["total_tokens"],
+                "r_version": cell["r_version"],
+                "source": "real_execution",
+            }
+            if any(
+                not equivalent(row.get(key), value) for key, value in expected.items()
+            ):
+                raise ValueError("Gate feedback inputs/costs disagree with execution")
     print(json.dumps({"gate_recomputed": True, "r_version": model["r_version"]}))

@@ -16,6 +16,24 @@ c = json.loads(a.protocol.read_text())
 root = Path(c["output"])
 root.mkdir(parents=True, exist_ok=True)
 identity = hashlib.sha256(a.protocol.read_bytes()).hexdigest()
+gate_binding = {}
+if any(cell["policy"] == "auto" for cell in c["cells"]):
+    routing_path = Path(c["routing_config"])
+    routing = json.loads(routing_path.read_text())
+    gate_path = Path(routing["gate"])
+    if not gate_path.is_absolute():
+        gate_path = routing_path.parent / gate_path
+    seal = json.loads(gate_path.with_suffix(".freeze.json").read_text())
+    gate_binding = {
+        "gate_sha256": hashlib.sha256(gate_path.read_bytes()).hexdigest(),
+        "routing_config_sha256": hashlib.sha256(routing_path.read_bytes()).hexdigest(),
+        "r_version": routing["r_version"],
+    }
+    if (
+        gate_binding["gate_sha256"] != seal["gate_sha256"]
+        or routing["r_version"] != seal["r_version"]
+    ):
+        raise ValueError("gate/config freeze mismatch before launch")
 locked = root / "protocol-sha256.txt"
 if locked.exists() and locked.read_text().strip() != identity:
     raise ValueError("protocol changed")
@@ -61,6 +79,14 @@ for cell in c["cells"]:
         cmd += ["--arm", "N"]
     else:
         cmd += ["--policy", cell["policy"], "--routing-config", c["routing_config"]]
+    if gate_binding:
+        if (
+            hashlib.sha256(gate_path.read_bytes()).hexdigest()
+            != gate_binding["gate_sha256"]
+            or hashlib.sha256(routing_path.read_bytes()).hexdigest()
+            != gate_binding["routing_config_sha256"]
+        ):
+            raise ValueError("frozen policy changed between final launches")
     with (root / "attempts.jsonl").open("a") as log:
         log.write(
             json.dumps(
@@ -69,6 +95,7 @@ for cell in c["cells"]:
                     "run_id": run_id,
                     "time": time.time(),
                     "protocol_sha256": identity,
+                    **gate_binding,
                 }
             )
             + "\n"

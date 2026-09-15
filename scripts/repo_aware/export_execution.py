@@ -108,6 +108,9 @@ def export(protocol, output):
                     if isinstance(value.get("exit_code"), int)
                     else None,
                     "protocol_sha256": digest(value.get("protocol_sha256")),
+                    "gate_sha256": digest(value.get("gate_sha256")),
+                    "routing_config_sha256": digest(value.get("routing_config_sha256")),
+                    "r_version": digest(value.get("r_version")),
                 }
             )
     result = {
@@ -314,6 +317,16 @@ def export(protocol, output):
             key: number(value)
             for key, value in routing.get("timing", {}).items()
             if re.fullmatch(r"[a-z_]+", key)
+        }
+        out["gate_predictions"] = {
+            action: {
+                key: number(values.get(key))
+                for key in ("quality_estimate", "time_scaled", "tokens_scaled")
+            }
+            for action, values in routing.get("decision", {})
+            .get("predictions", {})
+            .items()
+            if action in ("N", "F", "R") and isinstance(values, dict)
         }
         out["fallback_reason"] = identifier(
             routing.get("decision", {}).get("fallback_reason")

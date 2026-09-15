@@ -1,0 +1,43 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index d8ad737d256ea6f9b250adcb982032b5c0b6c268..dc7f71fe64d3692c89e7c6bab427be43ddfdcbce 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -98,7 +98,7 @@ class CSVJoin(CSVKitUtility):
+             remaining_tables.reverse()
+ 
+             for i, table in enumerate(remaining_tables):
+-                jointab = agate.Table.join(jointab, table, join_column_ids[-(i + 2)], join_column_ids[-1])
++                jointab = agate.Table.join(jointab, table, join_column_ids[-1], join_column_ids[-(i + 2)])
+         elif self.args.outer_join:
+             # Full outer join
+             for i, table in enumerate(tables[1:]):
+diff --git a/tests/test_utilities/fixtures/csvjoin_right.csv b/tests/test_utilities/fixtures/csvjoin_right.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..5bc14c5eaa8dc74122bdcdb19699465d47193753
+--- /dev/null
++++ b/tests/test_utilities/fixtures/csvjoin_right.csv
+@@ -0,0 +1,3 @@
++right_value,right_key
++matched,1
++unmatched,4
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index b7cb39ff240048b556ce209fabfe45f48f09fa7c..a92bf4d35aed34954fc434278202a556e558e2e5 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -29,6 +29,16 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['-c', 'a', '--right', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 4)
+ 
++    def test_right_different_join_column_positions(self):
++        self.assertRows([
++            '--no-inference', '--right', '-c', 'a,right_key',
++            'examples/join_a.csv', 'tests/test_utilities/fixtures/csvjoin_right.csv',
++        ], [
++            ['right_value', 'right_key', 'b', 'c'],
++            ['matched', '1', 'b', 'c'],
++            ['unmatched', '4', '', ''],
++        ])
++
+     def test_outer(self):
+         output = self.get_output_as_io(['-c', 'a', '--outer', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 6)

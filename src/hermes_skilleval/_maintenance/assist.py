@@ -415,7 +415,7 @@ def execute(args):
         result["timing"]["request_wall_seconds"] = time.monotonic() - start
         result["timing"]["worker_seconds"] = None
         result["timing"]["selection_seconds"] = (
-            None  # No retrieval; included in preflight.
+            result.get("routing", {}).get("timing", {}).get("route_wall_seconds")
         )
         write(output / "result.json", result)
         report = [
