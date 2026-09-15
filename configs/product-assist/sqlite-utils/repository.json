@@ -1,0 +1,38 @@
+{
+  "version": "assist-repository-v1",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "sha256:5bd5455d39cce90ab5f22e09c5b79bf1b79a4ab39b98a8e332ac17df4642209f",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests"
+    ],
+    "file_policy": {
+      "version": "operations-v1",
+      "rules": [
+        {
+          "path": "sqlite_utils",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ]
+        },
+        {
+          "path": "tests",
+          "operations": [
+            "add",
+            "modify"
+          ]
+        }
+      ]
+    }
+  },
+  "exclude_input": []
+}

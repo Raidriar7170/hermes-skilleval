@@ -272,9 +272,9 @@ See [`docs/experiment-timeline.md`](docs/experiment-timeline.md) for the histori
 experiment chain and [`docs/release-notes/v0.3.0.md`](docs/release-notes/v0.3.0.md)
 for the current release notes.
 
-## Real repository maintenance replay
+## Current-task assistance and historical replay
 
-This branch provides an installable `hermes-maintain` entrypoint for historical csvkit and sqlite-utils tasks, saved patches, and independent target/regression checks. See the [maintenance review index](docs/repo-portability/review-index.md) for N/F/S records, offline recomputation, installation and acceptance limits. This is a small exploratory study; current-task assist is not implemented, and upstream adoption or algorithmic gain is not established.
+The installable `hermes-maintain assist` supports current csvkit and sqlite-utils workspaces: preflight, isolated source snapshot, real patch capture and predeclared checks. N is default; F is explicit. It requires no reference patch or historical qualification, never applies changes to the source repository, and leaves uncovered requirements unknown. See [assist usage](docs/product-closeout/usage.md) and the [current review index](docs/product-closeout/review-index.md). The [historical maintenance index](docs/repo-portability/review-index.md) retains N/F/S records and both UNKNOWN outcomes. Software smokes do not establish algorithmic gains or upstream adoption.
 
 [Failure gallery](docs/failure-gallery.md) · [Current CI](https://github.com/Raidriar7170/hermes-skilleval/actions/workflows/validate.yml)
 

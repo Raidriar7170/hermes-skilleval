@@ -2,6 +2,16 @@
 
 
 def maintenance_prompt(request, profile):
+    if profile.file_policy is not None:
+        from hermes_skilleval.file_policy import disclosure
+        from dataclasses import replace
+
+        common = maintenance_prompt(request, replace(profile, file_policy=None))
+        return (
+            common.split("\nThe controller only accepts", 1)[0]
+            + "\n"
+            + disclosure(profile.file_policy)
+        )
     roots = ", ".join(profile.writable_roots)
     return (
         request

@@ -1,23 +1,14 @@
 """Fresh code-editing trial through inherited isolated Codex transport."""
 
 import argparse
+from hermes_skilleval._maintenance.execution import run_agent
 import hashlib
 import json
-import os
 import shutil
 import subprocess
 import time
 from pathlib import Path
 from hermes_skilleval._maintenance import container_runner
-from hermes_skilleval._maintenance.prompts import maintenance_prompt
-from hermes_skilleval.live_agent_runtime import (
-    AgentRequest,
-    CodexCliRunnerConfig,
-    LiveAgentSkill,
-    prepare_live_agent_workspace,
-    build_condition,
-    parse_codex_usage,
-)
 from hermes_skilleval.runtime_utility import load_registry
 from hermes_skilleval.repository_maintenance import manifest
 from hermes_skilleval.repository_profile import profile_for
@@ -135,118 +126,32 @@ if a.arm in ["S", "T"]:
     ids = route["skill_ids"]
 elif a.route:
     raise ValueError("N/O/F do not accept route overrides")
-mounted = [
-    LiveAgentSkill(
-        s["id"],
-        s["name"],
-        s["body"],
-        s["description"],
-        a.skill_assets / s["package_path"],
-        s["package_sha256"],
-    )
-    for s in registry["skills"]
-    if s["id"] in ids
-]
-a.output.mkdir(parents=True)
+record = run_agent(
+    base=a.task_root / "base",
+    public_request=a.public_request.read_text(),
+    profile=profile_for(task),
+    registry=registry,
+    ids=ids,
+    skill_assets=a.skill_assets,
+    output=a.output,
+    workspace_root=a.workspace_root,
+    private_root=a.private_root,
+    run_id=a.run_id,
+    task_id=task["task_id"],
+    arm=a.arm,
+    timeout=a.timeout,
+    metadata={
+        "split": task["split"],
+        "base_commit": task["base_commit"],
+        "qualification_sha256": hashlib.sha256(
+            a.qualification.read_bytes()
+        ).hexdigest(),
+    },
+)
 if a.route:
     shutil.copyfile(a.route, a.output / "route.json")
-source_root = Path(__file__).resolve().parent.parent
-shutil.copytree(
-    source_root,
-    a.output / "executed-source/hermes_skilleval",
-    ignore=shutil.ignore_patterns("__pycache__"),
-)
-package_started = time.monotonic()
-ws = prepare_live_agent_workspace(
-    base_dir=a.workspace_root.resolve(), run_id=a.run_id, mounted_skills=mounted
-)
-shutil.copytree(a.task_root / "base", ws.workspace_path, dirs_exist_ok=True)
-
-prompt = maintenance_prompt(a.public_request.read_text(), profile_for(task))
-
-condition = build_condition(
-    task_id=task["task_id"],
-    prompt=prompt,
-    condition="routed-skill",
-    routed_skills=mounted,
-)
-req = AgentRequest.from_condition(
-    run_id=a.run_id, condition=condition, workspace=ws, timeout_seconds=a.timeout
-)
-authroot = a.private_root.resolve() / "auth"
-auth = authroot / a.run_id
-auth.mkdir(parents=True, mode=0o700)
-config = CodexCliRunnerConfig(
-    codex_home_base=authroot,
-    model="gpt-5.6-sol",
-    reasoning_effort="medium",
-    restrict_reads=True,
-    max_stdout_chars=2000000,
-    max_event_chars=2000000,
-    max_stderr_chars=20000,
-)
-record = {
-    "run_id": a.run_id,
-    "task_id": task["task_id"],
-    "arm": a.arm,
-    "split": task["split"],
-    "base_commit": task["base_commit"],
-    "registry_id": registry["registry_id"],
-    "selected_ids": ids,
-    "mounted_skills": ws.mounted_skills,
-    "model": config.model,
-    "effort": config.reasoning_effort,
-    "timeout": a.timeout,
-    "usage": None,
-    "package_prepare_seconds": time.monotonic() - package_started,
-    "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
-    "workspace": str(ws.workspace_path),
-    "qualification_sha256": hashlib.sha256(a.qualification.read_bytes()).hexdigest(),
-    "source_sha256": {
-        str(f.relative_to(source_root.parent)): hashlib.sha256(
-            f.read_bytes()
-        ).hexdigest()
-        for f in [
-            Path(__file__),
-            Path(__file__).with_name("check.py"),
-            source_root / "repository_maintenance.py",
-        ]
-    },
-}
-write(a.output / "started.json", record)
-(a.output / "prompt.txt").write_text(prompt)
-source = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))) / "auth.json"
-started = time.monotonic()
-try:
-    shutil.copyfile(source, auth / "auth.json")
-    (auth / "auth.json").chmod(0o600)
-    out = container_runner.ContainerRunner(config).run(req)
-    record.update(
-        execution_seconds=time.monotonic() - started,
-        exit_code=out.exit_code,
-        timed_out=out.timed_out,
-        usage=parse_codex_usage(out.events),
-        execution_status="STARTED"
-        if any(
-            e.get("type") == "thread.started" for e in out.events if isinstance(e, dict)
-        )
-        else "NOT_STARTED",
-    )
-    (a.output / "events.jsonl").write_text(
-        "".join(json.dumps(e) + "\n" for e in out.events)
-    )
-    (a.output / "stderr.txt").write_text(out.stderr)
-except Exception as exc:
-    record.update(
-        execution_seconds=time.monotonic() - started,
-        execution_status="EXECUTOR_ERROR",
-        error=str(exc),
-    )
-    write(a.output / "run.json", record)
-    raise
-finally:
-    (auth / "auth.json").unlink(missing_ok=True)
-write(a.output / "executor.json", record)
+if not record["cleanup_confirmed"]:
+    raise RuntimeError("executor cleanup unconfirmed; do not capture while running")
 record = finalize(
     a.output / "executor.json", a.task_root, a.qualification, a.output / "verification"
 )

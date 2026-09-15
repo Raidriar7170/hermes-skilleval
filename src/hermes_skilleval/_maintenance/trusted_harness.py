@@ -77,12 +77,7 @@ else:
         def pytest_collection_finish(self, session):
             ids = []
             for item in session.items:
-                parts = item.nodeid.split("::")
-                ids.append(
-                    parts[0].replace(".py", "").replace("/", ".")
-                    + "::"
-                    + "::".join(parts[1:])
-                )
+                ids.append(runpy.run_path("/test_ids.py")["case_id"](item.nodeid))
             Path("/out/collected.json").write_text(json.dumps(sorted(ids)))
 
     raise SystemExit(

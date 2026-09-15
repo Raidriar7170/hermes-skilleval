@@ -37,6 +37,7 @@ def binding(task_root):
             for p in [
                 Path(__file__),
                 Path(__file__).with_name("check.py"),
+                Path(__file__).with_name("test_ids.py"),
                 Path(__file__).parent.parent / "repository_profile.py",
                 Path(__file__).parent.parent / "repository_maintenance.py",
             ]
@@ -87,11 +88,19 @@ def finalize(executor, task_root, qualification, output):
             if (
                 hashlib.sha256((saved / "candidate.patch").read_bytes()).hexdigest()
                 != cap["patch_sha256"]
-                or manifest(saved / "snapshot") != cap["candidate_manifest"]
+                or manifest(
+                    saved / "snapshot", strict=profile_for(task).file_policy is not None
+                )
+                != cap["candidate_manifest"]
             ):
                 raise RuntimeError("saved patch identity changed")
         else:
-            cap = capture(task_root / "base", Path(record["workspace"]), saved)
+            cap = capture(
+                task_root / "base",
+                Path(record["workspace"]),
+                saved,
+                strict=profile_for(task).file_policy is not None,
+            )
             write(executor.parent / "saved-capture.json", cap)
         record["capture_seconds"] = time.monotonic() - capture_clock
         write(output / "capture.json", cap)
@@ -99,13 +108,20 @@ def finalize(executor, task_root, qualification, output):
             patch_sha256=cap["patch_sha256"], changed_files=cap["changed_files"]
         )
         if task.get("profile"):
-            validate_changes(profile_for(task), cap["changed_files"])
+            validate_changes(
+                profile_for(task),
+                cap["changed_files"],
+                before=cap["base_manifest"],
+                after=cap["candidate_manifest"],
+                candidate=saved / "snapshot",
+            )
         rebuild(
             task_root / "base",
             saved / "candidate.patch",
             output / "rebuilt",
             cap["candidate_manifest"],
             cap.get("candidate_modes"),
+            strict=profile_for(task).file_policy is not None,
         )
         record["patch_applies"] = True
         results = {

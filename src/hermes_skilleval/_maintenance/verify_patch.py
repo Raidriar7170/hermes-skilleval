@@ -37,11 +37,20 @@ r = {
     "resolved": None,
 }
 try:
-    rebuild(a.task_root / "base", a.patch, a.output / "rebuilt")
+    rebuild(
+        a.task_root / "base",
+        a.patch,
+        a.output / "rebuilt",
+        strict=profile_for(task).file_policy is not None,
+    )
     r["patch_applies"] = True
     if task.get("profile"):
-        before = manifest(a.task_root / "base")
-        after = manifest(a.output / "rebuilt")
+        before = manifest(
+            a.task_root / "base", strict=profile_for(task).file_policy is not None
+        )
+        after = manifest(
+            a.output / "rebuilt", strict=profile_for(task).file_policy is not None
+        )
         before_modes = mode_manifest(a.task_root / "base", before)
         after_modes = mode_manifest(a.output / "rebuilt", after)
         validate_changes(
@@ -52,6 +61,9 @@ try:
                 if before.get(k) != after.get(k)
                 or before_modes.get(k) != after_modes.get(k)
             ],
+            before=before,
+            after=after,
+            candidate=a.output / "rebuilt",
         )
     cells = {
         kind: check(

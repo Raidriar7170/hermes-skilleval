@@ -14,8 +14,13 @@ class RepositoryProfile:
     cli_name: str
     image: str
     writable_roots: tuple[str, ...]
+    file_policy: dict | None = None
 
     def __post_init__(self):
+        if self.file_policy is not None:
+            from hermes_skilleval.file_policy import validate_policy
+
+            validate_policy(self.file_policy)
         if not self.packages:
             raise ValueError("at least one candidate package is required")
         for name, root in self.packages.items():
@@ -33,7 +38,10 @@ class RepositoryProfile:
             raise ValueError("invalid console name")
 
     def to_dict(self):
-        return asdict(self)
+        value = asdict(self)
+        if self.file_policy is None:
+            value.pop("file_policy")
+        return value
 
 
 SQLITE_UTILS = RepositoryProfile(
@@ -65,7 +73,19 @@ def profile_for(task):
     return SQLITE_UTILS
 
 
-def validate_changes(profile, changed_files):
+def validate_changes(
+    profile, changed_files, *, before=None, after=None, candidate=None
+):
+    if profile.file_policy is not None:
+        from hermes_skilleval.file_policy import validate_candidate
+
+        if before is None or after is None or candidate is None:
+            raise ValueError(
+                "operation policy requires captured before/after and candidate"
+            )
+        return validate_candidate(
+            profile.file_policy, before, after, candidate, changed_files
+        )
     for name in changed_files:
         if not any(
             name == root or name.startswith(root.rstrip("/") + "/")

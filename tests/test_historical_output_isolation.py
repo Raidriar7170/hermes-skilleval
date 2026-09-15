@@ -25,7 +25,7 @@ def historical_state():
     return contents, status
 
 
-def test_release_generation_preserves_history_in_both_orders(tmp_path):
+def test_repeated_release_generation_preserves_history(tmp_path):
     before = historical_state()
     for name in ("first", "second"):
         output = tmp_path / name

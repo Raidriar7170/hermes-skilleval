@@ -39,7 +39,7 @@ def stopped(name):
         raise RuntimeError("container cleanup unconfirmed: " + name)
 
 
-def isolated(image, mounts, args, output, label):
+def isolated(image, mounts, args, output, label, timeout=180):
     name = "hermes-repo-check-" + uuid.uuid4().hex
     cmd = [
         "docker",
@@ -65,7 +65,7 @@ def isolated(image, mounts, args, output, label):
         cmd += ["-v", f"{src.resolve()}:{dst}:{mode}"]
     cmd += ["-w", "/tmp", image, *args]
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         (output / (label + "-stdout.txt")).write_text(p.stdout)
         (output / (label + "-stderr.txt")).write_text(p.stderr)
         return p.returncode, cmd
@@ -81,6 +81,7 @@ def check(
     image=IMAGE,
     test_file="test_cli_convert.py",
     profile=None,
+    timeout=180,
 ):
     profile = profile or SQLITE_UTILS
     image = profile.image if profile != SQLITE_UTILS else image
@@ -113,6 +114,7 @@ def check(
             ],
             output,
             "build",
+            timeout=timeout,
         )
         result.update(build_returncode=rc, build_command=cmd)
         if rc:
@@ -134,6 +136,7 @@ def check(
             ["python", "-I", "/harness.py", "cli", "--help"],
             output,
             "cli",
+            timeout=timeout,
         )
         result["cli_returncode"] = rc
         if rc or "usage:" not in (output / "cli-stdout.txt").read_text().lower():
@@ -141,6 +144,7 @@ def check(
         mounts = [
             (candidate, "/input", "ro"),
             (trusted, "/trusted", "ro"),
+            (Path(__file__).with_name("test_ids.py"), "/test_ids.py", "ro"),
             (harness, "/harness.py", "ro"),
             (profile_file, "/profile.json", "ro"),
             (output, "/out", "rw"),
@@ -151,6 +155,7 @@ def check(
             ["python", "-I", "/harness.py", "collect", test_file, selector],
             output,
             "collect",
+            timeout=timeout,
         )
         result["collection_returncode"] = rc
         if rc:
@@ -162,6 +167,7 @@ def check(
             ["python", "-I", "/harness.py", "run", test_file, selector],
             output,
             "test",
+            timeout=timeout,
         )
         result.update(returncode=rc, test_command=cmd)
         if (output / "junit.xml").exists():

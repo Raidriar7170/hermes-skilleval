@@ -21,7 +21,7 @@ EXCLUDED_PARTS = {
 EXCLUDED_SUFFIXES = {".pyc", ".db", ".sqlite", ".sqlite3", ".log"}
 
 
-def manifest(root: Path) -> dict[str, str]:
+def manifest(root: Path, *, strict: bool = False) -> dict[str, str]:
     result = {}
     for path in sorted(root.rglob("*")):
         rel = path.relative_to(root)
@@ -33,8 +33,18 @@ def manifest(root: Path) -> dict[str, str]:
         ):
             continue
         if path.is_symlink():
+            if strict:
+                result[rel.as_posix()] = (
+                    "symlink:"
+                    + hashlib.sha256(str(path.readlink()).encode()).hexdigest()
+                )
+                continue
             raise ValueError(f"symlink rejected: {rel}")
-        if not path.is_file() or path.suffix in EXCLUDED_SUFFIXES:
+        if not path.is_file():
+            if strict and not path.is_dir():
+                raise ValueError(f"special file rejected: {rel}")
+            continue
+        if not strict and path.suffix in EXCLUDED_SUFFIXES:
             continue
         if path.stat().st_size > 5_000_000:
             raise ValueError(f"oversized candidate file: {rel}")
@@ -43,13 +53,24 @@ def manifest(root: Path) -> dict[str, str]:
 
 
 def mode_manifest(root: Path, files: dict[str, str]) -> dict[str, int]:
-    return {rel: (root / rel).stat().st_mode & 0o777 for rel in files}
+    return {rel: (root / rel).lstat().st_mode & 0o777 for rel in files}
 
 
 def copy_manifest(source: Path, dest: Path, files: dict[str, str]) -> None:
     for rel, digest in files.items():
         p = source / rel
-        if hashlib.sha256(p.read_bytes()).hexdigest() != digest:
+        if digest.startswith("symlink:"):
+            if (
+                not p.is_symlink()
+                or "symlink:" + hashlib.sha256(str(p.readlink()).encode()).hexdigest()
+                != digest
+            ):
+                raise ValueError("source link changed during capture")
+            target = dest / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.symlink_to(p.readlink())
+            continue
+        if p.is_symlink() or hashlib.sha256(p.read_bytes()).hexdigest() != digest:
             raise ValueError("source changed during capture")
         target = dest / rel
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -57,9 +78,9 @@ def copy_manifest(source: Path, dest: Path, files: dict[str, str]) -> None:
         target.chmod(p.stat().st_mode & 0o777)
 
 
-def capture(base: Path, candidate: Path, output: Path) -> dict:
+def capture(base: Path, candidate: Path, output: Path, *, strict: bool = False) -> dict:
     """Snapshot allowed source and make a binary Git patch from a private index."""
-    before, after = manifest(base), manifest(candidate)
+    before, after = manifest(base, strict=strict), manifest(candidate, strict=strict)
     before_modes, after_modes = (
         mode_manifest(base, before),
         mode_manifest(candidate, after),
@@ -90,7 +111,7 @@ def capture(base: Path, candidate: Path, output: Path) -> dict:
         )
         for p in list(root.iterdir()):
             if p.name != ".git":
-                shutil.rmtree(p) if p.is_dir() else p.unlink()
+                shutil.rmtree(p) if p.is_dir() and not p.is_symlink() else p.unlink()
         copy_manifest(snapshot, root, after)
         git("add", "-A", "-f", ".")
         patch = git("diff", "--cached", "--binary", "--full-index", "--no-ext-diff")
@@ -116,9 +137,11 @@ def rebuild(
     output: Path,
     expected: dict[str, str] | None = None,
     expected_modes: dict[str, int] | None = None,
+    *,
+    strict: bool = False,
 ) -> dict[str, str]:
     output.mkdir(parents=True, exist_ok=False)
-    copy_manifest(base, output, manifest(base))
+    copy_manifest(base, output, manifest(base, strict=strict))
     subprocess.run(["git", "init", "-q", str(output)], check=True, capture_output=True)
     if patch.stat().st_size:
         subprocess.run(
@@ -131,7 +154,7 @@ def rebuild(
             check=True,
             capture_output=True,
         )
-    actual = manifest(output)
+    actual = manifest(output, strict=strict)
     if expected is not None and actual != expected:
         raise ValueError("reconstructed source differs from captured candidate")
     if expected_modes is not None and mode_manifest(output, actual) != expected_modes:

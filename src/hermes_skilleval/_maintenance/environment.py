@@ -64,13 +64,19 @@ cmd = ["codex", "sandbox"]
 for item in runner.permission_overrides(req):
     cmd += ["-c", item]
 cmd += ["-P", "hermes-task", "-C", str(root), "--", "python", "-c", code]
-proc = subprocess.run(
-    runner.wrap(req, cmd),
-    env=runner._env(req),
-    capture_output=True,
-    text=True,
-    timeout=45,
-)
+try:
+    proc = subprocess.run(
+        runner.wrap(req, cmd),
+        env=runner._env(req),
+        capture_output=True,
+        text=True,
+        timeout=45,
+    )
+finally:
+    from hermes_skilleval._maintenance.check import stopped
+
+    stopped(runner.name(req))
+
 facts = json.loads(proc.stdout) if proc.returncode == 0 else {}
 record = {
     "returncode": proc.returncode,

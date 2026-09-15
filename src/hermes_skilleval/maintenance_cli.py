@@ -117,6 +117,31 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     for command in commands:
         sub.add_parser(command, help="Shared isolated " + command + " entrypoint")
+    assist = sub.add_parser(
+        "assist", help="Current-task isolated patch; no gold or qualification"
+    )
+    for name in (
+        "repo",
+        "request",
+        "repository-config",
+        "checks",
+        "registry",
+        "skill-assets",
+        "output",
+    ):
+        assist.add_argument("--" + name, type=Path, required=True)
+    assist.add_argument("--fixed-config", type=Path)
+    assist.add_argument("--arm", choices=["N", "F"], default="N")
+    assist.add_argument("--model", default="gpt-5.6-sol")
+    assist.add_argument(
+        "--effort", choices=["low", "medium", "high", "xhigh", "max"], default="medium"
+    )
+    assist.add_argument("--timeout", type=int, default=600)
+    assist.add_argument(
+        "--plan-only",
+        action="store_true",
+        help="Inspect inputs/resources without model calls or source writes",
+    )
     records = sub.add_parser("records", help="Recompute public records offline")
     records.add_argument("--index", type=Path, required=True)
     records.add_argument("--output", type=Path, required=True)
@@ -130,6 +155,24 @@ def main():
         rec.add_argument("--" + name, type=Path)
     rec.add_argument("--repository")
     args = parser.parse_args()
+    if args.command == "assist":
+        from hermes_skilleval._maintenance.assist import execute
+
+        try:
+            result, code = execute(args)
+        except (ValueError, OSError, KeyError, TypeError, RuntimeError) as exc:
+            print(
+                json.dumps(
+                    {
+                        "status": "PREFLIGHT_REJECTED",
+                        "error": str(exc),
+                        "resolved": None,
+                    }
+                )
+            )
+            return 2
+        print(json.dumps(result, indent=2))
+        return code
     if args.command == "records":
         from hermes_skilleval.maintenance_records import recompute
 
