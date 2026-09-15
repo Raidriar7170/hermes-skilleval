@@ -12,6 +12,7 @@ spec = importlib.util.spec_from_file_location(
     "repo_evidence",
     Path(__file__).parents[1] / "scripts/repo_aware/recompute_execution.py",
 )
+assert spec is not None and spec.loader is not None
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
@@ -109,3 +110,16 @@ def test_identity_tampering_is_unknown(tmp_path, mutation):
         bad, tmp_path, True, "version", "registry", packages
     )
     assert result is None and reasons
+
+
+def test_committed_public_tables_recompute():
+    import subprocess
+    import sys
+
+    subprocess.run(
+        [sys.executable, "scripts/repo_aware/check_public.py"],
+        cwd=Path(__file__).parents[1],
+        check=True,
+        capture_output=True,
+        text=True,
+    )

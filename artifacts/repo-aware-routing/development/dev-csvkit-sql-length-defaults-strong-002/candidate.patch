@@ -1,0 +1,56 @@
+diff --git a/csvkit/utilities/csvsql.py b/csvkit/utilities/csvsql.py
+index 4eecf49b083c24d3c4180cfe3757fb430578b4ff..dd051c13cb08cb05d7c6603cc7e97fe36dc4a67b 100644
+--- a/csvkit/utilities/csvsql.py
++++ b/csvkit/utilities/csvsql.py
+@@ -86,10 +86,10 @@ class CSVSQL(CSVKitUtility):
+             '--chunk-size', dest='chunk_size', type=int,
+             help='Chunk size for batch insert into the table. Requires --insert.')
+         self.argparser.add_argument(
+-            '--min-col-len', dest='min_col_len', type=int,
++            '--min-col-len', dest='min_col_len', type=int, default=1,
+             help='The minimum length of text columns.')
+         self.argparser.add_argument(
+-            '--col-len-multiplier', dest='col_len_multiplier', type=int,
++            '--col-len-multiplier', dest='col_len_multiplier', type=int, default=1,
+             help='Multiply the maximum column length by this multiplier to accomodate larger values in later runs.')
+ 
+     def main(self):
+diff --git a/tests/test_utilities/test_csvsql.py b/tests/test_utilities/test_csvsql.py
+index c6d13ca7660e014f12e14907cf27b1da8bd449ad..d9a59ef54ff26bd74439e7eeeb9c987759ec72e4 100644
+--- a/tests/test_utilities/test_csvsql.py
++++ b/tests/test_utilities/test_csvsql.py
+@@ -5,6 +5,7 @@ import unittest
+ from textwrap import dedent
+ from unittest.mock import patch
+ 
++import agate
+ from sqlalchemy.exc import IntegrityError, OperationalError
+ 
+ from csvkit.utilities.csvsql import CSVSQL, launch_new_instance
+@@ -57,6 +58,26 @@ class TestCSVSQL(CSVKitTestCase, EmptyFileTests):
+                     f'The {args[0]} option is only valid if --insert is also specified.'
+                 )
+ 
++    def test_column_length_options(self):
++        for options, expected in (
++            ([], (1, 1)),
++            (['--min-col-len', '8', '--col-len-multiplier', '3'], (8, 3)),
++        ):
++            with self.subTest(options=options), patch.object(agate.Table, 'to_sql', autospec=True) as to_sql:
++                self.get_output([
++                    '--db', 'sqlite:///:memory:',
++                    *options,
++                    'examples/testfixed_converted.csv',
++                ])
++
++                table = to_sql.call_args.args[0]
++                self.assertEqual(table.column_names[0], 'text')
++                self.assertEqual(table.rows[0][0], 'Chicago Reader')
++                self.assertEqual(
++                    (to_sql.call_args.kwargs['min_col_len'], to_sql.call_args.kwargs['col_len_multiplier']),
++                    expected,
++                )
++
+     def setUp(self):
+         self.db_file = 'foo.db'
+ 

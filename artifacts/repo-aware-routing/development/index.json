@@ -1,0 +1,2372 @@
+{
+  "schema": "repo-aware-public-execution-v1",
+  "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606",
+  "routing_config_sha256": "554a5ae2b5a8c79af1947382ae8e0ad3b15a19ea1c09e49526c2df2226a9bf21",
+  "registry_sha256": "0f6e9838c15a5c07d1eedd6670565c92ef0b1b0485f20bb5cc2d1fd362f9fbd3",
+  "ledger_sha256": "1fde4d3370d625ba669923771ac9d86d230cfc94ccc22710ff178c8717a5092c",
+  "protocol_lock_matches": true,
+  "dollars": null,
+  "cells": [
+    {
+      "run_id": "dev-csvkit-empty-stack-native-minus-002",
+      "actual_run_id": "dev-csvkit-empty-stack-native-minus-002",
+      "actual_arm": "N",
+      "routing_skill_ids": [],
+      "task_id": "csvkit-empty-stack",
+      "repository": "wireservice/csvkit",
+      "family_id": "empty-stack",
+      "family_source": "qualification",
+      "policy": "native-minus",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "788d8b531676a2fb05d734bf4a9ee1f6015c0b10a92758b3fc8d72fb902b601e",
+      "executor_sha256": "f7849913e5cea984f51bc180ae6a4e513d5ed7bd230aa507824067ba4969c811",
+      "routing_sha256": null,
+      "qualification_sha256": "5af5393a60735f67d80b6092d28626440627ecaad0fcf180d4924f78f389bef3",
+      "base_commit": "95b0672e29f36d016dd855a1b5d95b88a5c3a714",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": null,
+      "routing_policy": null,
+      "routing_registry_id": null,
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "N",
+      "adapter_sha256": null,
+      "context_digest": null,
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 214.01144687499618,
+        "execution_seconds": 209.22687262500403,
+        "package_prepare_seconds": 0.029569125006673858,
+        "capture_seconds": 0.36312487500254065,
+        "finalize_seconds": 4.646590000018477
+      },
+      "calls": {
+        "heavy_constructors": null,
+        "encoder_queries": null,
+        "reranker_forwards": null
+      },
+      "usage": {
+        "input_tokens": 459203,
+        "cached_input_tokens": 419200,
+        "output_tokens": 8260,
+        "reasoning_output_tokens": 3229
+      },
+      "patch": {
+        "sha256": "5a6df3666955d3658302f28f3db05d5de23fd08ff4153af5a7b8d023d2caf14b",
+        "path": "dev-csvkit-empty-stack-native-minus-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-native-minus-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "90e86ff59dcd398c551c02d6785f3b2a0c59f029d85fe63520058e8b0fba01b4",
+          "result_sha256": "bbd2d68a347f4a67c9384229502cccf7498ca2257ca8da9f6cbe9c854c674556",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-native-minus-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "b0cf4b1163e80dfd0f1d805749cfd946aa9fe7db8402a2facd3e98b5acd382b6",
+          "result_sha256": "347909952ff798404aaa7d98dc7c4b92f95ddbf4df477e25eef098f400a6b016",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "import-data-regression",
+          "package_sha256": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04",
+              "size": 606,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        },
+        {
+          "event_ordinal": 7,
+          "referenced_skill_paths": [
+            ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        },
+        {
+          "event_ordinal": 9,
+          "referenced_skill_paths": [
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {},
+      "fallback_reason": null
+    },
+    {
+      "run_id": "dev-csvkit-empty-stack-native-002",
+      "actual_run_id": "dev-csvkit-empty-stack-native-002",
+      "actual_arm": "N",
+      "routing_skill_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "task_id": "csvkit-empty-stack",
+      "repository": "wireservice/csvkit",
+      "family_id": "empty-stack",
+      "family_source": "qualification",
+      "policy": "native",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "a8f64ba090f29b285f6cfd10a87fcf0169f4367243afa8e8c9aeaeb5d5b4d8c3",
+      "executor_sha256": "b46c2c687763210857627acf685c72b4ffaee80d8c03930309a3266cbca4c2bb",
+      "routing_sha256": "3d4bfe6506332a600a71d0fbb4a5aefabdd283ec09a666c0311d738ffee8d60d",
+      "qualification_sha256": "5af5393a60735f67d80b6092d28626440627ecaad0fcf180d4924f78f389bef3",
+      "base_commit": "95b0672e29f36d016dd855a1b5d95b88a5c3a714",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "f97fb09049461a2255683c36d3dcb8da8d1f6b289516a2bc469cda7e45a33771",
+      "routing_policy": "native",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "N",
+      "adapter_sha256": null,
+      "context_digest": "13ad888bb72c190ed5a1c3f0da211c5c77767a75584edace9713e276bbe4ec7d",
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 162.06024345802143,
+        "execution_seconds": 157.2417228340055,
+        "package_prepare_seconds": 0.03052041699993424,
+        "capture_seconds": 0.34709162497892976,
+        "finalize_seconds": 4.634646291990066
+      },
+      "calls": {
+        "heavy_constructors": 0,
+        "encoder_queries": 0,
+        "reranker_forwards": 0
+      },
+      "usage": {
+        "input_tokens": 576844,
+        "cached_input_tokens": 540160,
+        "output_tokens": 6409,
+        "reasoning_output_tokens": 2055
+      },
+      "patch": {
+        "sha256": "4eb3eea4816e98d7cbce713be43f747e890e600600efcef02982286e74b16043",
+        "path": "dev-csvkit-empty-stack-native-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-native-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "72d390ceea35797d09434fbebc315843cd56475aad1d9ace1eb7336d0e4e5094",
+          "result_sha256": "d44983e51f83f4f71567989e9b87f3b00a0b0644a78a9e2f8b60d4da441882fa",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-native-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "7228078a735570e06ee9b807b414bf759f40d0da917554acf337bb3bd14cb661",
+          "result_sha256": "aadcaf31b8409909fe19b2521bf0065a37b35828fb190a343e84384ae28351bd",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "import-data-regression",
+          "package_sha256": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04",
+              "size": 606,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/import-data-regression--e013e6d8b3f2/SKILL.md",
+            ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md",
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "route_wall_seconds": 0.037895916000707075
+      },
+      "fallback_reason": null
+    },
+    {
+      "run_id": "dev-csvkit-empty-stack-strong-002",
+      "actual_run_id": "dev-csvkit-empty-stack-strong-002",
+      "actual_arm": "S",
+      "routing_skill_ids": [
+        "verification-before-completion",
+        "systematic-debugging"
+      ],
+      "task_id": "csvkit-empty-stack",
+      "repository": "wireservice/csvkit",
+      "family_id": "empty-stack",
+      "family_source": "qualification",
+      "policy": "strong",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "801e6e84d7533dae42aaa06699f8b1153d39cf2ac47afbbd864d71e416d263bf",
+      "executor_sha256": "1be2556c8a594adfc4e667f838cb55d007b09db947420482af7000fde0628b7d",
+      "routing_sha256": "ac72fd68d675d663525a46ccabca7533a122691d171e476d7afb791382e24488",
+      "qualification_sha256": "5af5393a60735f67d80b6092d28626440627ecaad0fcf180d4924f78f389bef3",
+      "base_commit": "95b0672e29f36d016dd855a1b5d95b88a5c3a714",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "3a97fc3682750e8df21a4f0fd4f1f785e45bd3d8279dcff5f214c6c984b2ad98",
+      "routing_policy": "strong",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "S",
+      "adapter_sha256": null,
+      "context_digest": "13ad888bb72c190ed5a1c3f0da211c5c77767a75584edace9713e276bbe4ec7d",
+      "selected_ids": [
+        "verification-before-completion",
+        "systematic-debugging"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 150.8470228750084,
+        "execution_seconds": 141.17315937500098,
+        "package_prepare_seconds": 0.028510583011666313,
+        "capture_seconds": 0.46723904099781066,
+        "finalize_seconds": 5.1605558750161435
+      },
+      "calls": {
+        "heavy_constructors": 1,
+        "encoder_queries": 1,
+        "reranker_forwards": 5
+      },
+      "usage": {
+        "input_tokens": 434215,
+        "cached_input_tokens": 384768,
+        "output_tokens": 4907,
+        "reasoning_output_tokens": 1389
+      },
+      "patch": {
+        "sha256": "5d0599fae63648760b1997390f255fce1436e1b3f8ee689f491c7e2219e79dac",
+        "path": "dev-csvkit-empty-stack-strong-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-strong-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "1d9d47b17b6852862ad8a8eb24e202bc6a2074cd63721aab85f4d9e64e405159",
+          "result_sha256": "d5c8aee2edf381630b03559536b420b6776ba443fb0e28f46ed51da915a2bcd9",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-strong-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "f04ba565b8a881fd4114dc8d510aac3b5ca6490c53a35dea0c80412b77c90dcb",
+          "result_sha256": "a787c1902574ec1fd941131024c9b2709482af22ad683285b6074d2205d95d81",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md",
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "constructor_index_seconds": 1.1575362499861512,
+        "retrieval_seconds": 0.5524513749987818,
+        "reranker_selection_seconds": 1.0399112089944538,
+        "route_wall_seconds": 4.295685165998293
+      },
+      "fallback_reason": null
+    },
+    {
+      "run_id": "dev-csvkit-empty-stack-repo-aware-002",
+      "actual_run_id": "dev-csvkit-empty-stack-repo-aware-002",
+      "actual_arm": "N",
+      "routing_skill_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "task_id": "csvkit-empty-stack",
+      "repository": "wireservice/csvkit",
+      "family_id": "empty-stack",
+      "family_source": "qualification",
+      "policy": "repo-aware",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "3028814f66a09a48dd0eac8461354f7e223d660548aad038aacb53d025619829",
+      "executor_sha256": "12c6925deaeee9f406c9a05ed615185c4de812af4984599022f6ee8ee9a7f96e",
+      "routing_sha256": "99767121ad1a111de1d1217f6b84084e37481a28bae113c87ac293f2e8c0c256",
+      "qualification_sha256": "5af5393a60735f67d80b6092d28626440627ecaad0fcf180d4924f78f389bef3",
+      "base_commit": "95b0672e29f36d016dd855a1b5d95b88a5c3a714",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "3a97fc3682750e8df21a4f0fd4f1f785e45bd3d8279dcff5f214c6c984b2ad98",
+      "routing_policy": "repo-aware",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "N",
+      "adapter_sha256": "b254f34cfbc25a93435563773bd12155b206118e0f438e9c27704c234044a774",
+      "context_digest": "13ad888bb72c190ed5a1c3f0da211c5c77767a75584edace9713e276bbe4ec7d",
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 180.19650925000315,
+        "execution_seconds": 169.70925220899517,
+        "package_prepare_seconds": 0.02976629202021286,
+        "capture_seconds": 0.4608659590012394,
+        "finalize_seconds": 5.214206875010859
+      },
+      "calls": {
+        "heavy_constructors": 2,
+        "encoder_queries": 1,
+        "reranker_forwards": 10
+      },
+      "usage": {
+        "input_tokens": 504733,
+        "cached_input_tokens": 464768,
+        "output_tokens": 5767,
+        "reasoning_output_tokens": 2132
+      },
+      "patch": {
+        "sha256": "cd9eedc713c3269fab9f02ed3e12f924587b15a8cbd3597aeb89af174943932c",
+        "path": "dev-csvkit-empty-stack-repo-aware-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-repo-aware-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "22517c2352c030f541a0d6314170c755716bd866f8fcc76d13e2e4ccab478d0e",
+          "result_sha256": "1539f1fcd43aeecbea165f68a0555d5de8960c3d50f6d18ec3d86909d14ed5d3",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-empty-stack-repo-aware-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "0c5713bb500ba801af02c92bee5b238beafd5a6c046376399ba59f234522a4f3",
+          "result_sha256": "0f495d2454d993d4a9b6049ff551e001960cb5ab9d79ca949986b84696b7983e",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "import-data-regression",
+          "package_sha256": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04",
+              "size": 606,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md",
+            ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md",
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "constructor_index_seconds": 1.1008692499890458,
+        "retrieval_seconds": 0.5277529580052942,
+        "reranker_selection_seconds": 1.9831179169996176,
+        "route_wall_seconds": 5.034620542021003
+      },
+      "fallback_reason": "no_positive_feasible_supported_set"
+    },
+    {
+      "run_id": "dev-csvkit-sql-length-defaults-native-002",
+      "actual_run_id": "dev-csvkit-sql-length-defaults-native-002",
+      "actual_arm": "N",
+      "routing_skill_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "task_id": "csvkit-sql-length-defaults",
+      "repository": "wireservice/csvkit",
+      "family_id": "sql-length-defaults",
+      "family_source": "qualification",
+      "policy": "native",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "a3c8d1b7bdafc82646d7c3ce8333d9826a456d544c6b7a6679dad8271b993674",
+      "executor_sha256": "814091875a452911108f1e3a6bf5a528aeafe33431305c32505fe14781c52033",
+      "routing_sha256": "da20e9607a99bf79b1d1cfc78c070f7f5bba5d0c536d176f426b37ef04a556d4",
+      "qualification_sha256": "abfc89993ccbddf6482b55aca14100c4b70ba12e0862ac80523248c690ae2244",
+      "base_commit": "9c0f91bedcb9c741311dc1c4d98a9bb6ccb49c2a",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "416f853983790d72fd1ccf0551c8a41b106613bb8d5964596adea7d0b1d0bc82",
+      "routing_policy": "native",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "N",
+      "adapter_sha256": null,
+      "context_digest": "d5f33a14b65cdb88dd4d2bd11553f8c510e152cabe6a638d4b98dbfd64db22d6",
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 135.10539420798887,
+        "execution_seconds": 130.26973870801157,
+        "package_prepare_seconds": 0.0289879159827251,
+        "capture_seconds": 0.3302448330214247,
+        "finalize_seconds": 4.650904709007591
+      },
+      "calls": {
+        "heavy_constructors": 0,
+        "encoder_queries": 0,
+        "reranker_forwards": 0
+      },
+      "usage": {
+        "input_tokens": 547969,
+        "cached_input_tokens": 505344,
+        "output_tokens": 5140,
+        "reasoning_output_tokens": 1759
+      },
+      "patch": {
+        "sha256": "08908067f497ac34c5bcdf99794367997d3a0b5d175952c1fac9c163ac06805e",
+        "path": "dev-csvkit-sql-length-defaults-native-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-native-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "d8ee9b7922765f42443659f08e3b3ffe20d6ac904895e416cbc1b6cc5dcdfa6c",
+          "result_sha256": "19f82dfbd218f5ee4697f72c182721376631b8a192841eecbe4bb350fc8eeb7c",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-native-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "24f7a2a9d049eb0f2b6cbad218a29d1a443579c6ece090493d01971aa03cb0a1",
+          "result_sha256": "cda7c6bc25b974f84b19a605fd8d0de2429cfbb4155f8fe285ba52629b8a3f4f",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "import-data-regression",
+          "package_sha256": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04",
+              "size": 606,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md",
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "route_wall_seconds": 0.037623415992129594
+      },
+      "fallback_reason": null
+    },
+    {
+      "run_id": "dev-csvkit-sql-length-defaults-strong-002",
+      "actual_run_id": "dev-csvkit-sql-length-defaults-strong-002",
+      "actual_arm": "S",
+      "routing_skill_ids": [
+        "verification-before-completion",
+        "systematic-debugging"
+      ],
+      "task_id": "csvkit-sql-length-defaults",
+      "repository": "wireservice/csvkit",
+      "family_id": "sql-length-defaults",
+      "family_source": "qualification",
+      "policy": "strong",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "4c7cdfeb13e394d9c5981db6863cd4883be8f7251da6059c5a29cb9c05c78a88",
+      "executor_sha256": "852d50d884cad7ff02d85cce8af12cfe46b082cd3991cf92da2acf918433b5d0",
+      "routing_sha256": "2cfd1a6b1e847481d047608911386783e97526402436c7d5e891054c42750f5b",
+      "qualification_sha256": "abfc89993ccbddf6482b55aca14100c4b70ba12e0862ac80523248c690ae2244",
+      "base_commit": "9c0f91bedcb9c741311dc1c4d98a9bb6ccb49c2a",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "416f853983790d72fd1ccf0551c8a41b106613bb8d5964596adea7d0b1d0bc82",
+      "routing_policy": "strong",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "S",
+      "adapter_sha256": null,
+      "context_digest": "d5f33a14b65cdb88dd4d2bd11553f8c510e152cabe6a638d4b98dbfd64db22d6",
+      "selected_ids": [
+        "verification-before-completion",
+        "systematic-debugging"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 137.5931267089909,
+        "execution_seconds": 127.55785725000896,
+        "package_prepare_seconds": 0.02801475001615472,
+        "capture_seconds": 0.5041313750261907,
+        "finalize_seconds": 5.803890624985797
+      },
+      "calls": {
+        "heavy_constructors": 2,
+        "encoder_queries": 1,
+        "reranker_forwards": 5
+      },
+      "usage": {
+        "input_tokens": 466037,
+        "cached_input_tokens": 432640,
+        "output_tokens": 5324,
+        "reasoning_output_tokens": 1625
+      },
+      "patch": {
+        "sha256": "d89b5b962a65ec0948ab6d3e01b7963ac8b3de0951e03ddc9f241f97612ed319",
+        "path": "dev-csvkit-sql-length-defaults-strong-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-strong-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "4791dc69e619aecefe2da2db44e29e840b49da6141731467310534f37743056e",
+          "result_sha256": "8ff71312c79e9e40045fe409caa924f3b3d501b134d7d7fe68aac6522bea0e8d",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-strong-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "30bc0070842bc0584a40a523a1e27b030d3a3151eee03c3a6a425658abc27412",
+          "result_sha256": "554c5157362b01e8c233a5ddad443e37c330ec58ae3ec5feaf2fc4ceb42f2df7",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md",
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "constructor_index_seconds": 1.0907082920020912,
+        "retrieval_seconds": 0.5300594590080436,
+        "reranker_selection_seconds": 0.9884131249855272,
+        "route_wall_seconds": 4.020457083999645
+      },
+      "fallback_reason": null
+    },
+    {
+      "run_id": "dev-csvkit-sql-length-defaults-repo-aware-002",
+      "actual_run_id": "dev-csvkit-sql-length-defaults-repo-aware-002",
+      "actual_arm": "N",
+      "routing_skill_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "task_id": "csvkit-sql-length-defaults",
+      "repository": "wireservice/csvkit",
+      "family_id": "sql-length-defaults",
+      "family_source": "qualification",
+      "policy": "repo-aware",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "c889ea7c8b250d6772e4ea3274de3e3f93d6958f5b6609ac3d750fd2075c7c4a",
+      "executor_sha256": "097a31d4b22cd692e3e8bbaaa1c182128608b1c2a7c60fbe5045b610a853511d",
+      "routing_sha256": "b02775e091dad6aa163e77638280ca1b938a4e28592d68fd77f31391d324f65c",
+      "qualification_sha256": "abfc89993ccbddf6482b55aca14100c4b70ba12e0862ac80523248c690ae2244",
+      "base_commit": "9c0f91bedcb9c741311dc1c4d98a9bb6ccb49c2a",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "416f853983790d72fd1ccf0551c8a41b106613bb8d5964596adea7d0b1d0bc82",
+      "routing_policy": "repo-aware",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "N",
+      "adapter_sha256": "b254f34cfbc25a93435563773bd12155b206118e0f438e9c27704c234044a774",
+      "context_digest": "d5f33a14b65cdb88dd4d2bd11553f8c510e152cabe6a638d4b98dbfd64db22d6",
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 145.21285587499733,
+        "execution_seconds": 133.39857795799617,
+        "package_prepare_seconds": 0.029959207982756197,
+        "capture_seconds": 0.46469704201444983,
+        "finalize_seconds": 5.733707915991545
+      },
+      "calls": {
+        "heavy_constructors": 2,
+        "encoder_queries": 1,
+        "reranker_forwards": 15
+      },
+      "usage": {
+        "input_tokens": 557066,
+        "cached_input_tokens": 518016,
+        "output_tokens": 4806,
+        "reasoning_output_tokens": 1264
+      },
+      "patch": {
+        "sha256": "2764c7f6b55dd767d560f4a7e010b05ae4c4314b1d3e85bc3e0c92c770a209e4",
+        "path": "dev-csvkit-sql-length-defaults-repo-aware-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-repo-aware-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "89fd4a2a0701835650a8d8f4934c8f5770e937c09abc04b4a07b2f26cc091bf5",
+          "result_sha256": "ae78688968536f4a9eaeefec8595007b2e190a889daa159bd8b1bb842b4ab214",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-repo-aware-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "7cc7dadcaabdcd80d44fef787dd59a988ac0b9a993cf7108b9f93fd43db3d69a",
+          "result_sha256": "000b2d902cee1aaa7500494915dd640d198e6b2a899c6845af2865fddecd6fb2",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "import-data-regression",
+          "package_sha256": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04",
+              "size": 606,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        },
+        {
+          "event_ordinal": 26,
+          "referenced_skill_paths": [
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "constructor_index_seconds": 1.1068973329965957,
+        "retrieval_seconds": 0.5460703750140965,
+        "reranker_selection_seconds": 2.7575417080079205,
+        "route_wall_seconds": 5.845897041988792
+      },
+      "fallback_reason": "no_positive_feasible_supported_set"
+    },
+    {
+      "run_id": "dev-csvkit-sql-length-defaults-native-minus-002",
+      "actual_run_id": "dev-csvkit-sql-length-defaults-native-minus-002",
+      "actual_arm": "N",
+      "routing_skill_ids": [],
+      "task_id": "csvkit-sql-length-defaults",
+      "repository": "wireservice/csvkit",
+      "family_id": "sql-length-defaults",
+      "family_source": "qualification",
+      "policy": "native-minus",
+      "repeat": null,
+      "execution_status": "STARTED",
+      "exit_code": 0,
+      "timed_out": false,
+      "error_present": false,
+      "parse_errors": [],
+      "run_sha256": "9babb844e8d1073fa78a4a94b182a4022c82f89c198c92d804160477811823b6",
+      "executor_sha256": "f23e85fe7d5a228d16db901c67120e4203f64c21bd593b36e859ffb0f1030c8a",
+      "routing_sha256": null,
+      "qualification_sha256": "abfc89993ccbddf6482b55aca14100c4b70ba12e0862ac80523248c690ae2244",
+      "base_commit": "9c0f91bedcb9c741311dc1c4d98a9bb6ccb49c2a",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": null,
+      "routing_policy": null,
+      "routing_registry_id": null,
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "27a2c80efc72fe5dd5bfa03b43e16f00b383de310a5d36cc7ff192c45e313ff7",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "N",
+      "adapter_sha256": null,
+      "context_digest": null,
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 142.1006113330077,
+        "execution_seconds": 137.1301636249991,
+        "package_prepare_seconds": 0.029385084024397656,
+        "capture_seconds": 0.3328658750106115,
+        "finalize_seconds": 4.823370625003008
+      },
+      "calls": {
+        "heavy_constructors": null,
+        "encoder_queries": null,
+        "reranker_forwards": null
+      },
+      "usage": {
+        "input_tokens": 444803,
+        "cached_input_tokens": 407936,
+        "output_tokens": 5625,
+        "reasoning_output_tokens": 1965
+      },
+      "patch": {
+        "sha256": "4f047f54f031a858c4f51d64e73571c2422dcebbd230c44c1ca26a8bf038f9dc",
+        "path": "dev-csvkit-sql-length-defaults-native-minus-002/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-native-minus-002/target.xml",
+          "junit_sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+          "raw_junit_sha256": "1699febd507339b5957616d8dd6ef41845fcbf831fb104923e8a702ac4972477",
+          "result_sha256": "54db1c029ab122f59dcb15fbbcdd0babe0677c5e9157a0734e0f9fd6c89b4974",
+          "expected_ids": [
+            "test_behavior::test_target"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "dev-csvkit-sql-length-defaults-native-minus-002/regression.xml",
+          "junit_sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+          "raw_junit_sha256": "b3ca5c29f85eafe843ca9cbb993540e3945d79f63cec518ec69af42ed6a81456",
+          "result_sha256": "fba42f50887527512dd79c5bec46eb82f53bab79f2e32baad19f50598697dc25",
+          "expected_ids": [
+            "test_behavior::test_regression"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": true
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "import-data-regression",
+          "package_sha256": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04",
+              "size": 606,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [
+        {
+          "event_ordinal": 5,
+          "referenced_skill_paths": [
+            ".agents/skills/cli-api-regression--9528bc70d4b5/SKILL.md",
+            ".agents/skills/verification-before-completion--d020aca45e4a/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        },
+        {
+          "event_ordinal": 25,
+          "referenced_skill_paths": [
+            ".agents/skills/systematic-debugging--1e9ad67e8972/SKILL.md"
+          ],
+          "read_command_observed": true,
+          "exit_code": 0
+        }
+      ],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {},
+      "fallback_reason": null
+    }
+  ],
+  "events": [
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-empty-stack-native-minus-002",
+      "time": 1789497797.434242,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-empty-stack-native-minus-002",
+      "time": 1789498011.517697,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-empty-stack-native-002",
+      "time": 1789498011.517909,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-empty-stack-native-002",
+      "time": 1789498173.654324,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-empty-stack-strong-002",
+      "time": 1789498173.654499,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-empty-stack-strong-002",
+      "time": 1789498324.8517911,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-empty-stack-repo-aware-002",
+      "time": 1789498324.851941,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-empty-stack-repo-aware-002",
+      "time": 1789498505.408156,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-sql-length-defaults-native-002",
+      "time": 1789498505.408333,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-sql-length-defaults-native-002",
+      "time": 1789498640.56596,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-sql-length-defaults-strong-002",
+      "time": 1789498640.566111,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-sql-length-defaults-strong-002",
+      "time": 1789498778.503809,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-sql-length-defaults-repo-aware-002",
+      "time": 1789498778.503979,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-sql-length-defaults-repo-aware-002",
+      "time": 1789498924.084459,
+      "exit_code": 0,
+      "protocol_sha256": null
+    },
+    {
+      "event": "launch",
+      "run_id": "dev-csvkit-sql-length-defaults-native-minus-002",
+      "time": 1789498924.084627,
+      "exit_code": null,
+      "protocol_sha256": "6c93e399770f811afba74b774b7a4e92c8df3d1cfa4c849fc4cecad8ecdad606"
+    },
+    {
+      "event": "exit",
+      "run_id": "dev-csvkit-sql-length-defaults-native-minus-002",
+      "time": 1789499066.278581,
+      "exit_code": 0,
+      "protocol_sha256": null
+    }
+  ],
+  "privacy": "Allowlisted metadata; raw patches withheld on sensitive-pattern detection; JUnit stack bodies omitted.",
+  "expected_r_version": null,
+  "expected_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+  "version_scope": "DEVELOPMENT_UNFROZEN",
+  "expected_packages": {
+    "systematic-debugging": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+    "verification-before-completion": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+    "cli-api-regression": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+    "schema-change-regression": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+    "import-data-regression": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37"
+  }
+}
