@@ -12,3 +12,5 @@ Baseline: `10f8aa65b75fdcaf988d4a2e953ed02628b3c400`. A detached diagnostic chec
 Current generator tests use temporary fixtures. Historical consistency tests still run in the full suite. Default `skilleval release-check` prints its newly generated report location; explicit `--phase17-output-dir` / `--release-output-dir` remain available outside protected evidence directories. It does not update the historical release record.
 
 Focused C1 validation: 31 release/summary/scanner cases passed; 32 current-surface cases passed. First full after-run: 1230 passed, one new test expected an exception instead of CLI error code; the protected write was correctly rejected. The subsequent clean-environment suite passed 1267 cases. The final suite (including the additional class-ID and qualification-binding regression tests) and exact-HEAD CI belong in the final validation record and PR body.
+
+Raw assist `candidate.patch` and JUnit XML are preserved byte-for-byte, including patch context spaces and traceback whitespace. The existing evidence whitespace policy is extended only to those two output patterns; source, tests and all functional CI outcomes remain checked.
