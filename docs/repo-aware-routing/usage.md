@@ -53,6 +53,18 @@ No model weights or full upstream datasets are committed. The current trained ad
 3. Put pinned encoder/reranker assets beneath `local-assets/`, outside tracked files. Do not commit that directory.
 4. Run the real training and independent reload commands below. Paths in train.json resolve from the process working directory; routing model paths resolve from the routing configuration directory.
 
+For exact public base assets, run this inside the isolated training environment. Preserve the recorded revisions and licenses.
+
+```python
+from huggingface_hub import snapshot_download
+snapshot_download("pipizhao/SkillRouter-Embedding-0.6B",
+    revision="c03c9bcee9fce92ab0262bb6dcf54d174a8ba558",
+    local_dir="local-assets/SkillRouter-Embedding-0.6B")
+snapshot_download("pipizhao/SkillRouter-Reranker-0.6B",
+    revision="78986e1142d12857cfd85b8005e62902cd42d858",
+    local_dir="local-assets/SkillRouter-Reranker-0.6B")
+```
+
 ```sh
 python scripts/repo_aware/prepare_rank_data.py --tasks /private/task-root \
   --registry configs/repo-portability/skills-v1/registry.json \

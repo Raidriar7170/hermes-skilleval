@@ -1,0 +1,63 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 677a1f878fb0158ab9a8dc11f5f1d154a659d598..575ddefa9b6c7790b8e25bae6bc8f0ed382d6d77 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2777,7 +2777,7 @@ class Table(Queryable):
+         """).strip()
+         args = {
+             "like": '%VIRTUAL TABLE%USING FTS%content="{}"%'.format(self.name),
+-            "like2": '%VIRTUAL TABLE%USING FTS%content="{}"%'.format(self.name),
++            "like2": "%VIRTUAL TABLE%USING FTS%content=[{}]%".format(self.name),
+             "table": self.name,
+         }
+         rows = self.db.execute(sql, args).fetchall()
+diff --git a/tests/test_fts.py b/tests/test_fts.py
+index 9c635ffaff208c462d2c39076dfc3287f4e74726..6215b38fe74719d4b6bbc3621be3fb8406890bcc 100644
+--- a/tests/test_fts.py
++++ b/tests/test_fts.py
+@@ -420,6 +420,24 @@ def test_enable_fts_replace_does_nothing_if_args_the_same():
+     assert all(q[0].startswith("select ") for q in queries)
+ 
+ 
++@pytest.mark.parametrize("fts_version", ("FTS4", "FTS5"))
++def test_enable_fts_replace_legacy_bracket_quoted_content(fts_version):
++    db = Database(memory=True)
++    db["books"].insert({"title": "Habits of Australian Marsupials"})
++    db.execute(
++        "CREATE VIRTUAL TABLE books_fts USING {} "
++        "(title, content=[books])".format(fts_version)
++    )
++
++    assert db["books"].detect_fts() == "books_fts"
++    db["books"].enable_fts(["title"], fts_version=fts_version, replace=True)
++
++    assert 'content="books"' in db["books_fts"].schema
++    assert ["Habits of Australian Marsupials"] == [
++        row["title"] for row in db["books"].search("marsupials")
++    ]
++
++
+ def test_enable_fts_error_message_on_views():
+     db = Database(memory=True)
+     db.create_view("hello", "select 1 + 1")
+diff --git a/tests/test_tracer.py b/tests/test_tracer.py
+index ac490c58f763b8721492395ca25d01bf83338525..d3d7887cede4f282b39bd3b61b02ba10e25ce7b4 100644
+--- a/tests/test_tracer.py
++++ b/tests/test_tracer.py
+@@ -63,11 +63,11 @@ def test_with_tracer():
+             "            AND sql LIKE '%VIRTUAL TABLE%USING FTS%'\n"
+             "        )\n"
+             "    )",
+-            {
+-                "like": '%VIRTUAL TABLE%USING FTS%content="dogs"%',
+-                "like2": '%VIRTUAL TABLE%USING FTS%content="dogs"%',
+-                "table": "dogs",
+-            },
++                {
++                    "like": '%VIRTUAL TABLE%USING FTS%content="dogs"%',
++                    "like2": "%VIRTUAL TABLE%USING FTS%content=[dogs]%",
++                    "table": "dogs",
++                },
+         ),
+         ("select name from sqlite_master where type = 'view'", None),
+         ("select sql from sqlite_master where name = ?", ("dogs_fts",)),

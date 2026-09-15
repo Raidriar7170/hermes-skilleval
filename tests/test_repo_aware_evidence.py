@@ -123,3 +123,35 @@ def test_committed_public_tables_recompute():
         capture_output=True,
         text=True,
     )
+
+
+def test_task_difficulty_without_action_contrast_keeps_native():
+    from scripts.repo_aware.gate_recipe import train
+    from hermes_skilleval.repo_routing.gate import FEATURES, decide
+
+    def rows(split, families):
+        return [
+            {
+                "split": split,
+                "repair_family": family,
+                "action": action,
+                "quality": label,
+                "features": [float(label)] * len(FEATURES),
+                "seconds": 10 + i,
+                "tokens": 20 + i,
+                "source": "real_execution",  # Unit fixture only, never study evidence.
+                "r_version": "unit-fixture",
+            }
+            for family, label in families
+            for i, action in enumerate(("N", "F", "R"))
+        ]
+
+    model = train(
+        rows("gate-fit", [("a", 0), ("b", 1)]),
+        rows("gate-calibration", [("c", 0), ("d", 1)]),
+        "unit-fixture",
+    )
+    assert model["quality_action_contrast_families"] == 0
+    decision = decide([0.0] * len(FEATURES), model, "unit-fixture")
+    assert decision["action"] == "N"
+    assert decision["fallback_reason"] == "gate_data_signal_insufficient"

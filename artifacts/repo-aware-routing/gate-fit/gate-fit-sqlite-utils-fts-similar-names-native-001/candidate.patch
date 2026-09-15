@@ -1,0 +1,133 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 7a06304974b12348a9336beda5d3782550f876c7..8bc582009702961d1c3c5158c50fc6c6ed4d49fe 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -62,6 +62,24 @@ USING\s+(?P<using>\w+)          # for example USING FTS5
+     re.VERBOSE | re.IGNORECASE,
+ )
+ 
++_fts_content_re = re.compile(
++    r"""
++    (?:\(|,)\s*content\s*=\s*
++    (
++        '(?P<squoted_content>[^']*(?:''[^']*)*)' |
++        "(?P<dquoted_content>[^"]*(?:""[^"]*)*)" |
++        `(?P<backtick_content>[^`]*(?:``[^`]*)*)` |
++        \[(?P<squarequoted_content>[^\]]+)\] |
++        (?P<identifier_content>
++            [A-Za-z_\u0080-\uffff]
++            [A-Za-z_\u0080-\uffff0-9\$]*
++        )
++    )
++    \s*(?:,|\))
++    """,
++    re.VERBOSE | re.IGNORECASE,
++)
++
+ try:
+     import pandas as pd  # type: ignore
+ except ImportError:
+@@ -2212,28 +2230,32 @@ class Table(Queryable):
+ 
+     def detect_fts(self) -> Optional[str]:
+         "Detect if table has a corresponding FTS virtual table and return it"
+-        sql = (
+-            textwrap.dedent(
+-                """
+-            SELECT name FROM sqlite_master
++        sql = textwrap.dedent(
++            """
++            SELECT name, sql FROM sqlite_master
+                 WHERE rootpage = 0
+-                AND (
+-                    sql LIKE '%VIRTUAL TABLE%USING FTS%content=%{table}%'
+-                    OR (
+-                        tbl_name = "{table}"
+-                        AND sql LIKE '%VIRTUAL TABLE%USING FTS%'
+-                    )
+-                )
++                AND sql LIKE '%VIRTUAL TABLE%USING FTS%'
+         """
+-            )
+-            .strip()
+-            .format(table=self.name)
+-        )
++        ).strip()
+         rows = self.db.execute(sql).fetchall()
+-        if len(rows) == 0:
+-            return None
+-        else:
+-            return rows[0][0]
++        for name, create_sql in rows:
++            if name.casefold() == self.name.casefold():
++                return name
++            match = _fts_content_re.search(create_sql)
++            if match is None:
++                continue
++            content_table = next(
++                value for value in match.groupdict().values() if value is not None
++            )
++            if match.group("squoted_content") is not None:
++                content_table = content_table.replace("''", "'")
++            elif match.group("dquoted_content") is not None:
++                content_table = content_table.replace('""', '"')
++            elif match.group("backtick_content") is not None:
++                content_table = content_table.replace("``", "`")
++            if content_table.casefold() == self.name.casefold():
++                return name
++        return None
+ 
+     def optimize(self) -> "Table":
+         "Run the ``optimize`` operation against the associated full-text search index table."
+diff --git a/tests/test_introspect.py b/tests/test_introspect.py
+index 28a5009f3d42ddfc8d0a5fdccbe318d9f86cd3ff..1cdc9cd3265cc86e6995f6ba4416bca8a0fe847c 100644
+--- a/tests/test_introspect.py
++++ b/tests/test_introspect.py
+@@ -36,6 +36,25 @@ def test_detect_fts(existing_db):
+     assert existing_db["foo"].detect_fts() is None
+ 
+ 
++@pytest.mark.parametrize(
++    "creation_order", (("authors", "authors_archive"), ("authors_archive", "authors"))
++)
++@pytest.mark.parametrize("fts_version", ("fts4", "fts5"))
++def test_detect_fts_similarly_named_tables(fresh_db, creation_order, fts_version):
++    for table_name in ("authors", "authors_archive"):
++        fresh_db.execute("create table [{}] (name text)".format(table_name))
++    for table_name in creation_order:
++        fresh_db.execute(
++            "create virtual table [{0}_fts] using {1} "
++            "(name, content='{0}')".format(table_name, fts_version)
++        )
++
++    assert fresh_db["authors"].detect_fts() == "authors_fts"
++    assert fresh_db["authors_archive"].detect_fts() == "authors_archive_fts"
++    assert fresh_db["authors_fts"].detect_fts() == "authors_fts"
++    assert fresh_db["authors_archive_fts"].detect_fts() == "authors_archive_fts"
++
++
+ def test_tables(existing_db):
+     assert 1 == len(existing_db.tables)
+     assert "foo" == existing_db.tables[0].name
+diff --git a/tests/test_tracer.py b/tests/test_tracer.py
+index 618d1e6d0d26f121626237e1baa720f610e731ba..1e72fad9c1a2dfe8421a590e1379b46f650c7139 100644
+--- a/tests/test_tracer.py
++++ b/tests/test_tracer.py
+@@ -51,15 +51,9 @@ def test_with_tracer():
+         ("select name from sqlite_master where type = 'view'", None),
+         (
+             (
+-                "SELECT name FROM sqlite_master\n"
++                "SELECT name, sql FROM sqlite_master\n"
+                 "    WHERE rootpage = 0\n"
+-                "    AND (\n"
+-                "        sql LIKE '%VIRTUAL TABLE%USING FTS%content=%dogs%'\n"
+-                "        OR (\n"
+-                '            tbl_name = "dogs"\n'
+-                "            AND sql LIKE '%VIRTUAL TABLE%USING FTS%'\n"
+-                "        )\n"
+-                "    )"
++                "    AND sql LIKE '%VIRTUAL TABLE%USING FTS%'"
+             ),
+             None,
+         ),

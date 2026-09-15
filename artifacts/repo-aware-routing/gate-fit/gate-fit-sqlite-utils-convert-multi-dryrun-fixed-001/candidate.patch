@@ -1,0 +1,144 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 0cf0468f1875aee873c34c8551ded5fa012560dc..ca5b4a45fdd595cd64e28726c102505f0132997f 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -2675,23 +2675,55 @@ def convert(
+     except SyntaxError as e:
+         raise click.ClickException(str(e))
+     if dry_run:
+-        # Pull first 20 values for first column and preview them
+-        db.conn.create_function("preview_transform", 1, lambda v: fn(v) if v else v)
+-        sql = """
+-            select
+-                [{column}] as value,
+-                preview_transform([{column}]) as preview
+-            from [{table}]{where} limit 10
+-        """.format(
+-            column=columns[0],
+-            table=table,
+-            where=" where {}".format(where) if where is not None else "",
+-        )
+-        for row in db.conn.execute(sql, where_args).fetchall():
+-            click.echo(str(row[0]))
+-            click.echo(" --- becomes:")
+-            click.echo(str(row[1]))
+-            click.echo()
++        if multi:
++            # Multi conversions return dictionaries, which cannot be returned by a
++            # SQLite user-defined function, so evaluate these directly in Python.
++            sql = """
++                select [{column}] as value
++                from [{table}]{where} limit 10
++            """.format(
++                column=columns[0],
++                table=table,
++                where=" where {}".format(where) if where is not None else "",
++            )
++            previews = []
++            try:
++                for row in db.conn.execute(sql, where_args).fetchall():
++                    values = fn(row[0])
++                    if values is not None and not isinstance(values, dict):
++                        raise BadMultiValues(values)
++                    previews.append((row[0], values))
++            except BadMultiValues as e:
++                raise click.ClickException(
++                    "When using --multi code must return a Python dictionary - returned: {}".format(
++                        repr(e.values)
++                    )
++                )
++            for value, values in previews:
++                click.echo(str(value))
++                click.echo(" --- becomes:")
++                if values:
++                    for key, value in values.items():
++                        click.echo("{}: {}".format(key, value))
++                click.echo()
++        else:
++            # Pull first 10 values for first column and preview them
++            db.conn.create_function("preview_transform", 1, lambda v: fn(v) if v else v)
++            sql = """
++                select
++                    [{column}] as value,
++                    preview_transform([{column}]) as preview
++                from [{table}]{where} limit 10
++            """.format(
++                column=columns[0],
++                table=table,
++                where=" where {}".format(where) if where is not None else "",
++            )
++            for row in db.conn.execute(sql, where_args).fetchall():
++                click.echo(str(row[0]))
++                click.echo(" --- becomes:")
++                click.echo(str(row[1]))
++                click.echo()
+         count = db[table].count_where(
+             where=where,
+             where_args=where_args,
+diff --git a/tests/test_cli_convert.py b/tests/test_cli_convert.py
+index ec8110f1c846bafcfcf3e188010c13592822499a..30120b5c43c15d036174068609c3612d545f0266 100644
+--- a/tests/test_cli_convert.py
++++ b/tests/test_cli_convert.py
+@@ -324,6 +324,43 @@ def test_convert_multi(fresh_db_and_path, drop):
+     assert list(db["creatures"].rows) == expected
+ 
+ 
++def test_convert_multi_dry_run(fresh_db_and_path):
++    db, db_path = fresh_db_and_path
++    original_rows = [
++        {"id": 1, "name": "Simon"},
++        {"id": 2, "name": "Cleo"},
++    ]
++    db["creatures"].insert_all(original_rows, pk="id")
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "convert",
++            db_path,
++            "creatures",
++            "name",
++            "--multi",
++            '{"upper": value.upper(), "lower": value.lower()}',
++            "--dry-run",
++        ],
++    )
++    assert result.exit_code == 0, result.output
++    assert result.output.strip() == (
++        "Simon\n"
++        " --- becomes:\n"
++        "upper: SIMON\n"
++        "lower: simon\n"
++        "\n"
++        "Cleo\n"
++        " --- becomes:\n"
++        "upper: CLEO\n"
++        "lower: cleo\n"
++        "\n"
++        "Would affect 2 rows"
++    )
++    assert list(db["creatures"].rows) == original_rows
++    assert [column.name for column in db["creatures"].columns] == ["id", "name"]
++
++
+ def test_convert_multi_complex_column_types(fresh_db_and_path):
+     db, db_path = fresh_db_and_path
+     db["rows"].insert_all(
+@@ -471,7 +508,8 @@ def test_cannot_use_multi_with_more_than_one_column(fresh_db_and_path):
+     assert "Error: Cannot use --multi with more than one column" in result.output
+ 
+ 
+-def test_multi_with_bad_function(test_db_and_path):
++@pytest.mark.parametrize("dry_run", (False, True))
++def test_multi_with_bad_function(test_db_and_path, dry_run):
+     args = [
+         "convert",
+         test_db_and_path[1],
+@@ -480,6 +518,8 @@ def test_multi_with_bad_function(test_db_and_path):
+         "value.upper()",
+         "--multi",
+     ]
++    if dry_run:
++        args.append("--dry-run")
+     result = CliRunner().invoke(cli.cli, args)
+     assert result.exit_code == 1, result.output
+     assert "When using --multi code must return a Python dictionary" in result.output

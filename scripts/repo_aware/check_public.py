@@ -28,7 +28,7 @@ gate_root = root / "gate"
 if (gate_root / "model.json").exists():
     import math
     import hashlib
-    from hermes_skilleval.repo_routing.gate import fit, calibrate
+    from gate_recipe import train
 
     def read_rows(path):
         return [
@@ -46,6 +46,13 @@ if (gate_root / "model.json").exists():
     ):
         if hashlib.sha256((gate_root / name).read_bytes()).hexdigest() != seal[key]:
             raise ValueError("Gate freeze bytes mismatch")
+    for name, digest in seal["recipe_sha256"].items():
+        if (
+            name not in ("train_gate.py", "gate_recipe.py")
+            or hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+            != digest
+        ):
+            raise ValueError("Gate training recipe changed after freeze")
     final_index = root / "final-test/index.json"
     if final_index.exists():
         final = json.loads(final_index.read_text())
@@ -61,7 +68,7 @@ if (gate_root / "model.json").exists():
                 decision = decide(cell["features"], model, final["expected_r_version"])
                 if decision["action"] != cell["action"]:
                     raise ValueError("Actual auto action disagrees with frozen gate")
-    actual = calibrate(calibration_rows, fit(fit_rows, model["r_version"]))
+    actual = train(fit_rows, calibration_rows, model["r_version"])
 
     def equivalent(a, b):
         if isinstance(a, dict) and isinstance(b, dict):
