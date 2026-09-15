@@ -125,6 +125,10 @@ def preflight(args):
     if getattr(args, "policy", None):
         if not args.routing_config:
             raise ValueError("new policy requires --routing-config")
+        if args.arm != "N" or args.fixed_config is not None:
+            raise ValueError(
+                "new policy cannot be combined with legacy arm/fixed overrides"
+            )
     elif args.arm == "F":
         from hermes_skilleval.fixed_baseline import fixed_ids
 

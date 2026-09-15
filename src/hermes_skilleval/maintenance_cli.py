@@ -222,13 +222,14 @@ def main():
         print(json.dumps(recompute(args.index, args.output)["summary"], indent=2))
     elif args.command == "doctor":
         from hermes_skilleval.repository_profile import CSVKIT, SQLITE_UTILS
+        from hermes_skilleval._maintenance.assist import CSV_DIFF
 
         result = {
             "models_loaded": False,
             "native_fixed_requires_retrieval": False,
             "python": sys.version.split()[0],
             "docker_executable": bool(shutil.which("docker")),
-            "profiles": [p.to_dict() for p in [SQLITE_UTILS, CSVKIT]],
+            "profiles": [p.to_dict() for p in [SQLITE_UTILS, CSVKIT, CSV_DIFF]],
             "strong": {"configured": bool(args.profile), "available": False},
         }
         if args.profile:

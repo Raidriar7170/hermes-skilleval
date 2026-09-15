@@ -166,6 +166,7 @@ def route(root, request, environment, registry, policy, config, *, repository=No
         mark = time.monotonic()
         if action == "S":
             scores, inputs = router.rerank(request, candidates)
+            counts["heavy_constructors"] = len(router.load_seconds)
             counts["reranker_forwards"] += (
                 len(candidates) + profile.batch_size - 1
             ) // profile.batch_size

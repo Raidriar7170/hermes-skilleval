@@ -1,0 +1,56 @@
+{
+  "encoder_path": "../../local-assets/SkillRouter-Embedding-0.6B",
+  "reranker_path": "../../local-assets/SkillRouter-Reranker-0.6B",
+  "encoder_revision": "c03c9bcee9fce92ab0262bb6dcf54d174a8ba558",
+  "reranker_revision": "78986e1142d12857cfd85b8005e62902cd42d858",
+  "profile": {
+    "device": "mps",
+    "dtype": "float32",
+    "encoder_max_length": 2048,
+    "reranker_max_length": 1024,
+    "retrieval_top_k": 12
+  },
+  "schema": "repo-routing-v1",
+  "adapter": "../../local-assets/training-v1/adapter",
+  "adapter_sha256": "b254f34cfbc25a93435563773bd12155b206118e0f438e9c27704c234044a774",
+  "max_length": 1024,
+  "fixed_ids": [
+    "cli-api-regression",
+    "systematic-debugging"
+  ],
+  "support_threshold": 0.8,
+  "budget": {
+    "tokens": 4000,
+    "max_k": 4,
+    "alpha": 0.25,
+    "beta": 0.2,
+    "gamma": 0.1
+  },
+  "cache": "../../local-assets/encoder-cache.json",
+  "model_files": {
+    "encoder": {
+      "added_tokens.json": "c0284b582e14987fbd3d5a2cb2bd139084371ed9acbae488829a1c900833c680",
+      "config.json": "02b34f6be10ee6a35304e32b67ac37be4b2b04e327efff49a689136b0913a0e8",
+      "merges.txt": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+      "model.safetensors": "cbab45b8a3c786b8c23aedb24fb22aff74d0e9b62a52369a3090c37f26b00360",
+      "special_tokens_map.json": "76862e765266b85aa9459767e33cbaf13970f327a0e88d1c65846c2ddd3a1ecd",
+      "tokenizer.json": "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a",
+      "tokenizer_config.json": "7f33cbb21bae9b2ed4a7396d68f9f10d6280d75332d04911cd6c5a0967bd10c9",
+      "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    },
+    "reranker": {
+      "added_tokens.json": "c0284b582e14987fbd3d5a2cb2bd139084371ed9acbae488829a1c900833c680",
+      "config.json": "17f3b5063350823bfda01f740ac14b9d1cd9cb80c738cbe0d9939c4988ac6b39",
+      "generation_config.json": "b015f739ce02d6f51f0fbd1fbd6bfd22436983139cfb51514c86fa1ffe5dfef5",
+      "merges.txt": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+      "model.safetensors": "34064850b1b512168309481a9cebe4ecaf55d0821bf22608f657b40033ed36d7",
+      "special_tokens_map.json": "76862e765266b85aa9459767e33cbaf13970f327a0e88d1c65846c2ddd3a1ecd",
+      "tokenizer.json": "ab19c66299579df20542864f9e27b79898ca05f35acc97fd9259aee385a07d4a",
+      "tokenizer_config.json": "7f33cbb21bae9b2ed4a7396d68f9f10d6280d75332d04911cd6c5a0967bd10c9",
+      "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    }
+  },
+  "adapter_config_sha256": "04b99824f6d58c726476210356a354ee9f0117038c9133cb49da72f9abaebb00",
+  "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+  "gate": "../../artifacts/repo-aware-routing/gate/model.json"
+}

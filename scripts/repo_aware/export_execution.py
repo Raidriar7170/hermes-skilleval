@@ -127,6 +127,16 @@ def export(protocol, output):
         "events": events,
         "privacy": "Allowlisted metadata; raw patches withheld on sensitive-pattern detection; JUnit stack bodies omitted.",
     }
+    expected_config = read(Path(config["routing_config"]))
+    expected_registry = read(Path(config["registry"]))
+    result["expected_r_version"] = digest(expected_config.get("r_version"))
+    result["expected_registry_id"] = identifier(expected_registry.get("registry_id"))
+    result["version_scope"] = (
+        "FROZEN" if result["expected_r_version"] else "DEVELOPMENT_UNFROZEN"
+    )
+    result["expected_packages"] = {
+        item["id"]: item.get("package_sha256") for item in expected_registry["skills"]
+    }
     seen = set()
     for cell in config["cells"]:
         run_id, task_id = (
@@ -157,7 +167,15 @@ def export(protocol, output):
         policy = identifier(cell.get("policy"))
         out = {
             "run_id": run_id,
+            "actual_run_id": identifier(metadata.get("run_id")),
+            "actual_arm": identifier(metadata.get("arm")),
+            "routing_skill_ids": [identifier(x) for x in routing.get("skill_ids", [])],
             "task_id": task_id,
+            "repository": qualification.get("repository")
+            if re.fullmatch(
+                r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", str(qualification.get("repository"))
+            )
+            else None,
             "family_id": identifier(
                 cell.get("family_id") or qualification.get("family_id") or task_id
             ),
@@ -232,6 +250,73 @@ def export(protocol, output):
             "checks": {},
             "binding": {},
         }
+        out["mounted_packages"] = [
+            {
+                "skill_id": identifier(item.get("skill_id")),
+                "package_sha256": digest(item.get("package", {}).get("sha256")),
+                "files": [
+                    {
+                        "path": file["path"],
+                        "sha256": digest(file.get("sha256")),
+                        "size": number(file.get("size")),
+                        "executable": file.get("executable"),
+                    }
+                    for file in item.get("package", {}).get("files", [])
+                    if isinstance(file.get("path"), str)
+                    and not Path(file["path"]).is_absolute()
+                    and ".." not in Path(file["path"]).parts
+                ],
+            }
+            for item in metadata.get("mounted_skills", [])
+            if identifier(item.get("skill_id"))
+        ]
+        out["selected_mount_match"] = sorted(out["selected_ids"]) == sorted(
+            item["skill_id"] for item in out["mounted_packages"]
+        )
+        observed = []
+        events_path = directory / "events.jsonl"
+        if events_path.is_file():
+            for ordinal, line in enumerate(events_path.read_text().splitlines()):
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                item = event.get("item") or {}
+                if (
+                    event.get("type") == "item.completed"
+                    and item.get("type") == "command_execution"
+                ):
+                    command = item.get("command", "")
+                    paths = sorted(
+                        set(
+                            re.findall(
+                                r"\.agents/skills/[a-zA-Z0-9_.-]+/SKILL\.md", command
+                            )
+                        )
+                    )
+                    if paths:
+                        observed.append(
+                            {
+                                "event_ordinal": ordinal,
+                                "referenced_skill_paths": paths,
+                                "read_command_observed": bool(
+                                    re.search(r"\b(cat|sed|head|tail)\b", command)
+                                ),
+                                "exit_code": item.get("exit_code"),
+                            }
+                        )
+        out["observed_skill_reads"] = observed
+        out["read_evidence_scope"] = (
+            "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim."
+        )
+        out["routing_timing"] = {
+            key: number(value)
+            for key, value in routing.get("timing", {}).items()
+            if re.fullmatch(r"[a-z_]+", key)
+        }
+        out["fallback_reason"] = identifier(
+            routing.get("decision", {}).get("fallback_reason")
+        )
         usage = metadata.get("usage")
         if isinstance(usage, dict):
             out["usage"] = {

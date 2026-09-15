@@ -39,7 +39,9 @@ def checked_file(root, relative, digest):
     return path
 
 
-def quality(cell, root, locked):
+def quality(
+    cell, root, locked, expected_r=None, expected_registry=None, expected_packages=None
+):
     reasons = []
     if cell.get("parse_errors"):
         reasons.append("malformed_private_metadata")
@@ -47,6 +49,49 @@ def quality(cell, root, locked):
         reasons.append("protocol_lock_missing_or_changed")
     if cell.get("execution_status") != "STARTED":
         reasons.append("not_started")
+    if cell.get("actual_run_id") != cell.get("run_id"):
+        reasons.append("run_identity_mismatch")
+    if cell.get("actual_arm") != cell.get("action"):
+        reasons.append("actual_action_mismatch")
+    if cell.get("policy") == "native-minus":
+        if cell.get("actual_arm") != "N":
+            reasons.append("native_minus_intervention_mismatch")
+    elif cell.get("routing_skill_ids") != cell.get("selected_ids"):
+        reasons.append("routing_selection_mismatch")
+    selected = cell.get("selected_ids")
+    mounted = cell.get("mounted_packages")
+    if not isinstance(selected, list) or not isinstance(mounted, list):
+        reasons.append("mount_evidence_missing")
+    elif (
+        sorted(selected) != sorted(p.get("skill_id", "") for p in mounted)
+        or len(selected) != len(set(selected))
+        or any(
+            not p.get("package_sha256")
+            or not p.get("files")
+            or any(not f.get("sha256") for f in p["files"])
+            for p in mounted
+        )
+    ):
+        reasons.append("selected_mount_mismatch")
+    for package in mounted or []:
+        manifest_sha = hashlib.sha256(
+            json.dumps(package.get("files", []), sort_keys=True).encode()
+        ).hexdigest()
+        if (
+            manifest_sha != package.get("package_sha256")
+            or (expected_packages or {}).get(package.get("skill_id")) != manifest_sha
+        ):
+            reasons.append("package_identity_mismatch")
+    if expected_registry is None or cell.get("registry_id") != expected_registry:
+        reasons.append("expected_registry_mismatch")
+    if cell.get("policy") == "auto" and expected_r is None:
+        reasons.append("expected_r_version_missing")
+    if (
+        expected_r is not None
+        and cell.get("policy") != "native-minus"
+        and cell.get("r_version") != expected_r
+    ):
+        reasons.append("expected_r_version_mismatch")
     binding = cell.get("binding", {})
     required = (
         "single_launch",
@@ -112,6 +157,10 @@ def recompute(index):
     data = json.loads(index.read_text())
     if data.get("schema") != "repo-aware-public-execution-v1":
         raise ValueError("Unsupported execution evidence schema")
+    if {"native", "fixed", "strong", "repo-aware", "auto"} <= {
+        cell.get("policy") for cell in data["cells"]
+    } and not data.get("expected_r_version"):
+        raise ValueError("Five-arm confirmation requires a frozen expected R")
     rows = []
     ids = set()
     for cell in data["cells"]:
@@ -131,6 +180,9 @@ def recompute(index):
             cell,
             index.parent,
             data.get("protocol_lock_matches") is True and ledger_consistent,
+            data.get("expected_r_version"),
+            data.get("expected_registry_id"),
+            data.get("expected_packages"),
         )
         usage = cell.get("usage") or {}
         input_tokens, output_tokens = (
@@ -150,6 +202,7 @@ def recompute(index):
             {
                 "run_id": cell["run_id"],
                 "task_id": cell["task_id"],
+                "repository": cell.get("repository"),
                 "family_id": cell["family_id"],
                 "policy": cell["policy"],
                 "quality": score,
