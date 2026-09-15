@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.021" timestamp="2026-09-15T01:31:25.483679+00:00" hostname="d1bbc4fc05a4"><testcase classname="test_behavior" name="test_fieldsize_option[32]" time="0.001"><failure message="TypeError: 'field_size_limit' is an invalid keyword argument for this function">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_fieldsize_option_32_0')
+size = 32
+
+    @pytest.mark.parametrize("size", [32, 140000])
+    def test_fieldsize_option(tmp_path, size):
+        source = tmp_path / "data.csv"
+        source.write_text("value\n" + "a" * size + "\n")
+        output = io.StringIO()
+&gt;       CSVStack(["-z", "2500000", str(source)], output_file=output).main()
+
+/trusted/test_behavior.py:11: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/csvkit/utilities/csvstack.py:75: in main
+    rows = Reader(f, **self.reader_kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;agate.csv_py3.DictReader object at 0xffff69f57f50&gt;
+f = &lt;csvkit.cli.LazyFile object at 0xffff6a598980&gt;, fieldnames = None
+restkey = None, restval = None, dialect = 'excel', args = ()
+kwds = {'doublequote': True, 'field_size_limit': 2500000, 'skipinitialspace': False}
+
+    def __init__(self, f, fieldnames=None, restkey=None, restval=None,
+                 dialect="excel", *args, **kwds):
+        if fieldnames is not None and iter(fieldnames) is fieldnames:
+            fieldnames = list(fieldnames)
+        self._fieldnames = fieldnames   # list of keys for the dict
+        self.restkey = restkey          # key to catch long rows
+        self.restval = restval          # default value for short rows
+&gt;       self.reader = reader(f, dialect, *args, **kwds)
+E       TypeError: 'field_size_limit' is an invalid keyword argument for this function
+
+/usr/local/lib/python3.12/csv.py:91: TypeError</failure></testcase><testcase classname="test_behavior" name="test_fieldsize_option[140000]" time="0.000"><failure message="TypeError: 'field_size_limit' is an invalid keyword argument for this function">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_fieldsize_option_140000_0')
+size = 140000
+
+    @pytest.mark.parametrize("size", [32, 140000])
+    def test_fieldsize_option(tmp_path, size):
+        source = tmp_path / "data.csv"
+        source.write_text("value\n" + "a" * size + "\n")
+        output = io.StringIO()
+&gt;       CSVStack(["-z", "2500000", str(source)], output_file=output).main()
+
+/trusted/test_behavior.py:11: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/csvkit/utilities/csvstack.py:75: in main
+    rows = Reader(f, **self.reader_kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;agate.csv_py3.DictReader object at 0xffff69f59070&gt;
+f = &lt;csvkit.cli.LazyFile object at 0xffff69f59040&gt;, fieldnames = None
+restkey = None, restval = None, dialect = 'excel', args = ()
+kwds = {'doublequote': True, 'field_size_limit': 2500000, 'skipinitialspace': False}
+
+    def __init__(self, f, fieldnames=None, restkey=None, restval=None,
+                 dialect="excel", *args, **kwds):
+        if fieldnames is not None and iter(fieldnames) is fieldnames:
+            fieldnames = list(fieldnames)
+        self._fieldnames = fieldnames   # list of keys for the dict
+        self.restkey = restkey          # key to catch long rows
+        self.restval = restval          # default value for short rows
+&gt;       self.reader = reader(f, dialect, *args, **kwds)
+E       TypeError: 'field_size_limit' is an invalid keyword argument for this function
+
+/usr/local/lib/python3.12/csv.py:91: TypeError</failure></testcase></testsuite></testsuites>

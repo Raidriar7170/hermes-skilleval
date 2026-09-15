@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="5" time="0.060" timestamp="2026-09-15T01:31:33.960368+00:00" hostname="0b17d430be19"><testcase classname="test_behavior" name="test_timedelta_json[60]" time="0.000"><failure message="TypeError: datetime.timedelta(seconds=60) is not JSON serializable">seconds = 60
+
+    @pytest.mark.parametrize("seconds", [60, 0, -90, 3600.5])
+    def test_timedelta_json(seconds):
+        assert (
+            json.loads(
+&gt;               json.dumps(
+                    {"value": datetime.timedelta(seconds=seconds)},
+                    default=default_float_decimal,
+                )
+            )["value"]
+            == seconds
+        )
+
+/trusted/test_behavior.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+/usr/local/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+/usr/local/lib/python3.12/json/encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+/input/csvkit/cli.py:449: in default_float_decimal
+    return default_str_decimal(obj)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = datetime.timedelta(seconds=60)
+
+    def default_str_decimal(obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+&gt;       raise TypeError(f'{repr(obj)} is not JSON serializable')
+E       TypeError: datetime.timedelta(seconds=60) is not JSON serializable
+
+/input/csvkit/cli.py:443: TypeError</failure></testcase><testcase classname="test_behavior" name="test_timedelta_json[0]" time="0.000"><failure message="TypeError: datetime.timedelta(0) is not JSON serializable">seconds = 0
+
+    @pytest.mark.parametrize("seconds", [60, 0, -90, 3600.5])
+    def test_timedelta_json(seconds):
+        assert (
+            json.loads(
+&gt;               json.dumps(
+                    {"value": datetime.timedelta(seconds=seconds)},
+                    default=default_float_decimal,
+                )
+            )["value"]
+            == seconds
+        )
+
+/trusted/test_behavior.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+/usr/local/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+/usr/local/lib/python3.12/json/encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+/input/csvkit/cli.py:449: in default_float_decimal
+    return default_str_decimal(obj)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = datetime.timedelta(0)
+
+    def default_str_decimal(obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+&gt;       raise TypeError(f'{repr(obj)} is not JSON serializable')
+E       TypeError: datetime.timedelta(0) is not JSON serializable
+
+/input/csvkit/cli.py:443: TypeError</failure></testcase><testcase classname="test_behavior" name="test_timedelta_json[-90]" time="0.000"><failure message="TypeError: datetime.timedelta(days=-1, seconds=86310) is not JSON serializable">seconds = -90
+
+    @pytest.mark.parametrize("seconds", [60, 0, -90, 3600.5])
+    def test_timedelta_json(seconds):
+        assert (
+            json.loads(
+&gt;               json.dumps(
+                    {"value": datetime.timedelta(seconds=seconds)},
+                    default=default_float_decimal,
+                )
+            )["value"]
+            == seconds
+        )
+
+/trusted/test_behavior.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+/usr/local/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+/usr/local/lib/python3.12/json/encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+/input/csvkit/cli.py:449: in default_float_decimal
+    return default_str_decimal(obj)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = datetime.timedelta(days=-1, seconds=86310)
+
+    def default_str_decimal(obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+&gt;       raise TypeError(f'{repr(obj)} is not JSON serializable')
+E       TypeError: datetime.timedelta(days=-1, seconds=86310) is not JSON serializable
+
+/input/csvkit/cli.py:443: TypeError</failure></testcase><testcase classname="test_behavior" name="test_timedelta_json[3600.5]" time="0.000"><failure message="TypeError: datetime.timedelta(seconds=3600, microseconds=500000) is not JSON serializable">seconds = 3600.5
+
+    @pytest.mark.parametrize("seconds", [60, 0, -90, 3600.5])
+    def test_timedelta_json(seconds):
+        assert (
+            json.loads(
+&gt;               json.dumps(
+                    {"value": datetime.timedelta(seconds=seconds)},
+                    default=default_float_decimal,
+                )
+            )["value"]
+            == seconds
+        )
+
+/trusted/test_behavior.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+/usr/local/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+/usr/local/lib/python3.12/json/encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+/input/csvkit/cli.py:449: in default_float_decimal
+    return default_str_decimal(obj)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = datetime.timedelta(seconds=3600, microseconds=500000)
+
+    def default_str_decimal(obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+&gt;       raise TypeError(f'{repr(obj)} is not JSON serializable')
+E       TypeError: datetime.timedelta(seconds=3600, microseconds=500000) is not JSON serializable
+
+/input/csvkit/cli.py:443: TypeError</failure></testcase><testcase classname="test_behavior" name="test_timedelta_cli" time="0.003"><failure message="TypeError: datetime.timedelta(seconds=60) is not JSON serializable">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_timedelta_cli0')
+
+    def test_timedelta_cli(tmp_path):
+        source = tmp_path / "durations.csv"
+        source.write_text("duration\n00:01:00\n00:02:00\n")
+        output = io.StringIO()
+&gt;       CSVStat(["--json", str(source)], output_file=output).run()
+
+/trusted/test_behavior.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/csvkit/cli.py:133: in run
+    self.main()
+/input/csvkit/utilities/csvstat.py:219: in main
+    self.print_json(table, column_ids, stats)
+/input/csvkit/utilities/csvstat.py:350: in print_json
+    json.dump(data, self.output_file, default=default_float_decimal, ensure_ascii=False, indent=self.args.indent)
+/usr/local/lib/python3.12/json/__init__.py:179: in dump
+    for chunk in iterable:
+/usr/local/lib/python3.12/json/encoder.py:430: in _iterencode
+    yield from _iterencode_list(o, _current_indent_level)
+/usr/local/lib/python3.12/json/encoder.py:326: in _iterencode_list
+    yield from chunks
+/usr/local/lib/python3.12/json/encoder.py:406: in _iterencode_dict
+    yield from chunks
+/usr/local/lib/python3.12/json/encoder.py:439: in _iterencode
+    o = _default(o)
+/input/csvkit/cli.py:449: in default_float_decimal
+    return default_str_decimal(obj)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = datetime.timedelta(seconds=60)
+
+    def default_str_decimal(obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+&gt;       raise TypeError(f'{repr(obj)} is not JSON serializable')
+E       TypeError: datetime.timedelta(seconds=60) is not JSON serializable
+
+/input/csvkit/cli.py:443: TypeError</failure></testcase></testsuite></testsuites>

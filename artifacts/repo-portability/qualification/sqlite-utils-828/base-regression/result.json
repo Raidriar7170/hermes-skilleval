@@ -1,0 +1,226 @@
+{
+  "valid": true,
+  "passed": true,
+  "cases": [
+    {
+      "id": "test_behavior::test_enable_fts",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_escape_table_names",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_duplicate_columns_are_deduped",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_limit_offset",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_where[FTS4]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_where[FTS5]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_where_args_disallows_query",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_include_rank",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_table_names_containing_spaces",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_populate_fts",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_populate_fts_escape_table_names",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_fts_tokenize[4]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_fts_tokenize[5]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_optimize_fts",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_with_triggers",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_disable_fts[True]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_disable_fts[False]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_rebuild_fts",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_optimize_and_rebuild_fts_commit[optimize]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_optimize_and_rebuild_fts_commit[rebuild_fts]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_rebuild_fts_invalid[does_not_exist]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_rebuild_fts_invalid[not_searchable]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS4]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS5]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_replace[kwargs0]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_replace[kwargs1]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_replace[kwargs2]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_replace[kwargs3]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_replace_does_nothing_if_args_the_same",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_replace_handles_legacy_bracket_quoted_content_table",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_view_has_no_enable_fts",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs0-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs1-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rowid\\nlimit 10]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs2-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs3-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs4-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 1 offset 1]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs5-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 2]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs6-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs7-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    \"books_fts\".rank rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_sql[kwargs8-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx')) rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[dog-\"dog\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[cat,-\"cat,\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[cat's-\"cat's\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[dog.-\"dog.\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[cat dog-\"cat\" \"dog\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[\"cat dog\"-\"cat dog\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[\"cat dog\" fish-\"cat dog\" \"fish\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[cat\"-\"cat\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_quote_fts_query[\"cat dog\" \"fish-\"cat dog\" \"fish\"]",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_search_quote",
+      "outcome": "passed"
+    },
+    {
+      "id": "test_behavior::test_enable_fts_cli_on_view_errors",
+      "outcome": "passed"
+    }
+  ],
+  "evidence_sha256": {
+    "cli-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "test-stdout.txt": "e31a2e5b8f8dc1db40515348635204a5ba9097ce0cf1286981a36207f04bf190",
+    "build-stdout.txt": "d7b7441e7dcb7e8a1a93d41d41362b5187b6370ba7806bc85faa57de49c98329",
+    "collect-stdout.txt": "5b02ab10488d7fd1bd7dede04f6dd17cbeced9bb447f7be389303af98f01fca0",
+    "collected.json": "cdefeacc400c57536da591501bd8a0a25bb4b54689cd66cd50ec62645a2984a3",
+    "identity.json": "a017ec2ff7cb8161537695b555b690e9c956419f14cdb91d15e0706322fcaca2",
+    "cli-stdout.txt": "f8a6092ad2a844f4f0227fd7165565141caf135c0cb3ecb6f7f76586a97a7b06",
+    "test-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build-stderr.txt": "abd6f7249a473f07f501069dde0fe2436ada294e0816606ef6d35309752ff944",
+    "junit.xml": "a72ccb54df28769c95e17ad3d39cdadd3318b78892d598082580ecf576b67ae1",
+    "profile.json": "95fdbc895478053a0992f7159f218e37e792ccd7a1c757ff4c3590db4d79054e",
+    "collect-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "derivation": "ALLOWLISTED_QUALIFICATION_SUMMARY",
+  "original_sha256": "ded424724ad8dea3e1f1021ccc91463409551ed601000682939e28aff8831808"
+}

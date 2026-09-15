@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.070" timestamp="2026-09-15T01:32:11.307122+00:00" hostname="b42339feb34b"><testcase classname="test_behavior" name="test_fts_tokenize_escaped" time="0.001"><failure message="AssertionError: assert 'injected' not in ['searchable', 'searchable_fts', 'searchable_fts_data', 'searchable_fts_idx', 'searchable_fts_content', 'searchable_fts_docsize', ...]&#10; +  where ['searchable', 'searchable_fts', 'searchable_fts_data', 'searchable_fts_idx', 'searchable_fts_content', 'searchable_fts_docsize', ...] = table_names()&#10; +    where table_names = &lt;Database &lt;sqlite3.Connection object at 0xffff862e4040&gt;&gt;.table_names">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff862e4040&gt;&gt;
+
+    def test_fts_tokenize_escaped(fresh_db):
+        # A malicious tokenize value must not be able to break out of the
+        # string literal in the CREATE VIRTUAL TABLE statement.
+        table = fresh_db["searchable"]
+        table.insert_all(search_records)
+        malicious = "porter'); CREATE TABLE injected(x); --"
+        with pytest.raises(Exception):
+            table.enable_fts(["text"], tokenize=malicious)
+        # The injected statement must not have executed
+&gt;       assert "injected" not in fresh_db.table_names()
+E       AssertionError: assert 'injected' not in ['searchable', 'searchable_fts', 'searchable_fts_data', 'searchable_fts_idx', 'searchable_fts_content', 'searchable_fts_docsize', ...]
+E        +  where ['searchable', 'searchable_fts', 'searchable_fts_data', 'searchable_fts_idx', 'searchable_fts_content', 'searchable_fts_docsize', ...] = table_names()
+E        +    where table_names = &lt;Database &lt;sqlite3.Connection object at 0xffff862e4040&gt;&gt;.table_names
+
+/trusted/test_behavior.py:264: AssertionError</failure></testcase></testsuite></testsuites>

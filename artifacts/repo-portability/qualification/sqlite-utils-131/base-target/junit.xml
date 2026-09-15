@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.053" timestamp="2026-09-15T01:31:51.521956+00:00" hostname="4179ecfb6b2f"><testcase classname="test_behavior" name="test_insert_upsert_csv_type_overrides_detected_types[insert-extra_args0-zipcode,score\n01234,9.5\n-expected_row0]" time="0.002"><failure message="AssertionError: Usage: cli insert [OPTIONS] PATH TABLE [FILE]&#10;  Try 'cli insert --help' for help.&#10;  &#10;  Error: No such option '--type'. (Did you mean one of: '--alter', '--pk', '--text'?)&#10;  &#10;assert 2 == 0&#10; +  where 2 = &lt;Result SystemExit(2)&gt;.exit_code">db_path = '/tmp/pytest-of-root/pytest-0/test_insert_upsert_csv_type_ov0/test.db'
+command = 'insert', extra_args = [], input_text = 'zipcode,score\n01234,9.5\n'
+expected_row = {'score': 9.5, 'zipcode': '01234'}
+
+    @pytest.mark.parametrize(
+        "command,extra_args,input_text,expected_row",
+        (
+            (
+                "insert",
+                [],
+                "zipcode,score\n01234,9.5\n",
+                {"zipcode": "01234", "score": 9.5},
+            ),
+            (
+                "upsert",
+                ["--pk", "id"],
+                "id,zipcode,score\n1,01234,9.5\n",
+                {"id": 1, "zipcode": "01234", "score": 9.5},
+            ),
+        ),
+    )
+    def test_insert_upsert_csv_type_overrides_detected_types(
+        db_path, command, extra_args, input_text, expected_row
+    ):
+        result = CliRunner().invoke(
+            cli.cli,
+            [
+                command,
+                db_path,
+                "places",
+                "-",
+                "--csv",
+            ]
+            + extra_args
+            + [
+                "--type",
+                "zipcode",
+                "text",
+            ],
+            catch_exceptions=False,
+            input=input_text,
+        )
+&gt;       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli insert [OPTIONS] PATH TABLE [FILE]
+E         Try 'cli insert --help' for help.
+E         
+E         Error: No such option '--type'. (Did you mean one of: '--alter', '--pk', '--text'?)
+E         
+E       assert 2 == 0
+E        +  where 2 = &lt;Result SystemExit(2)&gt;.exit_code
+
+/trusted/test_behavior.py:705: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_insert_upsert_csv_type_overrides_detected_types[upsert-extra_args1-id,zipcode,score\n1,01234,9.5\n-expected_row1]" time="0.001"><failure message="AssertionError: Usage: cli upsert [OPTIONS] PATH TABLE [FILE]&#10;  Try 'cli upsert --help' for help.&#10;  &#10;  Error: No such option '--type'. (Did you mean one of: '--alter', '--pk', '--text'?)&#10;  &#10;assert 2 == 0&#10; +  where 2 = &lt;Result SystemExit(2)&gt;.exit_code">db_path = '/tmp/pytest-of-root/pytest-0/test_insert_upsert_csv_type_ov1/test.db'
+command = 'upsert', extra_args = ['--pk', 'id']
+input_text = 'id,zipcode,score\n1,01234,9.5\n'
+expected_row = {'id': 1, 'score': 9.5, 'zipcode': '01234'}
+
+    @pytest.mark.parametrize(
+        "command,extra_args,input_text,expected_row",
+        (
+            (
+                "insert",
+                [],
+                "zipcode,score\n01234,9.5\n",
+                {"zipcode": "01234", "score": 9.5},
+            ),
+            (
+                "upsert",
+                ["--pk", "id"],
+                "id,zipcode,score\n1,01234,9.5\n",
+                {"id": 1, "zipcode": "01234", "score": 9.5},
+            ),
+        ),
+    )
+    def test_insert_upsert_csv_type_overrides_detected_types(
+        db_path, command, extra_args, input_text, expected_row
+    ):
+        result = CliRunner().invoke(
+            cli.cli,
+            [
+                command,
+                db_path,
+                "places",
+                "-",
+                "--csv",
+            ]
+            + extra_args
+            + [
+                "--type",
+                "zipcode",
+                "text",
+            ],
+            catch_exceptions=False,
+            input=input_text,
+        )
+&gt;       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli upsert [OPTIONS] PATH TABLE [FILE]
+E         Try 'cli upsert --help' for help.
+E         
+E         Error: No such option '--type'. (Did you mean one of: '--alter', '--pk', '--text'?)
+E         
+E       assert 2 == 0
+E        +  where 2 = &lt;Result SystemExit(2)&gt;.exit_code
+
+/trusted/test_behavior.py:705: AssertionError</failure></testcase></testsuite></testsuites>

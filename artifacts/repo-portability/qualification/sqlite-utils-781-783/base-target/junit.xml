@@ -1,0 +1,1128 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="12" skipped="0" tests="14" time="0.421" timestamp="2026-09-15T01:32:01.120558+00:00" hostname="4bcad5bf66ae"><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row" time="0.001"><failure message="assert None == 1&#10; +  where None = &lt;Table docs (id, title)&gt;.last_rowid">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569d210&gt;&gt;
+
+    def test_insert_ignore_reports_existing_row(fresh_db):
+        # An ignored insert (row already exists) should point last_rowid and
+        # last_pk at the existing conflicting row - see the Datasette insert API
+        fresh_db["docs"].insert({"id": 1, "title": "Exists"}, pk="id")
+        # Insert a conflicting row with ignore=True and no explicit pk=
+        table = fresh_db["docs"].insert({"id": 1, "title": "One"}, ignore=True)
+&gt;       assert table.last_rowid == 1
+E       assert None == 1
+E        +  where None = &lt;Table docs (id, title)&gt;.last_rowid
+
+/trusted/test_behavior.py:999: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-rowid]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['rowid'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569e6b0&gt;&gt;
+rowid_alias = 'rowid', method = 'upsert'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+&gt;           table = fresh_db["t"].upsert(record, pk=rowid_alias)
+
+/trusted/test_behavior.py:1016: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4620: in upsert
+    return self.upsert_all(
+/input/sqlite_utils/db.py:4660: in upsert_all
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'rowid': 1, 'title': 'Updated'}]
+pk = 'rowid', foreign_keys = None, column_order = None, not_null = None
+defaults = None, batch_size = 100, hash_id = None, hash_id_columns = None
+alter = False, ignore = False, replace = False, truncate = False
+extracts = None, conversions = {}, columns = None, upsert = True
+analyze = False, strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['rowid'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['_rowid_'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569e890&gt;&gt;
+rowid_alias = '_rowid_', method = 'upsert'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+&gt;           table = fresh_db["t"].upsert(record, pk=rowid_alias)
+
+/trusted/test_behavior.py:1016: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4620: in upsert
+    return self.upsert_all(
+/input/sqlite_utils/db.py:4660: in upsert_all
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'_rowid_': 1, 'title': 'Updated'}]
+pk = '_rowid_', foreign_keys = None, column_order = None, not_null = None
+defaults = None, batch_size = 100, hash_id = None, hash_id_columns = None
+alter = False, ignore = False, replace = False, truncate = False
+extracts = None, conversions = {}, columns = None, upsert = True
+analyze = False, strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['_rowid_'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-oid]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['oid'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569f3d0&gt;&gt;
+rowid_alias = 'oid', method = 'upsert'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+&gt;           table = fresh_db["t"].upsert(record, pk=rowid_alias)
+
+/trusted/test_behavior.py:1016: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4620: in upsert
+    return self.upsert_all(
+/input/sqlite_utils/db.py:4660: in upsert_all
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'oid': 1, 'title': 'Updated'}], pk = 'oid'
+foreign_keys = None, column_order = None, not_null = None, defaults = None
+batch_size = 100, hash_id = None, hash_id_columns = None, alter = False
+ignore = False, replace = False, truncate = False, extracts = None
+conversions = {}, columns = None, upsert = True, analyze = False, strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['oid'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['rowid'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569f5b0&gt;&gt;
+rowid_alias = 'rowid', method = 'insert_replace'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+            table = fresh_db["t"].upsert(record, pk=rowid_alias)
+        elif method == "insert_replace":
+&gt;           table = fresh_db["t"].insert(record, pk=rowid_alias, replace=True)
+
+/trusted/test_behavior.py:1018: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4256: in insert
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'rowid': 1, 'title': 'Updated'}]
+pk = 'rowid', foreign_keys = None, column_order = None, not_null = None
+defaults = None, batch_size = 100, hash_id = None, hash_id_columns = None
+alter = False, ignore = False, replace = True, truncate = False, extracts = None
+conversions = {}, columns = None, upsert = False, analyze = False
+strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['rowid'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['_rowid_'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569f790&gt;&gt;
+rowid_alias = '_rowid_', method = 'insert_replace'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+            table = fresh_db["t"].upsert(record, pk=rowid_alias)
+        elif method == "insert_replace":
+&gt;           table = fresh_db["t"].insert(record, pk=rowid_alias, replace=True)
+
+/trusted/test_behavior.py:1018: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4256: in insert
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'_rowid_': 1, 'title': 'Updated'}]
+pk = '_rowid_', foreign_keys = None, column_order = None, not_null = None
+defaults = None, batch_size = 100, hash_id = None, hash_id_columns = None
+alter = False, ignore = False, replace = True, truncate = False, extracts = None
+conversions = {}, columns = None, upsert = False, analyze = False
+strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['_rowid_'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-oid]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['oid'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569d030&gt;&gt;
+rowid_alias = 'oid', method = 'insert_replace'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+            table = fresh_db["t"].upsert(record, pk=rowid_alias)
+        elif method == "insert_replace":
+&gt;           table = fresh_db["t"].insert(record, pk=rowid_alias, replace=True)
+
+/trusted/test_behavior.py:1018: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4256: in insert
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'oid': 1, 'title': 'Updated'}], pk = 'oid'
+foreign_keys = None, column_order = None, not_null = None, defaults = None
+batch_size = 100, hash_id = None, hash_id_columns = None, alter = False
+ignore = False, replace = True, truncate = False, extracts = None
+conversions = {}, columns = None, upsert = False, analyze = False
+strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['oid'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['rowid'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569f880&gt;&gt;
+rowid_alias = 'rowid', method = 'insert_ignore'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+            table = fresh_db["t"].upsert(record, pk=rowid_alias)
+        elif method == "insert_replace":
+            table = fresh_db["t"].insert(record, pk=rowid_alias, replace=True)
+        else:
+&gt;           table = fresh_db["t"].insert(record, pk=rowid_alias, ignore=True)
+
+/trusted/test_behavior.py:1020: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4256: in insert
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'rowid': 1, 'title': 'Updated'}]
+pk = 'rowid', foreign_keys = None, column_order = None, not_null = None
+defaults = None, batch_size = 100, hash_id = None, hash_id_columns = None
+alter = False, ignore = True, replace = False, truncate = False, extracts = None
+conversions = {}, columns = None, upsert = False, analyze = False
+strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['rowid'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['_rowid_'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569fd30&gt;&gt;
+rowid_alias = '_rowid_', method = 'insert_ignore'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+            table = fresh_db["t"].upsert(record, pk=rowid_alias)
+        elif method == "insert_replace":
+            table = fresh_db["t"].insert(record, pk=rowid_alias, replace=True)
+        else:
+&gt;           table = fresh_db["t"].insert(record, pk=rowid_alias, ignore=True)
+
+/trusted/test_behavior.py:1020: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4256: in insert
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'_rowid_': 1, 'title': 'Updated'}]
+pk = '_rowid_', foreign_keys = None, column_order = None, not_null = None
+defaults = None, batch_size = 100, hash_id = None, hash_id_columns = None
+alter = False, ignore = True, replace = False, truncate = False, extracts = None
+conversions = {}, columns = None, upsert = False, analyze = False
+strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['_rowid_'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]" time="0.000"><failure message="sqlite_utils.db.InvalidColumns: Invalid primary key column ['oid'] for table t with columns ['title']">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569e980&gt;&gt;
+rowid_alias = 'oid', method = 'insert_ignore'
+
+    @pytest.mark.parametrize("rowid_alias", ("rowid", "_rowid_", "oid"))
+    @pytest.mark.parametrize("method", ("upsert", "insert_replace", "insert_ignore"))
+    def test_pk_rowid_alias_on_rowid_table(fresh_db, rowid_alias, method):
+        # rowid and its aliases are valid primary keys for a rowid table even
+        # though they are not listed among the table's columns - see the Datasette
+        # upsert API against tables without an explicit primary key
+        fresh_db["t"].insert({"title": "Hello"})
+        assert fresh_db["t"].pks == ["rowid"]
+        record = {rowid_alias: 1, "title": "Updated"}
+        if method == "upsert":
+            table = fresh_db["t"].upsert(record, pk=rowid_alias)
+        elif method == "insert_replace":
+            table = fresh_db["t"].insert(record, pk=rowid_alias, replace=True)
+        else:
+&gt;           table = fresh_db["t"].insert(record, pk=rowid_alias, ignore=True)
+
+/trusted/test_behavior.py:1020: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:4256: in insert
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (title)&gt;, records = [{'oid': 1, 'title': 'Updated'}], pk = 'oid'
+foreign_keys = None, column_order = None, not_null = None, defaults = None
+batch_size = 100, hash_id = None, hash_id_columns = None, alter = False
+ignore = True, replace = False, truncate = False, extracts = None
+conversions = {}, columns = None, upsert = False, analyze = False
+strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and not pk and not hash_id and self.exists():
+            existing_pks = [column.name for column in self.columns if column.is_pk]
+            if existing_pks:
+                pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        if hash_id and pk:
+            raise ValueError("Use either pk= or hash_id=")
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        # pk columns missing from an existing table are an error - unless
+        # alter=True, where a pk column supplied by the records will be
+        # added, so validation waits until the record keys are known
+        deferred_invalid_pk_check = None
+        if pk and not hash_id and self.exists():
+            pk_cols = [pk] if isinstance(pk, str) else list(pk)
+            existing_columns = self.columns_dict
+            missing_pk_cols = [
+                col
+                for col in pk_cols
+                if resolve_casing(col, existing_columns) not in existing_columns
+            ]
+            if missing_pk_cols:
+                invalid_pk_error = InvalidColumns(
+                    "Invalid primary key column{} {} for table {} with columns {}".format(
+                        "s" if len(missing_pk_cols) &gt; 1 else "",
+                        missing_pk_cols,
+                        self.name,
+                        list(existing_columns),
+                    )
+                )
+                if not alter:
+&gt;                   raise invalid_pk_error
+E                   sqlite_utils.db.InvalidColumns: Invalid primary key column ['oid'] for table t with columns ['title']
+
+/input/sqlite_utils/db.py:4361: InvalidColumns</failure></testcase><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row_compound_pk" time="0.000"><failure message="AssertionError: assert [] == [{'a': 1, 'b'...te': 'first'}]&#10;  &#10;  Right contains one more item: {'a': 1, 'b': 2, 'note': 'first'}&#10;  Use -v to get more diff">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569f1f0&gt;&gt;
+
+    def test_insert_ignore_reports_existing_row_compound_pk(fresh_db):
+        # Compound primary key variant of the ignored-insert lookup
+        fresh_db["t"].insert_all([{"a": 1, "b": 2, "note": "first"}], pk=("a", "b"))
+        table = fresh_db["t"].insert(
+            {"a": 1, "b": 2, "note": "second"}, pk=("a", "b"), ignore=True
+        )
+        assert table.last_pk == (1, 2)
+&gt;       assert list(fresh_db["t"].rows_where("rowid = ?", [table.last_rowid])) == [
+            {"a": 1, "b": 2, "note": "first"}
+        ]
+E       AssertionError: assert [] == [{'a': 1, 'b'...te': 'first'}]
+E         
+E         Right contains one more item: {'a': 1, 'b': 2, 'note': 'first'}
+E         Use -v to get more diff
+
+/trusted/test_behavior.py:1033: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row_list_mode" time="0.000"><failure message="assert None == 1&#10; +  where None = &lt;Table t (id, title)&gt;.last_rowid">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6569fa60&gt;&gt;
+
+    def test_insert_ignore_reports_existing_row_list_mode(fresh_db):
+        # List-based iteration variant of the ignored-insert lookup
+        fresh_db["t"].insert_all([["id", "title"], [1, "first"]], pk="id")
+        table = fresh_db["t"].insert_all(
+            [["id", "title"], [1, "second"]], pk="id", ignore=True
+        )
+        assert table.last_pk == 1
+&gt;       assert table.last_rowid == 1
+E       assert None == 1
+E        +  where None = &lt;Table t (id, title)&gt;.last_rowid
+
+/trusted/test_behavior.py:1045: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_insert_ignore_hash_id_reports_pk" time="0.000" /><testcase classname="test_behavior" name="test_insert_ignore_unresolvable_conflict_leaves_pk_unset" time="0.000" /></testsuite></testsuites>

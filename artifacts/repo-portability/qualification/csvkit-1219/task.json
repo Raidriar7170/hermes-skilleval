@@ -1,0 +1,40 @@
+{
+  "task_id": "csvkit-1219",
+  "repository": "wireservice/csvkit",
+  "source_url": "https://github.com/wireservice/csvkit/issues/1219",
+  "family_id": "dictreader-field-limit",
+  "split": "confirmation",
+  "reference_fix_commit": "8119565ce5b2c28d1dbb8fcd93907d6fb823e726",
+  "profile": {
+    "repository": "wireservice/csvkit",
+    "packages": {
+      "csvkit": "."
+    },
+    "cli_module": "csvkit.utilities.in2csv",
+    "cli_callable": "launch_new_instance",
+    "cli_name": "in2csv",
+    "image": "hermes-two-repo-clean:v3",
+    "writable_roots": [
+      "csvkit",
+      "tests",
+      "docs",
+      "man",
+      "README.md",
+      "README.rst",
+      "CHANGELOG.rst"
+    ]
+  },
+  "public_request": "csvkit-1219-public.md",
+  "trusted_files": {
+    "test_behavior.py": "test_csvkit_fieldsize.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "fieldsize_option",
+  "regression_selector": "ordinary_stack",
+  "export_exclusions": [
+    "examples/realdata/"
+  ],
+  "comment_extraction_rule": "Issue/PR body only, plus explicitly named related issue; no comments. Current fetched body; edit history unknown.",
+  "base_commit": "78c5bb29f7d8f35caf2bb0bf3e946fb8f71e9de0",
+  "public_request_sha256": "2ef09c06207ab75ee3e98cb49041b8b938caa1e433fefa561faf9c55d524453c"
+}

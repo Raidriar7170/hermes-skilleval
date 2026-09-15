@@ -1,0 +1,39 @@
+{
+  "task_id": "sqlite-utils-828",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/pull/828",
+  "family_id": "fts-tokenizer-escaping",
+  "split": "confirmation",
+  "reference_fix_commit": "2d3c6b9a1e5068fcee6923c9ed74cbd158ee9db4",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-two-repo-clean:v3",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "man",
+      "README.md",
+      "README.rst",
+      "CHANGELOG.rst"
+    ]
+  },
+  "public_request": "sqlite-utils-828-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_fts.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_fts_tokenize_escaped",
+  "regression_selector": "not test_fts_tokenize_escaped",
+  "export_exclusions": [],
+  "comment_extraction_rule": "Issue/PR body only, plus explicitly named related issue; no comments. Current fetched body; edit history unknown.",
+  "base_commit": "b37b8cf8c83515a022e7ec0b1599004bb2f7eb55",
+  "public_request_sha256": "9069748be712655c384ad1d7d5627071fd4a86979989d3e68c8ab8e0db6152d1"
+}

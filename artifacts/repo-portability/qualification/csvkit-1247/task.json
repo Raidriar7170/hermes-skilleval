@@ -1,0 +1,40 @@
+{
+  "task_id": "csvkit-1247",
+  "repository": "wireservice/csvkit",
+  "source_url": "https://github.com/wireservice/csvkit/issues/1247",
+  "family_id": "timedelta-json",
+  "split": "confirmation",
+  "reference_fix_commit": "f73742fc0ec4c993b5f76809ee15dfab8a0cef10",
+  "profile": {
+    "repository": "wireservice/csvkit",
+    "packages": {
+      "csvkit": "."
+    },
+    "cli_module": "csvkit.utilities.in2csv",
+    "cli_callable": "launch_new_instance",
+    "cli_name": "in2csv",
+    "image": "hermes-two-repo-clean:v3",
+    "writable_roots": [
+      "csvkit",
+      "tests",
+      "docs",
+      "man",
+      "README.md",
+      "README.rst",
+      "CHANGELOG.rst"
+    ]
+  },
+  "public_request": "csvkit-1247-public.md",
+  "trusted_files": {
+    "test_behavior.py": "test_csvkit_timedelta.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "timedelta",
+  "regression_selector": "existing_json",
+  "export_exclusions": [
+    "examples/realdata/"
+  ],
+  "comment_extraction_rule": "Issue/PR body only, plus explicitly named related issue; no comments. Current fetched body; edit history unknown.",
+  "base_commit": "b36512a17f237866645bbb37f2f4ccff73cb0a49",
+  "public_request_sha256": "2fb2d0959cb97ba55997a3329d8af64fdc4ff0381e24e633eadc0015cca5ce4d"
+}
