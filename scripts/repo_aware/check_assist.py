@@ -1,6 +1,7 @@
 """Check the separate product smoke's public artifact and outcome bindings."""
 
 import json
+import math
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -44,7 +45,24 @@ def check_assist(root: Path):
         supported=record["context_supported"],
         resources=record["heavy_available"],
     )
-    if decision != routing["decision"] or routing["action"] != decision["action"]:
+    recorded = routing["decision"]
+    metadata_matches = {k: v for k, v in decision.items() if k != "predictions"} == {
+        k: v for k, v in recorded.items() if k != "predictions"
+    }
+    expected, observed = decision["predictions"], recorded["predictions"]
+    predictions_match = expected.keys() == observed.keys() and all(
+        expected[action].keys() == observed[action].keys()
+        and all(
+            math.isclose(value, observed[action][key], rel_tol=1e-10, abs_tol=1e-10)
+            for key, value in expected[action].items()
+        )
+        for action in expected
+    )
+    if (
+        not metadata_matches
+        or not predictions_match
+        or routing["action"] != decision["action"]
+    ):
         raise ValueError("Assist gate decision mismatch")
     if routing["action"] in ("N", "F") and any(routing["calls"].values()):
         raise ValueError("Assist cheap branch invoked heavy model")

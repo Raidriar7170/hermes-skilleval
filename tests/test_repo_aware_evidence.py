@@ -176,6 +176,7 @@ def test_task_difficulty_without_action_contrast_keeps_native():
         ("result.rebuild", "NOT_RUN"),
         ("result.errors", ["failure"]),
         ("result.routing.action", "F"),
+        ("result.routing.decision.predictions.N.time_scaled", 999.0),
     ],
 )
 def test_assist_completion_rejects_inconsistent_record(
@@ -198,6 +199,10 @@ def test_assist_completion_rejects_inconsistent_record(
     assert assist.check_assist(tmp_path)["assist_checked"]
     path = tmp_path / "assist/record.json"
     record = json.loads(path.read_text())
+    # Python 3.11/3.12 summation differs by one ulp in the real cost model.
+    record["result"]["routing"]["decision"]["predictions"]["N"]["time_scaled"] += 2e-16
+    path.write_text(json.dumps(record))
+    assert assist.check_assist(tmp_path)["assist_checked"]
     target = record
     keys = field.split(".")
     for key in keys[:-1]:
