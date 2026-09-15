@@ -7,7 +7,7 @@ import re
 import time
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from hermes_skilleval.models import BenchmarkTask, RouteResult, Skill
 from hermes_skilleval.router_query import router_query_text
@@ -18,7 +18,8 @@ TOKEN_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
 
 
 class EmbeddingModel(Protocol):
-    cache_key: str
+    @property
+    def cache_key(self) -> str: ...
 
     def encode_batch(self, texts: Iterable[str]) -> list[list[float]]:
         raise NotImplementedError
@@ -51,7 +52,14 @@ class EmbeddingDependencyError(RuntimeError):
 
 
 class SentenceTransformerEmbeddingModel:
-    def __init__(self, model_name: str) -> None:
+    def __init__(
+        self,
+        model_name: str,
+        *,
+        revision: str | None = None,
+        device: str | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         try:
             from sentence_transformers import SentenceTransformer
         except (ImportError, ModuleNotFoundError) as exc:
@@ -61,12 +69,61 @@ class SentenceTransformerEmbeddingModel:
             ) from exc
 
         self.model_name = model_name
-        self.cache_key = f"sentence-transformers:{model_name}"
-        self.model = SentenceTransformer(model_name)
+        options: dict[str, Any] = {}
+        if revision is not None:
+            options["revision"] = revision
+        if device is not None:
+            options["device"] = device
+        if local_files_only:
+            options["local_files_only"] = True
+        self.model = SentenceTransformer(model_name, **options)
+        self.max_seq_length = getattr(self.model, "max_seq_length", None)
+        self.revision = revision
+        self._loaded_identity = self._identity()
+        self._loaded_metadata = self._metadata()
+
+    @property
+    def cache_key(self) -> str:
+        if self._metadata() != self._loaded_metadata:
+            raise ValueError("checkpoint changed after loading; reload the model")
+        return f"sentence-transformers:{self.model_name}:{self._loaded_identity}:normalized-v1:maxlen={self.max_seq_length}"
+
+    def _metadata(self) -> list[tuple[str, int, int]]:
+        root = Path(self.model_name)
+        return (
+            [
+                (str(p), p.stat().st_size, p.stat().st_mtime_ns)
+                for p in sorted(root.rglob("*"))
+                if p.is_file()
+            ]
+            if root.is_dir()
+            else []
+        )
+
+    def _identity(self) -> str:
+        # A path is not a model identity: replacing weights must invalidate the index.
+        root = Path(self.model_name)
+        digest = hashlib.sha256()
+        if root.is_dir():
+            for path in sorted(p for p in root.rglob("*") if p.is_file()):
+                digest.update(path.relative_to(root).as_posix().encode())
+                with path.open("rb") as stream:
+                    for block in iter(lambda: stream.read(1024 * 1024), b""):
+                        digest.update(block)
+            identity = digest.hexdigest()
+        else:
+            identity = self.revision or "unresolved-revision"
+        return identity
 
     def encode_batch(self, texts: Iterable[str]) -> list[list[float]]:
-        embeddings = self.model.encode(list(texts), normalize_embeddings=True)
-        return [_to_float_list(vector) for vector in embeddings]
+        texts = list(texts)
+        embeddings = self.model.encode(texts, normalize_embeddings=True)
+        vectors = [_to_float_list(vector) for vector in embeddings]
+        if len(vectors) != len(texts):
+            raise ValueError("embedding batch size mismatch")
+        for vector in vectors:
+            _validate_vector(vector)
+        return vectors
 
 
 class EmbeddingRouter(SkillRouter):
@@ -80,14 +137,19 @@ class EmbeddingRouter(SkillRouter):
         self.model = model or HashingEmbeddingModel()
         self.cache = EmbeddingCache(cache_path) if cache_path is not None else None
 
-    def route(self, task: BenchmarkTask, skills: list[Skill], top_k: int) -> RouteResult:
+    def route(
+        self, task: BenchmarkTask, skills: list[Skill], top_k: int
+    ) -> RouteResult:
         if not isinstance(top_k, int) or top_k <= 0:
             raise ValueError("top_k must be positive")
         if not skills:
             raise ValueError("skill index is empty")
 
         started = time.perf_counter()
-        query = self.model.encode_batch([router_query_text(task.prompt)])[0]
+        queries = self.model.encode_batch([router_query_text(task.prompt)])
+        if len(queries) != 1:
+            raise ValueError("query embedding batch size mismatch")
+        query = queries[0]
         skill_vectors = self._skill_vectors(skills)
         scores = {skill.id: _cosine(query, skill_vectors[skill.id]) for skill in skills}
         ranked = sorted(skills, key=lambda skill: (-scores[skill.id], skill.id))
@@ -103,8 +165,9 @@ class EmbeddingRouter(SkillRouter):
     def _skill_vectors(self, skills: list[Skill]) -> dict[str, list[float]]:
         vectors: dict[str, list[float]] = {}
         missing: list[tuple[Skill, str]] = []
+        model_key = self.model.cache_key
         for skill in skills:
-            key = _skill_cache_key(self.model.cache_key, skill)
+            key = _skill_cache_key(model_key, skill)
             cached = self.cache.get(key) if self.cache else None
             if cached is None:
                 missing.append((skill, key))
@@ -112,7 +175,9 @@ class EmbeddingRouter(SkillRouter):
                 vectors[skill.id] = cached
 
         if missing:
-            encoded = self.model.encode_batch(_skill_text(skill) for skill, _ in missing)
+            encoded = self.model.encode_batch(
+                _skill_text(skill) for skill, _ in missing
+            )
             for (skill, key), vector in zip(missing, encoded, strict=True):
                 vectors[skill.id] = vector
                 if self.cache:
@@ -188,10 +253,16 @@ def _dense(vector: dict[int, float], dimensions: int) -> list[float]:
 
 
 def _cosine(left: list[float], right: list[float]) -> float:
-    if not left or not right:
-        return 0.0
-    length = min(len(left), len(right))
-    return sum(left[index] * right[index] for index in range(length))
+    _validate_vector(left)
+    _validate_vector(right)
+    if len(left) != len(right):
+        raise ValueError("embedding dimensions mismatch")
+    return sum(a * b for a, b in zip(left, right, strict=True))
+
+
+def _validate_vector(vector: list[float]) -> None:
+    if not vector or not all(math.isfinite(value) for value in vector):
+        raise ValueError("embedding must be nonempty and finite")
 
 
 def _to_float_list(vector) -> list[float]:
@@ -202,4 +273,4 @@ def _to_float_list(vector) -> list[float]:
 
 def _skill_cache_key(model_key: str, skill: Skill) -> str:
     digest = hashlib.sha256(_skill_text(skill).encode("utf-8")).hexdigest()
-    return f"{model_key}:{skill.id}:{digest}"
+    return f"{model_key}:skill-text-v1:{skill.id}:{digest}"
