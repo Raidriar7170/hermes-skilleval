@@ -47,3 +47,8 @@ ignore_missing_imports = true
 # Byte-preserved upstream trusted tests are evidence, not project Python sources.
 extend-exclude = ["artifacts/repo-portability/**/trusted/**"]
 force-exclude = true
+
+[[tool.mypy.overrides]]
+# Optional strong-retrieval extra is intentionally absent in lightweight CI.
+module = ["torch", "torch.*", "transformers", "transformers.*"]
+ignore_missing_imports = true
