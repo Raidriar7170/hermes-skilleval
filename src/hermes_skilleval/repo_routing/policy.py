@@ -33,6 +33,7 @@ def routing_version(config, registry):
         "max_length",
         "support_threshold",
         "budget",
+        "selection_mode",
         "profile",
         "context_budget",
         "fixed_ids",
@@ -233,6 +234,25 @@ def route(root, request, environment, registry, policy, config, *, repository=No
                 Budget(**config.get("budget", {})),
             )
             result["requirements"] = clauses
+            if config.get("selection_mode", "budget") == "top2":
+                compatible = {item["id"] for item in items if item["compatible"]}
+                selection["skill_ids"] = [
+                    skill["id"]
+                    for skill, score in sorted(
+                        zip(candidates, scores),
+                        key=lambda pair: (-pair[1], pair[0]["id"]),
+                    )
+                    if skill["id"] in compatible
+                ][:2]
+                selection["mode"] = "top2_ablation"
+                selection["objective"] = None
+                selection["potential_load_tokens"] = sum(
+                    item["tokens"]
+                    for item in items
+                    if item["id"] in selection["skill_ids"]
+                )
+            elif config.get("selection_mode", "budget") != "budget":
+                raise ValueError("unknown selection mode")
             ids = selection["skill_ids"]
             if not ids:
                 result["decision"]["fallback_reason"] = selection["fallback_reason"]
