@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import torch
@@ -29,8 +28,10 @@ def get_device() -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def last_token_pool(last_hidden_states: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
-    left_padding = (attention_mask[:, -1].sum() == attention_mask.shape[0])
+def last_token_pool(
+    last_hidden_states: torch.Tensor, attention_mask: torch.Tensor
+) -> torch.Tensor:
+    left_padding = attention_mask[:, -1].sum() == attention_mask.shape[0]
     if left_padding:
         return last_hidden_states[:, -1]
     sequence_lengths = attention_mask.sum(dim=1) - 1
@@ -119,11 +120,18 @@ def load_reranker_model(model_name_or_path: str, dtype: torch.dtype = torch.bflo
     return model, tokenizer
 
 
-def encode_texts(model, tokenizer, texts: list[str], max_length: int, batch_size: int, device: torch.device) -> torch.Tensor:
+def encode_texts(
+    model,
+    tokenizer,
+    texts: list[str],
+    max_length: int,
+    batch_size: int,
+    device: torch.device,
+) -> torch.Tensor:
     model.eval()
     all_embs: list[torch.Tensor] = []
     for i in range(0, len(texts), batch_size):
-        batch_texts = texts[i:i + batch_size]
+        batch_texts = texts[i : i + batch_size]
         encoded = tokenizer(
             batch_texts,
             padding=True,
@@ -142,17 +150,19 @@ def encode_texts(model, tokenizer, texts: list[str], max_length: int, batch_size
 
 def get_reranker_template_tokens(tokenizer):
     prefix = (
-        '<|im_start|>system\nJudge whether the Document meets the requirements '
-        'based on the Query and the Instruct provided. Note that the answer can '
+        "<|im_start|>system\nJudge whether the Document meets the requirements "
+        "based on the Query and the Instruct provided. Note that the answer can "
         'only be "yes" or "no".<|im_end|>\n<|im_start|>user\n'
     )
-    suffix = '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n'
+    suffix = "<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
     prefix_tokens = tokenizer.encode(prefix, add_special_tokens=False)
     suffix_tokens = tokenizer.encode(suffix, add_special_tokens=False)
     return prefix_tokens, suffix_tokens
 
 
-def tokenize_reranker_text(text: str, tokenizer, prefix_tokens, suffix_tokens, max_length: int) -> list[int]:
+def tokenize_reranker_text(
+    text: str, tokenizer, prefix_tokens, suffix_tokens, max_length: int
+) -> list[int]:
     inputs = tokenizer(
         text,
         padding=False,

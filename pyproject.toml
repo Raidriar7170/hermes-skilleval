@@ -26,6 +26,7 @@ embedding = [
 
 [project.scripts]
 skilleval = "hermes_skilleval.cli:main"
+hermes-maintain = "hermes_skilleval.maintenance_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -37,3 +38,7 @@ pythonpath = ["src"]
 [[tool.mypy.overrides]]
 module = "yaml"
 ignore_missing_imports = true
+
+[tool.setuptools.package-data]
+"hermes_skilleval._maintenance" = ["docker-seccomp-userns.json"]
+"hermes_skilleval.vendor" = ["SkillRouter-LICENSE"]

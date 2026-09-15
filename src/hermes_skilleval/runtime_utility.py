@@ -19,13 +19,21 @@ from hermes_skilleval.skill_parser import parse_skill_file
 
 def validate_registry_projection(pool: list[dict], registry: dict) -> str:
     """Bind the actual indexed projection to the complete-package registry."""
-    if hashlib.sha256(json.dumps(registry['skills'], sort_keys=True).encode()).hexdigest() != registry['registry_id']:
-        raise ValueError('registry digest mismatch')
-    keys = [k for k in Skill.__dataclass_fields__ if k != 'path'] + ['package_sha256']
-    project = lambda rows: [{k: row[k] for k in keys} for row in rows]
-    if project(pool) != project(registry['skills']):
-        raise ValueError('indexed pool differs from registry')
-    return registry['registry_id']
+    if (
+        hashlib.sha256(
+            json.dumps(registry["skills"], sort_keys=True).encode()
+        ).hexdigest()
+        != registry["registry_id"]
+    ):
+        raise ValueError("registry digest mismatch")
+    keys = [k for k in Skill.__dataclass_fields__ if k != "path"] + ["package_sha256"]
+
+    def project(rows):
+        return [{k: row[k] for k in keys} for row in rows]
+
+    if project(pool) != project(registry["skills"]):
+        raise ValueError("indexed pool differs from registry")
+    return registry["registry_id"]
 
 
 def load_registry(path: Path, assets: Path) -> tuple[dict, list[Skill]]:
@@ -69,28 +77,43 @@ def recommend(
     selection_config: dict | None = None,
 ) -> dict:
     from hermes_skilleval.skill_selection import SelectionConfig, bind_snapshot, select
+
     policy_config = SelectionConfig(**(selection_config or {}))
     if selection_policy not in ("topk", "dedup", "complementary"):
         raise ValueError("invalid selection policy")
-    if backend != "skillrouter-open" and (selection_policy != "topk" or selection_config):
+    if backend != "skillrouter-open" and (
+        selection_policy != "topk" or selection_config
+    ):
         raise ValueError("set selection requires SkillRouterOpen")
     started = time.perf_counter()
     registry, skills = load_registry(registry_path, assets)
     if backend == "skillrouter-open":
         from dataclasses import asdict
-        from hermes_skilleval.routers.skillrouter_open import OpenProfile, SkillRouterOpen
+        from hermes_skilleval.routers.skillrouter_open import (
+            OpenProfile,
+            SkillRouterOpen,
+        )
 
         config = dict(open_config or {})
         profile = OpenProfile(**config.pop("profile", {}))
         constructor_start = time.perf_counter()
         router = SkillRouterOpen(profile=profile, **config)
         constructor_seconds = time.perf_counter() - constructor_start
-        router.index([asdict(s) for s in skills], cache_path, registry_id=registry["registry_id"])
+        router.index(
+            [asdict(s) for s in skills], cache_path, registry_id=registry["registry_id"]
+        )
         result = router.recommend(prompt, top_k)
         result["timing"]["constructor_seconds"] = constructor_seconds
         result["timing"]["initialization_id"] = router.index_key
         result = bind_snapshot(result, prompt, registry["registry_id"])
-        selection = select(prompt=prompt, snapshot=result, registry=registry, policy=selection_policy, k=top_k, config=policy_config)
+        selection = select(
+            prompt=prompt,
+            snapshot=result,
+            registry=registry,
+            policy=selection_policy,
+            k=top_k,
+            config=policy_config,
+        )
         result["selection"] = selection
         result["skill_ids"] = selection["skill_ids"]
         return result
@@ -136,12 +159,18 @@ def main():
     p.add_argument("--registry", type=Path, required=True)
     p.add_argument("--assets", type=Path, required=True)
     p.add_argument("--model", type=Path)
-    p.add_argument("--backend", choices=["sentence-transformers", "skillrouter-open"], default="sentence-transformers")
+    p.add_argument(
+        "--backend",
+        choices=["sentence-transformers", "skillrouter-open"],
+        default="sentence-transformers",
+    )
     p.add_argument("--open-config", type=Path)
     p.add_argument("--prompt", required=True)
     p.add_argument("--top-k", type=int, default=2)
     p.add_argument("--cache", type=Path)
-    p.add_argument("--selection-policy", choices=["topk", "dedup", "complementary"], default="topk")
+    p.add_argument(
+        "--selection-policy", choices=["topk", "dedup", "complementary"], default="topk"
+    )
     p.add_argument("--selection-config", type=Path)
     args = p.parse_args()
     print(
@@ -155,8 +184,12 @@ def main():
                 cache_path=args.cache,
                 backend=args.backend,
                 selection_policy=args.selection_policy,
-                selection_config=json.loads(args.selection_config.read_text()) if args.selection_config else None,
-                open_config=json.loads(args.open_config.read_text()) if args.open_config else None,
+                selection_config=json.loads(args.selection_config.read_text())
+                if args.selection_config
+                else None,
+                open_config=json.loads(args.open_config.read_text())
+                if args.open_config
+                else None,
             ),
             indent=2,
         )
