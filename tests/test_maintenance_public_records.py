@@ -13,3 +13,4 @@ def test_public_records_match_published_summary(tmp_path):
     actual = recompute(index, tmp_path / "records")
     assert actual["summary"] == expected["summary"]
     assert actual["rows"] == expected["rows"]
+    assert actual["cost_summary"] == expected["cost_summary"]

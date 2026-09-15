@@ -272,6 +272,10 @@ See [`docs/experiment-timeline.md`](docs/experiment-timeline.md) for the histori
 experiment chain and [`docs/release-notes/v0.3.0.md`](docs/release-notes/v0.3.0.md)
 for the current release notes.
 
+## Real repository maintenance replay
+
+This branch provides an installable `hermes-maintain` entrypoint for historical csvkit and sqlite-utils tasks, saved patches, and independent target/regression checks. See the [maintenance review index](docs/repo-portability/review-index.md) for N/F/S records, offline recomputation, installation and acceptance limits. This is a small exploratory study; current-task assist is not implemented, and upstream adoption or algorithmic gain is not established.
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).
