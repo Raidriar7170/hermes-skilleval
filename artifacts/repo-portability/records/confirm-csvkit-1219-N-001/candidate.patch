@@ -1,0 +1,110 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4c3d1bdf25852c19abae995b147d7435b4c36ac1..b53b4d923d3ed1e58e4f32a99ab188dba07ed99c 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -2,6 +2,7 @@
+ 
+ import argparse
+ import bz2
++import csv
+ import datetime
+ import decimal
+ import gzip
+@@ -269,11 +270,14 @@ class CSVKitUtility:
+         elif self.args.delimiter:
+             kwargs['delimiter'] = self.args.delimiter
+ 
+-        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'field_size_limit', 'skipinitialspace'):
++        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'skipinitialspace'):
+             value = getattr(self.args, arg)
+             if value is not None:
+                 kwargs[arg] = value
+ 
++        if self.args.field_size_limit:
++            csv.field_size_limit(self.args.field_size_limit)
++
+         if getattr(self.args, 'no_header_row', None):
+             kwargs['header'] = not self.args.no_header_row
+ 
+diff --git a/tests/test_utilities/test_csvpy.py b/tests/test_utilities/test_csvpy.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..025f87f2315aa488ffd49340095f42fe3017d223
+--- /dev/null
++++ b/tests/test_utilities/test_csvpy.py
+@@ -0,0 +1,24 @@
++import csv
++import unittest
++from unittest.mock import patch
++
++from csvkit.utilities.csvpy import CSVPy
++
++
++class TestCSVPy(unittest.TestCase):
++
++    def test_dict_field_size_limit(self):
++        previous_limit = csv.field_size_limit()
++        rows = []
++
++        def interact(banner, local):
++            rows.extend(local['reader'])
++
++        try:
++            with patch.dict('sys.modules', {'IPython.frontend.terminal.embed': None}):
++                with patch('code.interact', side_effect=interact):
++                    CSVPy(['--dict', '-z', '1024', 'examples/dummy.csv']).run()
++        finally:
++            csv.field_size_limit(previous_limit)
++
++        self.assertEqual(rows, [{'a': '1', 'b': '2', 'c': '3'}])
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 7187971a6eb32374fe6b038f4fd57009a2564ac4..45287268e97e4d9f27c386f66657ab138e4374f8 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,4 +1,7 @@
++import csv
++import os
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.csvstack import CSVStack, launch_new_instance
+@@ -34,6 +37,39 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_field_size_limit(self):
++        previous_limit = csv.field_size_limit()
++
++        try:
++            self.assertRows(['-z', '1024', 'examples/dummy.csv'], [
++                ['a', 'b', 'c'],
++                ['1', '2', '3'],
++            ])
++        finally:
++            csv.field_size_limit(previous_limit)
++
++    def test_field_size_limit_above_default(self):
++        previous_limit = csv.field_size_limit()
++        field = 'a' * 131073
++
++        try:
++            csv.field_size_limit(131072)
++
++            with tempfile.TemporaryDirectory() as dirname:
++                path = os.path.join(dirname, 'large.csv')
++
++                with open(path, 'w', newline='') as f:
++                    writer = csv.writer(f)
++                    writer.writerow(['a'])
++                    writer.writerow([field])
++
++                self.assertRows(['--maxfieldsize', str(len(field)), path], [
++                    ['a'],
++                    [field],
++                ])
++        finally:
++            csv.field_size_limit(previous_limit)
++
+     def test_multiple_file_stack(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy2.csv'], [
+             ['a', 'b', 'c'],

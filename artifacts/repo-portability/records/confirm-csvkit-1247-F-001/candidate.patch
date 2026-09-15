@@ -1,0 +1,106 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index a0d54c26f84cac66374b42b90b0603cff32742c7..a22915a750b84bbce4f6b429acebe576eb994f46 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -436,6 +436,8 @@ def isatty(f):
+ 
+ 
+ def default_str_decimal(obj):
++    if isinstance(obj, datetime.timedelta):
++        return obj.total_seconds()
+     if isinstance(obj, (datetime.date, datetime.datetime)):
+         return obj.isoformat()
+     if isinstance(obj, decimal.Decimal):
+diff --git a/docs/scripts/csvstat.rst b/docs/scripts/csvstat.rst
+index 259d2cf0c1bef4e1c7d0702c09e7f253797c6a6a..1dc0500940e38a1fe7d8f70e30d43db04cee7b58 100644
+--- a/docs/scripts/csvstat.rst
++++ b/docs/scripts/csvstat.rst
+@@ -7,6 +7,8 @@ Description
+ 
+ Prints descriptive statistics for all columns in a CSV file. Will intelligently determine the type of each column and then print analysis relevant to that type (ranges for dates, mean and median for integers, etc.):
+ 
++In JSON output, time delta values are represented as numeric total seconds.
++
+ .. code-block:: bash
+ 
+    usage: csvstat [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+diff --git a/examples/test_timedelta.csv b/examples/test_timedelta.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..78c1aedbee4dfaae02ccbbc1d65963a0ae9dcb2d
+--- /dev/null
++++ b/examples/test_timedelta.csv
+@@ -0,0 +1,4 @@
++duration,label
++0:00:00,zero
++-0:00:01.5,negative
++0:00:01.5,positive
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..ce5750491ebdeb2616051faa442a49e7436df20e 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,9 @@
++import datetime
++import decimal
++import json
+ import unittest
+ 
+-from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.cli import default_float_decimal, default_str_decimal, match_column_identifier, parse_column_identifiers
+ 
+ 
+ class TestCli(unittest.TestCase):
+@@ -43,3 +46,31 @@ class TestCli(unittest.TestCase):
+         self.assertEqual(target, parse_column_identifiers('1,4:', self.headers))
+ 
+         self.assertEqual(list(range(0, len(self.headers))), parse_column_identifiers('1:', self.headers))
++
++    def test_default_str_decimal(self):
++        data = [
++            datetime.timedelta(0),
++            datetime.timedelta(seconds=-1.5),
++            datetime.timedelta(seconds=1.5),
++            decimal.Decimal('1.25'),
++            datetime.date(2020, 1, 2),
++        ]
++
++        self.assertEqual(
++            json.loads(json.dumps(data, default=default_str_decimal)),
++            [0.0, -1.5, 1.5, '1.25', '2020-01-02'],
++        )
++
++    def test_default_float_decimal(self):
++        data = [
++            datetime.timedelta(0),
++            datetime.timedelta(seconds=-1.5),
++            datetime.timedelta(seconds=1.5),
++            decimal.Decimal('1.25'),
++            datetime.date(2020, 1, 2),
++        ]
++
++        self.assertEqual(
++            json.loads(json.dumps(data, default=default_float_decimal)),
++            [0.0, -1.5, 1.5, 1.25, '2020-01-02'],
++        )
+diff --git a/tests/test_utilities/test_csvstat.py b/tests/test_utilities/test_csvstat.py
+index d55e0f9cc08487756e37493b4e680a9b3a3ae400..1a3b7ccf8c4eead437e5f75b3c780a87954bc929 100644
+--- a/tests/test_utilities/test_csvstat.py
++++ b/tests/test_utilities/test_csvstat.py
+@@ -153,6 +153,18 @@ class TestCSVStat(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+         self.assertNotIn('min', data[0])
+         self.assertEqual(row[-2], 16.0)
+ 
++    def test_json_timedelta(self):
++        output = self.get_output_as_io(['--json', 'examples/test_timedelta.csv'])
++
++        data = json.load(output)
++
++        self.assertEqual(data[0]['type'], 'TimeDelta')
++        self.assertEqual(data[0]['min'], -1.5)
++        self.assertEqual(data[0]['max'], 1.5)
++        self.assertEqual(data[0]['sum'], 0.0)
++        self.assertEqual(data[0]['mean'], 0.0)
++        self.assertEqual([row['value'] for row in data[0]['freq']], [0.0, -1.5, 1.5])
++
+     def test_decimal_format(self):
+         output = self.get_output(['-c', 'TOTAL', '--mean', 'examples/realdata/FY09_EDU_Recipients_by_State.csv'])
+ 

@@ -1,0 +1,99 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4c3d1bdf25852c19abae995b147d7435b4c36ac1..b52d2cadd649638d7bc659a87394fd2fd681d729 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -2,6 +2,7 @@
+ 
+ import argparse
+ import bz2
++import csv
+ import datetime
+ import decimal
+ import gzip
+@@ -264,12 +265,15 @@ class CSVKitUtility:
+         """
+         kwargs = {}
+ 
++        if self.args.field_size_limit:
++            csv.field_size_limit(self.args.field_size_limit)
++
+         if self.args.tabs:
+             kwargs['delimiter'] = '\t'
+         elif self.args.delimiter:
+             kwargs['delimiter'] = self.args.delimiter
+ 
+-        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'field_size_limit', 'skipinitialspace'):
++        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'skipinitialspace'):
+             value = getattr(self.args, arg)
+             if value is not None:
+                 kwargs[arg] = value
+diff --git a/tests/test_utilities/test_csvpy.py b/tests/test_utilities/test_csvpy.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..ab2f3c7cfe305501d279cb65d3a7143c1136fa7c
+--- /dev/null
++++ b/tests/test_utilities/test_csvpy.py
+@@ -0,0 +1,26 @@
++import csv
++import tempfile
++from unittest.mock import patch
++
++from csvkit.utilities.csvpy import CSVPy
++from tests.utils import CSVKitTestCase
++
++
++class TestCSVPy(CSVKitTestCase):
++    Utility = CSVPy
++
++    def test_dict_maxfieldsize(self):
++        old_limit = csv.field_size_limit()
++        self.addCleanup(csv.field_size_limit, old_limit)
++        value = 'a' * (old_limit + 1)
++
++        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as f:
++            f.write('column\n')
++            f.write(f'{value}\n')
++            f.flush()
++
++            def interact(message, local):
++                self.assertEqual(next(local['reader']), {'column': value})
++
++            with patch('code.interact', side_effect=interact):
++                self.Utility(['--dict', '-z', str(len(value)), f.name]).run()
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 7187971a6eb32374fe6b038f4fd57009a2564ac4..8fb297fa7e1861686b4cea9cb5e087219545f133 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,4 +1,6 @@
++import csv
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.csvstack import CSVStack, launch_new_instance
+@@ -34,6 +36,26 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_maxfieldsize(self):
++        old_limit = csv.field_size_limit()
++        self.addCleanup(csv.field_size_limit, old_limit)
++
++        self.assertRows(['-z', '100', 'examples/dummy.csv'], [
++            ['a', 'b', 'c'],
++            ['1', '2', '3'],
++        ])
++
++        value = 'a' * (old_limit + 1)
++        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as f:
++            f.write('column\n')
++            f.write(f'{value}\n')
++            f.flush()
++
++            self.assertRows(['-z', str(len(value)), f.name], [
++                ['column'],
++                [value],
++            ])
++
+     def test_multiple_file_stack(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy2.csv'], [
+             ['a', 'b', 'c'],

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="14" time="0.066" timestamp="2026-09-15T02:11:33.279608+00:00" hostname="2e3edd3c8928"><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row" time="0.001" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-rowid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-oid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-oid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]" time="0.000" /><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row_compound_pk" time="0.000" /><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row_list_mode" time="0.000" /><testcase classname="test_behavior" name="test_insert_ignore_hash_id_reports_pk" time="0.001"><failure message="assert 1 is None&#10; +  where 1 = &lt;Table dogs (id, name)&gt;.last_rowid">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff91049d50&gt;&gt;
+
+    def test_insert_ignore_hash_id_reports_pk(fresh_db):
+        # With hash_id the pk is the computed hash; the original record has no id
+        # column to look up so last_rowid is left unset
+        first = fresh_db["dogs"].insert({"name": "Cleo"}, hash_id="id")
+        table = fresh_db["dogs"].insert({"name": "Cleo"}, hash_id="id", ignore=True)
+        assert table.last_pk == first.last_pk
+&gt;       assert table.last_rowid is None
+E       assert 1 is None
+E        +  where 1 = &lt;Table dogs (id, name)&gt;.last_rowid
+
+/trusted/test_behavior.py:1055: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_insert_ignore_unresolvable_conflict_leaves_pk_unset" time="0.000" /></testsuite></testsuites>

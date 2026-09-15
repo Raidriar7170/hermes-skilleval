@@ -1,0 +1,264 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index 5d1816a039794e094402f4088bb86dbec883f51d..91c41c114a169c66517ade9b24b9681bac17974e 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -9,6 +9,7 @@
+ Unreleased
+ ----------
+ 
++- ``sqlite-utils insert`` and ``sqlite-utils upsert`` now accept repeatable ``--type COLUMN TYPE`` options for explicitly setting column types. Supported types are ``text``, ``integer``, ``float`` and ``blob``, and explicit types take precedence over CSV/TSV type detection. (:issue:`131`)
+ - ``sqlite-utils query`` can now read the SQL query from standard input by passing ``-`` in place of the query, for example ``echo "select * from dogs" | sqlite-utils query dogs.db -``. (:issue:`765`)
+ - ``sqlite-utils insert`` and ``sqlite-utils upsert`` now accept a ``--code`` option for :ref:`providing a block of Python code <cli_insert_code>` (or a path to a ``.py`` file) that defines a ``rows()`` function or ``rows`` iterable of rows to insert, as an alternative to importing from a file. (:issue:`684`)
+ 
+diff --git a/docs/cli-reference.rst b/docs/cli-reference.rst
+index 57988092b0fc5dd0a57460e4cae882e714a9d65b..b5f272449d01d8f48c7bbd916fd9bc18434148d9 100644
+--- a/docs/cli-reference.rst
++++ b/docs/cli-reference.rst
+@@ -307,6 +307,7 @@ See :ref:`cli_inserting_data`, :ref:`cli_insert_csv_tsv`, :ref:`cli_insert_unstr
+       --not-null TEXT           Columns that should be created as NOT NULL
+       --default <TEXT TEXT>...  Default value that should be set for a column
+       --no-detect-types         Treat all CSV/TSV columns as TEXT
++      --type <TEXT CHOICE>...   Set a column type to TEXT, INTEGER, FLOAT or BLOB
+       --analyze                 Run ANALYZE at the end of this operation
+       --load-extension TEXT     Path to SQLite extension, with optional :entrypoint
+       --silent                  Do not show progress bar
+@@ -367,6 +368,7 @@ See :ref:`cli_upsert`.
+       --not-null TEXT           Columns that should be created as NOT NULL
+       --default <TEXT TEXT>...  Default value that should be set for a column
+       --no-detect-types         Treat all CSV/TSV columns as TEXT
++      --type <TEXT CHOICE>...   Set a column type to TEXT, INTEGER, FLOAT or BLOB
+       --analyze                 Run ANALYZE at the end of this operation
+       --load-extension TEXT     Path to SQLite extension, with optional :entrypoint
+       --silent                  Do not show progress bar
+diff --git a/docs/cli.rst b/docs/cli.rst
+index 4ed92edb02d4ef4d9bd4ea7bc8a9ec2161c4802f..dbb76f0cb0f49205195c1f2d4d450a60471f36b1 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1372,6 +1372,21 @@ To disable type detection and treat all columns as TEXT, use ``--no-detect-types
+ 
+     sqlite-utils insert creatures.db creatures creatures.csv --csv --no-detect-types
+ 
++Use ``--type COLUMN TYPE`` to explicitly set the type of one or more columns.
++The supported types are ``text``, ``integer``, ``float`` and ``blob``. This
++option can be repeated, and explicit types take precedence over automatically
++detected types:
++
++.. code-block:: bash
++
++    sqlite-utils insert creatures.db creatures creatures.csv --csv \
++        --type age text \
++        --type weight float
++
++``--type`` works with both ``insert`` and ``upsert``. It also applies to tables
++that already exist; other columns in an existing table retain their current
++types.
++
+ If a CSV or TSV file includes empty cells, like this one:
+ 
+ ::
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 4eefc709d9057ce55f3b4218d3f53400726dd8c9..a20f7bc806ad8a53b96e70fc655fd7408f17bc89 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -985,6 +985,16 @@ def insert_upsert_options(*, require_pk=False):
+                     is_flag=True,
+                     help="Treat all CSV/TSV columns as TEXT",
+                 ),
++                click.option(
++                    "--type",
++                    "types",
++                    type=(
++                        str,
++                        CaseInsensitiveChoice(("text", "integer", "float", "blob")),
++                    ),
++                    multiple=True,
++                    help="Set a column type to TEXT, INTEGER, FLOAT or BLOB",
++                ),
+                 click.option(
+                     "--analyze",
+                     is_flag=True,
+@@ -1035,6 +1045,7 @@ def insert_upsert_implementation(
+     not_null=None,
+     default=None,
+     no_detect_types=False,
++    types=None,
+     analyze=False,
+     load_extension=None,
+     silent=False,
+@@ -1114,13 +1125,16 @@ def insert_upsert_implementation(
+                 raise
+         # Apply detected types only to a table this command created -
+         # transforming a pre-existing table would rewrite its column types
+-        # and corrupt values such as TEXT zip codes with leading zeros
+-        if (
+-            tracker is not None
+-            and not table_existed_before_insert
+-            and db.table(table).exists()
+-        ):
+-            db.table(table).transform(types=tracker.types)
++        # and corrupt values such as TEXT zip codes with leading zeros. Explicit
++        # types are applied to both new and existing tables, and take precedence
++        # over detected types.
++        type_overrides = dict(types or ())
++        final_types = {}
++        if tracker is not None and not table_existed_before_insert:
++            final_types.update(tracker.types)
++        final_types.update(type_overrides)
++        if final_types and db.table(table).exists():
++            db.table(table).transform(types=final_types)
+ 
+     if code is not None:
+         if file is not None:
+@@ -1322,6 +1336,7 @@ def insert(
+     stop_after,
+     alter,
+     no_detect_types,
++    types,
+     analyze,
+     load_extension,
+     silent,
+@@ -1415,6 +1430,7 @@ def insert(
+             replace=replace,
+             truncate=truncate,
+             no_detect_types=no_detect_types,
++            types=types,
+             analyze=analyze,
+             load_extension=load_extension,
+             silent=silent,
+@@ -1455,6 +1471,7 @@ def upsert(
+     not_null,
+     default,
+     no_detect_types,
++    types,
+     analyze,
+     load_extension,
+     silent,
+@@ -1502,6 +1519,7 @@ def upsert(
+             not_null=not_null,
+             default=default,
+             no_detect_types=no_detect_types,
++            types=types,
+             analyze=analyze,
+             load_extension=load_extension,
+             silent=silent,
+diff --git a/tests/test_cli_insert.py b/tests/test_cli_insert.py
+index e290f9715cba02b10a194af9924eb6726060fc58..75ff38e443a54fa4d0c7dbb9249cc7349739f10c 100644
+--- a/tests/test_cli_insert.py
++++ b/tests/test_cli_insert.py
+@@ -678,6 +678,116 @@ def test_upsert_csv_detect_types_leaves_existing_table_alone(db_path):
+     assert db["places"].get(1)["zip"] == "01234"
+ 
+ 
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++def test_csv_type_overrides_detected_types(db_path, command):
++    args = [
++        command,
++        db_path,
++        "measurements",
++        "-",
++        "--csv",
++        "--type",
++        "id",
++        "TEXT",
++        "--type",
++        "score",
++        "float",
++        "--type",
++        "count",
++        "integer",
++        "--type",
++        "payload",
++        "blob",
++    ]
++    if command == "upsert":
++        args.extend(("--pk", "id"))
++    result = CliRunner().invoke(
++        cli.cli,
++        args,
++        catch_exceptions=False,
++        input="id,score,count,payload\n001,2,3,hello",
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(db_path)
++    assert db["measurements"].columns_dict == {
++        "id": str,
++        "score": float,
++        "count": int,
++        "payload": bytes,
++    }
++    assert list(db["measurements"].rows) == [
++        {"id": "001", "score": 2.0, "count": 3, "payload": "hello"}
++    ]
++
++
++def test_type_override_with_no_detect_types(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "measurements",
++            "-",
++            "--csv",
++            "--no-detect-types",
++            "--type",
++            "score",
++            "float",
++        ],
++        catch_exceptions=False,
++        input="id,score\n001,2",
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(db_path)
++    assert db["measurements"].columns_dict == {"id": str, "score": float}
++    assert list(db["measurements"].rows) == [{"id": "001", "score": 2.0}]
++
++
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++def test_type_override_existing_table(db_path, command):
++    db = Database(db_path)
++    db["measurements"].insert({"id": 1, "score": "1.5"}, pk="id")
++    db["measurements"].create_index(["score"])
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            command,
++            db_path,
++            "measurements",
++            "-",
++            "--csv",
++            "--pk",
++            "id",
++            "--type",
++            "score",
++            "float",
++        ],
++        catch_exceptions=False,
++        input=("id,score\n2,2.5" if command == "insert" else "id,score\n1,2.5"),
++    )
++    assert result.exit_code == 0, result.output
++    assert db["measurements"].columns_dict == {"id": int, "score": float}
++    assert db["measurements"].indexes[0].columns == ["score"]
++    expected = (
++        [{"id": 1, "score": 2.5}]
++        if command == "upsert"
++        else [{"id": 1, "score": 1.5}, {"id": 2, "score": 2.5}]
++    )
++    assert list(db["measurements"].rows) == expected
++
++
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++def test_type_override_rejects_unsupported_type(tmpdir, command):
++    db_path = str(tmpdir / "invalid.db")
++    result = CliRunner().invoke(
++        cli.cli,
++        [command, db_path, "data", "-", "--type", "id", "real"],
++        input='{"id": 1}',
++    )
++    assert result.exit_code == 2
++    assert "is not one of 'text', 'integer', 'float', 'blob'" in result.output
++
++
+ def test_insert_invalid_pk_clean_error(db_path):
+     # An invalid --pk against an existing table should be a clean CLI
+     # error, not a raw InvalidColumns traceback

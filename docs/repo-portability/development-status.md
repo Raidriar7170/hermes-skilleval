@@ -1,4 +1,7 @@
-# Development status
+# Development slice (historical checkpoint)
+
+This page records the first csvkit slice, not the final delivery status. See the
+[review index](review-index.md) for the study and current limitations.
 
 The active execution contract is [the Goal](../goals/Hermes_Two_Repo_Fixed_Baseline_GitHub_Goal.md).
 
@@ -24,5 +27,8 @@ preparations. Python 3.12 and explicit export exclusions resolved these causes.
 No study completion, algorithm gain, arbitrary-repository support or upstream
 adoption is claimed. Public patches and JUnit are sanitized derivatives under
 artifacts/repo-portability; no raw conversations or authentication files belong
-in this branch. The initial image still inherits a local prerequisite and is
-not yet a clean-install demonstration.
+in this branch. The initial development image inherits a local prerequisite and
+is not a clean-install demonstration. The later confirmation uses the separately
+built clean image and installed wheel described in the review index. All three
+saved development patches received the separate audit described in the evidence
+boundary; those audits did not invoke new Agents.

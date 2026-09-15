@@ -57,8 +57,21 @@
   "resolved_baseline_failures": [],
   "base_summary": "25 failed, 1155 passed in 25.00s",
   "head_summary": "25 failed, 1185 passed in 23.90s",
-  "full_suite_boundary": "Executed after runtime typing/export repairs, before addition of public-records CI test; that additional test passed separately. No claim that the frozen campaign ran latest delivery source.",
-  "focused_integration": "48 passed; mandatory-test regression addition 3 passed; public-records CI test passed; latest records/export subset 15 passed",
+  "full_suite_boundary": "Historical full-suite comparison after runtime typing/export repairs, before later public-records/prompt/cost/read-observation additions. Those additions received focused checks. This is not a final-HEAD full-suite pass claim.",
+  "focused_integration": {
+    "result": "35 passed in 0.82s",
+    "source_commit": "15c15aaf041108e15ff6f46c9604e062ba668d3b",
+    "tests": [
+      "test_maintenance_export.py",
+      "test_maintenance_public_records.py",
+      "test_maintenance_records.py",
+      "test_repo_finalize.py",
+      "test_repo_verifier.py",
+      "test_repository_maintenance.py",
+      "test_repository_profile.py"
+    ],
+    "scope": "Focused maintenance tests; not the complete repository suite"
+  },
   "typecheck_without_models": {
     "base_errors": 41,
     "head_errors": 40,
@@ -78,14 +91,29 @@
       "pytest",
       "release-check"
     ],
-    "historical_artifacts_changed_to_force_pass": false
+    "historical_artifacts_changed_to_force_pass": false,
+    "boundary": "Earlier pushed code boundary; final delivery HEAD CI is read after the last push and reported in PR #47. This object does not claim final-HEAD CI success."
   },
   "publication_note": "Initial GitHub OAuth workflow-scope rejection was resolved by removing the unpublished new workflow and adding records checks to existing pytest CI; no auth scope change, no force push.",
   "delivery_wheel": {
-    "sha256": "6b44fa7cd60bf144b70c7c6b8edeec4071aa3bbd8e71e4fe93f4da8ddd3eb4a1",
+    "sha256": "560330c0964325fdb02c85b166ada9dc3b255290073599330edc1c9254cb678f",
     "script": "scripts/repo_workflow/check_install.sh",
-    "tested": "fresh venv outside repository; doctor, F recommendation, absence of retrieval modules, records-only",
+    "tested": "Fresh venv outside repository; doctor, F recommendation, no retrieval modules installed, records-only. Final cohort records are checked separately with this installed wheel.",
     "model_calls": 0,
-    "docker_calls": 0
+    "docker_calls": 0,
+    "source_commit": "15c15aaf041108e15ff6f46c9604e062ba668d3b"
+  },
+  "ruff": {
+    "result": "passed",
+    "changed_python_files": 53,
+    "trusted_upstream_evidence_excluded": true
+  },
+  "final_cohort_records": {
+    "rows": 21,
+    "confirmation": 18,
+    "development": 3,
+    "installed_wheel_recomputation": "exact JSON equality",
+    "public_records_ci_test": "1 passed",
+    "model_network_docker_calls": 0
   }
 }

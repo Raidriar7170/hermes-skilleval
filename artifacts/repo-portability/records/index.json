@@ -37,6 +37,7 @@
         "reason": "Verifier evidence binding repair; identical saved patch, no new Agent invocation",
         "original_resolved": true
       },
+      "policy_rejected": false,
       "expected_test_ids": {
         "target": [
           "test_behavior::test_ndjson_api[jl]",
@@ -83,6 +84,10 @@
         "binding": {
           "path": "dev-csvkit-1345-N-001/verification.json",
           "sha256": "8263e4a1f8611b9e2709a8c895add320b5faee03ac7b0acd2dd3aaad9a5cb12f"
+        },
+        "events": {
+          "path": "dev-csvkit-1345-N-001/events.json",
+          "sha256": "d06a1e6b4bd7fcf609ab685975a2b8a9410469d1c9be7d631d49afe89c2bbdcb"
         }
       },
       "timing": {
@@ -92,6 +97,7 @@
         "finalize_seconds": 4.373379124997882,
         "pipeline_wall_seconds": null
       },
+      "skill_file_reference_commands": 1,
       "observed_skill_read_commands": 1
     },
     {
@@ -130,6 +136,7 @@
         "reason": "Verifier evidence binding repair; identical saved patch, no new Agent invocation",
         "original_resolved": true
       },
+      "policy_rejected": false,
       "expected_test_ids": {
         "target": [
           "test_behavior::test_ndjson_api[jl]",
@@ -173,6 +180,10 @@
         "binding": {
           "path": "dev-csvkit-1345-F-001/verification.json",
           "sha256": "6e93816858eba8ef7da20fc5ed4abaf2187445dec4ffb13a07030ff2ddb917bf"
+        },
+        "events": {
+          "path": "dev-csvkit-1345-F-001/events.json",
+          "sha256": "1bef354973a67813ba0468a6da042a82331dc6a80fe303df0a086de65c654f93"
         }
       },
       "timing": {
@@ -182,7 +193,8 @@
         "finalize_seconds": 4.317960582993692,
         "pipeline_wall_seconds": null
       },
-      "observed_skill_read_commands": 3
+      "skill_file_reference_commands": 3,
+      "observed_skill_read_commands": 2
     },
     {
       "task_id": "csvkit-1345-ndjson",
@@ -220,6 +232,7 @@
         "reason": "Verifier evidence binding repair; identical saved patch, no new Agent invocation",
         "original_resolved": true
       },
+      "policy_rejected": false,
       "expected_test_ids": {
         "target": [
           "test_behavior::test_ndjson_api[jl]",
@@ -263,6 +276,15 @@
         "binding": {
           "path": "dev-csvkit-1345-S-001/verification.json",
           "sha256": "bad76584675ee78d79040a44ba8a44508235c73cc5884540c642694fff81c680"
+        },
+        "events": {
+          "path": "dev-csvkit-1345-S-001/events.json",
+          "sha256": "b7a9b0d96ab26f5bb83713a9c002ad34d74974862a85ab0bb2c1fc23047f7738"
+        },
+        "route": {
+          "path": "dev-csvkit-1345-S-001/route.json",
+          "sha256": "a3a71de4173690ec23911be896870355f404aa25e655e015db22d8dadb76cb21",
+          "original_sha256": "433b84f34d35f5d08dd85b6a2d82ef0ab5da595e10784df114b28305665b0065"
         }
       },
       "timing": {
@@ -272,6 +294,1868 @@
         "finalize_seconds": 4.286522832990158,
         "pipeline_wall_seconds": null
       },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1219",
+      "repository": "wireservice/csvkit",
+      "family_id": "dictreader-field-limit",
+      "split": "confirmation",
+      "base_commit": "78c5bb29f7d8f35caf2bb0bf3e946fb8f71e9de0",
+      "arm": "N",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1219-N-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 921952,
+            "cached_input_tokens": 862208,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 12345,
+            "reasoning_output_tokens": 6351
+          }
+        ],
+        "input_tokens": 921952,
+        "cached_input_tokens": 862208,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 12345,
+        "reasoning_output_tokens": 6351
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_fieldsize_option[140000]",
+          "test_behavior::test_fieldsize_option[32]"
+        ],
+        "regression": [
+          "test_behavior::test_ordinary_stack[values0]",
+          "test_behavior::test_ordinary_stack[values1]"
+        ]
+      },
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1219-N-001/candidate.patch",
+          "sha256": "c91fd9f2823944365b67254cab97316f88cabe5663433639e7946faf333bb2a2",
+          "original_sha256": "c91fd9f2823944365b67254cab97316f88cabe5663433639e7946faf333bb2a2"
+        },
+        "target": {
+          "path": "confirm-csvkit-1219-N-001/target.xml",
+          "sha256": "cbf81df25b3c250a1c36854f8960b4036b122f4b43e5f407161f41185f7f8bd8",
+          "original_sha256": "cbf81df25b3c250a1c36854f8960b4036b122f4b43e5f407161f41185f7f8bd8"
+        },
+        "regression": {
+          "path": "confirm-csvkit-1219-N-001/regression.xml",
+          "sha256": "9264ca9be2779a4e45e587654d8e66999b84a1422ec314e9045862a37e3c7d36",
+          "original_sha256": "9264ca9be2779a4e45e587654d8e66999b84a1422ec314e9045862a37e3c7d36"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1219-N-001/verification.json",
+          "sha256": "ab1d0c47d472a9e1fe9b479975f3feff645a01409647513e252882a1c6271673"
+        },
+        "events": {
+          "path": "confirm-csvkit-1219-N-001/events.json",
+          "sha256": "05cfb562e6d2d02e25ed826bc55d9d73159ca470d79d4f78529c672560898c38"
+        }
+      },
+      "timing": {
+        "execution_seconds": 338.9132399579976,
+        "package_prepare_seconds": 0.03531183302402496,
+        "capture_seconds": 0.30442687499453314,
+        "finalize_seconds": 4.29781233301037,
+        "pipeline_wall_seconds": 343.3341416659823
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1219",
+      "repository": "wireservice/csvkit",
+      "family_id": "dictreader-field-limit",
+      "split": "confirmation",
+      "base_commit": "78c5bb29f7d8f35caf2bb0bf3e946fb8f71e9de0",
+      "arm": "F",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1219-F-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 624013,
+            "cached_input_tokens": 578048,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 6779,
+            "reasoning_output_tokens": 2716
+          }
+        ],
+        "input_tokens": 624013,
+        "cached_input_tokens": 578048,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6779,
+        "reasoning_output_tokens": 2716
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_fieldsize_option[140000]",
+          "test_behavior::test_fieldsize_option[32]"
+        ],
+        "regression": [
+          "test_behavior::test_ordinary_stack[values0]",
+          "test_behavior::test_ordinary_stack[values1]"
+        ]
+      },
+      "selected_ids": [
+        "cli-api-regression",
+        "systematic-debugging"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1219-F-001/candidate.patch",
+          "sha256": "02bc2a7d1e65bdda0881106dd58ea2387509c82556d7db21149fa62d486f97cb",
+          "original_sha256": "02bc2a7d1e65bdda0881106dd58ea2387509c82556d7db21149fa62d486f97cb"
+        },
+        "target": {
+          "path": "confirm-csvkit-1219-F-001/target.xml",
+          "sha256": "1e04daa2ca661ae4e6a3772c1de786452bdc4651a63df33cea727cec573f4206",
+          "original_sha256": "1e04daa2ca661ae4e6a3772c1de786452bdc4651a63df33cea727cec573f4206"
+        },
+        "regression": {
+          "path": "confirm-csvkit-1219-F-001/regression.xml",
+          "sha256": "e169119385637a4f802d4062e5814e629bc7b758e60a9f633e225ba9c36dabef",
+          "original_sha256": "e169119385637a4f802d4062e5814e629bc7b758e60a9f633e225ba9c36dabef"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1219-F-001/verification.json",
+          "sha256": "45d644fd74d86beb19869ff7de54d99ebe99bf9c70558038bcb68c86da8dbb03"
+        },
+        "events": {
+          "path": "confirm-csvkit-1219-F-001/events.json",
+          "sha256": "9be9ac6cdf81461cfbb89ef984cc8b0e6c9ded20dd7db9881284fd6b89593ff7"
+        }
+      },
+      "timing": {
+        "execution_seconds": 212.33467199999723,
+        "package_prepare_seconds": 0.032469874975504354,
+        "capture_seconds": 0.30016541699296795,
+        "finalize_seconds": 4.30946750001749,
+        "pipeline_wall_seconds": 216.76457775000017
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1219",
+      "repository": "wireservice/csvkit",
+      "family_id": "dictreader-field-limit",
+      "split": "confirmation",
+      "base_commit": "78c5bb29f7d8f35caf2bb0bf3e946fb8f71e9de0",
+      "arm": "S",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1219-S-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 794657,
+            "cached_input_tokens": 740096,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 9264,
+            "reasoning_output_tokens": 4129
+          }
+        ],
+        "input_tokens": 794657,
+        "cached_input_tokens": 740096,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 9264,
+        "reasoning_output_tokens": 4129
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_fieldsize_option[140000]",
+          "test_behavior::test_fieldsize_option[32]"
+        ],
+        "regression": [
+          "test_behavior::test_ordinary_stack[values0]",
+          "test_behavior::test_ordinary_stack[values1]"
+        ]
+      },
+      "selected_ids": [
+        "schema-change-regression",
+        "cli-api-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1219-S-001/candidate.patch",
+          "sha256": "33f8554e54bb4cc1105cf79001d3011b5813e31a5c70bd8b35a174308344682f",
+          "original_sha256": "33f8554e54bb4cc1105cf79001d3011b5813e31a5c70bd8b35a174308344682f"
+        },
+        "target": {
+          "path": "confirm-csvkit-1219-S-001/target.xml",
+          "sha256": "5a679023f6f2401b7da602bdc506da701acbb2bf43d058c4645ad976d6c4f982",
+          "original_sha256": "5a679023f6f2401b7da602bdc506da701acbb2bf43d058c4645ad976d6c4f982"
+        },
+        "regression": {
+          "path": "confirm-csvkit-1219-S-001/regression.xml",
+          "sha256": "28669f5b14b1c7807d844de786a8b893443645204d969825c6d63d84a93342f5",
+          "original_sha256": "28669f5b14b1c7807d844de786a8b893443645204d969825c6d63d84a93342f5"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1219-S-001/verification.json",
+          "sha256": "d9e7dcba753f4331040948a7d154c1408d0d298fbc9b9f463f02379d9e2a865f"
+        },
+        "events": {
+          "path": "confirm-csvkit-1219-S-001/events.json",
+          "sha256": "140c5ccb9c045a3f4a1116875a6e373608e2510c06f89a4ba01f60c7f11d1d92"
+        },
+        "route": {
+          "path": "confirm-csvkit-1219-S-001/route.json",
+          "sha256": "d8d95302fff4a53755c604e09bfd1a9be5b0883d75ec278cda431b32f5f322d5",
+          "original_sha256": "fd6384386bdb0c90f0853bb36c272276825c1fd2aafc9b9ddce7a139d86b4cc8"
+        }
+      },
+      "timing": {
+        "execution_seconds": 248.5726556669979,
+        "package_prepare_seconds": 0.024015417002374306,
+        "capture_seconds": 0.49153891700552776,
+        "finalize_seconds": 5.238351999985753,
+        "pipeline_wall_seconds": 260.52752929201233
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1247",
+      "repository": "wireservice/csvkit",
+      "family_id": "timedelta-json",
+      "split": "confirmation",
+      "base_commit": "b36512a17f237866645bbb37f2f4ccff73cb0a49",
+      "arm": "F",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1247-F-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 779104,
+            "cached_input_tokens": 723456,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 8115,
+            "reasoning_output_tokens": 2838
+          }
+        ],
+        "input_tokens": 779104,
+        "cached_input_tokens": 723456,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8115,
+        "reasoning_output_tokens": 2838
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": true,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_timedelta_cli",
+          "test_behavior::test_timedelta_json[-90]",
+          "test_behavior::test_timedelta_json[0]",
+          "test_behavior::test_timedelta_json[3600.5]",
+          "test_behavior::test_timedelta_json[60]"
+        ],
+        "regression": [
+          "test_behavior::test_existing_json[value0-2.5]",
+          "test_behavior::test_existing_json[value1-2024-01-02]"
+        ]
+      },
+      "selected_ids": [
+        "cli-api-regression",
+        "systematic-debugging"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1247-F-001/candidate.patch",
+          "sha256": "f6d4b55bcf65d1dbd17bd4f6683e7411abac610a0ad08bdc0409a647b100877d",
+          "original_sha256": "f6d4b55bcf65d1dbd17bd4f6683e7411abac610a0ad08bdc0409a647b100877d"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1247-F-001/verification.json",
+          "sha256": "04cadee31d1fb0c9d9e07647685663fb001db5474642215415e3c62804519491"
+        },
+        "events": {
+          "path": "confirm-csvkit-1247-F-001/events.json",
+          "sha256": "0157956aaf63425cf0bed5e568b3c1d0f9cfa13f7c71e4615ebf2b2c50b0b443"
+        }
+      },
+      "timing": {
+        "execution_seconds": 200.52178408400505,
+        "package_prepare_seconds": 0.02729066601023078,
+        "capture_seconds": 0.32751166698290035,
+        "finalize_seconds": 0.36541166598908603,
+        "pipeline_wall_seconds": 200.9918247089954
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1247",
+      "repository": "wireservice/csvkit",
+      "family_id": "timedelta-json",
+      "split": "confirmation",
+      "base_commit": "b36512a17f237866645bbb37f2f4ccff73cb0a49",
+      "arm": "S",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1247-S-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 600989,
+            "cached_input_tokens": 556160,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 5736,
+            "reasoning_output_tokens": 2074
+          }
+        ],
+        "input_tokens": 600989,
+        "cached_input_tokens": 556160,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5736,
+        "reasoning_output_tokens": 2074
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_timedelta_cli",
+          "test_behavior::test_timedelta_json[-90]",
+          "test_behavior::test_timedelta_json[0]",
+          "test_behavior::test_timedelta_json[3600.5]",
+          "test_behavior::test_timedelta_json[60]"
+        ],
+        "regression": [
+          "test_behavior::test_existing_json[value0-2.5]",
+          "test_behavior::test_existing_json[value1-2024-01-02]"
+        ]
+      },
+      "selected_ids": [
+        "schema-change-regression",
+        "cli-api-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1247-S-001/candidate.patch",
+          "sha256": "8c2f5a20bf1dc28eb11b6a9bc2a1aec5da629d8a13cd1ab503781c5422815d59",
+          "original_sha256": "8c2f5a20bf1dc28eb11b6a9bc2a1aec5da629d8a13cd1ab503781c5422815d59"
+        },
+        "target": {
+          "path": "confirm-csvkit-1247-S-001/target.xml",
+          "sha256": "bbb14c596673b91aa8e1ce5382fab55886ec6120bbfd12099edecaf9ed7e9a72",
+          "original_sha256": "bbb14c596673b91aa8e1ce5382fab55886ec6120bbfd12099edecaf9ed7e9a72"
+        },
+        "regression": {
+          "path": "confirm-csvkit-1247-S-001/regression.xml",
+          "sha256": "7c624aa741ba8c5f66dbd7244e16e136c9a3d3cfa6a32f52f296c4548bccb6af",
+          "original_sha256": "7c624aa741ba8c5f66dbd7244e16e136c9a3d3cfa6a32f52f296c4548bccb6af"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1247-S-001/verification.json",
+          "sha256": "e35063fd6c419665144b84f923a885fba655cc03f9e4e9169fa58e1b1960af06"
+        },
+        "events": {
+          "path": "confirm-csvkit-1247-S-001/events.json",
+          "sha256": "1d64d2879c88ed04f1486d2c88bf889d7095fefd12723de4daaf0878f1349141"
+        },
+        "route": {
+          "path": "confirm-csvkit-1247-S-001/route.json",
+          "sha256": "ace02dd6064ea30cb9ac1c3f8ab6a06693e89c6961a1a88d44ae46688c890391",
+          "original_sha256": "3ad1178ae7045e8890e6850d39d8ae0d368b85ef628b4aec6f8449179f27f634"
+        }
+      },
+      "timing": {
+        "execution_seconds": 165.08251479201135,
+        "package_prepare_seconds": 0.023336583020864055,
+        "capture_seconds": 0.4738264999759849,
+        "finalize_seconds": 5.467448334005894,
+        "pipeline_wall_seconds": 176.1537244170031
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1247",
+      "repository": "wireservice/csvkit",
+      "family_id": "timedelta-json",
+      "split": "confirmation",
+      "base_commit": "b36512a17f237866645bbb37f2f4ccff73cb0a49",
+      "arm": "N",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1247-N-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 1055462,
+            "cached_input_tokens": 981760,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 7186,
+            "reasoning_output_tokens": 1554
+          }
+        ],
+        "input_tokens": 1055462,
+        "cached_input_tokens": 981760,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7186,
+        "reasoning_output_tokens": 1554
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": true,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_timedelta_cli",
+          "test_behavior::test_timedelta_json[-90]",
+          "test_behavior::test_timedelta_json[0]",
+          "test_behavior::test_timedelta_json[3600.5]",
+          "test_behavior::test_timedelta_json[60]"
+        ],
+        "regression": [
+          "test_behavior::test_existing_json[value0-2.5]",
+          "test_behavior::test_existing_json[value1-2024-01-02]"
+        ]
+      },
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1247-N-001/candidate.patch",
+          "sha256": "fcccf68543d3f4c1304113c5428c5da724e92f4b1b6d17cc1aeb90d1c1aa4378",
+          "original_sha256": "fcccf68543d3f4c1304113c5428c5da724e92f4b1b6d17cc1aeb90d1c1aa4378"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1247-N-001/verification.json",
+          "sha256": "878bff3695e2debbcfbd101f5cc76994985f66874564193b93e4bbbbd5b807b4"
+        },
+        "events": {
+          "path": "confirm-csvkit-1247-N-001/events.json",
+          "sha256": "1ee6eada27606f87e2b97029bd4843542474b48f937d2f9f32a2f942485c4f31"
+        }
+      },
+      "timing": {
+        "execution_seconds": 216.75176829201519,
+        "package_prepare_seconds": 0.028190750017529353,
+        "capture_seconds": 0.30306987499352545,
+        "finalize_seconds": 0.3405800000182353,
+        "pipeline_wall_seconds": 217.21333420902374
+      },
+      "skill_file_reference_commands": 2,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1270",
+      "repository": "wireservice/csvkit",
+      "family_id": "numeric-date-inference",
+      "split": "confirmation",
+      "base_commit": "0095bed9fc51f27482d439c9e83f78f255fe6bf1",
+      "arm": "S",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1270-S-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 536825,
+            "cached_input_tokens": 492160,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 8157,
+            "reasoning_output_tokens": 3462
+          }
+        ],
+        "input_tokens": 536825,
+        "cached_input_tokens": 492160,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8157,
+        "reasoning_output_tokens": 3462
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_number_with_date_format[4.4]",
+          "test_behavior::test_number_with_date_format[5.5]"
+        ],
+        "regression": [
+          "test_behavior::test_explicit_datetime",
+          "test_behavior::test_ordinary_numeric"
+        ]
+      },
+      "selected_ids": [
+        "schema-change-regression",
+        "cli-api-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1270-S-001/candidate.patch",
+          "sha256": "2c1cc01161bfcdf8e5bcccf80d736accfe789d08336b2ee2b0a8a7bc8a549a5e",
+          "original_sha256": "2c1cc01161bfcdf8e5bcccf80d736accfe789d08336b2ee2b0a8a7bc8a549a5e"
+        },
+        "target": {
+          "path": "confirm-csvkit-1270-S-001/target.xml",
+          "sha256": "0d552b8f959940bba60a2e369e5e398b60b268d63c25f066de755834b4378e8c",
+          "original_sha256": "0d552b8f959940bba60a2e369e5e398b60b268d63c25f066de755834b4378e8c"
+        },
+        "regression": {
+          "path": "confirm-csvkit-1270-S-001/regression.xml",
+          "sha256": "3c447e80cbf6fc5252051f4a6444869dab855e7303e8ba85f35396512fb1e1ac",
+          "original_sha256": "3c447e80cbf6fc5252051f4a6444869dab855e7303e8ba85f35396512fb1e1ac"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1270-S-001/verification.json",
+          "sha256": "b62bc6842deee270956be9c66b0d064ecc08e6ea5c8af1e655f1c585ee79dd11"
+        },
+        "events": {
+          "path": "confirm-csvkit-1270-S-001/events.json",
+          "sha256": "19b39d78e7a471467436be4fa512e4223c43d4bcab4860672c22fd560fe2af0e"
+        },
+        "route": {
+          "path": "confirm-csvkit-1270-S-001/route.json",
+          "sha256": "ff2145ad29320e2e9b411300fc2ea6e3ada201ab6102f4c50b573828fa808dc1",
+          "original_sha256": "09d522569a86c8798e51485ba9b299945dd45b989b05f8b8f5ee70c23bd0bc2b"
+        }
+      },
+      "timing": {
+        "execution_seconds": 181.46222133401898,
+        "package_prepare_seconds": 0.024662125011673197,
+        "capture_seconds": 0.4913557500112802,
+        "finalize_seconds": 5.307024125009775,
+        "pipeline_wall_seconds": 193.18525079201208
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "csvkit-1270",
+      "repository": "wireservice/csvkit",
+      "family_id": "numeric-date-inference",
+      "split": "confirmation",
+      "base_commit": "0095bed9fc51f27482d439c9e83f78f255fe6bf1",
+      "arm": "N",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1270-N-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 600309,
+            "cached_input_tokens": 541312,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 7548,
+            "reasoning_output_tokens": 2531
+          }
+        ],
+        "input_tokens": 600309,
+        "cached_input_tokens": 541312,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7548,
+        "reasoning_output_tokens": 2531
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_number_with_date_format[4.4]",
+          "test_behavior::test_number_with_date_format[5.5]"
+        ],
+        "regression": [
+          "test_behavior::test_explicit_datetime",
+          "test_behavior::test_ordinary_numeric"
+        ]
+      },
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1270-N-001/candidate.patch",
+          "sha256": "bb1040e3b72ef013b46c86587c272e10246a2d48deb9c48e4b9fa066cce6612d",
+          "original_sha256": "bb1040e3b72ef013b46c86587c272e10246a2d48deb9c48e4b9fa066cce6612d"
+        },
+        "target": {
+          "path": "confirm-csvkit-1270-N-001/target.xml",
+          "sha256": "664f7cf5ef67a2d5b38f6162faf9128065ad777129510cf983e3a856a499673f",
+          "original_sha256": "664f7cf5ef67a2d5b38f6162faf9128065ad777129510cf983e3a856a499673f"
+        },
+        "regression": {
+          "path": "confirm-csvkit-1270-N-001/regression.xml",
+          "sha256": "017084cc6726ada3c02cd516917a90dbeb0a30f95613fcb9460c3c5e61f0076e",
+          "original_sha256": "017084cc6726ada3c02cd516917a90dbeb0a30f95613fcb9460c3c5e61f0076e"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1270-N-001/verification.json",
+          "sha256": "57e5e087b824a191e0b91385eca70cbeb0eeaec3b33b3f454f3fd9588e62f8c0"
+        },
+        "events": {
+          "path": "confirm-csvkit-1270-N-001/events.json",
+          "sha256": "ecbb839e65be0ffed604cdbf8a5d450643a00ef9550f0c8adccd7b96ac2f1e07"
+        }
+      },
+      "timing": {
+        "execution_seconds": 212.90644270798657,
+        "package_prepare_seconds": 0.03140174999134615,
+        "capture_seconds": 0.3225237080187071,
+        "finalize_seconds": 4.214514874998713,
+        "pipeline_wall_seconds": 217.25604137498885
+      },
+      "skill_file_reference_commands": 4,
+      "observed_skill_read_commands": 4
+    },
+    {
+      "task_id": "csvkit-1270",
+      "repository": "wireservice/csvkit",
+      "family_id": "numeric-date-inference",
+      "split": "confirmation",
+      "base_commit": "0095bed9fc51f27482d439c9e83f78f255fe6bf1",
+      "arm": "F",
+      "attempt": 1,
+      "run_id": "confirm-csvkit-1270-F-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 520385,
+            "cached_input_tokens": 474240,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 7646,
+            "reasoning_output_tokens": 2820
+          }
+        ],
+        "input_tokens": 520385,
+        "cached_input_tokens": 474240,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7646,
+        "reasoning_output_tokens": 2820
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_number_with_date_format[4.4]",
+          "test_behavior::test_number_with_date_format[5.5]"
+        ],
+        "regression": [
+          "test_behavior::test_explicit_datetime",
+          "test_behavior::test_ordinary_numeric"
+        ]
+      },
+      "selected_ids": [
+        "cli-api-regression",
+        "systematic-debugging"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-csvkit-1270-F-001/candidate.patch",
+          "sha256": "50580524438218b55d6efb41b09540dffb039fd309b2df9a43bbc55fc1de8bab",
+          "original_sha256": "50580524438218b55d6efb41b09540dffb039fd309b2df9a43bbc55fc1de8bab"
+        },
+        "target": {
+          "path": "confirm-csvkit-1270-F-001/target.xml",
+          "sha256": "ecd2bb91e9993a79fb7af2fafc7f14e34bc790ca007380e5a1985a5991190e61",
+          "original_sha256": "ecd2bb91e9993a79fb7af2fafc7f14e34bc790ca007380e5a1985a5991190e61"
+        },
+        "regression": {
+          "path": "confirm-csvkit-1270-F-001/regression.xml",
+          "sha256": "1b4479ee4f730f85185a1ee3cd8977bccf24676f1e890e2cceef90b0cf3c67b2",
+          "original_sha256": "1b4479ee4f730f85185a1ee3cd8977bccf24676f1e890e2cceef90b0cf3c67b2"
+        },
+        "binding": {
+          "path": "confirm-csvkit-1270-F-001/verification.json",
+          "sha256": "ccf781fb1ced2af23ee96cc4ae643877ef35516c15217299c7952a7469c1eb70"
+        },
+        "events": {
+          "path": "confirm-csvkit-1270-F-001/events.json",
+          "sha256": "30db9d7f4dd26ecb738cebf177ca9a1cce5278219926382fb621b202772a43f7"
+        }
+      },
+      "timing": {
+        "execution_seconds": 215.57336299997405,
+        "package_prepare_seconds": 0.03161599999293685,
+        "capture_seconds": 0.326630290976027,
+        "finalize_seconds": 4.409103250014596,
+        "pipeline_wall_seconds": 220.09114304199466
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "sqlite-utils-131",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "explicit-insert-types",
+      "split": "confirmation",
+      "base_commit": "092f0919c3c254de0801dda60e7bbf8b73818c6c",
+      "arm": "N",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-131-N-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 1971347,
+            "cached_input_tokens": 1867392,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 11086,
+            "reasoning_output_tokens": 4303
+          }
+        ],
+        "input_tokens": 1971347,
+        "cached_input_tokens": 1867392,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 11086,
+        "reasoning_output_tokens": 4303
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[insert-extra_args0-zipcode,score\\n01234,9.5\\n-expected_row0]",
+          "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[upsert-extra_args1-id,zipcode,score\\n1,01234,9.5\\n-expected_row1]"
+        ],
+        "regression": [
+          "test_behavior::test_insert_csv_detect_types_leaves_existing_table_alone",
+          "test_behavior::test_insert_csv_detect_types_new_table",
+          "test_behavior::test_insert_from_stdin",
+          "test_behavior::test_insert_simple"
+        ]
+      },
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-131-N-001/candidate.patch",
+          "sha256": "d7a7ea3cc534e09f86914c4078ff0554e068d5778a51968c291ff20415dbccb0",
+          "original_sha256": "d7a7ea3cc534e09f86914c4078ff0554e068d5778a51968c291ff20415dbccb0"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-131-N-001/target.xml",
+          "sha256": "8a930d1ebb636d6e3307e22f2b4d256859edb5b691a70c80ca9e95df4dd6f406",
+          "original_sha256": "8a930d1ebb636d6e3307e22f2b4d256859edb5b691a70c80ca9e95df4dd6f406"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-131-N-001/regression.xml",
+          "sha256": "60d60d25839aea40a3cab84af1a4b1026c1a909ea0bb1d645cd28654ac1edde0",
+          "original_sha256": "60d60d25839aea40a3cab84af1a4b1026c1a909ea0bb1d645cd28654ac1edde0"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-131-N-001/verification.json",
+          "sha256": "2dc88743b207b40078434a4066e41cc60f64fb363c266b7fc0f01fd6dbf66104"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-131-N-001/events.json",
+          "sha256": "9fa21d423622889b64be192ede14b380e1b2cd4d59be6ac8fdee386fd4782112"
+        }
+      },
+      "timing": {
+        "execution_seconds": 373.3658204159874,
+        "package_prepare_seconds": 0.02493174999835901,
+        "capture_seconds": 0.3013928330037743,
+        "finalize_seconds": 4.847714415984228,
+        "pipeline_wall_seconds": 378.31682800001
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "sqlite-utils-131",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "explicit-insert-types",
+      "split": "confirmation",
+      "base_commit": "092f0919c3c254de0801dda60e7bbf8b73818c6c",
+      "arm": "F",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-131-F-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 1987422,
+            "cached_input_tokens": 1913728,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 11829,
+            "reasoning_output_tokens": 4540
+          }
+        ],
+        "input_tokens": 1987422,
+        "cached_input_tokens": 1913728,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 11829,
+        "reasoning_output_tokens": 4540
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[insert-extra_args0-zipcode,score\\n01234,9.5\\n-expected_row0]",
+          "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[upsert-extra_args1-id,zipcode,score\\n1,01234,9.5\\n-expected_row1]"
+        ],
+        "regression": [
+          "test_behavior::test_insert_csv_detect_types_leaves_existing_table_alone",
+          "test_behavior::test_insert_csv_detect_types_new_table",
+          "test_behavior::test_insert_from_stdin",
+          "test_behavior::test_insert_simple"
+        ]
+      },
+      "selected_ids": [
+        "cli-api-regression",
+        "systematic-debugging"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-131-F-001/candidate.patch",
+          "sha256": "8fe0b15f4ca0494845151e4e399cbf22f813082a682e7b41dbfabd2fba1f44e1",
+          "original_sha256": "8fe0b15f4ca0494845151e4e399cbf22f813082a682e7b41dbfabd2fba1f44e1"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-131-F-001/target.xml",
+          "sha256": "a7b6837e96ab3f3ab532d04e0a5c364625143fa910e0c0e2d1738aa943a044da",
+          "original_sha256": "a7b6837e96ab3f3ab532d04e0a5c364625143fa910e0c0e2d1738aa943a044da"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-131-F-001/regression.xml",
+          "sha256": "168f01605ad5c9efd2a7d5f24cae6af270c73780af60bf7725fe577f0b4b48a9",
+          "original_sha256": "168f01605ad5c9efd2a7d5f24cae6af270c73780af60bf7725fe577f0b4b48a9"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-131-F-001/verification.json",
+          "sha256": "0c4f0589e9c6a3cc3f5a2f9176a034c1dddaeede612ed2b9c0412e7507bcfb48"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-131-F-001/events.json",
+          "sha256": "688272bfc7a49adffffb31554c01224b0a74bf9bf1019f753940d04f8ddb906b"
+        }
+      },
+      "timing": {
+        "execution_seconds": 320.49286262498936,
+        "package_prepare_seconds": 0.01846770799602382,
+        "capture_seconds": 0.2894443749974016,
+        "finalize_seconds": 4.773309791984502,
+        "pipeline_wall_seconds": 325.3623167909973
+      },
+      "skill_file_reference_commands": 3,
+      "observed_skill_read_commands": 3
+    },
+    {
+      "task_id": "sqlite-utils-131",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "explicit-insert-types",
+      "split": "confirmation",
+      "base_commit": "092f0919c3c254de0801dda60e7bbf8b73818c6c",
+      "arm": "S",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-131-S-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 1102553,
+            "cached_input_tokens": 983296,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 11322,
+            "reasoning_output_tokens": 4911
+          }
+        ],
+        "input_tokens": 1102553,
+        "cached_input_tokens": 983296,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 11322,
+        "reasoning_output_tokens": 4911
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[insert-extra_args0-zipcode,score\\n01234,9.5\\n-expected_row0]",
+          "test_behavior::test_insert_upsert_csv_type_overrides_detected_types[upsert-extra_args1-id,zipcode,score\\n1,01234,9.5\\n-expected_row1]"
+        ],
+        "regression": [
+          "test_behavior::test_insert_csv_detect_types_leaves_existing_table_alone",
+          "test_behavior::test_insert_csv_detect_types_new_table",
+          "test_behavior::test_insert_from_stdin",
+          "test_behavior::test_insert_simple"
+        ]
+      },
+      "selected_ids": [
+        "cli-api-regression",
+        "schema-change-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-131-S-001/candidate.patch",
+          "sha256": "ee7372380f20f004e084087e484c0d399a3c21e09f6561d080d6c168cf2d96d0",
+          "original_sha256": "ee7372380f20f004e084087e484c0d399a3c21e09f6561d080d6c168cf2d96d0"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-131-S-001/target.xml",
+          "sha256": "e77aee4faf653213d798ab992c04310feeb7866baaf09a5412e553f6af366d19",
+          "original_sha256": "e77aee4faf653213d798ab992c04310feeb7866baaf09a5412e553f6af366d19"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-131-S-001/regression.xml",
+          "sha256": "2d29e2b5dd8c6445f1a4f0d9e4c4f98097cd3c2fc7fdc09f17d18e7b58683bb1",
+          "original_sha256": "2d29e2b5dd8c6445f1a4f0d9e4c4f98097cd3c2fc7fdc09f17d18e7b58683bb1"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-131-S-001/verification.json",
+          "sha256": "2bcdd86a6d9cd9fc91cd17cbf74ff55252c691edb3483011ec1e5fccceea94a1"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-131-S-001/events.json",
+          "sha256": "e4aa889244dfd91868b88872c402e42f786170143c30db8b89fe2d0d40aff37c"
+        },
+        "route": {
+          "path": "confirm-sqlite-utils-131-S-001/route.json",
+          "sha256": "5d71eef72e7a77771914b2f1b0ed38f656408ad439c371da845806da609f427f",
+          "original_sha256": "179847d2cec894859691339aaf5b17736689feaeb2a2692654e79cf72ca33807"
+        }
+      },
+      "timing": {
+        "execution_seconds": 419.35024729100405,
+        "package_prepare_seconds": 0.015333791001467034,
+        "capture_seconds": 0.4646077920042444,
+        "finalize_seconds": 5.836483833991224,
+        "pipeline_wall_seconds": 430.90586312499363
+      },
+      "skill_file_reference_commands": 2,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "sqlite-utils-781-783",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "rowid-conflict-reporting",
+      "split": "confirmation",
+      "base_commit": "d314d04215f7337d42c847214861ec7ffe0bf757",
+      "arm": "F",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-781-783-F-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 1642225,
+            "cached_input_tokens": 1548672,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 16330,
+            "reasoning_output_tokens": 6955
+          }
+        ],
+        "input_tokens": 1642225,
+        "cached_input_tokens": 1548672,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 16330,
+        "reasoning_output_tokens": 6955
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_insert_ignore_hash_id_reports_pk",
+          "test_behavior::test_insert_ignore_reports_existing_row",
+          "test_behavior::test_insert_ignore_reports_existing_row_compound_pk",
+          "test_behavior::test_insert_ignore_reports_existing_row_list_mode",
+          "test_behavior::test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-rowid]"
+        ],
+        "regression": [
+          "test_behavior::test_create_table",
+          "test_behavior::test_create_table_column_order[False]",
+          "test_behavior::test_create_table_column_order[True]",
+          "test_behavior::test_create_table_compound_primary_key",
+          "test_behavior::test_create_table_from_example[example0-expected_columns0]",
+          "test_behavior::test_create_table_from_example[example1-expected_columns1]",
+          "test_behavior::test_create_table_from_example[example2-expected_columns2]",
+          "test_behavior::test_create_table_from_example[example3-expected_columns3]",
+          "test_behavior::test_create_table_from_example[example4-expected_columns4]",
+          "test_behavior::test_create_table_from_example[example5-expected_columns5]",
+          "test_behavior::test_create_table_from_example[example6-expected_columns6]",
+          "test_behavior::test_create_table_from_example[example7-expected_columns7]",
+          "test_behavior::test_create_table_from_example_with_compound_primary_keys",
+          "test_behavior::test_create_table_numpy",
+          "test_behavior::test_create_table_sql[columns0-\"id\" INTEGER]",
+          "test_behavior::test_create_table_sql[columns1-\"col\" TEXT]",
+          "test_behavior::test_create_table_sql[columns2-\"col\" TEXT]",
+          "test_behavior::test_create_table_sql[columns3-\"col\" TEXT]",
+          "test_behavior::test_create_table_strict[False]",
+          "test_behavior::test_create_table_strict[True]",
+          "test_behavior::test_create_table_with_bad_not_null",
+          "test_behavior::test_create_table_with_custom_columns[False-insert]",
+          "test_behavior::test_create_table_with_custom_columns[False-insert_all]",
+          "test_behavior::test_create_table_with_custom_columns[False-upsert]",
+          "test_behavior::test_create_table_with_custom_columns[False-upsert_all]",
+          "test_behavior::test_create_table_with_custom_columns[True-insert]",
+          "test_behavior::test_create_table_with_custom_columns[True-insert_all]",
+          "test_behavior::test_create_table_with_custom_columns[True-upsert]",
+          "test_behavior::test_create_table_with_custom_columns[True-upsert_all]",
+          "test_behavior::test_create_table_with_defaults",
+          "test_behavior::test_create_table_with_not_null",
+          "test_behavior::test_create_table_with_single_primary_key[id]",
+          "test_behavior::test_create_table_with_single_primary_key[pk1]",
+          "test_behavior::test_create_table_with_special_column_characters",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification0-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification1-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification2-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification3-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification4-NoObviousTable]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification5-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification6-AlterError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification7-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification0-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification1-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification2-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification3-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification4-NoObviousTable]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification5-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification6-AlterError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification7-ValueError]"
+        ]
+      },
+      "selected_ids": [
+        "cli-api-regression",
+        "systematic-debugging"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-781-783-F-001/candidate.patch",
+          "sha256": "6d232968ea8ed45d50444488169351bc1134dc833a613ecf8f28709123a788e7",
+          "original_sha256": "6d232968ea8ed45d50444488169351bc1134dc833a613ecf8f28709123a788e7"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-781-783-F-001/target.xml",
+          "sha256": "356ecdfdcba90e6676f1fa6ce4bf42d3b8cab0015e2e17db2da97d9e180b7329",
+          "original_sha256": "356ecdfdcba90e6676f1fa6ce4bf42d3b8cab0015e2e17db2da97d9e180b7329"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-781-783-F-001/regression.xml",
+          "sha256": "944086525dc5214a742ac2438f8c8c2dbd41f8a0d02ab4092532879efdfbe233",
+          "original_sha256": "944086525dc5214a742ac2438f8c8c2dbd41f8a0d02ab4092532879efdfbe233"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-781-783-F-001/verification.json",
+          "sha256": "932d00fe09f993161e1ad79ad7b7cde3ba10e8cf944d68979bb2d5bb0967f6b0"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-781-783-F-001/events.json",
+          "sha256": "a412634b43f1e3bbca7f17c73cfa89b8b18fb3114258047ba7d8d8e43a267637"
+        }
+      },
+      "timing": {
+        "execution_seconds": 517.7826747079962,
+        "package_prepare_seconds": 0.01848737502587028,
+        "capture_seconds": 0.3006779169954825,
+        "finalize_seconds": 5.04336950002471,
+        "pipeline_wall_seconds": 522.9245003750257
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "sqlite-utils-781-783",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "rowid-conflict-reporting",
+      "split": "confirmation",
+      "base_commit": "d314d04215f7337d42c847214861ec7ffe0bf757",
+      "arm": "S",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-781-783-S-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 1474578,
+            "cached_input_tokens": 1396096,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 18302,
+            "reasoning_output_tokens": 6421
+          }
+        ],
+        "input_tokens": 1474578,
+        "cached_input_tokens": 1396096,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 18302,
+        "reasoning_output_tokens": 6421
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_insert_ignore_hash_id_reports_pk",
+          "test_behavior::test_insert_ignore_reports_existing_row",
+          "test_behavior::test_insert_ignore_reports_existing_row_compound_pk",
+          "test_behavior::test_insert_ignore_reports_existing_row_list_mode",
+          "test_behavior::test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-rowid]"
+        ],
+        "regression": [
+          "test_behavior::test_create_table",
+          "test_behavior::test_create_table_column_order[False]",
+          "test_behavior::test_create_table_column_order[True]",
+          "test_behavior::test_create_table_compound_primary_key",
+          "test_behavior::test_create_table_from_example[example0-expected_columns0]",
+          "test_behavior::test_create_table_from_example[example1-expected_columns1]",
+          "test_behavior::test_create_table_from_example[example2-expected_columns2]",
+          "test_behavior::test_create_table_from_example[example3-expected_columns3]",
+          "test_behavior::test_create_table_from_example[example4-expected_columns4]",
+          "test_behavior::test_create_table_from_example[example5-expected_columns5]",
+          "test_behavior::test_create_table_from_example[example6-expected_columns6]",
+          "test_behavior::test_create_table_from_example[example7-expected_columns7]",
+          "test_behavior::test_create_table_from_example_with_compound_primary_keys",
+          "test_behavior::test_create_table_numpy",
+          "test_behavior::test_create_table_sql[columns0-\"id\" INTEGER]",
+          "test_behavior::test_create_table_sql[columns1-\"col\" TEXT]",
+          "test_behavior::test_create_table_sql[columns2-\"col\" TEXT]",
+          "test_behavior::test_create_table_sql[columns3-\"col\" TEXT]",
+          "test_behavior::test_create_table_strict[False]",
+          "test_behavior::test_create_table_strict[True]",
+          "test_behavior::test_create_table_with_bad_not_null",
+          "test_behavior::test_create_table_with_custom_columns[False-insert]",
+          "test_behavior::test_create_table_with_custom_columns[False-insert_all]",
+          "test_behavior::test_create_table_with_custom_columns[False-upsert]",
+          "test_behavior::test_create_table_with_custom_columns[False-upsert_all]",
+          "test_behavior::test_create_table_with_custom_columns[True-insert]",
+          "test_behavior::test_create_table_with_custom_columns[True-insert_all]",
+          "test_behavior::test_create_table_with_custom_columns[True-upsert]",
+          "test_behavior::test_create_table_with_custom_columns[True-upsert_all]",
+          "test_behavior::test_create_table_with_defaults",
+          "test_behavior::test_create_table_with_not_null",
+          "test_behavior::test_create_table_with_single_primary_key[id]",
+          "test_behavior::test_create_table_with_single_primary_key[pk1]",
+          "test_behavior::test_create_table_with_special_column_characters",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification0-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification1-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification2-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification3-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification4-NoObviousTable]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification5-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification6-AlterError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification7-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification0-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification1-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification2-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification3-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification4-NoObviousTable]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification5-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification6-AlterError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification7-ValueError]"
+        ]
+      },
+      "selected_ids": [
+        "schema-change-regression",
+        "cli-api-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-781-783-S-001/candidate.patch",
+          "sha256": "e6738fef72416911b15f26cb116e52add3ccc3792e162902b3b0bcf5422d95cd",
+          "original_sha256": "e6738fef72416911b15f26cb116e52add3ccc3792e162902b3b0bcf5422d95cd"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-781-783-S-001/target.xml",
+          "sha256": "459ef230f9cd023931567b98fd13834dda310e02a4d3d2a6636f8213b45559e1",
+          "original_sha256": "459ef230f9cd023931567b98fd13834dda310e02a4d3d2a6636f8213b45559e1"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-781-783-S-001/regression.xml",
+          "sha256": "c37b650e1345d10e9fda805a52d3e2e38f07caa9608526c0213ed58e1b7768c5",
+          "original_sha256": "c37b650e1345d10e9fda805a52d3e2e38f07caa9608526c0213ed58e1b7768c5"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-781-783-S-001/verification.json",
+          "sha256": "1355f8149da2ff3bfa93d84128c3fe5b1ee157d43c1f635ea4d6999ea3237e3c"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-781-783-S-001/events.json",
+          "sha256": "2013dc2588576e8c3c3e4b63e9bebcf98603f1a2c31e6f8495375e18dd587e25"
+        },
+        "route": {
+          "path": "confirm-sqlite-utils-781-783-S-001/route.json",
+          "sha256": "a3eabfe2c70fb030c6d7e0c7288561af027ecf8c9079139db0ba7d8edc31eead",
+          "original_sha256": "96910576c3ff1e43cade332ecfd4bccdabda63884d07eb24cb5c7e042c936ad7"
+        }
+      },
+      "timing": {
+        "execution_seconds": 447.3913552919985,
+        "package_prepare_seconds": 0.014961250009946525,
+        "capture_seconds": 0.4451228749821894,
+        "finalize_seconds": 5.864869250013726,
+        "pipeline_wall_seconds": 459.5168893339869
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "sqlite-utils-781-783",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "rowid-conflict-reporting",
+      "split": "confirmation",
+      "base_commit": "d314d04215f7337d42c847214861ec7ffe0bf757",
+      "arm": "N",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-781-783-N-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 1987358,
+            "cached_input_tokens": 1904256,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 17486,
+            "reasoning_output_tokens": 6557
+          }
+        ],
+        "input_tokens": 1987358,
+        "cached_input_tokens": 1904256,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 17486,
+        "reasoning_output_tokens": 6557
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_insert_ignore_hash_id_reports_pk",
+          "test_behavior::test_insert_ignore_reports_existing_row",
+          "test_behavior::test_insert_ignore_reports_existing_row_compound_pk",
+          "test_behavior::test_insert_ignore_reports_existing_row_list_mode",
+          "test_behavior::test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-oid]",
+          "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-rowid]"
+        ],
+        "regression": [
+          "test_behavior::test_create_table",
+          "test_behavior::test_create_table_column_order[False]",
+          "test_behavior::test_create_table_column_order[True]",
+          "test_behavior::test_create_table_compound_primary_key",
+          "test_behavior::test_create_table_from_example[example0-expected_columns0]",
+          "test_behavior::test_create_table_from_example[example1-expected_columns1]",
+          "test_behavior::test_create_table_from_example[example2-expected_columns2]",
+          "test_behavior::test_create_table_from_example[example3-expected_columns3]",
+          "test_behavior::test_create_table_from_example[example4-expected_columns4]",
+          "test_behavior::test_create_table_from_example[example5-expected_columns5]",
+          "test_behavior::test_create_table_from_example[example6-expected_columns6]",
+          "test_behavior::test_create_table_from_example[example7-expected_columns7]",
+          "test_behavior::test_create_table_from_example_with_compound_primary_keys",
+          "test_behavior::test_create_table_numpy",
+          "test_behavior::test_create_table_sql[columns0-\"id\" INTEGER]",
+          "test_behavior::test_create_table_sql[columns1-\"col\" TEXT]",
+          "test_behavior::test_create_table_sql[columns2-\"col\" TEXT]",
+          "test_behavior::test_create_table_sql[columns3-\"col\" TEXT]",
+          "test_behavior::test_create_table_strict[False]",
+          "test_behavior::test_create_table_strict[True]",
+          "test_behavior::test_create_table_with_bad_not_null",
+          "test_behavior::test_create_table_with_custom_columns[False-insert]",
+          "test_behavior::test_create_table_with_custom_columns[False-insert_all]",
+          "test_behavior::test_create_table_with_custom_columns[False-upsert]",
+          "test_behavior::test_create_table_with_custom_columns[False-upsert_all]",
+          "test_behavior::test_create_table_with_custom_columns[True-insert]",
+          "test_behavior::test_create_table_with_custom_columns[True-insert_all]",
+          "test_behavior::test_create_table_with_custom_columns[True-upsert]",
+          "test_behavior::test_create_table_with_custom_columns[True-upsert_all]",
+          "test_behavior::test_create_table_with_defaults",
+          "test_behavior::test_create_table_with_not_null",
+          "test_behavior::test_create_table_with_single_primary_key[id]",
+          "test_behavior::test_create_table_with_single_primary_key[pk1]",
+          "test_behavior::test_create_table_with_special_column_characters",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification0-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification1-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification2-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification3-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification4-NoObviousTable]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification5-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification6-AlterError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[False-foreign_key_specification7-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification0-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification1-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification2-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification3-False]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification4-NoObviousTable]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification5-ValueError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification6-AlterError]",
+          "test_behavior::test_create_table_works_for_m2m_with_only_foreign_keys[True-foreign_key_specification7-ValueError]"
+        ]
+      },
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-781-783-N-001/candidate.patch",
+          "sha256": "5628559b92cf90eebc380c66d7e8ddfa6811832b23315d6be21bd887df46f4e4",
+          "original_sha256": "5628559b92cf90eebc380c66d7e8ddfa6811832b23315d6be21bd887df46f4e4"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-781-783-N-001/target.xml",
+          "sha256": "d17b3e3e24cc55b30ea15b113e9efa217a07de0b45ab3a733d4b0ea2d6dab9e6",
+          "original_sha256": "d17b3e3e24cc55b30ea15b113e9efa217a07de0b45ab3a733d4b0ea2d6dab9e6"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-781-783-N-001/regression.xml",
+          "sha256": "f31215a70f852b7cca636f56305b7b6ab39a908dd06ffc4153ca9334900b5062",
+          "original_sha256": "f31215a70f852b7cca636f56305b7b6ab39a908dd06ffc4153ca9334900b5062"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-781-783-N-001/verification.json",
+          "sha256": "7ef608e2be13ee302bb82c9dad47714db9212058351bc6e5091fba2cd48088a6"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-781-783-N-001/events.json",
+          "sha256": "9a6bac97e03c9a4c90527bb3a55d556e7bb6044298a4aacf05c9655c9d8f1810"
+        }
+      },
+      "timing": {
+        "execution_seconds": 506.74933675001375,
+        "package_prepare_seconds": 0.02021499999682419,
+        "capture_seconds": 0.28283670800738037,
+        "finalize_seconds": 5.074262584006647,
+        "pipeline_wall_seconds": 511.9176988330146
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 1
+    },
+    {
+      "task_id": "sqlite-utils-828",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "fts-tokenizer-escaping",
+      "split": "confirmation",
+      "base_commit": "b37b8cf8c83515a022e7ec0b1599004bb2f7eb55",
+      "arm": "S",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-828-S-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 362700,
+            "cached_input_tokens": 291200,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 5306,
+            "reasoning_output_tokens": 2396
+          }
+        ],
+        "input_tokens": 362700,
+        "cached_input_tokens": 291200,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5306,
+        "reasoning_output_tokens": 2396
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_fts_tokenize_escaped"
+        ],
+        "regression": [
+          "test_behavior::test_disable_fts[False]",
+          "test_behavior::test_disable_fts[True]",
+          "test_behavior::test_enable_fts",
+          "test_behavior::test_enable_fts_cli_on_view_errors",
+          "test_behavior::test_enable_fts_escape_table_names",
+          "test_behavior::test_enable_fts_replace[kwargs0]",
+          "test_behavior::test_enable_fts_replace[kwargs1]",
+          "test_behavior::test_enable_fts_replace[kwargs2]",
+          "test_behavior::test_enable_fts_replace[kwargs3]",
+          "test_behavior::test_enable_fts_replace_does_nothing_if_args_the_same",
+          "test_behavior::test_enable_fts_replace_handles_legacy_bracket_quoted_content_table",
+          "test_behavior::test_enable_fts_table_names_containing_spaces",
+          "test_behavior::test_enable_fts_with_triggers",
+          "test_behavior::test_fts_tokenize[4]",
+          "test_behavior::test_fts_tokenize[5]",
+          "test_behavior::test_optimize_and_rebuild_fts_commit[optimize]",
+          "test_behavior::test_optimize_and_rebuild_fts_commit[rebuild_fts]",
+          "test_behavior::test_optimize_fts",
+          "test_behavior::test_populate_fts",
+          "test_behavior::test_populate_fts_escape_table_names",
+          "test_behavior::test_quote_fts_query[\"cat dog\" \"fish-\"cat dog\" \"fish\"]",
+          "test_behavior::test_quote_fts_query[\"cat dog\" fish-\"cat dog\" \"fish\"]",
+          "test_behavior::test_quote_fts_query[\"cat dog\"-\"cat dog\"]",
+          "test_behavior::test_quote_fts_query[cat dog-\"cat\" \"dog\"]",
+          "test_behavior::test_quote_fts_query[cat\"-\"cat\"]",
+          "test_behavior::test_quote_fts_query[cat's-\"cat's\"]",
+          "test_behavior::test_quote_fts_query[cat,-\"cat,\"]",
+          "test_behavior::test_quote_fts_query[dog-\"dog\"]",
+          "test_behavior::test_quote_fts_query[dog.-\"dog.\"]",
+          "test_behavior::test_rebuild_fts",
+          "test_behavior::test_rebuild_fts_invalid[does_not_exist]",
+          "test_behavior::test_rebuild_fts_invalid[not_searchable]",
+          "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS4]",
+          "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS5]",
+          "test_behavior::test_search_duplicate_columns_are_deduped",
+          "test_behavior::test_search_include_rank",
+          "test_behavior::test_search_limit_offset",
+          "test_behavior::test_search_quote",
+          "test_behavior::test_search_sql[kwargs0-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs1-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rowid\\nlimit 10]",
+          "test_behavior::test_search_sql[kwargs2-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs3-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_sql[kwargs4-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 1 offset 1]",
+          "test_behavior::test_search_sql[kwargs5-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 2]",
+          "test_behavior::test_search_sql[kwargs6-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_sql[kwargs7-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    \"books_fts\".rank rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs8-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx')) rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_where[FTS4]",
+          "test_behavior::test_search_where[FTS5]",
+          "test_behavior::test_search_where_args_disallows_query",
+          "test_behavior::test_view_has_no_enable_fts"
+        ]
+      },
+      "selected_ids": [
+        "schema-change-regression",
+        "verification-before-completion"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-828-S-001/candidate.patch",
+          "sha256": "4a4722b2340b2d7e678493b53620509840705570297d7d2bf679534b7ff18028",
+          "original_sha256": "4a4722b2340b2d7e678493b53620509840705570297d7d2bf679534b7ff18028"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-828-S-001/target.xml",
+          "sha256": "28600612165a588449402234a9c62e6a45dd6ca1cf7acd151f6c84bf73ebabe3",
+          "original_sha256": "28600612165a588449402234a9c62e6a45dd6ca1cf7acd151f6c84bf73ebabe3"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-828-S-001/regression.xml",
+          "sha256": "c52433b68f746e2448fdf33108f3a739a69db15cdcbeee2010005d5db535c432",
+          "original_sha256": "c52433b68f746e2448fdf33108f3a739a69db15cdcbeee2010005d5db535c432"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-828-S-001/verification.json",
+          "sha256": "6b7bc7d0c57505b8d8f4e14d73f0b5a2bf9e8a8d77ae6f689abb4b2c9dbd0b15"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-828-S-001/events.json",
+          "sha256": "b4cba858c76421effc34bcf93d4ef648786dff6d624cf1cf4d536c1aa15df280"
+        },
+        "route": {
+          "path": "confirm-sqlite-utils-828-S-001/route.json",
+          "sha256": "f5320b8c47091b6d1146c8c518f812d7d1e075fbcb2d70907a97c1923f863911",
+          "original_sha256": "93cd1bab362ddae4e87cb202aea401379dcd6c69bc869b2345aadd67c1a50c8f"
+        }
+      },
+      "timing": {
+        "execution_seconds": 193.44179645899567,
+        "package_prepare_seconds": 0.015752999985124916,
+        "capture_seconds": 0.4234262079990003,
+        "finalize_seconds": 5.840959124994697,
+        "pipeline_wall_seconds": 205.03814387501916
+      },
+      "skill_file_reference_commands": 1,
+      "observed_skill_read_commands": 0
+    },
+    {
+      "task_id": "sqlite-utils-828",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "fts-tokenizer-escaping",
+      "split": "confirmation",
+      "base_commit": "b37b8cf8c83515a022e7ec0b1599004bb2f7eb55",
+      "arm": "N",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-828-N-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 490279,
+            "cached_input_tokens": 448000,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 6346,
+            "reasoning_output_tokens": 2214
+          }
+        ],
+        "input_tokens": 490279,
+        "cached_input_tokens": 448000,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6346,
+        "reasoning_output_tokens": 2214
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_fts_tokenize_escaped"
+        ],
+        "regression": [
+          "test_behavior::test_disable_fts[False]",
+          "test_behavior::test_disable_fts[True]",
+          "test_behavior::test_enable_fts",
+          "test_behavior::test_enable_fts_cli_on_view_errors",
+          "test_behavior::test_enable_fts_escape_table_names",
+          "test_behavior::test_enable_fts_replace[kwargs0]",
+          "test_behavior::test_enable_fts_replace[kwargs1]",
+          "test_behavior::test_enable_fts_replace[kwargs2]",
+          "test_behavior::test_enable_fts_replace[kwargs3]",
+          "test_behavior::test_enable_fts_replace_does_nothing_if_args_the_same",
+          "test_behavior::test_enable_fts_replace_handles_legacy_bracket_quoted_content_table",
+          "test_behavior::test_enable_fts_table_names_containing_spaces",
+          "test_behavior::test_enable_fts_with_triggers",
+          "test_behavior::test_fts_tokenize[4]",
+          "test_behavior::test_fts_tokenize[5]",
+          "test_behavior::test_optimize_and_rebuild_fts_commit[optimize]",
+          "test_behavior::test_optimize_and_rebuild_fts_commit[rebuild_fts]",
+          "test_behavior::test_optimize_fts",
+          "test_behavior::test_populate_fts",
+          "test_behavior::test_populate_fts_escape_table_names",
+          "test_behavior::test_quote_fts_query[\"cat dog\" \"fish-\"cat dog\" \"fish\"]",
+          "test_behavior::test_quote_fts_query[\"cat dog\" fish-\"cat dog\" \"fish\"]",
+          "test_behavior::test_quote_fts_query[\"cat dog\"-\"cat dog\"]",
+          "test_behavior::test_quote_fts_query[cat dog-\"cat\" \"dog\"]",
+          "test_behavior::test_quote_fts_query[cat\"-\"cat\"]",
+          "test_behavior::test_quote_fts_query[cat's-\"cat's\"]",
+          "test_behavior::test_quote_fts_query[cat,-\"cat,\"]",
+          "test_behavior::test_quote_fts_query[dog-\"dog\"]",
+          "test_behavior::test_quote_fts_query[dog.-\"dog.\"]",
+          "test_behavior::test_rebuild_fts",
+          "test_behavior::test_rebuild_fts_invalid[does_not_exist]",
+          "test_behavior::test_rebuild_fts_invalid[not_searchable]",
+          "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS4]",
+          "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS5]",
+          "test_behavior::test_search_duplicate_columns_are_deduped",
+          "test_behavior::test_search_include_rank",
+          "test_behavior::test_search_limit_offset",
+          "test_behavior::test_search_quote",
+          "test_behavior::test_search_sql[kwargs0-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs1-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rowid\\nlimit 10]",
+          "test_behavior::test_search_sql[kwargs2-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs3-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_sql[kwargs4-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 1 offset 1]",
+          "test_behavior::test_search_sql[kwargs5-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 2]",
+          "test_behavior::test_search_sql[kwargs6-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_sql[kwargs7-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    \"books_fts\".rank rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs8-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx')) rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_where[FTS4]",
+          "test_behavior::test_search_where[FTS5]",
+          "test_behavior::test_search_where_args_disallows_query",
+          "test_behavior::test_view_has_no_enable_fts"
+        ]
+      },
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-828-N-001/candidate.patch",
+          "sha256": "02676eb81e8fc54234127bd4a3f61e99afdc153f2a8261b47dde695a9739010b",
+          "original_sha256": "02676eb81e8fc54234127bd4a3f61e99afdc153f2a8261b47dde695a9739010b"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-828-N-001/target.xml",
+          "sha256": "e1b6a4a53d195de9f78cd7b57bcef56e48cd628804d2ac5bf2a0fe33b5383050",
+          "original_sha256": "e1b6a4a53d195de9f78cd7b57bcef56e48cd628804d2ac5bf2a0fe33b5383050"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-828-N-001/regression.xml",
+          "sha256": "1b2d30e4c5b7acb8da52eb225ccaf23df3e881dc0b82bfa3723950fec4ecf436",
+          "original_sha256": "1b2d30e4c5b7acb8da52eb225ccaf23df3e881dc0b82bfa3723950fec4ecf436"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-828-N-001/verification.json",
+          "sha256": "cb95d3e6f0069900e72aee034b71026990b81bcd60dcc2242f0575f3fa583333"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-828-N-001/events.json",
+          "sha256": "5def70c1cbb7b2f8d35d34b1bc5f8d8af34077ba8052e754a66626272d7db6f8"
+        }
+      },
+      "timing": {
+        "execution_seconds": 193.70314575001248,
+        "package_prepare_seconds": 0.02498912499868311,
+        "capture_seconds": 0.2463974170095753,
+        "finalize_seconds": 4.824246250005672,
+        "pipeline_wall_seconds": 198.635802875011
+      },
+      "skill_file_reference_commands": 3,
+      "observed_skill_read_commands": 3
+    },
+    {
+      "task_id": "sqlite-utils-828",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "fts-tokenizer-escaping",
+      "split": "confirmation",
+      "base_commit": "b37b8cf8c83515a022e7ec0b1599004bb2f7eb55",
+      "arm": "F",
+      "attempt": 1,
+      "run_id": "confirm-sqlite-utils-828-F-001",
+      "execution_status": "STARTED",
+      "usage": {
+        "source": "codex-jsonl:turn.completed",
+        "raw_turn_usage": [
+          {
+            "input_tokens": 514607,
+            "cached_input_tokens": 475392,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 5764,
+            "reasoning_output_tokens": 1556
+          }
+        ],
+        "input_tokens": 514607,
+        "cached_input_tokens": 475392,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5764,
+        "reasoning_output_tokens": 1556
+      },
+      "timed_out": false,
+      "exit_code": 0,
+      "timeout_seconds": 600,
+      "cost_usd": null,
+      "reverification": null,
+      "policy_rejected": false,
+      "expected_test_ids": {
+        "target": [
+          "test_behavior::test_fts_tokenize_escaped"
+        ],
+        "regression": [
+          "test_behavior::test_disable_fts[False]",
+          "test_behavior::test_disable_fts[True]",
+          "test_behavior::test_enable_fts",
+          "test_behavior::test_enable_fts_cli_on_view_errors",
+          "test_behavior::test_enable_fts_escape_table_names",
+          "test_behavior::test_enable_fts_replace[kwargs0]",
+          "test_behavior::test_enable_fts_replace[kwargs1]",
+          "test_behavior::test_enable_fts_replace[kwargs2]",
+          "test_behavior::test_enable_fts_replace[kwargs3]",
+          "test_behavior::test_enable_fts_replace_does_nothing_if_args_the_same",
+          "test_behavior::test_enable_fts_replace_handles_legacy_bracket_quoted_content_table",
+          "test_behavior::test_enable_fts_table_names_containing_spaces",
+          "test_behavior::test_enable_fts_with_triggers",
+          "test_behavior::test_fts_tokenize[4]",
+          "test_behavior::test_fts_tokenize[5]",
+          "test_behavior::test_optimize_and_rebuild_fts_commit[optimize]",
+          "test_behavior::test_optimize_and_rebuild_fts_commit[rebuild_fts]",
+          "test_behavior::test_optimize_fts",
+          "test_behavior::test_populate_fts",
+          "test_behavior::test_populate_fts_escape_table_names",
+          "test_behavior::test_quote_fts_query[\"cat dog\" \"fish-\"cat dog\" \"fish\"]",
+          "test_behavior::test_quote_fts_query[\"cat dog\" fish-\"cat dog\" \"fish\"]",
+          "test_behavior::test_quote_fts_query[\"cat dog\"-\"cat dog\"]",
+          "test_behavior::test_quote_fts_query[cat dog-\"cat\" \"dog\"]",
+          "test_behavior::test_quote_fts_query[cat\"-\"cat\"]",
+          "test_behavior::test_quote_fts_query[cat's-\"cat's\"]",
+          "test_behavior::test_quote_fts_query[cat,-\"cat,\"]",
+          "test_behavior::test_quote_fts_query[dog-\"dog\"]",
+          "test_behavior::test_quote_fts_query[dog.-\"dog.\"]",
+          "test_behavior::test_rebuild_fts",
+          "test_behavior::test_rebuild_fts_invalid[does_not_exist]",
+          "test_behavior::test_rebuild_fts_invalid[not_searchable]",
+          "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS4]",
+          "test_behavior::test_rebuild_removes_junk_docsize_rows[FTS5]",
+          "test_behavior::test_search_duplicate_columns_are_deduped",
+          "test_behavior::test_search_include_rank",
+          "test_behavior::test_search_limit_offset",
+          "test_behavior::test_search_quote",
+          "test_behavior::test_search_sql[kwargs0-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs1-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rowid\\nlimit 10]",
+          "test_behavior::test_search_sql[kwargs2-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs3-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        \"title\"\\n    from \"books\"\\n)\\nselect\\n    \"original\".\"title\"\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_sql[kwargs4-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 1 offset 1]",
+          "test_behavior::test_search_sql[kwargs5-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))\\nlimit 2]",
+          "test_behavior::test_search_sql[kwargs6-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n    where author = :author\\n)\\nselect\\n    \"original\".*\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_sql[kwargs7-FTS5-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    \"books_fts\".rank rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    \"books_fts\".rank]",
+          "test_behavior::test_search_sql[kwargs8-FTS4-with \"original\" as (\\n    select\\n        rowid,\\n        *\\n    from \"books\"\\n)\\nselect\\n    \"original\".*,\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx')) rank\\nfrom\\n    \"original\"\\n    join \"books_fts\" on \"original\".rowid = \"books_fts\".rowid\\nwhere\\n    \"books_fts\" match :query\\norder by\\n    rank_bm25(matchinfo(\"books_fts\", 'pcnalx'))]",
+          "test_behavior::test_search_where[FTS4]",
+          "test_behavior::test_search_where[FTS5]",
+          "test_behavior::test_search_where_args_disallows_query",
+          "test_behavior::test_view_has_no_enable_fts"
+        ]
+      },
+      "selected_ids": [
+        "cli-api-regression",
+        "systematic-debugging"
+      ],
+      "derivation": "SANITIZED_DERIVATIVE",
+      "files": {
+        "patch": {
+          "path": "confirm-sqlite-utils-828-F-001/candidate.patch",
+          "sha256": "783c39d1f34854303f939588ec8d135a5ab87f01e1ee32697d9f21770a63a375",
+          "original_sha256": "783c39d1f34854303f939588ec8d135a5ab87f01e1ee32697d9f21770a63a375"
+        },
+        "target": {
+          "path": "confirm-sqlite-utils-828-F-001/target.xml",
+          "sha256": "dd71e6bfd375e41f2e4881a0ff8026bd6b8adeb05357beb633fa12bc142b12c6",
+          "original_sha256": "dd71e6bfd375e41f2e4881a0ff8026bd6b8adeb05357beb633fa12bc142b12c6"
+        },
+        "regression": {
+          "path": "confirm-sqlite-utils-828-F-001/regression.xml",
+          "sha256": "dd2a47e22dfd6a7dda53c985687559e5c77066d1e51fa1b9edcda6a286ed68ad",
+          "original_sha256": "dd2a47e22dfd6a7dda53c985687559e5c77066d1e51fa1b9edcda6a286ed68ad"
+        },
+        "binding": {
+          "path": "confirm-sqlite-utils-828-F-001/verification.json",
+          "sha256": "6f5700081ed0efca11a292682c09f1f11e289450512e745bd83f25ef74e346e5"
+        },
+        "events": {
+          "path": "confirm-sqlite-utils-828-F-001/events.json",
+          "sha256": "c010df415677434c55d0068ba5866b4c987c339414ac8401410bbe1c8e6b66ea"
+        }
+      },
+      "timing": {
+        "execution_seconds": 177.75280945797567,
+        "package_prepare_seconds": 0.022733959020115435,
+        "capture_seconds": 0.2784773749881424,
+        "finalize_seconds": 4.940969874995062,
+        "pipeline_wall_seconds": 182.80088637501467
+      },
+      "skill_file_reference_commands": 1,
       "observed_skill_read_commands": 1
     }
   ]

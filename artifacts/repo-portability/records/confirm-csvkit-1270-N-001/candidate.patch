@@ -1,0 +1,99 @@
+diff --git a/CHANGELOG.rst b/CHANGELOG.rst
+index 9b97c93ed2b703bbace6f826b30030d049ad8dfa..f6405a1eb17cd6df3bf7f0c6e4a12f5664d7fab8 100644
+--- a/CHANGELOG.rst
++++ b/CHANGELOG.rst
+@@ -6,6 +6,7 @@ Unreleased
+ -  feat: :doc:`/scripts/csvsql` adds a :code:`--sql-delimiter` option, to set a different delimiter than ``;`` for the :code:`--query`, :code:`--before-insert` and :code:`after-insert` options.
+ -  feat: :doc:`/scripts/sql2csv` adds a :code:`--execution-option` option.
+ -  feat: :doc:`/scripts/sql2csv` uses the ``stream_results=True`` execution option, by default, to not load all data into memory at once.
++-  fix: Setting :code:`--date-format` no longer causes decimal numbers to be inferred as datetimes.
+ -  fix: :doc:`/scripts/csvsql` uses a default value of 1 for the :code:`--min-col-len` and :code:`--col-len-multiplier` options.
+ 
+ 2.0.1 - July 12, 2024
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..bce403a59ba6747d3737f5acae110dff26793f35 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -359,19 +359,34 @@ class CSVKitUtility:
+                 types = [number_type, text_type]
+             else:
+                 # See the order in the `agate.TypeTester` class.
+-                types = [
+-                    agate.Boolean(**type_kwargs),
+-                    agate.TimeDelta(**type_kwargs),
+-                    agate.Date(date_format=self.args.date_format, **type_kwargs),
+-                    agate.DateTime(datetime_format=self.args.datetime_format, **type_kwargs),
+-                    text_type,
+-                ]
+-
+-                # In order to parse dates like "20010101".
++                types = [agate.Boolean(**type_kwargs)]
++
+                 if self.args.date_format or self.args.datetime_format:
+-                    types.insert(-1, number_type)
++                    types.append(agate.TimeDelta(**type_kwargs))
++
++                    # Give explicitly formatted dates and datetimes priority over numbers in order to parse values
++                    # like "20010101". Unconfigured date types remain after numbers so that their permissive parsers
++                    # do not interpret ordinary numeric values as dates or datetimes.
++                    if self.args.date_format:
++                        types.append(agate.Date(date_format=self.args.date_format, **type_kwargs))
++                    if self.args.datetime_format:
++                        types.append(agate.DateTime(datetime_format=self.args.datetime_format, **type_kwargs))
++
++                    types.append(number_type)
++
++                    if not self.args.date_format:
++                        types.append(agate.Date(**type_kwargs))
++                    if not self.args.datetime_format:
++                        types.append(agate.DateTime(**type_kwargs))
+                 else:
+-                    types.insert(1, number_type)
++                    types.extend([
++                        number_type,
++                        agate.TimeDelta(**type_kwargs),
++                        agate.Date(**type_kwargs),
++                        agate.DateTime(**type_kwargs),
++                    ])
++
++                types.append(text_type)
+ 
+         return agate.TypeTester(types=types)
+ 
+diff --git a/tests/test_utilities/test_csvstat.py b/tests/test_utilities/test_csvstat.py
+index d55e0f9cc08487756e37493b4e680a9b3a3ae400..79651277ced62a3bae3f0f0ae14ca478e1d3e94e 100644
+--- a/tests/test_utilities/test_csvstat.py
++++ b/tests/test_utilities/test_csvstat.py
+@@ -1,3 +1,4 @@
++import io
+ import json
+ import sys
+ from unittest.mock import patch
+@@ -5,7 +6,7 @@ from unittest.mock import patch
+ import agate
+ 
+ from csvkit.utilities.csvstat import CSVStat, launch_new_instance
+-from tests.utils import ColumnsTests, CSVKitTestCase, EmptyFileTests, NamesTests
++from tests.utils import ColumnsTests, CSVKitTestCase, EmptyFileTests, NamesTests, stdin_as_string
+ 
+ 
+ class TestCSVStat(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+@@ -35,6 +36,18 @@ class TestCSVStat(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+         # Test that csvstat doesn't error on UTF-8 input.
+         self.get_output(['examples/test_utf8.csv'])
+ 
++    def test_date_format_does_not_parse_decimal_as_datetime(self):
++        with stdin_as_string(io.BytesIO(b'13/12/2024,5.5\n')):
++            output = self.get_output(['-H', '--date-format', '%d/%m/%Y', '--type'])
++
++        self.assertEqual(output, '  1. a: Date\n  2. b: Number\n')
++
++    def test_explicit_datetime_format_takes_priority_over_number(self):
++        with stdin_as_string(io.BytesIO(b'20241213\n')):
++            output = self.get_output(['-H', '--datetime-format', '%Y%m%d', '--type'])
++
++        self.assertEqual(output, 'DateTime\n')
++
+     def test_encoding(self):
+         # Test that csvstat doesn't error on Latin-1 input.
+         self.get_output(['-e', 'latin1', 'examples/test_latin1.csv'])
