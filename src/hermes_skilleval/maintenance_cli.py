@@ -97,6 +97,15 @@ def recommend(args):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "support":
+        return subprocess.call(
+            [
+                sys.executable,
+                "-m",
+                "hermes_skilleval.repo_routing.support_cli",
+                *sys.argv[2:],
+            ]
+        )
     commands = {
         "run": "execute",
         "qualify": "qualify",
@@ -117,6 +126,9 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     for command in commands:
         sub.add_parser(command, help="Shared isolated " + command + " entrypoint")
+    sub.add_parser(
+        "support", help="Experimental text support scoring/calibration/checks"
+    )
     assist = sub.add_parser(
         "assist", help="Current-task isolated patch; no gold or qualification"
     )

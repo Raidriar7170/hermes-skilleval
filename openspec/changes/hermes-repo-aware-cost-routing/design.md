@@ -13,3 +13,13 @@ Reuse SkillRouterOpen encoder and causal yes/no scoring, train LoRA on repair-fa
 ## Risks / Trade-offs
 
 Small local study → PILOT and no generalized gain claim. Unknown outcomes → missing quality labels. Public historical repairs → pretraining contamination cannot be excluded. Missing resources → preserve attempts and explicit partial status. Late evaluation policy bug → retain original evidence and uniformly correct affected scope.
+
+## R repair v1 continuation
+
+The newly designated `docs/goals/Hermes_PR48_R_Support_Context_Repair_Codex_Goal.md`
+authorizes M0–M5 as a separate repair on this Draft. The preceding design and
+completed pilot remain historical. V2 source fragments and structured inputs,
+absolute text labels and an independent affine support calibration replace the
+experimental R semantics only under explicit `experimental_repair` configuration.
+B2/C2 use the same frozen rank adapter and pool. Old Gate feedback is incompatible;
+native remains default and no Gate training or original matrix rerun is authorized.

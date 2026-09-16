@@ -103,3 +103,144 @@ def score_candidates(
             }
         )
     return clauses, items
+
+
+def ordinal_relevance(candidates, rank_scores):
+    """Within-pool ordering proxy. A rank logit is never a support probability."""
+    import math
+
+    if len(candidates) != len(rank_scores) or not all(
+        math.isfinite(v) for v in rank_scores
+    ):
+        raise ValueError("finite rank scores aligned with candidates required")
+    order = sorted(
+        range(len(candidates)), key=lambda i: (-rank_scores[i], candidates[i]["id"])
+    )
+    return {
+        candidates[i]["id"]: 1 - rank / max(1, len(order) - 1)
+        for rank, i in enumerate(order)
+    }
+
+
+def support_identity(config):
+    from pathlib import Path
+    import hashlib
+    from .context import digest
+    from .reranker import SUPPORT_TEMPLATE, SUPPORT_INSTRUCTION
+
+    return digest(
+        {
+            "schema": "text-help-v2",
+            "template": SUPPORT_TEMPLATE,
+            "instruction": SUPPORT_INSTRUCTION,
+            "base": config["reranker_revision"],
+            "adapter": config["adapter_sha256"],
+            "adapter_config": config.get("adapter_config_sha256"),
+            "model_files": config.get("model_files", {}).get("reranker"),
+            "max_length": config.get("support_max_length", 8192),
+            "context": "repo-context-v2",
+            "context_budget": config.get("fragment_budget", {}),
+            "evidence": "full-body-v1",
+            "requirement": "whole-public-request-v1",
+            "sources": {
+                n: hashlib.sha256(
+                    Path(__file__).with_name(n + ".py").read_bytes()
+                ).hexdigest()
+                for n in ("context", "reranker", "support")
+            },
+        }
+    )
+
+
+def score_support(requirement, context, skill_evidence, ranker, *, max_length=8192):
+    """Independent support instruction, raw yes/no logit and actual input evidence."""
+    import time
+    from .reranker import structured_representation
+
+    before = ranker.max_length
+    started = time.monotonic()
+    try:
+        ranker.max_length = max_length
+        values, records = ranker.scores(
+            [structured_representation(requirement, context, skill_evidence)]
+        )
+    finally:
+        ranker.max_length = before
+    record = records[0]
+    return {
+        "raw_support_score": float(values.detach().cpu()[0]),
+        "input": record,
+        "visible": record["request_complete"] and record["evidence_complete"],
+        "wall_seconds": time.monotonic() - started,
+        "source": "model_judged_text",
+        "score_target": "specific applicable textual help, not issue sufficiency",
+    }
+
+
+def calibrated_candidates(
+    request, context, candidates, rank_scores, ranker, environment, config, model
+):
+    from .calibration import predict
+
+    relevance = ordinal_relevance(candidates, rank_scores)
+    identity = support_identity(config)
+    # Reject incompatible calibration before any expensive support forwards.
+    predict(model, 0.0, identity)
+    items = []
+    for skill in candidates:
+        observed = score_support(
+            request,
+            context,
+            skill,
+            ranker,
+            max_length=config.get("support_max_length", 8192),
+        )
+        conflicts = contradictions(request, skill, environment)
+        p = predict(model, observed["raw_support_score"], identity)
+        threshold = model.get("threshold")
+        accepted = (
+            threshold is not None
+            and observed["visible"]
+            and not conflicts
+            and context.get("state") == "usable"
+            and p >= threshold
+        )
+        reason = (
+            "explicit_conflict"
+            if conflicts
+            else "critical_input_not_visible"
+            if not observed["visible"]
+            else "context_" + context.get("state", "unknown")
+            if context.get("state") != "usable"
+            else "no_valid_operating_point"
+            if threshold is None
+            else "supported"
+            if accepted
+            else "support_below_threshold"
+        )
+        items.append(
+            {
+                "id": skill["id"],
+                "relevance": relevance[skill["id"]],
+                "rank_score": rank_scores[candidates.index(skill)],
+                "support": [p if accepted else 0.0],
+                "support_state": "SUPPORTED_BY_TEXT" if accepted else "UNKNOWN",
+                "support_source": "model_judged_text",
+                "compatible": not conflicts,
+                "tokens": len(ranker.tokenizer.encode(skill["body"])),
+                "equivalent_family": skill["package_sha256"],
+                "evidence": [
+                    {
+                        "requirement": request,
+                        **observed,
+                        "p_text": p,
+                        "threshold": threshold,
+                        "conflicts": conflicts,
+                        "eligible": accepted,
+                        "reason": reason,
+                        "text": skill["body"],
+                    }
+                ],
+            }
+        )
+    return [request], items

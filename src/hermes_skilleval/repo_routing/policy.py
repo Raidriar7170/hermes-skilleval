@@ -15,7 +15,14 @@ POLICIES = ("native", "fixed", "strong", "repo-aware", "auto")
 def read_config(path):
     path = Path(path).resolve()
     value = json.loads(path.read_text())
-    for key in ("encoder_path", "reranker_path", "adapter", "gate", "cache"):
+    for key in (
+        "encoder_path",
+        "reranker_path",
+        "adapter",
+        "gate",
+        "cache",
+        "support_calibration",
+    ):
         if value.get(key):
             p = Path(value[key])
             value[key] = str(p if p.is_absolute() else (path.parent / p).resolve())
@@ -38,6 +45,10 @@ def routing_version(config, registry):
         "context_budget",
         "fixed_ids",
         "model_files",
+        "experimental_repair",
+        "fragment_budget",
+        "support_max_length",
+        "support_calibration_sha256",
     )
     source = {
         name: hashlib.sha256(
@@ -45,6 +56,10 @@ def routing_version(config, registry):
         ).hexdigest()
         for name in ("context", "reranker", "selector", "support", "policy", "gate")
     }
+    if config.get("experimental_repair"):
+        source["calibration"] = hashlib.sha256(
+            Path(__file__).with_name("calibration.py").read_bytes()
+        ).hexdigest()
     for relative in ("routers/skillrouter_open.py", "vendor/skillrouter_common.py"):
         source[relative] = hashlib.sha256(
             (Path(__file__).parent.parent / relative).read_bytes()
@@ -62,12 +77,25 @@ def route(root, request, environment, registry, policy, config, *, repository=No
     started = time.monotonic()
     if policy not in POLICIES:
         raise ValueError("unsupported policy")
-    context = extract(
-        Path(root),
-        request,
-        environment,
-        ContextBudget(**config.get("context_budget", {})),
-    )
+    repair = config.get("experimental_repair")
+    if repair not in (None, "r-support-context-v1"):
+        raise ValueError("unknown experimental repair version")
+    if repair:
+        from .context import extract_fragments, FragmentBudget
+
+        context = extract_fragments(
+            Path(root),
+            request,
+            environment,
+            FragmentBudget(**config.get("fragment_budget", {})),
+        )
+    else:
+        context = extract(
+            Path(root),
+            request,
+            environment,
+            ContextBudget(**config.get("context_budget", {})),
+        )
     counts = {"heavy_constructors": 0, "encoder_queries": 0, "reranker_forwards": 0}
     decision = {
         "action": {
@@ -179,7 +207,7 @@ def route(root, request, environment, registry, policy, config, *, repository=No
             result["scores"] = {s["id"]: v for s, v in zip(candidates, scores)}
             result["inputs"] = inputs
         else:
-            from .reranker import Reranker, representation
+            from .reranker import Reranker, representation, structured_representation
 
             if (
                 not config.get("adapter")
@@ -214,26 +242,77 @@ def route(root, request, environment, registry, policy, config, *, repository=No
             scores, inputs = [], []
             for skill in candidates:
                 values, record = ranker.scores(
-                    [representation(request, context, skill)]
+                    [
+                        structured_representation(
+                            request, context, skill, support=False
+                        )
+                        if repair
+                        else representation(request, context, skill)
+                    ]
                 )
                 scores.append(float(values.detach().cpu()[0]))
                 inputs.extend(record)
             from .support import score_candidates
 
-            clauses, items = score_candidates(
-                request,
-                context,
-                candidates,
-                scores,
-                ranker,
-                environment,
-                config.get("support_threshold", 0.8),
-            )
-            selection = select(
-                items,
-                [1.0 / len(clauses)] * len(clauses),
-                Budget(**config.get("budget", {})),
-            )
+            mode = config.get("selection_mode", "budget")
+            if repair and mode == "B2":
+                # Rank-only comparator performs zero support forwards.
+                order = sorted(
+                    range(len(candidates)),
+                    key=lambda i: (-scores[i], candidates[i]["id"]),
+                )[:2]
+                clauses, items = [request], []
+                selection = {
+                    "skill_ids": [candidates[i]["id"] for i in order],
+                    "mode": "B2",
+                    "exact_k": 2,
+                    "objective": None,
+                    "fallback_reason": None
+                    if len(order) == 2
+                    else "insufficient_candidates",
+                }
+                if len(order) != 2:
+                    selection["skill_ids"] = []
+            elif repair and mode == "C2":
+                from .support import calibrated_candidates
+
+                path = Path(config["support_calibration"])
+                raw = path.read_bytes()
+                if hashlib.sha256(raw).hexdigest() != config.get(
+                    "support_calibration_sha256"
+                ):
+                    raise ValueError("support calibration file identity mismatch")
+                clauses, items = calibrated_candidates(
+                    request,
+                    context,
+                    candidates,
+                    scores,
+                    ranker,
+                    environment,
+                    config,
+                    json.loads(raw),
+                )
+                selection = select(
+                    items, [1.0], Budget(**config.get("budget", {})), exact_k=2
+                )
+                selection["mode"] = "C2"
+            elif repair:
+                raise ValueError("repair requires explicit B2 or C2 selection mode")
+            else:
+                clauses, items = score_candidates(
+                    request,
+                    context,
+                    candidates,
+                    scores,
+                    ranker,
+                    environment,
+                    config.get("support_threshold", 0.8),
+                )
+                selection = select(
+                    items,
+                    [1.0 / len(clauses)] * len(clauses),
+                    Budget(**config.get("budget", {})),
+                )
             result["requirements"] = clauses
             if config.get("selection_mode", "budget") == "top2":
                 compatible = {item["id"] for item in items if item["compatible"]}
@@ -252,7 +331,7 @@ def route(root, request, environment, registry, policy, config, *, repository=No
                     for item in items
                     if item["id"] in selection["skill_ids"]
                 )
-            elif config.get("selection_mode", "budget") != "budget":
+            elif not repair and config.get("selection_mode", "budget") != "budget":
                 raise ValueError("unknown selection mode")
             ids = selection["skill_ids"]
             if not ids:

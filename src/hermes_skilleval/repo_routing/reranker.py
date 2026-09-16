@@ -74,6 +74,11 @@ class Reranker:
 
         batches, records = [], []
         for text in texts:
+            if isinstance(text, dict):
+                ids, record = structured_tokens(self, text)
+                batches.append(ids)
+                records.append(record)
+                continue
             full = self.tokenizer.encode(text)
             markers = [
                 "[TASK]",
@@ -299,3 +304,93 @@ def reload_probe(training_path):
         json.dumps(result, indent=2) + "\n"
     )
     return result
+
+
+SUPPORT_TEMPLATE = "text-help-structured-v2"
+SUPPORT_INSTRUCTION = (
+    "Judge textual applicability, not whether a skill alone solves the issue. "
+    "Does the skill provide a concrete applicable procedure, implementation step, "
+    "or verification check for this requirement under the known constraints? "
+    "Generic encouragement is insufficient. Preserve negation, conditions and scope. "
+    "Answer yes only when visible skill evidence supports a specific useful step "
+    "and no necessary precondition conflicts; otherwise answer no."
+)
+
+
+def structured_representation(request, context, skill, *, support=True):
+    return {
+        "schema": SUPPORT_TEMPLATE,
+        "instruction": SUPPORT_INSTRUCTION
+        if support
+        else "Rank relevance of this skill to the public task using the repository facts.",
+        "task": request,
+        "context": context["summary"],
+        "metadata": skill["name"] + "\n" + skill.get("description", ""),
+        "evidence": skill.get("body", ""),
+    }
+
+
+def structured_tokens(ranker, sections):
+    """Program-owned sections; user marker text is never parsed as structure."""
+    if sections.get("schema") != SUPPORT_TEMPLATE:
+        raise ValueError("unsupported structured representation")
+    names = ("instruction", "task", "context", "metadata", "evidence")
+    tokenizer = ranker.tokenizer
+    headers = [
+        tokenizer.encode("\n[" + name.upper() + "]\n", add_special_tokens=False)
+        for name in names
+    ]
+    tokens = [
+        tokenizer.encode(sections[name], add_special_tokens=False) for name in names
+    ]
+    available = (
+        ranker.max_length
+        - len(ranker.prefix)
+        - len(ranker.suffix)
+        - sum(map(len, headers))
+    )
+    # Instruction and request must be intact for a supported decision. Allocate
+    # the rest proportionally, then lend unused capacity in fixed order.
+    caps = [
+        len(tokens[0]),
+        min(len(tokens[1]), max(0, min(available // 3, available - len(tokens[0])))),
+        0,
+        0,
+        0,
+    ]
+    remainder = available - sum(caps)
+    if remainder < 0:
+        raise ValueError("instruction does not fit token budget")
+    caps[2:5] = [int(remainder * 0.40), int(remainder * 0.10), 0]
+    caps[4] = remainder - caps[2] - caps[3]
+    caps = [min(cap, len(t)) for cap, t in zip(caps, tokens)]
+    spare = available - sum(caps)
+    for index in (1, 4, 2, 3):
+        extra = min(spare, len(tokens[index]) - caps[index])
+        caps[index] += extra
+        spare -= extra
+    body, records = [], []
+    for name, header, ids, cap in zip(names, headers, tokens, caps):
+        visible = ids[:cap]
+        body.extend(header + visible)
+        records.append(
+            {
+                "section": name,
+                "tokens_before": len(ids),
+                "tokens_used": cap,
+                "truncated": cap < len(ids),
+                "visible_text": tokenizer.decode(visible),
+                "visible_token_ids": visible,
+            }
+        )
+    ids = ranker.prefix + body + ranker.suffix
+    return ids, {
+        "schema": SUPPORT_TEMPLATE,
+        "actual_tokens": len(ids),
+        "body_tokens_before": sum(map(len, tokens)),
+        "sections": records,
+        "truncated": any(r["truncated"] for r in records),
+        "request_complete": not records[1]["truncated"],
+        "evidence_complete": not records[4]["truncated"],
+        "input_sha256": hashlib.sha256(json.dumps(ids).encode()).hexdigest(),
+    }
