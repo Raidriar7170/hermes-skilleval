@@ -245,6 +245,16 @@ def guarded_score(
             or calibration.get("axis") != "applicability"
         ):
             raise ValueError("calibration/input/contract mismatch")
+    if (
+        calibration is not None
+        and calibration.get("schema") == "aligned-calibration-v2"
+    ):
+        if (
+            not facts.get("environment_binding")
+            or calibration.get("environment_bindings", {}).get(current_input)
+            != facts["environment_binding"]
+        ):
+            raise ValueError("calibration/environment binding mismatch")
     identity = scorer_identity(config)
     if calibration is not None and calibration.get("scorer_identity") != identity:
         raise ValueError("calibration/scorer mismatch")

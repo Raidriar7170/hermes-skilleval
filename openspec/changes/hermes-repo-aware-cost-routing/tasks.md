@@ -52,3 +52,15 @@ Authority: `docs/goals/Hermes_PR48_Decision_Alignment_Calibration_Preflight_Code
 - [x] 4.6 A6 Compact evidence, independent boundary review, clean wheel and same-HEAD Draft delivery.
 
 Decision-alignment code HEAD `fedfbcd8ff5d9cd96b30e27c3179bb91dd131923` passed CI `35130060478`; Draft PR #48 updated. Final documentation HEAD is checked separately. Context repair does not establish support: environment qualification remains BLOCKED, operating point NOT_ESTABLISHED, runtime NOT_RUN. No archive or merge.
+
+## 5. Context spans and environment readiness (active Goal)
+
+Authority: `docs/goals/Hermes_PR48_Context_Span_Environment_Readiness_Codex_Goal.md`.
+Prior incomplete task 2.5 stays historical and is not resumed.
+
+- [x] 5.1 M0 Reproduce mixed prose/code loss through the complete extractor.
+- [x] 5.2 M1 Position-bound correction and conservative full-chain regressions.
+- [x] 5.3 M2 Freeze per-version scope, requirements and probe plan before scores.
+- [x] 5.4 M3 Attempt four isolated source preparations and record actual facts.
+- [x] 5.5 M4 Shared layered qualification and conditional fresh A cal scoring.
+- [ ] 5.6 M5 Independent boundary review, clean wheel, compatibility, CI and Draft delivery.

@@ -266,7 +266,7 @@ def test_online_cli_does_not_read_training_labels(tmp_path, monkeypatch, selecte
         decision_cli, "read_rows", lambda *a: pytest.fail("online read label rows")
     )
     monkeypatch.setattr(
-        decision_cli, "tokenize", lambda *a: {"public::public": {"visible": True}}
+        decision_cli, "tokenize", lambda *a, **kw: {"public::public": {"visible": True}}
     )
     monkeypatch.setattr(
         "sys.argv",

@@ -41,7 +41,9 @@ def input_identity(tasks, registry, template_identity):
                 {
                     "request": t["request"],
                     "source_revision": t["source_revision"],
-                    "context": t["context"],
+                    "context": {k: v for k, v in t["context"].items() if k != "cost"}
+                    if t["context"].get("schema") == "repo-context-prose-span-v2"
+                    else t["context"],
                 }
                 for t in tasks
             ],
@@ -51,7 +53,9 @@ def input_identity(tasks, registry, template_identity):
     )
 
 
-def structural(tasks, skills, *, tokens=None, environment_known=False):
+def structural(
+    tasks, skills, *, tokens=None, environment_known=False, environment_states=None
+):
     """Public tasks only; token records must already bind to current input identity."""
     validate_splits(tasks)
     result = []
@@ -79,6 +83,9 @@ def structural(tasks, skills, *, tokens=None, environment_known=False):
             if isinstance(environment_known, dict)
             else environment_known is True
         )
+        measured = (environment_states or {}).get(task["task_id"], {})
+        if environment_states is not None:
+            known_environment = measured.get("state") == "SATISFIED"
         for skill in skills:
             row_id = task["task_id"] + "::" + skill["id"]
             token = (tokens or {}).get(row_id)
@@ -120,6 +127,21 @@ def structural(tasks, skills, *, tokens=None, environment_known=False):
                     else "TRUNCATED",
                     "token_visible": visible,
                     "environment_known": known_environment,
+                    "environment_facts": {
+                        k: measured[k]
+                        for k in ("state", "binding", "reason")
+                        if k in measured
+                    },
+                    "layers": {
+                        "text_input_ready": c["state"] == "usable"
+                        and not errors
+                        and not missing
+                        and visible is True,
+                        "skill_conditions": measured.get("state", "UNKNOWN"),
+                        "target_environment": measured.get("state", "UNKNOWN"),
+                        "supported_operating_point": "NOT_ESTABLISHED",
+                        "repair_acceptance": "NOT_RUN",
+                    },
                     "environment": c.get("environment", {}),
                     "conflicts": conflict,
                     "eligible": not reasons,
@@ -204,11 +226,16 @@ def report(
     labels=None,
     tokens=None,
     environment_known=False,
+    environment_states=None,
     requested_operation="calibrate",
     identity=None,
 ):
     public = structural(
-        tasks, skills, tokens=tokens, environment_known=environment_known
+        tasks,
+        skills,
+        tokens=tokens,
+        environment_known=environment_known,
+        environment_states=environment_states,
     )
     result = {
         "schema": "calibration-preflight-v1",
@@ -265,36 +292,36 @@ def extract_repaired(root, request, environment, budget=None):
     from .context import extract_fragments
 
     context = extract_fragments(root, request, environment, budget)
-    prose = re.sub(r"```[\s\S]*?```|`[^`\n]*`", "", request)
-    false_calls = set(
-        re.findall(
-            r"\b([A-Za-z_]\w*)\s+\((?:the |maybe |an |a |e\.g\.|i\.e\.)[^)]*\)", prose
-        )
-    )
+    from .prose_spans import prose_call_spans
+
+    spans, protected, uncertainty = prose_call_spans(request)
     removed = []
     kept = []
     for missing in context["missing"]:
         name = missing.get("symbol", "")
-        # Every mention that looks like a call must be a recognized prose aside.
-        remaining = (
-            re.sub(
-                r"\b"
-                + re.escape(name)
-                + r"\s+\((?:the |maybe |an |a |e\.g\.|i\.e\.)[^)]*\)",
-                "",
-                request,
-            )
+        occurrences = (
+            list(re.finditer(r"\b" + re.escape(name) + r"\s*\(", request))
             if name
-            else request
+            else []
         )
         if (
             missing["reason"] == "explicit_call_unlocated"
-            and name in false_calls
-            and not re.search(r"\b" + re.escape(name) + r"\s*\(", remaining)
+            and occurrences
+            and not uncertainty
+            and all(
+                any(a == m.start() and m.end() <= b for a, b in spans)
+                for m in occurrences
+            )
         ):
             removed.append(missing)
         else:
             kept.append(missing)
+    context["prose_span_analysis"] = {
+        "correction_spans": spans,
+        "protected_spans": protected,
+        "uncertainty": uncertainty,
+        "policy": "conservative positions; not a complete CommonMark parser",
+    }
     context["missing"] = kept
     if removed:
         # Recompute only this predicate. Scan uncertainty and genuine criticality remain.
@@ -315,7 +342,7 @@ def extract_repaired(root, request, environment, budget=None):
             context["summary"] = context["summary"].replace(
                 "Context state: partial.", "Context state: usable.", 1
             )
-    context["schema"] = "repo-context-prose-call-v1"
+    context["schema"] = "repo-context-prose-span-v2"
     context["legacy_cache_key"] = context["cache_key"]
     context["cache_key"] = digest(
         [context["schema"], context["legacy_cache_key"], context["summary"], kept]

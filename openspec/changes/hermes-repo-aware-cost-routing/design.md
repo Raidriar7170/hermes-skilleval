@@ -31,3 +31,14 @@ The new designated Applicability Data Pointwise Learning Goal supersedes only th
 ## Decision alignment continuation
 
 The active Decision Alignment Calibration Preflight Goal and `configs/decision-alignment-v1/protocol.json` define the current bounded change. Reuse six checkpoints and saved predictions; select A by applicability and directly supervised J by its raw product event loss on model-dev. Historical check remains retrospective. Add a thin CLI dispatcher, shared no-forward eligibility, and evidence-grounded context repair. Preserve all historical bound source modules where possible. No training, new Agent runs, default promotion, merge or archive.
+
+## Context span and environment readiness continuation
+
+The designated Context Span Environment Readiness Goal now governs this bounded
+increment. Keep original request positions, protect code/ambiguous regions, and
+only remove a missing call when every occurrence is a proven prose span. Bind
+measured isolated environment facts to source, immutable image, probe and scope;
+share derived qualification across installed preflight, score and support paths.
+Run only frozen A on four original cal tasks if prerequisites hold. Any operating
+point is retrospective; repair effectiveness remains NOT_RUN. Prior frozen
+records and task 2.5 are unchanged. No new training, check selection, or Agent runs.

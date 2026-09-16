@@ -1,0 +1,87 @@
+{
+  "schema": "environment-readiness-validation-v1",
+  "baseline": "6dd9a4aa46225361d94f13cc10ed695f51d336b1",
+  "scope": {
+    "read": [
+      "src",
+      "tests",
+      "configs",
+      "artifacts",
+      "docs",
+      "openspec",
+      ".github",
+      "original private snapshots and frozen local model assets"
+    ],
+    "write": [
+      "src/hermes_skilleval/repo_routing",
+      "tests/test_calibration_preflight.py",
+      "tests/test_decision_alignment.py",
+      "tests/test_environment_facts.py",
+      "pyproject.toml",
+      "scripts/repo_aware/environment_readiness_replay.py",
+      "configs/environment-readiness-v1",
+      "artifacts/environment-readiness-v1",
+      "docs/goals/Hermes_PR48_Context_Span_Environment_Readiness_Codex_Goal.md",
+      "docs/repo-aware-routing/environment-readiness-v1",
+      "openspec/changes/hermes-repo-aware-cost-routing"
+    ],
+    "frozen": [
+      "artifacts/conditional-applicability-v1",
+      "artifacts/decision-alignment-v1",
+      "configs/conditional-applicability-v1",
+      "all original LoRA/rank/Gate weights and prior research artifacts"
+    ],
+    "final_repository_scope": "."
+  },
+  "focused_tests": {
+    "passed": 61
+  },
+  "full_tests": {
+    "passed": 1390,
+    "command": "PYTHONPATH=src python3.12 -m pytest -q"
+  },
+  "lint_changed_files": "PASSED",
+  "mypy_changed_modules": "PASSED --no-site-packages",
+  "broad_lint": "2 existing unused-import errors outside changed files; new-error CI gate is authoritative",
+  "broad_mypy": "50 errors in 14 unchanged modules with no-site-packages; focused changed modules pass; CI compares base/head signatures",
+  "openspec": "strict change validation passed",
+  "historical_records": {
+    "status": "MATCHED",
+    "rows": 40,
+    "model_calls": 0
+  },
+  "wheel": {
+    "sha256": "22bd5557fa202bbded8706370b539a6bb3763fc5effbb53c21cf38c3faf23e75",
+    "clean_lightweight_environment": true,
+    "outside_checkout": true,
+    "inherited_pythonpath_removed": true,
+    "final_install_has_no_torch_transformers_peft": true
+  },
+  "installed_model_replay": {
+    "row": "sqlite-utils-issue-211::systematic-debugging",
+    "matches_batch": true,
+    "forward_calls": 1,
+    "note": "Executed before later conservative span and missing-base handling refinements; final four-task public input identity re-extracted unchanged, final light wheel checked separately. No repeated model forward."
+  },
+  "independent_review": {
+    "mode": "read-only static boundary review",
+    "blocking_findings_remaining": 0,
+    "runtime_evidence_substitute": false,
+    "post_review_refinements": "Valid Python expression aside retained; missing local base UNKNOWN; tests and final public-input identity checked."
+  },
+  "source_sha256": {
+    "src/hermes_skilleval/repo_routing/calibration_preflight.py": "e1eae239c3b029c3424dd5403b3fc3d3c3194b7a08d4b06c96f69de63935a5fd",
+    "src/hermes_skilleval/repo_routing/decision_cli.py": "ce8606812d479b3a895121b2e1ddf766f73d8e3578614b034dff2094116ed5b5",
+    "src/hermes_skilleval/repo_routing/decision_contract.py": "33b3cb1de990294b4254232bc1a8f161eafd76f3c0365ca772d95ac999a2d107",
+    "src/hermes_skilleval/repo_routing/environment_facts.py": "3f17bc3d4094287fc2eaca5b1a8408a8c0012fffa0771830aed81a66f763ecdf",
+    "src/hermes_skilleval/repo_routing/environment_probe.py": "31181e9a9ee943ee7efdb58396c73041efa9ad15329e28b280796fcc721e55e2",
+    "src/hermes_skilleval/repo_routing/prose_spans.py": "e66ba02bb62cc72449a6e779e862664888ed225a202abb0354713c11f19e1c9f"
+  },
+  "ci": {
+    "status": "PENDING_EXACT_HEAD",
+    "url": "https://github.com/Raidriar7170/hermes-skilleval/pull/48/checks"
+  },
+  "runtime_effectiveness": "NOT_RUN",
+  "repair_agent_calls": 0,
+  "default_policy": "native-auto unchanged"
+}

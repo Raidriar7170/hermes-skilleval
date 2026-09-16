@@ -55,3 +55,8 @@ force-exclude = true
 # Optional strong-retrieval extra is intentionally absent in lightweight CI.
 module = ["torch", "torch.*", "transformers", "transformers.*", "peft", "peft.*", "sklearn", "sklearn.*", "scipy", "scipy.*", "numpy", "numpy.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Only imported by the isolated target probe, never the lightweight host install.
+module = ["csvkit", "csvkit.*", "csv_diff", "csv_diff.*"]
+ignore_missing_imports = true

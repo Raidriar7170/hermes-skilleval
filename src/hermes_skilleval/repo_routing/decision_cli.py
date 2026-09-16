@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 from .applicability_data import read_json, read_rows, write_json, file_hash
 from .context import digest, FragmentBudget
@@ -29,7 +30,9 @@ DEFAULT = Path("artifacts/conditional-applicability-v1")
 NEW = Path("artifacts/decision-alignment-v1")
 REGISTRY = Path("configs/conditional-applicability-v1/registry.json")
 RULE = Path("configs/conditional-applicability-v1/protocol.json")
+PROJECT_ROOT = Path(".")
 COMMANDS = {
+    "probe-environment",
     "select-for-goal",
     "decision-replay",
     "preflight",
@@ -74,7 +77,7 @@ def selection(root):
         if name.startswith("src/") or name.startswith(
             "configs/conditional-applicability-v1/"
         ):
-            if file_hash(Path(name)) != expected:
+            if file_hash(PROJECT_ROOT / name) != expected:
                 raise ValueError(
                     "frozen input/template changed; old predictions cannot be rebound"
                 )
@@ -268,7 +271,9 @@ def stream(rows, pp, target, model):
     }
 
 
-def tokenize(tasks, skills, config):
+def tokenize(
+    tasks, skills, config, *, axes=("applicability", "specificity_given_applicable")
+):
     """Optional local tokenizer only: do not hash/open model weights or build models."""
     from types import SimpleNamespace
     from transformers import AutoTokenizer
@@ -295,7 +300,7 @@ def tokenize(tasks, skills, config):
     for task in tasks:
         for skill in skills:
             records = []
-            for axis in ("applicability", "specificity_given_applicable"):
+            for axis in axes:
                 _, r = structured_tokens(
                     shell, representation(public_input(task, skill), axis)
                 )
@@ -357,11 +362,9 @@ def run_preflight(args):
                 }
             )
     identity = input_identity(tasks, skills, template_identity())
-    token_records = (
-        tokenize(tasks, skills, read_json(args.tokenizer_config))
-        if args.tokenizer_config
-        else None
-    )
+    environment_states = measured_environments(args, tasks)
+    args._prepared = (tasks, skills)
+    args._environment_states = environment_states
     # Cal labels are read only after a validated development-selected contract.
     labels = None
     if args.operation in {"calibrate", "cal-score"}:
@@ -373,15 +376,27 @@ def run_preflight(args):
         labels = [
             r for r in read_rows(args.root / "labels.jsonl") if r["split"] == "cal"
         ]
+    from .decision_contract import AXES
+
+    axes = (
+        AXES[read_json(args.contract)["decision_target"]]
+        if args.contract
+        else ("applicability", "specificity_given_applicable")
+    )
+    token_started = time.monotonic()
+    token_records = (
+        tokenize(tasks, skills, read_json(args.tokenizer_config), axes=axes)
+        if args.tokenizer_config
+        else None
+    )
+    token_seconds = time.monotonic() - token_started if token_records else None
     result = report(
         tasks,
         skills,
         read_json(RULE),
         labels=labels,
         tokens=token_records,
-        environment_known=read_json(args.environment_facts)
-        if args.environment_facts
-        else False,
+        environment_states=environment_states,
         requested_operation=args.operation,
         identity=identity,
     )
@@ -389,15 +404,71 @@ def run_preflight(args):
         "LOCAL_TOKENIZER_ONLY" if token_records else "TOKENIZATION_UNCHECKED"
     )
     result["tokens"] = token_records
+    result["tokenizer_cost"] = {
+        "constructions": 1 if token_records else 0,
+        "rows": len(token_records or {}),
+        "axes": list(axes),
+        "elapsed_seconds": token_seconds,
+    }
     result["context_repairs"] = repairs
-    result["execution_environment"] = (
-        "UNKNOWN: repository dependencies unverified; cannot infer from text-study network setting"
+    result["execution_environment"] = environment_states
+    result["environment_binding"] = digest(
+        {k: v.get("binding") for k, v in environment_states.items()}
     )
+    result["execution_authority"] = "NONE"
     write_json(args.output, result)
     return result
 
 
+def measured_environments(args, tasks):
+    from .environment_facts import verify_record
+
+    if not getattr(args, "environment_facts", None):
+        return {
+            t["task_id"]: {
+                "state": "UNKNOWN",
+                "reason": "measured environment facts absent",
+            }
+            for t in tasks
+        }
+    data = read_json(args.environment_facts)
+    if data.get("schema") != "environment-records-v1" or not isinstance(
+        data.get("records"), list
+    ):
+        raise ValueError(
+            "verified path requires structured probe records, not boolean declarations"
+        )
+    records = {r["task_id"]: r for r in data["records"]}
+    if len(records) != len(data["records"]):
+        raise ValueError("duplicate environment record")
+    profile = read_json(args.environment_profile)
+    results = {}
+    for task in tasks:
+        record = records.get(task["task_id"])
+        if record is None:
+            results[task["task_id"]] = {
+                "state": "UNKNOWN",
+                "reason": "task record absent",
+            }
+        else:
+            results[task["task_id"]] = verify_record(
+                record,
+                task,
+                safe_snapshot_path(args.snapshots, task["task_id"])
+                if args.snapshots
+                else None,
+                profile,
+                wheelhouse=safe_snapshot_path(
+                    args.environment_assets, task["task_id"] + "/wheelhouse"
+                )
+                if getattr(args, "environment_assets", None)
+                else None,
+            )
+    return results
+
+
 def main():
+    global REGISTRY, RULE, PROJECT_ROOT
     if not any(c in sys.argv[1:] for c in COMMANDS) and not (
         len(sys.argv) == 1 or sys.argv[1:] == ["--help"]
     ):
@@ -406,7 +477,31 @@ def main():
         return legacy()
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", type=Path, default=DEFAULT)
+    p.add_argument("--registry", type=Path, default=REGISTRY)
+    p.add_argument("--rule", type=Path, default=RULE)
+    p.add_argument(
+        "--project-root",
+        type=Path,
+        help="External frozen source/config tree for historical identity checks",
+    )
+    p.add_argument(
+        "--environment-profile",
+        type=Path,
+        default=Path("configs/environment-readiness-v1/profile.json"),
+    )
+    p.add_argument(
+        "--environment-assets",
+        type=Path,
+        help="Private build root containing per-task wheelhouse directories",
+    )
     sub = p.add_subparsers(dest="command", required=True)
+    probe = sub.add_parser(
+        "probe-environment",
+        help="Prepare isolated cal source environments and save measured facts; no model",
+    )
+    probe.add_argument("--snapshots", type=Path, required=True)
+    probe.add_argument("--private-build-root", type=Path, required=True)
+    probe.add_argument("--output", type=Path, required=True)
     for name in ("select-for-goal", "decision-replay"):
         a = sub.add_parser(name)
         a.add_argument("--output", type=Path, default=NEW)
@@ -448,7 +543,14 @@ def main():
     a.add_argument("--input", type=Path, required=True)
     a.add_argument("--calibration", type=Path)
     a.add_argument("--manifest", type=Path, required=True)
-    a.add_argument("--environment-known", action="store_true")
+    a.add_argument(
+        "--environment-known",
+        action="store_true",
+        help="Historical declaration only; never verified readiness",
+    )
+    a.add_argument("--environment-facts", type=Path)
+    a.add_argument("--snapshots", type=Path)
+    a.add_argument("--task-id")
     a.add_argument(
         "--context-state",
         choices=["usable", "partial", "unknown", "unavailable"],
@@ -456,6 +558,30 @@ def main():
     )
     a.add_argument("--output", type=Path, required=True)
     args = p.parse_args()
+    REGISTRY, RULE = args.registry, args.rule
+    PROJECT_ROOT = args.project_root or Path(".")
+    if args.command == "probe-environment":
+        from .environment_facts import prepare
+
+        tasks, _, _ = study(args.root)
+        profile = read_json(args.environment_profile)
+        records = []
+        for task in (t for t in tasks if t["split"] == "cal"):
+            records.append(
+                prepare(
+                    task,
+                    safe_snapshot_path(args.snapshots, task["task_id"]),
+                    profile,
+                    args.private_build_root / task["task_id"],
+                )
+            )
+            write_json(
+                args.output, {"schema": "environment-records-v1", "records": records}
+            )
+        print(
+            json.dumps({r["task_id"]: r["required_conditions_state"] for r in records})
+        )
+        return
     if args.command in {"select-for-goal", "decision-replay"}:
         selected = selection(args.root)
         write_json(args.output / "dev-selection.json", selected)
@@ -480,6 +606,14 @@ def main():
 
         contract = read_json(args.contract)
         validate_contract(contract)
+        if contract["support_mode"] == "supported" and args.environment_facts:
+            if (
+                not args.calibration
+                or read_json(args.calibration).get("schema") != "aligned-calibration-v2"
+            ):
+                raise ValueError(
+                    "verified support requires current environment-bound calibration"
+                )
         manifest = read_json(args.manifest)
         frozen_contract = manifest[contract["decision_target"]]
         validate_contract(frozen_contract)
@@ -498,19 +632,51 @@ def main():
             "description": public.skill_description,
             "body": public.skill_body,
         }
-        token = tokenize([task], [skill], config)["public::public"]
+        from .decision_contract import AXES
+
+        token = tokenize(
+            [task], [skill], config, axes=AXES[contract["decision_target"]]
+        )["public::public"]
         token["public_input_identity"] = digest(public.__dict__)
+        measured = {
+            "state": "UNKNOWN",
+            "reason": "historical declaration is not measured",
+        }
+        context_state = args.context_state
+        if args.environment_facts:
+            if not args.task_id or not args.snapshots:
+                raise ValueError("verified advice requires task-id and snapshots")
+            tasks, skills, _ = study(args.root)
+            task = next(t for t in tasks if t["task_id"] == args.task_id)
+            c = task["context"]
+            task["context"] = extract_repaired(
+                safe_snapshot_path(args.snapshots, task["task_id"]),
+                task["request"],
+                c["environment"],
+                FragmentBudget(**c["budget"]),
+            )
+            from .pointwise_support import public_input
+
+            if not any(public_input(task, skill) == public for skill in skills):
+                raise ValueError(
+                    "advice public input differs from verified source input"
+                )
+            measured = measured_environments(args, [task])[task["task_id"]]
+            context_state = task["context"]["state"]
         result = guarded_score(
             public,
             config,
             contract,
             {
-                "context_state": args.context_state,
-                "environment_known": args.environment_known,
+                "context_state": context_state,
+                "environment_known": measured["state"] == "SATISFIED",
+                "environment_binding": measured.get("binding"),
             },
             token,
             calibration=read_json(args.calibration) if args.calibration else None,
         )
+        result["environment_facts"] = measured
+        result["execution_authority"] = "NONE"
         write_json(args.output, result)
         print(json.dumps({"status": result["status"], "accepted": result["accepted"]}))
         if result["status"] == "BLOCKED":
@@ -535,15 +701,17 @@ def main():
                 args.tokenizer_config = None
                 result = run_preflight(args)
                 args.tokenizer_config = saved
-                if (
-                    result["calibration"]["context_known_group_upper_bound"]
-                    < result["calibration"]["min_accepted_groups"]
+                if result["calibration"]["context_known_group_upper_bound"] < result[
+                    "calibration"
+                ]["min_accepted_groups"] or any(
+                    v.get("state") != "SATISFIED"
+                    for v in args._environment_states.values()
                 ):
                     print(
                         json.dumps(
                             {
                                 "status": "BLOCKED",
-                                "reason": "INSUFFICIENT_CONTEXT_GROUPS",
+                                "reason": "CONTEXT_OR_ENVIRONMENT_NECESSARY_CONDITIONS_UNMET",
                                 "model_constructions": 0,
                             }
                         )
@@ -590,6 +758,10 @@ def execute_batch(args, preflight):
     ):
         raise ValueError("candidate/checkpoint mismatch")
     if args.command == "aligned-calibrate":
+        if contract["decision_target"] != "applicability":
+            raise ValueError(
+                "only A applicability calibration is implemented; J remains raw advisory"
+            )
         if not args.scores:
             raise ValueError("scores required after successful calibration preflight")
         scores = read_json(args.scores)
@@ -597,6 +769,7 @@ def execute_batch(args, preflight):
             scores.get("input_identity") != preflight["input_identity"]
             or scores.get("contract_identity") != contract_identity(contract)
             or scores.get("split") != "cal"
+            or scores.get("environment_binding") != preflight["environment_binding"]
         ):
             raise ValueError("new input/contract/scores binding mismatch")
         from .applicability_eval import (
@@ -613,6 +786,7 @@ def execute_batch(args, preflight):
             raise ValueError("calibration model identity mismatch")
         rr = [r for r in read_rows(args.root / "labels.jsonl") if r["split"] == "cal"]
         observed = aligned(rr, scores["rows"])
+        fit_started = time.monotonic()
         mapping = fit_calibration(
             rr, [r["logits"] for r in observed], 0, read_json(RULE)["calibration"]
         )
@@ -627,11 +801,22 @@ def execute_batch(args, preflight):
         ):
             raise ValueError("scored public inputs differ from preflight")
         eligible = [facts[r["row_id"]]["eligible"] for r in rr]
-        chosen = choose_threshold(
-            precision_curve(rr, pp, eligible), read_json(RULE)["operating_point"]
-        )
+        curve = precision_curve(rr, pp, eligible)
+        chosen = choose_threshold(curve, read_json(RULE)["operating_point"])
         result = {
-            "schema": "aligned-calibration-v1",
+            "schema": "aligned-calibration-v2",
+            "cost": {
+                "calibration_fits": 1,
+                "fit_and_curve_seconds": time.monotonic() - fit_started,
+                "model_constructions": 0,
+                "forward_calls": 0,
+            },
+            "environment_binding": preflight["environment_binding"],
+            "environment_bindings": {
+                r["public_input_identity"]: r["environment_facts"].get("binding")
+                for r in preflight["rows"]
+            },
+            "precision_curve": curve,
             "axis": "applicability",
             "public_input_identities": [
                 r["public_input_identity"]
@@ -655,45 +840,69 @@ def execute_batch(args, preflight):
     from .reranker import Reranker
     from .decision_contract import score_axes
 
-    tasks, skills, _ = study(args.root)
-    tasks = [t for t in tasks if t["split"] == args.split]
-    if args.snapshots:
-        for t in tasks:
-            c = t["context"]
-            t["context"] = extract_repaired(
-                safe_snapshot_path(args.snapshots, t["task_id"]),
-                t["request"],
-                c["environment"],
-                FragmentBudget(**c["budget"]),
-            )
+    tasks, skills = args._prepared
     if (
         input_identity(tasks, skills, template_identity())
         != preflight["input_identity"]
     ):
-        raise ValueError("input changed after preflight")
+        raise ValueError("prepared input changed after preflight")
+    refreshed = measured_environments(args, tasks)
+    if digest({k: v.get("binding") for k, v in refreshed.items()}) != preflight[
+        "environment_binding"
+    ] or (
+        args.operation == "cal-score"
+        and any(v.get("state") != "SATISFIED" for v in refreshed.values())
+    ):
+        raise ValueError("environment changed after preflight")
     identity = scorer_identity(config)
+    construction_started = time.monotonic()
     ranker = Reranker(
         config["base"],
         device=config["device"],
         max_length=config["max_length"],
         adapter=config.get("adapter"),
     )
+    construction_seconds = time.monotonic() - construction_started
+    forward_started = time.monotonic()
     records = []
     for task in tasks:
         for skill in skills:
             observed = score_axes(ranker, public_input(task, skill), contract)
+            row_id = task["task_id"] + "::" + skill["id"]
+            actual_tokens = [
+                {k: r[k] for k in ("input_sha256", "actual_tokens", "truncated")}
+                for r in observed["inputs"]
+            ]
+            if actual_tokens != preflight["tokens"][row_id]["axes"]:
+                raise ValueError("forward tokens differ from prepared tokenizer input")
             records.append(
                 {
-                    "row_id": task["task_id"] + "::" + skill["id"],
+                    "row_id": row_id,
                     "public_input_identity": digest(public_input(task, skill).__dict__),
                     "logits": observed["logits"],
                     "formula_id": observed["formula_id"],
                     "output_axes": observed["output_axes"],
                     "priority_score": observed["priority_score"],
+                    "token_inputs": [
+                        {
+                            k: r[k]
+                            for k in ("input_sha256", "actual_tokens", "truncated")
+                        }
+                        for r in observed["inputs"]
+                    ],
                 }
             )
     result = {
-        "schema": "aligned-scores-v1",
+        "schema": "aligned-scores-v2",
+        "cost": {
+            "model_constructions": 1,
+            "model_construction_seconds": construction_seconds,
+            "forward_calls": ranker.forward_calls,
+            "scorer_calls": len(records),
+            "forward_seconds": time.monotonic() - forward_started,
+            "repair_agent_calls": 0,
+        },
+        "environment_binding": preflight["environment_binding"],
         "input_identity": preflight["input_identity"],
         "contract_identity": contract_identity(contract),
         "scorer_identity": identity,

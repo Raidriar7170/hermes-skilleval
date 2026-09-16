@@ -205,3 +205,80 @@ def test_installed_style_cli_blocks_before_tokenizer_or_model(tmp_path, monkeypa
         decision_cli.main()
     assert e.value.code == 2
     assert read_json(tmp_path / "report.json")["model_constructions"] == 0
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "`warning (maybe + value)`",
+        "``warning (maybe + `value`)``",
+        "```python\nwarning (maybe + value)\n```",
+        "~~~~python\r\nwarning (maybe + value)\r\n~~~~",
+        "    warning (maybe + value)",
+        "\twarning (maybe + value)",
+        "warning(value)",
+        "warning (value)",
+        "`warning (maybe + value)",
+        "```\nwarning (maybe + value)",
+    ],
+)
+@pytest.mark.parametrize("reverse", [False, True])
+def test_mixed_same_name_full_chain(tmp_path, code, reverse):
+    from hermes_skilleval.repo_routing.context import extract_fragments
+
+    (tmp_path / "module.py").write_text('def display():\n    return "lines"\n')
+    parts = [
+        "检查 display 的错误提示：\r\ndisplay should raise a warning (maybe allowing a choice).",
+        code,
+    ]
+    request = "\r\n".join(reversed(parts) if reverse else parts)
+    original = extract_fragments(tmp_path, request, {})
+    result = extract_repaired(tmp_path, request, {})
+    missing = {
+        "path": ".",
+        "symbol": "warning",
+        "reason": "explicit_call_unlocated",
+        "critical": True,
+    }
+    assert missing in original["missing"]
+    assert missing in result["missing"]
+    assert result["state"] != "usable"
+    assert not result["prose_call_corrections"]
+
+
+def test_repeated_plain_asides_and_uncertainty(tmp_path):
+    (tmp_path / "module.py").write_text("def display():\n    pass\n")
+    prose = "display warning (maybe allowing a choice). warning (the easier way)."
+    assert extract_repaired(tmp_path, prose, {})["state"] == "usable"
+    for prefix in ["> ", "- ", "<div> ", "`unclosed "]:
+        result = extract_repaired(tmp_path, prefix + prose, {})
+        assert result["prose_span_analysis"]["uncertainty"]
+        assert result["state"] != "usable"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        " \twarning (maybe + value)",
+        "  \twarning (maybe + value)",
+        "Text <code>warning (maybe + value)</code>",
+    ],
+)
+def test_conservative_column_indentation_and_inline_html(tmp_path, code):
+    (tmp_path / "module.py").write_text("def display():\n    pass\n")
+    result = extract_repaired(
+        tmp_path, "display warning (maybe allowing a choice).\n\n" + code, {}
+    )
+    assert result["state"] != "usable"
+    assert any(m.get("symbol") == "warning" for m in result["missing"])
+
+
+@pytest.mark.parametrize(
+    "expression", ["warning (maybe + value)", "warning (a if value else b)"]
+)
+def test_valid_expression_without_markup_is_still_ambiguous(tmp_path, expression):
+    (tmp_path / "module.py").write_text("def display():\n    pass\n")
+    request = "display warning (maybe allowing a choice).\n" + expression
+    result = extract_repaired(tmp_path, request, {})
+    assert result["state"] != "usable"
+    assert not result["prose_call_corrections"]

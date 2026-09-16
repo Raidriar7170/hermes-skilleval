@@ -1,0 +1,1043 @@
+{
+  "schema": "environment-records-v1",
+  "records": [
+    {
+      "schema": "environment-readiness-v1",
+      "task_id": "sqlite-utils-issue-211",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "0dca784dbe6b75de6e4c0da4869c0b2b9574dde4",
+      "snapshot_identity": "c78023da663fa7ab17273ada78b0236ba66ff1a06c1ce20aad5beec5dd4cf2a6",
+      "original_snapshot_identity": "b75a22c14da0e44162a01b50acccf8f22c20643c29ca8a858325b76f8c93e57c",
+      "scope": "isolated-source-maintenance",
+      "profile_version": "isolated-source-maintenance-v1",
+      "profile_identity": "461e2cec80907825bf7138b19c32723d3c393f904a641d4cf90c1f95a458c165",
+      "probe_identity": "31181e9a9ee943ee7efdb58396c73041efa9ad15329e28b280796fcc721e55e2",
+      "observed_at": "2026-09-16T20:49:07.535747+00:00",
+      "runner_identity": "sha256:9ad3819ff67daf84778e1a659a78fb3da04015c48ff35541d7320661d561d4c4",
+      "base_image_identity": "sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea",
+      "wheelhouse_identity": "47fdfcb46d2c3ca1f9812d81a04c4edde264f29a54cb24b036cc200d73ced007",
+      "dependency_download": null,
+      "requirements": [
+        {
+          "id": "interpreter",
+          "required": true,
+          "source": "engineering scope: Python 3.12 Linux; setup.py Python >=3.6 where declared",
+          "observation": "Python major/minor and platform match"
+        },
+        {
+          "id": "source_import",
+          "required": true,
+          "source": "Goal M3 and exact task setup.py",
+          "observation": "installed distribution version, module origin under /opt/source, snapshot file hashes match"
+        },
+        {
+          "id": "dependencies",
+          "required": true,
+          "source": "exact task setup.py install_requires",
+          "observation": "target distribution installed plus pip check succeeds; dependency inventory recorded"
+        },
+        {
+          "id": "entrypoint",
+          "required": true,
+          "source": "exact task setup.py entry_points",
+          "observation": "target CLI --help exits zero"
+        },
+        {
+          "id": "feature",
+          "required": true,
+          "source": "public request: trigger introspection / attachment / CSV display / keyed diff",
+          "observation": "small independent SQLite trigger/attach or CSV library interface, not target bug acceptance"
+        },
+        {
+          "id": "isolation",
+          "required": true,
+          "source": "Goal fixed execution policy",
+          "observation": "Docker network none, rootfs read-only, unprivileged uid, no mounts, cap drop, tmpfs only; container network interfaces and write canaries"
+        }
+      ],
+      "observations": [
+        {
+          "probe_id": "interpreter",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-211"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "python": "3.12.14",
+            "platform": "Linux",
+            "machine": "aarch64"
+          },
+          "elapsed_seconds": 0.00020566700004565064
+        },
+        {
+          "probe_id": "source_import",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-211"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "module_origin": "/opt/source/sqlite_utils/__init__.py",
+            "distribution_version": "3.1.1",
+            "mismatches": [],
+            "checked_files": 51
+          },
+          "elapsed_seconds": 0.020325250000041706
+        },
+        {
+          "probe_id": "dependencies",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-211"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "exit_status": 0,
+            "output": "No broken requirements found.\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n",
+            "inventory": [
+              [
+                "click",
+                "8.5.0"
+              ],
+              [
+                "click-default-group",
+                "1.2.4"
+              ],
+              [
+                "packaging",
+                "26.3"
+              ],
+              [
+                "pip",
+                "25.0.1"
+              ],
+              [
+                "pytest-runner",
+                "6.0.1"
+              ],
+              [
+                "setuptools",
+                "80.10.2"
+              ],
+              [
+                "sqlite-fts4",
+                "1.0.3"
+              ],
+              [
+                "sqlite-utils",
+                "3.1.1"
+              ],
+              [
+                "tabulate",
+                "0.10.0"
+              ],
+              [
+                "wheel",
+                "0.48.0"
+              ]
+            ],
+            "inventory_sha256": "7fd8a34718823fcb62bc12f5b112bd6c658d43eb697f10b7086c0f74f1f53139"
+          },
+          "elapsed_seconds": 0.10648650000007365
+        },
+        {
+          "probe_id": "entrypoint",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-211"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "argv": [
+              "sqlite-utils",
+              "--help"
+            ],
+            "exit_status": 0,
+            "output": "Usage: sqlite-utils [OPTIONS] COMMAND [ARGS]...\n\n  Commands for interacting with a SQLite database\n\nOptions:\n  --version  Show the version and exit.\n  --help     Show this message and exit.\n\nCommands:\n  query*              Execute SQL query and return the results as JSON\n  add-column          Add a column to the specified table\n  add-foreign-key     Add a new foreign key constraint to an existing table.\n  add-foreign-keys    Add multiple new foreign key constraints to a...\n  analyze-tables      Analyze the columns in one or more tables\n  create-index        Add an index to the specified table covering the...\n  create-table        Add an index to the specified table covering the...\n  create-view         Create a view for the provided SELECT query\n  disable-fts         Disable FTS for specific table\n  disable-wal         Disable WAL for database files\n  drop-table          Drop the specified table\n  drop-view           Drop the specified view\n  enable-fts          Enable FTS for specific table and columns\n  enable-wal          Enable WAL for database files\n  extract             Extract one or more columns into a separate table\n  index-foreign-keys  Ensure every foreign key column has an index on it.\n  insert              Insert records from JSON file into a table,...\n  insert-files        Insert one or more files using BLOB columns in the...\n  optimize            Optimize all FTS tables and then run VACUUM -...\n  populate-fts        Re-populate FTS for specific table and column"
+          },
+          "elapsed_seconds": 0.05395008400000734
+        },
+        {
+          "probe_id": "feature",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-211"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "sqlite_version": "3.46.1",
+            "capability": "trigger introspection"
+          },
+          "elapsed_seconds": 0.00015250000001287844
+        },
+        {
+          "probe_id": "isolation",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-211"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "network_interfaces": [
+              "erspan0",
+              "gre0",
+              "gretap0",
+              "ip6_vti0",
+              "ip6gre0",
+              "ip6tnl0",
+              "ip_vti0",
+              "lo",
+              "sit0",
+              "tunl0"
+            ],
+            "external_route_unavailable": true,
+            "source_write_denied": true,
+            "temporary_write": true,
+            "uid": 65534,
+            "docker_socket_present": false
+          },
+          "elapsed_seconds": 0.00018862499996430415
+        }
+      ],
+      "preparation": {
+        "exit_status": 0,
+        "output": "#0 building with \"desktop-linux\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile\n#1 transferring dockerfile: 477B done\n#1 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#2 DONE 0.0s\n\n#3 [internal] load .dockerignore\n#3 transferring context: 2B done\n#3 DONE 0.0s\n\n#4 [1/6] FROM docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#4 resolve docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea done\n#4 DONE 0.0s\n\n#5 [internal] load build context\n#5 transferring context: 14.65kB done\n#5 DONE 0.0s\n\n#6 [5/6] COPY wheelhouse /opt/wheels\n#6 CACHED\n\n#7 [3/6] COPY probe-plan.json /opt/probe-plan.json\n#7 CACHED\n\n#8 [4/6] COPY environment_probe.py /opt/environment_probe.py\n#8 CACHED\n\n#9 [2/6] COPY source /opt/source\n#9 CACHED\n\n#10 [6/6] RUN python -m pip install --no-index --find-links /opt/wheels \"setuptools<81\" wheel pytest-runner && python -m pip install --no-index --find-links /opt/wheels --use-pep517 --no-build-isolation -e /opt/source\n#10 CACHED\n\n#11 exporting to image\n#11 exporting layers done\n#11 exporting manifest sha256:9ad3819ff67daf84778e1a659a78fb3da04015c48ff35541d7320661d561d4c4 done\n#11 exporting config sha256:5cc69a4b0d60d6a16492376bff451e40bc1ec66adcbc650725882fe54b1e39ef done\n#11 naming to docker.io/library/hermes-env-sqlite-utils-issue-211:bbfeaba2700e done\n#11 unpacking to docker.io/library/hermes-env-sqlite-utils-issue-211:bbfeaba2700e done\n#11 DONE 0.0s\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/x5ht8ecdzxi67kvr3igp7cpms\n",
+        "error": null,
+        "elapsed_seconds": 0.23442870800499804
+      },
+      "probe_run": {
+        "exit_status": 0,
+        "output": "{\"observations\": [{\"probe_id\": \"interpreter\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-211\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"python\": \"3.12.14\", \"platform\": \"Linux\", \"machine\": \"aarch64\"}, \"elapsed_seconds\": 0.00020566700004565064}, {\"probe_id\": \"source_import\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-211\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"module_origin\": \"/opt/source/sqlite_utils/__init__.py\", \"distribution_version\": \"3.1.1\", \"mismatches\": [], \"checked_files\": 51}, \"elapsed_seconds\": 0.020325250000041706}, {\"probe_id\": \"dependencies\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-211\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"exit_status\": 0, \"output\": \"No broken requirements found.\\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\\n\", \"inventory\": [[\"click\", \"8.5.0\"], [\"click-default-group\", \"1.2.4\"], [\"packaging\", \"26.3\"], [\"pip\", \"25.0.1\"], [\"pytest-runner\", \"6.0.1\"], [\"setuptools\", \"80.10.2\"], [\"sqlite-fts4\", \"1.0.3\"], [\"sqlite-utils\", \"3.1.1\"], [\"tabulate\", \"0.10.0\"], [\"wheel\", \"0.48.0\"]], \"inventory_sha256\": \"7fd8a34718823fcb62bc12f5b112bd6c658d43eb697f10b7086c0f74f1f53139\"}, \"elapsed_seconds\": 0.10648650000007365}, {\"probe_id\": \"entrypoint\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-211\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"argv\": [\"sqlite-utils\", \"--help\"], \"exit_status\": 0, \"output\": \"Usage: sqlite-utils [OPTIONS] COMMAND [ARGS]...\\n\\n  Commands for interacting with a SQLite database\\n\\nOptions:\\n  --version  Show the version and exit.\\n  --help     Show this message and exit.\\n\\nCommands:\\n  query*              Execute SQL query and return the results as JSON\\n  add-column          Add a column to the specified table\\n  add-foreign-key ",
+        "error": null,
+        "elapsed_seconds": 0.35475962501368485,
+        "argv": [
+          "docker",
+          "run",
+          "--name",
+          "hermes-env-probe-faf162d74f104fa4a3c3fc720d5e8031",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "--user",
+          "65534:65534",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--memory",
+          "2g",
+          "--cpus",
+          "2",
+          "--pids-limit",
+          "128",
+          "--tmpfs",
+          "/tmp:rw,nosuid,nodev,size=128m",
+          "-w",
+          "/tmp",
+          "-e",
+          "PYTHONDONTWRITEBYTECODE=1",
+          "--entrypoint",
+          "python",
+          "sha256:9ad3819ff67daf84778e1a659a78fb3da04015c48ff35541d7320661d561d4c4",
+          "/opt/environment_probe.py"
+        ]
+      },
+      "execution_authority": "NONE",
+      "required_conditions_state": "SATISFIED"
+    },
+    {
+      "schema": "environment-readiness-v1",
+      "task_id": "sqlite-utils-issue-236",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "2c1b9f2445d0ca4ca9f30a1433b7cde8cc0f42a2",
+      "snapshot_identity": "93e9cba6bd733f7bef428abf7f6bc41c4660a8087ed762092be2c61941f66037",
+      "original_snapshot_identity": "bd91c82e8903db6a82d0fe7dc347a8cb1c298ed296538e4bb045a55bfc99e5e5",
+      "scope": "isolated-source-maintenance",
+      "profile_version": "isolated-source-maintenance-v1",
+      "profile_identity": "461e2cec80907825bf7138b19c32723d3c393f904a641d4cf90c1f95a458c165",
+      "probe_identity": "31181e9a9ee943ee7efdb58396c73041efa9ad15329e28b280796fcc721e55e2",
+      "observed_at": "2026-09-16T20:49:08.239189+00:00",
+      "runner_identity": "sha256:0018ad414131d7c57d523dbd42ec60e3fc42aa4035fafd8b290975f0f5b4a06a",
+      "base_image_identity": "sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea",
+      "wheelhouse_identity": "47fdfcb46d2c3ca1f9812d81a04c4edde264f29a54cb24b036cc200d73ced007",
+      "dependency_download": null,
+      "requirements": [
+        {
+          "id": "interpreter",
+          "required": true,
+          "source": "engineering scope: Python 3.12 Linux; setup.py Python >=3.6 where declared",
+          "observation": "Python major/minor and platform match"
+        },
+        {
+          "id": "source_import",
+          "required": true,
+          "source": "Goal M3 and exact task setup.py",
+          "observation": "installed distribution version, module origin under /opt/source, snapshot file hashes match"
+        },
+        {
+          "id": "dependencies",
+          "required": true,
+          "source": "exact task setup.py install_requires",
+          "observation": "target distribution installed plus pip check succeeds; dependency inventory recorded"
+        },
+        {
+          "id": "entrypoint",
+          "required": true,
+          "source": "exact task setup.py entry_points",
+          "observation": "target CLI --help exits zero"
+        },
+        {
+          "id": "feature",
+          "required": true,
+          "source": "public request: trigger introspection / attachment / CSV display / keyed diff",
+          "observation": "small independent SQLite trigger/attach or CSV library interface, not target bug acceptance"
+        },
+        {
+          "id": "isolation",
+          "required": true,
+          "source": "Goal fixed execution policy",
+          "observation": "Docker network none, rootfs read-only, unprivileged uid, no mounts, cap drop, tmpfs only; container network interfaces and write canaries"
+        }
+      ],
+      "observations": [
+        {
+          "probe_id": "interpreter",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-236"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "python": "3.12.14",
+            "platform": "Linux",
+            "machine": "aarch64"
+          },
+          "elapsed_seconds": 0.00012749999996231054
+        },
+        {
+          "probe_id": "source_import",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-236"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "module_origin": "/opt/source/sqlite_utils/__init__.py",
+            "distribution_version": "3.5",
+            "mismatches": [],
+            "checked_files": 58
+          },
+          "elapsed_seconds": 0.021346833999928094
+        },
+        {
+          "probe_id": "dependencies",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-236"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "exit_status": 0,
+            "output": "No broken requirements found.\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n",
+            "inventory": [
+              [
+                "click",
+                "8.5.0"
+              ],
+              [
+                "click-default-group",
+                "1.2.4"
+              ],
+              [
+                "packaging",
+                "26.3"
+              ],
+              [
+                "pip",
+                "25.0.1"
+              ],
+              [
+                "pytest-runner",
+                "6.0.1"
+              ],
+              [
+                "setuptools",
+                "80.10.2"
+              ],
+              [
+                "sqlite-fts4",
+                "1.0.3"
+              ],
+              [
+                "sqlite-utils",
+                "3.5"
+              ],
+              [
+                "tabulate",
+                "0.10.0"
+              ],
+              [
+                "wheel",
+                "0.48.0"
+              ]
+            ],
+            "inventory_sha256": "c27601495d063796f03eb927764ef06f212d496599e229ab4a6a93fe156e4c70"
+          },
+          "elapsed_seconds": 0.12195129199994881
+        },
+        {
+          "probe_id": "entrypoint",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-236"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "argv": [
+              "sqlite-utils",
+              "--help"
+            ],
+            "exit_status": 0,
+            "output": "Usage: sqlite-utils [OPTIONS] COMMAND [ARGS]...\n\n  Commands for interacting with a SQLite database\n\nOptions:\n  --version  Show the version and exit.\n  --help     Show this message and exit.\n\nCommands:\n  query*              Execute SQL query and return the results as JSON\n  add-column          Add a column to the specified table\n  add-foreign-key     Add a new foreign key constraint to an existing table.\n  add-foreign-keys    Add multiple new foreign key constraints to a...\n  analyze-tables      Analyze the columns in one or more tables\n  create-index        Add an index to the specified table covering the...\n  create-table        Add an index to the specified table covering the...\n  create-view         Create a view for the provided SELECT query\n  disable-fts         Disable FTS for specific table\n  disable-wal         Disable WAL for database files\n  drop-table          Drop the specified table\n  drop-view           Drop the specified view\n  enable-counts       Configure triggers to update a _counts table with...\n  enable-fts          Enable FTS for specific table and columns\n  enable-wal          Enable WAL for database files\n  extract             Extract one or more columns into a separate table\n  index-foreign-keys  Ensure every foreign key column has an index on it.\n  insert              Insert records from JSON file into a table,...\n  insert-files        Insert one or more files using BLOB columns in the...\n  optimize            Optimize all FTS tables and then run VACU"
+          },
+          "elapsed_seconds": 0.0591762500000641
+        },
+        {
+          "probe_id": "feature",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-236"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "sqlite_version": "3.46.1",
+            "capability": "ATTACH in-memory database"
+          },
+          "elapsed_seconds": 0.00012033399991651095
+        },
+        {
+          "probe_id": "isolation",
+          "parameters": {
+            "profile_task": "sqlite-utils-issue-236"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "network_interfaces": [
+              "erspan0",
+              "gre0",
+              "gretap0",
+              "ip6_vti0",
+              "ip6gre0",
+              "ip6tnl0",
+              "ip_vti0",
+              "lo",
+              "sit0",
+              "tunl0"
+            ],
+            "external_route_unavailable": true,
+            "source_write_denied": true,
+            "temporary_write": true,
+            "uid": 65534,
+            "docker_socket_present": false
+          },
+          "elapsed_seconds": 0.00019724999992831727
+        }
+      ],
+      "preparation": {
+        "exit_status": 0,
+        "output": "#0 building with \"desktop-linux\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile\n#1 transferring dockerfile: 477B done\n#1 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#2 DONE 0.0s\n\n#3 [internal] load .dockerignore\n#3 transferring context: 2B done\n#3 DONE 0.0s\n\n#4 [1/6] FROM docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#4 resolve docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea done\n#4 DONE 0.0s\n\n#5 [internal] load build context\n#5 transferring context: 15.70kB done\n#5 DONE 0.0s\n\n#6 [2/6] COPY source /opt/source\n#6 CACHED\n\n#7 [4/6] COPY environment_probe.py /opt/environment_probe.py\n#7 CACHED\n\n#8 [3/6] COPY probe-plan.json /opt/probe-plan.json\n#8 CACHED\n\n#9 [5/6] COPY wheelhouse /opt/wheels\n#9 CACHED\n\n#10 [6/6] RUN python -m pip install --no-index --find-links /opt/wheels \"setuptools<81\" wheel pytest-runner && python -m pip install --no-index --find-links /opt/wheels --use-pep517 --no-build-isolation -e /opt/source\n#10 CACHED\n\n#11 exporting to image\n#11 exporting layers done\n#11 exporting manifest sha256:0018ad414131d7c57d523dbd42ec60e3fc42aa4035fafd8b290975f0f5b4a06a done\n#11 exporting config sha256:b7b2bae15bbdef633bd99a807252214e3625ceb40c9ec6b69dfc1c8c231fec2c done\n#11 naming to docker.io/library/hermes-env-sqlite-utils-issue-236:67bd95806f47 done\n#11 unpacking to docker.io/library/hermes-env-sqlite-utils-issue-236:67bd95806f47 done\n#11 DONE 0.0s\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/x3ppfryvv0s0ddmxsyryjy2iz\n",
+        "error": null,
+        "elapsed_seconds": 0.18543450001743622
+      },
+      "probe_run": {
+        "exit_status": 0,
+        "output": "{\"observations\": [{\"probe_id\": \"interpreter\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-236\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"python\": \"3.12.14\", \"platform\": \"Linux\", \"machine\": \"aarch64\"}, \"elapsed_seconds\": 0.00012749999996231054}, {\"probe_id\": \"source_import\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-236\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"module_origin\": \"/opt/source/sqlite_utils/__init__.py\", \"distribution_version\": \"3.5\", \"mismatches\": [], \"checked_files\": 58}, \"elapsed_seconds\": 0.021346833999928094}, {\"probe_id\": \"dependencies\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-236\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"exit_status\": 0, \"output\": \"No broken requirements found.\\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\\n\", \"inventory\": [[\"click\", \"8.5.0\"], [\"click-default-group\", \"1.2.4\"], [\"packaging\", \"26.3\"], [\"pip\", \"25.0.1\"], [\"pytest-runner\", \"6.0.1\"], [\"setuptools\", \"80.10.2\"], [\"sqlite-fts4\", \"1.0.3\"], [\"sqlite-utils\", \"3.5\"], [\"tabulate\", \"0.10.0\"], [\"wheel\", \"0.48.0\"]], \"inventory_sha256\": \"c27601495d063796f03eb927764ef06f212d496599e229ab4a6a93fe156e4c70\"}, \"elapsed_seconds\": 0.12195129199994881}, {\"probe_id\": \"entrypoint\", \"parameters\": {\"profile_task\": \"sqlite-utils-issue-236\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"argv\": [\"sqlite-utils\", \"--help\"], \"exit_status\": 0, \"output\": \"Usage: sqlite-utils [OPTIONS] COMMAND [ARGS]...\\n\\n  Commands for interacting with a SQLite database\\n\\nOptions:\\n  --version  Show the version and exit.\\n  --help     Show this message and exit.\\n\\nCommands:\\n  query*              Execute SQL query and return the results as JSON\\n  add-column          Add a column to the specified table\\n  add-foreign-key     ",
+        "error": null,
+        "elapsed_seconds": 0.36416745799942873,
+        "argv": [
+          "docker",
+          "run",
+          "--name",
+          "hermes-env-probe-dc796b0e74ea4fe7af112bdcfdd3eb5a",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "--user",
+          "65534:65534",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--memory",
+          "2g",
+          "--cpus",
+          "2",
+          "--pids-limit",
+          "128",
+          "--tmpfs",
+          "/tmp:rw,nosuid,nodev,size=128m",
+          "-w",
+          "/tmp",
+          "-e",
+          "PYTHONDONTWRITEBYTECODE=1",
+          "--entrypoint",
+          "python",
+          "sha256:0018ad414131d7c57d523dbd42ec60e3fc42aa4035fafd8b290975f0f5b4a06a",
+          "/opt/environment_probe.py"
+        ]
+      },
+      "execution_authority": "NONE",
+      "required_conditions_state": "SATISFIED"
+    },
+    {
+      "schema": "environment-readiness-v1",
+      "task_id": "csvkit-issue-1148",
+      "repository": "wireservice/csvkit",
+      "source_revision": "74e6934094e0215d1a3e58f0d9e16937f1f19484",
+      "snapshot_identity": "774e7ddb2ddbc3f8a8c698d08368b326c1ef8fcac931605f328f7cbbb57d58d0",
+      "original_snapshot_identity": "0f5f3b7852df961469cca51e94f3bcdb47233ff80b27ad65d0a46e7ee7ee021d",
+      "scope": "isolated-source-maintenance",
+      "profile_version": "isolated-source-maintenance-v1",
+      "profile_identity": "461e2cec80907825bf7138b19c32723d3c393f904a641d4cf90c1f95a458c165",
+      "probe_identity": "31181e9a9ee943ee7efdb58396c73041efa9ad15329e28b280796fcc721e55e2",
+      "observed_at": "2026-09-16T20:49:09.003464+00:00",
+      "runner_identity": "sha256:3a5b97b332a8292665493862178e089a92c09d0b8ce44df263aa5dfd8b0f3041",
+      "base_image_identity": "sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea",
+      "wheelhouse_identity": "392c5f6e38b3b5cde9a2a0e10839ae22927bc56869d40d2ce8f974c95a7a1667",
+      "dependency_download": null,
+      "requirements": [
+        {
+          "id": "interpreter",
+          "required": true,
+          "source": "engineering scope: Python 3.12 Linux; setup.py Python >=3.6 where declared",
+          "observation": "Python major/minor and platform match"
+        },
+        {
+          "id": "source_import",
+          "required": true,
+          "source": "Goal M3 and exact task setup.py",
+          "observation": "installed distribution version, module origin under /opt/source, snapshot file hashes match"
+        },
+        {
+          "id": "dependencies",
+          "required": true,
+          "source": "exact task setup.py install_requires",
+          "observation": "target distribution installed plus pip check succeeds; dependency inventory recorded"
+        },
+        {
+          "id": "entrypoint",
+          "required": true,
+          "source": "exact task setup.py entry_points",
+          "observation": "target CLI --help exits zero"
+        },
+        {
+          "id": "feature",
+          "required": true,
+          "source": "public request: trigger introspection / attachment / CSV display / keyed diff",
+          "observation": "small independent SQLite trigger/attach or CSV library interface, not target bug acceptance"
+        },
+        {
+          "id": "isolation",
+          "required": true,
+          "source": "Goal fixed execution policy",
+          "observation": "Docker network none, rootfs read-only, unprivileged uid, no mounts, cap drop, tmpfs only; container network interfaces and write canaries"
+        }
+      ],
+      "observations": [
+        {
+          "probe_id": "interpreter",
+          "parameters": {
+            "profile_task": "csvkit-issue-1148"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "python": "3.12.14",
+            "platform": "Linux",
+            "machine": "aarch64"
+          },
+          "elapsed_seconds": 9.458400006678858e-05
+        },
+        {
+          "probe_id": "source_import",
+          "parameters": {
+            "profile_task": "csvkit-issue-1148"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "module_origin": "/opt/source/csvkit/__init__.py",
+            "distribution_version": "1.0.6",
+            "mismatches": [],
+            "checked_files": 177
+          },
+          "elapsed_seconds": 0.0660594170000195
+        },
+        {
+          "probe_id": "dependencies",
+          "parameters": {
+            "profile_task": "csvkit-issue-1148"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "exit_status": 0,
+            "output": "No broken requirements found.\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n",
+            "inventory": [
+              [
+                "SQLAlchemy",
+                "2.0.54"
+              ],
+              [
+                "agate",
+                "1.14.2"
+              ],
+              [
+                "agate-dbf",
+                "0.2.4"
+              ],
+              [
+                "agate-excel",
+                "0.4.2"
+              ],
+              [
+                "agate-sql",
+                "0.7.3"
+              ],
+              [
+                "babel",
+                "2.18.0"
+              ],
+              [
+                "csvkit",
+                "1.0.6"
+              ],
+              [
+                "dbfread",
+                "2.0.7"
+              ],
+              [
+                "et_xmlfile",
+                "2.0.0"
+              ],
+              [
+                "greenlet",
+                "3.5.6"
+              ],
+              [
+                "isodate",
+                "0.7.2"
+              ],
+              [
+                "leather",
+                "0.4.1"
+              ],
+              [
+                "olefile",
+                "0.47"
+              ],
+              [
+                "openpyxl",
+                "3.1.5"
+              ],
+              [
+                "packaging",
+                "26.3"
+              ],
+              [
+                "parsedatetime",
+                "2.6"
+              ],
+              [
+                "pip",
+                "25.0.1"
+              ],
+              [
+                "pytest-runner",
+                "6.0.1"
+              ],
+              [
+                "python-slugify",
+                "9.0.0"
+              ],
+              [
+                "pytimeparse",
+                "1.1.8"
+              ],
+              [
+                "setuptools",
+                "80.10.2"
+              ],
+              [
+                "six",
+                "1.17.0"
+              ],
+              [
+                "text-unidecode",
+                "1.3"
+              ],
+              [
+                "typing_extensions",
+                "4.16.0"
+              ],
+              [
+                "wheel",
+                "0.48.0"
+              ],
+              [
+                "xlrd",
+                "2.0.2"
+              ]
+            ],
+            "inventory_sha256": "1b8b5f910bac614e978395bb4e1210d03437c38217497632575604af4e1ba868"
+          },
+          "elapsed_seconds": 0.11892045900003723
+        },
+        {
+          "probe_id": "entrypoint",
+          "parameters": {
+            "profile_task": "csvkit-issue-1148"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "argv": [
+              "csvlook",
+              "--help"
+            ],
+            "exit_status": 0,
+            "output": "usage: csvlook [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n               [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]\n               [-S] [--blanks] [--date-format DATE_FORMAT]\n               [--datetime-format DATETIME_FORMAT] [-H] [-K SKIP_LINES] [-v]\n               [-l] [--zero] [-V] [--max-rows MAX_ROWS]\n               [--max-columns MAX_COLUMNS]\n               [--max-column-width MAX_COLUMN_WIDTH] [-y SNIFF_LIMIT] [-I]\n               [FILE]\n\nRender a CSV file in the console as a Markdown-compatible, fixed-width table.\n\npositional arguments:\n  FILE                  The CSV file to operate on. If omitted, will accept\n                        input as piped data via STDIN.\n\noptions:\n  -h, --help            show this help message and exit\n  -d DELIMITER, --delimiter DELIMITER\n                        Delimiting character of the input CSV file.\n  -t, --tabs            Specify that the input CSV file is delimited with\n                        tabs. Overrides \"-d\".\n  -q QUOTECHAR, --quotechar QUOTECHAR\n                        Character used to quote strings in the input CSV file.\n  -u {0,1,2,3}, --quoting {0,1,2,3}\n                        Quoting style used in the input CSV file. 0 = Quote\n                        Minimal, 1 = Quote All, 2 = Quote Non-numeric, 3 =\n                        Quote None.\n  -b, --no-doublequote  Whether or not double quotes are doubled in the input\n                        CSV file.\n  -p ESCAPECHAR, --escapechar ESCAPEC"
+          },
+          "elapsed_seconds": 0.06102249999992182
+        },
+        {
+          "probe_id": "feature",
+          "parameters": {
+            "profile_task": "csvkit-issue-1148"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "capability": "CSVLook minimal CSV rendering"
+          },
+          "elapsed_seconds": 0.009496916999978566
+        },
+        {
+          "probe_id": "isolation",
+          "parameters": {
+            "profile_task": "csvkit-issue-1148"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "network_interfaces": [
+              "erspan0",
+              "gre0",
+              "gretap0",
+              "ip6_vti0",
+              "ip6gre0",
+              "ip6tnl0",
+              "ip_vti0",
+              "lo",
+              "sit0",
+              "tunl0"
+            ],
+            "external_route_unavailable": true,
+            "source_write_denied": true,
+            "temporary_write": true,
+            "uid": 65534,
+            "docker_socket_present": false
+          },
+          "elapsed_seconds": 0.0001379170000745944
+        }
+      ],
+      "preparation": {
+        "exit_status": 0,
+        "output": "#0 building with \"desktop-linux\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile\n#1 transferring dockerfile: 477B done\n#1 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#2 DONE 0.0s\n\n#3 [internal] load .dockerignore\n#3 transferring context: 2B done\n#3 DONE 0.0s\n\n#4 [1/6] FROM docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#4 resolve docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea done\n#4 DONE 0.0s\n\n#5 [internal] load build context\n#5 transferring context: 36.24kB done\n#5 DONE 0.0s\n\n#6 [5/6] COPY wheelhouse /opt/wheels\n#6 CACHED\n\n#7 [2/6] COPY source /opt/source\n#7 CACHED\n\n#8 [3/6] COPY probe-plan.json /opt/probe-plan.json\n#8 CACHED\n\n#9 [4/6] COPY environment_probe.py /opt/environment_probe.py\n#9 CACHED\n\n#10 [6/6] RUN python -m pip install --no-index --find-links /opt/wheels \"setuptools<81\" wheel pytest-runner && python -m pip install --no-index --find-links /opt/wheels --use-pep517 --no-build-isolation -e /opt/source\n#10 CACHED\n\n#11 exporting to image\n#11 exporting layers done\n#11 exporting manifest sha256:3a5b97b332a8292665493862178e089a92c09d0b8ce44df263aa5dfd8b0f3041 done\n#11 exporting config sha256:a673c9588e5d7c051793e455f75c0c0fd8cd0f25b30d21a17e807cf5a7156c38 done\n#11 naming to docker.io/library/hermes-env-csvkit-issue-1148:ea22835f3e59 done\n#11 unpacking to docker.io/library/hermes-env-csvkit-issue-1148:ea22835f3e59 done\n#11 DONE 0.0s\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/q74212dpixox4ydnlc2151ias\n",
+        "error": null,
+        "elapsed_seconds": 0.18339787499280646
+      },
+      "probe_run": {
+        "exit_status": 0,
+        "output": "{\"observations\": [{\"probe_id\": \"interpreter\", \"parameters\": {\"profile_task\": \"csvkit-issue-1148\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"python\": \"3.12.14\", \"platform\": \"Linux\", \"machine\": \"aarch64\"}, \"elapsed_seconds\": 9.458400006678858e-05}, {\"probe_id\": \"source_import\", \"parameters\": {\"profile_task\": \"csvkit-issue-1148\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"module_origin\": \"/opt/source/csvkit/__init__.py\", \"distribution_version\": \"1.0.6\", \"mismatches\": [], \"checked_files\": 177}, \"elapsed_seconds\": 0.0660594170000195}, {\"probe_id\": \"dependencies\", \"parameters\": {\"profile_task\": \"csvkit-issue-1148\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"exit_status\": 0, \"output\": \"No broken requirements found.\\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\\n\", \"inventory\": [[\"SQLAlchemy\", \"2.0.54\"], [\"agate\", \"1.14.2\"], [\"agate-dbf\", \"0.2.4\"], [\"agate-excel\", \"0.4.2\"], [\"agate-sql\", \"0.7.3\"], [\"babel\", \"2.18.0\"], [\"csvkit\", \"1.0.6\"], [\"dbfread\", \"2.0.7\"], [\"et_xmlfile\", \"2.0.0\"], [\"greenlet\", \"3.5.6\"], [\"isodate\", \"0.7.2\"], [\"leather\", \"0.4.1\"], [\"olefile\", \"0.47\"], [\"openpyxl\", \"3.1.5\"], [\"packaging\", \"26.3\"], [\"parsedatetime\", \"2.6\"], [\"pip\", \"25.0.1\"], [\"pytest-runner\", \"6.0.1\"], [\"python-slugify\", \"9.0.0\"], [\"pytimeparse\", \"1.1.8\"], [\"setuptools\", \"80.10.2\"], [\"six\", \"1.17.0\"], [\"text-unidecode\", \"1.3\"], [\"typing_extensions\", \"4.16.0\"], [\"wheel\", \"0.48.0\"], [\"xlrd\", \"2.0.2\"]], \"inventory_sha256\": \"1b8b5f910bac614e978395bb4e1210d03437c38217497632575604af4e1ba868\"}, \"elapsed_seconds\": 0.11892045900003723}, {\"probe_id\": \"entrypoint\", \"parameters\": {\"profile_task\": \"csvkit-issue-1148\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"argv\": [\"csvlook\", \"--help\"], \"exit_status\": 0, \"output\": \"usage: csvlook [-h] [-d",
+        "error": null,
+        "elapsed_seconds": 0.4452010410022922,
+        "argv": [
+          "docker",
+          "run",
+          "--name",
+          "hermes-env-probe-7c8e5e24f5c544e297623d905a557ec0",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "--user",
+          "65534:65534",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--memory",
+          "2g",
+          "--cpus",
+          "2",
+          "--pids-limit",
+          "128",
+          "--tmpfs",
+          "/tmp:rw,nosuid,nodev,size=128m",
+          "-w",
+          "/tmp",
+          "-e",
+          "PYTHONDONTWRITEBYTECODE=1",
+          "--entrypoint",
+          "python",
+          "sha256:3a5b97b332a8292665493862178e089a92c09d0b8ce44df263aa5dfd8b0f3041",
+          "/opt/environment_probe.py"
+        ]
+      },
+      "execution_authority": "NONE",
+      "required_conditions_state": "SATISFIED"
+    },
+    {
+      "schema": "environment-readiness-v1",
+      "task_id": "csv-diff-issue-31",
+      "repository": "simonw/csv-diff",
+      "source_revision": "33e0a5918283c02a339a1fb507fc7a9cda89a198",
+      "snapshot_identity": "c919b1b13fec1fcadfd712ab7bd8e90c5500ec8ee00b9ec452e04b64bdd0e9ff",
+      "original_snapshot_identity": "480b39cdd0761a3eead36dccd351503d38e911482dc1483ef2662a29d0c82355",
+      "scope": "isolated-source-maintenance",
+      "profile_version": "isolated-source-maintenance-v1",
+      "profile_identity": "461e2cec80907825bf7138b19c32723d3c393f904a641d4cf90c1f95a458c165",
+      "probe_identity": "31181e9a9ee943ee7efdb58396c73041efa9ad15329e28b280796fcc721e55e2",
+      "observed_at": "2026-09-16T20:49:09.647834+00:00",
+      "runner_identity": "sha256:854bdff8b4b212c8237029ecec6c27b28bb0ea7aaea2ad264bdc748604a3c821",
+      "base_image_identity": "sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea",
+      "wheelhouse_identity": "2c5e943187b03a28da7cf8953871840dac7e39ea902682a4a4ce32305da4b54c",
+      "dependency_download": null,
+      "requirements": [
+        {
+          "id": "interpreter",
+          "required": true,
+          "source": "engineering scope: Python 3.12 Linux; setup.py Python >=3.6 where declared",
+          "observation": "Python major/minor and platform match"
+        },
+        {
+          "id": "source_import",
+          "required": true,
+          "source": "Goal M3 and exact task setup.py",
+          "observation": "installed distribution version, module origin under /opt/source, snapshot file hashes match"
+        },
+        {
+          "id": "dependencies",
+          "required": true,
+          "source": "exact task setup.py install_requires",
+          "observation": "target distribution installed plus pip check succeeds; dependency inventory recorded"
+        },
+        {
+          "id": "entrypoint",
+          "required": true,
+          "source": "exact task setup.py entry_points",
+          "observation": "target CLI --help exits zero"
+        },
+        {
+          "id": "feature",
+          "required": true,
+          "source": "public request: trigger introspection / attachment / CSV display / keyed diff",
+          "observation": "small independent SQLite trigger/attach or CSV library interface, not target bug acceptance"
+        },
+        {
+          "id": "isolation",
+          "required": true,
+          "source": "Goal fixed execution policy",
+          "observation": "Docker network none, rootfs read-only, unprivileged uid, no mounts, cap drop, tmpfs only; container network interfaces and write canaries"
+        }
+      ],
+      "observations": [
+        {
+          "probe_id": "interpreter",
+          "parameters": {
+            "profile_task": "csv-diff-issue-31"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "python": "3.12.14",
+            "platform": "Linux",
+            "machine": "aarch64"
+          },
+          "elapsed_seconds": 0.00011141699997097021
+        },
+        {
+          "probe_id": "source_import",
+          "parameters": {
+            "profile_task": "csv-diff-issue-31"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "module_origin": "/opt/source/csv_diff/__init__.py",
+            "distribution_version": "1.1",
+            "mismatches": [],
+            "checked_files": 13
+          },
+          "elapsed_seconds": 0.002200791000063873
+        },
+        {
+          "probe_id": "dependencies",
+          "parameters": {
+            "profile_task": "csv-diff-issue-31"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "exit_status": 0,
+            "output": "No broken requirements found.\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n",
+            "inventory": [
+              [
+                "click",
+                "8.5.0"
+              ],
+              [
+                "csv-diff",
+                "1.1"
+              ],
+              [
+                "dictdiffer",
+                "0.10.0"
+              ],
+              [
+                "packaging",
+                "26.3"
+              ],
+              [
+                "pip",
+                "25.0.1"
+              ],
+              [
+                "pytest-runner",
+                "6.0.1"
+              ],
+              [
+                "setuptools",
+                "80.10.2"
+              ],
+              [
+                "wheel",
+                "0.48.0"
+              ]
+            ],
+            "inventory_sha256": "2969f72ab8bffbe86f4256eed316f7cf24eebd89880b3ca8a08ae41dee3b0fb6"
+          },
+          "elapsed_seconds": 0.1049204580000378
+        },
+        {
+          "probe_id": "entrypoint",
+          "parameters": {
+            "profile_task": "csv-diff-issue-31"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "argv": [
+              "csv-diff",
+              "--help"
+            ],
+            "exit_status": 0,
+            "output": "Usage: csv-diff [OPTIONS] PREVIOUS CURRENT\n\n  Diff two CSV or JSON files\n\nOptions:\n  --version                Show the version and exit.\n  --key TEXT               Column to use as a unique ID for each row\n  --format [csv|tsv|json]  Explicitly specify input format (csv, tsv, json)\n                           instead of auto-detecting\n  --json                   Output changes as JSON\n  --singular TEXT          Singular word to use, e.g. 'tree' for '1 tree'\n  --plural TEXT            Plural word to use, e.g. 'trees' for '2 trees'\n  --show-unchanged         Show unchanged fields for rows with at least one\n                           change\n  --help                   Show this message and exit.\n"
+          },
+          "elapsed_seconds": 0.026323667000042406
+        },
+        {
+          "probe_id": "feature",
+          "parameters": {
+            "profile_task": "csv-diff-issue-31"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "capability": "unique-key load_csv/compare identical input"
+          },
+          "elapsed_seconds": 0.0003830000000561995
+        },
+        {
+          "probe_id": "isolation",
+          "parameters": {
+            "profile_task": "csv-diff-issue-31"
+          },
+          "exit_status": 0,
+          "state": "SATISFIED",
+          "details": {
+            "network_interfaces": [
+              "erspan0",
+              "gre0",
+              "gretap0",
+              "ip6_vti0",
+              "ip6gre0",
+              "ip6tnl0",
+              "ip_vti0",
+              "lo",
+              "sit0",
+              "tunl0"
+            ],
+            "external_route_unavailable": true,
+            "source_write_denied": true,
+            "temporary_write": true,
+            "uid": 65534,
+            "docker_socket_present": false
+          },
+          "elapsed_seconds": 0.00016787499998827116
+        }
+      ],
+      "preparation": {
+        "exit_status": 0,
+        "output": "#0 building with \"desktop-linux\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile\n#1 transferring dockerfile: 477B done\n#1 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#2 DONE 0.0s\n\n#3 [internal] load .dockerignore\n#3 transferring context: 2B done\n#3 DONE 0.0s\n\n#4 [1/6] FROM docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea\n#4 resolve docker.io/library/python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea done\n#4 DONE 0.0s\n\n#5 [internal] load build context\n#5 transferring context: 9.11kB done\n#5 DONE 0.0s\n\n#6 [3/6] COPY probe-plan.json /opt/probe-plan.json\n#6 CACHED\n\n#7 [4/6] COPY environment_probe.py /opt/environment_probe.py\n#7 CACHED\n\n#8 [5/6] COPY wheelhouse /opt/wheels\n#8 CACHED\n\n#9 [2/6] COPY source /opt/source\n#9 CACHED\n\n#10 [6/6] RUN python -m pip install --no-index --find-links /opt/wheels \"setuptools<81\" wheel pytest-runner && python -m pip install --no-index --find-links /opt/wheels --use-pep517 --no-build-isolation -e /opt/source\n#10 CACHED\n\n#11 exporting to image\n#11 exporting layers done\n#11 exporting manifest sha256:854bdff8b4b212c8237029ecec6c27b28bb0ea7aaea2ad264bdc748604a3c821 done\n#11 exporting config sha256:d49cd2d8309d67957b7719c9756e8c59b3fc5244cc70d8aeec4bc7f6c6a2f8e0 done\n#11 naming to docker.io/library/hermes-env-csv-diff-issue-31:57287b48637c done\n#11 unpacking to docker.io/library/hermes-env-csv-diff-issue-31:57287b48637c done\n#11 DONE 0.0s\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/f1g2ge3du8z1uzjat3nthwdxn\n",
+        "error": null,
+        "elapsed_seconds": 0.22165366701665334
+      },
+      "probe_run": {
+        "exit_status": 0,
+        "output": "{\"observations\": [{\"probe_id\": \"interpreter\", \"parameters\": {\"profile_task\": \"csv-diff-issue-31\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"python\": \"3.12.14\", \"platform\": \"Linux\", \"machine\": \"aarch64\"}, \"elapsed_seconds\": 0.00011141699997097021}, {\"probe_id\": \"source_import\", \"parameters\": {\"profile_task\": \"csv-diff-issue-31\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"module_origin\": \"/opt/source/csv_diff/__init__.py\", \"distribution_version\": \"1.1\", \"mismatches\": [], \"checked_files\": 13}, \"elapsed_seconds\": 0.002200791000063873}, {\"probe_id\": \"dependencies\", \"parameters\": {\"profile_task\": \"csv-diff-issue-31\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"exit_status\": 0, \"output\": \"No broken requirements found.\\nWARNING: The directory '/nonexistent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\\n\", \"inventory\": [[\"click\", \"8.5.0\"], [\"csv-diff\", \"1.1\"], [\"dictdiffer\", \"0.10.0\"], [\"packaging\", \"26.3\"], [\"pip\", \"25.0.1\"], [\"pytest-runner\", \"6.0.1\"], [\"setuptools\", \"80.10.2\"], [\"wheel\", \"0.48.0\"]], \"inventory_sha256\": \"2969f72ab8bffbe86f4256eed316f7cf24eebd89880b3ca8a08ae41dee3b0fb6\"}, \"elapsed_seconds\": 0.1049204580000378}, {\"probe_id\": \"entrypoint\", \"parameters\": {\"profile_task\": \"csv-diff-issue-31\"}, \"exit_status\": 0, \"state\": \"SATISFIED\", \"details\": {\"argv\": [\"csv-diff\", \"--help\"], \"exit_status\": 0, \"output\": \"Usage: csv-diff [OPTIONS] PREVIOUS CURRENT\\n\\n  Diff two CSV or JSON files\\n\\nOptions:\\n  --version                Show the version and exit.\\n  --key TEXT               Column to use as a unique ID for each row\\n  --format [csv|tsv|json]  Explicitly specify input format (csv, tsv, json)\\n                           instead of auto-detecting\\n  --json                   Output changes as JSON\\n  --singular TEXT          Singular word to use, e.g. 'tree",
+        "error": null,
+        "elapsed_seconds": 0.31045916699804366,
+        "argv": [
+          "docker",
+          "run",
+          "--name",
+          "hermes-env-probe-c2cc4ae0dbea48dca68f22c9c49663d2",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "--user",
+          "65534:65534",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--memory",
+          "2g",
+          "--cpus",
+          "2",
+          "--pids-limit",
+          "128",
+          "--tmpfs",
+          "/tmp:rw,nosuid,nodev,size=128m",
+          "-w",
+          "/tmp",
+          "-e",
+          "PYTHONDONTWRITEBYTECODE=1",
+          "--entrypoint",
+          "python",
+          "sha256:854bdff8b4b212c8237029ecec6c27b28bb0ea7aaea2ad264bdc748604a3c821",
+          "/opt/environment_probe.py"
+        ]
+      },
+      "execution_authority": "NONE",
+      "required_conditions_state": "SATISFIED"
+    }
+  ]
+}
