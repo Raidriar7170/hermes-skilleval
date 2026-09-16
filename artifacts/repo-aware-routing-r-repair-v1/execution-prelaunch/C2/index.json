@@ -1,0 +1,340 @@
+{
+  "schema": "repo-aware-public-execution-v1",
+  "protocol_sha256": "ce17f84afe8723cf732b4bfeb6d39e4cacfc96f7638fb4b8aedcb39491a74d63",
+  "routing_config_sha256": "e359e8c4894357203fd3704e93672ac53867e53f99b489d0d2b800a67acb3f8f",
+  "registry_sha256": "0f6e9838c15a5c07d1eedd6670565c92ef0b1b0485f20bb5cc2d1fd362f9fbd3",
+  "ledger_sha256": "0d749a17d620a11ee52fd62abe2a12b37091a73b2a88d5767876bb046be11f3b",
+  "protocol_lock_matches": true,
+  "dollars": null,
+  "cells": [
+    {
+      "run_id": "repair-smoke-delete-transaction-c2-001",
+      "actual_run_id": "repair-smoke-delete-transaction-c2-001",
+      "actual_arm": "N",
+      "routing_skill_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "task_id": "sqlite-utils-delete-transaction",
+      "repository": "simonw/sqlite-utils",
+      "family_id": "delete-transaction",
+      "family_source": "protocol",
+      "policy": "repo-aware",
+      "repeat": 1,
+      "execution_status": "EXECUTOR_ERROR",
+      "exit_code": null,
+      "timed_out": null,
+      "error_present": true,
+      "parse_errors": [],
+      "run_sha256": "7d25da92e6ba7250cf9c778687af0c5bba81f188ca2ff162b49e21e6dab66014",
+      "executor_sha256": "26d0d4dceab42b998f9f3496a15fba605ef0f2ea4c8e7ff2954d1150caaf340b",
+      "routing_sha256": "209f25965420803f3267c418a04a567d5f1a6e64b858c10e14c95a89e3fd73f4",
+      "qualification_sha256": "5eb7562873f04abf0677e031c5817751221d195f351e2a62778ac015aa5f5d01",
+      "base_commit": "f3c012774a609999e65d49f032f354315dda6cb9",
+      "registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "r_version": "106e82d2fb4c10183b06c8023d882be5756767954efb1cda16b78114482db011",
+      "routing_policy": "repo-aware",
+      "routing_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+      "source_sha256": {
+        "hermes_skilleval/_maintenance/execution.py": "3eee38316dce8b39082343b0606d60231174fc81dd31cd5463e16e23fc1fdaa3",
+        "hermes_skilleval/_maintenance/check.py": "5b888d883a114d61fbfcecb952375b049cecefb9074fa65cf3878739723b27c9",
+        "hermes_skilleval/repository_maintenance.py": "ea4b035d3cc7531f5cf6ea28305f836a0d86686d53eb2879320db1e8d751ca9b"
+      },
+      "action": "N",
+      "features": [
+        124.0,
+        1.0,
+        61.0,
+        4.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "adapter_sha256": "b254f34cfbc25a93435563773bd12155b206118e0f438e9c27704c234044a774",
+      "context_digest": "3db6d4a6ee2e90f7b5bcb9d4eaaef2e804084ce9785640ba02d74e3ffcbdbd18",
+      "context_supported": true,
+      "context_wall_seconds": 0.09046412497991696,
+      "context_cache_hit": false,
+      "selected_ids": [
+        "systematic-debugging",
+        "verification-before-completion",
+        "cli-api-regression",
+        "schema-change-regression",
+        "import-data-regression"
+      ],
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timing": {
+        "pipeline_wall_seconds": 14.111891999986256,
+        "execution_seconds": 0.03877291700337082,
+        "package_prepare_seconds": 0.02083074999973178,
+        "capture_seconds": 0.369321249978384,
+        "finalize_seconds": 5.485955749987625
+      },
+      "calls": {
+        "heavy_constructors": 3,
+        "encoder_queries": 1,
+        "reranker_forwards": 10
+      },
+      "usage": null,
+      "patch": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "path": "repair-smoke-delete-transaction-c2-001/candidate.patch",
+        "status": "EXPORTED",
+        "run_binding_matches": true
+      },
+      "checks": {
+        "target": {
+          "status": "EXPORTED",
+          "junit": "repair-smoke-delete-transaction-c2-001/target.xml",
+          "junit_sha256": "8ca9f9d5d09070f985a67286e01661ac09cd2f704b121358daebf17689f1732a",
+          "raw_junit_sha256": "2b3cd37c7bc9362cf123e361a54adb315b068202219389c1924543eae8b40eb7",
+          "result_sha256": "11f329405d837d26c1091b78e1ff21e7c82dcf56557d633a4d419c1b0eb9de68",
+          "expected_ids": [
+            "test_behavior::test_delete_where_commits"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 1,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        },
+        "regression": {
+          "status": "EXPORTED",
+          "junit": "repair-smoke-delete-transaction-c2-001/regression.xml",
+          "junit_sha256": "149a25eada88cef9fd8b0f4d06493b61fe508e0d8e1c280b682b2623fddd0568",
+          "raw_junit_sha256": "50c0da763cfb08c54f61d33039b3e61a748c9c4dbae22aa248c07ac9a5a08611",
+          "result_sha256": "77b3e1f0309c4210ef8b680a87fdadc6e60f41decc889bf4e758d3a58638778d",
+          "expected_ids": [
+            "test_behavior::test_delete_pk_table",
+            "test_behavior::test_delete_rowid_table"
+          ],
+          "image_id": "sha256:6e11db0c24a0bbbedb54eeebdb805289800645a83fa4ea12d406765f306bb886",
+          "returncode": 0,
+          "build_ok": true,
+          "canary_ok": true,
+          "collection_ok": true,
+          "image_matches": true,
+          "candidate_import_isolated": true,
+          "run_hashes_match": true
+        }
+      },
+      "binding": {
+        "single_launch": true,
+        "launch_protocol_matches": true,
+        "task_and_base_match": true,
+        "qualification_matches": true,
+        "registry_matches": true,
+        "policy_matches": true,
+        "r_version_present": true,
+        "patch_applies": true,
+        "finalize_no_error": false
+      },
+      "mounted_packages": [
+        {
+          "skill_id": "systematic-debugging",
+          "package_sha256": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+          "files": [
+            {
+              "path": "CREATION-LOG.md",
+              "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+              "size": 4257,
+              "executable": false
+            },
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+              "size": 9465,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting-example.ts",
+              "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+              "size": 5054,
+              "executable": false
+            },
+            {
+              "path": "condition-based-waiting.md",
+              "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+              "size": 3516,
+              "executable": false
+            },
+            {
+              "path": "defense-in-depth.md",
+              "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+              "size": 3650,
+              "executable": false
+            },
+            {
+              "path": "find-polluter.sh",
+              "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+              "size": 1986,
+              "executable": true
+            },
+            {
+              "path": "root-cause-tracing.md",
+              "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+              "size": 5316,
+              "executable": false
+            },
+            {
+              "path": "test-academic.md",
+              "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+              "size": 653,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-1.md",
+              "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+              "size": 1900,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-2.md",
+              "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+              "size": 2283,
+              "executable": false
+            },
+            {
+              "path": "test-pressure-3.md",
+              "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+              "size": 2692,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "verification-before-completion",
+          "package_sha256": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+              "size": 1070,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+              "size": 3646,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "cli-api-regression",
+          "package_sha256": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "51401b6421b0295dd4f5612dc194cd2d2347d6dcf2de81224e95bc6a5b792640",
+              "size": 638,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "schema-change-regression",
+          "package_sha256": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "447a10d40982a35a335edf058008afbe02636c7413cf84d96becec22d7766332",
+              "size": 668,
+              "executable": false
+            }
+          ]
+        },
+        {
+          "skill_id": "import-data-regression",
+          "package_sha256": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha256": "67b8d84ca137bde725782619a1a5ecf5c96964c4076a4658d61600764cf016f8",
+              "size": 1069,
+              "executable": false
+            },
+            {
+              "path": "SKILL.md",
+              "sha256": "eee24c21f88e72ab51bd7ac92e995d139936e81aba646874044567b3eb1fda04",
+              "size": 606,
+              "executable": false
+            }
+          ]
+        }
+      ],
+      "selected_mount_match": true,
+      "observed_skill_reads": [],
+      "read_evidence_scope": "Completed commands referencing skill files; absence is unobserved, not proof of no use. No cognitive or causal-use claim.",
+      "routing_timing": {
+        "constructor_index_seconds": 1.1449434169917367,
+        "retrieval_seconds": 0.5219647920166608,
+        "reranker_selection_seconds": 5.09835454201675,
+        "route_wall_seconds": 8.319561625015922
+      },
+      "gate_predictions": {},
+      "fallback_reason": "no_valid_operating_point"
+    }
+  ],
+  "events": [
+    {
+      "event": "launch",
+      "run_id": "repair-smoke-delete-transaction-c2-001",
+      "time": 1789518637.515916,
+      "exit_code": null,
+      "protocol_sha256": "ce17f84afe8723cf732b4bfeb6d39e4cacfc96f7638fb4b8aedcb39491a74d63",
+      "gate_sha256": null,
+      "routing_config_sha256": null,
+      "r_version": null
+    },
+    {
+      "event": "exit",
+      "run_id": "repair-smoke-delete-transaction-c2-001",
+      "time": 1789518652.049021,
+      "exit_code": 0,
+      "protocol_sha256": null,
+      "gate_sha256": null,
+      "routing_config_sha256": null,
+      "r_version": null
+    }
+  ],
+  "privacy": "Allowlisted metadata; raw patches withheld on sensitive-pattern detection; JUnit stack bodies omitted.",
+  "expected_r_version": "106e82d2fb4c10183b06c8023d882be5756767954efb1cda16b78114482db011",
+  "expected_registry_id": "d77e2cff3d6a61ef2da2f99eac6532b7a721a78c8935c3ad77f78359f1e83cbf",
+  "version_scope": "FROZEN",
+  "expected_packages": {
+    "systematic-debugging": "dd1296a6003d45afc6cd2226320ae7d6b2d59c6aa35fe98c99bb2cefbe64d04b",
+    "verification-before-completion": "c9be4ebad42a662f7fab2ce1f6dcc526e8191168ac9898aeb5db3a8a254e911b",
+    "cli-api-regression": "b9a060a244da5915a9fd7de845afe3cd35d8221dd7aae3f1f9920dc6a195cea3",
+    "schema-change-regression": "8078c328b34b5777ad56cb0169238266b5a196bc3d14719b267c05f2b34d86eb",
+    "import-data-regression": "40019e723f12bb66942993e893bc3f3b2a82896821501ccd998170787c396a37"
+  }
+}

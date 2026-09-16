@@ -21,6 +21,7 @@ from hermes_skilleval.repo_routing.calibration import (
     calibrate,
     predict,
     binary_rows,
+    input_eligible,
 )
 
 
@@ -48,7 +49,9 @@ def metrics(rows):
             ),
             unknown=sum(r["label"] == "UNKNOWN" for r in items),
             accepted_unknown=sum(r["label"] == "UNKNOWN" for r in accepted),
-            precision=tp / len(accepted) if accepted else None,
+            precision=tp / sum(r["label"] != "UNKNOWN" for r in accepted)
+            if any(r["label"] != "UNKNOWN" for r in accepted)
+            else None,
             recall=tp / len(positive) if positive else None,
         )
 
@@ -143,7 +146,17 @@ def main():
             max_length=config.get("max_length", 1024),
             adapter=config["adapter"],
         )
+        support_ranker = ranker
+        if config.get("support_model", "rank-adapter") == "base":
+            support_ranker = Reranker(
+                config["reranker_path"],
+                device=config["profile"]["device"],
+                max_length=config.get("support_max_length", 8192),
+            )
+        elif config.get("support_model", "rank-adapter") != "rank-adapter":
+            raise ValueError("unknown support model")
         rows = []
+        support_forwards = 0
         started = time.monotonic()
         for task_id in sorted({r["task_id"] for r in selected}):
             task = a.tasks / task_id
@@ -156,13 +169,15 @@ def main():
             )
             for label in [r for r in selected if r["task_id"] == task_id]:
                 skill = skills[label["skill_id"]]
+                before_support_calls = support_ranker.forward_calls
                 result = score_support(
                     request,
                     context,
                     skill,
-                    ranker,
+                    support_ranker,
                     max_length=config.get("support_max_length", 8192),
                 )
+                support_forwards += support_ranker.forward_calls - before_support_calls
                 visible = "\n".join(
                     s["visible_text"]
                     for s in result["input"]["sections"]
@@ -207,7 +222,17 @@ def main():
                 split=a.split,
                 rows=rows,
                 wall_seconds=time.monotonic() - started,
-                forwards=ranker.forward_calls,
+                forwards=ranker.forward_calls
+                + (support_ranker.forward_calls if support_ranker is not ranker else 0),
+                rank_forwards=ranker.forward_calls
+                - (support_forwards if support_ranker is ranker else 0),
+                support_forwards=support_forwards,
+                loaded_source_sha256={
+                    n: hashlib.sha256(
+                        Path(__file__).with_name(n + ".py").read_bytes()
+                    ).hexdigest()
+                    for n in ("context", "reranker", "support", "support_cli")
+                },
             ),
         )
         return
@@ -284,9 +309,7 @@ def main():
             accepted = (
                 model["threshold"] is not None
                 and value >= model["threshold"]
-                and row["visible"]
-                and not row["conflict"]
-                and row["context"]["state"] == "usable"
+                and input_eligible(row)
             )
             predicted.append({**row, "prediction": value, "accepted": accepted})
         write_new(

@@ -11,6 +11,8 @@ IMAGE = "hermes-runtime-utility-executor:v1"
 
 
 class ContainerRunner(CodexCliRunner):
+    scratch_enabled = False
+
     def _check_output(self, command):
         return subprocess.check_output(
             [
@@ -53,6 +55,8 @@ class ContainerRunner(CodexCliRunner):
             "/bin": "read",
             "/etc": "read",
         }
+        if self.scratch_enabled:
+            roots["/tmp/hermes-debug"] = "write"
         mapping = ", ".join(
             json.dumps(k) + "=" + json.dumps(v) for k, v in roots.items()
         )
@@ -96,6 +100,11 @@ class ContainerRunner(CodexCliRunner):
             "-w",
             str(request.workspace_path),
         ]
+        if self.scratch_enabled:
+            args += [
+                "--tmpfs",
+                f"/tmp/hermes-debug:rw,nosuid,nodev,size=128m,uid={os.getuid()},gid={os.getgid()}",
+            ]
         for key in ("CODEX_HOME", "HOME", "TMPDIR"):
             args += ["-e", key + "=" + env[key]]
         return args + [IMAGE, *command]

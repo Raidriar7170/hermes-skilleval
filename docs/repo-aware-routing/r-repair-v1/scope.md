@@ -16,5 +16,5 @@ Hardware observed: Apple M5 Pro, 48 GiB RAM; Docker server 29.6.1 reachable.
 Reuse existing isolated model environment and local 0.6B assets. No purchases,
 reset credits, global changes or Gate retraining. Native stays default.
 
-M0–M5 ongoing; no new validation or utility conclusion yet. Full old study is not
+Negative development delivery: PARTIAL / DATA_SIGNAL_INSUFFICIENT / FALLBACK_ONLY / INCONCLUSIVE. See results.md. Full old study is not
 rerun. Original OpenSpec tasks remain historical; appended repair tasks own this work.

@@ -134,7 +134,10 @@ def support_identity(config):
             "template": SUPPORT_TEMPLATE,
             "instruction": SUPPORT_INSTRUCTION,
             "base": config["reranker_revision"],
-            "adapter": config["adapter_sha256"],
+            "adapter": config["adapter_sha256"]
+            if config.get("support_model", "rank-adapter") == "rank-adapter"
+            else None,
+            "support_model": config.get("support_model", "rank-adapter"),
             "adapter_config": config.get("adapter_config_sha256"),
             "model_files": config.get("model_files", {}).get("reranker"),
             "max_length": config.get("support_max_length", 8192),
@@ -142,11 +145,16 @@ def support_identity(config):
             "context_budget": config.get("fragment_budget", {}),
             "evidence": "full-body-v1",
             "requirement": "whole-public-request-v1",
+            "outer_template_sha256": hashlib.sha256(
+                (
+                    Path(__file__).parent.parent / "vendor/skillrouter_common.py"
+                ).read_bytes()
+            ).hexdigest(),
             "sources": {
                 n: hashlib.sha256(
                     Path(__file__).with_name(n + ".py").read_bytes()
                 ).hexdigest()
-                for n in ("context", "reranker", "support")
+                for n in ("context", "reranker", "support", "calibration")
             },
         }
     )
@@ -170,7 +178,7 @@ def score_support(requirement, context, skill_evidence, ranker, *, max_length=81
     return {
         "raw_support_score": float(values.detach().cpu()[0]),
         "input": record,
-        "visible": record["request_complete"] and record["evidence_complete"],
+        "visible": not any(s["truncated"] for s in record["sections"]),
         "wall_seconds": time.monotonic() - started,
         "source": "model_judged_text",
         "score_target": "specific applicable textual help, not issue sufficiency",
@@ -180,7 +188,7 @@ def score_support(requirement, context, skill_evidence, ranker, *, max_length=81
 def calibrated_candidates(
     request, context, candidates, rank_scores, ranker, environment, config, model
 ):
-    from .calibration import predict
+    from .calibration import predict, input_eligible
 
     relevance = ordinal_relevance(candidates, rank_scores)
     identity = support_identity(config)
@@ -200,9 +208,9 @@ def calibrated_candidates(
         threshold = model.get("threshold")
         accepted = (
             threshold is not None
-            and observed["visible"]
-            and not conflicts
-            and context.get("state") == "usable"
+            and input_eligible(
+                {**observed, "conflict": bool(conflicts), "context": context}
+            )
             and p >= threshold
         )
         reason = (

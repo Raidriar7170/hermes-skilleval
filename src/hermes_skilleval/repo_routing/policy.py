@@ -48,6 +48,7 @@ def routing_version(config, registry):
         "experimental_repair",
         "fragment_budget",
         "support_max_length",
+        "support_model",
         "support_calibration_sha256",
     )
     source = {
@@ -282,12 +283,22 @@ def route(root, request, environment, registry, policy, config, *, repository=No
                     "support_calibration_sha256"
                 ):
                     raise ValueError("support calibration file identity mismatch")
+                support_ranker = ranker
+                if config.get("support_model", "rank-adapter") == "base":
+                    support_ranker = Reranker(
+                        config["reranker_path"],
+                        device=profile.device,
+                        max_length=config.get("support_max_length", 8192),
+                    )
+                    counts["heavy_constructors"] += 1
+                elif config.get("support_model", "rank-adapter") != "rank-adapter":
+                    raise ValueError("unknown support model")
                 clauses, items = calibrated_candidates(
                     request,
                     context,
                     candidates,
                     scores,
-                    ranker,
+                    support_ranker,
                     environment,
                     config,
                     json.loads(raw),
@@ -296,6 +307,21 @@ def route(root, request, environment, registry, policy, config, *, repository=No
                     items, [1.0], Budget(**config.get("budget", {})), exact_k=2
                 )
                 selection["mode"] = "C2"
+                if not selection["skill_ids"]:
+                    if json.loads(raw).get("threshold") is None:
+                        selection["fallback_reason"] = "no_valid_operating_point"
+                    elif context.get("state") != "usable":
+                        selection["fallback_reason"] = "context_" + context.get(
+                            "state", "unknown"
+                        )
+                    elif sum(i["compatible"] and any(i["support"]) for i in items) < 2:
+                        selection["fallback_reason"] = (
+                            "insufficient_supported_candidates"
+                        )
+                    else:
+                        selection["fallback_reason"] = "supported_set_over_budget"
+                if support_ranker is not ranker:
+                    counts["reranker_forwards"] += support_ranker.forward_calls
             elif repair:
                 raise ValueError("repair requires explicit B2 or C2 selection mode")
             else:
@@ -337,6 +363,8 @@ def route(root, request, environment, registry, policy, config, *, repository=No
             if not ids:
                 result["decision"]["fallback_reason"] = selection["fallback_reason"]
                 result["action"] = "N"
+                if repair:
+                    result["decision"]["action"] = "N"
                 ids = [s["id"] for s in registry["skills"]]
             result.update(
                 selection=selection,

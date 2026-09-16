@@ -11,7 +11,13 @@ from hermes_skilleval.repo_routing.support import ordinal_relevance
 
 def rows():
     return [
-        dict(family=f, label=label, raw_support_score=z, visible=True)
+        dict(
+            family=f,
+            label=label,
+            raw_support_score=z,
+            visible=True,
+            context={"state": "usable"},
+        )
         for f in ("a", "b", "c", "d")
         for label, z in [
             ("SUPPORTED", 2.0),
@@ -38,7 +44,15 @@ def test_real_fit_reload_unknown_and_identity():
 def test_family_weights_and_calibration_operating_point():
     data = (
         rows()
-        + [dict(family="a", label="SUPPORTED", raw_support_score=2.0, visible=True)]
+        + [
+            dict(
+                family="a",
+                label="SUPPORTED",
+                raw_support_score=2.0,
+                visible=True,
+                context={"state": "usable"},
+            )
+        ]
         * 20
     )
     weighted = binary_rows(data)
@@ -59,3 +73,9 @@ def test_rank_translation_is_not_support_calibration():
     model = fit(rows(), "v")
     # Independent calibrated support uses its own z, not either rank value.
     assert predict(model, 2.0, "v") != predict(model, -2.0, "v")
+
+
+def test_partial_inputs_cannot_create_an_operating_point():
+    model = calibrate([{**r, "context": {"state": "partial"}} for r in rows()], "v")
+    assert model["threshold"] is None
+    assert model["status"] == "NO_VALID_OPERATING_POINT"

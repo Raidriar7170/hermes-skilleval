@@ -13,6 +13,7 @@ p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("--workspace-root", type=Path, required=True)
 p.add_argument("--private-root", type=Path, required=True)
 p.add_argument("--output", type=Path, required=True)
+p.add_argument("--scratch", action="store_true")
 a = p.parse_args()
 if a.output.exists():
     raise ValueError("new output required")
@@ -34,6 +35,7 @@ config = CodexCliRunnerConfig(
     restrict_reads=True,
 )
 runner = ContainerRunner(config)
+runner.scratch_enabled = a.scratch
 req = AgentRequest(canary_id, "canary", "canary", "no-skill", "canary", root, [], 30)
 paths = [
     str(home / "nonsecret"),
@@ -60,6 +62,11 @@ except PermissionError:out['network_allowed']=False
 except OSError:out['network_allowed']=None
 print(json.dumps(out))
 """.replace("PATHS", repr(paths))
+if a.scratch:
+    code = code.replace(
+        "print(json.dumps(out))",
+        "Path('/tmp/hermes-debug/probe').write_text('scratch'); out['scratch_write']=True; print(json.dumps(out))",
+    )
 cmd = ["codex", "sandbox"]
 for item in runner.permission_overrides(req):
     cmd += ["-c", item]
@@ -86,7 +93,8 @@ record = {
     "passed": proc.returncode == 0
     and all(v in ("DENIED", "UNMOUNTED") for v in facts.get("paths", {}).values())
     and facts.get("workspace_write")
-    and facts.get("network_allowed") is False,
+    and facts.get("network_allowed") is False
+    and (not a.scratch or facts.get("scratch_write") is True),
     "images": {
         name: subprocess.check_output(
             ["docker", "image", "inspect", "--format", "{{.Id}}", name], text=True

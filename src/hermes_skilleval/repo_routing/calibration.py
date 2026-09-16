@@ -9,6 +9,15 @@ from .context import digest
 from .gate import sigmoid
 
 
+def input_eligible(row):
+    """Shared qualification for calibration, checking and runtime acceptance."""
+    return bool(
+        row.get("visible")
+        and not row.get("conflict")
+        and row.get("context", {}).get("state") == "usable"
+    )
+
+
 def binary_rows(rows):
     known = []
     for row in rows:
@@ -131,11 +140,7 @@ def calibrate(rows, identity, *, precision_target=0.9, minimum_families=2):
     curve = []
     for threshold in sorted({r["prediction"] for r in data}):
         accepted = [
-            r
-            for r in data
-            if r["prediction"] >= threshold
-            and r.get("visible", False)
-            and not r.get("conflict", False)
+            r for r in data if r["prediction"] >= threshold and input_eligible(r)
         ]
         tp = sum(r["weight"] * r["y"] for r in accepted)
         total = sum(r["weight"] for r in accepted)

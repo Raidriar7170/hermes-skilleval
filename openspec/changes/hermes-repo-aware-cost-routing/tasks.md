@@ -16,8 +16,12 @@ Authority: `docs/goals/Hermes_PR48_R_Support_Context_Repair_Codex_Goal.md`.
 Original completed pilot tasks above remain historical.
 
 - [x] 2.1 M0 Export legacy requirement/candidate filtering and actual model inputs.
-- [ ] 2.2 M1 Bounded large-file fragments and structured token-visible inputs.
+- [x] 2.2 M1 Bounded large-file fragments and structured token-visible inputs.
 - [x] 2.3 M2 Grounded independent support labels and family-separated partitions.
-- [ ] 2.4 M3 Real support scores, fitted/reloaded calibration and frozen checks.
+- [x] 2.4 M3 Real support scores, fitted/reloaded calibration and frozen checks.
 - [ ] 2.5 M4 Prespecified N+/B2/C2 runs with complete package/patch evidence.
-- [ ] 2.6 M5 Compatibility, external wheel, review, same-HEAD CI and Draft delivery.
+- [x] 2.6 M5 Compatibility, external wheel, review, same-HEAD CI and Draft delivery.
+
+M3 produced NO_VALID_OPERATING_POINT. M4 remains incomplete: three installation/fallback smoke cells and all three prelaunch rejections retained; nine planned cells not executed. No supported C2 runtime or completed main comparison is claimed.
+
+M5 delivery verification is recorded in the current PR HEAD checks and final response; this task does not certify M4 or authorize archive/merge.

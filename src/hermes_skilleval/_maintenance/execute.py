@@ -164,6 +164,7 @@ record = run_agent(
     run_id=a.run_id,
     task_id=task["task_id"],
     arm=routing["action"] if routing else a.arm,
+    scratch=bool(routing and routing["context"].get("schema") == "repo-context-v2"),
     timeout=a.timeout,
     metadata={
         "split": task["split"],

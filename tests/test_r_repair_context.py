@@ -70,3 +70,23 @@ def test_repair_native_fixed_and_old_gate_stay_lightweight(tmp_path, monkeypatch
     result = route(tmp_path, "Fix apply.", {}, registry, "auto", config)
     assert result["decision"]["fallback_reason"] == "gate_missing"
     assert result["calls"]["heavy_constructors"] == 0
+
+
+def test_critical_window_partial_but_optional_window_usable(tmp_path):
+    (tmp_path / "code.py").write_text("def repair():\n" + "    pass\n" * 70)
+    explicit = extract_fragments(tmp_path, "Fix code.py repair().", {})
+    assert explicit["state"] == "partial"
+    assert explicit["truncated"]
+    assert "declaration_complete=False" in explicit["summary"]
+    assert any(m["critical"] for m in explicit["missing"])
+
+
+def test_unparsed_window_does_not_invent_a_declaration_boundary(tmp_path):
+    (tmp_path / "code.py").write_text("def repair():\n" + "    pass\n" * 70)
+    result = extract_fragments(
+        tmp_path, "Fix code.py repair().", {}, FragmentBudget(parse_bytes=1)
+    )
+    assert result["state"] == "partial"
+    fragment = result["matched_symbols"][0]
+    assert not fragment["declaration_complete"]
+    assert fragment["boundary_source"] == "unparsed_window"

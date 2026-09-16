@@ -473,9 +473,11 @@ def extract_fragments(root, request, environment, budget=None):
         for line in lines:
             offsets.append(offsets[-1] + len(line.encode()))
         declarations = []
+        ast_boundaries = False
         if complete and len(data) <= budget.parse_bytes and name.endswith(".py"):
             try:
                 tree = ast.parse(text)
+                ast_boundaries = True
                 declarations = [
                     (n.lineno, n.end_lineno, n.name)
                     for n in ast.walk(tree)
@@ -520,7 +522,8 @@ def extract_fragments(root, request, environment, budget=None):
                     "snippet": snippet,
                     "source_sha256": sources[name]["read_sha256"],
                     "kind": "literal_source_window",
-                    "declaration_complete": end == last and complete,
+                    "declaration_complete": end == last and complete and ast_boundaries,
+                    "boundary_source": "ast" if ast_boundaries else "unparsed_window",
                     "relevance": relevance,
                     "critical_path": critical,
                 }
@@ -546,6 +549,43 @@ def extract_fragments(root, request, environment, budget=None):
             continue
         chosen.append(fragment)
         output_used += cost
+    # Explicit call/snake-case symbols and explicit paths are public evidence
+    # of criticality. Missing optional neighboring windows stay noncritical.
+    named_symbols = set(re.findall(r"\b([A-Za-z_]\w*)\s*\(", request))
+    named_symbols.update(t for t in terms if "_" in t)
+    for name in sorted(named_symbols):
+        matches = [f for f in chosen if f["symbol"].lower() == name.lower()]
+        if matches and any(not f["declaration_complete"] for f in matches):
+            missing.append(
+                {
+                    "path": matches[0]["path"],
+                    "symbol": name,
+                    "reason": "critical_symbol_window_incomplete",
+                    "critical": True,
+                }
+            )
+        elif not matches:
+            # Attributes/options are not automatically functions. Explicit calls
+            # have a stronger requirement than a bare variable mention.
+            if re.search(r"\b" + re.escape(name) + r"\s*\(", request):
+                missing.append(
+                    {
+                        "path": ".",
+                        "symbol": name,
+                        "reason": "explicit_call_unlocated",
+                        "critical": True,
+                    }
+                )
+    for name in explicit:
+        matches = [f for f in chosen if f["path"] == name]
+        if not matches or any(not f["declaration_complete"] for f in matches):
+            missing.append(
+                {
+                    "path": name,
+                    "reason": "critical_path_window_incomplete",
+                    "critical": True,
+                }
+            )
     critical_missing = [m for m in missing if m["critical"]]
     state = (
         "unavailable"
@@ -573,7 +613,9 @@ def extract_fragments(root, request, environment, budget=None):
         f"Context state: {state}. Network: {environment.get('network', 'unknown')}. Source windows are incomplete; verify conditions in source."
     ]
     for f in chosen:
-        sections.append(f"{f['path']}:{f['lines'][0]}-{f['lines'][1]}\n{f['snippet']}")
+        sections.append(
+            f"{f['path']}:{f['lines'][0]}-{f['lines'][1]} (declaration_complete={f['declaration_complete']})\n{f['snippet']}"
+        )
     summary = "\n".join(sections)
     identity = digest(
         ["repo-context-v2", request, environment, asdict(budget), sources]
@@ -597,7 +639,11 @@ def extract_fragments(root, request, environment, budget=None):
         "summary": summary,
         "files_scanned": len(scanned),
         "entries_enumerated": entries,
-        "truncated": bool(missing or len(chosen) < len(fragments)),
+        "truncated": bool(
+            missing
+            or len(chosen) < len(fragments)
+            or any(not f["declaration_complete"] for f in chosen)
+        ),
         "budget": asdict(budget),
         "cost": {
             "wall_seconds": time.monotonic() - started,
