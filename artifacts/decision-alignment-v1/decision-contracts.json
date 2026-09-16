@@ -1,0 +1,45 @@
+{
+  "applicability": {
+    "candidate_id": "training-lambda-0",
+    "epoch": 3,
+    "adapter_sha256": "cba6b64c0cbc2b031ad6f01e3b9923a6f8c580970692ffbe8ed84b4590cf3db7",
+    "supervised_denominators": {
+      "applicability": 0.9666666666666667,
+      "specificity_given_applicable": 0
+    },
+    "schema": "decision-alignment-v1",
+    "decision_target": "applicability",
+    "required_supervised_axes": [
+      "applicability"
+    ],
+    "selection_metric": "group_macro_applicability_log_loss",
+    "ranking_formula": "sigmoid_applicability",
+    "k": 2,
+    "support_mode": "advisory",
+    "input_identity": "125a5246b9485c485f54cd32101f13affd0842c672268233568afd826400c12c",
+    "calibration_ref": null,
+    "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC"
+  },
+  "task_specific": {
+    "candidate_id": "training-lambda-1",
+    "epoch": 3,
+    "adapter_sha256": "62974d9088aaaa27effdc65d8407e7ccb93d2669487642eb7d826227c60b8645",
+    "supervised_denominators": {
+      "applicability": 0.9666666666666667,
+      "specificity_given_applicable": 0.3416666666666667
+    },
+    "schema": "decision-alignment-v1",
+    "decision_target": "task_specific",
+    "required_supervised_axes": [
+      "applicability",
+      "specificity_given_applicable"
+    ],
+    "selection_metric": "group_macro_joint_event_log_loss",
+    "ranking_formula": "raw_app_times_conditional_specificity",
+    "k": 2,
+    "support_mode": "advisory",
+    "input_identity": "125a5246b9485c485f54cd32101f13affd0842c672268233568afd826400c12c",
+    "calibration_ref": null,
+    "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC"
+  }
+}

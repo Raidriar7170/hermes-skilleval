@@ -39,3 +39,14 @@ Authority: `docs/goals/Hermes_PR48_Applicability_Data_Pointwise_Learning_Codex_G
 - [x] 3.7 M6 Records, clean install, independent review, Draft update and same-HEAD CI.
 
 Conditional-applicability offline delivery completed. First delivered code HEAD `4d787c33c11371a8e7e13ee9e1950d8d2cf90397` passed GitHub CI run `35057546855`; final documentation closeout HEAD is checked separately in PR #48. Runtime is NOT_RUN under the frozen prerequisite stop, not supported-branch completion. Historical task 2.5 remains incomplete; no archive or merge.
+
+## 4. Decision alignment and calibration preflight (active Goal)
+
+Authority: `docs/goals/Hermes_PR48_Decision_Alignment_Calibration_Preflight_Codex_Goal.md`. Earlier sections are historical; 2.5 is not resumed.
+
+- [x] 4.1 A0/A1 Recompute legacy selection; implement separate supervised A/J contracts.
+- [x] 4.2 A2 Zero-forward structural and calibration feasibility preflight.
+- [x] 4.3 A3 Diagnose both excluded groups and fix evidenced generic input defects.
+- [x] 4.4 A4 Recompute development selection and retrospective comparisons.
+- [x] 4.5 A5 Installed CLI integration, compatibility and behavioral regressions.
+- [ ] 4.6 A6 Compact evidence, independent boundary review, clean wheel and same-HEAD Draft delivery.

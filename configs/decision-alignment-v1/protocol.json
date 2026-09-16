@@ -1,0 +1,19 @@
+{
+  "schema": "decision-alignment-v1",
+  "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC",
+  "baseline": "db5c9d0c8ad06ed58b13ac33e9581cd7842e5b5b",
+  "data": "conditional-applicability-v1; unchanged 24 tasks, 10 skills, 240 labels",
+  "candidates": "six frozen lambda 0/1 checkpoints, epochs 1/2/3",
+  "tie_tolerance": 1e-12,
+  "applicability": {"metric": "group_macro_applicability_log_loss", "ranking": "sigmoid_applicability", "tie_break": ["applicability_brier", "candidate_id", "epoch"]},
+  "task_specific": {"metric": "group_macro_joint_event_log_loss", "ranking": "raw_app_times_conditional_specificity", "tie_break": ["known_inapplicable_at_2", "negative_specific_precision_at_2", "candidate_id", "epoch"], "min_dev_each_class": 1},
+  "k": 2,
+  "default_runtime": "native",
+  "runtime_effectiveness": "NOT_RUN",
+  "resources": "records and no-forward first; tokenizer local-only optional; no training or Agent runs",
+  "read_scope": ["src", "tests", "configs", "artifacts", "docs", "openspec", "authorized private snapshots and old model metadata"],
+  "write_scope": ["src/hermes_skilleval/repo_routing", "tests/test_decision_alignment.py", "tests/test_calibration_preflight.py", "pyproject.toml", "configs/decision-alignment-v1", "artifacts/decision-alignment-v1", "docs/goals/Hermes_PR48_Decision_Alignment_Calibration_Preflight_Codex_Goal.md", "docs/repo-aware-routing/decision-alignment-v1", "openspec/changes/hermes-repo-aware-cost-routing"],
+  "frozen_asset_scope": ["artifacts/conditional-applicability-v1", "configs/conditional-applicability-v1", "all old checkpoints, rank, Gate and research records"],
+  "final_repository_scope": ".",
+  "identity_rule": "new context/template/model invalidates old scores and calibration; no input relabeling of old logits"
+}

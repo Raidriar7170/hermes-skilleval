@@ -1,0 +1,103 @@
+{
+  "schema": "decision-alignment-validation-v1",
+  "baseline": "db5c9d0c8ad06ed58b13ac33e9581cd7842e5b5b",
+  "engineering": "COMPLETE",
+  "objective_alignment": "IMPLEMENTED_AND_TESTED",
+  "calibration_preflight": "BLOCKED",
+  "supported_operating_point": "NOT_ESTABLISHED",
+  "runtime_effectiveness": "NOT_RUN",
+  "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC",
+  "publication": "PENDING_AT_COMMIT; see exact head checks and PR delivery section",
+  "tests": {
+    "focused": "20 passed",
+    "full": "1349 passed in 30.37s",
+    "command": "PYTHONPATH=src python -m pytest -q",
+    "environment_failure_preserved": "first attempt: 4 subprocess imports failed because package absent; PYTHONPATH correction yielded full pass; no implementation bypass"
+  },
+  "lint": "ruff check passed",
+  "typing": "mypy --follow-imports=silent: 3 source files passed",
+  "openspec": "strict validation passed",
+  "independent_review": {
+    "mode": "read-only",
+    "scope": "input/model/calibrator binding, privacy paths, pre-construction rejection and objective consistency",
+    "result": "NO_REMAINING_BLOCKING_FINDINGS",
+    "reviewed_base": "db5c9d0 plus new uncommitted code",
+    "independent_focused_tests": "20 passed",
+    "limitations": "no actual new model inference, training or threshold validation"
+  },
+  "wheel": {
+    "sha256": "695d31d1a1ade347cd5cd1e0f26f6e793b8cdf8b28078c9a98a767d25d12d11f",
+    "new_module_bytes": "MATCHED",
+    "absent_dependencies": [
+      "torch",
+      "transformers",
+      "peft",
+      "sklearn"
+    ],
+    "records": {
+      "status": "MATCHED",
+      "rows": 40,
+      "model_calls": 0
+    },
+    "decision_replay": "MATCHED published JSON",
+    "preflight_exit": 2,
+    "aligned_score_missing_config_exit": 2,
+    "aligned_score_model_constructions": 0
+  },
+  "six_frozen_checkpoints": [
+    {
+      "candidate_id": "training-lambda-0",
+      "epoch": 1,
+      "adapter_sha256": "57a7dbfe8ee350904cb9e8ec11b07f7bcb182fdf65be6379edb335ec9f5d53ec",
+      "matches_frozen": true
+    },
+    {
+      "candidate_id": "training-lambda-0",
+      "epoch": 2,
+      "adapter_sha256": "2649b2633e0be180435e5c45e209781e2e21379c8573c481df0795d8cc41a459",
+      "matches_frozen": true
+    },
+    {
+      "candidate_id": "training-lambda-0",
+      "epoch": 3,
+      "adapter_sha256": "cba6b64c0cbc2b031ad6f01e3b9923a6f8c580970692ffbe8ed84b4590cf3db7",
+      "matches_frozen": true
+    },
+    {
+      "candidate_id": "training-lambda-1",
+      "epoch": 1,
+      "adapter_sha256": "2205d6d9feaa3fd173aa7734a7667eb449f206833b2dcfe2e5cae6c5926ffaef",
+      "matches_frozen": true
+    },
+    {
+      "candidate_id": "training-lambda-1",
+      "epoch": 2,
+      "adapter_sha256": "9cf3cdcc5cd8764a4c55101cf56295bb0c9ab0a1838774fae5f90af977fa3702",
+      "matches_frozen": true
+    },
+    {
+      "candidate_id": "training-lambda-1",
+      "epoch": 3,
+      "adapter_sha256": "62974d9088aaaa27effdc65d8407e7ccb93d2669487642eb7d826227c60b8645",
+      "matches_frozen": true
+    }
+  ],
+  "new_training_runs": 0,
+  "new_model_forward_calls": 0,
+  "new_calibration_fits": 0,
+  "new_agent_runs": 0,
+  "new_fallback_smoke": 0,
+  "tokenization": {
+    "mode": "existing local tokenizer only",
+    "original_cal_rows_complete": 40,
+    "repaired_cal_rows_complete": 40,
+    "model_weight_reads_for_preflight": 0
+  },
+  "unproven": [
+    "independent operating point",
+    "patch utility",
+    "online cost reduction",
+    "generalization to new tasks"
+  ],
+  "user_mastery": "NOT_ASSESSED"
+}

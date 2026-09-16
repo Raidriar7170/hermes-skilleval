@@ -27,3 +27,7 @@ native remains default and no Gate training or original matrix rerun is authoriz
 ## Conditional applicability v1 continuation
 
 The new designated Applicability Data Pointwise Learning Goal supersedes only the current research scope. Preserve prior records. Use independent group-disjoint fit/model-dev/cal/check, APPLICABLE versus explicit inapplicability and conditional specificity, a separately trained shared LoRA with two instructions, fit-only priors and cheap lexical comparisons. Reuse structured token handling and causal yes/no scorer. Runtime remains conditional on frozen nonzero support criteria; no Gate training, default promotion or archive.
+
+## Decision alignment continuation
+
+The active Decision Alignment Calibration Preflight Goal and `configs/decision-alignment-v1/protocol.json` define the current bounded change. Reuse six checkpoints and saved predictions; select A by applicability and directly supervised J by its raw product event loss on model-dev. Historical check remains retrospective. Add a thin CLI dispatcher, shared no-forward eligibility, and evidence-grounded context repair. Preserve all historical bound source modules where possible. No training, new Agent runs, default promotion, merge or archive.
