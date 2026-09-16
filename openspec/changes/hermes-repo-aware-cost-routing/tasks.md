@@ -49,4 +49,6 @@ Authority: `docs/goals/Hermes_PR48_Decision_Alignment_Calibration_Preflight_Code
 - [x] 4.3 A3 Diagnose both excluded groups and fix evidenced generic input defects.
 - [x] 4.4 A4 Recompute development selection and retrospective comparisons.
 - [x] 4.5 A5 Installed CLI integration, compatibility and behavioral regressions.
-- [ ] 4.6 A6 Compact evidence, independent boundary review, clean wheel and same-HEAD Draft delivery.
+- [x] 4.6 A6 Compact evidence, independent boundary review, clean wheel and same-HEAD Draft delivery.
+
+Decision-alignment code HEAD `fedfbcd8ff5d9cd96b30e27c3179bb91dd131923` passed CI `35130060478`; Draft PR #48 updated. Final documentation HEAD is checked separately. Context repair does not establish support: environment qualification remains BLOCKED, operating point NOT_ESTABLISHED, runtime NOT_RUN. No archive or merge.
