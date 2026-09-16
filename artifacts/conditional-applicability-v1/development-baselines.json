@@ -1,0 +1,358 @@
+{
+  "development": {
+    "cheap_text": {
+      "selection_loss": 0.18049711879015246,
+      "trials": [
+        {
+          "C": 0.1,
+          "loss": 0.3446302507115273
+        },
+        {
+          "C": 1,
+          "loss": 0.25108770885809817
+        },
+        {
+          "C": 10,
+          "loss": 0.18049711879015246
+        }
+      ]
+    },
+    "skill_only": {
+      "selection_loss": 0.3277768222457837,
+      "trials": [
+        {
+          "C": 0.1,
+          "loss": 0.36396249561254074
+        },
+        {
+          "C": 1,
+          "loss": 0.3327345730429261
+        },
+        {
+          "C": 10,
+          "loss": 0.3277768222457837
+        }
+      ]
+    }
+  },
+  "identifiability": {
+    "scope": "fit/model-dev only",
+    "skills": {
+      "csv-dialect": {
+        "labels": {
+          "NOT_APPLICABLE": 12,
+          "UNKNOWN": 2,
+          "APPLICABLE": 2
+        },
+        "specificity": {
+          "TASK_SPECIFIC": 2
+        },
+        "positive_groups": [
+          "csv-delimiter",
+          "inference-preserve-fields"
+        ],
+        "negative_groups": [
+          "batch-schema-expansion",
+          "database-driver-options",
+          "descending-index",
+          "empty-snapshot",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping",
+          "headerless-import",
+          "heterogeneous-stack",
+          "json-diff-input",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "conditional_group_pairs": 24,
+        "agreement": 0.875
+      },
+      "csv-relational-join": {
+        "labels": {
+          "NOT_APPLICABLE": 16
+        },
+        "specificity": {},
+        "positive_groups": [],
+        "negative_groups": [
+          "batch-schema-expansion",
+          "csv-delimiter",
+          "database-driver-options",
+          "descending-index",
+          "empty-snapshot",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping",
+          "headerless-import",
+          "heterogeneous-stack",
+          "inference-preserve-fields",
+          "json-diff-input",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "conditional_group_pairs": 0,
+        "agreement": 1.0
+      },
+      "keyed-csv-diff": {
+        "labels": {
+          "APPLICABLE": 2,
+          "NOT_APPLICABLE": 12,
+          "UNKNOWN": 2
+        },
+        "specificity": {
+          "TASK_SPECIFIC": 2
+        },
+        "positive_groups": [
+          "empty-snapshot",
+          "json-diff-input"
+        ],
+        "negative_groups": [
+          "batch-schema-expansion",
+          "csv-delimiter",
+          "database-driver-options",
+          "descending-index",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping",
+          "headerless-import",
+          "heterogeneous-stack",
+          "nested-json-columns",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "conditional_group_pairs": 24,
+        "agreement": 0.875
+      },
+      "sql-query-export": {
+        "labels": {
+          "NOT_APPLICABLE": 16
+        },
+        "specificity": {},
+        "positive_groups": [],
+        "negative_groups": [
+          "batch-schema-expansion",
+          "csv-delimiter",
+          "database-driver-options",
+          "descending-index",
+          "empty-snapshot",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping",
+          "headerless-import",
+          "heterogeneous-stack",
+          "inference-preserve-fields",
+          "json-diff-input",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "conditional_group_pairs": 0,
+        "agreement": 1.0
+      },
+      "sqlite-fulltext": {
+        "labels": {
+          "NOT_APPLICABLE": 12,
+          "APPLICABLE": 4
+        },
+        "specificity": {
+          "TASK_SPECIFIC": 4
+        },
+        "positive_groups": [
+          "descending-index",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping"
+        ],
+        "negative_groups": [
+          "batch-schema-expansion",
+          "csv-delimiter",
+          "database-driver-options",
+          "empty-snapshot",
+          "headerless-import",
+          "heterogeneous-stack",
+          "inference-preserve-fields",
+          "json-diff-input",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "conditional_group_pairs": 48,
+        "agreement": 1.0
+      },
+      "sqlite-ingest": {
+        "labels": {
+          "NOT_APPLICABLE": 11,
+          "APPLICABLE": 5
+        },
+        "specificity": {
+          "TASK_SPECIFIC": 5
+        },
+        "positive_groups": [
+          "batch-schema-expansion",
+          "csv-delimiter",
+          "fts-import",
+          "headerless-import",
+          "utf8-bom"
+        ],
+        "negative_groups": [
+          "database-driver-options",
+          "descending-index",
+          "empty-snapshot",
+          "foreign-key-identifier",
+          "fts-query-escaping",
+          "heterogeneous-stack",
+          "inference-preserve-fields",
+          "json-diff-input",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values"
+        ],
+        "conditional_group_pairs": 55,
+        "agreement": 1.0
+      },
+      "sqlite-schema": {
+        "labels": {
+          "NOT_APPLICABLE": 12,
+          "UNKNOWN": 1,
+          "APPLICABLE": 3
+        },
+        "specificity": {
+          "TASK_SPECIFIC": 3
+        },
+        "positive_groups": [
+          "batch-schema-expansion",
+          "descending-index",
+          "foreign-key-identifier"
+        ],
+        "negative_groups": [
+          "csv-delimiter",
+          "database-driver-options",
+          "empty-snapshot",
+          "fts-query-escaping",
+          "headerless-import",
+          "heterogeneous-stack",
+          "inference-preserve-fields",
+          "json-diff-input",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "conditional_group_pairs": 36,
+        "agreement": 0.9375
+      },
+      "systematic-debugging": {
+        "labels": {
+          "APPLICABLE": 16
+        },
+        "specificity": {
+          "GENERAL_WORKFLOW": 16
+        },
+        "positive_groups": [
+          "batch-schema-expansion",
+          "csv-delimiter",
+          "database-driver-options",
+          "descending-index",
+          "empty-snapshot",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping",
+          "headerless-import",
+          "heterogeneous-stack",
+          "inference-preserve-fields",
+          "json-diff-input",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "negative_groups": [],
+        "conditional_group_pairs": 0,
+        "agreement": 1.0
+      },
+      "tabular-conversion": {
+        "labels": {
+          "UNKNOWN": 1,
+          "NOT_APPLICABLE": 8,
+          "APPLICABLE": 7
+        },
+        "specificity": {
+          "TASK_SPECIFIC": 7
+        },
+        "positive_groups": [
+          "csv-delimiter",
+          "headerless-import",
+          "inference-preserve-fields",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "negative_groups": [
+          "batch-schema-expansion",
+          "database-driver-options",
+          "descending-index",
+          "empty-snapshot",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping",
+          "heterogeneous-stack"
+        ],
+        "conditional_group_pairs": 56,
+        "agreement": 0.9375
+      },
+      "verification-before-completion": {
+        "labels": {
+          "APPLICABLE": 16
+        },
+        "specificity": {
+          "GENERAL_WORKFLOW": 16
+        },
+        "positive_groups": [
+          "batch-schema-expansion",
+          "csv-delimiter",
+          "database-driver-options",
+          "descending-index",
+          "empty-snapshot",
+          "foreign-key-identifier",
+          "fts-import",
+          "fts-query-escaping",
+          "headerless-import",
+          "heterogeneous-stack",
+          "inference-preserve-fields",
+          "json-diff-input",
+          "nested-json-columns",
+          "sort-preserve-types",
+          "spreadsheet-null-values",
+          "utf8-bom"
+        ],
+        "negative_groups": [],
+        "conditional_group_pairs": 0,
+        "agreement": 1.0
+      }
+    },
+    "conditional_signal": 243
+  },
+  "fixed": {
+    "default": [
+      "sqlite-ingest",
+      "tabular-conversion"
+    ],
+    "simonw/csv-diff": [
+      "keyed-csv-diff",
+      "csv-dialect"
+    ],
+    "simonw/sqlite-utils": [
+      "sqlite-ingest",
+      "sqlite-fulltext"
+    ],
+    "wireservice/csvkit": [
+      "tabular-conversion",
+      "csv-dialect"
+    ]
+  }
+}

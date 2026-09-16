@@ -27,3 +27,21 @@ The system SHALL preserve replay qualification and assist source protection, giv
 #### Scenario: Final comparison
 - **WHEN** frozen confirmation runs
 - **THEN** N/F/S/R/H execute their own decisions and report unknown outcomes without fabricated labels or utility claims.
+
+### Requirement: Conditional pointwise applicability study
+The system SHALL distinguish textual applicability from conditional task specificity, retain UNKNOWN masks, and train a separate pointwise support adapter without modifying frozen rank or Gate weights.
+
+#### Scenario: General workflow is applicable
+- **WHEN** a skill supplies concrete generic debugging or verification help
+- **THEN** the applicability target is positive and the known specificity target is negative.
+
+### Requirement: Grouped evaluation and bound inference
+The system SHALL separate fit, model-dev, calibration and check by parent task and repair mechanism, select configuration only on development, and bind calibration and records to the exact scorer and public input sources.
+
+#### Scenario: A scored checkpoint changes
+- **WHEN** an adapter, tokenizer, input source or context mode differs from the frozen scorer
+- **THEN** calibration application and records verification reject the mismatch.
+
+#### Scenario: No supported operating point exists
+- **WHEN** the preregistered precision and nonzero coverage criteria cannot be met
+- **THEN** the complete offline comparison remains reportable while conditional Agent execution is NOT_RUN without another fallback-only smoke.

@@ -25,3 +25,15 @@ Original completed pilot tasks above remain historical.
 M3 produced NO_VALID_OPERATING_POINT. M4 remains incomplete: three installation/fallback smoke cells and all three prelaunch rejections retained; nine planned cells not executed. No supported C2 runtime or completed main comparison is claimed.
 
 M5 delivery verification is recorded in the current PR HEAD checks and final response; this task does not certify M4 or authorize archive/merge.
+
+## 3. Conditional applicability v1 (active Goal)
+
+Authority: `docs/goals/Hermes_PR48_Applicability_Data_Pointwise_Learning_Codex_Goal.md`. Sections 1–2 are historical; 2.5 remains incomplete.
+
+- [x] 3.1 M0 Verify source/resource identity and save Goal.
+- [x] 3.2 M1 Freeze natural tasks, registry, grouped splits and independent dual-axis labels.
+- [x] 3.3 M2 Establish conditional signal and cheap/frozen baselines.
+- [x] 3.4 M3 Train independent pointwise adapter and verify fresh-process reload.
+- [x] 3.5 M4 Freeze model then calibrate/check and report grouped results.
+- [x] 3.6 M5 Exercise supported branch conditionally or record prerequisite stop.
+- [ ] 3.7 M6 Records, clean install, independent review, Draft update and same-HEAD CI.

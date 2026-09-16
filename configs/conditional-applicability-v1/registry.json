@@ -1,0 +1,327 @@
+{
+  "schema": "task-conditioned-registry-v1",
+  "registry_id": "ae70866024ab952e0c399f309c4e3ed342f6ae4cb720ba7ff99656ef023a4502",
+  "skills": [
+    {
+      "id": "systematic-debugging",
+      "name": "systematic-debugging",
+      "path": "configs/conditional-applicability-v1/skills/systematic-debugging/SKILL.md",
+      "category": null,
+      "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
+      "body": "# Systematic Debugging\n\n## Overview\n\n**Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.\n\n**Violating the letter of this process is violating the spirit of debugging.**\n\n## The Iron Law\n\n```\nNO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST\n```\n\nIf you haven't completed Phase 1, you cannot propose fixes.\n\n## When to Use\n\nUse for ANY technical issue:\n- Test failures\n- Bugs in production\n- Unexpected behavior\n- Performance problems\n- Build failures\n- Integration issues\n\n**Use this ESPECIALLY when:**\n- Under time pressure (emergencies make guessing tempting)\n- \"Just one quick fix\" seems obvious\n- You've already tried multiple fixes\n- Previous fix didn't work\n- You don't fully understand the issue\n\n**Don't skip when:**\n- Issue seems simple (simple bugs have root causes too)\n- You're in a hurry (rushing guarantees rework)\n- Manager wants it fixed NOW (systematic is faster than thrashing)\n\n## The Four Phases\n\nYou MUST complete each phase before proceeding to the next.\n\n### Phase 1: Root Cause Investigation\n\n**BEFORE attempting ANY fix:**\n\n1. **Read Error Messages Carefully**\n   - Don't skip past errors or warnings\n   - They often contain the exact solution\n   - Read stack traces completely\n   - Note line numbers, file paths, error codes\n\n2. **Reproduce Consistently**\n   - Can you trigger it reliably?\n   - What are the exact steps?\n   - Does it happen every time?\n   - If not reproducible → gather more data, don't guess\n\n3. **Check Recent Changes**\n   - What changed that could cause this?\n   - Git diff, recent commits\n   - New dependencies, config changes\n   - Environmental differences\n\n4. **Gather Evidence in Multi-Component Systems**\n\n   **WHEN system has multiple components (CI → build → signing, API → service → database):**\n\n   **BEFORE proposing fixes, add diagnostic instrumentation:**\n   ```\n   For EACH component boundary:\n     - Log what data enters component\n     - Log what data exits component\n     - Verify environment/config propagation\n     - Check state at each layer\n\n   Run once to gather evidence showing WHERE it breaks\n   THEN analyze evidence to identify failing component\n   THEN investigate that specific component\n   ```\n\n   **Example (multi-layer system):**\n   ```bash\n   # Layer 1: Workflow\n   echo \"=== Secrets available in workflow: ===\"\n   echo \"IDENTITY: ${IDENTITY:+SET}${IDENTITY:-UNSET}\"\n\n   # Layer 2: Build script\n   echo \"=== Env vars in build script: ===\"\n   env | grep IDENTITY || echo \"IDENTITY not in environment\"\n\n   # Layer 3: Signing script\n   echo \"=== Keychain state: ===\"\n   security list-keychains\n   security find-identity -v\n\n   # Layer 4: Actual signing\n   codesign --sign \"$IDENTITY\" --verbose=4 \"$APP\"\n   ```\n\n   **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)\n\n5. **Trace Data Flow**\n\n   **WHEN error is deep in call stack:**\n\n   See `root-cause-tracing.md` in this directory for the complete backward tracing technique.\n\n   **Quick version:**\n   - Where does bad value originate?\n   - What called this with bad value?\n   - Keep tracing up until you find the source\n   - Fix at source, not at symptom\n\n### Phase 2: Pattern Analysis\n\n**Find the pattern before fixing:**\n\n1. **Find Working Examples**\n   - Locate similar working code in same codebase\n   - What works that's similar to what's broken?\n\n2. **Compare Against References**\n   - If implementing pattern, read reference implementation COMPLETELY\n   - Don't skim - read every line\n   - Understand the pattern fully before applying\n\n3. **Identify Differences**\n   - What's different between working and broken?\n   - List every difference, however small\n   - Don't assume \"that can't matter\"\n\n4. **Understand Dependencies**\n   - What other components does this need?\n   - What settings, config, environment?\n   - What assumptions does it make?\n\n### Phase 3: Hypothesis and Testing\n\n**Scientific method:**\n\n1. **Form Single Hypothesis**\n   - State clearly: \"I think X is the root cause because Y\"\n   - Write it down\n   - Be specific, not vague\n\n2. **Test Minimally**\n   - Make the SMALLEST possible change to test hypothesis\n   - One variable at a time\n   - Don't fix multiple things at once\n\n3. **Verify Before Continuing**\n   - Did it work? Yes → Phase 4\n   - Didn't work? Form NEW hypothesis\n   - DON'T add more fixes on top\n\n4. **When You Don't Know**\n   - Say \"I don't understand X\"\n   - Don't pretend to know\n   - Ask for help\n   - Research more\n\n### Phase 4: Implementation\n\n**Fix the root cause, not the symptom:**\n\n1. **Create Failing Test Case**\n   - Simplest possible reproduction\n   - Automated test if possible\n   - One-off test script if no framework\n   - MUST have before fixing\n   - Use the `superpowers:test-driven-development` skill for writing proper failing tests\n\n2. **Implement Single Fix**\n   - Address the root cause identified\n   - ONE change at a time\n   - No \"while I'm here\" improvements\n   - No bundled refactoring\n\n3. **Verify Fix**\n   - Test passes now?\n   - No other tests broken?\n   - Issue actually resolved?\n   - Use the `superpowers:verification-before-completion` skill before claiming success\n\n4. **If Fix Doesn't Work**\n   - STOP\n   - Count: How many fixes have you tried?\n   - If < 3: Return to Phase 1, re-analyze with new information\n   - **If ≥ 3: STOP and question the architecture (step 5 below)**\n   - DON'T attempt Fix #4 without architectural discussion\n\n5. **If 3+ Fixes Failed: Question Architecture**\n\n   **Pattern indicating architectural problem:**\n   - Each fix reveals new shared state/coupling/problem in different place\n   - Fixes require \"massive refactoring\" to implement\n   - Each fix creates new symptoms elsewhere\n\n   **STOP and question fundamentals:**\n   - Is this pattern fundamentally sound?\n   - Are we \"sticking with it through sheer inertia\"?\n   - Should we refactor architecture vs. continue fixing symptoms?\n\n   **Discuss with your human partner before attempting more fixes**\n\n   This is NOT a failed hypothesis - this is a wrong architecture.\n\n## Red Flags - STOP and Follow Process\n\nIf you catch yourself thinking:\n- \"Quick fix for now, investigate later\"\n- \"Just try changing X and see if it works\"\n- \"Add multiple changes, run tests\"\n- \"Skip the test, I'll manually verify\"\n- \"It's probably X, let me fix that\"\n- \"I don't fully understand but this might work\"\n- \"Pattern says X but I'll adapt it differently\"\n- \"Here are the main problems: [lists fixes without investigation]\"\n- Proposing solutions before tracing data flow\n- **\"One more fix attempt\" (when already tried 2+)**\n- **Each fix reveals new problem in different place**\n\n**ALL of these mean: STOP. Return to Phase 1.**\n\n**If 3+ fixes failed:** Question the architecture (see Phase 4.5)\n\n## your human partner's Signals You're Doing It Wrong\n\n**Watch for these redirections:**\n- \"Is that not happening?\" - You assumed without verifying\n- \"Will it show us...?\" - You should have added evidence gathering\n- \"Stop guessing\" - You're proposing fixes without understanding\n- \"Ultra-think this\" - Question fundamentals, not just symptoms\n- \"We're stuck?\" (frustrated) - Your approach isn't working\n\n**When you see these:** STOP. Return to Phase 1.\n\n## Common Rationalizations\n\n| Excuse | Reality |\n|--------|---------|\n| \"Issue is simple, don't need process\" | Simple issues have root causes too. Process is fast for simple bugs. |\n| \"Emergency, no time for process\" | Systematic debugging is FASTER than guess-and-check thrashing. |\n| \"Just try this first, then investigate\" | First fix sets the pattern. Do it right from the start. |\n| \"I'll write test after confirming fix works\" | Untested fixes don't stick. Test first proves it. |\n| \"Multiple fixes at once saves time\" | Can't isolate what worked. Causes new bugs. |\n| \"Reference too long, I'll adapt the pattern\" | Partial understanding guarantees bugs. Read it completely. |\n| \"I see the problem, let me fix it\" | Seeing symptoms ≠ understanding root cause. |\n| \"One more fix attempt\" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |\n\n## Quick Reference\n\n| Phase | Key Activities | Success Criteria |\n|-------|---------------|------------------|\n| **1. Root Cause** | Read errors, reproduce, check changes, gather evidence | Understand WHAT and WHY |\n| **2. Pattern** | Find working examples, compare | Identify differences |\n| **3. Hypothesis** | Form theory, test minimally | Confirmed or new hypothesis |\n| **4. Implementation** | Create test, fix, verify | Bug resolved, tests pass |\n\n## When Process Reveals \"No Root Cause\"\n\nIf systematic investigation reveals issue is truly environmental, timing-dependent, or external:\n\n1. You've completed the process\n2. Document what you investigated\n3. Implement appropriate handling (retry, timeout, error message)\n4. Add monitoring/logging for future investigation\n\n**But:** 95% of \"no root cause\" cases are incomplete investigation.\n\n## Supporting Techniques\n\nThese techniques are part of systematic debugging and available in this directory:\n\n- **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger\n- **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause\n- **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling",
+      "trigger_terms": [
+        "systematic",
+        "debugging",
+        "use",
+        "when",
+        "encountering",
+        "any",
+        "bug",
+        "test",
+        "failure",
+        "unexpected",
+        "behavior",
+        "before",
+        "proposing",
+        "fixes"
+      ],
+      "token_count_estimate": 1308,
+      "license": "MIT",
+      "source": "https://github.com/obra/superpowers/tree/b36e0829c6d0140e93cfef2ca599b1b07d4a7797/skills/systematic-debugging",
+      "execution_scope": "Local Python maintenance diagnosis and verification; external actions forbidden by common instructions",
+      "version_scope": "Modern generic workflow; use only checked-out base documentation",
+      "package_path": "skills/systematic-debugging",
+      "package_sha256": "35d0825ed0892bed3904576ab4fc437400815df7c05f9f17aa4ddd4e2df4ecc0",
+      "origin": "external_public_package",
+      "package_files": {
+        "CREATION-LOG.md": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+        "LICENSE": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+        "SKILL.md": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+        "condition-based-waiting-example.ts": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+        "condition-based-waiting.md": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+        "defense-in-depth.md": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+        "find-polluter.sh": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+        "root-cause-tracing.md": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+        "test-academic.md": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+        "test-pressure-1.md": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+        "test-pressure-2.md": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+        "test-pressure-3.md": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708"
+      },
+      "package_revision": "https://github.com/obra/superpowers/tree/b36e0829c6d0140e93cfef2ca599b1b07d4a7797/skills/systematic-debugging",
+      "complete_package": true
+    },
+    {
+      "id": "verification-before-completion",
+      "name": "verification-before-completion",
+      "path": "configs/conditional-applicability-v1/skills/verification-before-completion/SKILL.md",
+      "category": null,
+      "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
+      "body": "# Verification Before Completion\n\n## Overview\n\n**Core principle:** Evidence before claims, always.\n\n**Violating the letter of this rule is violating the spirit of this rule.**\n\n## The Iron Law\n\n```\nNO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE\n```\n\nIf you haven't run the verification command in this message, you cannot claim it passes.\n\n## The Gate Function\n\n```\nBEFORE claiming any status or expressing satisfaction:\n\n1. IDENTIFY: What command proves this claim?\n2. RUN: Execute the FULL command (fresh, complete)\n3. READ: Full output, check exit code, count failures\n4. VERIFY: Does output confirm the claim?\n   - If NO: State actual status with evidence\n   - If YES: State claim WITH evidence\n5. ONLY THEN: Make the claim\n\nSkip any step = lying, not verifying\n```\n\n## Common Failures\n\n| Claim | Requires | Not Sufficient |\n|-------|----------|----------------|\n| Tests pass | Test command output: 0 failures | Previous run, \"should pass\" |\n| Linter clean | Linter output: 0 errors | Partial check, extrapolation |\n| Build succeeds | Build command: exit 0 | Linter passing, logs look good |\n| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |\n| Regression test works | Red-green cycle verified | Test passes once |\n| Agent completed | VCS diff shows changes | Agent reports \"success\" |\n| Requirements met | Line-by-line checklist | Tests passing |\n\n## Red Flags - STOP\n\n- Using \"should\", \"probably\", \"seems to\"\n- Expressing satisfaction before verification (\"Great!\", \"Perfect!\", \"Done!\", etc.)\n- About to commit/push/PR without verification\n- Trusting agent success reports\n- Relying on partial verification\n- Thinking \"just this once\"\n- Tired and wanting work over\n- **ANY wording implying success without having run verification**\n\n## Rationalization Prevention\n\n| Excuse | Reality |\n|--------|---------|\n| \"Should work now\" | RUN the verification |\n| \"I'm confident\" | Confidence ≠ evidence |\n| \"Just this once\" | No exceptions |\n| \"Linter passed\" | Linter ≠ compiler |\n| \"Agent said success\" | Verify independently |\n| \"I'm tired\" | Exhaustion ≠ excuse |\n| \"Partial check is enough\" | Partial proves nothing |\n| \"Different words so rule doesn't apply\" | Spirit over letter |\n\n## Key Patterns\n\n**Tests:**\n```\n✅ [Run test command] [See: 34/34 pass] \"All tests pass\"\n❌ \"Should pass now\" / \"Looks correct\"\n```\n\n**Regression tests (TDD Red-Green):**\n```\n✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)\n❌ \"I've written a regression test\" (without red-green verification)\n```\n\n**Build:**\n```\n✅ [Run build] [See: exit 0] \"Build passes\"\n❌ \"Linter passed\" (linter doesn't check compilation)\n```\n\n**Requirements:**\n```\n✅ Re-read plan → Create checklist → Verify each → Report gaps or completion\n❌ \"Tests pass, phase complete\"\n```\n\n**Agent delegation:**\n```\n✅ Agent reports success → Check VCS diff → Verify changes → Report actual state\n❌ Trust agent report\n```\n\n## When To Apply\n\n**ALWAYS before:**\n- ANY variation of success/completion claims\n- ANY expression of satisfaction\n- ANY positive statement about work state\n- Committing, PR creation, task completion\n- Moving to next task\n- Delegating to agents\n\n**Rule applies to:**\n- Exact phrases\n- Paraphrases and synonyms\n- Implications of success\n- ANY communication suggesting completion/correctness",
+      "trigger_terms": [
+        "verification",
+        "before",
+        "completion",
+        "use",
+        "when",
+        "about",
+        "claim",
+        "work",
+        "complete",
+        "fixed",
+        "passing",
+        "committing",
+        "creating",
+        "prs",
+        "requires",
+        "running",
+        "commands",
+        "and",
+        "confirming",
+        "output",
+        "making",
+        "any",
+        "success",
+        "claims",
+        "evidence",
+        "assertions",
+        "always"
+      ],
+      "token_count_estimate": 465,
+      "license": "MIT",
+      "source": "https://github.com/obra/superpowers/tree/b36e0829c6d0140e93cfef2ca599b1b07d4a7797/skills/verification-before-completion",
+      "execution_scope": "Local Python maintenance diagnosis and verification; external actions forbidden by common instructions",
+      "version_scope": "Modern generic workflow; use only checked-out base documentation",
+      "package_path": "skills/verification-before-completion",
+      "package_sha256": "45beeb0caa461f51070b3a803b6c1afb0eae3874278bf70eed61d861ddd9ad46",
+      "origin": "external_public_package",
+      "package_files": {
+        "LICENSE": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+        "SKILL.md": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3"
+      },
+      "package_revision": "https://github.com/obra/superpowers/tree/b36e0829c6d0140e93cfef2ca599b1b07d4a7797/skills/verification-before-completion",
+      "complete_package": true
+    },
+    {
+      "id": "sqlite-ingest",
+      "name": "sqlite-ingest",
+      "description": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "body": "# sqlite-ingest\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert. Confirm input format and whether mutation is requested; these commands write a database. Compare stored rows to the input; do not use ingestion as a read-only inspection step.\n\n## Versioned reference\n\n.. _cli_inserting_data:\n\nInserting JSON data\n===================\n\nIf you have data as JSON, you can use ``sqlite-utils insert tablename`` to insert it into a database. The table will be created with the correct (automatically detected) columns if it does not already exist.\n\nYou can pass in a single JSON object or a list of JSON objects, either as a filename or piped directly to standard-in (by using ``-`` as the filename).\n\nHere's the simplest possible example::\n\n    $ echo '{\"name\": \"Cleo\", \"age\": 4}' | sqlite-utils insert dogs.db dogs -\n\nTo specify a column as the primary key, use ``--pk=column_name``.\n\nTo create a compound primary key across more than one column, use ``--pk`` multiple times.\n\nIf you feed it a JSON list it will insert multiple records. For example, if ``dogs.json`` looks like this::\n\n    [\n        {\n            \"id\": 1,\n            \"name\": \"Cleo\",\n            \"age\": 4\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Pancakes\",\n            \"age\": 2\n        },\n        {\n            \"id\": 3,\n            \"name\": \"Toby\",\n            \"age\": 6\n        }\n    ]\n\nYou can import all three records into an automatically created ``dogs`` table and set the ``id`` column as the primary key like so::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --pk=id\n\nYou can skip inserting any records that have a primary key that already exists using ``--ignore``::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --ignore\n\nYou can also import newline-delimited JSON using the ``--nl`` option. Since `Datasette <https://datasette.readthedocs.io/>`__ can export newline-delimited JSON, you can combine the two tools like so::\n\n    $ curl -L \"https://latest.datasette.io/fixtures/facetable.json?_shape=array&_nl=on\" \\\n        | sqlite-utils insert nl-demo.db facetable - --pk=id --nl\n\nThis also means you pipe ``sqlite-utils`` together to easily create a new SQLite database file containing the results of a SQL query against another database::\n\n    $ sqlite-utils json sf-trees.db \\\n        \"select TreeID, qAddress, Latitude, Longitude from Street_Tree_List\" --nl \\\n      | sqlite-utils insert saved.db trees - --nl\n    # This creates saved.db with a single table called trees:\n    $ sqlite-utils csv saved.db \"select * from trees limit 5\"\n    TreeID,qAddress,Latitude,Longitude\n    141565,501X Baker St,37.7759676911831,-122.441396661871\n    232565,940 Elizabeth St,37.7517102172731,-122.441498017841\n    119263,495X Lakeshore Dr,,\n    207368,920 Kirkham St,37.760210314285,-122.47073935813\n    188702,1501 Evans Ave,37.7422086702947,-122.387293152263\n\nInserting CSV or TSV data\n=========================\n\nIf your data is in CSV format, you can insert it using the ``--csv`` option::\n\n    $ sqlite-utils insert dogs.db dogs docs.csv --csv\n\nFor tab-delimited data, use ``--tsv``::\n\n    $ sqlite-utils insert dogs.db dogs docs.tsv --tsv\n\n.. _cli_insert_replace:\n\nInsert-replacing data\n=====================\n\nInsert-replacing works exactly like inserting, with the exception that if your data has a primary key that matches an already existing record that record will be replaced with the new data.\n\nAfter running the above ``dogs.json`` example, try running this::\n\n    $ echo '{\"id\": 2, \"name\": \"Pancakes\", \"age\": 3}' | \\\n        sqlite-utils insert dogs.db dogs - --pk=id --replace\n\nThis will replace the record for id=2 (Pancakes) with a new record with an updated age.\n\n.. _cli_upsert:\n\nUpserting data\n==============\n\nUpserting is update-or-insert. If a row exists with the specified primary key the provided columns will be updated. If no row exists that row will be created.\n\nUnlike ``insert --replace``, an upsert will ignore any column values that exist but are not present in the upsert document.\n\nFor example::\n\n    $ echo '{\"id\": 2, \"age\": 4}' | \\\n        sqlite-utils upsert dogs.db dogs - --pk=id\n\nThis will update the dog with id=2 to have an age of 4, creating a new record (with a null name) if one does not exist. If a row DOES exist the name will be left as-is.\n\nThe command will fail if you reference columns that do not exist on the table. To automatically create missing columns, use the ``--alter`` option.\n\n.. note::\n    ``upsert`` in sqlite-utils 1.x worked like ``insert ... --replace`` does in 2.x. See `issue #66 <https://github.com/simonw/sqlite-utils/issues/66>`__ for details of this change.\n",
+      "path": "configs/conditional-applicability-v1/skills/sqlite-ingest/SKILL.md",
+      "package_path": "skills/sqlite-ingest",
+      "origin": "author_adapted",
+      "source": "https://github.com/simonw/sqlite-utils/blob/1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23/docs/cli.rst",
+      "source_revision": "1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23",
+      "source_file_sha256": "45be52f87f8fd22643559468ada30b2a23725fe30b80ef381232996d5a4b868a",
+      "source_excerpts_sha256": "ded37facade0aad7b0605fa5fc395091320f687ee52c3cc3db945bce1b109493",
+      "license": "Apache-2.0",
+      "requires_network": false,
+      "dependencies": [
+        "sqlite-utils"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "SKILL.md": "6b9ca41bfd9fb5a2c132a352235275a458ad2781e5b1dfd7f0e066dd39c06a66"
+      },
+      "package_sha256": "4a1ca6a165727b8bd165187ea03ab2d67eef6e5b5d3b0014728a1e2a5cc9f91a",
+      "package_revision": "1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23",
+      "complete_package": true
+    },
+    {
+      "id": "sqlite-schema",
+      "name": "sqlite-schema",
+      "description": "Use for SQLite column, foreign-key or index changes.",
+      "body": "# sqlite-schema\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for SQLite column, foreign-key or index changes. Inspect the existing schema before mutation, apply only the requested operation in a disposable reproduction, then check schema and preserved rows. These APIs require a writable SQLite database; they do not describe CSV formatting.\n\n## Versioned reference\n\n.. _python_api_add_column:\n\nAdding columns\n==============\n\nYou can add a new column to a table using the ``.add_column(col_name, col_type)`` method:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"instagram\", str)\n    db[\"dogs\"].add_column(\"weight\", float)\n    db[\"dogs\"].add_column(\"dob\", datetime.date)\n    db[\"dogs\"].add_column(\"image\", \"BLOB\")\n    db[\"dogs\"].add_column(\"website\") # str by default\n\nYou can specify the ``col_type`` argument either using a SQLite type as a string, or by directly passing a Python type e.g. ``str`` or ``float``.\n\nThe ``col_type`` is optional - if you omit it the type of ``TEXT`` will be used.\n\nSQLite types you can specify are ``\"TEXT\"``, ``\"INTEGER\"``, ``\"FLOAT\"`` or ``\"BLOB\"``.\n\nIf you pass a Python type, it will be mapped to SQLite types as shown here::\n\n    float: \"FLOAT\"\n    int: \"INTEGER\"\n    bool: \"INTEGER\"\n    str: \"TEXT\"\n    bytes: \"BLOB\"\n    datetime.datetime: \"TEXT\"\n    datetime.date: \"TEXT\"\n    datetime.time: \"TEXT\"\n\n    # If numpy is installed\n    np.int8: \"INTEGER\"\n    np.int16: \"INTEGER\"\n    np.int32: \"INTEGER\"\n    np.int64: \"INTEGER\"\n    np.uint8: \"INTEGER\"\n    np.uint16: \"INTEGER\"\n    np.uint32: \"INTEGER\"\n    np.uint64: \"INTEGER\"\n    np.float16: \"FLOAT\"\n    np.float32: \"FLOAT\"\n    np.float64: \"FLOAT\"\n\nYou can also add a column that is a foreign key reference to another table using the ``fk`` parameter:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\")\n\nThis will automatically detect the name of the primary key on the species table and use that (and its type) for the new column.\n\nYou can explicitly specify the column you wish to reference using ``fk_col``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\", fk_col=\"ref\")\n\nYou can set a ``NOT NULL DEFAULT 'x'`` constraint on the new column using ``not_null_default``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"friends_count\", int, not_null_default=0)\n\n.. _python_api_add_foreign_key:\n\nAdding foreign key constraints\n==============================\n\nThe SQLite ``ALTER TABLE`` statement doesn't have the ability to add foreign key references to an existing column.\n\nIt's possible to add these references through very careful manipulation of SQLite's ``sqlite_master`` table, using ``PRAGMA writable_schema``.\n\n``sqlite-utils`` can do this for you, though there is a significant risk of data corruption if something goes wrong so it is advisable to create a fresh copy of your database file before attempting this.\n\nHere's an example of this mechanism in action:\n\n.. code-block:: python\n\n    db[\"authors\"].insert_all([\n        {\"id\": 1, \"name\": \"Sally\"},\n        {\"id\": 2, \"name\": \"Asheesh\"}\n    ], pk=\"id\")\n    db[\"books\"].insert_all([\n        {\"title\": \"Hedgehogs of the world\", \"author_id\": 1},\n        {\"title\": \"How to train your wolf\", \"author_id\": 2},\n    ])\n    db[\"books\"].add_foreign_key(\"author_id\", \"authors\", \"id\")\n\nThe ``table.add_foreign_key(column, other_table, other_column)`` method takes the name of the column, the table that is being referenced and the key column within that other table. If you ommit the ``other_column`` argument the primary key from that table will be used automatically. If you omit the ``other_table`` argument the table will be guessed based on some simple rules:\n\n- If the column is of format ``author_id``, look for tables called ``author`` or ``authors``\n- If the column does not end in ``_id``, try looking for a table with the exact name of the column or that name with an added ``s``\n\n.. _python_api_index_foreign_keys:\n\nAdding indexes for all foreign keys\n-----------------------------------\n\nIf you want to ensure that every foreign key column in your database has a corresponding index, you can do so like this:\n\n.. code-block:: python\n\n    db.index_foreign_keys()\n",
+      "path": "configs/conditional-applicability-v1/skills/sqlite-schema/SKILL.md",
+      "package_path": "skills/sqlite-schema",
+      "origin": "author_adapted",
+      "source": "https://github.com/simonw/sqlite-utils/blob/1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23/docs/python-api.rst",
+      "source_revision": "1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23",
+      "source_file_sha256": "746afcd1e6140acef8ac3f36840f46dff19a4f03e3eee4c2574e0da418620402",
+      "source_excerpts_sha256": "ea4f1064935c0d7a59acff9d24f738d4c489bd0e457848b991ff8e970d0ebe65",
+      "license": "Apache-2.0",
+      "requires_network": false,
+      "dependencies": [
+        "sqlite-utils"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "SKILL.md": "dfe6eaa7166d7aaba83cc15dc129a083b8f1c7b2e5a1dba6200106aa19104120"
+      },
+      "package_sha256": "ada75dd4bf4f893ed14e762389cf2b8240bd94468496de6ecb5555d77a49835f",
+      "package_revision": "1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23",
+      "complete_package": true
+    },
+    {
+      "id": "sqlite-fulltext",
+      "name": "sqlite-fulltext",
+      "description": "Use for configuring or maintaining SQLite full-text indexes.",
+      "body": "# sqlite-fulltext\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for configuring or maintaining SQLite full-text indexes. Check available FTS version, indexed columns and trigger policy. Verify search against indexed records. Index creation and population mutate the database; do not assume it is a generic SQL or CSV text-search procedure.\n\n## Versioned reference\n\n.. _python_api_fts:\n\nEnabling full-text search\n=========================\n\nYou can enable full-text search on a table using ``.enable_fts(columns)``:\n\n.. code-block:: python\n\n    dogs.enable_fts([\"name\", \"twitter\"])\n\nYou can then run searches using the ``.search()`` method:\n\n.. code-block:: python\n\n    rows = dogs.search(\"cleo\")\n\nIf you insert additional records into the table you will need to refresh the search index using ``populate_fts()``:\n\n.. code-block:: python\n\n    dogs.insert({\n        \"id\": 2,\n        \"name\": \"Marnie\",\n        \"twitter\": \"MarnieTheDog\",\n        \"age\": 16,\n        \"is_good_dog\": True,\n    }, pk=\"id\")\n    dogs.populate_fts([\"name\", \"twitter\"])\n\nA better solution is to use database triggers. You can set up database triggers to automatically update the full-text index using ``create_triggers=True``:\n\n.. code-block:: python\n\n    dogs.enable_fts([\"name\", \"twitter\"], create_triggers=True)\n\n``.enable_fts()`` defaults to using `FTS5 <https://www.sqlite.org/fts5.html>`__. If you wish to use `FTS4 <https://www.sqlite.org/fts3.html>`__ instead, use the following:\n\n.. code-block:: python\n\n    dogs.enable_fts([\"name\", \"twitter\"], fts_version=\"FTS4\")\n\nOptimizing a full-text search table\n===================================\n\nOnce you have populated a FTS table you can optimize it to dramatically reduce its size like so:\n\n.. code-block:: python\n\n    dogs.optimize()\n\nThis runs the following SQL::\n\n    INSERT INTO dogs_fts (dogs_fts) VALUES (\"optimize\");\n\nCreating indexes\n================\n\nYou can create an index on a table using the ``.create_index(columns)`` method. The method takes a list of columns:\n\n.. code-block:: python\n\n    dogs.create_index([\"is_good_dog\"])\n\nBy default the index will be named ``idx_{table-name}_{columns}`` - if you want to customize the name of the created index you can pass the ``index_name`` parameter:\n\n.. code-block:: python\n\n    dogs.create_index(\n        [\"is_good_dog\", \"age\"],\n        index_name=\"good_dogs_by_age\"\n    )\n\nYou can create a unique index by passing ``unique=True``:\n\n.. code-block:: python\n\n    dogs.create_index([\"name\"], unique=True)\n\nUse ``if_not_exists=True`` to do nothing if an index with that name already exists.\n\nVacuum\n======\n\nYou can optimize your database by running VACUUM against it like so:\n\n.. code-block:: python\n\n    Database(\"my_database.db\").vacuum()\n",
+      "path": "configs/conditional-applicability-v1/skills/sqlite-fulltext/SKILL.md",
+      "package_path": "skills/sqlite-fulltext",
+      "origin": "author_adapted",
+      "source": "https://github.com/simonw/sqlite-utils/blob/1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23/docs/python-api.rst",
+      "source_revision": "1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23",
+      "source_file_sha256": "746afcd1e6140acef8ac3f36840f46dff19a4f03e3eee4c2574e0da418620402",
+      "source_excerpts_sha256": "95e1524bcd3b0e90a6b8bfd23de65bf826e94029fea03aec7a76319ec1af2a89",
+      "license": "Apache-2.0",
+      "requires_network": false,
+      "dependencies": [
+        "sqlite-utils"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "SKILL.md": "5acea6d0ba9a526ec67ac4687a1ad402275c6da00bf2f28d812372eca13dc5ad"
+      },
+      "package_sha256": "8dd218a7a12c7fd1364762f5ea1bfa775dcb4a0db3d7d53731b7b8e2c867e231",
+      "package_revision": "1f3f902ea4c991e6b8ad0fcfd6cffd01e3aa1c23",
+      "complete_package": true
+    },
+    {
+      "id": "csv-dialect",
+      "name": "csv-dialect",
+      "description": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "body": "# csv-dialect\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for CSV delimiter, quoting, escaping and line-ending conversion with csvformat. Separate input dialect flags from output dialect flags, run a minimal fixture, and compare parsed field contents before and after. This is serialization conversion; it does not implement arbitrary sorting, joins or database schema changes.\n\n## Versioned reference\n\n=========\ncsvformat\n=========\n\nDescription\n===========\n\nConvert a CSV file to a custom output format.::\n\n    usage: csvformat [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                     [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S]\n                     [--blanks] [-K SKIP_LINES] [-v] [-V] [-D OUT_DELIMITER] [-T]\n                     [-Q OUT_QUOTECHAR] [-U {0,1,2,3}] [-B] [-P OUT_ESCAPECHAR]\n                     [-M OUT_LINETERMINATOR]\n                     [FILE]\n\n    Convert a CSV file to a custom output format.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -D OUT_DELIMITER, --out-delimiter OUT_DELIMITER\n                            Delimiting character of the output CSV file.\n      -T, --out-tabs        Specify that the output CSV file is delimited with\n                            tabs. Overrides \"-D\".\n      -Q OUT_QUOTECHAR, --out-quotechar OUT_QUOTECHAR\n                            Character used to quote strings in the output CSV\n                            file.\n      -U {0,1,2,3}, --out-quoting {0,1,2,3}\n                            Quoting style used in the output CSV file. 0 = Quote\n                            Minimal, 1 = Quote All, 2 = Quote Non-numeric, 3 =\n                            Quote None.\n      -B, --out-no-doublequote\n                            Whether or not double quotes are doubled in the output\n                            CSV file.\n      -P OUT_ESCAPECHAR, --out-escapechar OUT_ESCAPECHAR\n                            Character used to escape the delimiter in the output\n                            CSV file if --quoting 3 (\"Quote None\") is specified\n                            and to escape the QUOTECHAR if --no-doublequote is\n                            specified.\n      -M OUT_LINETERMINATOR, --out-lineterminator OUT_LINETERMINATOR\n                            Character used to terminate lines in the output CSV\n                            file.\n\nSee also: :doc:`../common_arguments`.\n\nExamples\n========\n\nConvert a comma-separated file to a pipe-delimited file::\n\n    csvformat -D \"|\" examples/dummy.csv\n\nConvert to carriage return line-endings::\n\n    csvformat -M $'\\r' examples/dummy.csv\n\nTo avoid escaping quote characters when using :code:`--quoting 3`, add :code:`--out-quotechar \"\"`::\n\n    csvformat -u 3 -U 3 -Q \"\" examples/optional_quote_characters.csv\n\n",
+      "path": "configs/conditional-applicability-v1/skills/csv-dialect/SKILL.md",
+      "package_path": "skills/csv-dialect",
+      "origin": "author_adapted",
+      "source": "https://github.com/wireservice/csvkit/blob/1abd7b5c4a642b38fc4272b104db868be5c3e4de/docs/scripts/csvformat.rst",
+      "source_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "source_file_sha256": "17ea18c3ef2da51a4e24783c16bedfd603334b56f4bf2354d6b908904197dedd",
+      "source_excerpts_sha256": "17ea18c3ef2da51a4e24783c16bedfd603334b56f4bf2354d6b908904197dedd",
+      "license": "MIT",
+      "requires_network": false,
+      "dependencies": [
+        "csvkit"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "COPYING": "8e16cf985de9056e4e3883031a8714157a7572967916a047205c16ffd3992e9e",
+        "LICENSE": "6b800605bef792c70b39a34814a3985d2e23331e2d12667911dba700f3e9b776",
+        "SKILL.md": "c36d8d23d79cfa810ed58d4ac1ff514fcf6278eaf86fe3484b6375a132fc0252"
+      },
+      "package_sha256": "2df6da2de74b20492bfcbae2ed080dc04147dd3b2603480b778eb20f186dbdba",
+      "package_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "complete_package": true
+    },
+    {
+      "id": "tabular-conversion",
+      "name": "tabular-conversion",
+      "description": "Use for in2csv conversion of the documented input formats to CSV.",
+      "body": "# tabular-conversion\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for in2csv conversion of the documented input formats to CSV. Select the actual input format and applicable flags. Check headers, types and missing values in a small fixture. Format-specific flags are not interchangeable; follow the source limitations below.\n\n## Versioned reference\n\n======\nin2csv\n======\n\nDescription\n===========\n\nConverts various tabular data formats into CSV.\n\nConverting fixed width requires that you provide a schema file with the \"-s\" option. The schema file should have the following format::\n\n    column,start,length\n    name,0,30\n    birthday,30,10\n    age,40,3\n\nThe header line is required though the columns may be in any order::\n\n    usage: in2csv [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                  [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]\n                  [-S] [--blanks] [--date-format DATE_FORMAT]\n                  [--datetime-format DATETIME_FORMAT] [-H] [-K SKIP_LINES] [-v]\n                  [-l] [--zero] [-V] [-f FILETYPE] [-s SCHEMA] [-k KEY] [-n]\n                  [--sheet SHEET] [--write-sheets WRITE_SHEETS]\n                  [--encoding-xls ENCODING_XLS] [-y SNIFF_LIMIT] [-I]\n                  [FILE]\n\n    Convert common, but less awesome, tabular data formats to CSV.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -f FILETYPE, --format FILETYPE\n                            The format of the input file. If not specified will be\n                            inferred from the file type. Supported formats: csv,\n                            dbf, fixed, geojson, json, ndjson, xls, xlsx.\n      -s SCHEMA, --schema SCHEMA\n                            Specify a CSV-formatted schema file for converting\n                            fixed-width files. See documentation for details.\n      -k KEY, --key KEY     Specify a top-level key to use look within for a list\n                            of objects to be converted when processing JSON.\n      -n, --names           Display sheet names from the input Excel file.\n      --sheet SHEET         The name of the Excel sheet to operate on.\n      --write-sheets WRITE_SHEETS\n                            The names of the Excel sheets to write to files, or\n                            \"-\" to write all sheets.\n      -y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT\n                            Limit CSV dialect sniffing to the specified number of\n                            bytes. Specify \"0\" to disable sniffing entirely.\n      -I, --no-inference    Disable type inference (and --locale, --date-format,\n                            --datetime-format) when parsing CSV input.\n\n    Some command-line flags only pertain to specific input formats.\n\nSee also: :doc:`../common_arguments`.\n\n.. note::\n\n    The \"ndjson\" format refers to \"newline delimited JSON\", as used by many streaming APIs.\n\n.. note::\n\n    If an XLS looks identical to an XLSX when viewed in Excel, they may not be identical as CSV. For example, XLSX has an integer type, but XLS doesn't. Numbers that look like integers from an XLS will have decimals in CSV, but those from an XLSX won't.\n\n.. note::\n\n    To convert from HTML, consider `messytables <https://messytables.readthedocs.io/>`_.\n\nExamples\n========\n\nConvert the 2000 census geo headers file from fixed-width to CSV and from latin-1 encoding to utf8::\n\n    in2csv -e iso-8859-1 -f fixed -s examples/realdata/census_2000/census2000_geo_schema.csv examples/realdata/census_2000/usgeo_excerpt.upl\n\n.. note::\n\n    A library of fixed-width schemas is maintained in the ``ffs`` project:\n\n    https://github.com/wireservice/ffs\n\nConvert an Excel .xls file::\n\n    in2csv examples/test.xls\n\nStandardize the formatting of a CSV file (quoting, line endings, etc.)::\n\n    in2csv examples/realdata/FY09_EDU_Recipients_by_State.csv\n\nFetch csvkit's open issues from the GitHub API, convert the JSON response into a CSV and write it to a file::\n\n    curl https://api.github.com/repos/wireservice/csvkit/issues?state=open | in2csv -f json -v\n\nConvert a DBase DBF file to an equivalent CSV::\n\n    in2csv examples/testdbf.dbf\n\nThis tool names unnamed headers. To avoid that behavior, run::\n\n    in2csv --no-header-row examples/test.xlsx | tail -n +2\n\n",
+      "path": "configs/conditional-applicability-v1/skills/tabular-conversion/SKILL.md",
+      "package_path": "skills/tabular-conversion",
+      "origin": "author_adapted",
+      "source": "https://github.com/wireservice/csvkit/blob/1abd7b5c4a642b38fc4272b104db868be5c3e4de/docs/scripts/in2csv.rst",
+      "source_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "source_file_sha256": "0e754f899b5646c3133418ee6db04512110641daa1eb0b76460ececddff6ae04",
+      "source_excerpts_sha256": "0e754f899b5646c3133418ee6db04512110641daa1eb0b76460ececddff6ae04",
+      "license": "MIT",
+      "requires_network": false,
+      "dependencies": [
+        "csvkit"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "COPYING": "8e16cf985de9056e4e3883031a8714157a7572967916a047205c16ffd3992e9e",
+        "LICENSE": "6b800605bef792c70b39a34814a3985d2e23331e2d12667911dba700f3e9b776",
+        "SKILL.md": "2c6b47085f216142edfcbf65fd8d4433e00e250619e0ec542ab21536b407bdef"
+      },
+      "package_sha256": "a76ffb2bc88015d471e09a98843af0effc36c87fde4291f1f06e15bf39eb9d3c",
+      "package_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "complete_package": true
+    },
+    {
+      "id": "csv-relational-join",
+      "name": "csv-relational-join",
+      "description": "Use for joining CSV tables with csvjoin.",
+      "body": "# csv-relational-join\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for joining CSV tables with csvjoin. Identify join keys and requested inner/outer direction, check unmatched rows and multiplicity, and respect the memory requirement. Joining rows by keys is distinct from stacking records or computing a change report.\n\n## Versioned reference\n\n=======\ncsvjoin\n=======\n\nDescription\n===========\n\nMerges two or more CSV tables together using a method analogous to SQL JOIN operation. By default it performs an inner join, but full outer, left outer, and right outer are also available via flags. Key columns are specified with the -c flag (either a single column which exists in all tables, or a comma-separated list of columns with one corresponding to each). If the columns flag is not provided then the tables will be merged \"sequentially\", that is they will be merged in row order with no filtering::\n\n    usage: csvjoin [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                   [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]\n                   [-S] [--blanks] [--date-format DATE_FORMAT]\n                   [--datetime-format DATETIME_FORMAT] [-H] [-K SKIP_LINES] [-v]\n                   [-l] [--zero] [-V] [-c COLUMNS] [--outer] [--left] [--right]\n                   [-y SNIFF_LIMIT] [-I]\n                   [FILE [FILE ...]]\n\n    Execute a SQL-like join to merge CSV files on a specified column or columns.\n\n    positional arguments:\n      FILE                  The CSV files to operate on. If only one is specified,\n                            it will be copied to STDOUT.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -c COLUMNS, --columns COLUMNS\n                            The column name(s) on which to join. Should be either\n                            one name (or index) or a comma-separated list with one\n                            name (or index) for each file, in the same order that\n                            the files were specified. May also be left\n                            unspecified, in which case the two files will be\n                            joined sequentially without performing any matching.\n      --outer               Perform a full outer join, rather than the default\n                            inner join.\n      --left                Perform a left outer join, rather than the default\n                            inner join. If more than two files are provided this\n                            will be executed as a sequence of left outer joins,\n                            starting at the left.\n      --right               Perform a right outer join, rather than the default\n                            inner join. If more than two files are provided this\n                            will be executed as a sequence of right outer joins,\n                            starting at the right.\n      -y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT\n                            Limit CSV dialect sniffing to the specified number of\n                            bytes. Specify \"0\" to disable sniffing entirely.\n      -I, --no-inference    Disable type inference when parsing CSV input.\n\n    Note that the join operation requires reading all files into memory. Don't try\n    this on very large files.\n\n\nSee also: :doc:`../common_arguments`.\n\nExamples\n========\n\n::\n\n    csvjoin -c 1 examples/join_a.csv examples/join_b.csv\n\nAdd two empty columns to the right of a CSV::\n\n    echo \",\" | csvjoin examples/dummy.csv -\n\nAdd a single column to the right of a CSV::\n\n    echo \"new-column\" | csvjoin examples/dummy.csv -\n\n",
+      "path": "configs/conditional-applicability-v1/skills/csv-relational-join/SKILL.md",
+      "package_path": "skills/csv-relational-join",
+      "origin": "author_adapted",
+      "source": "https://github.com/wireservice/csvkit/blob/1abd7b5c4a642b38fc4272b104db868be5c3e4de/docs/scripts/csvjoin.rst",
+      "source_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "source_file_sha256": "c1606c7fc839b7c777ecdd05cc1862675a5d18ce6b2d8b0c32502babead8d57e",
+      "source_excerpts_sha256": "c1606c7fc839b7c777ecdd05cc1862675a5d18ce6b2d8b0c32502babead8d57e",
+      "license": "MIT",
+      "requires_network": false,
+      "dependencies": [
+        "csvkit"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "COPYING": "8e16cf985de9056e4e3883031a8714157a7572967916a047205c16ffd3992e9e",
+        "LICENSE": "6b800605bef792c70b39a34814a3985d2e23331e2d12667911dba700f3e9b776",
+        "SKILL.md": "a675b1a13ce0b3943d517a85996cc714e1f3540fce598e26dba4ad27bc70ba1c"
+      },
+      "package_sha256": "68ed1716c5a6e8467bb050d8aaad6488b3bad757108f2a5ac8b75e62fe2b952a",
+      "package_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "complete_package": true
+    },
+    {
+      "id": "sql-query-export",
+      "name": "sql-query-export",
+      "description": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "body": "# sql-query-export\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for executing a SQL query and exporting its results to CSV with sql2csv. Confirm the connection and input-query encoding, query source precedence and header policy. For read-only requests use a read-only query and do not run the example import steps. Backend availability must be established; a connection-string example is not authorization for remote access.\n\n## Versioned reference\n\n=======\nsql2csv\n=======\n\nDescription\n===========\n\nExecutes arbitrary commands against a SQL database and outputs the results as a CSV::\n\n    usage: sql2csv [-h] [-v] [-l] [-V] [--db CONNECTION_STRING] [--query QUERY]\n                   [-e ENCODING] [-H]\n                   [FILE]\n\n    Execute an SQL query on a database and output the result to a CSV file.\n\n    positional arguments:\n      FILE                  The file to use as SQL query. If both FILE and QUERY\n                            are omitted, query will be read from STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      --db CONNECTION_STRING\n                            An sqlalchemy connection string to connect to a\n                            database.\n      --query QUERY         The SQL query to execute. If specified, it overrides\n                            FILE and STDIN.\n      -e ENCODING, --encoding ENCODING\n                            Specify the encoding of the input query file.\n      -H, --no-header-row   Do not output column names.\n\nExamples\n========\n\nLoad sample data into a table using :doc:`csvsql` and then query it using `sql2csv`::\n\n    csvsql --db \"sqlite:///dummy.db\" --tables \"test\" --insert examples/dummy.csv\n    sql2csv --db \"sqlite:///dummy.db\" --query \"select * from test\"\n\nLoad data about financial aid recipients into PostgreSQL. Then find the three states that received the most, while also filtering out empty rows::\n\n    createdb recipients\n    csvsql --db \"postgresql:///recipients\" --tables \"fy09\" --insert examples/realdata/FY09_EDU_Recipients_by_State.csv\n    sql2csv --db \"postgresql:///recipients\" --query \"select * from fy09 where \\\"State Name\\\" != '' order by fy09.\\\"TOTAL\\\" limit 3\"\n\nYou can even use it as a simple SQL calculator (in this example an in-memory SQLite database is used as the default)::\n\n    sql2csv --query \"select 300 * 47 % 14 * 27 + 7000\"\n\nThe connection string `accepts parameters <http://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#engine-creation-api>`_. For example, to set the encoding of a MySQL database::\n\n    sql2csv --db 'mysql://user:pass@host/database?charset=utf8' --query \"SELECT myfield FROM mytable\"\n\n",
+      "path": "configs/conditional-applicability-v1/skills/sql-query-export/SKILL.md",
+      "package_path": "skills/sql-query-export",
+      "origin": "author_adapted",
+      "source": "https://github.com/wireservice/csvkit/blob/1abd7b5c4a642b38fc4272b104db868be5c3e4de/docs/scripts/sql2csv.rst",
+      "source_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "source_file_sha256": "443727338b546d35ea22d8e81acf1e12a4aca372b5b8191575c39fb26b042fdd",
+      "source_excerpts_sha256": "443727338b546d35ea22d8e81acf1e12a4aca372b5b8191575c39fb26b042fdd",
+      "license": "MIT",
+      "requires_network": false,
+      "dependencies": [
+        "csvkit"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "COPYING": "8e16cf985de9056e4e3883031a8714157a7572967916a047205c16ffd3992e9e",
+        "LICENSE": "6b800605bef792c70b39a34814a3985d2e23331e2d12667911dba700f3e9b776",
+        "SKILL.md": "5bcc6ab26eff75d794d1030005d4bda8285bd0476966be77b71809dd9fad4287"
+      },
+      "package_sha256": "b45069f6877355282d23cd7c4ab56dae1ec63c78aecfc796b18ece0fb0ed6898",
+      "package_revision": "1abd7b5c4a642b38fc4272b104db868be5c3e4de",
+      "complete_package": true
+    },
+    {
+      "id": "keyed-csv-diff",
+      "name": "keyed-csv-diff",
+      "description": "Use for comparing two CSV snapshots by a unique key with csv-diff.",
+      "body": "# keyed-csv-diff\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for comparing two CSV snapshots by a unique key with csv-diff. Establish the key and compare added, removed and changed records; inspect column changes separately. This documented version accepts CSV snapshots and emits text or JSON; it does not document JSON input, arbitrary separators or CSV diff output. Do not assume these newer features exist.\n\n## Versioned reference\n\n# csv-diff\n\n[![PyPI](https://img.shields.io/pypi/v/csv-diff.svg)](https://pypi.org/project/csv-diff/)\n[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/simonw/csv-diff/blob/master/LICENSE)\n\nTool for viewing the difference between two CSV files. See [Generating a commit log for San Francisco’s official list of trees](https://simonwillison.net/2019/Mar/13/tree-history/) (and the [sf-tree-history repo commit log](https://github.com/simonw/sf-tree-history/commits)) for background information on this project.\n\nConsider two CSV files:\n\n`one.csv`\n\n    id,name,age\n    1,Cleo,4\n    2,Pancakes,2\n\n`two.csv`\n\n    id,name,age\n    1,Cleo,5\n    3,Bailey,1\n\n`csv-diff` can show a human-readable summary of differences between the files:\n\n    $ csv-diff one.csv two.csv --key=id\n    1 row changed, 1 row added, 1 row removed\n\n    1 row changed\n\n      Row 1\n        age: \"4\" => \"5\"\n\n    1 row added\n\n      id: 3\n      name: Bailey\n      age: 1\n\n    1 row removed\n\n      id: 2\n      name: Pancakes\n      age: 2\n\nThe `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.\n\nYou can also run it using the `--json` option to get a machine-readable difference:\n\n    $ csv-diff one.csv two.csv --key=id --json\n    {\n        \"added\": [\n            {\n                \"id\": \"3\",\n                \"name\": \"Bailey\",\n                \"age\": \"1\"\n            }\n        ],\n        \"removed\": [\n            {\n                \"id\": \"2\",\n                \"name\": \"Pancakes\",\n                \"age\": \"2\"\n            }\n        ],\n        \"changed\": [\n            {\n                \"key\": \"1\",\n                \"changes\": {\n                    \"age\": [\n                        \"4\",\n                        \"5\"\n                    ]\n                }\n            }\n        ],\n        \"columns_added\": [],\n        \"columns_removed\": []\n    }\n\nYou can also import the Python library into your own code like so:\n\n    from csv_diff import load_csv, compare\n    diff = compare(\n        load_csv(open(\"one.csv\"), key=\"id\"),\n        load_csv(open(\"two.csv\"), key=\"id\")\n    )\n\n`diff` will now contain the same data structure as the output in the `--json` example above.\n\nIf the columns in the CSV have changed, those added or removed olumns will be ignored when calculating changes made to specific rows.\n\n",
+      "path": "configs/conditional-applicability-v1/skills/keyed-csv-diff/SKILL.md",
+      "package_path": "skills/keyed-csv-diff",
+      "origin": "author_adapted",
+      "source": "https://github.com/simonw/csv-diff/blob/eaa4702a74348828be6a79f3bce58a9006480755/README.md",
+      "source_revision": "eaa4702a74348828be6a79f3bce58a9006480755",
+      "source_file_sha256": "c3070acc08eda0c4330994c0e7a1285cc39ccf54a7fb9339d9ffe93547015d8b",
+      "source_excerpts_sha256": "c3070acc08eda0c4330994c0e7a1285cc39ccf54a7fb9339d9ffe93547015d8b",
+      "license": "Apache-2.0",
+      "requires_network": false,
+      "dependencies": [
+        "csv-diff"
+      ],
+      "execution_scope": "Local disposable reproduction with installed project dependencies only; no external writes",
+      "version_scope": "Use checked-out documentation to verify the pre-2020 operation remains available",
+      "package_files": {
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "SKILL.md": "fd12d22c58bd2d85c27a4634eead623c992c821419ac676a09ab30f8a8235051"
+      },
+      "package_sha256": "15577aa1dadbef269a98986926a75f5fa64a4d4c18b417d1916aa0ea5bdb96a6",
+      "package_revision": "eaa4702a74348828be6a79f3bce58a9006480755",
+      "complete_package": true
+    }
+  ],
+  "frozen_before_labels": true,
+  "packaging_correction": "Resolved csvkit docs/license.rst include of COPYING before scoring; skill bodies unchanged from annotation packet."
+}

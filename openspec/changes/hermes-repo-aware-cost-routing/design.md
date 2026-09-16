@@ -23,3 +23,7 @@ absolute text labels and an independent affine support calibration replace the
 experimental R semantics only under explicit `experimental_repair` configuration.
 B2/C2 use the same frozen rank adapter and pool. Old Gate feedback is incompatible;
 native remains default and no Gate training or original matrix rerun is authorized.
+
+## Conditional applicability v1 continuation
+
+The new designated Applicability Data Pointwise Learning Goal supersedes only the current research scope. Preserve prior records. Use independent group-disjoint fit/model-dev/cal/check, APPLICABLE versus explicit inapplicability and conditional specificity, a separately trained shared LoRA with two instructions, fit-only priors and cheap lexical comparisons. Reuse structured token handling and causal yes/no scorer. Runtime remains conditional on frozen nonzero support criteria; no Gate training, default promotion or archive.
