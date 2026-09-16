@@ -36,4 +36,6 @@ Authority: `docs/goals/Hermes_PR48_Applicability_Data_Pointwise_Learning_Codex_G
 - [x] 3.4 M3 Train independent pointwise adapter and verify fresh-process reload.
 - [x] 3.5 M4 Freeze model then calibrate/check and report grouped results.
 - [x] 3.6 M5 Exercise supported branch conditionally or record prerequisite stop.
-- [ ] 3.7 M6 Records, clean install, independent review, Draft update and same-HEAD CI.
+- [x] 3.7 M6 Records, clean install, independent review, Draft update and same-HEAD CI.
+
+Conditional-applicability offline delivery completed. First delivered code HEAD `4d787c33c11371a8e7e13ee9e1950d8d2cf90397` passed GitHub CI run `35057546855`; final documentation closeout HEAD is checked separately in PR #48. Runtime is NOT_RUN under the frozen prerequisite stop, not supported-branch completion. Historical task 2.5 remains incomplete; no archive or merge.

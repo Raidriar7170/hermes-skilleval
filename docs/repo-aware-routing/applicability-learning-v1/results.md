@@ -2,7 +2,7 @@
 
 **结论：真实 pointwise 训练与重载完成，但未证明相对强便宜对照的新增优势；无合格支持操作点，未执行新的修复 Agent 对照。**
 
-`data=READY` · `pointwise_training=TRAINED_AND_RELOADED` · `text_discrimination=NO_DEMONSTRATED_GAIN` · `supported_operating_point=NOT_ESTABLISHED` · `runtime=NOT_RUN`。
+`data=READY` · `pointwise_training=TRAINED_AND_RELOADED` · `text_discrimination=NO_DEMONSTRATED_GAIN` · `supported_operating_point=NOT_ESTABLISHED` · `runtime=NOT_RUN` · `publication=PUSHED_DRAFT_PR`。
 
 这里的 NO_DEMONSTRATED_GAIN 指相对技能先验、便宜文本和 Fixed 的新增优势未建立，不否定相对冻结底座的改善：原始 Brier 0.2503 → 0.0961。技能先验为 0.0900、便宜文本为 0.0688；校准模型为 0.0692，不能以数值接近宣称等价。新模型的特定 P@2 为 0.125，Fixed 为 0.375。只有四个 check 机制组，所有标签均为未人工审核的模型弱标签。
 
@@ -98,3 +98,7 @@ model-dev 选择 `training-lambda-0` epoch 3，组宏适用性 log-loss 0.2709�
 这些案例的原请求、完整技能正文、两份判断与逐字引用分别在 tasks.json、registry.json 和 labels.jsonl 中；逐行预测在 check-predictions.jsonl 中。它们是对现有弱标签的误差分析，不是人工真值认证。
 
 check 的特定正例仅 3 行，分布于 2/4 个任务。P@2 对全部 4 个任务计算；R@2 和正例平均排名在无正例任务上为 null，宏平均覆盖其余 2 个任务，并单列零正例任务数。逐技能 AUC 仅覆盖 csv-dialect、keyed-csv-diff、sqlite-ingest，其余单类/未知项不填成 1。操作点表的 mean_positive_rank 是过滤前排序诊断，即使接受集合为空也不代表选中了正例。
+
+## 交付核验
+
+本地轻量测试 1329 passed，records 重算 40 行且零模型调用，干净 wheel 轻量回放与仓库外新模型预测均已实际运行。首个已推送代码 HEAD `4d787c33c11371a8e7e13ee9e1950d8d2cf90397` 的 [CI run 35057546855](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/35057546855) 成功；最终收尾 HEAD 的独立检查以 PR 当前检查与最终交付回复为准。保持 Draft，未 merge、ready、发布权重或改默认策略。
