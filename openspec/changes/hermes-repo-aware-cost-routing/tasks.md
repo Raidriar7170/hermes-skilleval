@@ -63,4 +63,6 @@ Prior incomplete task 2.5 stays historical and is not resumed.
 - [x] 5.3 M2 Freeze per-version scope, requirements and probe plan before scores.
 - [x] 5.4 M3 Attempt four isolated source preparations and record actual facts.
 - [x] 5.5 M4 Shared layered qualification and conditional fresh A cal scoring.
-- [ ] 5.6 M5 Independent boundary review, clean wheel, compatibility, CI and Draft delivery.
+- [x] 5.6 M5 Independent boundary review, clean wheel, compatibility, CI and Draft delivery.
+
+Environment-readiness code HEAD `16f55c0e2d3627080edb9d7825afd2ecb269e1a1` passed exact-head CI `35150447315`. Four environments verified for the fixed scope; frozen A calibration EXECUTED with RETROSPECTIVE_ONLY threshold. Runtime NOT_RUN. This documentation closeout HEAD is checked separately; no archive/merge.

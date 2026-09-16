@@ -14,7 +14,7 @@
 | runtime_effectiveness | NOT_RUN：0次修复 Agent 调用 |
 
 交付检查见 [validation.json](../../../artifacts/environment-readiness-v1/validation.json)；
-同 HEAD CI 以 [Draft PR #48 checks](https://github.com/Raidriar7170/hermes-skilleval/pull/48/checks) 为准。
+代码 HEAD `16f55c0e2d3627080edb9d7825afd2ecb269e1a1` 已通过 [CI 35150447315](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/35150447315)。最终文档提交的同 HEAD CI 以 [Draft PR #48 checks](https://github.com/Raidriar7170/hermes-skilleval/pull/48/checks) 为准。
 
 ## 1. 反例与修复
 
