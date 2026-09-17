@@ -103,4 +103,6 @@ All earlier sections are historical; incomplete 2.5 is not resumed.
 - [x] 8.2 S1 Trace actual prompts, public requests and fixed-version semantics.
 - [x] 8.3 S2/S3 Validate controls and freeze checks, fixtures and environment.
 - [x] 8.4 S4 Reconstruct and execute all 16 original patches symmetrically.
-- [ ] 8.5 S5 Records, installation, independent boundary review, same-HEAD CI and Draft delivery.
+- [x] 8.5 S5 Records, installation, independent boundary review, same-HEAD CI and Draft delivery.
+
+S0–S5 completed: original 32 preserved, affected 16 reconstructed and revalidated, all legacy checks matched. Code HEAD `f6d4951f24956b60eacd6489af5e34ee2383e5a0` passed exact-head CI `35257827222`; final documentation HEAD is checked separately. POSTHOC only, zero new repair/routing/training/calibration; KEEP_NATIVE. Historical 2.5 remains incomplete; no archive/merge.

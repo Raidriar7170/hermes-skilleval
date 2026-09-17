@@ -28,3 +28,11 @@ incomplete runtime/record identity checks before candidate execution. The
 reviewer then independently recomputed all public records without executing
 candidates or models. This is a model-agent code/evidence review, not human or
 blind adjudication and not an arbitrary-malicious-code safety certification.
+
+Validation: 1446 local tests passed; clean installed Git-archive records passed.
+Code HEAD `f6d4951f24956b60eacd6489af5e34ee2383e5a0` passed
+[CI 35257827222](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/35257827222).
+Final documentation HEAD is checked separately in PR48; code-head green is not
+used as a substitute. The first CI failures (raw evidence whitespace and Git
+empty-directory omission) are retained in history; both were packaging fixes,
+with no candidate or acceptance-rule changes.
