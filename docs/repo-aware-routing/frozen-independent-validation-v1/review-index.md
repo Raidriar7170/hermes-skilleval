@@ -72,3 +72,5 @@ Within-skill AUC is defined for only four skills: A values are 1.0 (keyed CSV), 
 ## Delivery boundary
 
 Local full suite: 1401 passed. Clean installed records: new 120 + historical 40 matched, no heavy model imports, tampered prediction hash rejected. Scope-limited lint/type checks and OpenSpec validation passed; whole-tree Ruff has two inherited unused-import findings, not changed by this study. Exact final commit CI is linked from the PR and final delivery message; local checks do not substitute for it. No merge, ready, archive, release, neural training or default change.
+
+First CI exposed an optional-dependency test issue: the real empty-cal fit test imported NumPy in the lightweight environment. The test now explicitly requires NumPy/SciPy and is skipped only when those extras are absent; it passes in the numerical environment. No frozen implementation or predictions changed. Initial Linux result was 1400 passed / 1 failed; its format/lint/type non-regression gates all passed.

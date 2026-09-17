@@ -26,5 +26,15 @@
     "tests/test_codex_cli_runner.py unused sys"
   ],
   "ci": "PENDING_EXACT_HEAD",
-  "independent_read_only_review": "NO_BLOCKER; two disclosure/diagnostic findings addressed"
+  "independent_read_only_review": "NO_BLOCKER; two disclosure/diagnostic findings addressed",
+  "ci_first_attempt": {
+    "head": "093b4b5c880c0fa70ec845dec859611efe8998ac",
+    "run": 35173292309,
+    "result": "FAILED",
+    "pytest": "1400 passed, 1 failed: empty-cal numerical test imported optional numpy",
+    "fix": "mark real-fit test dependent on numpy/scipy; full numerical environment still exercises it; no frozen runtime source changes",
+    "format_nonregression": "82 -> 82",
+    "ruff_nonregression": "2 -> 2",
+    "mypy_nonregression": "91 -> 91"
+  }
 }

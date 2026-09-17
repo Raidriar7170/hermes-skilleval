@@ -65,6 +65,9 @@ def test_probe_legacy_bytes_unchanged():
 
 
 def test_empty_cal_has_no_operating_point():
+    # Real calibration belongs to the optional numerical stack; records do not.
+    pytest.importorskip("numpy")
+    pytest.importorskip("scipy")
     result = calibrations(
         [],
         {},
