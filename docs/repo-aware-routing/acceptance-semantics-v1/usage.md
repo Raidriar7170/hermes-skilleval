@@ -81,3 +81,13 @@ It copies scoped observations/JUnit only; no source tree, model, private prompt
 or original raw archive is duplicated. The public `runs.json` references original
 patch paths/hashes. Host verdicts are recomputed from captured process/output
 observations, not candidate-supplied success JSON.
+
+CI portability correction: Git does not retain empty output directories. The
+installed records/summarize front door uses `acceptance_records.py` to restore
+only missing, unindexed empty `files` directories in a temporary copy, then
+calls the unchanged frozen verifier. Missing indexed CSV files still fail.
+The input checkout stays untouched. This is a storage reconstruction repair;
+no fixture, command, expected value, candidate observation or verdict changed,
+and no original candidate was rerun to repair it. Direct calls to the frozen
+internal `acceptance_review.records` require the complete execution directory
+layout; the supported installed front door handles Git checkouts.

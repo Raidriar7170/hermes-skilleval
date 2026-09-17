@@ -7,6 +7,7 @@ import pytest
 from hermes_skilleval.repo_routing import acceptance_review as a
 from hermes_skilleval.repo_routing.acceptance_controls import semantic_controls
 from hermes_skilleval.repo_routing.acceptance_probe import command
+from hermes_skilleval.repo_routing.acceptance_records import records as portable_records
 
 
 def test_csv_independent_negative_controls(tmp_path):
@@ -189,7 +190,7 @@ def test_records_no_subprocess_or_model(monkeypatch):
     monkeypatch.setattr(subprocess, "run", forbidden)
     monkeypatch.setattr(subprocess, "check_output", forbidden)
     assert (
-        a.records(legacy, config, output)["candidate_revalidation"]
+        portable_records(legacy, config, output)["candidate_revalidation"]
         == "COMPLETED_16_OF_16"
     )
 
@@ -241,7 +242,7 @@ def test_public_records_reject_semantic_tamper(tmp_path, mutation):
         index["files"].pop(rows[0]["alias"] + "/behavior.xml")
     a.write(out / "evidence-index.json", index)
     with pytest.raises(ValueError):
-        a.records(legacy, config, out)
+        portable_records(legacy, config, out)
 
 
 def test_revalidate_and_records_have_repair_sentinels(tmp_path, monkeypatch):
@@ -258,7 +259,7 @@ def test_revalidate_and_records_have_repair_sentinels(tmp_path, monkeypatch):
     monkeypatch.setattr(advisory_study, "recommend", forbidden)
     monkeypatch.setattr(execution, "run_agent", forbidden)
     legacy, config, public = _public_paths()
-    assert a.records(legacy, config, public)["new_repair_agent_calls"] == 0
+    assert portable_records(legacy, config, public)["new_repair_agent_calls"] == 0
     tasks = tmp_path / "tasks"
     runs = tmp_path / "runs"
     cfg = tmp_path / "config"
@@ -329,3 +330,24 @@ def test_revalidate_and_records_have_repair_sentinels(tmp_path, monkeypatch):
     before = a.sha(args.output / "candidate-01/result.json")
     a.revalidate(args)
     assert a.sha(args.output / "candidate-01/result.json") == before
+
+
+def test_git_archive_empty_directories_are_portable(tmp_path):
+    import shutil
+
+    legacy, config, original = _public_paths()
+    copy = tmp_path / "checkout"
+    shutil.copytree(original, copy)
+    for path in sorted(copy.rglob("*"), reverse=True):
+        if path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
+    before = sorted(p.relative_to(copy).as_posix() for p in copy.rglob("*"))
+    assert (
+        portable_records(legacy, config, copy)["candidate_revalidation"]
+        == "COMPLETED_16_OF_16"
+    )
+    assert sorted(p.relative_to(copy).as_posix() for p in copy.rglob("*")) == before
+    csv_dir = next(copy.glob("candidate-*/behavior/csv_original_fixture_content/files"))
+    shutil.rmtree(csv_dir)
+    with pytest.raises(ValueError, match="missing indexed output"):
+        portable_records(legacy, config, copy)
