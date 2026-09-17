@@ -46,3 +46,7 @@ records and task 2.5 are unchanged. No new training, check selection, or Agent r
 ## Frozen independent validation continuation
 
 The designated Frozen Independent Validation Goal governs V0–V6. Freeze A/J/rank and old baselines, recruit previously unused mechanisms, calibrate only on new cal and predict new check before opening labels. Thin experiment-only migration must retain legacy strict input bindings. Conditional five-arm repair is authorized only at the predeclared empirical trigger. No neural training, default promotion, merge, archive or new paid resources.
+
+## Advisory utility replay continuation
+
+The designated `docs/goals/Hermes_PR48_Advisory_Utility_Replay_Codex_Goal.md` authorizes U0-U5. All prior sections remain historical. Advisory J2 raw joint priority Top-2 versus N/F2/T2 is authorized without support certification. Four seen tasks, two fresh sessions per arm, fixed seed 7170, uniform 600-second budget. Preserve isolation, trusted qualification, full patch capture/reconstruction and native default. No training, threshold tuning, task replacement, merge or release.

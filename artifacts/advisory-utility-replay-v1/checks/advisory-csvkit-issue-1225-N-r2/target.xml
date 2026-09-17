@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.120" timestamp="2026-09-17T07:10:13.416753+00:00" hostname="9abd935f20bf"><testcase classname="test_behavior" name="test_target" time="0.106"><failure message="Failed">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0xffff9a5cca10&gt;
+
+    def test_target(tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        try:
+&gt;           exec('import subprocess\nfrom pathlib import Path\ndata=Path("/trusted/dummy.xlsx").read_bytes()\nr=candidate_run(["in2csv","-f","xlsx","--write-sheets","-"],input=data,capture_output=True)\nassert r.returncode==0,r.stderr\nassert list(Path(".").glob("stdin_*.csv"))', globals(), {})
+
+/trusted/test_behavior.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+&gt;   ???
+E   AssertionError
+
+&lt;string&gt;:6: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0xffff9a5cca10&gt;
+
+    def test_target(tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        try:
+            exec('import subprocess\nfrom pathlib import Path\ndata=Path("/trusted/dummy.xlsx").read_bytes()\nr=candidate_run(["in2csv","-f","xlsx","--write-sheets","-"],input=data,capture_output=True)\nassert r.returncode==0,r.stderr\nassert list(Path(".").glob("stdin_*.csv"))', globals(), {})
+        except Exception as exc:
+&gt;           pytest.fail(str(exc))
+E           Failed
+
+/trusted/test_behavior.py:19: Failed</failure></testcase></testsuite></testsuites>

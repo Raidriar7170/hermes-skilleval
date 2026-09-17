@@ -97,6 +97,14 @@ def recommend(args):
 
 
 def main():
+    if len(sys.argv) > 2 and sys.argv[1:3] == ["advisory-study", "records"]:
+        from .repo_routing.advisory_records import main as records_main
+
+        return records_main(sys.argv[3:])
+    if len(sys.argv) > 1 and sys.argv[1] == "advisory-study":
+        from .repo_routing.advisory_study import main as advisory_main
+
+        return advisory_main(sys.argv[2:])
     if len(sys.argv) > 1 and sys.argv[1] == "support":
         return subprocess.call(
             [

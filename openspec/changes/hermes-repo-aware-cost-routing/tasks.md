@@ -80,3 +80,14 @@ Authority: `docs/goals/Hermes_PR48_Frozen_Independent_Validation_Codex_Goal.md`.
 - [x] 6.7 V6 Regression, independent review, clean wheel, exact-head CI and Draft publication.
 
 V3: both new-cal mappings fitted; A and cheap text have NO_OPERATING_POINT. V5 is NOT_RUN_WITH_REASON (no A threshold), with zero repair Agent executions, not a completed runtime comparison. V4 completed on all 120 frozen check pairs, with 119 known and one UNKNOWN weak label. Check environment refresh returned UNKNOWN for all 12 tasks; raw scores remain valid offline observations, support eligibility remains zero. V6 code delivered as Draft; exact code HEAD c902edb2313f41aa8e5d02c04af68a3c687e0d96 passed CI 35173472941. The final documentation-only HEAD is checked separately in the PR and final delivery. No archive/merge.
+
+## 7. Advisory utility replay (active Goal)
+
+Authority: `docs/goals/Hermes_PR48_Advisory_Utility_Replay_Codex_Goal.md`. Historical incomplete 2.5 remains unchanged.
+
+- [x] 7.1 U0 Freeze methods, scope, budget and run order.
+- [x] 7.2 U1 Recover four environments and freshly qualify trusted behavior.
+- [x] 7.3 U2 Score real J/T and lock all package selections.
+- [x] 7.4 U3 Execute frozen isolated matrix and independently verify patches.
+- [x] 7.5 U4 Recompute full paired outcomes, observable reads and costs.
+- [ ] 7.6 U5 Independent boundary review, clean install, historical records, exact-head CI and Draft delivery.
