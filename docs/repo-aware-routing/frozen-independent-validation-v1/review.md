@@ -8,3 +8,5 @@ No newly identified blocking defect required changing frozen methods or predicti
 2. Add per-skill/repository/task diagnosis and non-J task-specific ranking. Added `independent_descriptive.py` and `descriptive-slices.json`, explicitly post-check and descriptive; original results, labels and locks unchanged.
 
 The reviewer independently matched all protocol source bindings and cal/check locks, confirmed both mappings FITTED with null thresholds, and found no credentials or complete private trace in the visible new artifacts. Main-agent wheel, test and publication checks remain separate evidence.
+
+The reviewer read the completed disclosures and descriptive appendix and found no material error; both P2 findings are closed. The later CI fix changes only optional dependency declarations inside a test, not frozen research code.

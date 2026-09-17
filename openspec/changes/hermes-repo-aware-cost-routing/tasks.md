@@ -77,6 +77,6 @@ Authority: `docs/goals/Hermes_PR48_Frozen_Independent_Validation_Codex_Goal.md`.
 - [x] 6.4 V3 Score new cal, fit declared mappings and lock thresholds.
 - [x] 6.5 V4 Lock new check predictions before labels, independently recompute full comparisons.
 - [x] 6.6 V5 Run prespecified repair matrix only if empirical triggers hold; otherwise retain reasons.
-- [ ] 6.7 V6 Regression, independent review, clean wheel, exact-head CI and Draft publication.
+- [x] 6.7 V6 Regression, independent review, clean wheel, exact-head CI and Draft publication.
 
-V3: both new-cal mappings fitted; A and cheap text have NO_OPERATING_POINT. V5 is NOT_RUN_WITH_REASON (no A threshold), with zero repair Agent executions, not a completed runtime comparison. V4 completed on all 120 frozen check pairs, with 119 known and one UNKNOWN weak label. Check environment refresh returned UNKNOWN for all 12 tasks; raw scores remain valid offline observations, support eligibility remains zero. V6 publication/exact-head CI pending.
+V3: both new-cal mappings fitted; A and cheap text have NO_OPERATING_POINT. V5 is NOT_RUN_WITH_REASON (no A threshold), with zero repair Agent executions, not a completed runtime comparison. V4 completed on all 120 frozen check pairs, with 119 known and one UNKNOWN weak label. Check environment refresh returned UNKNOWN for all 12 tasks; raw scores remain valid offline observations, support eligibility remains zero. V6 code delivered as Draft; exact code HEAD c902edb2313f41aa8e5d02c04af68a3c687e0d96 passed CI 35173472941. The final documentation-only HEAD is checked separately in the PR and final delivery. No archive/merge.
