@@ -1,0 +1,55 @@
+{
+  "generator": "stdlib OOXML deterministic ZIP v1",
+  "original_expected": [
+    [
+      [
+        "a",
+        "b",
+        "c"
+      ],
+      [
+        "True",
+        "2",
+        "3"
+      ]
+    ]
+  ],
+  "multisheet_expected": [
+    [
+      [
+        "name",
+        "value"
+      ],
+      [
+        "alpha",
+        "red"
+      ],
+      [
+        "alpha",
+        "red"
+      ]
+    ],
+    [
+      [
+        "label",
+        "note"
+      ],
+      [
+        "beta",
+        "blue,green"
+      ],
+      [
+        "gamma",
+        "quoted \"text\""
+      ]
+    ]
+  ],
+  "original_source": "fixed trusted/dummy.xlsx; Sheet1 A1:C2, sharedStrings a/b/c and numeric 1/2/3",
+  "normalization": "CSV parse only; no strip, reorder, coercion or deduplication. Files matched by complete matrix multiset.",
+  "files": {
+    "dummy.xlsx": "024138b7fb449ae0c750e79967419b35c28f6f68f44477d76db9d7fb99cdee20",
+    "multisheet.xlsx": "a8244e61dfd2c490ec549a1d7448c9cc8b6c1c3afad8d1833f3a15bebabe3ef7",
+    "known.db": "718788295999e792ed056f20fca3007fa0b2bece5e8507c2c36a2f3bb5cf4c61"
+  },
+  "original_inference": "Unchanged invocation uses csvkit/cli.py:327-342 Boolean before Number, agate 1.14.2 Boolean.cast(int(1)) => True, csvify => str(True). This is an expected value derived from the pinned interface, not output coercion."
+}

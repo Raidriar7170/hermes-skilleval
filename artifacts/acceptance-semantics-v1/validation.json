@@ -1,0 +1,1048 @@
+{
+  "csv_controls": {
+    "correct_alternate_names": {
+      "expected": "PASS",
+      "observed": "PASS"
+    },
+    "empty_matching_prefix": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "wrong_cell": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "missing_row": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "missing_column": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "missing_sheet": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "duplicate_first": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "no_output": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "nonzero": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    },
+    "symlink": {
+      "expected": "FAIL",
+      "observed": "FAIL"
+    }
+  },
+  "entry_controls": {
+    "package_only": {
+      "expected": {
+        "package_help": "PASS",
+        "package_function": "PASS",
+        "submodule_help": "FAIL",
+        "submodule_function": "FAIL",
+        "console_help": "PASS",
+        "console_function": "PASS"
+      },
+      "observed": {
+        "package_help": "PASS",
+        "package_function": "PASS",
+        "submodule_help": "FAIL",
+        "submodule_function": "FAIL",
+        "console_help": "PASS",
+        "console_function": "PASS"
+      },
+      "evidence": {
+        "package_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.2143910409649834,
+            "entry": "package",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "package_function": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "[{\"table\": \"acceptance_items\"}]\n",
+            "stderr": "",
+            "seconds": 0.17603933298960328,
+            "entry": "package",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.18366224999772385,
+            "entry": "submodule",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.1927384160226211,
+            "entry": "submodule",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.18934450001688674,
+            "entry": "console",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_function": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "[{\"table\": \"acceptance_items\"}]\n",
+            "stderr": "",
+            "seconds": 0.1757739590248093,
+            "entry": "console",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      }
+    },
+    "submodule_only": {
+      "expected": {
+        "package_help": "FAIL",
+        "package_function": "FAIL",
+        "submodule_help": "PASS",
+        "submodule_function": "PASS",
+        "console_help": "PASS",
+        "console_function": "PASS"
+      },
+      "observed": {
+        "package_help": "FAIL",
+        "package_function": "FAIL",
+        "submodule_help": "PASS",
+        "submodule_function": "PASS",
+        "console_help": "PASS",
+        "console_function": "PASS"
+      },
+      "evidence": {
+        "package_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 148, in _get_module_details\n  File \"<frozen runpy>\", line 142, in _get_module_details\nImportError: No module named sqlite_utils.__main__\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"<frozen runpy>\", line 222, in run_module\n  File \"<frozen runpy>\", line 152, in _get_module_details\nImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed\n",
+            "seconds": 0.2084129170398228,
+            "entry": "package",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "package_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 148, in _get_module_details\n  File \"<frozen runpy>\", line 142, in _get_module_details\nImportError: No module named sqlite_utils.__main__\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"<frozen runpy>\", line 222, in run_module\n  File \"<frozen runpy>\", line 152, in _get_module_details\nImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed\n",
+            "seconds": 0.18451804103096947,
+            "entry": "package",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.18620987504255027,
+            "entry": "submodule",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_function": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "[{\"table\": \"acceptance_items\"}]\n",
+            "stderr": "",
+            "seconds": 0.20460704097058624,
+            "entry": "submodule",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.17819412500830367,
+            "entry": "console",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_function": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "[{\"table\": \"acceptance_items\"}]\n",
+            "stderr": "",
+            "seconds": 0.19538791599916294,
+            "entry": "console",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      }
+    },
+    "help_only": {
+      "expected": {
+        "package_help": "PASS",
+        "package_function": "FAIL",
+        "submodule_help": "FAIL",
+        "submodule_function": "FAIL",
+        "console_help": "PASS",
+        "console_function": "FAIL"
+      },
+      "observed": {
+        "package_help": "PASS",
+        "package_function": "FAIL",
+        "submodule_help": "FAIL",
+        "submodule_function": "FAIL",
+        "console_help": "PASS",
+        "console_function": "FAIL"
+      },
+      "evidence": {
+        "package_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.19376416696468368,
+            "entry": "package",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "package_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.19143658300163224,
+            "entry": "package",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.19004316604696214,
+            "entry": "submodule",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.1856188749661669,
+            "entry": "submodule",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.1760777499875985,
+            "entry": "console",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: control\n",
+            "stderr": "",
+            "seconds": 0.1764633750426583,
+            "entry": "console",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      }
+    },
+    "console_broken": {
+      "expected": {
+        "package_help": "FAIL",
+        "package_function": "FAIL",
+        "submodule_help": "FAIL",
+        "submodule_function": "FAIL",
+        "console_help": "FAIL",
+        "console_function": "FAIL"
+      },
+      "observed": {
+        "package_help": "FAIL",
+        "package_function": "FAIL",
+        "submodule_help": "FAIL",
+        "submodule_function": "FAIL",
+        "console_help": "FAIL",
+        "console_function": "FAIL"
+      },
+      "evidence": {
+        "package_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 148, in _get_module_details\n  File \"<frozen runpy>\", line 142, in _get_module_details\nImportError: No module named sqlite_utils.__main__\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"<frozen runpy>\", line 222, in run_module\n  File \"<frozen runpy>\", line 152, in _get_module_details\nImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed\n",
+            "seconds": 0.18356812495039776,
+            "entry": "package",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "package_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 148, in _get_module_details\n  File \"<frozen runpy>\", line 142, in _get_module_details\nImportError: No module named sqlite_utils.__main__\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"<frozen runpy>\", line 222, in run_module\n  File \"<frozen runpy>\", line 152, in _get_module_details\nImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed\n",
+            "seconds": 0.18788270803634077,
+            "entry": "package",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.19841895799618214,
+            "entry": "submodule",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.18429108301643282,
+            "entry": "submodule",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"/input/sqlite_utils/cli.py\", line 2, in cli\n    raise RuntimeError('console regression')\nRuntimeError: console regression\n",
+            "seconds": 0.19047820899868384,
+            "entry": "console",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"/input/sqlite_utils/cli.py\", line 2, in cli\n    raise RuntimeError('console regression')\nRuntimeError: console regression\n",
+            "seconds": 0.19178408401785418,
+            "entry": "console",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      }
+    }
+  },
+  "real_controls": {
+    "csvkit-issue-1225": {
+      "base": {
+        "csv_original_fixture_content": {
+          "status": "FAIL",
+          "reason": "EXIT_OR_CONTENT_MISMATCH",
+          "files": {},
+          "stdout_matrix": [
+            [
+              "a",
+              "b",
+              "c"
+            ],
+            [
+              "True",
+              "2",
+              "3"
+            ]
+          ],
+          "process": {
+            "returncode": 1,
+            "stdout": "a,b,c\nTrue,2,3\n",
+            "stderr": "BadZipFile: File is not a zip file\n",
+            "seconds": 0.2890729160280898,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "--write-sheets",
+              "-"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "csv_multisheet_content": {
+          "status": "FAIL",
+          "reason": "EXIT_OR_CONTENT_MISMATCH",
+          "files": {},
+          "stdout_matrix": [
+            [
+              "name",
+              "value"
+            ],
+            [
+              "alpha",
+              "red"
+            ],
+            [
+              "alpha",
+              "red"
+            ]
+          ],
+          "process": {
+            "returncode": 1,
+            "stdout": "name,value\nalpha,red\nalpha,red\n",
+            "stderr": "BadZipFile: File is not a zip file\n",
+            "seconds": 0.29318549996241927,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "--write-sheets",
+              "-"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "csv_file_input_regression": {
+          "status": "PASS",
+          "reason": null,
+          "files": {},
+          "stdout_matrix": [
+            [
+              "a",
+              "b",
+              "c"
+            ],
+            [
+              "True",
+              "2",
+              "3"
+            ]
+          ],
+          "process": {
+            "returncode": 0,
+            "stdout": "a,b,c\nTrue,2,3\n",
+            "stderr": "",
+            "seconds": 0.29808329202933237,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "csv_multisheet_file_regression": {
+          "status": "PASS",
+          "reason": null,
+          "files": {},
+          "stdout_matrix": [
+            [
+              "name",
+              "value"
+            ],
+            [
+              "alpha",
+              "red"
+            ],
+            [
+              "alpha",
+              "red"
+            ]
+          ],
+          "process": {
+            "returncode": 0,
+            "stdout": "name,value\nalpha,red\nalpha,red\n",
+            "stderr": "",
+            "seconds": 0.30774512502830476,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      },
+      "reference": {
+        "csv_original_fixture_content": {
+          "status": "PASS",
+          "reason": null,
+          "files": {
+            "stdin_0.csv": [
+              [
+                "a",
+                "b",
+                "c"
+              ],
+              [
+                "True",
+                "2",
+                "3"
+              ]
+            ]
+          },
+          "stdout_matrix": [
+            [
+              "a",
+              "b",
+              "c"
+            ],
+            [
+              "True",
+              "2",
+              "3"
+            ]
+          ],
+          "process": {
+            "returncode": 0,
+            "stdout": "a,b,c\nTrue,2,3\n",
+            "stderr": "",
+            "seconds": 0.27859925001394004,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "--write-sheets",
+              "-"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "csv_multisheet_content": {
+          "status": "PASS",
+          "reason": null,
+          "files": {
+            "stdin_1.csv": [
+              [
+                "label",
+                "note"
+              ],
+              [
+                "beta",
+                "blue,green"
+              ],
+              [
+                "gamma",
+                "quoted \"text\""
+              ]
+            ],
+            "stdin_0.csv": [
+              [
+                "name",
+                "value"
+              ],
+              [
+                "alpha",
+                "red"
+              ],
+              [
+                "alpha",
+                "red"
+              ]
+            ]
+          },
+          "stdout_matrix": [
+            [
+              "name",
+              "value"
+            ],
+            [
+              "alpha",
+              "red"
+            ],
+            [
+              "alpha",
+              "red"
+            ]
+          ],
+          "process": {
+            "returncode": 0,
+            "stdout": "name,value\nalpha,red\nalpha,red\n",
+            "stderr": "",
+            "seconds": 0.305683541984763,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "--write-sheets",
+              "-"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "csv_file_input_regression": {
+          "status": "PASS",
+          "reason": null,
+          "files": {},
+          "stdout_matrix": [
+            [
+              "a",
+              "b",
+              "c"
+            ],
+            [
+              "True",
+              "2",
+              "3"
+            ]
+          ],
+          "process": {
+            "returncode": 0,
+            "stdout": "a,b,c\nTrue,2,3\n",
+            "stderr": "",
+            "seconds": 0.28478983300738037,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "csv_multisheet_file_regression": {
+          "status": "PASS",
+          "reason": null,
+          "files": {},
+          "stdout_matrix": [
+            [
+              "name",
+              "value"
+            ],
+            [
+              "alpha",
+              "red"
+            ],
+            [
+              "alpha",
+              "red"
+            ]
+          ],
+          "process": {
+            "returncode": 0,
+            "stdout": "name,value\nalpha,red\nalpha,red\n",
+            "stderr": "",
+            "seconds": 0.2874519170145504,
+            "entry": "csv",
+            "argv": [
+              "-f",
+              "xlsx",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      }
+    },
+    "sqlite-utils-issue-368": {
+      "base": {
+        "package_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 148, in _get_module_details\n  File \"<frozen runpy>\", line 142, in _get_module_details\nImportError: No module named sqlite_utils.__main__\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"<frozen runpy>\", line 222, in run_module\n  File \"<frozen runpy>\", line 152, in _get_module_details\nImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed\n",
+            "seconds": 0.21778941701631993,
+            "entry": "package",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "package_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 148, in _get_module_details\n  File \"<frozen runpy>\", line 142, in _get_module_details\nImportError: No module named sqlite_utils.__main__\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"<frozen runpy>\", line 222, in run_module\n  File \"<frozen runpy>\", line 152, in _get_module_details\nImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed\n",
+            "seconds": 0.21409283397952095,
+            "entry": "package",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.24189454200677574,
+            "entry": "submodule",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.22877820796566084,
+            "entry": "submodule",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: console [OPTIONS] COMMAND [ARGS]...\n\n  Commands for interacting with a SQLite database\n\nOptions:\n  --version   Show the version and exit.\n  -h, --help  Show this message and exit.\n\nCommands:\n  query*              Execute SQL query and return the results as JSON\n  add-column          Add a column to the specified table\n  add-foreign-key     Add a new foreign key constraint to an existing table.\n  add-foreign-keys    Add multiple new foreign key constraints to a...\n  analyze-tables      Analyze the columns in one or more tables\n  convert             Convert columns using Python code you supply.\n  create-index        Add an index to the specified table covering the...\n  create-table        Add a table with the specified columns.\n  create-view         Create a view for the provided SELECT query\n  disable-fts         Disable full-text search for specific table\n  disable-wal         Disable WAL for database files\n  drop-table          Drop the specified table\n  drop-view           Drop the specified view\n  dump                Output a SQL dump of the schema and full contents...\n  enable-counts       Configure triggers to update a _counts table with...\n  enable-fts          Enable full-text search for specific table and columns\n  enable-wal          Enable WAL for database files\n  extract             Extract one or more columns into a separate table\n  index-foreign-keys  Ensure every foreign key column has an index on it.\n  indexes             Show indexes for this database\n  insert              Insert records from FILE into a table, creating the...\n  insert-files        Insert one or more files using BLOB columns in the...\n  memory              Execute SQL query against an in-memory database,...\n  optimize            Optimize all full-text search tables and then run...\n  populate-fts        Re-populate full-text search for specific table and...\n  rebuild-fts         Rebuild all or specific full-text search tables\n  reset-counts        Reset calculated counts in the _counts table\n  rows                Output all rows in the specified table\n  schema              Show full schema for this database or for specified...\n  search              Execute a full-text search against this table\n  tables              List the tables in the database\n  transform           Transform a table beyond the capabilities of ALTER...\n  triggers            Show triggers configured in this database\n  upsert              Upsert records based on their primary key.\n  vacuum              Run VACUUM against the database\n  views               List the views in the database\n",
+            "stderr": "",
+            "seconds": 0.2212967500090599,
+            "entry": "console",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_function": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "[{\"table\": \"acceptance_items\"}]\n",
+            "stderr": "",
+            "seconds": 0.24342145898845047,
+            "entry": "console",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      },
+      "reference": {
+        "package_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: package [OPTIONS] COMMAND [ARGS]...\n\n  Commands for interacting with a SQLite database\n\nOptions:\n  --version   Show the version and exit.\n  -h, --help  Show this message and exit.\n\nCommands:\n  query*              Execute SQL query and return the results as JSON\n  add-column          Add a column to the specified table\n  add-foreign-key     Add a new foreign key constraint to an existing table.\n  add-foreign-keys    Add multiple new foreign key constraints to a...\n  analyze-tables      Analyze the columns in one or more tables\n  convert             Convert columns using Python code you supply.\n  create-index        Add an index to the specified table covering the...\n  create-table        Add a table with the specified columns.\n  create-view         Create a view for the provided SELECT query\n  disable-fts         Disable full-text search for specific table\n  disable-wal         Disable WAL for database files\n  drop-table          Drop the specified table\n  drop-view           Drop the specified view\n  dump                Output a SQL dump of the schema and full contents...\n  enable-counts       Configure triggers to update a _counts table with...\n  enable-fts          Enable full-text search for specific table and columns\n  enable-wal          Enable WAL for database files\n  extract             Extract one or more columns into a separate table\n  index-foreign-keys  Ensure every foreign key column has an index on it.\n  indexes             Show indexes for this database\n  insert              Insert records from FILE into a table, creating the...\n  insert-files        Insert one or more files using BLOB columns in the...\n  memory              Execute SQL query against an in-memory database,...\n  optimize            Optimize all full-text search tables and then run...\n  populate-fts        Re-populate full-text search for specific table and...\n  rebuild-fts         Rebuild all or specific full-text search tables\n  reset-counts        Reset calculated counts in the _counts table\n  rows                Output all rows in the specified table\n  schema              Show full schema for this database or for specified...\n  search              Execute a full-text search against this table\n  tables              List the tables in the database\n  transform           Transform a table beyond the capabilities of ALTER...\n  triggers            Show triggers configured in this database\n  upsert              Upsert records based on their primary key.\n  vacuum              Run VACUUM against the database\n  views               List the views in the database\n",
+            "stderr": "",
+            "seconds": 0.22825625003315508,
+            "entry": "package",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "package_function": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "[{\"table\": \"acceptance_items\"}]\n",
+            "stderr": "",
+            "seconds": 0.2472637080354616,
+            "entry": "package",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_help": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.24678141699405387,
+            "entry": "submodule",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "submodule_function": {
+          "status": "FAIL",
+          "reason": "ENTRY_BEHAVIOR_MISMATCH",
+          "process": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+            "seconds": 0.23839175002649426,
+            "entry": "submodule",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_help": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "Usage: console [OPTIONS] COMMAND [ARGS]...\n\n  Commands for interacting with a SQLite database\n\nOptions:\n  --version   Show the version and exit.\n  -h, --help  Show this message and exit.\n\nCommands:\n  query*              Execute SQL query and return the results as JSON\n  add-column          Add a column to the specified table\n  add-foreign-key     Add a new foreign key constraint to an existing table.\n  add-foreign-keys    Add multiple new foreign key constraints to a...\n  analyze-tables      Analyze the columns in one or more tables\n  convert             Convert columns using Python code you supply.\n  create-index        Add an index to the specified table covering the...\n  create-table        Add a table with the specified columns.\n  create-view         Create a view for the provided SELECT query\n  disable-fts         Disable full-text search for specific table\n  disable-wal         Disable WAL for database files\n  drop-table          Drop the specified table\n  drop-view           Drop the specified view\n  dump                Output a SQL dump of the schema and full contents...\n  enable-counts       Configure triggers to update a _counts table with...\n  enable-fts          Enable full-text search for specific table and columns\n  enable-wal          Enable WAL for database files\n  extract             Extract one or more columns into a separate table\n  index-foreign-keys  Ensure every foreign key column has an index on it.\n  indexes             Show indexes for this database\n  insert              Insert records from FILE into a table, creating the...\n  insert-files        Insert one or more files using BLOB columns in the...\n  memory              Execute SQL query against an in-memory database,...\n  optimize            Optimize all full-text search tables and then run...\n  populate-fts        Re-populate full-text search for specific table and...\n  rebuild-fts         Rebuild all or specific full-text search tables\n  reset-counts        Reset calculated counts in the _counts table\n  rows                Output all rows in the specified table\n  schema              Show full schema for this database or for specified...\n  search              Execute a full-text search against this table\n  tables              List the tables in the database\n  transform           Transform a table beyond the capabilities of ALTER...\n  triggers            Show triggers configured in this database\n  upsert              Upsert records based on their primary key.\n  vacuum              Run VACUUM against the database\n  views               List the views in the database\n",
+            "stderr": "",
+            "seconds": 0.2714314589975402,
+            "entry": "console",
+            "argv": [
+              "--help"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        },
+        "console_function": {
+          "status": "PASS",
+          "reason": null,
+          "process": {
+            "returncode": 0,
+            "stdout": "[{\"table\": \"acceptance_items\"}]\n",
+            "stderr": "",
+            "seconds": 0.2562247909954749,
+            "entry": "console",
+            "argv": [
+              "tables",
+              "/fixture"
+            ],
+            "source_mount": "/input",
+            "cleanup_confirmed": true
+          }
+        }
+      }
+    }
+  },
+  "timeout_control": {
+    "returncode": null,
+    "stdout": "",
+    "stderr": "",
+    "seconds": 1.0764394580037333,
+    "entry": "package",
+    "argv": [
+      "--help"
+    ],
+    "source_mount": "/input",
+    "cleanup_confirmed": true
+  }
+}

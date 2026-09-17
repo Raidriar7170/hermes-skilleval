@@ -97,6 +97,10 @@ def recommend(args):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "acceptance-review":
+        from .repo_routing.acceptance_review import main as acceptance_main
+
+        return acceptance_main(sys.argv[2:])
     if len(sys.argv) > 2 and sys.argv[1:3] == ["advisory-study", "records"]:
         from .repo_routing.advisory_records import main as records_main
 

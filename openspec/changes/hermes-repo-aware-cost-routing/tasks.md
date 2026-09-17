@@ -93,3 +93,14 @@ Authority: `docs/goals/Hermes_PR48_Advisory_Utility_Replay_Codex_Goal.md`. Histo
 - [x] 7.6 U5 Independent boundary review, clean install, historical records, exact-head CI and Draft delivery.
 
 U3 completed all 32 real calls. Raw fixed checks: N 5/8; F2/T2/J2 6/8 each. Request ambiguity and an over-specific filename oracle limit utility to INCONCLUSIVE; KEEP_NATIVE and NOT_CLAIMED remain. U5 code HEAD `d8e5ce4044e6262903be509e7c81cfb751dfa9ef` passed exact-head CI `35194261116`. Final evidence/documentation HEAD is checked separately in PR48 and final delivery. Historical 2.5 and old0/40 remain unchanged; no archive/merge.
+
+## 8. Acceptance semantics (active Goal)
+
+Authority: `docs/goals/Hermes_PR48_Acceptance_Semantics_Posthoc_Revalidation_Codex_Goal.md`.
+All earlier sections are historical; incomplete 2.5 is not resumed.
+
+- [x] 8.1 S0 Inventory immutable 32 records and affected 16 patches.
+- [x] 8.2 S1 Trace actual prompts, public requests and fixed-version semantics.
+- [x] 8.3 S2/S3 Validate controls and freeze checks, fixtures and environment.
+- [x] 8.4 S4 Reconstruct and execute all 16 original patches symmetrically.
+- [ ] 8.5 S5 Records, installation, independent boundary review, same-HEAD CI and Draft delivery.

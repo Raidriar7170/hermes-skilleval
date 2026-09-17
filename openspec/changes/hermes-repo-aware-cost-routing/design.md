@@ -50,3 +50,12 @@ The designated Frozen Independent Validation Goal governs V0–V6. Freeze A/J/ra
 ## Advisory utility replay continuation
 
 The designated `docs/goals/Hermes_PR48_Advisory_Utility_Replay_Codex_Goal.md` authorizes U0-U5. All prior sections remain historical. Advisory J2 raw joint priority Top-2 versus N/F2/T2 is authorized without support certification. Four seen tasks, two fresh sessions per arm, fixed seed 7170, uniform 600-second budget. Preserve isolation, trusted qualification, full patch capture/reconstruction and native default. No training, threshold tuning, task replacement, merge or release.
+
+## Acceptance semantics continuation
+
+The designated Acceptance Semantics Posthoc Revalidation Goal governs S0–S5.
+Preserve the original 32 records and patches. Add separate source-grounded CSV
+content and three-entrypoint dimensions, qualify controls before freezing, then
+reconstruct and execute the affected 16 original patches. No repair Agent,
+recommendation, training or calibration. All results are POSTHOC, with no new
+independent gain claim; native remains default. No archive, merge or release.

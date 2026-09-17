@@ -113,3 +113,6 @@ post-Agent 区间由文件时间戳推导，涵盖归档、捕获、重建与检
 完整原始 trace 保留本地，公开 patch、JUnit、身份与必要脱敏读取片段。零模型重算核对公开证据，不重跑模型，也不证明对恶意候选的密码学裁判隔离。
 
 另有 1 次非研究 transport smoke：15.488 秒，input 36,045（其中 cached 27,776）、output 204；它不在 32 次矩阵内，不计入任何臂。干净安装的资格复验和末次候选命名诊断均为零 Agent 调用的工程验证，未改写主表。共享环境准备与全部工程开销没有完整独立计时，不能把已知分项之和称为完整在线总成本。
+
+
+Posthoc appendix: [acceptance semantics and original-patch revalidation](../acceptance-semantics-v1/review-index.md). Original data and scores above are unchanged.
