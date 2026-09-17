@@ -23,3 +23,7 @@
 本地完整测试 **1416 passed**；仓库外干净 wheel 的 prepare、records、summarize、恢复跳过通过；旧 120/40 记录均零模型 `MATCHED`。精确最终 HEAD 的 CI 从同一 [Draft PR #48](https://github.com/Raidriar7170/hermes-skilleval/pull/48) 与交付消息核对，本地检查不替代它。没有合并、ready、归档或发布。
 
 状态：`EXPLORATORY_REPLAY_ON_SEEN_TASKS` / `VERIFIED_FOR_SCOPE` / `runtime_comparison=COMPLETED`（冻结检查范围）/ `advisory_package_exposure=VERIFIED` / `utility=INCONCLUSIVE` / `support_certification=NOT_CLAIMED` / `KEEP_NATIVE`。旧实验记录与结论原样保留。
+
+代码提交 `d8e5ce4044e6262903be509e7c81cfb751dfa9ef` 的 [CI 35194261116](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/35194261116) 已通过。最终文档/证据提交单独核对精确 HEAD；技术门禁的 ALLOW_MERGE 不改变 Draft、不构成合并授权，也不改变 INCONCLUSIVE。[冻结资产最终核对](../../../artifacts/advisory-utility-replay-v1/frozen-final.json) 使用新读 SHA-256；完整 Git 差异最终校验摘要在 PR 与交付消息中报告。
+
+轻量 CI 为 **1415 passed、1 skipped**。唯一可选依赖跳过项是 `test_empty_cal_has_no_operating_point`（需要 NumPy/SciPy）；完整本地环境该项通过。不得把这一个跳过写成 CI 通过。
