@@ -66,3 +66,17 @@ Prior incomplete task 2.5 stays historical and is not resumed.
 - [x] 5.6 M5 Independent boundary review, clean wheel, compatibility, CI and Draft delivery.
 
 Environment-readiness code HEAD `16f55c0e2d3627080edb9d7825afd2ecb269e1a1` passed exact-head CI `35150447315`. Four environments verified for the fixed scope; frozen A calibration EXECUTED with RETROSPECTIVE_ONLY threshold. Runtime NOT_RUN. This documentation closeout HEAD is checked separately; no archive/merge.
+
+## 6. Frozen independent validation (active Goal)
+
+Authority: `docs/goals/Hermes_PR48_Frozen_Independent_Validation_Codex_Goal.md`. Earlier sections remain historical, including incomplete 2.5.
+
+- [x] 6.1 V0 Freeze methods/resources, implement old-fixture research entrypoint and historical index.
+- [x] 6.2 V1 Recruit, deduplicate, preflight and freeze new cal/check and repair roster.
+- [x] 6.3 V2 Obtain two blinded weak-label contexts, preserve disagreements.
+- [x] 6.4 V3 Score new cal, fit declared mappings and lock thresholds.
+- [x] 6.5 V4 Lock new check predictions before labels, independently recompute full comparisons.
+- [x] 6.6 V5 Run prespecified repair matrix only if empirical triggers hold; otherwise retain reasons.
+- [ ] 6.7 V6 Regression, independent review, clean wheel, exact-head CI and Draft publication.
+
+V3: both new-cal mappings fitted; A and cheap text have NO_OPERATING_POINT. V5 is NOT_RUN_WITH_REASON (no A threshold), with zero repair Agent executions, not a completed runtime comparison. V4 completed on all 120 frozen check pairs, with 119 known and one UNKNOWN weak label. Check environment refresh returned UNKNOWN for all 12 tasks; raw scores remain valid offline observations, support eligibility remains zero. V6 publication/exact-head CI pending.

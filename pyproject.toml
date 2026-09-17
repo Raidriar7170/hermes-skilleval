@@ -60,3 +60,7 @@ ignore_missing_imports = true
 # Only imported by the isolated target probe, never the lightweight host install.
 module = ["csvkit", "csvkit.*", "csv_diff", "csv_diff.*"]
 ignore_missing_imports = true
+
+[tool.ruff.format]
+# Frozen executable payload: formatting would change probe/image identities.
+exclude = ["src/hermes_skilleval/repo_routing/environment_probe_explicit.py"]

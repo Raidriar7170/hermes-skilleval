@@ -1,0 +1,490 @@
+{
+  "schema": "environment-profile-v1",
+  "version": "isolated-source-maintenance-independent-v1",
+  "scope": "isolated-source-maintenance",
+  "base_image": "python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea",
+  "requirements": [
+    {
+      "id": "interpreter",
+      "required": true,
+      "source": "engineering scope: Python 3.12 Linux; setup.py Python >=3.6 where declared",
+      "observation": "Python major/minor and platform match"
+    },
+    {
+      "id": "source_import",
+      "required": true,
+      "source": "Goal M3 and exact task setup.py",
+      "observation": "installed distribution version, module origin under /opt/source, snapshot file hashes match"
+    },
+    {
+      "id": "dependencies",
+      "required": true,
+      "source": "exact task setup.py install_requires",
+      "observation": "target distribution installed plus pip check succeeds; dependency inventory recorded"
+    },
+    {
+      "id": "entrypoint",
+      "required": true,
+      "source": "exact task setup.py entry_points",
+      "observation": "target CLI --help exits zero"
+    },
+    {
+      "id": "feature",
+      "required": true,
+      "source": "public request: trigger introspection / attachment / CSV display / keyed diff",
+      "observation": "small independent SQLite trigger/attach or CSV library interface, not target bug acceptance"
+    },
+    {
+      "id": "isolation",
+      "required": true,
+      "source": "Goal fixed execution policy",
+      "observation": "Docker network none, rootfs read-only, unprivileged uid, no mounts, cap drop, tmpfs only; container network interfaces and write canaries"
+    }
+  ],
+  "preparation": "public pip dependencies in build phase only; never host source execution",
+  "execution_authority": "NONE",
+  "probe_timeout_seconds": 90,
+  "tasks": [
+    {
+      "task_id": "sqlite-utils-issue-348",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "4beb87f44694a1f82ab873ca1858e9d451afcdcf",
+      "split": "cal",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.19",
+      "snapshot_identity": "8cccac49928829681df69c8097de912072b78c1a962ec58914ce5473d6ca9999",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "4beb87f44694a1f82ab873ca1858e9d451afcdcf",
+      "split": "check",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.19",
+      "snapshot_identity": "8cccac49928829681df69c8097de912072b78c1a962ec58914ce5473d6ca9999",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-379",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "389cbd57924da5886a7700c6802d55a934523a29",
+      "split": "cal",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.20",
+      "snapshot_identity": "bd42313c8906d1cc9cd0cfdb2519f04c8a1d8c740515e70c78d07a25f2d3fc0e",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "126703706ea153f63e6134ad14e5712e4bbcb8ae",
+      "split": "check",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.19",
+      "snapshot_identity": "ea4810194deb8102a923e280cb2b91e6d5dd91534be2b401eb971e729a43b9cd",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-339",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "9cda5b070f885a7995f0c307bcc4f45f0812994a",
+      "split": "cal",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.17.1",
+      "snapshot_identity": "6488dc07fede43076b566517ee4882043f5e1324747b890d85543be9620049cf",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "e328db8eba1fbf29a69eda95dfec861954f9e771",
+      "split": "check",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.19",
+      "snapshot_identity": "b072ca229ea2ce53898102fc30bb18cbb3895e741dced9270a1af6286266e73f",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-323",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "77c240df56068341561e95e4a412cbfa24dc5bc7",
+      "split": "cal",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.17",
+      "snapshot_identity": "2f7223ee2d81e1ad728f13b6a58ef4d64a7c30bc7e5de49f67ba47e8cfcad9d0",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "aa2490311369697adbdbef4185b334e6730c762e",
+      "split": "check",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.23",
+      "snapshot_identity": "27417dfc54f8ae5685760be15a162fb1abd4a74a2b1bc20646c8e1d23233fca4",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-356",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "1a7ef2fe2064ace01d5535fb771f941296fb642a",
+      "split": "cal",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.19",
+      "snapshot_identity": "b1eef28943b67e109512cd3fa53dda29fb655dcc2d7bc4a3ffe8d49a4634ced8",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "repository": "simonw/sqlite-utils",
+      "source_revision": "650f97a08f29a688c530e5f6c9eedc9269ed7bdc",
+      "split": "check",
+      "module": "sqlite_utils",
+      "distribution": "sqlite-utils",
+      "cli": "sqlite-utils",
+      "version": "3.20",
+      "snapshot_identity": "95c71483615029a8c3f21973c003694ca397369837eff93c799f81f5974115d0",
+      "capability": "sqlite-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1264",
+      "repository": "wireservice/csvkit",
+      "source_revision": "65952972492e684c49ac68b13c312d7e8aa93df3",
+      "split": "cal",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "2.0.1",
+      "snapshot_identity": "accfa3e04d727800b2455fc49dfade0c8bd211e428d8e99c89c10f49f8df68cc",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "repository": "wireservice/csvkit",
+      "source_revision": "03024dc0de093da5d50f83fe2850bb765256cffb",
+      "split": "check",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "2.0.0",
+      "snapshot_identity": "4bf01a1ea7b26294017206c26a2fff56f8735ebdb80055df789ebae6428fbb3c",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1231",
+      "repository": "wireservice/csvkit",
+      "source_revision": "c42d0db94cc28216577ae92251d1240547393a2c",
+      "split": "cal",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "1.3.0",
+      "snapshot_identity": "4f753a1e738d92ef4ad651f673b6e288f95a4c5fca0888678477aa9a2ff1ee11",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "repository": "wireservice/csvkit",
+      "source_revision": "ed05def23eed47d35a562a32c4562767a780a494",
+      "split": "check",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "1.3.0",
+      "snapshot_identity": "d6fffb7804027ea269fd7608c5454a43f0e41d0a97f6c0e04e4f9bf9b976dd77",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1251",
+      "repository": "wireservice/csvkit",
+      "source_revision": "f73742fc0ec4c993b5f76809ee15dfab8a0cef10",
+      "split": "cal",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "2.0.0",
+      "snapshot_identity": "e9eb2c0777056cae5a587ee290904ff48664819bf067ec2ff201724d7170c52e",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "repository": "wireservice/csvkit",
+      "source_revision": "aee71d63e386bf74185f3744fea22f4049c326db",
+      "split": "check",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "2.0.1",
+      "snapshot_identity": "b047608a20c4b46aaa6c85ae39fb17900735ed073c0c8759fc7fc1cc0710484a",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1212",
+      "repository": "wireservice/csvkit",
+      "source_revision": "fa9e0db1cdd30757835912e48467d6ab2be02c14",
+      "split": "cal",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "1.1.1",
+      "snapshot_identity": "df1479fb7f08655ac0de14ba4c186077cd581d75fff52d85dca319e11e197bfe",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "repository": "wireservice/csvkit",
+      "source_revision": "002d6a7d8918bfcfaf84754cdcb362a1c5874970",
+      "split": "check",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "1.2.0",
+      "snapshot_identity": "bed96c4f2b1af75b0cd5c9beeedbb8588e0232126ee82da37d4bbfe42c4afc43",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1268",
+      "repository": "wireservice/csvkit",
+      "source_revision": "65952972492e684c49ac68b13c312d7e8aa93df3",
+      "split": "cal",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "2.0.1",
+      "snapshot_identity": "accfa3e04d727800b2455fc49dfade0c8bd211e428d8e99c89c10f49f8df68cc",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "repository": "wireservice/csvkit",
+      "source_revision": "65952972492e684c49ac68b13c312d7e8aa93df3",
+      "split": "check",
+      "module": "csvkit",
+      "distribution": "csvkit",
+      "cli": "csvlook",
+      "version": "2.0.1",
+      "snapshot_identity": "accfa3e04d727800b2455fc49dfade0c8bd211e428d8e99c89c10f49f8df68cc",
+      "capability": "csvlook-basic"
+    },
+    {
+      "task_id": "csv-diff-issue-23",
+      "repository": "simonw/csv-diff",
+      "source_revision": "33e0a5918283c02a339a1fb507fc7a9cda89a198",
+      "split": "cal",
+      "module": "csv_diff",
+      "distribution": "csv-diff",
+      "cli": "csv-diff",
+      "version": "1.1",
+      "snapshot_identity": "c919b1b13fec1fcadfd712ab7bd8e90c5500ec8ee00b9ec452e04b64bdd0e9ff",
+      "capability": "keyed-diff-basic"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "repository": "simonw/csv-diff",
+      "source_revision": "33e0a5918283c02a339a1fb507fc7a9cda89a198",
+      "split": "check",
+      "module": "csv_diff",
+      "distribution": "csv-diff",
+      "cli": "csv-diff",
+      "version": "1.1",
+      "snapshot_identity": "c919b1b13fec1fcadfd712ab7bd8e90c5500ec8ee00b9ec452e04b64bdd0e9ff",
+      "capability": "keyed-diff-basic"
+    },
+    {
+      "task_id": "csv-diff-issue-30",
+      "repository": "simonw/csv-diff",
+      "source_revision": "33e0a5918283c02a339a1fb507fc7a9cda89a198",
+      "split": "cal",
+      "module": "csv_diff",
+      "distribution": "csv-diff",
+      "cli": "csv-diff",
+      "version": "1.1",
+      "snapshot_identity": "c919b1b13fec1fcadfd712ab7bd8e90c5500ec8ee00b9ec452e04b64bdd0e9ff",
+      "capability": "keyed-diff-basic"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "repository": "simonw/csv-diff",
+      "source_revision": "33e0a5918283c02a339a1fb507fc7a9cda89a198",
+      "split": "check",
+      "module": "csv_diff",
+      "distribution": "csv-diff",
+      "cli": "csv-diff",
+      "version": "1.1",
+      "snapshot_identity": "c919b1b13fec1fcadfd712ab7bd8e90c5500ec8ee00b9ec452e04b64bdd0e9ff",
+      "capability": "keyed-diff-basic"
+    }
+  ],
+  "skills": [
+    {
+      "id": "systematic-debugging",
+      "package_sha256": "35d0825ed0892bed3904576ab4fc437400815df7c05f9f17aa4ddd4e2df4ecc0",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "verification-before-completion",
+      "package_sha256": "45beeb0caa461f51070b3a803b6c1afb0eae3874278bf70eed61d861ddd9ad46",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "sqlite-ingest",
+      "package_sha256": "4a1ca6a165727b8bd165187ea03ab2d67eef6e5b5d3b0014728a1e2a5cc9f91a",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "sqlite-schema",
+      "package_sha256": "ada75dd4bf4f893ed14e762389cf2b8240bd94468496de6ecb5555d77a49835f",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "sqlite-fulltext",
+      "package_sha256": "8dd218a7a12c7fd1364762f5ea1bfa775dcb4a0db3d7d53731b7b8e2c867e231",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "csv-dialect",
+      "package_sha256": "2df6da2de74b20492bfcbae2ed080dc04147dd3b2603480b778eb20f186dbdba",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "tabular-conversion",
+      "package_sha256": "a76ffb2bc88015d471e09a98843af0effc36c87fde4291f1f06e15bf39eb9d3c",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "csv-relational-join",
+      "package_sha256": "68ed1716c5a6e8467bb050d8aaad6488b3bad757108f2a5ac8b75e62fe2b952a",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "sql-query-export",
+      "package_sha256": "b45069f6877355282d23cd7c4ab56dae1ec63c78aecfc796b18ece0fb0ed6898",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    },
+    {
+      "id": "keyed-csv-diff",
+      "package_sha256": "15577aa1dadbef269a98986926a75f5fa64a4d4c18b417d1916aa0ea5bdb96a6",
+      "mode": "read-development-guidance",
+      "required_conditions": [
+        "interpreter",
+        "source_import",
+        "dependencies",
+        "entrypoint",
+        "feature",
+        "isolation"
+      ],
+      "example_execution": "NOT_REQUIRED_FOR_SCOPE",
+      "reason": "This operation reads guidance and scores applicability; no skill example command is scheduled. Target repository setup/import/entrypoint remain mandatory; other package CLIs, remote backends, input files and optional FTS execution are not invoked."
+    }
+  ],
+  "probe_variant": "explicit-capability-v1"
+}

@@ -468,6 +468,10 @@ def measured_environments(args, tasks):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "independent-validate":
+        from .independent_validation import main as independent
+
+        return independent(sys.argv[2:])
     global REGISTRY, RULE, PROJECT_ROOT
     if not any(c in sys.argv[1:] for c in COMMANDS) and not (
         len(sys.argv) == 1 or sys.argv[1:] == ["--help"]

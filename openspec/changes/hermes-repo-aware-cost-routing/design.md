@@ -42,3 +42,7 @@ share derived qualification across installed preflight, score and support paths.
 Run only frozen A on four original cal tasks if prerequisites hold. Any operating
 point is retrospective; repair effectiveness remains NOT_RUN. Prior frozen
 records and task 2.5 are unchanged. No new training, check selection, or Agent runs.
+
+## Frozen independent validation continuation
+
+The designated Frozen Independent Validation Goal governs V0–V6. Freeze A/J/rank and old baselines, recruit previously unused mechanisms, calibrate only on new cal and predict new check before opening labels. Thin experiment-only migration must retain legacy strict input bindings. Conditional five-arm repair is authorized only at the predeclared empirical trigger. No neural training, default promotion, merge, archive or new paid resources.

@@ -120,10 +120,17 @@ def bounded_run(argv, timeout):
     }
 
 
-def probe_identity():
-    return hashlib.sha256(
-        Path(__file__).with_name("environment_probe.py").read_bytes()
-    ).hexdigest()
+def probe_path(profile=None):
+    variant = (profile or {}).get("probe_variant")
+    if variant not in {None, "explicit-capability-v1"}:
+        raise ValueError("unknown probe variant")
+    return Path(__file__).with_name(
+        "environment_probe_explicit.py" if variant else "environment_probe.py"
+    )
+
+
+def probe_identity(profile=None):
+    return hashlib.sha256(probe_path(profile).read_bytes()).hexdigest()
 
 
 def isolated_probe(image):
@@ -208,7 +215,7 @@ def prepare(task, snapshot, profile, private_dir, *, offline=False, wheelhouse=N
     private_dir.mkdir(parents=True, exist_ok=False)
     shutil.copytree(snapshot, private_dir / "source")
     shutil.copyfile(
-        Path(__file__).with_name("environment_probe.py"),
+        probe_path(profile),
         private_dir / "environment_probe.py",
     )
     (private_dir / "probe-plan.json").write_text(
@@ -238,7 +245,7 @@ def prepare(task, snapshot, profile, private_dir, *, offline=False, wheelhouse=N
         "hermes-env-"
         + task["task_id"]
         + ":"
-        + digest([files, profile, probe_identity()])[:12]
+        + digest([files, profile, probe_identity(profile)])[:12]
     )
     download = None
     if wheelhouse is None:
@@ -340,7 +347,7 @@ def prepare(task, snapshot, profile, private_dir, *, offline=False, wheelhouse=N
         "scope": SCOPE,
         "profile_version": profile["version"],
         "profile_identity": digest(profile),
-        "probe_identity": probe_identity(),
+        "probe_identity": probe_identity(profile),
         "observed_at": datetime.now(timezone.utc).isoformat(),
         "runner_identity": image,
         "base_image_identity": base_id,
@@ -369,7 +376,7 @@ def verify_record(record, task, snapshot, profile, *, refresh=True, wheelhouse=N
         "source_revision": task["source_revision"],
         "scope": SCOPE,
         "profile_identity": digest(profile),
-        "probe_identity": probe_identity(),
+        "probe_identity": probe_identity(profile),
         "execution_authority": "NONE",
     }.items():
         if record.get(key) != expected:
@@ -443,7 +450,7 @@ def verify_record(record, task, snapshot, profile, *, refresh=True, wheelhouse=N
                 record["snapshot_identity"],
                 actual["runner_identity"],
                 digest(profile),
-                probe_identity(),
+                probe_identity(profile),
             ]
         ),
     }
