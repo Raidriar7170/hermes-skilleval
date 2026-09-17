@@ -1,0 +1,4659 @@
+{
+  "schema": "decision-replay-v1",
+  "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC",
+  "new_forward_calls": 0,
+  "operation": "saved-score arithmetic; no retokenization or model reload",
+  "streams": {
+    "legacy_product": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "training-lambda-0",
+        "epoch": 3,
+        "lambda_spec": 0,
+        "dev_loss": [
+          0.27087321475169585,
+          0.7388738664747255
+        ],
+        "adapter_sha256": "cba6b64c0cbc2b031ad6f01e3b9923a6f8c580970692ffbe8ed84b4590cf3db7"
+      },
+      "decision_target": "task_specific",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.09607578403057537,
+          "log_loss": 0.3310431683785788,
+          "auc": 0.9290858318636096,
+          "auprc": 0.9243725077723708,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 22,
+              "weight": 0.5888888888888889,
+              "mean_probability": 0.081454109824799,
+              "positive_rate": 0.04716981132075471
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 4,
+              "weight": 0.10833333333333334,
+              "mean_probability": 0.3100806751783042,
+              "positive_rate": 0.23076923076923078
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 6,
+              "weight": 0.1638888888888889,
+              "mean_probability": 0.46055928752971154,
+              "positive_rate": 0.6610169491525424
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 3,
+              "weight": 0.08333333333333333,
+              "mean_probability": 0.6770648241291549,
+              "positive_rate": 1.0
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.911272058749629,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08849372979391948,
+          "log_loss": 0.3597920292644585,
+          "auc": 0.6818181818181819,
+          "auprc": 0.2863636363636363,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 32,
+              "weight": 0.861111111111111,
+              "mean_probability": 0.03331045393181503,
+              "positive_rate": 0.06451612903225806
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.2640840312842283,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.5508280658978205,
+              "positive_rate": 0.5
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 1,
+              "weight": 0.027777777777777776,
+              "mean_probability": 0.8744569576797508,
+              "positive_rate": 0.0
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "keyed-csv-diff",
+                "systematic-debugging"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.5,
+              "recall_at_2": 0.5,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 2.5
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 7.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.125,
+            "recall_at_2": 0.25,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 4.75
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.5820194024527305
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.3011534863815229
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.18520242211963975
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.14137164486101475
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.10404523772152849
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.08834830293612216
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.0669770563908251
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.05749162913881024
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.031707036640541295
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.025347428662024715
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.8744569576797507
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.5196367293429105
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.05321744646808556
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.010578534883136452
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.006552278720148387
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.006009111130544083
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.005418731980416559
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.00355448463101494
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.0035242902197040937
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0008551650667300448
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.22701457618693366
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.1646906015420086
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.012922859631665087
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.01169162461818276
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.002574057566211062
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0025304503227571826
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.002275747430214656
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0012922904103349058
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.0009840722380285898
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.0003052321293432293
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.12830145249677738
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.03237104301532953
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.007723590712061082
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.007535725888156569
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.003246188268848145
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.001609887348653879
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0011067797223317283
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.0010545162968019484
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0006882500951067155
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.0006751079436008926
+          }
+        ]
+      },
+      "supported": false
+    },
+    "A_app_only": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "training-lambda-0",
+        "epoch": 3,
+        "adapter_sha256": "cba6b64c0cbc2b031ad6f01e3b9923a6f8c580970692ffbe8ed84b4590cf3db7",
+        "supervised_denominators": {
+          "applicability": 0.9666666666666667,
+          "specificity_given_applicable": 0
+        },
+        "schema": "decision-alignment-v1",
+        "decision_target": "applicability",
+        "required_supervised_axes": [
+          "applicability"
+        ],
+        "selection_metric": "group_macro_applicability_log_loss",
+        "ranking_formula": "sigmoid_applicability",
+        "k": 2,
+        "support_mode": "advisory",
+        "input_identity": "125a5246b9485c485f54cd32101f13affd0842c672268233568afd826400c12c",
+        "calibration_ref": null,
+        "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC"
+      },
+      "decision_target": "applicability",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.09607578403057537,
+          "log_loss": 0.3310431683785788,
+          "auc": 0.9290858318636096,
+          "auprc": 0.9243725077723708,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 22,
+              "weight": 0.5888888888888889,
+              "mean_probability": 0.081454109824799,
+              "positive_rate": 0.04716981132075471
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 4,
+              "weight": 0.10833333333333334,
+              "mean_probability": 0.3100806751783042,
+              "positive_rate": 0.23076923076923078
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 6,
+              "weight": 0.1638888888888889,
+              "mean_probability": 0.46055928752971154,
+              "positive_rate": 0.6610169491525424
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 3,
+              "weight": 0.08333333333333333,
+              "mean_probability": 0.6770648241291549,
+              "positive_rate": 1.0
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.911272058749629,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08849372979391948,
+          "log_loss": 0.3597920292644585,
+          "auc": 0.6818181818181819,
+          "auprc": 0.2863636363636363,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 32,
+              "weight": 0.861111111111111,
+              "mean_probability": 0.03331045393181503,
+              "positive_rate": 0.06451612903225806
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.2640840312842283,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.5508280658978205,
+              "positive_rate": 0.5
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 1,
+              "weight": 0.027777777777777776,
+              "mean_probability": 0.8744569576797508,
+              "positive_rate": 0.0
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "keyed-csv-diff",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.5,
+              "recall_at_2": 0.5,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 2.5
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 5.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.125,
+            "recall_at_2": 0.25,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 3.75
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.89721697181498
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.6673213073698189
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.6062808464582471
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.4681589544357229
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.41170344446932083
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.4078381602314654
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.3692782066117432
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.36058402773344106
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.3032391175967975
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.23519998341455872
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9253271456842782
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.7575923185593991
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.36262792356578893
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1378312681670712
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.10936959762194604
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.10684957826619912
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.10302002193859006
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.08470597251461723
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.07864127557357889
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.03075206108880889
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.5189532973752351
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.49096682618117754
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.19707176007746027
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.14044903949612572
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.0585778117008525
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.05437322560014139
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.05033259271165163
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.03773835967310179
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.03219848421729733
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.016106992261466706
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.4663101263693072
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.33510813952476337
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.16659369269840926
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.10829168547607353
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.092772826620202
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.06482539008197956
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.04712039990043833
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.04496693342253538
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.040659833039034185
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.03830514206907401
+          }
+        ]
+      },
+      "supported": false
+    },
+    "J_joint_specific": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "training-lambda-1",
+        "epoch": 3,
+        "adapter_sha256": "62974d9088aaaa27effdc65d8407e7ccb93d2669487642eb7d826227c60b8645",
+        "supervised_denominators": {
+          "applicability": 0.9666666666666667,
+          "specificity_given_applicable": 0.3416666666666667
+        },
+        "schema": "decision-alignment-v1",
+        "decision_target": "task_specific",
+        "required_supervised_axes": [
+          "applicability",
+          "specificity_given_applicable"
+        ],
+        "selection_metric": "group_macro_joint_event_log_loss",
+        "ranking_formula": "raw_app_times_conditional_specificity",
+        "k": 2,
+        "support_mode": "advisory",
+        "input_identity": "125a5246b9485c485f54cd32101f13affd0842c672268233568afd826400c12c",
+        "calibration_ref": null,
+        "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC"
+      },
+      "decision_target": "task_specific",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.15362814501994007,
+          "log_loss": 0.4667726356015248,
+          "auc": 0.815108759553204,
+          "auprc": 0.72062608653199,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 14,
+              "weight": 0.37222222222222223,
+              "mean_probability": 0.09395805885270858,
+              "positive_rate": 0.07462686567164178
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 16,
+              "weight": 0.43333333333333335,
+              "mean_probability": 0.2940439554900261,
+              "positive_rate": 0.30769230769230765
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 5,
+              "weight": 0.1388888888888889,
+              "mean_probability": 0.47160775898305324,
+              "positive_rate": 0.6
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 1,
+              "weight": 0.027777777777777776,
+              "mean_probability": 0.7234350382995938,
+              "positive_rate": 1.0
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 1,
+              "weight": 0.027777777777777776,
+              "mean_probability": 0.8369591679157142,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.06190361699790118,
+          "log_loss": 0.24686341869062112,
+          "auc": 0.7616161616161616,
+          "auprc": 0.5946180555555556,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 33,
+              "weight": 0.8888888888888888,
+              "mean_probability": 0.04568786338601202,
+              "positive_rate": 0.03125
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.2250130186469578,
+              "positive_rate": 0.5
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05555555555555555,
+              "mean_probability": 0.5466400422732316,
+              "positive_rate": 0.5
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "keyed-csv-diff",
+                "csv-dialect"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 1.0,
+              "recall_at_2": 1.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 1.5
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "systematic-debugging",
+                "tabular-conversion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.5,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 5.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "sqlite-schema",
+                "systematic-debugging"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.25,
+            "recall_at_2": 0.5,
+            "known_inapplicable_at_2": 0.125,
+            "unknown_at_2": 0.125,
+            "mean_positive_rank": 3.25
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.5592410682489025
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.22735090848221928
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.1650199418539279
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.14805423742139512
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.12181630141116731
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.1214574796068338
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.11436785612371309
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.08493169517068498
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.07404889646534175
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.05366257374996505
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.5340390162975607
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.30291528055324035
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.22267512881169627
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0923727317092422
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.06731427998360726
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.05146564947827023
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.03786462925066256
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.020192313107453258
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.014121806587674285
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.004730706827427518
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0738470978590443
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.07036387060871933
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.039065342578945554
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.03721475324848405
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.013697670071012472
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.011561726769341071
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.010447912340449672
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.004832456476170563
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.004643712972269436
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.002269993874999503
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.0552594263318645
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.043619022452570405
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.03444357726227415
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.01567768523887059
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.010727393730096858
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.0039052768402998987
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.0032750458292944333
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0031234791126469536
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.002014151558550399
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0013149649614107848
+          }
+        ]
+      },
+      "supported": false
+    },
+    "global_prior_applicability": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "global_prior",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "applicability",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.21423532375913323,
+          "log_loss": 0.6202708437330324,
+          "auc": 0.5,
+          "auprc": 0.3,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 37,
+              "weight": 1.0,
+              "mean_probability": 0.36507936507936506,
+              "positive_rate": 0.3
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08188739063768814,
+          "log_loss": 0.31111903786212686,
+          "auc": 0.5,
+          "auprc": 0.08333333333333333,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 37,
+              "weight": 1.0,
+              "mean_probability": 0.1574852163087457,
+              "positive_rate": 0.08333333333333333
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.5,
+              "recall_at_2": 0.5,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 2.0
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 6.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.125,
+            "recall_at_2": 0.25,
+            "known_inapplicable_at_2": 0.875,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 4.0
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.36507936507936506
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.36507936507936506
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.36507936507936506
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.36507936507936506
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.36507936507936506
+          }
+        ]
+      },
+      "supported": false
+    },
+    "global_prior_task_specific": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "global_prior",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "task_specific",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.21423532375913323,
+          "log_loss": 0.6202708437330324,
+          "auc": 0.5,
+          "auprc": 0.3,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 37,
+              "weight": 1.0,
+              "mean_probability": 0.36507936507936506,
+              "positive_rate": 0.3
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08188739063768814,
+          "log_loss": 0.31111903786212686,
+          "auc": 0.5,
+          "auprc": 0.08333333333333333,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 37,
+              "weight": 1.0,
+              "mean_probability": 0.1574852163087457,
+              "positive_rate": 0.08333333333333333
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.5,
+              "recall_at_2": 0.5,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 2.0
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 6.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "csv-dialect",
+                "csv-relational-join"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.125,
+            "recall_at_2": 0.25,
+            "known_inapplicable_at_2": 0.875,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 4.0
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.1574852163087457
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.1574852163087457
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.1574852163087457
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.1574852163087457
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.1574852163087457
+          }
+        ]
+      },
+      "supported": false
+    },
+    "skill_prior_applicability": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "skill_prior",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "applicability",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.08997736330808993,
+          "log_loss": 0.30551355864817387,
+          "auc": 0.859457671957672,
+          "auprc": 0.8304101616320172,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 15,
+              "weight": 0.40555555555555556,
+              "mean_probability": 0.0988765800409636,
+              "positive_rate": 0.136986301369863
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.2588522588522589,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.447089947089947,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 8,
+              "weight": 0.21666666666666667,
+              "mean_probability": 0.9511599511599511,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08572095036738639,
+          "log_loss": 0.292779756570432,
+          "auc": 0.6136363636363636,
+          "auprc": 0.10933401397942355,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 23,
+              "weight": 0.6222222222222222,
+              "mean_probability": 0.05794187656932755,
+              "positive_rate": 0.08928571428571427
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.22205463381933968,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.40471867759449454,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 7.5
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 5.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.0,
+            "recall_at_2": 0.0,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 6.25
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.44708994708994704
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1970899470899471
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1240981240981241
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.02808302808302808
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.02808302808302808
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.44708994708994704
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1970899470899471
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1240981240981241
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.02808302808302808
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.02808302808302808
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.44708994708994704
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1970899470899471
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1240981240981241
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.02808302808302808
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.02808302808302808
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9511599511599512
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.44708994708994704
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2588522588522589
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.1970899470899471
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.1240981240981241
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.02808302808302808
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.02808302808302808
+          }
+        ]
+      },
+      "supported": false
+    },
+    "skill_prior_task_specific": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "skill_prior",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "task_specific",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.08997736330808993,
+          "log_loss": 0.30551355864817387,
+          "auc": 0.859457671957672,
+          "auprc": 0.8304101616320172,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 15,
+              "weight": 0.40555555555555556,
+              "mean_probability": 0.0988765800409636,
+              "positive_rate": 0.136986301369863
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.2588522588522589,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.447089947089947,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 8,
+              "weight": 0.21666666666666667,
+              "mean_probability": 0.9511599511599511,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08572095036738639,
+          "log_loss": 0.292779756570432,
+          "auc": 0.6136363636363636,
+          "auprc": 0.10933401397942355,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 23,
+              "weight": 0.6222222222222222,
+              "mean_probability": 0.05794187656932755,
+              "positive_rate": 0.08928571428571427
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.22205463381933968,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.40471867759449454,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-fulltext"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.5,
+              "mean_positive_rank": 5.5
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-fulltext"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.5,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-fulltext"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 3.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-fulltext"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.0,
+            "recall_at_2": 0.0,
+            "known_inapplicable_at_2": 0.75,
+            "unknown_at_2": 0.25,
+            "mean_positive_rank": 4.25
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.40471867759449454
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.15973302901407474
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.08881532410944176
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.012114247408365053
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.012114247408365053
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.40471867759449454
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.15973302901407474
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.08881532410944176
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.012114247408365053
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.012114247408365053
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.40471867759449454
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.15973302901407474
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.08881532410944176
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.012114247408365053
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.012114247408365053
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.40471867759449454
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2220546338193397
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.15973302901407474
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.08881532410944176
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.031561868665941066
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.012114247408365053
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.012114247408365053
+          }
+        ]
+      },
+      "supported": false
+    },
+    "cheap_text_applicability": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "cheap_text",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "applicability",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.06879798814456017,
+          "log_loss": 0.22747200031942538,
+          "auc": 0.9474573780129336,
+          "auprc": 0.9200856220052807,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 24,
+              "weight": 0.65,
+              "mean_probability": 0.04616799398276887,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 3,
+              "weight": 0.08055555555555555,
+              "mean_probability": 0.2923811975479683,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.4431776371863927,
+              "positive_rate": 0.5263157894736842
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 8,
+              "weight": 0.21666666666666667,
+              "mean_probability": 0.9989883877234189,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.06886350104657668,
+          "log_loss": 0.22795862253018376,
+          "auc": 0.8555555555555556,
+          "auprc": 0.36041116952350255,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 32,
+              "weight": 0.8666666666666667,
+              "mean_probability": 0.03483987230232067,
+              "positive_rate": 0.0641025641025641
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 3,
+              "weight": 0.08055555555555555,
+              "mean_probability": 0.29060406033931935,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.438119913444215,
+              "positive_rate": 0.5263157894736842
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 5.0
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 5.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "verification-before-completion",
+                "systematic-debugging"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.0,
+            "recall_at_2": 0.0,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 5.0
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9992892731475355
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9992290778553934
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.43840762047835313
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.2790494680366631
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.07554122506881053
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.07262910507500041
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.06550332613405563
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.06480904285030262
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0005646892897275803
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0004944315872922667
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9982713434057322
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.99768662406654
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.40791929507809793
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.10243461093124195
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.04850227252697733
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.03466644552790659
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.026600382965606125
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.016020940801920052
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0016395117585187506
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0010560095118551396
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9995246190634505
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.999336963190136
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.3584200025422967
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2560061537536756
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.11666353851895742
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.07418635120823742
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.06344627127695844
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.026380006803421934
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0018216849569522937
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.00028068035806915625
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9994300095583871
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9992050165681471
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.448477655750881
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.25942146288126205
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.16353106934882233
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.06339715217266821
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.058552757364465996
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.032870054997605466
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0022932648890012326
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.00036927567402820637
+          }
+        ]
+      },
+      "supported": false
+    },
+    "cheap_text_task_specific": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "cheap_text",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "task_specific",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.06879798814456017,
+          "log_loss": 0.22747200031942538,
+          "auc": 0.9474573780129336,
+          "auprc": 0.9200856220052807,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 24,
+              "weight": 0.65,
+              "mean_probability": 0.04616799398276887,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 3,
+              "weight": 0.08055555555555555,
+              "mean_probability": 0.2923811975479683,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.4431776371863927,
+              "positive_rate": 0.5263157894736842
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 8,
+              "weight": 0.21666666666666667,
+              "mean_probability": 0.9989883877234189,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.06886350104657668,
+          "log_loss": 0.22795862253018376,
+          "auc": 0.8555555555555556,
+          "auprc": 0.36041116952350255,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 32,
+              "weight": 0.8666666666666667,
+              "mean_probability": 0.03483987230232067,
+              "positive_rate": 0.0641025641025641
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 3,
+              "weight": 0.08055555555555555,
+              "mean_probability": 0.29060406033931935,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.438119913444215,
+              "positive_rate": 0.5263157894736842
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "keyed-csv-diff",
+                "tabular-conversion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.5,
+              "recall_at_2": 0.5,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.5,
+              "mean_positive_rank": 3.0
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "tabular-conversion",
+                "csv-dialect"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.5,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "sqlite-fulltext",
+                "sqlite-schema"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 3.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "sqlite-fulltext",
+                "sqlite-schema"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.125,
+            "recall_at_2": 0.25,
+            "known_inapplicable_at_2": 0.625,
+            "unknown_at_2": 0.25,
+            "mean_positive_rank": 3.0
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.4321125647316386
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.2780087186395177
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.075112313712266
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.07222740943664459
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.06465587741364386
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.06414154632507447
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.002414756606764643
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0011847519289570041
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0005499300462209441
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.000475846741860005
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.40676477882146544
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.10132285835303019
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.048056962477223956
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.03422215246874605
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.02647178687180266
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.015950163029640703
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.0023950160554821434
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0016069217949669593
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0013288610720621798
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.0010244741327313843
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.3554795955501373
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.25490337253875806
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.11619685643985699
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.07395035778797424
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.06268236200228518
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.02602842089062865
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.0026749381921391526
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.001769454141200148
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0014740464896354404
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0002743826863929639
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.44479474534707775
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.25818756321681174
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.16297142610323123
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.062547353760093
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.05828822854584341
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.03240838215088254
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.002698813040522689
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.002220204717152497
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0013730417602930212
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.00036035311795350894
+          }
+        ]
+      },
+      "supported": false
+    },
+    "skill_only_applicability": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "skill_only",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "applicability",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.0895520488087486,
+          "log_loss": 0.2926003272458801,
+          "auc": 0.8451278659611994,
+          "auprc": 0.8304101616320172,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 15,
+              "weight": 0.40555555555555556,
+              "mean_probability": 0.07693113615433649,
+              "positive_rate": 0.136986301369863
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.24975534028195273,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.4530646730114108,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 8,
+              "weight": 0.21666666666666667,
+              "mean_probability": 0.9981391777163029,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08941208460675301,
+          "log_loss": 0.2924416211215098,
+          "auc": 0.6136363636363636,
+          "auprc": 0.11918847122623978,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 23,
+              "weight": 0.6222222222222222,
+              "mean_probability": 0.05030296803986389,
+              "positive_rate": 0.08928571428571427
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.2484360464500778,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.4518662632489861,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 7.5
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 6.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "systematic-debugging",
+                "verification-before-completion"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.0,
+            "recall_at_2": 0.0,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 6.75
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9987794641535336
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9974988912790723
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.45306467301141073
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.249903629062967
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2497326119749959
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24962977980789536
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.18125620086429223
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.10116172559790912
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003232526113628809
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031770125438984314
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9987794641535336
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9974988912790723
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.45306467301141073
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.249903629062967
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2497326119749959
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24962977980789536
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.18125620086429223
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.10116172559790912
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003232526113628809
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031770125438984314
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9987794641535336
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9974988912790723
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.45306467301141073
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.249903629062967
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2497326119749959
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24962977980789536
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.18125620086429223
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.10116172559790912
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003232526113628809
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031770125438984314
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.9987794641535336
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.9974988912790723
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.45306467301141073
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.249903629062967
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.2497326119749959
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24962977980789536
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.18125620086429223
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.10116172559790912
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003232526113628809
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031770125438984314
+          }
+        ]
+      },
+      "supported": false
+    },
+    "skill_only_task_specific": {
+      "status": "SAVED_SCORE_ARITHMETIC",
+      "model": {
+        "candidate_id": "skill_only",
+        "selection_scope": "old frozen fit/model-dev baseline; task-specific hyperparameters not optimized"
+      },
+      "decision_target": "task_specific",
+      "metrics": {
+        "applicability": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 11.0,
+          "negative": 26.0,
+          "weighted_prevalence": 0.3,
+          "brier": 0.0895520488087486,
+          "log_loss": 0.2926003272458801,
+          "auc": 0.8451278659611994,
+          "auprc": 0.8304101616320172,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 15,
+              "weight": 0.40555555555555556,
+              "mean_probability": 0.07693113615433649,
+              "positive_rate": 0.136986301369863
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.24975534028195273,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.4530646730114108,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 8,
+              "weight": 0.21666666666666667,
+              "mean_probability": 0.9981391777163029,
+              "positive_rate": 1.0
+            }
+          ]
+        },
+        "joint_event": {
+          "known": 37,
+          "unknown": 3,
+          "outside_conditional_axis": 0,
+          "positive": 3.0,
+          "negative": 34.0,
+          "weighted_prevalence": 0.08333333333333333,
+          "brier": 0.08941208460675301,
+          "log_loss": 0.2924416211215098,
+          "auc": 0.6136363636363636,
+          "auprc": 0.11918847122623978,
+          "reliability": [
+            {
+              "range": [
+                0.0,
+                0.2
+              ],
+              "count": 23,
+              "weight": 0.6222222222222222,
+              "mean_probability": 0.05030296803986389,
+              "positive_rate": 0.08928571428571427
+            },
+            {
+              "range": [
+                0.2,
+                0.4
+              ],
+              "count": 12,
+              "weight": 0.325,
+              "mean_probability": 0.2484360464500778,
+              "positive_rate": 0.08547008547008546
+            },
+            {
+              "range": [
+                0.4,
+                0.6
+              ],
+              "count": 2,
+              "weight": 0.05277777777777778,
+              "mean_probability": 0.4518662632489861,
+              "positive_rate": 0.0
+            },
+            {
+              "range": [
+                0.6,
+                0.8
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            },
+            {
+              "range": [
+                0.8,
+                1.0
+              ],
+              "count": 0,
+              "weight": 0,
+              "mean_probability": null,
+              "positive_rate": null
+            }
+          ]
+        },
+        "ranking": {
+          "tasks": [
+            {
+              "task_id": "csv-diff-issue-39",
+              "group": "diff-csv-output",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-schema"
+              ],
+              "filled_k2": true,
+              "specific_positives": 2,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.5,
+              "mean_positive_rank": 5.5
+            },
+            {
+              "task_id": "csvkit-issue-1177",
+              "group": "grep-header-semantics",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-schema"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 0.5,
+              "unknown_at_2": 0.5,
+              "mean_positive_rank": null
+            },
+            {
+              "task_id": "sqlite-utils-issue-207",
+              "group": "column-statistics",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-schema"
+              ],
+              "filled_k2": true,
+              "specific_positives": 1,
+              "precision_at_2": 0.0,
+              "recall_at_2": 0.0,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": 3.0
+            },
+            {
+              "task_id": "sqlite-utils-issue-274",
+              "group": "sql-dump",
+              "selected": [
+                "tabular-conversion",
+                "sqlite-schema"
+              ],
+              "filled_k2": true,
+              "specific_positives": 0,
+              "precision_at_2": 0.0,
+              "recall_at_2": null,
+              "known_inapplicable_at_2": 1.0,
+              "unknown_at_2": 0.0,
+              "mean_positive_rank": null
+            }
+          ],
+          "group_macro": {
+            "precision_at_2": 0.0,
+            "recall_at_2": 0.0,
+            "known_inapplicable_at_2": 0.75,
+            "unknown_at_2": 0.25,
+            "mean_positive_rank": 4.25
+          },
+          "tasks_without_specific_positive": 2,
+          "filled_k2": 4,
+          "total_tasks": 4
+        }
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.4518662632489861
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2488068235176432
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24859697077597753
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.24790434505661268
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.17942762204833507
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.09988180785536985
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003133726996290117
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031038060016735504
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.002719341972801821
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0014568261740530363
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.4518662632489861
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2488068235176432
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24859697077597753
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.24790434505661268
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.17942762204833507
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.09988180785536985
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003133726996290117
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031038060016735504
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.002719341972801821
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0014568261740530363
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.4518662632489861
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2488068235176432
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24859697077597753
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.24790434505661268
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.17942762204833507
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.09988180785536985
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003133726996290117
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031038060016735504
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.002719341972801821
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0014568261740530363
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": 0.4518662632489861
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": 0.2488068235176432
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": 0.24859697077597753
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": 0.24790434505661268
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": 0.17942762204833507
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": 0.09988180785536985
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": 0.003133726996290117
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": 0.0031038060016735504
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": 0.002719341972801821
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": 0.0014568261740530363
+          }
+        ]
+      },
+      "supported": false
+    },
+    "fixed": {
+      "candidate_id": "old fixed",
+      "probabilities": "NOT_APPLICABLE",
+      "ranking": {
+        "tasks": [
+          {
+            "task_id": "csv-diff-issue-39",
+            "group": "diff-csv-output",
+            "selected": [
+              "keyed-csv-diff",
+              "csv-dialect"
+            ],
+            "filled_k2": true,
+            "specific_positives": 2,
+            "precision_at_2": 1.0,
+            "recall_at_2": 1.0,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 1.5
+          },
+          {
+            "task_id": "csvkit-issue-1177",
+            "group": "grep-header-semantics",
+            "selected": [
+              "tabular-conversion",
+              "csv-dialect"
+            ],
+            "filled_k2": true,
+            "specific_positives": 0,
+            "precision_at_2": 0.0,
+            "recall_at_2": null,
+            "known_inapplicable_at_2": 0.5,
+            "unknown_at_2": 0.5,
+            "mean_positive_rank": null
+          },
+          {
+            "task_id": "sqlite-utils-issue-207",
+            "group": "column-statistics",
+            "selected": [
+              "sqlite-ingest",
+              "sqlite-fulltext"
+            ],
+            "filled_k2": true,
+            "specific_positives": 1,
+            "precision_at_2": 0.5,
+            "recall_at_2": 1.0,
+            "known_inapplicable_at_2": 0.5,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 1.0
+          },
+          {
+            "task_id": "sqlite-utils-issue-274",
+            "group": "sql-dump",
+            "selected": [
+              "sqlite-ingest",
+              "sqlite-fulltext"
+            ],
+            "filled_k2": true,
+            "specific_positives": 0,
+            "precision_at_2": 0.0,
+            "recall_at_2": null,
+            "known_inapplicable_at_2": 1.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": null
+          }
+        ],
+        "group_macro": {
+          "precision_at_2": 0.375,
+          "recall_at_2": 1.0,
+          "known_inapplicable_at_2": 0.5,
+          "unknown_at_2": 0.125,
+          "mean_positive_rank": 1.25
+        },
+        "tasks_without_specific_positive": 2,
+        "filled_k2": 4,
+        "total_tasks": 4
+      }
+    },
+    "original_rank": {
+      "candidate_id": "original_rank",
+      "input_max_length": 1024,
+      "support_input_max_length": 8192,
+      "probability_metrics": "NOT_APPLICABLE: ordinal rank score",
+      "ranking": {
+        "tasks": [
+          {
+            "task_id": "csv-diff-issue-39",
+            "group": "diff-csv-output",
+            "selected": [
+              "verification-before-completion",
+              "keyed-csv-diff"
+            ],
+            "filled_k2": true,
+            "specific_positives": 2,
+            "precision_at_2": 0.5,
+            "recall_at_2": 0.5,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 3.5
+          },
+          {
+            "task_id": "csvkit-issue-1177",
+            "group": "grep-header-semantics",
+            "selected": [
+              "tabular-conversion",
+              "csv-dialect"
+            ],
+            "filled_k2": true,
+            "specific_positives": 0,
+            "precision_at_2": 0.0,
+            "recall_at_2": null,
+            "known_inapplicable_at_2": 0.5,
+            "unknown_at_2": 0.5,
+            "mean_positive_rank": null
+          },
+          {
+            "task_id": "sqlite-utils-issue-207",
+            "group": "column-statistics",
+            "selected": [
+              "sqlite-fulltext",
+              "sqlite-ingest"
+            ],
+            "filled_k2": true,
+            "specific_positives": 1,
+            "precision_at_2": 0.5,
+            "recall_at_2": 1.0,
+            "known_inapplicable_at_2": 0.5,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 2.0
+          },
+          {
+            "task_id": "sqlite-utils-issue-274",
+            "group": "sql-dump",
+            "selected": [
+              "sqlite-ingest",
+              "sqlite-schema"
+            ],
+            "filled_k2": true,
+            "specific_positives": 0,
+            "precision_at_2": 0.0,
+            "recall_at_2": null,
+            "known_inapplicable_at_2": 1.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": null
+          }
+        ],
+        "group_macro": {
+          "precision_at_2": 0.25,
+          "recall_at_2": 0.75,
+          "known_inapplicable_at_2": 0.5,
+          "unknown_at_2": 0.125,
+          "mean_positive_rank": 2.75
+        },
+        "tasks_without_specific_positive": 2,
+        "filled_k2": 4,
+        "total_tasks": 4
+      },
+      "orders": {
+        "csv-diff-issue-39": [
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": -2.295694351196289
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": -2.397158622741699
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": -2.4512577056884766
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": -2.642568588256836
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": -2.665983200073242
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": -2.69558048248291
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": -2.7137842178344727
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": -2.7211732864379883
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": -2.9598493576049805
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": -2.9705963134765625
+          }
+        ],
+        "csvkit-issue-1177": [
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": -0.8135471343994141
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": -0.8333969116210938
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": -1.0599451065063477
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": -1.0791778564453125
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": -1.354360580444336
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": -1.7118406295776367
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": -1.773921012878418
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": -2.6890554428100586
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": -2.746257781982422
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": -2.9116086959838867
+          }
+        ],
+        "sqlite-utils-issue-207": [
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": -2.4829607009887695
+          },
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": -2.5494537353515625
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": -2.644235610961914
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": -2.702320098876953
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": -2.721109390258789
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": -2.801947593688965
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": -2.8186302185058594
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": -3.017989158630371
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": -3.162655830383301
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": -3.236945152282715
+          }
+        ],
+        "sqlite-utils-issue-274": [
+          {
+            "skill_id": "sqlite-ingest",
+            "priority_score": -3.4074888229370117
+          },
+          {
+            "skill_id": "sqlite-schema",
+            "priority_score": -3.4162158966064453
+          },
+          {
+            "skill_id": "verification-before-completion",
+            "priority_score": -3.4251441955566406
+          },
+          {
+            "skill_id": "sqlite-fulltext",
+            "priority_score": -3.5067882537841797
+          },
+          {
+            "skill_id": "systematic-debugging",
+            "priority_score": -3.6854820251464844
+          },
+          {
+            "skill_id": "sql-query-export",
+            "priority_score": -3.7564258575439453
+          },
+          {
+            "skill_id": "keyed-csv-diff",
+            "priority_score": -3.77139949798584
+          },
+          {
+            "skill_id": "tabular-conversion",
+            "priority_score": -3.936068534851074
+          },
+          {
+            "skill_id": "csv-relational-join",
+            "priority_score": -4.247015953063965
+          },
+          {
+            "skill_id": "csv-dialect",
+            "priority_score": -4.385235786437988
+          }
+        ]
+      }
+    },
+    "rank_plus_support": {
+      "candidate_id": "original_rank + historical support",
+      "threshold": null,
+      "ranking": {
+        "tasks": [
+          {
+            "task_id": "csv-diff-issue-39",
+            "group": "diff-csv-output",
+            "selected": [],
+            "filled_k2": false,
+            "specific_positives": 2,
+            "precision_at_2": 0.0,
+            "recall_at_2": 0.0,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 3.5
+          },
+          {
+            "task_id": "csvkit-issue-1177",
+            "group": "grep-header-semantics",
+            "selected": [],
+            "filled_k2": false,
+            "specific_positives": 0,
+            "precision_at_2": 0.0,
+            "recall_at_2": null,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": null
+          },
+          {
+            "task_id": "sqlite-utils-issue-207",
+            "group": "column-statistics",
+            "selected": [],
+            "filled_k2": false,
+            "specific_positives": 1,
+            "precision_at_2": 0.0,
+            "recall_at_2": 0.0,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": 2.0
+          },
+          {
+            "task_id": "sqlite-utils-issue-274",
+            "group": "sql-dump",
+            "selected": [],
+            "filled_k2": false,
+            "specific_positives": 0,
+            "precision_at_2": 0.0,
+            "recall_at_2": null,
+            "known_inapplicable_at_2": 0.0,
+            "unknown_at_2": 0.0,
+            "mean_positive_rank": null
+          }
+        ],
+        "group_macro": {
+          "precision_at_2": 0.0,
+          "recall_at_2": 0.0,
+          "known_inapplicable_at_2": 0.0,
+          "unknown_at_2": 0.0,
+          "mean_positive_rank": 2.75
+        },
+        "tasks_without_specific_positive": 2,
+        "filled_k2": 0,
+        "total_tasks": 4
+      },
+      "accepted_precision": null,
+      "status": "NOT_ESTABLISHED"
+    }
+  },
+  "runtime_effectiveness": "NOT_RUN"
+}

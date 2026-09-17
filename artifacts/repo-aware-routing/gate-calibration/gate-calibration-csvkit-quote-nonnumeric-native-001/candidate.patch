@@ -1,0 +1,123 @@
+diff --git a/csvkit/utilities/csvformat.py b/csvkit/utilities/csvformat.py
+index 655f5c44bf2ed3c1cbbaceedd79c3be921c7988d..e90d4a7764e8d8071452293ae25011b49f4d1c8b 100644
+--- a/csvkit/utilities/csvformat.py
++++ b/csvkit/utilities/csvformat.py
+@@ -1,4 +1,5 @@
+ #!/usr/bin/env python
++import csv
+ import itertools
+ import sys
+ 
+@@ -7,6 +8,34 @@ import agate
+ from csvkit.cli import CSVKitUtility, make_default_headers
+ 
+ 
++class _NumericValue(float):
++    """A numeric value that retains its original CSV representation."""
++
++    def __new__(cls, value):
++        instance = super().__new__(cls, value)
++        instance.value = value
++        return instance
++
++    def __str__(self):
++        return self.value
++
++
++def _parse_numeric_values(rows):
++    for row in rows:
++        values = []
++
++        for value in row:
++            if isinstance(value, str):
++                try:
++                    value = _NumericValue(value)
++                except ValueError:
++                    pass
++
++            values.append(value)
++
++        yield values
++
++
+ class CSVFormat(CSVKitUtility):
+     description = 'Convert a CSV file to a custom output format.'
+     override_flags = ['L', 'blanks', 'date-format', 'datetime-format']
+@@ -83,6 +112,15 @@ class CSVFormat(CSVKitUtility):
+         if self.args.skip_header:
+             next(reader)
+ 
++        if self.args.out_quoting == csv.QUOTE_NONNUMERIC:
++            if not self.args.skip_header:
++                try:
++                    writer.writerow(next(reader))
++                except StopIteration:
++                    return
++
++            reader = _parse_numeric_values(reader)
++
+         writer.writerows(reader)
+ 
+ 
+diff --git a/docs/scripts/csvformat.rst b/docs/scripts/csvformat.rst
+index cbaf956ec7de8182757d23a5cd77477b0ba67d7c..10bb6ec3c0d25febe6762d1accd1d2c156a48578 100644
+--- a/docs/scripts/csvformat.rst
++++ b/docs/scripts/csvformat.rst
+@@ -73,6 +73,12 @@ Convert to a tab-delimited file (TSV) with no doubling of double quotes:
+ 
+    printf 'key,value\n1,"a ""quoted"" string"' | csvformat -T -Q🐍
+ 
++Quote string fields while leaving numeric fields unquoted:
++
++.. code-block:: bash
++
++   printf 'name,count\nalice,2' | csvformat -U 2
++
+ To avoid escaping quote characters when using :code:`--quoting 3`, add :code:`--out-quotechar ""`:
+ 
+ .. code-block:: bash
+diff --git a/tests/test_utilities/test_csvformat.py b/tests/test_utilities/test_csvformat.py
+index 7123f2c233683ed787b5de8a0910d4ebddb7698a..b531ec57aaf71e60bc592ca5795af7e9093fc132 100644
+--- a/tests/test_utilities/test_csvformat.py
++++ b/tests/test_utilities/test_csvformat.py
+@@ -91,6 +91,40 @@ class TestCSVFormat(CSVKitTestCase, EmptyFileTests):
+ 
+         input_file.close()
+ 
++    def test_quote_nonnumeric(self):
++        input_file = io.BytesIO(b'name,count,amount\nalice,2,3.50\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2'], [
++                '"name","count","amount"',
++                '"alice",2,3.50',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_no_header_row(self):
++        self.assertLines(['--no-header-row', '--out-quoting', '2', 'examples/no_header_row.csv'], [
++            '"a","b","c"',
++            '1,2,3',
++        ])
++
++    def test_quote_nonnumeric_input_and_output(self):
++        input_file = io.BytesIO(b'"name","count"\n"alice",2\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--quoting', '2', '--out-quoting', '2'], [
++                '"name","count"',
++                '"alice",2.0',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_empty(self):
++        self.assertEqual(
++            self.get_output(['--out-quoting', '2', 'examples/empty.csv']),
++            self.get_output(['examples/empty.csv']),
++        )
++
+     def test_lineterminator(self):
+         self.assertLines(['-M', 'XYZ', 'examples/dummy.csv'], [
+             'a,b,cXYZ1,2,3XYZ',

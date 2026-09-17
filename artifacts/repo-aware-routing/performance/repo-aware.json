@@ -1,0 +1,1003 @@
+{
+  "started_at": 1789506806.0168982,
+  "finished_at": 1789506816.8957372,
+  "script_sha256": "8531d6787107429c633c33bc339ce2c5fc36d10b9c6f60850a51aaf5411eaf78",
+  "evidence_scope": "ENGINEERING_COMPONENT_PROFILE_NOT_MAIN_COMPARISON",
+  "profiler": "cProfile",
+  "policy": "repo-aware",
+  "limitations": "Inclusive function timings overlap and must not be summed. Profiling adds overhead. Warm process reloads models; no persistent model service or physical cold-disk claim. No Agent was run.",
+  "phases": [
+    {
+      "phase": "cold_process",
+      "action": "N",
+      "decision_reason": "no_positive_feasible_supported_set",
+      "calls": {
+        "heavy_constructors": 2,
+        "encoder_queries": 1,
+        "reranker_forwards": 10
+      },
+      "route_timing": {
+        "constructor_index_seconds": 1.2037740410014521,
+        "retrieval_seconds": 0.6487037920160219,
+        "reranker_selection_seconds": 2.3799890840018634,
+        "route_wall_seconds": 6.653377707989421
+      },
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "context_cache_hit": false,
+      "functions": [
+        {
+          "source": "repo_routing/context.py",
+          "line": 29,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.833e-06,
+          "inclusive_seconds": 1.9166000000000003e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 30,
+          "function": "<genexpr>",
+          "calls": 8,
+          "own_seconds": 6.68e-07,
+          "inclusive_seconds": 6.68e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 34,
+          "function": "digest",
+          "calls": 4,
+          "own_seconds": 1.1374000000000002e-05,
+          "inclusive_seconds": 0.000192499
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 40,
+          "function": "extract",
+          "calls": 1,
+          "own_seconds": 0.009666059000000001,
+          "inclusive_seconds": 0.081953333
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 75,
+          "function": "<lambda>",
+          "calls": 200,
+          "own_seconds": 7.035e-06,
+          "inclusive_seconds": 7.035e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 96,
+          "function": "<lambda>",
+          "calls": 49,
+          "own_seconds": 7.799300000000001e-05,
+          "inclusive_seconds": 0.004911120000000001
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 204,
+          "function": "<genexpr>",
+          "calls": 483,
+          "own_seconds": 5.577e-05,
+          "inclusive_seconds": 8.7612e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 229,
+          "function": "<lambda>",
+          "calls": 77,
+          "own_seconds": 7.1950000000000006e-06,
+          "inclusive_seconds": 7.1950000000000006e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 243,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 1.709e-06,
+          "inclusive_seconds": 2.0840000000000003e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 245,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 5.000000000000001e-07,
+          "inclusive_seconds": 7.5e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 282,
+          "function": "shared_prompt",
+          "calls": 1,
+          "own_seconds": 4.5800000000000005e-07,
+          "inclusive_seconds": 4.5800000000000005e-07
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 22,
+          "function": "features",
+          "calls": 1,
+          "own_seconds": 3.71e-06,
+          "inclusive_seconds": 4.3750000000000005e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 41,
+          "function": "sigmoid",
+          "calls": 10,
+          "own_seconds": 2.8459000000000003e-05,
+          "inclusive_seconds": 4.6083000000000006e-05
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 27,
+          "function": "routing_version",
+          "calls": 1,
+          "own_seconds": 2.1042000000000003e-05,
+          "inclusive_seconds": 0.000420541
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 61,
+          "function": "route",
+          "calls": 1,
+          "own_seconds": 0.000743672,
+          "inclusive_seconds": 2.839962292
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 149,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 2.0000000000000003e-06,
+          "inclusive_seconds": 2.0000000000000003e-06
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 159,
+          "function": "<lambda>",
+          "calls": 5,
+          "own_seconds": 5e-06,
+          "inclusive_seconds": 5e-06
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "own_seconds": 9.042e-06,
+          "inclusive_seconds": 2.7417000000000002e-05
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 12,
+          "function": "representation",
+          "calls": 10,
+          "own_seconds": 5.2709000000000006e-05,
+          "inclusive_seconds": 6.4917e-05
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 29,
+          "function": "Reranker",
+          "calls": 1,
+          "own_seconds": 6.67e-07,
+          "inclusive_seconds": 6.67e-07
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 30,
+          "function": "__init__",
+          "calls": 1,
+          "own_seconds": 6.004e-05,
+          "inclusive_seconds": 0.717980916
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 72,
+          "function": "inputs",
+          "calls": 10,
+          "own_seconds": 0.0013703,
+          "inclusive_seconds": 0.048674042
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 84,
+          "function": "<genexpr>",
+          "calls": 50,
+          "own_seconds": 2.5456e-05,
+          "inclusive_seconds": 2.5456e-05
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 123,
+          "function": "<genexpr>",
+          "calls": 30,
+          "own_seconds": 1.0582000000000001e-05,
+          "inclusive_seconds": 1.0582000000000001e-05
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 145,
+          "function": "scores",
+          "calls": 10,
+          "own_seconds": 1.441643491,
+          "inclusive_seconds": 1.597297334
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 16,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.2080000000000001e-06,
+          "inclusive_seconds": 9.125e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 19,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 3.75e-06,
+          "inclusive_seconds": 3.9590000000000006e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 25,
+          "function": "objective",
+          "calls": 2,
+          "own_seconds": 4.2510000000000005e-06,
+          "inclusive_seconds": 1.25e-05
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 26,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 1.8350000000000002e-06,
+          "inclusive_seconds": 4.168000000000001e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 27,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 2.5000000000000004e-07,
+          "inclusive_seconds": 2.5000000000000004e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 30,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 1.2500000000000002e-07,
+          "inclusive_seconds": 1.2500000000000002e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 32,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 2.08e-07,
+          "inclusive_seconds": 2.08e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 37,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 1.66e-07,
+          "inclusive_seconds": 1.66e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 47,
+          "function": "select",
+          "calls": 1,
+          "own_seconds": 1.4542e-05,
+          "inclusive_seconds": 4.0958e-05
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 51,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 3.75e-07,
+          "inclusive_seconds": 4.1700000000000004e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 57,
+          "function": "<genexpr>",
+          "calls": 15,
+          "own_seconds": 2.209e-06,
+          "inclusive_seconds": 2.793e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 66,
+          "function": "<genexpr>",
+          "calls": 1,
+          "own_seconds": 8.760000000000001e-07,
+          "inclusive_seconds": 1.5830000000000001e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 75,
+          "function": "<genexpr>",
+          "calls": 1,
+          "own_seconds": 1.2500000000000002e-07,
+          "inclusive_seconds": 1.2500000000000002e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 84,
+          "function": "<genexpr>",
+          "calls": 1,
+          "own_seconds": 1.2500000000000002e-07,
+          "inclusive_seconds": 1.2500000000000002e-07
+        },
+        {
+          "source": "repo_routing/support.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "own_seconds": 1.791e-06,
+          "inclusive_seconds": 1.791e-06
+        },
+        {
+          "source": "repo_routing/support.py",
+          "line": 6,
+          "function": "requirements",
+          "calls": 1,
+          "own_seconds": 2.291e-06,
+          "inclusive_seconds": 0.00011716700000000001
+        },
+        {
+          "source": "repo_routing/support.py",
+          "line": 17,
+          "function": "contradictions",
+          "calls": 5,
+          "own_seconds": 1.2666e-05,
+          "inclusive_seconds": 0.00045212500000000005
+        },
+        {
+          "source": "repo_routing/support.py",
+          "line": 63,
+          "function": "score_candidates",
+          "calls": 1,
+          "own_seconds": 0.00035537700000000004,
+          "inclusive_seconds": 0.789365375
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 18,
+          "function": "OpenProfile",
+          "calls": 1,
+          "own_seconds": 1.5410000000000002e-06,
+          "inclusive_seconds": 1.5410000000000002e-06
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 32,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.336e-06,
+          "inclusive_seconds": 1.917e-06
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 53,
+          "function": "asset_identity",
+          "calls": 2,
+          "own_seconds": 6.7537e-05,
+          "inclusive_seconds": 0.8100340410000001
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 56,
+          "function": "<genexpr>",
+          "calls": 19,
+          "own_seconds": 1.2377e-05,
+          "inclusive_seconds": 0.00022595900000000002
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 61,
+          "function": "<genexpr>",
+          "calls": 11,
+          "own_seconds": 2.751e-06,
+          "inclusive_seconds": 8.293e-06
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 70,
+          "function": "token_record",
+          "calls": 5,
+          "own_seconds": 5.8041e-05,
+          "inclusive_seconds": 0.008055585
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 83,
+          "function": "<genexpr>",
+          "calls": 3139,
+          "own_seconds": 8.9041e-05,
+          "inclusive_seconds": 8.9041e-05
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 87,
+          "function": "SkillRouterOpen",
+          "calls": 1,
+          "own_seconds": 1.7080000000000002e-06,
+          "inclusive_seconds": 1.7080000000000002e-06
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 88,
+          "function": "__init__",
+          "calls": 1,
+          "own_seconds": 5.1875e-05,
+          "inclusive_seconds": 1.190235334
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 126,
+          "function": "_metadata",
+          "calls": 3,
+          "own_seconds": 5.8586000000000005e-05,
+          "inclusive_seconds": 0.000997625
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 134,
+          "function": "_check_assets",
+          "calls": 2,
+          "own_seconds": 4.7080000000000005e-06,
+          "inclusive_seconds": 0.000674791
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 138,
+          "function": "_load",
+          "calls": 1,
+          "own_seconds": 5.2959000000000006e-05,
+          "inclusive_seconds": 0.321103167
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 167,
+          "function": "encode",
+          "calls": 1,
+          "own_seconds": 5.5624e-05,
+          "inclusive_seconds": 0.45714512500000004
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 184,
+          "function": "index",
+          "calls": 1,
+          "own_seconds": 0.00023616400000000002,
+          "inclusive_seconds": 0.013500958
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 31,
+          "function": "last_token_pool",
+          "calls": 1,
+          "own_seconds": 0.029706417000000002,
+          "inclusive_seconds": 0.029783292000000003
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 45,
+          "function": "format_query",
+          "calls": 1,
+          "own_seconds": 5.000000000000001e-07,
+          "inclusive_seconds": 5.000000000000001e-07
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 49,
+          "function": "format_skill",
+          "calls": 5,
+          "own_seconds": 4.916e-06,
+          "inclusive_seconds": 6.2080000000000005e-06
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 123,
+          "function": "encode_texts",
+          "calls": 1,
+          "own_seconds": 5.0708e-05,
+          "inclusive_seconds": 0.135958875
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 151,
+          "function": "get_reranker_template_tokens",
+          "calls": 1,
+          "own_seconds": 6.959000000000001e-06,
+          "inclusive_seconds": 0.000186667
+        }
+      ]
+    },
+    {
+      "phase": "warm_process_model_reloaded",
+      "action": "N",
+      "decision_reason": "no_positive_feasible_supported_set",
+      "calls": {
+        "heavy_constructors": 2,
+        "encoder_queries": 1,
+        "reranker_forwards": 10
+      },
+      "route_timing": {
+        "constructor_index_seconds": 1.2512444169842638,
+        "retrieval_seconds": 0.4133203339879401,
+        "reranker_selection_seconds": 2.235823541006539,
+        "route_wall_seconds": 3.9858649160014465
+      },
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "context_cache_hit": false,
+      "functions": [
+        {
+          "source": "repo_routing/context.py",
+          "line": 29,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.9590000000000002e-06,
+          "inclusive_seconds": 1.6333e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 30,
+          "function": "<genexpr>",
+          "calls": 8,
+          "own_seconds": 7.95e-07,
+          "inclusive_seconds": 7.95e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 34,
+          "function": "digest",
+          "calls": 4,
+          "own_seconds": 1.0460000000000001e-05,
+          "inclusive_seconds": 0.00021795700000000001
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 40,
+          "function": "extract",
+          "calls": 1,
+          "own_seconds": 0.010204286,
+          "inclusive_seconds": 0.08494720900000001
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 75,
+          "function": "<lambda>",
+          "calls": 200,
+          "own_seconds": 7.241000000000001e-06,
+          "inclusive_seconds": 7.241000000000001e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 96,
+          "function": "<lambda>",
+          "calls": 49,
+          "own_seconds": 8.4826e-05,
+          "inclusive_seconds": 0.005348246
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 204,
+          "function": "<genexpr>",
+          "calls": 483,
+          "own_seconds": 5.7579000000000006e-05,
+          "inclusive_seconds": 9.1377e-05
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 229,
+          "function": "<lambda>",
+          "calls": 77,
+          "own_seconds": 9.878000000000001e-06,
+          "inclusive_seconds": 9.878000000000001e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 243,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 1.4170000000000002e-06,
+          "inclusive_seconds": 1.667e-06
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 245,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 4.5800000000000005e-07,
+          "inclusive_seconds": 7.08e-07
+        },
+        {
+          "source": "repo_routing/context.py",
+          "line": 282,
+          "function": "shared_prompt",
+          "calls": 1,
+          "own_seconds": 4.5800000000000005e-07,
+          "inclusive_seconds": 4.5800000000000005e-07
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 22,
+          "function": "features",
+          "calls": 1,
+          "own_seconds": 3.418e-06,
+          "inclusive_seconds": 4.000000000000001e-06
+        },
+        {
+          "source": "repo_routing/gate.py",
+          "line": 41,
+          "function": "sigmoid",
+          "calls": 10,
+          "own_seconds": 2.9625000000000002e-05,
+          "inclusive_seconds": 4.9334000000000006e-05
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 27,
+          "function": "routing_version",
+          "calls": 1,
+          "own_seconds": 1.8671e-05,
+          "inclusive_seconds": 0.00039445800000000004
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 61,
+          "function": "route",
+          "calls": 1,
+          "own_seconds": 0.000954291,
+          "inclusive_seconds": 3.9859867080000004
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 149,
+          "function": "<genexpr>",
+          "calls": 3,
+          "own_seconds": 2.4170000000000003e-06,
+          "inclusive_seconds": 2.4170000000000003e-06
+        },
+        {
+          "source": "repo_routing/policy.py",
+          "line": 159,
+          "function": "<lambda>",
+          "calls": 5,
+          "own_seconds": 2.291e-06,
+          "inclusive_seconds": 2.291e-06
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 12,
+          "function": "representation",
+          "calls": 10,
+          "own_seconds": 7.2833e-05,
+          "inclusive_seconds": 7.6375e-05
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 30,
+          "function": "__init__",
+          "calls": 1,
+          "own_seconds": 4.5705000000000004e-05,
+          "inclusive_seconds": 0.5891978330000001
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 72,
+          "function": "inputs",
+          "calls": 10,
+          "own_seconds": 0.001311819,
+          "inclusive_seconds": 0.045083333
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 84,
+          "function": "<genexpr>",
+          "calls": 50,
+          "own_seconds": 2.4918e-05,
+          "inclusive_seconds": 2.4918e-05
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 123,
+          "function": "<genexpr>",
+          "calls": 30,
+          "own_seconds": 1.0039e-05,
+          "inclusive_seconds": 1.0039e-05
+        },
+        {
+          "source": "repo_routing/reranker.py",
+          "line": 145,
+          "function": "scores",
+          "calls": 10,
+          "own_seconds": 1.436655422,
+          "inclusive_seconds": 1.588503749
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 16,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.416e-06,
+          "inclusive_seconds": 8.208e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 19,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 3.7490000000000004e-06,
+          "inclusive_seconds": 4.291e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 25,
+          "function": "objective",
+          "calls": 2,
+          "own_seconds": 4.7930000000000005e-06,
+          "inclusive_seconds": 1.3958000000000001e-05
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 26,
+          "function": "<genexpr>",
+          "calls": 4,
+          "own_seconds": 1.7920000000000002e-06,
+          "inclusive_seconds": 4.0420000000000004e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 27,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 2.09e-07,
+          "inclusive_seconds": 2.09e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 30,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 2.08e-07,
+          "inclusive_seconds": 2.08e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 32,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 1.66e-07,
+          "inclusive_seconds": 1.66e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 37,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 1.67e-07,
+          "inclusive_seconds": 1.67e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 47,
+          "function": "select",
+          "calls": 1,
+          "own_seconds": 1.4289000000000002e-05,
+          "inclusive_seconds": 4.3875e-05
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 51,
+          "function": "<genexpr>",
+          "calls": 2,
+          "own_seconds": 5.000000000000001e-07,
+          "inclusive_seconds": 5.830000000000001e-07
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 57,
+          "function": "<genexpr>",
+          "calls": 15,
+          "own_seconds": 2.624e-06,
+          "inclusive_seconds": 3.208e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 66,
+          "function": "<genexpr>",
+          "calls": 1,
+          "own_seconds": 1.001e-06,
+          "inclusive_seconds": 1.8340000000000001e-06
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 75,
+          "function": "<genexpr>",
+          "calls": 1,
+          "own_seconds": 8.400000000000001e-08,
+          "inclusive_seconds": 8.400000000000001e-08
+        },
+        {
+          "source": "repo_routing/selector.py",
+          "line": 84,
+          "function": "<genexpr>",
+          "calls": 1,
+          "own_seconds": 8.400000000000001e-08,
+          "inclusive_seconds": 8.400000000000001e-08
+        },
+        {
+          "source": "repo_routing/support.py",
+          "line": 6,
+          "function": "requirements",
+          "calls": 1,
+          "own_seconds": 4.084e-06,
+          "inclusive_seconds": 0.000133125
+        },
+        {
+          "source": "repo_routing/support.py",
+          "line": 17,
+          "function": "contradictions",
+          "calls": 5,
+          "own_seconds": 1.6204e-05,
+          "inclusive_seconds": 0.000500207
+        },
+        {
+          "source": "repo_routing/support.py",
+          "line": 63,
+          "function": "score_candidates",
+          "calls": 1,
+          "own_seconds": 0.000391964,
+          "inclusive_seconds": 0.79206175
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 32,
+          "function": "__post_init__",
+          "calls": 1,
+          "own_seconds": 1.002e-06,
+          "inclusive_seconds": 1.542e-06
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 53,
+          "function": "asset_identity",
+          "calls": 2,
+          "own_seconds": 6.1751e-05,
+          "inclusive_seconds": 0.8270362080000001
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 56,
+          "function": "<genexpr>",
+          "calls": 19,
+          "own_seconds": 8.496000000000001e-06,
+          "inclusive_seconds": 0.00021808300000000002
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 61,
+          "function": "<genexpr>",
+          "calls": 11,
+          "own_seconds": 2.171e-06,
+          "inclusive_seconds": 7.919e-06
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 70,
+          "function": "token_record",
+          "calls": 5,
+          "own_seconds": 6.4372e-05,
+          "inclusive_seconds": 0.008408624
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 83,
+          "function": "<genexpr>",
+          "calls": 3139,
+          "own_seconds": 8.466200000000001e-05,
+          "inclusive_seconds": 8.466200000000001e-05
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 88,
+          "function": "__init__",
+          "calls": 1,
+          "own_seconds": 4.9502e-05,
+          "inclusive_seconds": 1.2397632920000001
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 126,
+          "function": "_metadata",
+          "calls": 3,
+          "own_seconds": 5.6957000000000004e-05,
+          "inclusive_seconds": 0.0009660000000000001
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 134,
+          "function": "_check_assets",
+          "calls": 2,
+          "own_seconds": 5.541e-06,
+          "inclusive_seconds": 0.0006303330000000001
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 138,
+          "function": "_load",
+          "calls": 1,
+          "own_seconds": 3.8251000000000004e-05,
+          "inclusive_seconds": 0.381204166
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 167,
+          "function": "encode",
+          "calls": 1,
+          "own_seconds": 5.4000000000000005e-05,
+          "inclusive_seconds": 0.41328175
+        },
+        {
+          "source": "routers/skillrouter_open.py",
+          "line": 184,
+          "function": "index",
+          "calls": 1,
+          "own_seconds": 0.00024354500000000001,
+          "inclusive_seconds": 0.011448417
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 31,
+          "function": "last_token_pool",
+          "calls": 1,
+          "own_seconds": 0.020685458,
+          "inclusive_seconds": 0.020691375
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 45,
+          "function": "format_query",
+          "calls": 1,
+          "own_seconds": 5.000000000000001e-07,
+          "inclusive_seconds": 5.000000000000001e-07
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 49,
+          "function": "format_skill",
+          "calls": 5,
+          "own_seconds": 5.248e-06,
+          "inclusive_seconds": 6.458000000000001e-06
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 123,
+          "function": "encode_texts",
+          "calls": 1,
+          "own_seconds": 4.1959e-05,
+          "inclusive_seconds": 0.031993875000000005
+        },
+        {
+          "source": "vendor/skillrouter_common.py",
+          "line": 151,
+          "function": "get_reranker_template_tokens",
+          "calls": 1,
+          "own_seconds": 4.084e-06,
+          "inclusive_seconds": 0.00019370900000000003
+        }
+      ]
+    }
+  ]
+}

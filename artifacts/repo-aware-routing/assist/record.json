@@ -1,0 +1,298 @@
+{
+  "schema": "repo-aware-product-assist-v1",
+  "evidence_scope": "ENGINEERING_CHECK_NOT_RESEARCH_SAMPLE",
+  "raw_result_sha256": "b2bc5a2f4d5064deb61a36a9adba42c2d1c7e87e9cb05adac0f6b5586b23ab2c",
+  "raw_routing_sha256": "b33e56b157d27c715e241f24544abf5df405a510e646f63ab9f94f020605a557",
+  "raw_executor_sha256": "75ac16ee38a80595a7002ceff78116fb94f4acfd7a8fbcefc79899858c748f79",
+  "launch": {
+    "time": 1789506596.60075,
+    "gate_sha256": "9372a82bdbd9ed9b75ea06e44560454268839d828c0b89af19bcea2ec8b439cb",
+    "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+    "wheel": {
+      "head": "f14b87c6d6146569278394050a1e06155a1e96e8",
+      "wheel_sha256": "c1518d121ab8f74b15ebf1412e562472c8e0954d7d9bd2882b87ce20775a07ae",
+      "heavy_dependencies_present": {
+        "torch": false,
+        "transformers": false,
+        "peft": false
+      },
+      "action": "N",
+      "calls": {
+        "heavy_constructors": 0,
+        "encoder_queries": 0,
+        "reranker_forwards": 0
+      },
+      "fallback_reason": "heavy_assets_missing",
+      "gate_predictions_present": true,
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "runtime_tree": "17c0926598276c97ed00bd21b1503fcefce41f87",
+      "installed_from_site_packages": true,
+      "runtime_python_files": 104,
+      "runtime_code_sha256": "996f0eeca4fe785de613b3ea8c59e599a4c7bfd0e21d6247f8992f3043565ba9"
+    }
+  },
+  "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+  "features": [
+    125.0,
+    1.0,
+    49.0,
+    12.0,
+    12.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "context_supported": true,
+  "heavy_available": true,
+  "result": {
+    "run_id": "assist-1ac27d9f4a0e4f2b99ecb8ad6c285ea5",
+    "engineering": "COMPLETE",
+    "resolved": null,
+    "source_unchanged": true,
+    "policy_status": "ACCEPTED",
+    "rebuild": "MATCHED_CAPTURE",
+    "usage": {
+      "source": "codex-jsonl:turn.completed",
+      "raw_turn_usage": [
+        {
+          "input_tokens": 511541,
+          "cached_input_tokens": 478720,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 6922,
+          "reasoning_output_tokens": 2361
+        }
+      ],
+      "input_tokens": 511541,
+      "cached_input_tokens": 478720,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 6922,
+      "reasoning_output_tokens": 2361
+    },
+    "dollar_cost": null,
+    "timing": {
+      "preflight_seconds": 1.1690115410019644,
+      "snapshot_and_checks_seconds": 0.19756604099529795,
+      "canary_seconds": 0.3928156250040047,
+      "baseline_checks_seconds": 4.171683250024216,
+      "skill_prepare_seconds": 0.0316592919989489,
+      "agent_seconds": 179.56993324999348,
+      "capture_seconds": 0.33450295799411833,
+      "rebuild_seconds": 0.08935037499759346,
+      "candidate_checks_seconds": 4.141904542018892,
+      "request_wall_seconds": 190.38490941599593,
+      "worker_seconds": null,
+      "selection_seconds": 0.046842040988849476
+    },
+    "checks": {
+      "target": {
+        "kind": "requirement",
+        "valid_comparison": true,
+        "baseline_passed": false,
+        "candidate_passed": true,
+        "pre_existing_failures": [
+          "test_behavior::test_target"
+        ],
+        "new_failures": [],
+        "unknown": false,
+        "baseline_cases": {
+          "test_behavior::test_target": "failed"
+        },
+        "candidate_cases": {
+          "test_behavior::test_target": "passed"
+        }
+      },
+      "regression": {
+        "kind": "requirement",
+        "valid_comparison": true,
+        "baseline_passed": true,
+        "candidate_passed": true,
+        "pre_existing_failures": [],
+        "new_failures": [],
+        "unknown": false,
+        "baseline_cases": {
+          "test_behavior::test_regression": "passed"
+        },
+        "candidate_cases": {
+          "test_behavior::test_regression": "passed"
+        }
+      }
+    },
+    "requirements": {
+      "empty-input": {
+        "description": "Empty input handling matches the stated request.",
+        "status": "CHECKED_PASS",
+        "checks": [
+          "target"
+        ]
+      },
+      "other-behavior": {
+        "description": "All behavior outside declared checks remains unverified.",
+        "status": "NOT_VERIFIED",
+        "checks": []
+      }
+    },
+    "errors": [],
+    "routing": {
+      "action": "N",
+      "requested_policy": "auto",
+      "calls": {
+        "heavy_constructors": 0,
+        "encoder_queries": 0,
+        "reranker_forwards": 0
+      },
+      "timing": {
+        "route_wall_seconds": 0.046842040988849476
+      },
+      "decision": {
+        "action": "N",
+        "fallback_reason": "gate_data_signal_insufficient",
+        "predictions": {
+          "N": {
+            "quality_estimate": 0.8524508538166031,
+            "time_scaled": 1.9619143524617813,
+            "tokens_scaled": 1.5168115812198966
+          },
+          "F": {
+            "quality_estimate": 0.8524508538166031,
+            "time_scaled": 0.8979222650578476,
+            "tokens_scaled": 0.7985358520967432
+          },
+          "R": {
+            "quality_estimate": 0.8524508538166031,
+            "time_scaled": 1.0669066221026717,
+            "tokens_scaled": 1.039447614451273
+          }
+        },
+        "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94"
+      },
+      "context_digest": "43db2ed1472714fb7f57126a5d58d11f03ab3d11b0ea01f65b067e5d21c76ed2"
+    },
+    "patch": {
+      "path": "capture/candidate.patch",
+      "sha256": "f12a464615a32d00f69186f53faac1ca6bc5afd69add9969fdfc57ee0fb2eeb5",
+      "changed_files": [
+        "csvkit/utilities/csvstack.py",
+        "tests/test_utilities/test_csvstack.py"
+      ]
+    }
+  },
+  "execution": {
+    "run_id": "assist-1ac27d9f4a0e4f2b99ecb8ad6c285ea5",
+    "arm": "N",
+    "execution_status": "STARTED",
+    "exit_code": 0,
+    "timed_out": false,
+    "cleanup_confirmed": true
+  },
+  "checks_config": {
+    "version": "assist-checks-v1",
+    "requirements": [
+      {
+        "id": "empty-input",
+        "description": "Empty input handling matches the stated request."
+      },
+      {
+        "id": "other-behavior",
+        "description": "All behavior outside declared checks remains unverified."
+      }
+    ],
+    "checks": [
+      {
+        "id": "target",
+        "kind": "requirement",
+        "requirements": [
+          "empty-input"
+        ],
+        "trusted_dir": "trusted",
+        "argv": [
+          "python",
+          "-m",
+          "pytest",
+          "test_behavior.py",
+          "-k",
+          "test_target"
+        ],
+        "cwd": "/tmp",
+        "env": {},
+        "timeout": 180
+      },
+      {
+        "id": "regression",
+        "kind": "requirement",
+        "requirements": [],
+        "trusted_dir": "trusted",
+        "argv": [
+          "python",
+          "-m",
+          "pytest",
+          "test_behavior.py",
+          "-k",
+          "test_regression"
+        ],
+        "cwd": "/tmp",
+        "env": {},
+        "timeout": 180
+      }
+    ]
+  },
+  "check_evidence": {
+    "baseline": {
+      "target": {
+        "path": "baseline-target.xml",
+        "sha256": "1b3b796f8c688b91f1718ae1d844f30ae3f3a21182ef4d880ec24f96b810b0a2",
+        "raw_junit_sha256": "e4eca0330e6c409c68d00af6697c0646cbc1707b238226f50882cbd8ce7233df",
+        "raw_result_sha256": "154de8759cf365fb34cf961f6ae456bf29759a83f79b445981ad74cb46956079",
+        "collected_ids": [
+          "test_behavior::test_target"
+        ],
+        "build_returncode": 0,
+        "cli_returncode": 0,
+        "collection_returncode": 0,
+        "returncode": 1
+      },
+      "regression": {
+        "path": "baseline-regression.xml",
+        "sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+        "raw_junit_sha256": "9d350f186b656d2254cdcd2699e422a09e05299fe3ef0c0fdff4f76a0c9b7ba0",
+        "raw_result_sha256": "c4f57397ad790336c973d10e0a7d1401b8ee4c3791fc9988f3143acf982ee8db",
+        "collected_ids": [
+          "test_behavior::test_regression"
+        ],
+        "build_returncode": 0,
+        "cli_returncode": 0,
+        "collection_returncode": 0,
+        "returncode": 0
+      }
+    },
+    "candidate": {
+      "target": {
+        "path": "candidate-target.xml",
+        "sha256": "0d91310c22dddb4ed4e88bffa5329e42e31b9c7b1988f447b28781401472d5ed",
+        "raw_junit_sha256": "278b25c590ed4cd2049e25ccd3281b1e7dca6b94513daa6c8a4e728a903350c5",
+        "raw_result_sha256": "fafdcdad02fe48bcb563b59b9b0ed375b6905eab4c0bc9a47b43049bca8dbd9e",
+        "collected_ids": [
+          "test_behavior::test_target"
+        ],
+        "build_returncode": 0,
+        "cli_returncode": 0,
+        "collection_returncode": 0,
+        "returncode": 0
+      },
+      "regression": {
+        "path": "candidate-regression.xml",
+        "sha256": "5e459f319efe954222069595ca60c5ce574e9a765029ec91cfe2ee5e3db87006",
+        "raw_junit_sha256": "4a997d71e2ecd6cb1eece97047eb08211cc19fd658d06c4a470a5167202c53a1",
+        "raw_result_sha256": "e29d96b342b12de4f551bc401341b09a63951f4c67cbcacbbcc6d79c0e3c82cd",
+        "collected_ids": [
+          "test_behavior::test_regression"
+        ],
+        "build_returncode": 0,
+        "cli_returncode": 0,
+        "collection_returncode": 0,
+        "returncode": 0
+      }
+    }
+  }
+}

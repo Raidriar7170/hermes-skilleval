@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.055" timestamp="2026-09-15T18:36:21.975543+00:00"><testcase classname="test_behavior" name="test_pks_and_rows_where_offset_without_limit" time="0.001"><failure message="sqlite3.OperationalError: near &quot;offset&quot;: syntax error">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff6a157880&gt;&gt;
+
+    def test_pks_and_rows_where_offset_without_limit(fresh_db):
+        table = fresh_db["rows"]
+        table.insert_all([{"id": id} for id in range(1, 6)], pk="id")
+&gt;       assert [pk for pk, _ in table.pks_and_rows_where(offset=3, order_by="id")] == [4, 5]
+
+/trusted/test_behavior.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:2108: in pks_and_rows_where
+    for row in self.rows_where(
+/input/sqlite_utils/db.py:2068: in rows_where
+    cursor = self.db.execute(sql, where_args or [])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Database &lt;sqlite3.Connection object at 0xffff6a157880&gt;&gt;
+sql = 'select "id" from "rows" order by id offset 3', parameters = []
+
+    def execute(
+        self, sql: str, parameters: Sequence | dict[str, Any] | None = None
+    ) -&gt; sqlite3.Cursor:
+        """
+        Execute SQL query and return a ``sqlite3.Cursor``.
+    
+        A write statement - ``INSERT``, ``UPDATE``, ``CREATE TABLE`` and so on -
+        is committed automatically, unless a transaction is already open, in
+        which case it becomes part of that transaction. See
+        :ref:`python_api_transactions`.
+    
+        :param sql: SQL query to execute
+        :param parameters: Parameters to use in that query - an iterable for ``where id = ?``
+          parameters, or a dictionary for ``where id = :id``
+        """
+        if self._tracer:
+            self._tracer(sql, parameters)
+        was_in_transaction = self.conn.in_transaction
+        try:
+            if parameters is not None:
+&gt;               cursor = self.conn.execute(sql, parameters)
+E               sqlite3.OperationalError: near "offset": syntax error
+
+/input/sqlite_utils/db.py:936: OperationalError</failure></testcase></testsuite></testsuites>

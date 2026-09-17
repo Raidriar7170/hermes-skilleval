@@ -1,0 +1,146 @@
+[
+  {
+    "task_key": "sqlite-utils-offset-without-limit",
+    "repair_family": "offset-without-limit",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "3e459b023994baf32481f979fc7062941112a4c936bdf688ea4dce8792f6eafe",
+    "public_request_hash": "1f04c192148e503be3ed68221031d4ca16cf608106b06769d18fc4fd24df3601",
+    "context_hash": "e5567b19c6f8225ed9f7c636e6a2a81455ace5450127dee1b6858e343c5b0a3d",
+    "positive_or_preferred": "cli-api-regression",
+    "negative_or_less_preferred": "import-data-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "API query boundaries are explicit; data ingestion is not requested.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  },
+  {
+    "task_key": "sqlite-utils-numeric-empty-transform",
+    "repair_family": "numeric-empty-transform",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "6d65f9e96734cd2da052a17cf9923cb8a393f1a512cad0f6075154a3173304a7",
+    "public_request_hash": "ca54fa0217d14cf069c270af9cbc07804c6ef82beff0af1972bd3b19aac265b6",
+    "context_hash": "a6142006aea1a55862ea02908e693afaf26fb7edfa22fd3eac3131c573678a08",
+    "positive_or_preferred": "import-data-regression",
+    "negative_or_less_preferred": "cli-api-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "Explicit empty string/null/type conversion support exceeds generic CLI checks.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  },
+  {
+    "task_key": "sqlite-utils-escaped-default",
+    "repair_family": "escaped-default",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "e001e5bc0ab21bec776c63196af497a143e48def6ba31aa277fa722349076571",
+    "public_request_hash": "182dfad044f4c62772d720a0fcf27c27eedd7bca3fcda0ce003c937545783756",
+    "context_hash": "aa45d04f0d9f1b5b201f35f6ab1601c8c14b73f5063b146b9e98acd6e7cc4a72",
+    "positive_or_preferred": "schema-change-regression",
+    "negative_or_less_preferred": "import-data-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "Schema default introspection is explicit; ingestion is outside this request.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  },
+  {
+    "task_key": "sqlite-utils-keyword-default",
+    "repair_family": "keyword-default",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "83b72716d4fe2042d46dd896de0dc98cc9d85a9d2b1ea482b09a151f6d973cb7",
+    "public_request_hash": "b63d2dadf9f9398fc2bc3f35e909b2c5a4a6960934453b09bed7d6d5129f29e4",
+    "context_hash": "90f933b35bbfa1570ba7feb082e54b726113660ce4a56435be3addc72c04ddc3",
+    "positive_or_preferred": "schema-change-regression",
+    "negative_or_less_preferred": "import-data-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "Schema default introspection needs SQL/Python type correspondence.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  },
+  {
+    "task_key": "sqlite-utils-ignore-last-pk",
+    "repair_family": "ignore-last-pk",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "14d9f95918739ce165781c3c3a63826ec2d8b902544e448e3bac0b7f2e45da99",
+    "public_request_hash": "d953ce5fcc46f2a2c67bd786ff1ef5f68071a0886adc99ea59a0eb26bf1d7c4d",
+    "context_hash": "a6a33b37730f5ff57cf9305a6d8ea27d20be3c2d56587e3f7da75b31229109bc",
+    "positive_or_preferred": "schema-change-regression",
+    "negative_or_less_preferred": "cli-api-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "Stored primary key and cross-table state require data/schema verification.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  },
+  {
+    "task_key": "sqlite-utils-column-case",
+    "repair_family": "column-case",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "c1892de3aab50acd772a52741e44ee97a61b9386bf054bc2850810975db41262",
+    "public_request_hash": "c3af21bbc73e87964c9bd57489fe66d9b2869abc48d827054c44532ad2eb403c",
+    "context_hash": "d01d0b2737f4b8992f0fdf216905f70c0d9f117cb3d93ffb34fbb6a11420d8b9",
+    "positive_or_preferred": "schema-change-regression",
+    "negative_or_less_preferred": "cli-api-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "Schema column identity and stored keys are more specific than generic interface checks.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  },
+  {
+    "task_key": "sqlite-utils-duplicate-result-columns",
+    "repair_family": "duplicate-result-columns",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "9c7270af1a59b8d0b1e4ade999c98c9e2a1cee6d179b92e996d3d85882eb4689",
+    "public_request_hash": "d27ac950f42e8dabd6df04298e62eba5a2dccc9cceb963fdb03a105146a17224",
+    "context_hash": "e29366a0687bb2c0bac5066e627145e47e873cfdc24b3ebaabb023baf1f8016b",
+    "positive_or_preferred": "cli-api-regression",
+    "negative_or_less_preferred": "import-data-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "API return values and preserved output are explicit; import batching is not.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  },
+  {
+    "task_key": "sqlite-utils-list-last-pk",
+    "repair_family": "list-last-pk",
+    "repository": "simonw/sqlite-utils",
+    "split": "rank-train",
+    "base_snapshot": "7ea18f766e18c594204324737af2ff962f497af7e80f3cf7651c0488fe21079d",
+    "public_request_hash": "36f4238c514b83f48b56e27370f93a2dd8e89f788a1c961fbf5199d6b02c0655",
+    "context_hash": "7b5ec6ec0367901bc28a27ada2203cb15d3597d0ca0046f3772e9ec1d89f120a",
+    "positive_or_preferred": "import-data-regression",
+    "negative_or_less_preferred": "cli-api-regression",
+    "label_source": "model_judged_text",
+    "weight": 0.5,
+    "rationale": "Input shape, row contents and batching boundaries match the requested insert interface.",
+    "execution_comparison_ids": [],
+    "uncontrolled_factors": [
+      "subjective textual preference; no causal utility label"
+    ]
+  }
+]

@@ -1,0 +1,125 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..76e9cc528115c645163b275ac5a004c40eda9df2 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -37,13 +37,14 @@ def compare(previous, current, show_unchanged=False):
+     current_columns = set(next(iter(current.values())).keys())
+     ignore_columns = None
+     if previous_columns != current_columns:
++        changed_columns = current_columns.symmetric_difference(previous_columns)
+         result["columns_added"] = [
+             c for c in current_columns if c not in previous_columns
+         ]
+         result["columns_removed"] = [
+             c for c in previous_columns if c not in current_columns
+         ]
+-        ignore_columns = current_columns.symmetric_difference(previous_columns)
++        ignore_columns = changed_columns | {(column,) for column in changed_columns}
+     # Have any rows been removed or added?
+     removed = [id for id in previous if id not in current]
+     added = [id for id in current if id not in previous]
+@@ -62,7 +63,10 @@ def compare(previous, current, show_unchanged=False):
+                 changes = {
+                     "key": id,
+                     "changes": {
+-                        field: [prev_value, current_value]
++                        (field[0] if isinstance(field, list) else field): [
++                            prev_value,
++                            current_value,
++                        ]
+                         for _, field, (prev_value, current_value) in d
+                     },
+                 }
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 11b4eef1bba305732e6e39e0e1f73673ef6d5bf0..b88b816ac6b492dd0de79beb2ec207444e85c6f5 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -86,6 +86,28 @@ def test_human_cli_json(tmpdir):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_json_cli_with_dot_in_column_name(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write("record.id,person.name\n1,Cleo")
++    two = tmpdir / "two.csv"
++    two.write("record.id,person.name\n1,Clio")
++
++    result = CliRunner().invoke(
++        cli.cli, [str(one), str(two), "--key", "record.id", "--json"]
++    )
++
++    assert 0 == result.exit_code
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {"key": "1", "changes": {"person.name": ["Cleo", "Clio"]}}
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    } == json.loads(result.output.strip())
++
++
+ def test_tsv_files(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..e627692c92871c8e2248b76c719a87924314f8e5 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -57,6 +57,28 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_row_changed_with_dot_in_column_name():
++    previous = """record.id,person.name,age
++1,Cleo,4"""
++    current = """record.id,person.name,age
++1,Clio,4"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="record.id"),
++        load_csv(io.StringIO(current), key="record.id"),
++    )
++
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {"key": "1", "changes": {"person.name": ["Cleo", "Clio"]}}
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")
+@@ -96,6 +118,26 @@ def test_columns_changed():
+     } == diff
+ 
+ 
++def test_columns_changed_with_dot_in_column_name():
++    previous = """id,name,profile.age
++1,Cleo,4"""
++    current = """id,name,profile.weight
++1,Cleo,48"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++    )
++
++    assert {
++        "changed": [],
++        "removed": [],
++        "added": [],
++        "columns_added": ["profile.weight"],
++        "columns_removed": ["profile.age"],
++    } == diff
++
++
+ def test_tsv():
+     diff = compare(
+         load_csv(io.StringIO(ONE), key="id"), load_csv(io.StringIO(TWO_TSV), key="id")

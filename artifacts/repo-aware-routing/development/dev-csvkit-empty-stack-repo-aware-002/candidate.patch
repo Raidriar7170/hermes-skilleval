@@ -1,0 +1,52 @@
+diff --git a/csvkit/utilities/csvstack.py b/csvkit/utilities/csvstack.py
+index 01178e2c17350e4e48304cb10a9da0ec6e96cae3..94001a33bd8719d95d6eb43a4faeaff37f5839c9 100644
+--- a/csvkit/utilities/csvstack.py
++++ b/csvkit/utilities/csvstack.py
+@@ -75,13 +75,15 @@ class CSVStack(CSVKitUtility):
+             rows = Reader(f, **self.reader_kwargs)
+ 
+             if use_fieldnames:
+-                for field in rows.fieldnames:
++                fieldnames = rows.fieldnames or []
++
++                for field in fieldnames:
+                     if field not in headers:
+                         headers.append(field)
+ 
+                 # If the file is standard input, store the fieldnames so that the rows can be read correctly later.
+                 if file_is_stdin:
+-                    stdin_fieldnames = rows.fieldnames
++                    stdin_fieldnames = fieldnames
+                 else:
+                     f.close()
+             else:
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 3e3898b91a608d0a3cfbd8e562d4eec266b5f178..0cd332382480655d10be9df70172f3662855a7ba 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,5 +1,6 @@
+ import os
+ import sys
++import tempfile
+ import unittest
+ from unittest.mock import patch
+ 
+@@ -62,6 +63,18 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_multiple_file_stack_with_empty_file(self):
++        with tempfile.TemporaryDirectory() as directory:
++            empty_path = os.path.join(directory, 'empty.csv')
++            open(empty_path, 'w').close()
++
++            for paths in ([empty_path, 'examples/dummy.csv'], ['examples/dummy.csv', empty_path]):
++                with self.subTest(paths=paths):
++                    self.assertRows(paths, [
++                        ['a', 'b', 'c'],
++                        ['1', '2', '3'],
++                    ])
++
+     def test_multiple_file_stack_col(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy_col_shuffled.csv'], [
+             ['a', 'b', 'c'],

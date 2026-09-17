@@ -1,0 +1,35 @@
+{
+  "task_id": "sqlite-utils-offset-without-limit",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/commit/43d5d3331f5bd056d20ee61903142b86a2ee0efb",
+  "family_id": "offset-without-limit",
+  "split": "rank-train",
+  "reference_fix_commit": "43d5d3331f5bd056d20ee61903142b86a2ee0efb",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "README.md"
+    ]
+  },
+  "public_request": "sqlite-utils-offset-without-limit-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_rows.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "offset_without_limit or test_rows_where_offset_limit",
+  "regression_selector": "test_rows_where and not offset",
+  "export_exclusions": [],
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements.",
+  "license": "Apache-2.0"
+}

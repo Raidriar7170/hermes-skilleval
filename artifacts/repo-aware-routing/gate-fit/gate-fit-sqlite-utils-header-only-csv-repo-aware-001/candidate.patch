@@ -1,0 +1,38 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 1c3ce8d98f6e0f0e0d7c1ee29f8e8ee06e3862a1..e2b28c995fe9cc5027f5fb0adf9eaae903720eb8 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1177,7 +1177,7 @@ def insert_upsert_implementation(
+                 )
+             else:
+                 raise
+-        if tracker is not None:
++        if tracker is not None and tracker.types:
+             db.table(table).transform(types=tracker.types)
+ 
+         # Clean up open file-like objects
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 565fbc28137ca47319aefe5ab735899fa7a2e5fc..2ac9e34b9b3a97ee3ba2a017da75d19d554dd21c 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -2319,6 +2319,20 @@ def test_insert_detect_types(tmpdir, option):
+     ]
+ 
+ 
++@pytest.mark.parametrize("option", (None, "-d", "--detect-types"))
++def test_insert_detect_types_header_only(tmpdir, option):
++    db_path = str(tmpdir / "test.db")
++    extra = [option] if option else []
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "creatures", "-", "--csv"] + extra,
++        catch_exceptions=False,
++        input="name,age\n",
++    )
++    assert result.exit_code == 0
++    assert Database(db_path).table_names() == []
++
++
+ @pytest.mark.parametrize("option", (None, "-d", "--detect-types"))
+ def test_upsert_detect_types(tmpdir, option):
+     """Test that type detection is now the default behavior for upsert"""

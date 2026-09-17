@@ -1,0 +1,1 @@
+Default-value introspection should unescape doubled single quotes in SQL string defaults. A default of O followed by an apostrophe and Brien must return the true string, not the SQL-escaped representation.

@@ -1,0 +1,63 @@
+    def __init__(self, force={}, limit=None, types=None, null_values=DEFAULT_NULL_VALUES):
+        self._force = force
+        self._limit = limit
+
+        if types:
+            self._possible_types = types
+        else:
+            # In order of preference
+            self._possible_types = [
+                Boolean(null_values=null_values),
+                Number(null_values=null_values),
+                TimeDelta(null_values=null_values),
+                Date(null_values=null_values),
+                DateTime(null_values=null_values),
+                Text(null_values=null_values)
+            ]
+
+    def __init__(self, true_values=DEFAULT_TRUE_VALUES, false_values=DEFAULT_FALSE_VALUES,
+                 null_values=DEFAULT_NULL_VALUES):
+        super().__init__(null_values=null_values)
+
+        self.true_values = true_values
+        self.false_values = false_values
+
+    def csvify(self, d):
+        """
+        Format a given native value for CSV serialization.
+        """
+        if d is None:
+            return None
+
+        return str(d)
+
+    def cast(self, d):
+        """
+        Cast a single value to :class:`bool`.
+
+        :param d: A value to cast.
+        :returns: :class:`bool` or :code:`None`.
+        """
+        if d is None:
+            return d
+        if type(d) is bool and type(d) is not int:
+            return d
+        if type(d) is int or isinstance(d, Decimal):
+            if d == 1:
+                return True
+            if d == 0:
+                return False
+        if isinstance(d, str):
+            d = d.replace(',', '').strip()
+
+            d_lower = d.lower()
+
+            if d_lower in self.null_values:
+                return None
+            if d_lower in self.true_values:
+                return True
+            if d_lower in self.false_values:
+                return False
+
+        raise CastError('Can not convert value %s to bool.' % d)
+

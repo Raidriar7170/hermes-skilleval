@@ -1,0 +1,40 @@
+diff --git a/csvkit/utilities/csvsql.py b/csvkit/utilities/csvsql.py
+index 4eecf49b083c24d3c4180cfe3757fb430578b4ff..dd051c13cb08cb05d7c6603cc7e97fe36dc4a67b 100644
+--- a/csvkit/utilities/csvsql.py
++++ b/csvkit/utilities/csvsql.py
+@@ -86,10 +86,10 @@ class CSVSQL(CSVKitUtility):
+             '--chunk-size', dest='chunk_size', type=int,
+             help='Chunk size for batch insert into the table. Requires --insert.')
+         self.argparser.add_argument(
+-            '--min-col-len', dest='min_col_len', type=int,
++            '--min-col-len', dest='min_col_len', type=int, default=1,
+             help='The minimum length of text columns.')
+         self.argparser.add_argument(
+-            '--col-len-multiplier', dest='col_len_multiplier', type=int,
++            '--col-len-multiplier', dest='col_len_multiplier', type=int, default=1,
+             help='Multiply the maximum column length by this multiplier to accomodate larger values in later runs.')
+ 
+     def main(self):
+diff --git a/tests/test_utilities/test_csvsql.py b/tests/test_utilities/test_csvsql.py
+index c6d13ca7660e014f12e14907cf27b1da8bd449ad..7334370b51b2b55d1446ff58f3d0ed78c6fe99b2 100644
+--- a/tests/test_utilities/test_csvsql.py
++++ b/tests/test_utilities/test_csvsql.py
+@@ -57,6 +57,18 @@ class TestCSVSQL(CSVKitTestCase, EmptyFileTests):
+                     f'The {args[0]} option is only valid if --insert is also specified.'
+                 )
+ 
++    def test_column_length_options(self):
++        for options, expected in (
++            ([], (1, 1)),
++            (['--min-col-len', '7', '--col-len-multiplier', '3'], (7, 3)),
++        ):
++            with self.subTest(options=options):
++                with patch('csvkit.utilities.csvsql.agate.Table.to_sql') as to_sql:
++                    self.get_output(['--db', 'sqlite:///:memory:'] + options + ['examples/dummy.csv'])
++
++                kwargs = to_sql.call_args.kwargs
++                self.assertEqual((kwargs['min_col_len'], kwargs['col_len_multiplier']), expected)
++
+     def setUp(self):
+         self.db_file = 'foo.db'
+ 

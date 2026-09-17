@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.060" timestamp="2026-09-17T06:41:28.056294+00:00" hostname="e51b026df08c"><testcase classname="test_behavior" name="test_target" time="0.049"><failure message="Failed: Traceback (most recent call last):&#10;  File &quot;&lt;frozen runpy&gt;&quot;, line 148, in _get_module_details&#10;  File &quot;&lt;frozen runpy&gt;&quot;, line 142, in _get_module_details&#10;ImportError: No module named sqlite_utils.__main__&#10;&#10;During handling of the above exception, another exception occurred:&#10;&#10;Traceback (most recent call last):&#10;  File &quot;&lt;string&gt;&quot;, line 11, in &lt;module&gt;&#10;  File &quot;&lt;frozen runpy&gt;&quot;, line 222, in run_module&#10;  File &quot;&lt;frozen runpy&gt;&quot;, line 152, in _get_module_details&#10;ImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0xffff9aef81d0&gt;
+
+    def test_target(tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        try:
+&gt;           exec('import subprocess,sys\nr=candidate_run([sys.executable,"-m","sqlite_utils","--help"],capture_output=True,text=True)\nassert r.returncode==0,r.stderr\nassert "Usage:" in r.stdout', globals(), {})
+
+/trusted/test_behavior.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+&gt;   ???
+E   AssertionError: Traceback (most recent call last):
+E     File "&lt;frozen runpy&gt;", line 148, in _get_module_details
+E     File "&lt;frozen runpy&gt;", line 142, in _get_module_details
+E   ImportError: No module named sqlite_utils.__main__
+E   
+E   During handling of the above exception, another exception occurred:
+E   
+E   Traceback (most recent call last):
+E     File "&lt;string&gt;", line 11, in &lt;module&gt;
+E     File "&lt;frozen runpy&gt;", line 222, in run_module
+E     File "&lt;frozen runpy&gt;", line 152, in _get_module_details
+E   ImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed
+
+&lt;string&gt;:3: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0xffff9aef81d0&gt;
+
+    def test_target(tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        try:
+            exec('import subprocess,sys\nr=candidate_run([sys.executable,"-m","sqlite_utils","--help"],capture_output=True,text=True)\nassert r.returncode==0,r.stderr\nassert "Usage:" in r.stdout', globals(), {})
+        except Exception as exc:
+&gt;           pytest.fail(str(exc))
+E           Failed: Traceback (most recent call last):
+E             File "&lt;frozen runpy&gt;", line 148, in _get_module_details
+E             File "&lt;frozen runpy&gt;", line 142, in _get_module_details
+E           ImportError: No module named sqlite_utils.__main__
+E           
+E           During handling of the above exception, another exception occurred:
+E           
+E           Traceback (most recent call last):
+E             File "&lt;string&gt;", line 11, in &lt;module&gt;
+E             File "&lt;frozen runpy&gt;", line 222, in run_module
+E             File "&lt;frozen runpy&gt;", line 152, in _get_module_details
+E           ImportError: No module named sqlite_utils.__main__; 'sqlite_utils' is a package and cannot be directly executed
+
+/trusted/test_behavior.py:19: Failed</failure></testcase></testsuite></testsuites>

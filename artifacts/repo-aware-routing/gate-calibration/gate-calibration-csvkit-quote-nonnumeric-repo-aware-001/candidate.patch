@@ -1,0 +1,67 @@
+diff --git a/csvkit/utilities/csvformat.py b/csvkit/utilities/csvformat.py
+index 655f5c44bf2ed3c1cbbaceedd79c3be921c7988d..dc3f1b757d96050c3fa5f4fe22a66128fe0264c9 100644
+--- a/csvkit/utilities/csvformat.py
++++ b/csvkit/utilities/csvformat.py
+@@ -1,4 +1,5 @@
+ #!/usr/bin/env python
++import csv
+ import itertools
+ import sys
+ 
+@@ -68,6 +69,13 @@ class CSVFormat(CSVKitUtility):
+ 
+         return kwargs
+ 
++    @staticmethod
++    def _try_float(value):
++        try:
++            return float(value)
++        except ValueError:
++            return value
++
+     def main(self):
+         if self.additional_input_expected():
+             sys.stderr.write('No input file or piped data provided. Waiting for standard input:\n')
+@@ -83,6 +91,9 @@ class CSVFormat(CSVKitUtility):
+         if self.args.skip_header:
+             next(reader)
+ 
++        if self.args.out_quoting == csv.QUOTE_NONNUMERIC:
++            reader = ([self._try_float(value) for value in row] for row in reader)
++
+         writer.writerows(reader)
+ 
+ 
+diff --git a/tests/test_utilities/test_csvformat.py b/tests/test_utilities/test_csvformat.py
+index 7123f2c233683ed787b5de8a0910d4ebddb7698a..91867608d3ef7a62d7758d107e9ccb543bc9a72a 100644
+--- a/tests/test_utilities/test_csvformat.py
++++ b/tests/test_utilities/test_csvformat.py
+@@ -91,6 +91,28 @@ class TestCSVFormat(CSVKitTestCase, EmptyFileTests):
+ 
+         input_file.close()
+ 
++    def test_quote_nonnumeric(self):
++        input_file = io.BytesIO(b'a,b,c,d\n1,2.5,text,\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2'], [
++                '"a","b","c","d"',
++                '1.0,2.5,"text",""',
++            ])
++
++        input_file.close()
++
++    def test_default_quoting_with_numeric_values(self):
++        input_file = io.BytesIO(b'a,b,c,d\n1,2.5,text,\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines([], [
++                'a,b,c,d',
++                '1,2.5,text,',
++            ])
++
++        input_file.close()
++
+     def test_lineterminator(self):
+         self.assertLines(['-M', 'XYZ', 'examples/dummy.csv'], [
+             'a,b,cXYZ1,2,3XYZ',

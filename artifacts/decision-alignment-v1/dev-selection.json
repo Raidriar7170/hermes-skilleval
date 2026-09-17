@@ -1,0 +1,2035 @@
+{
+  "schema": "decision-selection-v1",
+  "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC",
+  "selection_data": "model-dev only",
+  "new_forward_calls": 0,
+  "legacy_selected": {
+    "candidate_id": "training-lambda-0",
+    "epoch": 3,
+    "adapter_sha256": "cba6b64c0cbc2b031ad6f01e3b9923a6f8c580970692ffbe8ed84b4590cf3db7"
+  },
+  "targets": {
+    "applicability": {
+      "contract": {
+        "candidate_id": "training-lambda-0",
+        "epoch": 3,
+        "adapter_sha256": "cba6b64c0cbc2b031ad6f01e3b9923a6f8c580970692ffbe8ed84b4590cf3db7",
+        "supervised_denominators": {
+          "applicability": 0.9666666666666667,
+          "specificity_given_applicable": 0
+        },
+        "schema": "decision-alignment-v1",
+        "decision_target": "applicability",
+        "required_supervised_axes": [
+          "applicability"
+        ],
+        "selection_metric": "group_macro_applicability_log_loss",
+        "ranking_formula": "sigmoid_applicability",
+        "k": 2,
+        "support_mode": "advisory",
+        "input_identity": "125a5246b9485c485f54cd32101f13affd0842c672268233568afd826400c12c",
+        "calibration_ref": null,
+        "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC"
+      },
+      "trials": [
+        {
+          "candidate_id": "training-lambda-0",
+          "epoch": 1,
+          "lambda_spec": 0,
+          "dev_loss": [
+            0.5136199821534423,
+            0.663219188305714
+          ],
+          "adapter_sha256": "57a7dbfe8ee350904cb9e8ec11b07f7bcb182fdf65be6379edb335ec9f5d53ec",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.17330778488453816,
+              "log_loss": 0.5136199821534423,
+              "auc": 0.829982445099533,
+              "auprc": 0.7583417570794911,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 12,
+                  "weight": 0.3138888888888889,
+                  "mean_probability": 0.13561475695086736,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 17,
+                  "weight": 0.4388888888888889,
+                  "mean_probability": 0.26708435268460257,
+                  "positive_rate": 0.46835443037974683
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 6,
+                  "weight": 0.16666666666666666,
+                  "mean_probability": 0.4870100801727766,
+                  "positive_rate": 0.5
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.6872605441484587,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.9350602165224866,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.09101511119343923,
+              "log_loss": 0.3399627950843782,
+              "auc": 0.7939899253083204,
+              "auprc": 0.6788198833965424,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 31,
+                  "weight": 0.8083333333333333,
+                  "mean_probability": 0.044972483998661786,
+                  "positive_rate": 0.061855670103092786
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 4,
+                  "weight": 0.1111111111111111,
+                  "mean_probability": 0.2843873367224838,
+                  "positive_rate": 0.25
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.45444047891829925,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 0,
+                  "weight": 0,
+                  "mean_probability": null,
+                  "positive_rate": null
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.850898511576385,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "sqlite-schema"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.0,
+                  "recall_at_2": 0.0,
+                  "known_inapplicable_at_2": 0.5,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 5.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "systematic-debugging"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 3.5
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.5,
+                "recall_at_2": 0.625,
+                "known_inapplicable_at_2": 0.125,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 2.75
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.5136199821534423
+        },
+        {
+          "candidate_id": "training-lambda-0",
+          "epoch": 2,
+          "lambda_spec": 0,
+          "dev_loss": [
+            0.38717534371116624,
+            0.676324779122434
+          ],
+          "adapter_sha256": "2649b2633e0be180435e5c45e209781e2e21379c8573c481df0795d8cc41a459",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.11756567344790816,
+              "log_loss": 0.38717534371116624,
+              "auc": 0.961147361796562,
+              "auprc": 0.9376323442095696,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 7,
+                  "weight": 0.18888888888888888,
+                  "mean_probability": 0.094033129737528,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 19,
+                  "weight": 0.4916666666666667,
+                  "mean_probability": 0.2928449358235404,
+                  "positive_rate": 0.1581920903954802
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 6,
+                  "weight": 0.15555555555555556,
+                  "mean_probability": 0.5079254866016425,
+                  "positive_rate": 0.8214285714285714
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 3,
+                  "weight": 0.08333333333333333,
+                  "mean_probability": 0.6807068430737695,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.9133211694270086,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.08181509061418257,
+              "log_loss": 0.28437891811031984,
+              "auc": 0.8492849284928494,
+              "auprc": 0.713803463131617,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 29,
+                  "weight": 0.7583333333333333,
+                  "mean_probability": 0.05844925482725431,
+                  "positive_rate": 0.06593406593406594
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 4,
+                  "weight": 0.10555555555555556,
+                  "mean_probability": 0.3063113970790502,
+                  "positive_rate": 0.2631578947368421
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 2,
+                  "weight": 0.05555555555555555,
+                  "mean_probability": 0.49831976369026754,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.7137873866952004,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.9520624194973746,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "keyed-csv-diff"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "systematic-debugging"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.5
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.625,
+                "recall_at_2": 0.875,
+                "known_inapplicable_at_2": 0.0,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 1.75
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.38717534371116624
+        },
+        {
+          "candidate_id": "training-lambda-0",
+          "epoch": 3,
+          "lambda_spec": 0,
+          "dev_loss": [
+            0.27087321475169585,
+            0.7388738664747255
+          ],
+          "adapter_sha256": "cba6b64c0cbc2b031ad6f01e3b9923a6f8c580970692ffbe8ed84b4590cf3db7",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.07156353341213784,
+              "log_loss": 0.27087321475169585,
+              "auc": 0.994634162498758,
+              "auprc": 0.9919334760742917,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 14,
+                  "weight": 0.37777777777777777,
+                  "mean_probability": 0.10241477184277104,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 10,
+                  "weight": 0.25277777777777777,
+                  "mean_probability": 0.2783136042732064,
+                  "positive_rate": 0.09890109890109891
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 4,
+                  "weight": 0.10555555555555556,
+                  "mean_probability": 0.48162660580891314,
+                  "positive_rate": 0.763157894736842
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 6,
+                  "weight": 0.15555555555555556,
+                  "mean_probability": 0.7053852447470365,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 4,
+                  "weight": 0.10833333333333334,
+                  "mean_probability": 0.9244775631759062,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.08543183121022478,
+              "log_loss": 0.2655328068804222,
+              "auc": 0.9045220311504836,
+              "auprc": 0.7528208878866289,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 28,
+                  "weight": 0.7333333333333334,
+                  "mean_probability": 0.048443828225950454,
+                  "positive_rate": 0.06818181818181818
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.22768778004176365,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 3,
+                  "weight": 0.07777777777777778,
+                  "mean_probability": 0.43761349269709243,
+                  "positive_rate": 0.3571428571428571
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 2,
+                  "weight": 0.05555555555555555,
+                  "mean_probability": 0.6484647855443809,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.8858793443818026,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "keyed-csv-diff"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "systematic-debugging"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.5
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.625,
+                "recall_at_2": 0.875,
+                "known_inapplicable_at_2": 0.0,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 1.75
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.27087321475169585
+        },
+        {
+          "candidate_id": "training-lambda-1",
+          "epoch": 1,
+          "lambda_spec": 1,
+          "dev_loss": [
+            0.5495100663182941,
+            0.6225437840099147
+          ],
+          "adapter_sha256": "2205d6d9feaa3fd173aa7734a7667eb449f206833b2dcfe2e5cae6c5926ffaef",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0.3416666666666667
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.1869297146656773,
+              "log_loss": 0.5495100663182941,
+              "auc": 0.7666191911496805,
+              "auprc": 0.6825622933769705,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 6,
+                  "weight": 0.1611111111111111,
+                  "mean_probability": 0.15418873178020184,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 20,
+                  "weight": 0.5111111111111111,
+                  "mean_probability": 0.297848235002696,
+                  "positive_rate": 0.3532608695652174
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 8,
+                  "weight": 0.21944444444444444,
+                  "mean_probability": 0.5147168865055325,
+                  "positive_rate": 0.4936708860759494
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.719529819049495,
+                  "positive_rate": 0.6551724137931035
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.9319705850551223,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.09305367947029515,
+              "log_loss": 0.331891633670427,
+              "auc": 0.7887788778877889,
+              "auprc": 0.6389878379871208,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 28,
+                  "weight": 0.725,
+                  "mean_probability": 0.0625148037009294,
+                  "positive_rate": 0.06896551724137931
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 6,
+                  "weight": 0.16666666666666666,
+                  "mean_probability": 0.3089814353613834,
+                  "positive_rate": 0.16666666666666666
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.4955609792130518,
+                  "positive_rate": 0.4736842105263158
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.6091845467747371,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.864492675858013,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "sqlite-schema"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.0,
+                  "recall_at_2": 0.0,
+                  "known_inapplicable_at_2": 0.5,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 5.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "systematic-debugging"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 3.5
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.5,
+                "recall_at_2": 0.625,
+                "known_inapplicable_at_2": 0.125,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 2.75
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.5495100663182941
+        },
+        {
+          "candidate_id": "training-lambda-1",
+          "epoch": 2,
+          "lambda_spec": 1,
+          "dev_loss": [
+            0.5303245090815726,
+            0.5642111180053192
+          ],
+          "adapter_sha256": "9cf3cdcc5cd8764a4c55101cf56295bb0c9ab0a1838774fae5f90af977fa3702",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0.3416666666666667
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.179114976039487,
+              "log_loss": 0.5303245090815726,
+              "auc": 0.7779801927726806,
+              "auprc": 0.7030753295799039,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 4,
+                  "weight": 0.1111111111111111,
+                  "mean_probability": 0.13301889179644244,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 16,
+                  "weight": 0.4111111111111111,
+                  "mean_probability": 0.3155188768290283,
+                  "positive_rate": 0.25675675675675674
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 12,
+                  "weight": 0.3138888888888889,
+                  "mean_probability": 0.4806847584323744,
+                  "positive_rate": 0.4070796460176991
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 3,
+                  "weight": 0.08333333333333333,
+                  "mean_probability": 0.6660671892447771,
+                  "positive_rate": 0.6666666666666666
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.8898388018147179,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.0846822248047216,
+              "log_loss": 0.2978744417205804,
+              "auc": 0.8498639337617974,
+              "auprc": 0.7370943592748104,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 26,
+                  "weight": 0.6722222222222223,
+                  "mean_probability": 0.08197168150996297,
+                  "positive_rate": 0.0743801652892562
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 6,
+                  "weight": 0.1638888888888889,
+                  "mean_probability": 0.2889208288967011,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 3,
+                  "weight": 0.08333333333333333,
+                  "mean_probability": 0.4528431885528939,
+                  "positive_rate": 0.3333333333333333
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.7125295370028049,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.9163326969305514,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "sqlite-schema"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.0,
+                  "recall_at_2": 0.0,
+                  "known_inapplicable_at_2": 0.5,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 3.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "systematic-debugging"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.0
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.5,
+                "recall_at_2": 0.625,
+                "known_inapplicable_at_2": 0.125,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 1.875
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.5303245090815726
+        },
+        {
+          "candidate_id": "training-lambda-1",
+          "epoch": 3,
+          "lambda_spec": 1,
+          "dev_loss": [
+            0.4495407198359272,
+            0.4816355826492001
+          ],
+          "adapter_sha256": "62974d9088aaaa27effdc65d8407e7ccb93d2669487642eb7d826227c60b8645",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0.3416666666666667
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.14609465553918705,
+              "log_loss": 0.4495407198359272,
+              "auc": 0.8652247358484317,
+              "auprc": 0.8559870883064674,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 8,
+                  "weight": 0.21666666666666667,
+                  "mean_probability": 0.10628013948603304,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 17,
+                  "weight": 0.44166666666666665,
+                  "mean_probability": 0.3270721612961679,
+                  "positive_rate": 0.2389937106918239
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 9,
+                  "weight": 0.23333333333333334,
+                  "mean_probability": 0.4903883405051796,
+                  "positive_rate": 0.6666666666666666
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.7188280660974667,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.950077337263447,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.06245685798666175,
+              "log_loss": 0.22484730672549477,
+              "auc": 0.9291297550807714,
+              "auprc": 0.8248440043407488,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 30,
+                  "weight": 0.7833333333333333,
+                  "mean_probability": 0.08397302527073776,
+                  "positive_rate": 0.06382978723404256
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 4,
+                  "weight": 0.10833333333333334,
+                  "mean_probability": 0.3290727071001865,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.48443361766202647,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 0,
+                  "weight": 0,
+                  "mean_probability": null,
+                  "positive_rate": null
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.8854178131741282,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "keyed-csv-diff",
+                    "systematic-debugging"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "tabular-conversion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.75,
+                "recall_at_2": 1.0,
+                "known_inapplicable_at_2": 0.0,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 1.25
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.4495407198359272
+        }
+      ]
+    },
+    "task_specific": {
+      "contract": {
+        "candidate_id": "training-lambda-1",
+        "epoch": 3,
+        "adapter_sha256": "62974d9088aaaa27effdc65d8407e7ccb93d2669487642eb7d826227c60b8645",
+        "supervised_denominators": {
+          "applicability": 0.9666666666666667,
+          "specificity_given_applicable": 0.3416666666666667
+        },
+        "schema": "decision-alignment-v1",
+        "decision_target": "task_specific",
+        "required_supervised_axes": [
+          "applicability",
+          "specificity_given_applicable"
+        ],
+        "selection_metric": "group_macro_joint_event_log_loss",
+        "ranking_formula": "raw_app_times_conditional_specificity",
+        "k": 2,
+        "support_mode": "advisory",
+        "input_identity": "125a5246b9485c485f54cd32101f13affd0842c672268233568afd826400c12c",
+        "calibration_ref": null,
+        "analysis_scope": "RETROSPECTIVE_DIAGNOSTIC"
+      },
+      "trials": [
+        {
+          "candidate_id": "training-lambda-1",
+          "epoch": 1,
+          "lambda_spec": 1,
+          "dev_loss": [
+            0.5495100663182941,
+            0.6225437840099147
+          ],
+          "adapter_sha256": "2205d6d9feaa3fd173aa7734a7667eb449f206833b2dcfe2e5cae6c5926ffaef",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0.3416666666666667
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.1869297146656773,
+              "log_loss": 0.5495100663182941,
+              "auc": 0.7666191911496805,
+              "auprc": 0.6825622933769705,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 6,
+                  "weight": 0.1611111111111111,
+                  "mean_probability": 0.15418873178020184,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 20,
+                  "weight": 0.5111111111111111,
+                  "mean_probability": 0.297848235002696,
+                  "positive_rate": 0.3532608695652174
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 8,
+                  "weight": 0.21944444444444444,
+                  "mean_probability": 0.5147168865055325,
+                  "positive_rate": 0.4936708860759494
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.719529819049495,
+                  "positive_rate": 0.6551724137931035
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.9319705850551223,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.09305367947029515,
+              "log_loss": 0.331891633670427,
+              "auc": 0.7887788778877889,
+              "auprc": 0.6389878379871208,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 28,
+                  "weight": 0.725,
+                  "mean_probability": 0.0625148037009294,
+                  "positive_rate": 0.06896551724137931
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 6,
+                  "weight": 0.16666666666666666,
+                  "mean_probability": 0.3089814353613834,
+                  "positive_rate": 0.16666666666666666
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.4955609792130518,
+                  "positive_rate": 0.4736842105263158
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.6091845467747371,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.864492675858013,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "sqlite-schema"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.0,
+                  "recall_at_2": 0.0,
+                  "known_inapplicable_at_2": 0.5,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 5.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "systematic-debugging"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 4.0
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.5,
+                "recall_at_2": 0.625,
+                "known_inapplicable_at_2": 0.125,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 2.875
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.331891633670427
+        },
+        {
+          "candidate_id": "training-lambda-1",
+          "epoch": 2,
+          "lambda_spec": 1,
+          "dev_loss": [
+            0.5303245090815726,
+            0.5642111180053192
+          ],
+          "adapter_sha256": "9cf3cdcc5cd8764a4c55101cf56295bb0c9ab0a1838774fae5f90af977fa3702",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0.3416666666666667
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.179114976039487,
+              "log_loss": 0.5303245090815726,
+              "auc": 0.7779801927726806,
+              "auprc": 0.7030753295799039,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 4,
+                  "weight": 0.1111111111111111,
+                  "mean_probability": 0.13301889179644244,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 16,
+                  "weight": 0.4111111111111111,
+                  "mean_probability": 0.3155188768290283,
+                  "positive_rate": 0.25675675675675674
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 12,
+                  "weight": 0.3138888888888889,
+                  "mean_probability": 0.4806847584323744,
+                  "positive_rate": 0.4070796460176991
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 3,
+                  "weight": 0.08333333333333333,
+                  "mean_probability": 0.6660671892447771,
+                  "positive_rate": 0.6666666666666666
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.8898388018147179,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.0846822248047216,
+              "log_loss": 0.2978744417205804,
+              "auc": 0.8498639337617974,
+              "auprc": 0.7370943592748104,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 26,
+                  "weight": 0.6722222222222223,
+                  "mean_probability": 0.08197168150996297,
+                  "positive_rate": 0.0743801652892562
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 6,
+                  "weight": 0.1638888888888889,
+                  "mean_probability": 0.2889208288967011,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 3,
+                  "weight": 0.08333333333333333,
+                  "mean_probability": 0.4528431885528939,
+                  "positive_rate": 0.3333333333333333
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 2,
+                  "weight": 0.05277777777777778,
+                  "mean_probability": 0.7125295370028049,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.9163326969305514,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "sqlite-schema"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.0,
+                  "recall_at_2": 0.0,
+                  "known_inapplicable_at_2": 0.5,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 4.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "sql-query-export"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.5,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.5
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.5,
+                "recall_at_2": 0.625,
+                "known_inapplicable_at_2": 0.25,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 2.25
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.2978744417205804
+        },
+        {
+          "candidate_id": "training-lambda-1",
+          "epoch": 3,
+          "lambda_spec": 1,
+          "dev_loss": [
+            0.4495407198359272,
+            0.4816355826492001
+          ],
+          "adapter_sha256": "62974d9088aaaa27effdc65d8407e7ccb93d2669487642eb7d826227c60b8645",
+          "supervised_denominators": {
+            "applicability": 0.9666666666666667,
+            "specificity_given_applicable": 0.3416666666666667
+          },
+          "metrics": {
+            "applicability": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 14.0,
+              "negative": 24.0,
+              "weighted_prevalence": 0.36944444444444446,
+              "brier": 0.14609465553918705,
+              "log_loss": 0.4495407198359272,
+              "auc": 0.8652247358484317,
+              "auprc": 0.8559870883064674,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 8,
+                  "weight": 0.21666666666666667,
+                  "mean_probability": 0.10628013948603304,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 17,
+                  "weight": 0.44166666666666665,
+                  "mean_probability": 0.3270721612961679,
+                  "positive_rate": 0.2389937106918239
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 9,
+                  "weight": 0.23333333333333334,
+                  "mean_probability": 0.4903883405051796,
+                  "positive_rate": 0.6666666666666666
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.7188280660974667,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.950077337263447,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "joint_event": {
+              "known": 38,
+              "unknown": 2,
+              "outside_conditional_axis": 0,
+              "positive": 6.0,
+              "negative": 32.0,
+              "weighted_prevalence": 0.15833333333333333,
+              "brier": 0.06245685798666175,
+              "log_loss": 0.22484730672549477,
+              "auc": 0.9291297550807714,
+              "auprc": 0.8248440043407488,
+              "reliability": [
+                {
+                  "range": [
+                    0.0,
+                    0.2
+                  ],
+                  "count": 30,
+                  "weight": 0.7833333333333333,
+                  "mean_probability": 0.08397302527073776,
+                  "positive_rate": 0.06382978723404256
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.4
+                  ],
+                  "count": 4,
+                  "weight": 0.10833333333333334,
+                  "mean_probability": 0.3290727071001865,
+                  "positive_rate": 0.0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.6
+                  ],
+                  "count": 1,
+                  "weight": 0.027777777777777776,
+                  "mean_probability": 0.48443361766202647,
+                  "positive_rate": 1.0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.8
+                  ],
+                  "count": 0,
+                  "weight": 0,
+                  "mean_probability": null,
+                  "positive_rate": null
+                },
+                {
+                  "range": [
+                    0.8,
+                    1.0
+                  ],
+                  "count": 3,
+                  "weight": 0.08055555555555555,
+                  "mean_probability": 0.8854178131741282,
+                  "positive_rate": 1.0
+                }
+              ]
+            },
+            "ranking": {
+              "tasks": [
+                {
+                  "task_id": "csv-diff-issue-18",
+                  "group": "empty-snapshot",
+                  "selected": [
+                    "systematic-debugging",
+                    "keyed-csv-diff"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.0
+                },
+                {
+                  "task_id": "csvkit-issue-1106",
+                  "group": "nested-json-columns",
+                  "selected": [
+                    "tabular-conversion",
+                    "verification-before-completion"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 1,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.0
+                },
+                {
+                  "task_id": "sqlite-utils-issue-202",
+                  "group": "fts-import",
+                  "selected": [
+                    "sqlite-fulltext",
+                    "sqlite-ingest"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 1.0,
+                  "recall_at_2": 1.0,
+                  "known_inapplicable_at_2": 0.0,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 1.5
+                },
+                {
+                  "task_id": "sqlite-utils-issue-228",
+                  "group": "headerless-import",
+                  "selected": [
+                    "sqlite-ingest",
+                    "sql-query-export"
+                  ],
+                  "filled_k2": true,
+                  "specific_positives": 2,
+                  "precision_at_2": 0.5,
+                  "recall_at_2": 0.5,
+                  "known_inapplicable_at_2": 0.5,
+                  "unknown_at_2": 0.0,
+                  "mean_positive_rank": 2.0
+                }
+              ],
+              "group_macro": {
+                "precision_at_2": 0.625,
+                "recall_at_2": 0.875,
+                "known_inapplicable_at_2": 0.125,
+                "unknown_at_2": 0.0,
+                "mean_positive_rank": 1.625
+              },
+              "tasks_without_specific_positive": 0,
+              "filled_k2": 4,
+              "total_tasks": 4
+            }
+          },
+          "loss": 0.22484730672549477
+        }
+      ]
+    }
+  }
+}

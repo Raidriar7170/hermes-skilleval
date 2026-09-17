@@ -1,0 +1,26 @@
+{
+  "outside_checkout": true,
+  "clean_wheel": true,
+  "checks": [
+    {
+      "command": [
+        "independent-validate",
+        "--help"
+      ],
+      "exit_code": 0,
+      "stdout": "usage: hermes-applicability [-h] --stage\n                            {preflight,score,calibrate,lock,check,records}\n                            --tasks TASKS --registry REGISTRY --protocol\n                            PROTOCOL --project-root PROJECT_ROOT --output\n                            OUTPUT [--historical HISTORICAL]\n                            [--model-configs MODEL_CONFIGS]\n                            [--snapshots SNAPSHOTS]\n                            [--environment-facts ENVIRONMENT_FACTS]\n                            [--environment-profile ENVIRONMENT_PROFILE]\n                            [--environment-assets ENVIRONMENT_ASSETS]\n                            [--scores SCORES] [--cal-labels CAL_LABELS]\n                            [--check-labels CHECK_LABELS] [--lock LOCK]\n                            [--results RESULTS] [--split {cal,check}]\n                            [--lock-sha256 LOCK_SHA256]\n                            [--scores-sha256 SCORES_SHA256]\n\nFrozen experiment adapter. Prediction never opens annotations or reference\nrepairs.\n\noptions:\n  -h, --help            show this help message and exit\n  --stage {preflight,score,calibrate,lock,check,records}\n  --tasks TASKS\n  --registry REGISTRY\n  --protocol PROTOCOL\n  --project-root PROJECT_ROOT\n  --output OUTPUT\n  --historical HISTORICAL\n  --model-configs MODEL_CONFIGS\n  --snapshots SNAPSHOTS\n  --environment-facts ENVIRONMENT_FACTS\n  --environment-profile ENVIRONMENT_PROFILE\n  --environment-assets ENVIRONMENT_ASSETS\n  --scores SCORES\n  --cal-labels CAL_LABELS\n  --check-labels CHECK_LABELS\n  --lock LOCK\n  --results RESULTS\n  --split {cal,check}\n  --lock-sha256 LOCK_SHA256\n  --scores-sha256 SCORES_SHA256\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "independent-validate",
+        "--stage",
+        "preflight"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"roster\": \"VERIFIED\",\n  \"tasks\": 24,\n  \"pairs\": 240,\n  \"model_calls\": 0\n}\n",
+      "stderr": ""
+    }
+  ],
+  "heavy_dependencies_installed": false
+}

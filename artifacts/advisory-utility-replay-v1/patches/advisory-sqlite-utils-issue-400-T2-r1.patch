@@ -1,0 +1,76 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index b137d9b776f6b7af39b8cdda0779fa5c81a915b4..c42077c6438654842fb22b5ece02e6eaaf3aa623 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1389,6 +1389,12 @@ def create_database(path, enable_wal):
+     is_flag=True,
+     help="If table already exists, do nothing",
+ )
++@click.option(
++    "--if-not-exists",
++    help="Ignore if table already exists",
++    default=False,
++    is_flag=True,
++)
+ @click.option(
+     "--replace",
+     is_flag=True,
+@@ -1396,7 +1402,17 @@ def create_database(path, enable_wal):
+ )
+ @load_extension_option
+ def create_table(
+-    path, table, columns, pk, not_null, default, fk, ignore, replace, load_extension
++    path,
++    table,
++    columns,
++    pk,
++    not_null,
++    default,
++    fk,
++    ignore,
++    if_not_exists,
++    replace,
++    load_extension,
+ ):
+     """
+     Add a table with the specified columns. Columns should be specified using
+@@ -1427,7 +1443,7 @@ def create_table(
+         coltypes[name] = ctype.upper()
+     # Does table already exist?
+     if table in db.table_names():
+-        if ignore:
++        if ignore or if_not_exists:
+             return
+         elif replace:
+             db[table].drop()
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 244029d2e16f2c82e97f21683c9f2965495649ec..1d367af4ff98fb27a7ee88dfd31ae619811417bd 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1136,6 +1136,26 @@ def test_create_table_ignore():
+         assert "CREATE TABLE [dogs] (\n   [name] TEXT\n)" == db["dogs"].schema
+ 
+ 
++def test_create_table_if_not_exists():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        db = Database("test.db")
++        db["dogs"].insert({"name": "Cleo"})
++        result = runner.invoke(
++            cli.cli,
++            [
++                "create-table",
++                "test.db",
++                "dogs",
++                "id",
++                "integer",
++                "--if-not-exists",
++            ],
++        )
++        assert 0 == result.exit_code
++        assert "CREATE TABLE [dogs] (\n   [name] TEXT\n)" == db["dogs"].schema
++
++
+ def test_create_table_replace():
+     runner = CliRunner()
+     with runner.isolated_filesystem():

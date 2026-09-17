@@ -1,0 +1,35 @@
+{
+  "task_id": "sqlite-utils-list-last-pk",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/commit/7399ae48a1e73f69d63cb273596f4312a0400501",
+  "family_id": "list-last-pk",
+  "split": "rank-train",
+  "reference_fix_commit": "7399ae48a1e73f69d63cb273596f4312a0400501",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "README.md"
+    ]
+  },
+  "public_request": "sqlite-utils-list-last-pk-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_list_mode.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_list_mode_single_record_upsert_last_pk",
+  "regression_selector": "test_insert_all_list_mode_basic",
+  "export_exclusions": [],
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements.",
+  "license": "Apache-2.0"
+}

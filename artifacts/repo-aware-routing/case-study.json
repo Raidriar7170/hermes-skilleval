@@ -1,0 +1,79 @@
+{
+  "task_id": "sqlite-utils-delete-transaction",
+  "scope": "One frozen final family, descriptive only; no causal skill attribution or latency improvement claim.",
+  "records": {
+    "native": {
+      "run_id": "final-sqlite-utils-delete-transaction-native-001",
+      "resolved": true,
+      "verifier_valid": true,
+      "patch_sha256": "064e3fa15a6b3084ff8fc41a99f8325d45e6630a45a4011f4b9e36641bd1b6c1",
+      "action": "N",
+      "fallback_reason": null,
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "pipeline_wall_seconds": 175.69072270800825
+    },
+    "repo-aware": {
+      "run_id": "final-sqlite-utils-delete-transaction-repo-aware-001",
+      "resolved": true,
+      "verifier_valid": true,
+      "patch_sha256": "56d3ae9f3b77ab7c299295bc494a6195e1046c3b382b212d2241ef56445e967d",
+      "action": "N",
+      "fallback_reason": "no_positive_feasible_supported_set",
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "pipeline_wall_seconds": 127.6857195420016,
+      "scores": {
+        "schema-change-regression": -3.026723861694336,
+        "cli-api-regression": -2.95723819732666,
+        "import-data-regression": -3.6134214401245117,
+        "verification-before-completion": -3.631002426147461,
+        "systematic-debugging": -3.5832910537719727
+      },
+      "selection": {
+        "skill_ids": [],
+        "objective": {
+          "coverage": 0.0,
+          "relevance": 0.0,
+          "redundancy": 0.0,
+          "cost": 0.0,
+          "score": 0.0
+        },
+        "potential_load_tokens": 0,
+        "evaluated_subsets": 1,
+        "fallback_reason": "no_positive_feasible_supported_set",
+        "candidate_pool_only": true,
+        "exact_k": null
+      }
+    },
+    "auto": {
+      "run_id": "final-sqlite-utils-delete-transaction-auto-001",
+      "resolved": true,
+      "verifier_valid": true,
+      "patch_sha256": "2bce4d2d2edcea38f4e3f61e1bfc444083111d02a123b97fd67c1bf8e9b6dc71",
+      "action": "N",
+      "fallback_reason": "unsupported_context",
+      "r_version": "b840e2b1bbf4a2c51cd87deb7a207621609ce92ce8ff3e9e2188816bcb9c4a94",
+      "pipeline_wall_seconds": 173.70420391700463,
+      "calls": {
+        "heavy_constructors": 0,
+        "encoder_queries": 0,
+        "reranker_forwards": 0
+      },
+      "context_supported": false,
+      "entrypoints": [
+        {
+          "kind": "cli",
+          "command": "sqlite-utils",
+          "symbol": "sqlite_utils.cli:cli",
+          "evidence": "pyproject.toml:72"
+        }
+      ],
+      "pyproject_sha256": "ccd4769f391f070e1159796d5475802dd63b7f3570ef45763b280eec3ca2052d",
+      "missing": [
+        {
+          "path": "sqlite_utils/db.py",
+          "reason": "byte_budget"
+        }
+      ]
+    }
+  }
+}

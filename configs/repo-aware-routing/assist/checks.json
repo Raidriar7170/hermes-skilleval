@@ -1,0 +1,51 @@
+{
+  "version": "assist-checks-v1",
+  "requirements": [
+    {
+      "id": "empty-input",
+      "description": "Empty input handling matches the stated request."
+    },
+    {
+      "id": "other-behavior",
+      "description": "All behavior outside declared checks remains unverified."
+    }
+  ],
+  "checks": [
+    {
+      "id": "target",
+      "kind": "requirement",
+      "requirements": [
+        "empty-input"
+      ],
+      "trusted_dir": "trusted",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "test_behavior.py",
+        "-k",
+        "test_target"
+      ],
+      "cwd": "/tmp",
+      "env": {},
+      "timeout": 180
+    },
+    {
+      "id": "regression",
+      "kind": "requirement",
+      "requirements": [],
+      "trusted_dir": "trusted",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "test_behavior.py",
+        "-k",
+        "test_regression"
+      ],
+      "cwd": "/tmp",
+      "env": {},
+      "timeout": 180
+    }
+  ]
+}

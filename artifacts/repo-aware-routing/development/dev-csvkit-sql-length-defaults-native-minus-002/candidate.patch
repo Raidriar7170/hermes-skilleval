@@ -1,0 +1,63 @@
+diff --git a/csvkit/utilities/csvsql.py b/csvkit/utilities/csvsql.py
+index 4eecf49b083c24d3c4180cfe3757fb430578b4ff..49f5d6dd8958c75f70c6f1ef06289ca4700df801 100644
+--- a/csvkit/utilities/csvsql.py
++++ b/csvkit/utilities/csvsql.py
+@@ -86,11 +86,11 @@ class CSVSQL(CSVKitUtility):
+             '--chunk-size', dest='chunk_size', type=int,
+             help='Chunk size for batch insert into the table. Requires --insert.')
+         self.argparser.add_argument(
+-            '--min-col-len', dest='min_col_len', type=int,
++            '--min-col-len', dest='min_col_len', type=int, default=1,
+             help='The minimum length of text columns.')
+         self.argparser.add_argument(
+-            '--col-len-multiplier', dest='col_len_multiplier', type=int,
+-            help='Multiply the maximum column length by this multiplier to accomodate larger values in later runs.')
++            '--col-len-multiplier', dest='col_len_multiplier', type=int, default=1,
++            help='Multiply the maximum column length by this multiplier to accommodate larger values in later runs.')
+ 
+     def main(self):
+         if isatty(sys.stdin) and self.args.input_paths == ['-']:
+diff --git a/docs/scripts/csvsql.rst b/docs/scripts/csvsql.rst
+index 08b81306a5d13295d01b17da0088bdd0ac52ed45..184ef69f50fdda8d9ec3e8628d7048075be78a7b 100644
+--- a/docs/scripts/csvsql.rst
++++ b/docs/scripts/csvsql.rst
+@@ -83,10 +83,11 @@ Generate SQL statements for a CSV file or execute those statements directly on a
+                            Chunk size for batch insert into the table. Requires
+                            --insert.
+      --min-col-len MIN_COL_LEN
+-                           The minimum length of text columns.
++                           The minimum length of text columns. Defaults to 1.
+      --col-len-multiplier COL_LEN_MULTIPLIER
+                            Multiply the maximum column length by this multiplier
+-                           to accomodate larger values in later runs.
++                           to accommodate larger values in later runs. Defaults
++                           to 1.
+ 
+ See also: :doc:`../common_arguments`.
+ 
+diff --git a/tests/test_utilities/test_csvsql.py b/tests/test_utilities/test_csvsql.py
+index c6d13ca7660e014f12e14907cf27b1da8bd449ad..12f3e4b31f2a90577d534c6cbe6ee1912c60e151 100644
+--- a/tests/test_utilities/test_csvsql.py
++++ b/tests/test_utilities/test_csvsql.py
+@@ -97,6 +97,21 @@ class TestCSVSQL(CSVKitTestCase, EmptyFileTests):
+             );
+         '''))  # noqa: W291
+ 
++    def test_column_length_options(self):
++        for options, expected in (
++            ([], (1, 1)),
++            (['--min-col-len', '10', '--col-len-multiplier', '3'], (10, 3)),
++        ):
++            with self.subTest(options=options), patch('agate.Table.to_sql') as to_sql:
++                self.get_output([
++                    '--db', 'sqlite:///:memory:',
++                    *options,
++                    'examples/testfixed_converted.csv',
++                ])
++
++                self.assertEqual(to_sql.call_args.kwargs['min_col_len'], expected[0])
++                self.assertEqual(to_sql.call_args.kwargs['col_len_multiplier'], expected[1])
++
+     def test_no_blanks(self):
+         sql = self.get_output(['--tables', 'foo', 'examples/blanks.csv'])
+ 

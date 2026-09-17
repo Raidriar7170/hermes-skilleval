@@ -1,0 +1,43 @@
+diff --git a/csvkit/utilities/csvsql.py b/csvkit/utilities/csvsql.py
+index 4eecf49b083c24d3c4180cfe3757fb430578b4ff..dd051c13cb08cb05d7c6603cc7e97fe36dc4a67b 100644
+--- a/csvkit/utilities/csvsql.py
++++ b/csvkit/utilities/csvsql.py
+@@ -86,10 +86,10 @@ class CSVSQL(CSVKitUtility):
+             '--chunk-size', dest='chunk_size', type=int,
+             help='Chunk size for batch insert into the table. Requires --insert.')
+         self.argparser.add_argument(
+-            '--min-col-len', dest='min_col_len', type=int,
++            '--min-col-len', dest='min_col_len', type=int, default=1,
+             help='The minimum length of text columns.')
+         self.argparser.add_argument(
+-            '--col-len-multiplier', dest='col_len_multiplier', type=int,
++            '--col-len-multiplier', dest='col_len_multiplier', type=int, default=1,
+             help='Multiply the maximum column length by this multiplier to accomodate larger values in later runs.')
+ 
+     def main(self):
+diff --git a/tests/test_utilities/test_csvsql.py b/tests/test_utilities/test_csvsql.py
+index c6d13ca7660e014f12e14907cf27b1da8bd449ad..df7f172960a244ca06fc3dfcad5aa7956bda8bf1 100644
+--- a/tests/test_utilities/test_csvsql.py
++++ b/tests/test_utilities/test_csvsql.py
+@@ -97,6 +97,21 @@ class TestCSVSQL(CSVKitTestCase, EmptyFileTests):
+             );
+         '''))  # noqa: W291
+ 
++    def test_column_length_options(self):
++        for options, expected in (
++            ([], (1, 1)),
++            (['--min-col-len', '7'], (7, 1)),
++            (['--col-len-multiplier', '3'], (1, 3)),
++            (['--min-col-len', '7', '--col-len-multiplier', '3'], (7, 3)),
++        ):
++            with self.subTest(options=options), patch('agate.Table.to_sql') as to_sql:
++                self.get_output([
++                    '--db', 'sqlite:///:memory:', *options, 'examples/testfixed_converted.csv'
++                ])
++
++                self.assertEqual(to_sql.call_args.kwargs['min_col_len'], expected[0])
++                self.assertEqual(to_sql.call_args.kwargs['col_len_multiplier'], expected[1])
++
+     def test_no_blanks(self):
+         sql = self.get_output(['--tables', 'foo', 'examples/blanks.csv'])
+ 

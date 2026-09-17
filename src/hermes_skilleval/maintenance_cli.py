@@ -97,6 +97,35 @@ def recommend(args):
 
 
 def main():
+    if (
+        len(sys.argv) > 2
+        and sys.argv[1] == "acceptance-review"
+        and sys.argv[2] in ("records", "summarize")
+    ):
+        from .repo_routing.acceptance_records import main as acceptance_records_main
+
+        return acceptance_records_main(sys.argv[3:])
+    if len(sys.argv) > 1 and sys.argv[1] == "acceptance-review":
+        from .repo_routing.acceptance_review import main as acceptance_main
+
+        return acceptance_main(sys.argv[2:])
+    if len(sys.argv) > 2 and sys.argv[1:3] == ["advisory-study", "records"]:
+        from .repo_routing.advisory_records import main as records_main
+
+        return records_main(sys.argv[3:])
+    if len(sys.argv) > 1 and sys.argv[1] == "advisory-study":
+        from .repo_routing.advisory_study import main as advisory_main
+
+        return advisory_main(sys.argv[2:])
+    if len(sys.argv) > 1 and sys.argv[1] == "support":
+        return subprocess.call(
+            [
+                sys.executable,
+                "-m",
+                "hermes_skilleval.repo_routing.support_cli",
+                *sys.argv[2:],
+            ]
+        )
     commands = {
         "run": "execute",
         "qualify": "qualify",
@@ -117,6 +146,9 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     for command in commands:
         sub.add_parser(command, help="Shared isolated " + command + " entrypoint")
+    sub.add_parser(
+        "support", help="Experimental text support scoring/calibration/checks"
+    )
     assist = sub.add_parser(
         "assist", help="Current-task isolated patch; no gold or qualification"
     )
@@ -130,6 +162,10 @@ def main():
         "output",
     ):
         assist.add_argument("--" + name, type=Path, required=True)
+    assist.add_argument(
+        "--policy", choices=["native", "fixed", "strong", "repo-aware", "auto"]
+    )
+    assist.add_argument("--routing-config", type=Path)
     assist.add_argument("--fixed-config", type=Path)
     assist.add_argument("--arm", choices=["N", "F"], default="N")
     assist.add_argument("--model", default="gpt-5.6-sol")
@@ -141,6 +177,23 @@ def main():
         "--plan-only",
         action="store_true",
         help="Inspect inputs/resources without model calls or source writes",
+    )
+    route_parser = sub.add_parser(
+        "route", help="Experimental sourced repository routing"
+    )
+    for name in (
+        "repo",
+        "request",
+        "registry",
+        "skill-assets",
+        "routing-config",
+        "output",
+    ):
+        route_parser.add_argument("--" + name, type=Path, required=True)
+    route_parser.add_argument(
+        "--policy",
+        choices=["native", "fixed", "strong", "repo-aware", "auto"],
+        required=True,
     )
     records = sub.add_parser("records", help="Recompute public records offline")
     records.add_argument("--index", type=Path, required=True)
@@ -155,6 +208,28 @@ def main():
         rec.add_argument("--" + name, type=Path)
     rec.add_argument("--repository")
     args = parser.parse_args()
+    if args.command == "route":
+        from hermes_skilleval.repo_routing.policy import route, read_config
+        from hermes_skilleval.runtime_utility import load_registry
+
+        registry, _ = load_registry(args.registry, args.skill_assets)
+        result = route(
+            args.repo,
+            args.request.read_text(),
+            {"network": "unknown", "python": sys.version.split()[0]},
+            registry,
+            args.policy,
+            read_config(args.routing_config),
+        )
+        with args.output.open("x") as stream:
+            json.dump(result, stream, indent=2)
+        print(
+            json.dumps(
+                {k: result[k] for k in ("action", "skill_ids", "calls", "timing")},
+                indent=2,
+            )
+        )
+        return 0
     if args.command == "assist":
         from hermes_skilleval._maintenance.assist import execute
 
@@ -179,13 +254,14 @@ def main():
         print(json.dumps(recompute(args.index, args.output)["summary"], indent=2))
     elif args.command == "doctor":
         from hermes_skilleval.repository_profile import CSVKIT, SQLITE_UTILS
+        from hermes_skilleval._maintenance.assist import CSV_DIFF
 
         result = {
             "models_loaded": False,
             "native_fixed_requires_retrieval": False,
             "python": sys.version.split()[0],
             "docker_executable": bool(shutil.which("docker")),
-            "profiles": [p.to_dict() for p in [SQLITE_UTILS, CSVKIT]],
+            "profiles": [p.to_dict() for p in [SQLITE_UTILS, CSVKIT, CSV_DIFF]],
             "strong": {"configured": bool(args.profile), "available": False},
         }
         if args.profile:

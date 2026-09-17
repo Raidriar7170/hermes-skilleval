@@ -1,0 +1,39 @@
+[
+  {
+    "check": "help",
+    "returncode": 0,
+    "expected": 0,
+    "elapsed_seconds": 0.23128016598639078,
+    "stdout": "usage: hermes-applicability [-h] [--root ROOT] [--registry REGISTRY]\n                            [--rule RULE] [--project-root PROJECT_ROOT]\n                            [--environment-profile ENVIRONMENT_PROFILE]\n                            [--environment-assets ENVIRONMENT_ASSETS]\n                            {probe-environment,select-for-goal,decision-replay,preflight,aligned-score,aligned-calibrate,aligned-train,advise}\n                            ...\n\nThin aligned-protocol front door; historical commands retain frozen modules.\n\npositional arguments:\n  {probe-environment,select-for-goal,decision-replay,preflight,aligned-score,aligned-calibrate,aligned-train,advise}\n    probe-environment   Prepare isolated cal source environments and save\n                        measured facts; no model\n    aligned-score       Preflight guarded new-protocol operation\n    aligned-calibrate   Preflight guarded new-protocol operation\n    aligned-train       Preflight guarded new-protocol operation\n\noptions:\n  -h, --help            show this help message and exit\n  --root ROOT\n  --registry REGISTRY\n  --rule RULE\n  --project-root PROJECT_ROOT\n                        External frozen source/config tree for historical\n                        identity checks\n  --environment-profile ENVIRONMENT_PROFILE\n  --environment-assets ENVIRONMENT_ASSETS\n                        Private build root containing per-task wheelhouse\n                        directories\n",
+    "stderr": ""
+  },
+  {
+    "check": "records",
+    "returncode": 0,
+    "expected": 0,
+    "elapsed_seconds": 0.23379370901966467,
+    "stdout": "{\n  \"records\": \"MATCHED\",\n  \"rows\": 40,\n  \"model_calls\": 0\n}\n",
+    "stderr": ""
+  },
+  {
+    "check": "measured-preflight",
+    "returncode": 2,
+    "expected": 2,
+    "elapsed_seconds": 4.808573333983077,
+    "stdout": "{\"status\": \"BLOCKED\", \"requested_operation\": \"cal-score\", \"scorer_calls\": 0, \"model_constructions\": 0}\n",
+    "stderr": ""
+  },
+  {
+    "check": "absent-facts",
+    "returncode": 2,
+    "expected": 2,
+    "elapsed_seconds": 0.06734145901282318,
+    "stdout": "{\"status\": \"BLOCKED\", \"reason\": \"CONTEXT_OR_ENVIRONMENT_NECESSARY_CONDITIONS_UNMET\", \"model_constructions\": 0}\n",
+    "stderr": ""
+  },
+  {
+    "check": "lightweight-import-guard-span-and-records",
+    "returncode": 0,
+    "stdout": "{\n  \"records\": \"MATCHED\",\n  \"rows\": 40,\n  \"model_calls\": 0\n}\n"
+  }
+]

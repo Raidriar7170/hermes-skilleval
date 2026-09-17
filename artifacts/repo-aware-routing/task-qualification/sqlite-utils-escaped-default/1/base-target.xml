@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.026" timestamp="2026-09-15T18:36:40.981360+00:00"><testcase classname="test_behavior" name="test_table_default_values_escaped_quotes" time="0.000"><failure message="assert {'name': &quot;O''Brien&quot;} == {'name': &quot;O'Brien&quot;}&#10;  &#10;  Differing items:&#10;  {'name': &quot;O''Brien&quot;} != {'name': &quot;O'Brien&quot;}&#10;  Use -v to get more diff">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff57552b60&gt;&gt;
+
+    def test_table_default_values_escaped_quotes(fresh_db):
+        # SQLite stores string defaults with single quotes doubled, so
+        # introspection needs to unescape them again
+        fresh_db.execute(
+            "create table t (id integer primary key, name text default 'O''Brien')"
+        )
+        assert "default 'O''Brien'" in fresh_db["t"].schema
+&gt;       assert fresh_db["t"].default_values == {"name": "O'Brien"}
+E       assert {'name': "O''Brien"} == {'name': "O'Brien"}
+E         
+E         Differing items:
+E         {'name': "O''Brien"} != {'name': "O'Brien"}
+E         Use -v to get more diff
+
+/trusted/test_behavior.py:335: AssertionError</failure></testcase></testsuite></testsuites>

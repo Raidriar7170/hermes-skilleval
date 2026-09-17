@@ -1,0 +1,88 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index e620f9e3ec9911d1d7234c8e18bab65704e22463..7c018d0e4b6a88dbdb3a00ee44dac9544776a6d9 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -20,7 +20,9 @@ def load_csv(fp, key=None, dialect=None):
+     if key:
+         keyfn = lambda r: r[key]
+     else:
+-        keyfn = lambda r: hashlib.sha1(json.dumps(r, sort_keys=True).encode("utf8"))
++        keyfn = lambda r: hashlib.sha1(
++            json.dumps(r, sort_keys=True).encode("utf8")
++        ).hexdigest()
+     return {keyfn(r): r for r in rows}
+ 
+ 
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index bdaa47c53d24e459589e7a6b998e26a517a7a4da..d2d1dee8a2c759ce9e01750c8dc41d7283f05916 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -35,6 +35,35 @@ def test_human_cli(tmpdir):
+     )
+ 
+ 
++def test_human_cli_without_key(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write(ONE)
++    two = tmpdir / "two.csv"
++    two.write(TWO)
++    result = CliRunner().invoke(cli.cli, [str(one), str(two)])
++    assert 0 == result.exit_code
++    assert (
++        dedent(
++            """
++    1 row added, 1 row removed
++
++    1 row added
++
++      id: 1
++      name: Cleo
++      age: 5
++
++    1 row removed
++
++      id: 1
++      name: Cleo
++      age: 4
++    """
++        ).strip()
++        == result.output.strip()
++    )
++
++
+ def test_human_cli_alternative_names(tmpdir):
+     one = tmpdir / "one.csv"
+     one.write(ONE)
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..be81ace7c73680fd16c6d50e5f0a9404fd6eeb84 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -83,6 +83,28 @@ def test_row_removed():
+     } == diff
+ 
+ 
++def test_rows_compared_by_contents_without_key():
++    diff = compare(load_csv(io.StringIO(ONE)), load_csv(io.StringIO(TWO)))
++    assert {
++        "changed": [],
++        "removed": [{"age": "4", "id": "1", "name": "Cleo"}],
++        "added": [{"age": "5", "id": "1", "name": "Cleo"}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
++def test_equal_rows_compared_by_contents_without_key():
++    diff = compare(load_csv(io.StringIO(ONE)), load_csv(io.StringIO(ONE)))
++    assert {
++        "changed": [],
++        "removed": [],
++        "added": [],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
+ def test_columns_changed():
+     diff = compare(
+         load_csv(io.StringIO(SIX), key="id"), load_csv(io.StringIO(SEVEN), key="id")

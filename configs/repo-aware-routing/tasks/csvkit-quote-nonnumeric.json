@@ -1,0 +1,36 @@
+{
+  "task_id": "csvkit-quote-nonnumeric",
+  "repository": "wireservice/csvkit",
+  "source_url": "https://github.com/wireservice/csvkit/commit/95dc26dde97ddb2b28947f8b8353d8eace675a71",
+  "family_id": "quote-nonnumeric",
+  "split": "gate-calibration",
+  "reference_fix_commit": "95dc26dde97ddb2b28947f8b8353d8eace675a71",
+  "profile": {
+    "repository": "wireservice/csvkit",
+    "packages": {
+      "csvkit": "."
+    },
+    "cli_module": "csvkit.utilities.in2csv",
+    "cli_callable": "launch_new_instance",
+    "cli_name": "in2csv",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "csvkit",
+      "tests",
+      "docs",
+      "README.rst"
+    ]
+  },
+  "public_request": "csvkit-quote-nonnumeric-public.md",
+  "trusted_files": {
+    "test_behavior.py": "csvkit-quote-nonnumeric-trusted.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_target",
+  "regression_selector": "test_regression",
+  "export_exclusions": [
+    "examples/realdata/"
+  ],
+  "license": "MIT",
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements."
+}

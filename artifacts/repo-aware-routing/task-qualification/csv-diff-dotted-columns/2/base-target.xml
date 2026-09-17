@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.014" timestamp="2026-09-15T18:41:43.332301+00:00"><testcase classname="test_behavior" name="test_target" time="0.001"><failure message="TypeError: unhashable type: 'list'">def test_target():
+        old = load_csv(io.StringIO("id,foo.bar,foo.baz\n1,Dog,Cat\n"), key="id")
+        new = load_csv(io.StringIO("id,foo.bar,foo.baz\n1,Dog,Beaver\n"), key="id")
+&gt;       result = compare(old, new)
+
+/trusted/test_behavior.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+previous = {'1': {'foo.bar': 'Dog', 'foo.baz': 'Cat', 'id': '1'}}
+current = {'1': {'foo.bar': 'Dog', 'foo.baz': 'Beaver', 'id': '1'}}
+show_unchanged = False
+
+    def compare(previous, current, show_unchanged=False):
+        result = {
+            "added": [],
+            "removed": [],
+            "changed": [],
+            "columns_added": [],
+            "columns_removed": [],
+        }
+        # Have the columns changed?
+        previous_columns = set(next(iter(previous.values())).keys())
+        current_columns = set(next(iter(current.values())).keys())
+        ignore_columns = None
+        if previous_columns != current_columns:
+            result["columns_added"] = [
+                c for c in current_columns if c not in previous_columns
+            ]
+            result["columns_removed"] = [
+                c for c in previous_columns if c not in current_columns
+            ]
+            ignore_columns = current_columns.symmetric_difference(previous_columns)
+        # Have any rows been removed or added?
+        removed = [id for id in previous if id not in current]
+        added = [id for id in current if id not in previous]
+        # How about changed?
+        removed_or_added = set(removed) | set(added)
+        potential_changes = [id for id in current if id not in removed_or_added]
+        changed = [id for id in potential_changes if current[id] != previous[id]]
+        if added:
+            result["added"] = [current[id] for id in added]
+        if removed:
+            result["removed"] = [previous[id] for id in removed]
+        if changed:
+            for id in changed:
+                d = list(diff(previous[id], current[id], ignore=ignore_columns))
+                if d:
+                    changes = {
+                        "key": id,
+                        "changes": {
+&gt;                           field: [prev_value, current_value]
+                            for _, field, (prev_value, current_value) in d
+                        },
+                    }
+E                   TypeError: unhashable type: 'list'
+
+/input/csv_diff/__init__.py:65: TypeError</failure></testcase></testsuite></testsuites>

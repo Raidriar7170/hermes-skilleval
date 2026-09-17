@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.019" timestamp="2026-09-15T18:38:14.091560+00:00"><testcase classname="test_behavior" name="test_delete_where_commits" time="0.001"><failure message="assert not True&#10; +  where True = &lt;sqlite3.Connection object at 0xffff57684b80&gt;.in_transaction&#10; +    where &lt;sqlite3.Connection object at 0xffff57684b80&gt; = &lt;Database &lt;sqlite3.Connection object at 0xffff57684b80&gt;&gt;.conn">tmpdir = local('/tmp/pytest-of-root/pytest-0/test_delete_where_commits0')
+
+    def test_delete_where_commits(tmpdir):
+        path = str(tmpdir / "test.db")
+        db = sqlite_utils.Database(path)
+        db["table"].insert_all([{"id": i} for i in range(5)], pk="id")
+        db["table"].delete_where("id &gt; ?", [2])
+        # The connection must not be left inside an open transaction,
+        # otherwise subsequent atomic() blocks never commit either
+&gt;       assert not db.conn.in_transaction
+E       assert not True
+E        +  where True = &lt;sqlite3.Connection object at 0xffff57684b80&gt;.in_transaction
+E        +    where &lt;sqlite3.Connection object at 0xffff57684b80&gt; = &lt;Database &lt;sqlite3.Connection object at 0xffff57684b80&gt;&gt;.conn
+
+/trusted/test_behavior.py:45: AssertionError</failure></testcase></testsuite></testsuites>

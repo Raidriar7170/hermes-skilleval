@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.031" timestamp="2026-09-15T18:36:50.596094+00:00"><testcase classname="test_behavior" name="test_table_default_values_keyword_literals" time="0.000"><failure message="AssertionError: assert {'disabled': ...able': 'NULL'} == {'disabled': ...llable': None}&#10;  &#10;  Differing items:&#10;  {'disabled': 'false'} != {'disabled': False}&#10;  {'nullable': 'NULL'} != {'nullable': None}&#10;  {'enabled': 'TRUE'} != {'enabled': True}&#10;  Use -v to get more diff">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff839eb2e0&gt;&gt;
+
+    def test_table_default_values_keyword_literals(fresh_db):
+        fresh_db.execute(
+            "create table t ("
+            "enabled integer default TRUE, "
+            "disabled integer default false, "
+            "nullable text default NULL"
+            ")"
+        )
+&gt;       assert fresh_db.table("t").default_values == {
+            "enabled": True,
+            "disabled": False,
+            "nullable": None,
+        }
+E       AssertionError: assert {'disabled': ...able': 'NULL'} == {'disabled': ...llable': None}
+E         
+E         Differing items:
+E         {'disabled': 'false'} != {'disabled': False}
+E         {'nullable': 'NULL'} != {'nullable': None}
+E         {'enabled': 'TRUE'} != {'enabled': True}
+E         Use -v to get more diff
+
+/trusted/test_behavior.py:404: AssertionError</failure></testcase></testsuite></testsuites>

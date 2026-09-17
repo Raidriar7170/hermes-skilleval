@@ -1,0 +1,18 @@
+import hashlib,json,subprocess,sys,tempfile
+from pathlib import Path
+bootstrap="""import importlib.abc,importlib.machinery,sys
+class Candidate(importlib.abc.MetaPathFinder):
+ def find_spec(self,fullname,path=None,target=None):
+  if fullname=='csvkit':
+   spec=importlib.machinery.PathFinder.find_spec(fullname,['/input'])
+   if spec is None:raise ImportError(fullname)
+   return spec
+sys.meta_path.insert(0,Candidate())
+sys.argv=['in2csv','-f','xlsx','--write-sheets','-']
+from csvkit.utilities.in2csv import launch_new_instance
+launch_new_instance()
+"""
+with tempfile.TemporaryDirectory() as d:
+ r=subprocess.run([sys.executable,'-I','-c',bootstrap],input=Path('/fixture.xlsx').read_bytes(),capture_output=True,cwd=d)
+ files=[{'name':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(Path(d).glob('*.csv'))]
+ print(json.dumps({'returncode':r.returncode,'stderr':r.stderr.decode(),'stdout_bytes':len(r.stdout),'generated_csv':files,'posthoc_diagnostic_only':True,'changes_frozen_outcome':False}))

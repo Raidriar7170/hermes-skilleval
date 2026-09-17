@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.122" timestamp="2026-09-15T18:39:37.802822+00:00"><testcase classname="test_behavior" name="test_target" time="0.003"><failure message="assert False&#10; +  where False = any(&lt;generator object test_target.&lt;locals&gt;.&lt;genexpr&gt; at 0xffff726c85f0&gt;)">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target0')
+
+    def test_target(tmp_path):
+        left=tmp_path / "left.csv"; left.write_text("key,leftval\na,L\n")
+        right=tmp_path / "right.csv"; right.write_text("rightval,key\nR,a\nS,b\n")
+        rows=list(csv.reader(io.StringIO(run(CSVJoin,["--right","-c","1,2",str(left),str(right)]))))
+        assert len(rows) == 3
+&gt;       assert any("L" in row and "R" in row for row in rows[1:])
+E       assert False
+E        +  where False = any(&lt;generator object test_target.&lt;locals&gt;.&lt;genexpr&gt; at 0xffff726c85f0&gt;)
+
+/trusted/test_behavior.py:23: AssertionError</failure></testcase></testsuite></testsuites>

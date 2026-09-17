@@ -1,0 +1,240 @@
+diff --git a/docs/migrations.rst b/docs/migrations.rst
+index 5628dedf8f4741ea7318191eaa8a5774aa6fa8c0..7f1c8289c5b4e8dd99c96d2848e766b8738335df 100644
+--- a/docs/migrations.rst
++++ b/docs/migrations.rst
+@@ -156,6 +156,12 @@ You can also target a specific migration set using ``migration_set:migration_nam
+       --stop-before sales:drop_index
+ 
+ The ``--stop-before`` option can be passed more than once.
++Migration names are validated before any migrations are applied, so an unknown
++name causes the command to exit with an error without applying migrations.
++
++Legacy duck-typed migration collections support one stop point per collection.
++Passing multiple stop points that match one of those collections causes the
++command to exit with an error.
+ 
+ Verbose output
+ ==============
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index d51ba7b983a19a9bdfa4937e6cc06031e6b35fe3..db611685f040aae211800336a37cb1f87a208e36 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -3335,16 +3335,59 @@ def _display_migration_list(db, migration_sets):
+         click.echo()
+ 
+ 
+-def _stop_before_for_migration_set(stop_before, migration_set_name):
+-    matches = []
++def _migration_names(migration_set, db):
++    if isinstance(migration_set, sqlite_utils.Migrations):
++        return {migration.name for migration in migration_set._migrations}
++    return {
++        migration.name
++        for migration in (*migration_set.applied(db), *migration_set.pending(db))
++    }
++
++
++def _stop_before_for_migration_sets(stop_before, migration_sets, db):
++    if not stop_before:
++        return [
++            [] if isinstance(migration_set, sqlite_utils.Migrations) else None
++            for migration_set in migration_sets
++        ]
++    migration_names = [
++        _migration_names(migration_set, db) for migration_set in migration_sets
++    ]
++    matches_by_set = [[] for migration_set in migration_sets]
+     for value in stop_before:
+         set_name, separator, migration_name = value.partition(":")
+-        if separator:
+-            if set_name == migration_set_name:
+-                matches.append(migration_name)
++        if not separator:
++            migration_name = set_name
++        matches = [
++            index
++            for index, (migration_set, names) in enumerate(
++                zip(migration_sets, migration_names)
++            )
++            if migration_name in names
++            and (not separator or set_name == migration_set.name)
++        ]
++        if not matches:
++            raise click.ClickException("Unknown migration: {}".format(value))
++        for index in matches:
++            if migration_name not in matches_by_set[index]:
++                matches_by_set[index].append(migration_name)
++
++    stop_before_by_set = []
++    for migration_set, matches in zip(migration_sets, matches_by_set):
++        is_native = isinstance(migration_set, sqlite_utils.Migrations)
++        if not matches:
++            stop_before_by_set.append([] if is_native else None)
++        elif len(matches) == 1:
++            stop_before_by_set.append(matches[0])
++        elif not is_native:
++            raise click.ClickException(
++                "Legacy migration set '{}' only supports one --stop-before".format(
++                    migration_set.name
++                )
++            )
+         else:
+-            matches.append(value)
+-    return matches
++            stop_before_by_set.append(matches)
++    return stop_before_by_set
+ 
+ 
+ @click.command()
+@@ -3390,6 +3433,10 @@ def migrate(db_path, migrations, stop_before, list_, verbose):
+     db = sqlite_utils.Database(db_path)
+     _register_db_for_cleanup(db)
+ 
++    stop_before_by_set = _stop_before_for_migration_sets(
++        stop_before, migration_sets, db
++    )
++
+     if list_:
+         _display_migration_list(db, migration_sets)
+         return
+@@ -3400,10 +3447,10 @@ def migrate(db_path, migrations, stop_before, list_, verbose):
+         click.echo("\nSchema before:\n")
+         click.echo(textwrap.indent(prev_schema, "  ") or "  (empty)")
+         click.echo()
+-    for migration_set in migration_sets:
++    for migration_set, migration_stop_before in zip(migration_sets, stop_before_by_set):
+         migration_set.apply(
+             db,
+-            stop_before=_stop_before_for_migration_set(stop_before, migration_set.name),
++            stop_before=migration_stop_before,
+         )
+     if verbose:
+         click.echo("Schema after:\n")
+diff --git a/tests/test_cli_migrate.py b/tests/test_cli_migrate.py
+index 229bc9cdfec332678f85ca5f74d78ffe3a089cb1..c2137d846981453eb186b6cae9fb42031b54d4b1 100644
+--- a/tests/test_cli_migrate.py
++++ b/tests/test_cli_migrate.py
+@@ -301,3 +301,123 @@ def test_stop_before_multiple_qualified(two_sets_same_migration_name):
+     assert not db["creature_weights"].exists()
+     assert db["sales"].exists()
+     assert not db["sales_weights"].exists()
++
++
++@pytest.mark.parametrize(
++    "stop_before",
++    ("unknown", "hello:unknown", "unknown:foo"),
++)
++def test_stop_before_rejects_unknown_migration_without_applying(
++    two_migrations, stop_before
++):
++    path, migrations_py = two_migrations
++    db_path = str(path / "test.db")
++    result = CliRunner().invoke(
++        sqlite_utils.cli.cli,
++        [
++            "migrate",
++            db_path,
++            str(migrations_py),
++            "--stop-before",
++            stop_before,
++        ],
++    )
++    assert result.exit_code == 1
++    assert "Unknown migration: {}".format(stop_before) in result.output
++    db = sqlite_utils.Database(db_path)
++    assert not db["foo"].exists()
++    assert not db["bar"].exists()
++
++
++def test_stop_before_legacy_migration_set_receives_single_name(tmpdir):
++    path = pathlib.Path(tmpdir)
++    migrations_py = path / "migrations.py"
++    migrations_py.write_text(
++        """
++class Migration:
++    def __init__(self, name):
++        self.name = name
++
++class LegacyMigrations:
++    def __init__(self):
++        self.name = "legacy"
++
++    def applied(self, db):
++        return []
++
++    def pending(self, db):
++        return [Migration("foo"), Migration("bar")]
++
++    def apply(self, db, stop_before=None):
++        if stop_before is not None and not isinstance(stop_before, str):
++            raise TypeError("stop_before must be a string")
++        for migration in self.pending(db):
++            if migration.name == stop_before:
++                return
++            db[migration.name].insert({"id": 1})
++
++migrations = LegacyMigrations()
++""",
++        "utf-8",
++    )
++    db_path = str(path / "test.db")
++    result = CliRunner().invoke(
++        sqlite_utils.cli.cli,
++        [
++            "migrate",
++            db_path,
++            str(migrations_py),
++            "--stop-before",
++            "bar",
++        ],
++    )
++    assert result.exit_code == 0, result.output
++    db = sqlite_utils.Database(db_path)
++    assert db["foo"].exists()
++    assert not db["bar"].exists()
++
++
++def test_stop_before_legacy_migration_set_rejects_multiple_names(tmpdir):
++    path = pathlib.Path(tmpdir)
++    migrations_py = path / "migrations.py"
++    migrations_py.write_text(
++        """
++class Migration:
++    def __init__(self, name):
++        self.name = name
++
++class LegacyMigrations:
++    def __init__(self):
++        self.name = "legacy"
++
++    def applied(self, db):
++        return []
++
++    def pending(self, db):
++        return [Migration("foo"), Migration("bar")]
++
++    def apply(self, db, stop_before=None):
++        raise AssertionError("apply should not be called")
++
++migrations = LegacyMigrations()
++""",
++        "utf-8",
++    )
++    db_path = str(path / "test.db")
++    result = CliRunner().invoke(
++        sqlite_utils.cli.cli,
++        [
++            "migrate",
++            db_path,
++            str(migrations_py),
++            "--stop-before",
++            "foo",
++            "--stop-before",
++            "bar",
++        ],
++    )
++    assert result.exit_code == 1
++    assert (
++        "legacy migration set 'legacy' only supports one --stop-before"
++        in result.output.lower()
++    )

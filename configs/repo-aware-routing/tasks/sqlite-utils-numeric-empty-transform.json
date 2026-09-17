@@ -1,0 +1,35 @@
+{
+  "task_id": "sqlite-utils-numeric-empty-transform",
+  "repository": "simonw/sqlite-utils",
+  "source_url": "https://github.com/simonw/sqlite-utils/commit/e4935e064407bc995f77795c025c33cef52d742e",
+  "family_id": "numeric-empty-transform",
+  "split": "rank-train",
+  "reference_fix_commit": "e4935e064407bc995f77795c025c33cef52d742e",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests",
+      "docs",
+      "README.md"
+    ]
+  },
+  "public_request": "sqlite-utils-numeric-empty-transform-public.md",
+  "trusted_files": {
+    "test_behavior.py": "reference:tests/test_transform.py",
+    "conftest.py": "reference:tests/conftest.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_transform_empty_string_to_null_for_numeric_types",
+  "regression_selector": "test_transform_rename_pk",
+  "export_exclusions": [],
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements.",
+  "license": "Apache-2.0"
+}

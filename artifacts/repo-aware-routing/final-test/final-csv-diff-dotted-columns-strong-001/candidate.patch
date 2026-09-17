@@ -1,0 +1,70 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..dd9a60154d2e4a84a4ae61802174bf2366640885 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -57,12 +57,26 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            d = list(diff(previous[id], current[id], ignore=ignore_columns))
++            # CSV rows are flat dictionaries, and their headings are literal keys.
++            # Disable dictdiffer's dotted path notation so dots in a heading are
++            # not interpreted as separators. With dot notation disabled, both
++            # paths and ignored keys are represented as sequences.
++            ignore_paths = (
++                {(column,) for column in ignore_columns} if ignore_columns else None
++            )
++            d = list(
++                diff(
++                    previous[id],
++                    current[id],
++                    ignore=ignore_paths,
++                    dot_notation=False,
++                )
++            )
+             if d:
+                 changes = {
+                     "key": id,
+                     "changes": {
+-                        field: [prev_value, current_value]
++                        field[0]: [prev_value, current_value]
+                         for _, field, (prev_value, current_value) in d
+                     },
+                 }
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..c5da0b0efdaae0b140bbc5907ca1b9844abbd191 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -43,6 +43,12 @@ EIGHT = """id,name,age,length
+ 3,Bailee,1,100
+ 4,Bob,7,422"""
+ 
++DOTTED_COLUMNS_ONE = """identity.id,person.name
++1,Cleo"""
++
++DOTTED_COLUMNS_TWO = """identity.id,person.name
++1,Clio"""
++
+ 
+ def test_row_changed():
+     diff = compare(
+@@ -107,3 +113,19 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_dotted_column_names_with_dotted_key():
++    diff = compare(
++        load_csv(io.StringIO(DOTTED_COLUMNS_ONE), key="identity.id"),
++        load_csv(io.StringIO(DOTTED_COLUMNS_TWO), key="identity.id"),
++    )
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {"key": "1", "changes": {"person.name": ["Cleo", "Clio"]}}
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff

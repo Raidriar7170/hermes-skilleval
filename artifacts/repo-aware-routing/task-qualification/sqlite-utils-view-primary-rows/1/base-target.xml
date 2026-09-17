@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.042" timestamp="2026-09-15T18:38:23.087990+00:00"><testcase classname="test_behavior" name="test_pks_and_rows_where_view" time="0.001"><failure message="AttributeError: 'View' object has no attribute 'pks'">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff563598a0&gt;&gt;
+
+    def test_pks_and_rows_where_view(fresh_db):
+        # pks_and_rows_where() lives on Queryable so views expose it, but
+        # SQLite views have no rowid - it has always failed with an
+        # OperationalError from the generated SQL. Guard against it failing
+        # earlier with an AttributeError from View lacking Table properties
+        from sqlite_utils.utils import sqlite3
+    
+        fresh_db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")
+        fresh_db.create_view("dog_names", "select name from dogs")
+        with pytest.raises(sqlite3.OperationalError):
+&gt;           list(fresh_db["dog_names"].pks_and_rows_where())
+
+/trusted/test_behavior.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;View dog_names (name)&gt;, where = None, where_args = None, order_by = None
+limit = None, offset = None
+
+    def pks_and_rows_where(
+        self,
+        where: Optional[str] = None,
+        where_args: Optional[Union[Sequence, Dict[str, Any]]] = None,
+        order_by: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -&gt; Generator[Tuple[Any, Dict[str, Any]], None, None]:
+        """
+        Like ``.rows_where()`` but returns ``(pk, row)`` pairs - ``pk`` can be a single value or tuple.
+    
+        :param where: SQL where fragment to use, for example ``id &gt; ?``
+        :param where_args: Parameters to use with that fragment - an iterable for ``id &gt; ?``
+          parameters, or a dictionary for ``id &gt; :id``
+        :param order_by: Column or fragment of SQL to order by
+        :param select: Comma-separated list of columns to select - defaults to ``*``
+        :param limit: Integer number of rows to limit to
+        :param offset: Integer for SQL offset
+        """
+        column_names = [column.name for column in self.columns]
+&gt;       pks = self.pks
+E       AttributeError: 'View' object has no attribute 'pks'
+
+/input/sqlite_utils/db.py:2027: AttributeError</failure></testcase></testsuite></testsuites>

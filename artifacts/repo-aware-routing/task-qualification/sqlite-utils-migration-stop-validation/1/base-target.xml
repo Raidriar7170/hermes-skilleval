@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="0.046" timestamp="2026-09-15T18:39:17.140308+00:00"><testcase classname="test_behavior" name="test_stop_before_unknown_name_errors" time="0.003"><failure message="assert 0 == 1&#10; +  where 0 = &lt;Result okay&gt;.exit_code">two_migrations = (PosixPath('/tmp/pytest-of-root/pytest-0/test_stop_before_unknown_name_0'), PosixPath('/tmp/pytest-of-root/pytest-0/test_stop_before_unknown_name_0/foo/migrations.py'))
+
+    def test_stop_before_unknown_name_errors(two_migrations):
+        path, _ = two_migrations
+        db_path = str(path / "test.db")
+        runner = CliRunner()
+        result = runner.invoke(
+            sqlite_utils.cli.cli,
+            ["migrate", db_path, str(path), "--stop-before", "fooo"],
+        )
+&gt;       assert result.exit_code == 1
+E       assert 0 == 1
+E        +  where 0 = &lt;Result okay&gt;.exit_code
+
+/trusted/test_behavior.py:387: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_stop_before_with_legacy_migrations_class" time="0.002"><failure message="AssertionError: assert 'second' not in ['_sqlite_migrations', 'first', 'second']&#10; +  where ['_sqlite_migrations', 'first', 'second'] = table_names()&#10; +    where table_names = &lt;Database &lt;sqlite3.Connection object at 0xffff653bad40&gt;&gt;.table_names">tmpdir = local('/tmp/pytest-of-root/pytest-0/test_stop_before_with_legacy_m0')
+
+    def test_stop_before_with_legacy_migrations_class(tmpdir):
+        path = pathlib.Path(tmpdir)
+        (path / "migrations.py").write_text(LEGACY_MIGRATIONS, "utf-8")
+        db_path = str(path / "test.db")
+        runner = CliRunner()
+        result = runner.invoke(
+            sqlite_utils.cli.cli,
+            ["migrate", db_path, str(path), "--stop-before", "second"],
+        )
+        assert result.exit_code == 0, result.output
+        db = sqlite_utils.Database(db_path)
+        assert "first" in db.table_names()
+&gt;       assert "second" not in db.table_names()
+E       AssertionError: assert 'second' not in ['_sqlite_migrations', 'first', 'second']
+E        +  where ['_sqlite_migrations', 'first', 'second'] = table_names()
+E        +    where table_names = &lt;Database &lt;sqlite3.Connection object at 0xffff653bad40&gt;&gt;.table_names
+
+/trusted/test_behavior.py:407: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_stop_before_multiple_values_for_legacy_set_errors" time="0.002"><failure message="assert 0 == 1&#10; +  where 0 = &lt;Result okay&gt;.exit_code">tmpdir = local('/tmp/pytest-of-root/pytest-0/test_stop_before_multiple_valu0')
+
+    def test_stop_before_multiple_values_for_legacy_set_errors(tmpdir):
+        path = pathlib.Path(tmpdir)
+        (path / "migrations.py").write_text(LEGACY_MIGRATIONS, "utf-8")
+        db_path = str(path / "test.db")
+        runner = CliRunner()
+        result = runner.invoke(
+            sqlite_utils.cli.cli,
+            [
+                "migrate",
+                db_path,
+                str(path),
+                "--stop-before",
+                "legacy_set:first",
+                "--stop-before",
+                "legacy_set:second",
+            ],
+        )
+&gt;       assert result.exit_code == 1
+E       assert 0 == 1
+E        +  where 0 = &lt;Result okay&gt;.exit_code
+
+/trusted/test_behavior.py:427: AssertionError</failure></testcase></testsuite></testsuites>

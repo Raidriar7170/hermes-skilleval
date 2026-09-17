@@ -1,0 +1,102 @@
+{
+  "csv-diff-content-key": {
+    "text": "When no --key is given, csv-diff should compare rows by their contents and display added/removed rows without errors. Equal rows must not become spurious differences.\n",
+    "sha256": "5934ae0c36d034c3d1b91cbb5f253d587e8f9b6f35f6197bf8787350b86e79bf",
+    "source_spec": "configs/repo-aware-routing/tasks/csv-diff-content-key.json"
+  },
+  "csv-diff-dotted-columns": {
+    "text": "csv-diff should compare CSV files containing dots in column names. Preserve the exact column name in the changes output and support keyed comparison without an exception.\n",
+    "sha256": "4ed12961845300feb73362e222d38d36e941838e55b10ba78904b82d9ebc6cde",
+    "source_spec": "configs/repo-aware-routing/tasks/csv-diff-dotted-columns.json"
+  },
+  "csvkit-empty-stack": {
+    "text": "csvstack must accept an empty CSV file when stacking it with a normal CSV, without error and without losing the normal rows.\n",
+    "sha256": "8574004c6b54bff7357842c412b8114acec1daa91d646d860e65f14cb7988865",
+    "source_spec": "configs/repo-aware-routing/tasks/csvkit-empty-stack.json"
+  },
+  "csvkit-quote-nonnumeric": {
+    "text": "csvformat should support --out-quoting 2 (QUOTE_NONNUMERIC), quoting string values and writing numeric values without quotes. Preserve ordinary output.\n",
+    "sha256": "44ec8fe2282674fa8e58e3d5430129b757346196071fe9e545543e2f7a1035f7",
+    "source_spec": "configs/repo-aware-routing/tasks/csvkit-quote-nonnumeric.json"
+  },
+  "csvkit-right-join-columns": {
+    "text": "csvjoin --right must use the correct join column from each input when the key columns have different positions. Preserve matched and unmatched right-hand rows.\n",
+    "sha256": "880285dad084b9482eec205e3a740e0526a5cee6303d7a40d95f6b0087838698",
+    "source_spec": "configs/repo-aware-routing/tasks/csvkit-right-join-columns.json"
+  },
+  "csvkit-sql-length-defaults": {
+    "text": "csvsql should default --min-col-len and --col-len-multiplier to 1. Preserve explicit values and ordinary CSV processing.\n",
+    "sha256": "35d2f3aa128168614a199421375f874b6a15ec8da8163945fc0e7db4259cfb16",
+    "source_spec": "configs/repo-aware-routing/tasks/csvkit-sql-length-defaults.json"
+  },
+  "sqlite-utils-column-case": {
+    "text": "Match public Python API column names against the schema case-insensitively, as SQLite does. Inserting with a differently cased primary-key name should populate last_pk correctly; preserve exact-case inserts.\n",
+    "sha256": "c3af21bbc73e87964c9bd57489fe66d9b2869abc48d827054c44532ad2eb403c",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-column-case.json"
+  },
+  "sqlite-utils-convert-multi-dryrun": {
+    "text": "Fix combining convert --multi with --dry-run. Preview the multiple output columns without changing stored rows; retain ordinary convert behavior.\n",
+    "sha256": "2f97b646088b964e497c8e619dfdcc80efaf10d6a4757bf847a2ef137b6dc4de",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-convert-multi-dryrun.json"
+  },
+  "sqlite-utils-delete-transaction": {
+    "text": "Ensure delete_where commits its deletion so it survives closing and reopening the database. Preserve ordinary row deletion.\n",
+    "sha256": "c74c45821a2e34061277ae85cfa7bae31856a0459a1351d86b48cdb1095a3e18",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-delete-transaction.json"
+  },
+  "sqlite-utils-duplicate-result-columns": {
+    "text": "Preserve all values in query results with duplicate column names. Rename later duplicates using numeric suffixes, skipping names already present in the query. Preserve ordinary query results.\n",
+    "sha256": "d27ac950f42e8dabd6df04298e62eba5a2dccc9cceb963fdb03a105146a17224",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-duplicate-result-columns.json"
+  },
+  "sqlite-utils-escaped-default": {
+    "text": "Default-value introspection should unescape doubled single quotes in SQL string defaults. A default of O followed by an apostrophe and Brien must return the true string, not the SQL-escaped representation.\n",
+    "sha256": "182dfad044f4c62772d720a0fcf27c27eedd7bca3fcda0ce003c937545783756",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-escaped-default.json"
+  },
+  "sqlite-utils-fts-bracket-table": {
+    "text": "detect_fts and enable_fts(replace=True) should handle legacy bracket-quoted content table names. Preserve ordinary FTS setup.\n",
+    "sha256": "ffd72a4d9fac91d1d55072491bdc5591e5caa8d4b2c83dd3f3ddc2882dcbf78d",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-fts-bracket-table.json"
+  },
+  "sqlite-utils-fts-similar-names": {
+    "text": "Fix detect_fts() confusing similarly named tables. Each table must identify its own full-text search table, regardless of creation order.\n",
+    "sha256": "0980c5c54947aa509ce363510fc7c6abd600282528cb3570ff521cb4389038ba",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-fts-similar-names.json"
+  },
+  "sqlite-utils-header-only-csv": {
+    "text": "CSV insertion using --detect-types must handle a CSV containing only a header without AssertionError. Preserve regular CSV insertion.\n",
+    "sha256": "93e06219731f3bec904eea5f316e4620fc5a2da335e131fbd7d09d43ffb05017",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-header-only-csv.json"
+  },
+  "sqlite-utils-ignore-last-pk": {
+    "text": "Fix table.insert(..., pk=..., ignore=True) after a previous insert into another table: report the actual inserted or existing primary key rather than a stale connection lastrowid.\n",
+    "sha256": "d953ce5fcc46f2a2c67bd786ff1ef5f68071a0886adc99ea59a0eb26bf1d7c4d",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-ignore-last-pk.json"
+  },
+  "sqlite-utils-keyword-default": {
+    "text": "Introspection of SQL DEFAULT TRUE, FALSE and NULL should return their proper Python values. Preserve string defaults and ordinary table introspection.\n",
+    "sha256": "b63d2dadf9f9398fc2bc3f35e909b2c5a4a6960934453b09bed7d6d5129f29e4",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-keyword-default.json"
+  },
+  "sqlite-utils-list-last-pk": {
+    "text": "last_pk should work for single list-mode rows during insert/upsert. Preserve the existing generator-based list-mode interface and row contents.\n",
+    "sha256": "36f4238c514b83f48b56e27370f93a2dd8e89f788a1c961fbf5199d6b02c0655",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-list-last-pk.json"
+  },
+  "sqlite-utils-migration-stop-validation": {
+    "text": "migrate --stop-before must reject unknown migration names instead of applying every migration. Preserve compatibility with legacy duck-typed migration collections: pass a single name for one stop point and reject multiple stop points for a legacy set. Preserve normal migration execution.\n",
+    "sha256": "942a166a0a598499902f0c2d5dd5a7a76f85160cfadc0c9df1ce7bd82c500df8",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-migration-stop-validation.json"
+  },
+  "sqlite-utils-numeric-empty-transform": {
+    "text": "When transforming TEXT columns to INTEGER, FLOAT or REAL, empty strings should become NULL instead of zero. Preserve nonempty values and existing schema transformations.\n",
+    "sha256": "ca54fa0217d14cf069c270af9cbc07804c6ef82beff0af1972bd3b19aac265b6",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-numeric-empty-transform.json"
+  },
+  "sqlite-utils-offset-without-limit": {
+    "text": "Allow rows_where and pks_and_rows_where to accept offset without limit. SQLite requires LIMIT before OFFSET; use LIMIT -1 to express unlimited rows. Preserve ordinary limited and unfiltered reads.\n",
+    "sha256": "1f04c192148e503be3ed68221031d4ca16cf608106b06769d18fc4fd24df3601",
+    "source_spec": "configs/repo-aware-routing/tasks/sqlite-utils-offset-without-limit.json"
+  }
+}

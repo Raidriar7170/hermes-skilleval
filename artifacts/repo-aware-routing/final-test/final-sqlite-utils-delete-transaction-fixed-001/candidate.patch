@@ -1,0 +1,103 @@
+diff --git a/docs/python-api.rst b/docs/python-api.rst
+index eab858ee794dd9a45f230aa174c4bd77507676d7..b7566056acc3e57f2ba8e7c296e8c9dc64f62ec3 100644
+--- a/docs/python-api.rst
++++ b/docs/python-api.rst
+@@ -984,8 +984,7 @@ You can delete all records in a table that match a specific WHERE statement usin
+ 
+     >>> db = sqlite_utils.Database("dogs.db")
+     >>> # Delete every dog with age less than 3
+-    >>> with db.atomic():
+-    >>>     db.table("dogs").delete_where("age < ?", [3])
++    >>> db.table("dogs").delete_where("age < ?", [3])
+ 
+ Calling ``table.delete_where()`` with no other arguments will delete every row in the table.
+ 
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index ae99322b518731d615ff7871bce346061e49a028..82878d909a8381a87bb88e1b06fb971da0a7d9e2 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2966,9 +2966,10 @@ class Table(Queryable):
+         sql = "delete from {}".format(quote_identifier(self.name))
+         if where is not None:
+             sql += " where " + where
+-        self.db.execute(sql, where_args or [])
+-        if analyze:
+-            self.analyze()
++        with self.db.atomic():
++            self.db.execute(sql, where_args or [])
++            if analyze:
++                self.analyze()
+         return self
+ 
+     def update(
+diff --git a/tests/test_atomic.py b/tests/test_atomic.py
+index acd54745774cd568bcd2252907a0960dd5255a7c..69b5515015cb6b46f66fef5a9fc0c66dc9b222b6 100644
+--- a/tests/test_atomic.py
++++ b/tests/test_atomic.py
+@@ -57,6 +57,23 @@ def test_atomic_rolls_back(fresh_db):
+     assert not fresh_db["dogs"].exists()
+ 
+ 
++def test_delete_where_does_not_commit_open_atomic_block(fresh_db):
++    fresh_db["dogs"].insert_all(
++        ({"id": i, "name": "Dog {}".format(i)} for i in range(1, 4)), pk="id"
++    )
++
++    with pytest.raises(RuntimeError):
++        with fresh_db.atomic():
++            fresh_db["dogs"].delete_where("id > ?", [1])
++            raise RuntimeError("boom")
++
++    assert list(fresh_db["dogs"].rows) == [
++        {"id": 1, "name": "Dog 1"},
++        {"id": 2, "name": "Dog 2"},
++        {"id": 3, "name": "Dog 3"},
++    ]
++
++
+ def test_nested_atomic_rolls_back_to_savepoint(fresh_db):
+     fresh_db["dogs"].create({"id": int, "name": str}, pk="id")
+ 
+diff --git a/tests/test_delete.py b/tests/test_delete.py
+index 652096ce43007d05361319fa4bb36c68d91daca1..cff5356ac80eb547993483c7409707c34c123c36 100644
+--- a/tests/test_delete.py
++++ b/tests/test_delete.py
+@@ -1,3 +1,8 @@
++import pytest
++
++from sqlite_utils import Database
++
++
+ def test_delete_rowid_table(fresh_db):
+     table = fresh_db["table"]
+     table.insert({"foo": 1}).last_pk
+@@ -23,6 +28,29 @@ def test_delete_where(fresh_db):
+     assert table.count == 5
+ 
+ 
++@pytest.mark.parametrize("analyze", (False, True))
++def test_delete_where_commits(tmpdir, analyze):
++    path = str(tmpdir / "data.db")
++    db = Database(path)
++    db["table"].insert_all(({"id": i} for i in range(1, 4)), pk="id")
++
++    db["table"].delete_where("id > ?", [1], analyze=analyze)
++    db.close()
++
++    assert list(Database(path)["table"].rows) == [{"id": 1}]
++
++
++def test_delete_commits(tmpdir):
++    path = str(tmpdir / "data.db")
++    db = Database(path)
++    db["table"].insert_all(({"id": i} for i in range(1, 4)), pk="id")
++
++    db["table"].delete(1)
++    db.close()
++
++    assert list(Database(path)["table"].rows) == [{"id": 2}, {"id": 3}]
++
++
+ def test_delete_where_all(fresh_db):
+     table = fresh_db["table"]
+     for i in range(1, 11):

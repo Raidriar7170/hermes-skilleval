@@ -1,0 +1,90 @@
+diff --git a/csvkit/utilities/csvstack.py b/csvkit/utilities/csvstack.py
+index 01178e2c17350e4e48304cb10a9da0ec6e96cae3..b8dba479090ccb5ec9d4a2e269ce698ca872346b 100644
+--- a/csvkit/utilities/csvstack.py
++++ b/csvkit/utilities/csvstack.py
+@@ -75,17 +75,25 @@ class CSVStack(CSVKitUtility):
+             rows = Reader(f, **self.reader_kwargs)
+ 
+             if use_fieldnames:
+-                for field in rows.fieldnames:
++                fieldnames = rows.fieldnames or []
++
++                for field in fieldnames:
+                     if field not in headers:
+                         headers.append(field)
+ 
+                 # If the file is standard input, store the fieldnames so that the rows can be read correctly later.
+                 if file_is_stdin:
+-                    stdin_fieldnames = rows.fieldnames
++                    stdin_fieldnames = fieldnames
+                 else:
+                     f.close()
+             else:
+-                row = next(rows, [])
++                row = next(rows, None)
++
++                if row is None:
++                    if not file_is_stdin:
++                        f.close()
++                    continue
++
+                 headers = list(make_default_headers(len(row)))
+ 
+                 # If the file is standard input, store the row that was used to calculate the number of columns.
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 3e3898b91a608d0a3cfbd8e562d4eec266b5f178..90d37d70f530ea6c12403c53fccd013d8455fd82 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,5 +1,6 @@
+ import os
+ import sys
++import tempfile
+ import unittest
+ from unittest.mock import patch
+ 
+@@ -62,6 +63,22 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_multiple_file_stack_with_empty_file(self):
++        with tempfile.TemporaryDirectory() as directory:
++            empty = os.path.join(directory, 'empty.csv')
++            with open(empty, 'w'):
++                pass
++
++            for args in (
++                [empty, 'examples/dummy.csv'],
++                ['examples/dummy.csv', empty],
++            ):
++                with self.subTest(args=args):
++                    self.assertRows(args, [
++                        ['a', 'b', 'c'],
++                        ['1', '2', '3'],
++                    ])
++
+     def test_multiple_file_stack_col(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy_col_shuffled.csv'], [
+             ['a', 'b', 'c'],
+@@ -114,6 +131,22 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+ 
+ class TestNoHeaderRow(TestCSVStack):
+ 
++    def test_no_header_row_with_empty_file(self):
++        with tempfile.TemporaryDirectory() as directory:
++            empty = os.path.join(directory, 'empty.csv')
++            with open(empty, 'w'):
++                pass
++
++            for args in (
++                ['--no-header-row', empty, 'examples/no_header_row.csv'],
++                ['--no-header-row', 'examples/no_header_row.csv', empty],
++            ):
++                with self.subTest(args=args):
++                    self.assertRows(args, [
++                        ['a', 'b', 'c'],
++                        ['1', '2', '3'],
++                    ])
++
+     def test_no_header_row_basic(self):
+         self.assertRows(['--no-header-row', 'examples/no_header_row.csv', 'examples/no_header_row2.csv'], [
+             ['a', 'b', 'c'],

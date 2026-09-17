@@ -1,0 +1,24 @@
+{
+  "schema": "repo-aware-execution-v1",
+  "evidence_level": "PILOT",
+  "tasks": "local-assets/data/tasks",
+  "qualification": "local-assets/data/qualification",
+  "registry": "configs/repo-portability/skills-v1/registry.json",
+  "skill_assets": "configs/repo-portability/skills-v1",
+  "output": "local-assets/new-c2-replay",
+  "workspace": "/tmp/hermes-new-c2-workspaces",
+  "private": "local-assets/runtime-private",
+  "canary": "local-assets/repair-canary.json",
+  "routing_config": "configs/repo-aware-routing-r-repair-v1/C2.json",
+  "timeout": 600,
+  "cells": [
+    {
+      "task_id": "sqlite-utils-delete-transaction",
+      "policy": "repo-aware",
+      "condition": "C2",
+      "family_id": "delete-transaction",
+      "repeat": 1,
+      "run_id": "new-c2-delete-transaction-001"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+diff --git a/csvkit/utilities/csvstack.py b/csvkit/utilities/csvstack.py
+index 01178e2c17350e4e48304cb10a9da0ec6e96cae3..2784845169b0f11b1e6c538dc7303f9d589b49f4 100644
+--- a/csvkit/utilities/csvstack.py
++++ b/csvkit/utilities/csvstack.py
+@@ -75,7 +75,7 @@ class CSVStack(CSVKitUtility):
+             rows = Reader(f, **self.reader_kwargs)
+ 
+             if use_fieldnames:
+-                for field in rows.fieldnames:
++                for field in rows.fieldnames or []:
+                     if field not in headers:
+                         headers.append(field)
+ 
+diff --git a/tests/test_utilities/empty-zero.csv b/tests/test_utilities/empty-zero.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 3e3898b91a608d0a3cfbd8e562d4eec266b5f178..0a3c25372b74ac5ca802c8ee3d5e28bb3f12addb 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -62,6 +62,17 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_multiple_file_stack_with_empty_file(self):
++        for args in (
++            ['tests/test_utilities/empty-zero.csv', 'examples/dummy.csv'],
++            ['examples/dummy.csv', 'tests/test_utilities/empty-zero.csv'],
++        ):
++            with self.subTest(args=args):
++                self.assertRows(args, [
++                    ['a', 'b', 'c'],
++                    ['1', '2', '3'],
++                ])
++
+     def test_multiple_file_stack_col(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy_col_shuffled.csv'], [
+             ['a', 'b', 'c'],

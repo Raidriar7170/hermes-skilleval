@@ -1,0 +1,39 @@
+{
+  "schema": "independent-access-log-v1",
+  "method_freeze_at": "2026-09-17T01:40:51.518983+00:00",
+  "policy_lock_at": "2026-09-17T01:48:20.396927+00:00",
+  "prediction_lock_at": "2026-09-17T01:54:07.252115+00:00",
+  "check_annotation_dispatch_recorded_at": "2026-09-17T01:55:47.427557+00:00",
+  "check_prediction_sha256": "c71e4eae7f209efa53685de559933d99b36930e737cf88e54bb1b52b6ae32db8",
+  "label_contexts": {
+    "cal": [
+      "/root/label_a",
+      "/root/label_b"
+    ],
+    "check": [
+      "/root/check_label_a",
+      "/root/check_label_b"
+    ]
+  },
+  "check_labels_existed_at_prediction_lock": false,
+  "annotation_input_allowlist": [
+    "task_id",
+    "request",
+    "repository",
+    "source_revision",
+    "context",
+    "skill id/name/description/body/source/package hash"
+  ],
+  "forbidden_annotation_fields": [
+    "split",
+    "methods",
+    "scores",
+    "thresholds",
+    "reference patches",
+    "other-context output"
+  ],
+  "controller_visibility": "all public tasks, source preparation and reference qualification; cal labels after independent annotation; check labels only after locked prediction",
+  "isolation": "separate fresh agent contexts and independent worktrees; shared-host filesystem, not cryptographic or adversarial OS isolation",
+  "model_family_independence": false,
+  "human_reviewed": false
+}

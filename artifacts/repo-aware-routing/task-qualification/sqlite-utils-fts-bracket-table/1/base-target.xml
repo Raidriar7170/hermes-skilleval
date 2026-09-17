@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.100" timestamp="2026-09-15T18:37:46.754909+00:00"><testcase classname="test_behavior" name="test_enable_fts_replace_handles_legacy_bracket_quoted_content_table" time="0.001"><failure message="sqlite3.OperationalError: table &quot;books_fts&quot; already exists">def test_enable_fts_replace_handles_legacy_bracket_quoted_content_table():
+        db = Database(memory=True)
+        db["books"].insert(
+            {
+                "id": 1,
+                "title": "Habits of Australian Marsupials",
+                "author": "Marlee Hawkins",
+            },
+            pk="id",
+        )
+        db.executescript("""
+            CREATE VIRTUAL TABLE [books_fts] USING FTS5 (
+                [title],
+                content=[books]
+            );
+        """)
+    
+&gt;       db["books"].enable_fts(["title", "author"], replace=True)
+
+/trusted/test_behavior.py:440: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:2670: in enable_fts
+    self.db.executescript(create_fts_sql)
+/input/sqlite_utils/db.py:629: in executescript
+    return self._executescript(sql)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Database &lt;sqlite3.Connection object at 0xffff737b57b0&gt;&gt;
+sql = 'CREATE VIRTUAL TABLE "books_fts" USING FTS5 (\n    "title", "author",\n    content="books"\n)'
+
+    def _executescript(self, sql: str) -&gt; sqlite3.Cursor:
+        if self.conn.in_transaction:
+            cursor = self.conn.cursor()
+            # avoid sqlite3.executescript()'s implicit commit:
+            for statement in _iter_complete_sql_statements(sql):
+                cursor.execute(statement)
+            return cursor
+&gt;       return self.conn.executescript(sql)
+E       sqlite3.OperationalError: table "books_fts" already exists
+
+/input/sqlite_utils/db.py:638: OperationalError</failure></testcase></testsuite></testsuites>

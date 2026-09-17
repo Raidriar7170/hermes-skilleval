@@ -1,0 +1,213 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index cd0be829bec462d3ffead2e003307d4872e0be91..cfafafa82910d5d1ecfb3b411ddd84b55d26d36c 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1001,9 +1001,24 @@ def upsert(
+     is_flag=True,
+     help="If table already exists, replace it",
+ )
++@click.option(
++    "--strict",
++    is_flag=True,
++    help="Create a STRICT table",
++)
+ @load_extension_option
+ def create_table(
+-    path, table, columns, pk, not_null, default, fk, ignore, replace, load_extension
++    path,
++    table,
++    columns,
++    pk,
++    not_null,
++    default,
++    fk,
++    ignore,
++    replace,
++    strict,
++    load_extension,
+ ):
+     """
+     Add a table with the specified columns. Columns should be specified using
+@@ -1045,7 +1060,12 @@ def create_table(
+                 )
+             )
+     db[table].create(
+-        coltypes, pk=pk, not_null=not_null, defaults=dict(default), foreign_keys=fk
++        coltypes,
++        pk=pk,
++        not_null=not_null,
++        defaults=dict(default),
++        foreign_keys=fk,
++        strict=strict,
+     )
+ 
+ 
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index aebca897b7f5672666c9fa3a70d33f66d3ed7926..ade74b8b6bf15ff23047467c35d7a8468216e73a 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -641,6 +641,7 @@ class Database:
+         defaults: Optional[Dict[str, Any]] = None,
+         hash_id: Optional[str] = None,
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
++        strict: bool = False,
+     ) -> str:
+         "Returns the SQL ``CREATE TABLE`` statement for creating the specified table."
+         foreign_keys = self.resolve_foreign_keys(name, foreign_keys or [])
+@@ -716,10 +717,13 @@ class Database:
+                         other_column=foreign_keys_by_column[column_name].other_column,
+                     )
+                 )
++            sqlite_type = COLUMN_TYPE_MAPPING[column_type]
++            if strict and sqlite_type == "FLOAT":
++                sqlite_type = "REAL"
+             column_defs.append(
+                 "   [{column_name}] {column_type}{column_extras}".format(
+                     column_name=column_name,
+-                    column_type=COLUMN_TYPE_MAPPING[column_type],
++                    column_type=sqlite_type,
+                     column_extras=(" " + " ".join(column_extras))
+                     if column_extras
+                     else "",
+@@ -733,9 +737,12 @@ class Database:
+         columns_sql = ",\n".join(column_defs)
+         sql = """CREATE TABLE [{table}] (
+ {columns_sql}{extra_pk}
+-);
++){strict};
+         """.format(
+-            table=name, columns_sql=columns_sql, extra_pk=extra_pk
++            table=name,
++            columns_sql=columns_sql,
++            extra_pk=extra_pk,
++            strict=" STRICT" if strict else "",
+         )
+         return sql
+ 
+@@ -750,6 +757,7 @@ class Database:
+         defaults: Optional[Dict[str, Any]] = None,
+         hash_id: Optional[str] = None,
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
++        strict: bool = False,
+     ) -> "Table":
+         """
+         Create a table with the specified name and the specified ``{column_name: type}`` columns.
+@@ -766,6 +774,7 @@ class Database:
+             defaults=defaults,
+             hash_id=hash_id,
+             extracts=extracts,
++            strict=strict,
+         )
+         self.execute(sql)
+         table = self.table(
+@@ -1229,6 +1238,7 @@ class Table(Queryable):
+         defaults: Optional[Dict[str, Any]] = None,
+         hash_id: Optional[str] = None,
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
++        strict: bool = False,
+     ) -> "Table":
+         """
+         Create a table with the specified columns.
+@@ -1247,6 +1257,7 @@ class Table(Queryable):
+                 defaults=defaults,
+                 hash_id=hash_id,
+                 extracts=extracts,
++                strict=strict,
+             )
+         return self
+ 
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..6ef93caebc7c73b1da22e9542b388ac6bc23628d 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1347,6 +1347,35 @@ def test_create_table(args, schema):
+         assert schema == db["t"].schema
+ 
+ 
++@pytest.mark.skipif(
++    sqlite3.sqlite_version_info < (3, 37, 0),
++    reason="STRICT tables require SQLite 3.37 or higher",
++)
++def test_create_table_strict():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        result = runner.invoke(
++            cli.cli,
++            [
++                "create-table",
++                "test.db",
++                "strict_table",
++                "id",
++                "integer",
++                "value",
++                "float",
++                "--strict",
++            ],
++            catch_exceptions=False,
++        )
++        assert 0 == result.exit_code
++        db = Database("test.db")
++        assert (
++            "CREATE TABLE [strict_table] (\n   [id] INTEGER,\n   [value] REAL\n) STRICT"
++            == db["strict_table"].schema
++        )
++
++
+ def test_create_table_foreign_key():
+     runner = CliRunner()
+     creates = (
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 187d20a97c9012c186d3c8cd1ed2b4f58867b367..02b3cbf2b7f27e74b16033fe03dcfb8e0cced73c 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -60,6 +60,50 @@ def test_create_table(fresh_db):
+     ) == table.schema
+ 
+ 
++@pytest.mark.skipif(
++    sqlite3.sqlite_version_info < (3, 37, 0),
++    reason="STRICT tables require SQLite 3.37 or higher",
++)
++def test_create_table_strict(fresh_db):
++    table = fresh_db.create_table(
++        "strict_table",
++        {
++            "text_col": str,
++            "float_col": float,
++            "int_col": int,
++            "bytes_col": bytes,
++        },
++        strict=True,
++    )
++    assert (
++        "CREATE TABLE [strict_table] (\n"
++        "   [text_col] TEXT,\n"
++        "   [float_col] REAL,\n"
++        "   [int_col] INTEGER,\n"
++        "   [bytes_col] BLOB\n"
++        ") STRICT"
++    ) == table.schema
++    table.insert(
++        {"text_col": "text", "float_col": 1.5, "int_col": 1, "bytes_col": b"x"}
++    )
++    with pytest.raises(sqlite3.IntegrityError):
++        table.insert(
++            {
++                "text_col": "text",
++                "float_col": 1.5,
++                "int_col": "not an integer",
++                "bytes_col": b"x",
++            }
++        )
++
++
++def test_create_table_sql_strict(fresh_db):
++    assert (
++        "CREATE TABLE [strict_table] (\n   [value] REAL\n) STRICT;\n        "
++        == fresh_db.create_table_sql("strict_table", {"value": float}, strict=True)
++    )
++
++
+ def test_create_table_compound_primary_key(fresh_db):
+     table = fresh_db.create_table(
+         "test_table", {"id1": str, "id2": str, "value": int}, pk=("id1", "id2")

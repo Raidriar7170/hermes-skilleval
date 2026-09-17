@@ -1,0 +1,70 @@
+diff --git a/csvkit/utilities/in2csv.py b/csvkit/utilities/in2csv.py
+index 9ee188e18d44b7e74f0ddbcd2ccb882e68067e22..5056161ebdb236f5fb09935f9cbfc298fbff31ec 100644
+--- a/csvkit/utilities/in2csv.py
++++ b/csvkit/utilities/in2csv.py
+@@ -65,7 +65,9 @@ class In2CSV(CSVKitUtility):
+ 
+     def open_excel_input_file(self, path):
+         if not path or path == '-':
+-            return BytesIO(sys.stdin.buffer.read())
++            if not hasattr(self, '_stdin_excel_data'):
++                self._stdin_excel_data = sys.stdin.buffer.read()
++            return BytesIO(self._stdin_excel_data)
+         return open(path, 'rb')
+ 
+     def sheet_names(self, path, filetype):
+@@ -186,7 +188,10 @@ class In2CSV(CSVKitUtility):
+                     self.input_file, sheet=sheets, reset_dimensions=self.args.reset_dimensions, **kwargs
+                 )
+ 
+-            base = splitext(self.input_file.name)[0]
++            if not path or path == '-':
++                base = 'stdin'
++            else:
++                base = splitext(self.input_file.name)[0]
+             for i, (sheet_name, table) in enumerate(tables.items()):
+                 if self.args.use_sheet_names:
+                     filename = '%s_%s.csv' % (base, sheet_name)
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index 95b691572f0fbe2f11fe62c46c9e88720d49e2b4..61adc49e4e34373a8c53eab7cbc42da8a11e3e2e 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -258,6 +258,38 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+                 if os.path.exists(path):
+                     os.remove(path)
+ 
++    def test_convert_xlsx_stdin_with_write_sheets(self):
++        try:
++            with open('examples/sheets.xlsx', 'rb') as f:
++                input_file = io.BytesIO(f.read())
++
++            with stdin_as_string(input_file):
++                self.assertLines(
++                    ['-f', 'xlsx', '--no-inference', '--sheet', 'data', '--write-sheets', '-', '-'],
++                    [
++                        'text,date,integer,boolean,float,datetime,empty_column,h',
++                        'Chicago Reader,1971-01-01,40,True,1,1971-01-01 04:14:00,,',
++                        'Chicago Sun-Times,1948-01-01,63,True,1.27,1948-01-01 14:57:13,,'
++                        'Extra data beyond headers will be trimmed',
++                        'Chicago Tribune,1920-01-01,164,False,41800000.01,1920-01-01,,',
++                        'This row has blanks,,,,,,,',
++                        'Unicode! Σ,,,,,,,',
++                    ],
++                )
++            input_file.close()
++
++            with open('stdin_0.csv') as f:
++                self.assertEqual(f.read(), '\n')
++            with open('stdin_1.csv') as f, open('examples/testxlsx_noinference_converted.csv') as g:
++                self.assertEqual(f.read(), g.read())
++            with open('stdin_2.csv') as f, open('examples/testxlsx_unicode_converted.csv') as g:
++                self.assertEqual(f.read(), g.read())
++        finally:
++            for suffix in (0, 1, 2):
++                path = 'stdin_%d.csv' % suffix
++                if os.path.exists(path):
++                    os.remove(path)
++
+     def test_convert_xls_with_write_sheets_with_names(self):
+         try:
+             self.assertConverted('xls', 'examples/sheets.xls', 'examples/testxls_converted.csv',

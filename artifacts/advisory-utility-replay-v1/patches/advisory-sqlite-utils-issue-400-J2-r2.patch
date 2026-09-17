@@ -1,0 +1,37 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index b137d9b776f6b7af39b8cdda0779fa5c81a915b4..1c5978d4ba83798ab73dbe9c806dc87553c55ab8 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1386,6 +1386,7 @@ def create_database(path, enable_wal):
+ )
+ @click.option(
+     "--ignore",
++    "--if-not-exists",
+     is_flag=True,
+     help="If table already exists, do nothing",
+ )
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 244029d2e16f2c82e97f21683c9f2965495649ec..30174ee4e7e9d5aeb42a91ae7c1869d37d6c6ffb 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1124,16 +1124,18 @@ def test_create_table_error_if_table_exists():
+         )
+ 
+ 
+-def test_create_table_ignore():
++@pytest.mark.parametrize("option", ("--ignore", "--if-not-exists"))
++def test_create_table_ignore(option):
+     runner = CliRunner()
+     with runner.isolated_filesystem():
+         db = Database("test.db")
+         db["dogs"].insert({"name": "Cleo"})
+         result = runner.invoke(
+-            cli.cli, ["create-table", "test.db", "dogs", "id", "integer", "--ignore"]
++            cli.cli, ["create-table", "test.db", "dogs", "id", "integer", option]
+         )
+         assert 0 == result.exit_code
+         assert "CREATE TABLE [dogs] (\n   [name] TEXT\n)" == db["dogs"].schema
++        assert [{"name": "Cleo"}] == list(db["dogs"].rows)
+ 
+ 
+ def test_create_table_replace():

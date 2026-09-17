@@ -1,0 +1,164 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 0cf0468f1875aee873c34c8551ded5fa012560dc..7707b5bf2d22f0f12e8475c2de9d5048b1ff50ff 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -2674,31 +2674,52 @@ def convert(
+         fn = _compile_code(code, imports)
+     except SyntaxError as e:
+         raise click.ClickException(str(e))
+-    if dry_run:
+-        # Pull first 20 values for first column and preview them
+-        db.conn.create_function("preview_transform", 1, lambda v: fn(v) if v else v)
+-        sql = """
+-            select
+-                [{column}] as value,
+-                preview_transform([{column}]) as preview
+-            from [{table}]{where} limit 10
+-        """.format(
+-            column=columns[0],
+-            table=table,
+-            where=" where {}".format(where) if where is not None else "",
+-        )
+-        for row in db.conn.execute(sql, where_args).fetchall():
+-            click.echo(str(row[0]))
+-            click.echo(" --- becomes:")
+-            click.echo(str(row[1]))
+-            click.echo()
+-        count = db[table].count_where(
+-            where=where,
+-            where_args=where_args,
+-        )
+-        click.echo("Would affect {} row{}".format(count, "" if count == 1 else "s"))
+-    else:
+-        try:
++    try:
++        if dry_run:
++            # Pull first 10 values for first column and preview them
++            if multi:
++                sql = """
++                    select [{column}] as value
++                    from [{table}]{where} limit 10
++                """.format(
++                    column=columns[0],
++                    table=table,
++                    where=" where {}".format(where) if where is not None else "",
++                )
++                rows = []
++                for row in db.conn.execute(sql, where_args).fetchall():
++                    preview = fn(row[0])
++                    if preview is not None and not isinstance(preview, dict):
++                        raise BadMultiValues(preview)
++                    rows.append((row[0], preview))
++            else:
++                db.conn.create_function(
++                    "preview_transform", 1, lambda v: fn(v) if v else v
++                )
++                sql = """
++                    select
++                        [{column}] as value,
++                        preview_transform([{column}]) as preview
++                    from [{table}]{where} limit 10
++                """.format(
++                    column=columns[0],
++                    table=table,
++                    where=" where {}".format(where) if where is not None else "",
++                )
++                rows = db.conn.execute(sql, where_args).fetchall()
++            for row in rows:
++                click.echo(str(row[0]))
++                click.echo(" --- becomes:")
++                click.echo(str(row[1]))
++                click.echo()
++            count = db[table].count_where(
++                where=where,
++                where_args=where_args,
++            )
++            click.echo(
++                "Would affect {} row{}".format(count, "" if count == 1 else "s")
++            )
++        else:
+             db[table].convert(
+                 columns,
+                 fn,
+@@ -2710,12 +2731,12 @@ def convert(
+                 multi=multi,
+                 show_progress=not silent,
+             )
+-        except BadMultiValues as e:
+-            raise click.ClickException(
+-                "When using --multi code must return a Python dictionary - returned: {}".format(
+-                    repr(e.values)
+-                )
++    except BadMultiValues as e:
++        raise click.ClickException(
++            "When using --multi code must return a Python dictionary - returned: {}".format(
++                repr(e.values)
+             )
++        )
+ 
+ 
+ @cli.command("add-geometry-column")
+diff --git a/tests/test_cli_convert.py b/tests/test_cli_convert.py
+index ec8110f1c846bafcfcf3e188010c13592822499a..e23505a6097f9ea60abc7894e2de297a6c899666 100644
+--- a/tests/test_cli_convert.py
++++ b/tests/test_cli_convert.py
+@@ -179,6 +179,40 @@ def test_convert_dryrun(test_db_and_path):
+     assert result.output.strip().split("\n")[-1] == "Would affect 1 row"
+ 
+ 
++def test_convert_multi_dryrun(fresh_db_and_path):
++    db, db_path = fresh_db_and_path
++    original_rows = [
++        {"id": 1, "name": "Simon"},
++        {"id": 2, "name": "Cleo"},
++    ]
++    db["creatures"].insert_all(original_rows, pk="id")
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "convert",
++            db_path,
++            "creatures",
++            "name",
++            '{"upper": value.upper(), "lower": value.lower()}',
++            "--multi",
++            "--dry-run",
++        ],
++    )
++    assert result.exit_code == 0, result.output
++    assert result.output.strip() == (
++        "Simon\n"
++        " --- becomes:\n"
++        "{'upper': 'SIMON', 'lower': 'simon'}\n"
++        "\n"
++        "Cleo\n"
++        " --- becomes:\n"
++        "{'upper': 'CLEO', 'lower': 'cleo'}\n"
++        "\n"
++        "Would affect 2 rows"
++    )
++    assert list(db["creatures"].rows) == original_rows
++
++
+ @pytest.mark.parametrize("drop", (True, False))
+ def test_convert_output_column(test_db_and_path, drop):
+     db, db_path = test_db_and_path
+@@ -471,7 +505,8 @@ def test_cannot_use_multi_with_more_than_one_column(fresh_db_and_path):
+     assert "Error: Cannot use --multi with more than one column" in result.output
+ 
+ 
+-def test_multi_with_bad_function(test_db_and_path):
++@pytest.mark.parametrize("dry_run", (False, True))
++def test_multi_with_bad_function(test_db_and_path, dry_run):
+     args = [
+         "convert",
+         test_db_and_path[1],
+@@ -480,6 +515,8 @@ def test_multi_with_bad_function(test_db_and_path):
+         "value.upper()",
+         "--multi",
+     ]
++    if dry_run:
++        args.append("--dry-run")
+     result = CliRunner().invoke(cli.cli, args)
+     assert result.exit_code == 1, result.output
+     assert "When using --multi code must return a Python dictionary" in result.output

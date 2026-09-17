@@ -1,0 +1,95 @@
+{
+  "schema": "conditional-applicability-v1",
+  "status": "FROZEN_BEFORE_LABELS_AND_SCORES",
+  "seed": 7170,
+  "registry": "task-conditioned-v1",
+  "axes": [
+    "applicability",
+    "specificity_given_applicable"
+  ],
+  "weighting": "equal mechanism groups, equal parent tasks within group, equal requirement-skill rows within parent; normalize per masked axis",
+  "unknown": "masked, never negative; disagreements unknown per axis",
+  "annotation": "two independent same-model contexts, no human review, full 24x10 catalog, no scores/patches/splits visible",
+  "training": {
+    "base": "pipizhao/SkillRouter-Reranker-0.6B",
+    "revision": "78986e1142d12857cfd85b8005e62902cd42d858",
+    "rank": 8,
+    "targets": [
+      "q_proj",
+      "v_proj"
+    ],
+    "lr": 2e-05,
+    "epochs": 3,
+    "batch_size": 1,
+    "gradient_accumulation": 8,
+    "lambda_spec_candidates": [
+      0,
+      1
+    ],
+    "selection": "lowest model-dev group-weighted applicability log-loss; specificity loss tie-break only for joint candidates; all epochs retained",
+    "max_length": 8192,
+    "class_resampling": false
+  },
+  "baselines": {
+    "prior_smoothing_candidates": [
+      1,
+      4
+    ],
+    "lexical_C_candidates": [
+      0.1,
+      1,
+      10
+    ],
+    "fixed": "per-repository two skills selected by model-dev specificity count, fit fallback; no task input",
+    "negative_control": "skill-only lexical classifier fitted on fit",
+    "frozen": "same base, inputs and instructions; no adapter"
+  },
+  "calibration": {
+    "mapping": "positive-slope temperature plus intercept, fit on cal after model freeze; single-class axis remains uncalibrated",
+    "min_axis_groups": 3,
+    "min_each_class": 3
+  },
+  "operating_point": {
+    "target_precision": 0.9,
+    "min_accepted_groups": 3,
+    "min_accepted_rows": 6,
+    "min_known_coverage": 0.1,
+    "max_unknown_acceptance": 0,
+    "selection": "highest eligible known coverage then higher threshold; cal only",
+    "check": "report full curve; no threshold/selection updates"
+  },
+  "ranking": "p_app*p_specific_given_applicable; K=2; scores not utility",
+  "bootstrap": {
+    "unit": "repair_group_id",
+    "repetitions": 1000,
+    "seed": 7170
+  },
+  "runtime": {
+    "preselected": [
+      "sqlite-utils-issue-207",
+      "csv-diff-issue-39"
+    ],
+    "arms": [
+      "N+",
+      "B2",
+      "C2"
+    ],
+    "max_new_tasks": 2,
+    "requires": [
+      "qualified base/reference and independent tests",
+      "nonempty check supported selection with no qualification contradiction",
+      "same frozen rank and K=2 for B2/C2"
+    ],
+    "no_operating_point": "NOT_RUN; do not rerun fallback smoke"
+  },
+  "dollar_cost": null,
+  "original_rank": {
+    "max_length": 1024,
+    "adapter_files": {
+      "adapter_model.safetensors": "b254f34cfbc25a93435563773bd12155b206118e0f438e9c27704c234044a774",
+      "adapter_config.json": "04b99824f6d58c726476210356a354ee9f0117038c9133cb49da72f9abaebb00"
+    },
+    "comparison": "original structured rank, B2 vs support-filtered C2; separate from two-axis priority; inherited 1024-token budget and truncation disclosed",
+    "added": "before cal/check; frozen original weights, no new tuning"
+  }
+}

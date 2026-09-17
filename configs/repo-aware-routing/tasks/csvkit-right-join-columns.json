@@ -1,0 +1,36 @@
+{
+  "task_id": "csvkit-right-join-columns",
+  "repository": "wireservice/csvkit",
+  "source_url": "https://github.com/wireservice/csvkit/commit/3f9d8b6f4af359a109ff5dd76bb886b53ce230fc",
+  "family_id": "right-join-columns",
+  "split": "gate-calibration",
+  "reference_fix_commit": "3f9d8b6f4af359a109ff5dd76bb886b53ce230fc",
+  "profile": {
+    "repository": "wireservice/csvkit",
+    "packages": {
+      "csvkit": "."
+    },
+    "cli_module": "csvkit.utilities.in2csv",
+    "cli_callable": "launch_new_instance",
+    "cli_name": "in2csv",
+    "image": "hermes-repo-aware-data:v1",
+    "writable_roots": [
+      "csvkit",
+      "tests",
+      "docs",
+      "README.rst"
+    ]
+  },
+  "public_request": "csvkit-right-join-columns-public.md",
+  "trusted_files": {
+    "test_behavior.py": "csvkit-right-join-columns-trusted.py"
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "test_target",
+  "regression_selector": "test_regression",
+  "export_exclusions": [
+    "examples/realdata/"
+  ],
+  "license": "MIT",
+  "request_source": "Controller paraphrase of public commit behavior; no hidden requirements."
+}

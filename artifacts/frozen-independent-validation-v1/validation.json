@@ -1,0 +1,47 @@
+{
+  "schema": "independent-engineering-validation-v1",
+  "full_pytest": {
+    "passed": 1401,
+    "seconds": 32.01
+  },
+  "focused_pytest": {
+    "passed": 11
+  },
+  "historical_records": {
+    "matched_rows": 40,
+    "model_calls": 0
+  },
+  "installed_records": {
+    "matched_rows": 120,
+    "model_calls": 0,
+    "no_heavy_imports": true,
+    "prediction_mismatch_rejected": true
+  },
+  "mypy_changed_modules": "PASSED",
+  "openspec_active_change": "VALID",
+  "ruff_changed_python": "PASSED",
+  "full_ruff": "INHERITED_FINDINGS",
+  "full_ruff_inherited": [
+    "src/hermes_skilleval/external/skillrouter_prediction_export.py unused gzip",
+    "tests/test_codex_cli_runner.py unused sys"
+  ],
+  "ci": "CODE_HEAD_PASSED; final documentation HEAD checked separately",
+  "independent_read_only_review": "NO_BLOCKER; two disclosure/diagnostic findings addressed",
+  "ci_first_attempt": {
+    "head": "093b4b5c880c0fa70ec845dec859611efe8998ac",
+    "run": 35173292309,
+    "result": "FAILED",
+    "pytest": "1400 passed, 1 failed: empty-cal numerical test imported optional numpy",
+    "fix": "mark real-fit test dependent on numpy/scipy; full numerical environment still exercises it; no frozen runtime source changes",
+    "format_nonregression": "82 -> 82",
+    "ruff_nonregression": "2 -> 2",
+    "mypy_nonregression": "91 -> 91"
+  },
+  "code_head_ci": {
+    "head": "c902edb2313f41aa8e5d02c04af68a3c687e0d96",
+    "run": 35173472941,
+    "url": "https://github.com/Raidriar7170/hermes-skilleval/actions/runs/35173472941",
+    "conclusion": "success",
+    "lightweight_pytest": "1400 passed, 1 skipped (optional NumPy/SciPy real calibration test)"
+  }
+}

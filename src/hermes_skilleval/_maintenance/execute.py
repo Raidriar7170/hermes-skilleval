@@ -36,7 +36,9 @@ p.add_argument("--profile", type=Path)
 p.add_argument("--cache", type=Path)
 p.add_argument("--fixed-config", type=Path)
 p.add_argument("--route", type=Path)
-p.add_argument("--arm", choices=["N", "O", "F", "S", "T"], required=True)
+p.add_argument("--arm", choices=["N", "O", "F", "S", "T"], default="N")
+p.add_argument("--policy", choices=["native", "fixed", "strong", "repo-aware", "auto"])
+p.add_argument("--routing-config", type=Path)
 p.add_argument("--run-id", required=True)
 p.add_argument("--timeout", type=int, default=600)
 a = p.parse_args()
@@ -126,9 +128,32 @@ if a.arm in ["S", "T"]:
     ids = route["skill_ids"]
 elif a.route:
     raise ValueError("N/O/F do not accept route overrides")
+routing = None
+public_request = a.public_request.read_text()
+if a.policy:
+    if not a.routing_config or a.arm != "N" or a.route:
+        raise ValueError(
+            "new policy requires routing config and no legacy arm/route override"
+        )
+    from hermes_skilleval.repo_routing.policy import route, read_config
+
+    routing = route(
+        a.task_root / "base",
+        public_request,
+        {"network": "disabled", "python": "executor image " + profile_for(task).image},
+        registry,
+        a.policy,
+        read_config(a.routing_config),
+        repository=task["repository"],
+    )
+    ids = routing["skill_ids"]
+    public_request = routing["agent_public_request"]
+    # Persist the decision before the actual Agent launch.
+    a.output.parent.mkdir(parents=True, exist_ok=True)
+    write(a.output.parent / (a.run_id + "-decision.json"), routing)
 record = run_agent(
     base=a.task_root / "base",
-    public_request=a.public_request.read_text(),
+    public_request=public_request,
     profile=profile_for(task),
     registry=registry,
     ids=ids,
@@ -138,7 +163,8 @@ record = run_agent(
     private_root=a.private_root,
     run_id=a.run_id,
     task_id=task["task_id"],
-    arm=a.arm,
+    arm=routing["action"] if routing else a.arm,
+    scratch=bool(routing and routing["context"].get("schema") == "repo-context-v2"),
     timeout=a.timeout,
     metadata={
         "split": task["split"],
@@ -148,6 +174,8 @@ record = run_agent(
         ).hexdigest(),
     },
 )
+if routing:
+    write(a.output / "routing.json", routing)
 if a.route:
     shutil.copyfile(a.route, a.output / "route.json")
 if not record["cleanup_confirmed"]:
@@ -155,6 +183,18 @@ if not record["cleanup_confirmed"]:
 record = finalize(
     a.output / "executor.json", a.task_root, a.qualification, a.output / "verification"
 )
+if routing:
+    record["routing"] = {
+        k: routing[k]
+        for k in (
+            "action",
+            "requested_policy",
+            "calls",
+            "timing",
+            "decision",
+            "context_digest",
+        )
+    }
 record["pipeline_wall_seconds"] = time.monotonic() - pipeline_started
 write(a.output / "run.json", record)
 print(

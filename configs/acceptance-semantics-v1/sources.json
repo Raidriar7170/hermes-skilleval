@@ -1,0 +1,25 @@
+[
+  {
+    "task_id": "csvkit-issue-1225",
+    "request": "BadZipFile when using -f xlsx --write-sheets - on STDIN\n\nRunning `cat file.xlsx | in2csv -f xlsx --write-sheets -` throws `BadZipFile: File is not a zip file`. Maybe https://stackoverflow.com/a/76780830/2241241 is of interest, as https://github.com/dilshod/xlsx2csv used it to implement  reading from STDIN and works fine with `--all`, analogous to `--write-sheets -`. ",
+    "base_commit": "ed05def23eed47d35a562a32c4562767a780a494",
+    "visible_to_original_agent": "YES title and body verified in all original prompts",
+    "sources": {
+      "csvkit/utilities/in2csv.py": "05e4fbc616aa9a5a8a038482e78f38dd45656b9af45f25455922f8b10551bf87",
+      "csvkit/cli.py": "c2a54b452a0fdda3de99eff66fe7bafdc8917bb780fdedcf229ddc192ada020a",
+      "docs/scripts/in2csv.rst": "65fe7cb41fe26b3a5a1faa1554bd1ad8ebb67f057b2534003bb93f0cc5a0a624",
+      "docs/common_arguments.rst": "6e04721633ebfb07570f7d9d28f986da181484461c7a052336c0536668abd050"
+    }
+  },
+  {
+    "task_id": "sqlite-utils-issue-368",
+    "request": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`\n\n> Add this to `sqlite_utils/cli.py`:\n>\n> ```python\n> if __name__ == \"__main__\":\n>     cli()\n> ```\n> Now the tool can be run using `python -m sqlite_utils.cli --help`\n\n_Originally posted by @simonw in https://github.com/simonw/sqlite-utils/issues/364#issuecomment-1008214998_",
+    "base_commit": "650f97a08f29a688c530e5f6c9eedc9269ed7bdc",
+    "visible_to_original_agent": "YES title and body verified in all original prompts",
+    "sources": {
+      "setup.py": "1aaa5531621be5c8596e8a75633aa23e13f0bfe404a6207c0a514d3855c1d5ba",
+      "docs/cli.rst": "0793c483eff77706d9cbd4e5558e097cddd1ce1e0348f1c5dc727305b96978f2",
+      "sqlite_utils/cli.py": "56764ed50c7d4293c28214967f78589738dbaeddbf23e7aebbe9c48bbf106f74"
+    }
+  }
+]

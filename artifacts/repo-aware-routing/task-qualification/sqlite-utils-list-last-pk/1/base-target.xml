@@ -1,0 +1,253 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.045" timestamp="2026-09-15T18:37:28.475803+00:00"><testcase classname="test_behavior" name="test_list_mode_single_record_upsert_last_pk" time="0.000"><failure message="TypeError: list indices must be integers or slices, not str">def test_list_mode_single_record_upsert_last_pk():
+        """Test that last_pk is populated correctly for single-record upserts in list mode"""
+        db = Database(memory=True)
+    
+        # Create table first
+        db["data"].insert({"id": 1, "name": "Alice", "value": 100}, pk="id")
+    
+        # Now upsert a single record using list mode
+        def upsert_data():
+            yield ["id", "name", "value"]
+            yield [1, "Alice", 150]  # Update existing
+    
+        table = db["data"]
+&gt;       table.upsert_all(upsert_data(), pk="id")
+
+/trusted/test_behavior.py:281: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:3611: in upsert_all
+    return self.insert_all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table data (id, name, value)&gt;
+records = &lt;generator object test_list_mode_single_record_upsert_last_pk.&lt;locals&gt;.upsert_data at 0xffff60fbceb0&gt;
+pk = 'id', foreign_keys = None, column_order = None, not_null = None
+defaults = None, batch_size = 100, hash_id = None, hash_id_columns = None
+alter = False, ignore = False, replace = False, truncate = False
+extracts = None, conversions = {}, columns = None, upsert = True
+analyze = False, strict = False
+
+    def insert_all(
+        self,
+        records: Union[
+            Iterable[Dict[str, Any]],
+            Iterable[Sequence[Any]],
+        ],
+        pk=DEFAULT,
+        foreign_keys=DEFAULT,
+        column_order=DEFAULT,
+        not_null=DEFAULT,
+        defaults=DEFAULT,
+        batch_size=DEFAULT,
+        hash_id=DEFAULT,
+        hash_id_columns=DEFAULT,
+        alter=DEFAULT,
+        ignore=DEFAULT,
+        replace=DEFAULT,
+        truncate=False,
+        extracts=DEFAULT,
+        conversions=DEFAULT,
+        columns=DEFAULT,
+        upsert=False,
+        analyze=False,
+        strict=DEFAULT,
+    ) -&gt; "Table":
+        """
+        Like ``.insert()`` but takes a list of records and ensures that the table
+        that it creates (if table does not exist) has columns for ALL of that data.
+    
+        Use ``analyze=True`` to run ``ANALYZE`` after the insert has completed.
+        """
+        pk = self.value_or_default("pk", pk)
+        foreign_keys = self.value_or_default("foreign_keys", foreign_keys)
+        column_order = self.value_or_default("column_order", column_order)
+        not_null = self.value_or_default("not_null", not_null)
+        defaults = self.value_or_default("defaults", defaults)
+        batch_size = self.value_or_default("batch_size", batch_size)
+        hash_id = self.value_or_default("hash_id", hash_id)
+        hash_id_columns = self.value_or_default("hash_id_columns", hash_id_columns)
+        alter = self.value_or_default("alter", alter)
+        ignore = self.value_or_default("ignore", ignore)
+        replace = self.value_or_default("replace", replace)
+        extracts = self.value_or_default("extracts", extracts)
+        conversions = self.value_or_default("conversions", conversions) or {}
+        columns = self.value_or_default("columns", columns)
+        strict = self.value_or_default("strict", strict)
+    
+        if hash_id_columns and hash_id is None:
+            hash_id = "id"
+    
+        if upsert and (not pk and not hash_id):
+            raise PrimaryKeyRequired("upsert() requires a pk")
+    
+        assert not (hash_id and pk), "Use either pk= or hash_id="
+        if hash_id_columns and (hash_id is None):
+            hash_id = "id"
+        if hash_id:
+            pk = hash_id
+    
+        assert not (
+            ignore and replace
+        ), "Use either ignore=True or replace=True, not both"
+        all_columns = []
+        first = True
+        num_records_processed = 0
+    
+        # Detect if we're using list-based iteration or dict-based iteration
+        list_mode = False
+        column_names: List[str] = []
+    
+        # Fix up any records with square braces in the column names (only for dict mode)
+        # We'll handle this differently for list mode
+        records_iter = iter(records)
+    
+        # Peek at first record to determine mode:
+        try:
+            first_record = next(records_iter)
+        except StopIteration:
+            return self  # It was an empty list
+    
+        # Check if this is list mode or dict mode
+        if isinstance(first_record, (list, tuple)):
+            # List/tuple mode: first record should be column names
+            list_mode = True
+            if not all(isinstance(col, str) for col in first_record):
+                raise ValueError(
+                    "When using list-based iteration, the first yielded value must be a list of column name strings"
+                )
+            column_names = list(first_record)
+            all_columns = column_names
+            num_columns = len(column_names)
+            # Get the actual first data record
+            try:
+                first_record = next(records_iter)
+            except StopIteration:
+                return self  # Only headers, no data
+            if not isinstance(first_record, (list, tuple)):
+                raise ValueError(
+                    "After column names list, all subsequent records must also be lists"
+                )
+        else:
+            # Dict mode: traditional behavior
+            records_iter = itertools.chain([first_record], records_iter)
+            records_iter = fix_square_braces(
+                cast(Iterable[Dict[str, Any]], records_iter)
+            )
+            try:
+                first_record = next(records_iter)
+            except StopIteration:
+                return self
+            first_record = cast(Dict[str, Any], first_record)
+            num_columns = len(first_record.keys())
+    
+        assert (
+            num_columns &lt;= SQLITE_MAX_VARS
+        ), "Rows can have a maximum of {} columns".format(SQLITE_MAX_VARS)
+        batch_size = max(1, min(batch_size, SQLITE_MAX_VARS // num_columns))
+        self.last_rowid = None
+        self.last_pk = None
+        if truncate and self.exists():
+            self.db.execute("DELETE FROM [{}];".format(self.name))
+        result = None
+        for chunk in chunks(itertools.chain([first_record], records_iter), batch_size):
+            chunk = list(chunk)
+            num_records_processed += len(chunk)
+            if first:
+                if not self.exists():
+                    # Use the first batch to derive the table names
+                    if list_mode:
+                        # Convert list records to dicts for type detection
+                        chunk_as_dicts = [dict(zip(column_names, row)) for row in chunk]
+                        column_types = suggest_column_types(chunk_as_dicts)
+                    else:
+                        column_types = suggest_column_types(chunk)
+                    if extracts:
+                        for col in extracts:
+                            if col in column_types:
+                                column_types[col] = (
+                                    int  # This will be an integer foreign key
+                                )
+                    column_types.update(columns or {})
+                    self.create(
+                        column_types,
+                        pk,
+                        foreign_keys,
+                        column_order=column_order,
+                        not_null=not_null,
+                        defaults=defaults,
+                        hash_id=hash_id,
+                        hash_id_columns=hash_id_columns,
+                        extracts=extracts,
+                        strict=strict,
+                    )
+                if list_mode:
+                    # In list mode, columns are already known
+                    all_columns = list(column_names)
+                    if hash_id:
+                        all_columns.insert(0, hash_id)
+                else:
+                    all_columns_set = set()
+                    for record in chunk:
+                        all_columns_set.update(record.keys())
+                    all_columns = list(sorted(all_columns_set))
+                    if hash_id:
+                        all_columns.insert(0, hash_id)
+            else:
+                if not list_mode:
+                    for record in chunk:
+                        all_columns += [
+                            column for column in record if column not in all_columns
+                        ]
+    
+            first = False
+    
+            result = self.insert_chunk(
+                alter,
+                extracts,
+                chunk,
+                all_columns,
+                hash_id,
+                hash_id_columns,
+                upsert,
+                pk,
+                not_null,
+                conversions,
+                num_records_processed,
+                replace,
+                ignore,
+                list_mode,
+            )
+    
+        # If we only handled a single row populate self.last_pk
+        if num_records_processed == 1:
+            # For an insert we need to use result.lastrowid
+            if not upsert and result is not None:
+                self.last_rowid = result.lastrowid
+                if (hash_id or pk) and self.last_rowid:
+                    # Set self.last_pk to the pk(s) for that rowid
+                    row = list(self.rows_where("rowid = ?", [self.last_rowid]))[0]
+                    if hash_id:
+                        self.last_pk = row[hash_id]
+                    elif isinstance(pk, str):
+                        self.last_pk = row[pk]
+                    else:
+                        self.last_pk = tuple(row[p] for p in pk)
+                else:
+                    self.last_pk = self.last_rowid
+            else:
+                # For an upsert use first_record from earlier
+                # Note: This code path assumes dict mode; list mode upserts
+                # with single records don't populate last_pk correctly yet
+                first_record_dict = cast(Dict[str, Any], first_record)
+                if hash_id:
+                    self.last_pk = hash_record(first_record_dict, hash_id_columns)
+                else:
+                    self.last_pk = (
+&gt;                       first_record_dict[pk]
+                        if isinstance(pk, str)
+                        else tuple(first_record_dict[p] for p in pk)
+                    )
+E                   TypeError: list indices must be integers or slices, not str
+
+/input/sqlite_utils/db.py:3539: TypeError</failure></testcase></testsuite></testsuites>

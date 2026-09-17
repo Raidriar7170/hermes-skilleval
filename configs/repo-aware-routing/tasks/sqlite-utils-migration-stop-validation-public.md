@@ -1,0 +1,1 @@
+migrate --stop-before must reject unknown migration names instead of applying every migration. Preserve compatibility with legacy duck-typed migration collections: pass a single name for one stop point and reject multiple stop points for a legacy set. Preserve normal migration execution.

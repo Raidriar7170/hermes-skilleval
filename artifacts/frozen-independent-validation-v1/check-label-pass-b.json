@@ -1,0 +1,1373 @@
+{
+  "annotator_id": "independent-check-context-b",
+  "human_reviewed": false,
+  "rows": [
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "请求补齐 insert 的新参数，没有给出需查根因的故障；调试流程不能说明抽取参数设计。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "为新 --extract 构造最小输入，核查抽取表、外键与未启用时的原有插入结果，再报告完成。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "正文只教普通插入、替换和 upsert；无法据此决定 --extract 的传参和抽取语义。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "增加列和外键操作不等于将重复列值抽成关联表，正文没有 extract 流程。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "索引启用和搜索步骤无法实现插入时的列抽取。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "改变分隔符及引号不解决 insert 到 extracts 参数的连接。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "将其他文件转换成 CSV 不解决 SQLite CLI 新参数。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "CSV 键连接不产生所要求的 SQLite 抽取表及插入参数。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "导出查询结果不是为 insert 添加抽取选项的实现或必要检查。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-352",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils insert --extract colname`",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "比较两份 CSV 的变化不覆盖插入时的抽取行为。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "STRICT 是新增 SQLite 支持请求，没有故障或意外行为供根因分析。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "在满足版本要求的 SQLite 上验证 STRICT 建表、类型拒绝和普通表兼容性后再声明支持。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "自动推断列的插入操作未说明 STRICT 建表和严格类型限制，不能据旧命令宣称支持。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "正文列类型与加外键步骤没有 STRICT 表选项；旧版 FLOAT 映射也不能作为严格表实现依据。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "FTS 及普通索引管理与 STRICT 表选项没有直接操作对应。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "CSV 输出序列化不增加 SQLite STRICT 表能力。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "文件转 CSV 的格式与类型推断不能实现数据库 STRICT 约束。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "CSV join 不涉及 SQLite 严格表创建。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "查询导出说明没有 STRICT DDL 或其兼容性处理。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-344",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support STRICT tables",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "CSV 快照比较不提供严格表实现步骤。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "按现有删除 FTS 内部数据的用例复现，记录 SQLite 版本和 rebuild 调用，逐一验证损坏与重建失败原因。",
+      "roles": [
+        "procedure",
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "重新执行两个 table_to_fix 参数，确认先前错误重现且修复后 tanuki 搜索返回完整记录。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "普通插入虽出现在夹具中，正文不解释已损坏 FTS 索引或 rebuild 失败，不能作为相关修复程序。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "普通列及外键修改不处理 FTS 内部表损坏。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "TASK_SPECIFIC",
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "以 enable_fts 和 search 建立可搜索基线，核对 FTS 版本、列与触发器，在重建前后比较 tanuki 命中；正文不提供 rebuild 实现。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。 适用范围仅覆盖基线和回归验证，不覆盖正文未文档化的新功能实现。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "CSV 引号及换行转换与损坏的 FTS 内部索引无关。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "输入格式转换不处理重建全文索引的 DatabaseError。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "内存 CSV join 不能诊断或恢复 SQLite FTS 数据结构。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "SQL 结果导出没有索引重建说明，且请求已有更直接的 search 验证。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-354",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Test failure in test_rebuild_fts",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "CSV 行差异比较不能验证重建后的全文搜索索引。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "新增幂等建表开关的需求明确，未报告需追踪的运行故障。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "验证首次创建、重复创建加开关、重复创建不加开关三个路径及原表数据保持。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "插入自动建表的流程不是 create-table 的 --if-not-exists 行为。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "技能限定加列、外键及索引，未提供 create-table 幂等创建接口。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "if_not_exists=True 仅描述索引；不能把索引示例等同为新建表选项的支持。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "CSV 格式改写不影响建表 CLI 的幂等性。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "in2csv 的输入文件转换没有建表选项。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "CSV join 没有 SQLite 建表异常处理。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "查询结果导出不实现重复建表时的忽略机制。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-400",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "`sqlite-utils create-table` ... `--if-not-exists`",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "CSV 差异算法与 create-table 选项不相干。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "请求增加模块入口而非定位一个已报告的异常，根因流程没有具体故障对象。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "分别执行包级 python -m sqlite_utils 和既有命令的 --help，检查退出状态和子命令一致性。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "insert 使用示例不指导 Python 包 __main__ 入口及分发实现。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "列和外键变更 API 不涉及模块可执行入口。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "FTS 索引 API 不涉及 python -m 的加载机制。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "csvformat 序列化流程不能添加 sqlite_utils 模块入口。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "in2csv 文件转换与该 Python 包启动方式无关。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "CSV join 的键选择流程不解决包入口。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "sql2csv 查询命令不能指导 sqlite_utils 包启动。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "sqlite-utils-issue-368",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Offer `python -m sqlite_utils` as an alternative to `sqlite-utils`",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "csv-diff 比较流程不涉及 Python 模块入口。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "请求询问列内文本替换能力，未报告已有实现发生故障；调试流程不提供替换方法。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "以给定三列样例验证仅第二列移除后缀，并检查其他单元格和表头保留，避免未经运行声称命令存在。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "SQLite 插入不能按所需正则改写 CSV 第二列内容。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "数据库列定义修改不是单元格字符串替换。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "全文检索匹配不改写指定 CSV 单元格。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "技能只更改序列化格式，字段内容应保持，不能实现 str2-remove 到 str2。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "格式转换不包含列内正则替换，不能因 parse 一词推断支持。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "表之间键连接不包含单元格正则替换。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "正文未提供 CSV 列内正则处理，需额外导入及变换设计，不能凭查询导出认定适用。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1243",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Question: parsing text column-wise",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "对快照求差异仅报告变化，不执行请求的列内替换。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "用同一 XLSX 比较路径输入和 STDIN，加减 write-sheets 选项，追踪字节流读取或定位能力导致的 BadZipFile。",
+      "roles": [
+        "procedure",
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "新鲜运行请求中的管道并核查所有工作表输出，再测试路径输入没有回退。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "SQLite 导入没有 XLSX ZIP 流读取能力。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "SQLite 模式操作与 in2csv 的 ZIP 输入错误无关。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "全文索引管理不处理 Excel STDIN 流。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "csvformat 接受 CSV 而非 XLSX ZIP，无法复现故障输入。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "TASK_SPECIFIC",
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "按 xlsx 格式及 write-sheets 为 - 建立小型多表夹具，对照文件与 STDIN 的表头和值，限定 Excel 格式标志；该步骤直接构成复现和验收。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "CSV join 需要已经解析的 CSV 文件，不能修复 XLSX 流读取。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "sql2csv 不接收 XLSX 文件或多工作表输入。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1225",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "BadZipFile when using -f xlsx --write-sheets - on STDIN",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "CSV 快照差异不验证 ZIP 解码和所有工作表写出。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "复现 Python 3.12 的 csvgrep 命令，沿 reader 到列名解析追踪列表被字符串化的边界，并对比可工作的 Python 环境。",
+      "roles": [
+        "procedure",
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "在报告版本运行原命令，核查列 a 可识别、匹配行正确和退出状态，同时覆盖常规 CSV 表头。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "把数据导入 SQLite 不会解释 csvgrep 的列名读取错误。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "SQLite 模式变化不影响 Python CSV 读取及列标识符。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "SQLite 全文搜索不能代替 csvgrep 的列名故障修复。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "csv-dialect",
+      "applicability_label": "UNKNOWN",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "异常表头像被字符串化的列表，但包内技能只说明 csvformat 序列化；尚不能确定输入方言转换是否有直接诊断作用。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 需确认原始 CSV 字节、实际 dialect 和 reader 输出类型；现有片段不足以决定 csvformat 是否有用。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "in2csv 的转换步骤不提供 Python 3.12 下 csvgrep 的 reader 或列名兼容修复。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "csvjoin 也使用列名并不足以给出这个 csvgrep 故障的具体解决步骤。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "SQL 查询导出不诊断 csvgrep 的列解析堆栈。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1275",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvgrep: Catastrophic failure in Python 3.12",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "CSV 差异比较不处理 csvgrep 对列 a 的识别异常。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "复现 csvsql -h 的 STDERR，比较其他工具启动路径，定位 pkg_resources 导入触发的弃用警告并做单一原因验证。",
+      "roles": [
+        "procedure",
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "重新捕获 csvsql -h 与 --version 的 STDERR 和退出状态，验证警告消失且帮助文本及其他工具未受影响。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "向 SQLite 导入数据不是启动时 pkg_resources 弃用警告的原因检查。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "SQLite 表模式变更不解决 Python 包导入发出的警告。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "FTS 索引操作与 csvsql 导入警告无关。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "更改 CSV 的引号或分隔符无法改变 -h 执行前的导入警告。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "in2csv 格式转换并不覆盖 csvsql 的 pkg_resources 依赖处理。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "CSV join 不定位 csvsql 特有的导入副作用。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "正文虽出现 csvsql 导入示例，核心是 sql2csv 查询导出，没有解决 -h 导入警告的方法。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1215",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "csvsql (only) emits lot's of warnings on STDERR",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "CSV 差异分析与依赖弃用警告无关。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "以带连字符表头复现，比较精确名称和数字区间解析顺序，追踪名称为何进入整数范围错误分支。",
+      "roles": [
+        "procedure",
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "验证连字符列名可匹配，并覆盖数字范围、冒号范围、无效列名与引号输入的回归。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "SQLite 导入不会修复 csvgrep --columns 的范围识别。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "数据库列定义与 CSV CLI 列标识符解释不是同一操作。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "全文搜索索引不涉及 csvgrep 的列名和范围冲突。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "请求已说明给列名加引号也失败，CSV 序列化引号设置不等于修复 CLI 范围解析。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "in2csv 转换格式不提供 csvgrep 连字符列名解析规则。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "csvjoin 的键名选项属于另一程序，正文没有复用解析器或处理连字符歧义的方法。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "SQL 查询导出不改变 csvgrep 参数解析。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csvkit-issue-1263",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Cannot `csvgrep` columns containing hyphens",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "快照唯一键比较不处理 csvgrep 范围参数。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "大小写敏感是请求希望扩展的行为，未证明实现有故障；根因调试不等于提供忽略大小写功能。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "用 JOHN 和 john 验证新增忽略大小写模式及默认敏感模式，并检查新增删除记录不被误吞。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "SQLite 导入不改变 csv-diff 的字符串比较语义。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "修改 SQLite 模式不能实现 CSV 比较的忽略大小写选项。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "全文检索的匹配语义不能移作 CSV 差异比较语义。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "分隔符、引号和行尾转换保持字段内容，不完成大小写归一化。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "in2csv 转换没有大小写折叠步骤。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "CSV 表连接不提供差异比较中的大小写忽略。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "SQL 导出需要额外的数据导入与大小写变换设计，正文没有本请求的直接操作。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-20",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "TASK_SPECIFIC",
+      "request_quote": "Option to Ignore case in comparison?",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "用文档中的唯一键 compare 接口建立 JOHN/john 差异基线，再对已归一化夹具检查 changed 为空及 added/removed 不变；仅为验证参考，不声称版本已有忽略选项。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。 适用范围仅覆盖基线和回归验证，不覆盖正文未文档化的新功能实现。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "systematic-debugging",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for ANY technical issue:",
+      "application_explanation": "这是明确的新增行号键语义和冲突优先级需求，没有待定位故障。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "verification-before-completion",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "GENERAL_WORKFLOW",
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "1. IDENTIFY: What command proves this claim?",
+      "application_explanation": "逐项验证行号匹配、重排行为、无键旧逻辑及 row/row_number 真表头优先级，按结果声明完成。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "sqlite-ingest",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert.",
+      "application_explanation": "SQLite 主键插入不能实现 load_csv 行号标识。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "sqlite-schema",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for SQLite column, foreign-key or index changes.",
+      "application_explanation": "SQLite 列与外键模式操作不同于 CSV 行号键选择。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "sqlite-fulltext",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for configuring or maintaining SQLite full-text indexes.",
+      "application_explanation": "全文索引 rowid 不是 csv-diff 新关键字的实现规则。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "csv-dialect",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for CSV delimiter, quoting, escaping and line-ending conversion with csvformat.",
+      "application_explanation": "CSV 格式重写不会提供作为唯一键的行号语义。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "tabular-conversion",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for in2csv conversion of the documented input formats to CSV.",
+      "application_explanation": "in2csv 标志中的行输出不能证明 csv-diff 支持行号键，正文没有相关集成步骤。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "csv-relational-join",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for joining CSV tables with csvjoin.",
+      "application_explanation": "csvjoin 的无键顺序连接虽然按行序，但输出和键冲突语义均不同，不能实现 load_csv 新关键字。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "sql-query-export",
+      "applicability_label": "NOT_APPLICABLE",
+      "specificity_label": null,
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "Use for executing a SQL query and exporting its results to CSV with sql2csv.",
+      "application_explanation": "SQL 结果导出未提供 CSV load_csv 的行号键或表头冲突策略。",
+      "roles": [],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。"
+    },
+    {
+      "task_id": "csv-diff-issue-15",
+      "skill_id": "keyed-csv-diff",
+      "applicability_label": "APPLICABLE",
+      "specificity_label": "TASK_SPECIFIC",
+      "request_quote": "Support using row number as a key",
+      "skill_quote": "The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.",
+      "application_explanation": "利用 load_csv 的显式列键和 compare 示例建立兼容基线，检查新增行号键后普通列键与 changed 结构保持；正文不提供新关键字实现。",
+      "roles": [
+        "verification"
+      ],
+      "conditions": "仅依据给定公开请求和技能正文；未执行目标源码。 所列检查需在对应版本的隔离夹具环境实际运行；此处不是运行成功证据。 适用范围仅覆盖基线和回归验证，不覆盖正文未文档化的新功能实现。"
+    }
+  ]
+}

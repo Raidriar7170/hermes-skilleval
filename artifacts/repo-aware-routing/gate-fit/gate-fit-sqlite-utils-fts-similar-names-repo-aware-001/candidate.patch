@@ -1,0 +1,122 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 7a06304974b12348a9336beda5d3782550f876c7..7c06a839438f35f4564b548a0a23fb5d3efdab67 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -62,6 +62,20 @@ USING\s+(?P<using>\w+)          # for example USING FTS5
+     re.VERBOSE | re.IGNORECASE,
+ )
+ 
++_fts_content_re = re.compile(
++    r"""
++\bcontent\s*=\s*
++(?:
++    '(?P<squoted>(?:''|[^'])*)' |
++    "(?P<dquoted>(?:""|[^"])*)" |
++    `(?P<backtick>(?:``|[^`])*)` |
++    \[(?P<squarequoted>[^\]]*)\] |
++    (?P<identifier>[^,\s\)]+)
++)
++""",
++    re.VERBOSE | re.IGNORECASE,
++)
++
+ try:
+     import pandas as pd  # type: ignore
+ except ImportError:
+@@ -2212,28 +2226,33 @@ class Table(Queryable):
+ 
+     def detect_fts(self) -> Optional[str]:
+         "Detect if table has a corresponding FTS virtual table and return it"
+-        sql = (
+-            textwrap.dedent(
+-                """
+-            SELECT name FROM sqlite_master
++        rows = self.db.execute(
++            """
++            SELECT name, sql FROM sqlite_master
+                 WHERE rootpage = 0
+-                AND (
+-                    sql LIKE '%VIRTUAL TABLE%USING FTS%content=%{table}%'
+-                    OR (
+-                        tbl_name = "{table}"
+-                        AND sql LIKE '%VIRTUAL TABLE%USING FTS%'
+-                    )
+-                )
+-        """
++                AND sql LIKE '%VIRTUAL TABLE%USING FTS%'
++            """.strip()
++        ).fetchall()
++        for row in rows:
++            if row[0].casefold() == self.name.casefold():
++                return row[0]
++            match = _fts_content_re.search(row[1])
++            if match is None:
++                continue
++            group_name, content_table = next(
++                (key, value)
++                for key, value in match.groupdict().items()
++                if value is not None
+             )
+-            .strip()
+-            .format(table=self.name)
+-        )
+-        rows = self.db.execute(sql).fetchall()
+-        if len(rows) == 0:
+-            return None
+-        else:
+-            return rows[0][0]
++            if group_name == "squoted":
++                content_table = content_table.replace("''", "'")
++            elif group_name == "dquoted":
++                content_table = content_table.replace('""', '"')
++            elif group_name == "backtick":
++                content_table = content_table.replace("``", "`")
++            if content_table.casefold() == self.name.casefold():
++                return row[0]
++        return None
+ 
+     def optimize(self) -> "Table":
+         "Run the ``optimize`` operation against the associated full-text search index table."
+diff --git a/tests/test_introspect.py b/tests/test_introspect.py
+index 28a5009f3d42ddfc8d0a5fdccbe318d9f86cd3ff..5c908e800f27ac1dc51ccedae478829f2a0434b1 100644
+--- a/tests/test_introspect.py
++++ b/tests/test_introspect.py
+@@ -36,6 +36,15 @@ def test_detect_fts(existing_db):
+     assert existing_db["foo"].detect_fts() is None
+ 
+ 
++@pytest.mark.parametrize("table_names", (("items", "item"), ("item", "items")))
++def test_detect_fts_similarly_named_tables(fresh_db, table_names):
++    for table_name in table_names:
++        fresh_db[table_name].insert({"text": table_name}).enable_fts(["text"])
++
++    assert "item_fts" == fresh_db["item"].detect_fts()
++    assert "items_fts" == fresh_db["items"].detect_fts()
++
++
+ def test_tables(existing_db):
+     assert 1 == len(existing_db.tables)
+     assert "foo" == existing_db.tables[0].name
+diff --git a/tests/test_tracer.py b/tests/test_tracer.py
+index 618d1e6d0d26f121626237e1baa720f610e731ba..736352a8e47bca27300af78264dddcff9937fa0b 100644
+--- a/tests/test_tracer.py
++++ b/tests/test_tracer.py
+@@ -51,15 +51,9 @@ def test_with_tracer():
+         ("select name from sqlite_master where type = 'view'", None),
+         (
+             (
+-                "SELECT name FROM sqlite_master\n"
+-                "    WHERE rootpage = 0\n"
+-                "    AND (\n"
+-                "        sql LIKE '%VIRTUAL TABLE%USING FTS%content=%dogs%'\n"
+-                "        OR (\n"
+-                '            tbl_name = "dogs"\n'
+-                "            AND sql LIKE '%VIRTUAL TABLE%USING FTS%'\n"
+-                "        )\n"
+-                "    )"
++                "SELECT name, sql FROM sqlite_master\n"
++                "                WHERE rootpage = 0\n"
++                "                AND sql LIKE '%VIRTUAL TABLE%USING FTS%'"
+             ),
+             None,
+         ),

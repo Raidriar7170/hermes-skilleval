@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="5" time="0.079" timestamp="2026-09-15T18:36:31.431337+00:00"><testcase classname="test_behavior" name="test_transform_empty_string_to_null_for_numeric_types[int-42-int]" time="0.001"><failure message="AssertionError: assert '' is None">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff72a7c400&gt;&gt;
+new_type = &lt;class 'int'&gt;, expected_value = 42, expected_type = &lt;class 'int'&gt;
+
+    @pytest.mark.parametrize(
+        "new_type,expected_value,expected_type",
+        [
+            (int, 42, int),
+            (float, 42.0, float),
+            ("integer", 42, int),
+            ("float", 42.0, float),
+            ("REAL", 42.0, float),
+        ],
+    )
+    def test_transform_empty_string_to_null_for_numeric_types(
+        fresh_db, new_type, expected_value, expected_type
+    ):
+        fresh_db["test"].insert_all(
+            [
+                {"id": 1, "value": "42"},
+                {"id": 2, "value": ""},
+                {"id": 3, "value": None},
+                {"id": 4, "value": " "},
+            ]
+        )
+        fresh_db["test"].transform(types={"value": new_type})
+        rows = {r["id"]: r["value"] for r in fresh_db["test"].rows}
+        assert rows[1] == expected_value
+        assert type(rows[1]) is expected_type
+&gt;       assert rows[2] is None
+E       AssertionError: assert '' is None
+
+/trusted/test_behavior.py:1153: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_transform_empty_string_to_null_for_numeric_types[float-42.0-float0]" time="0.001"><failure message="AssertionError: assert '' is None">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff72a7c9a0&gt;&gt;
+new_type = &lt;class 'float'&gt;, expected_value = 42.0
+expected_type = &lt;class 'float'&gt;
+
+    @pytest.mark.parametrize(
+        "new_type,expected_value,expected_type",
+        [
+            (int, 42, int),
+            (float, 42.0, float),
+            ("integer", 42, int),
+            ("float", 42.0, float),
+            ("REAL", 42.0, float),
+        ],
+    )
+    def test_transform_empty_string_to_null_for_numeric_types(
+        fresh_db, new_type, expected_value, expected_type
+    ):
+        fresh_db["test"].insert_all(
+            [
+                {"id": 1, "value": "42"},
+                {"id": 2, "value": ""},
+                {"id": 3, "value": None},
+                {"id": 4, "value": " "},
+            ]
+        )
+        fresh_db["test"].transform(types={"value": new_type})
+        rows = {r["id"]: r["value"] for r in fresh_db["test"].rows}
+        assert rows[1] == expected_value
+        assert type(rows[1]) is expected_type
+&gt;       assert rows[2] is None
+E       AssertionError: assert '' is None
+
+/trusted/test_behavior.py:1153: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_transform_empty_string_to_null_for_numeric_types[integer-42-int]" time="0.001"><failure message="AssertionError: assert '' is None">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff72a7cf40&gt;&gt;
+new_type = 'integer', expected_value = 42, expected_type = &lt;class 'int'&gt;
+
+    @pytest.mark.parametrize(
+        "new_type,expected_value,expected_type",
+        [
+            (int, 42, int),
+            (float, 42.0, float),
+            ("integer", 42, int),
+            ("float", 42.0, float),
+            ("REAL", 42.0, float),
+        ],
+    )
+    def test_transform_empty_string_to_null_for_numeric_types(
+        fresh_db, new_type, expected_value, expected_type
+    ):
+        fresh_db["test"].insert_all(
+            [
+                {"id": 1, "value": "42"},
+                {"id": 2, "value": ""},
+                {"id": 3, "value": None},
+                {"id": 4, "value": " "},
+            ]
+        )
+        fresh_db["test"].transform(types={"value": new_type})
+        rows = {r["id"]: r["value"] for r in fresh_db["test"].rows}
+        assert rows[1] == expected_value
+        assert type(rows[1]) is expected_type
+&gt;       assert rows[2] is None
+E       AssertionError: assert '' is None
+
+/trusted/test_behavior.py:1153: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_transform_empty_string_to_null_for_numeric_types[float-42.0-float1]" time="0.001"><failure message="AssertionError: assert '' is None">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff72a7d210&gt;&gt;
+new_type = 'float', expected_value = 42.0, expected_type = &lt;class 'float'&gt;
+
+    @pytest.mark.parametrize(
+        "new_type,expected_value,expected_type",
+        [
+            (int, 42, int),
+            (float, 42.0, float),
+            ("integer", 42, int),
+            ("float", 42.0, float),
+            ("REAL", 42.0, float),
+        ],
+    )
+    def test_transform_empty_string_to_null_for_numeric_types(
+        fresh_db, new_type, expected_value, expected_type
+    ):
+        fresh_db["test"].insert_all(
+            [
+                {"id": 1, "value": "42"},
+                {"id": 2, "value": ""},
+                {"id": 3, "value": None},
+                {"id": 4, "value": " "},
+            ]
+        )
+        fresh_db["test"].transform(types={"value": new_type})
+        rows = {r["id"]: r["value"] for r in fresh_db["test"].rows}
+        assert rows[1] == expected_value
+        assert type(rows[1]) is expected_type
+&gt;       assert rows[2] is None
+E       AssertionError: assert '' is None
+
+/trusted/test_behavior.py:1153: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_transform_empty_string_to_null_for_numeric_types[REAL-42.0-float]" time="0.001"><failure message="AssertionError: assert '' is None">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffff72a7d4e0&gt;&gt;
+new_type = 'REAL', expected_value = 42.0, expected_type = &lt;class 'float'&gt;
+
+    @pytest.mark.parametrize(
+        "new_type,expected_value,expected_type",
+        [
+            (int, 42, int),
+            (float, 42.0, float),
+            ("integer", 42, int),
+            ("float", 42.0, float),
+            ("REAL", 42.0, float),
+        ],
+    )
+    def test_transform_empty_string_to_null_for_numeric_types(
+        fresh_db, new_type, expected_value, expected_type
+    ):
+        fresh_db["test"].insert_all(
+            [
+                {"id": 1, "value": "42"},
+                {"id": 2, "value": ""},
+                {"id": 3, "value": None},
+                {"id": 4, "value": " "},
+            ]
+        )
+        fresh_db["test"].transform(types={"value": new_type})
+        rows = {r["id"]: r["value"] for r in fresh_db["test"].rows}
+        assert rows[1] == expected_value
+        assert type(rows[1]) is expected_type
+&gt;       assert rows[2] is None
+E       AssertionError: assert '' is None
+
+/trusted/test_behavior.py:1153: AssertionError</failure></testcase></testsuite></testsuites>
