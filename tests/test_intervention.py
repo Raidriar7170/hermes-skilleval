@@ -70,6 +70,33 @@ def test_public_usage_excludes_resumed_prefix_and_duplicate_updates(tmp_path):
     assert result["all_started_turns_completed_with_usage"]
 
 
+def test_missing_runtime_cost_is_not_reported_as_zero():
+    from hermes_skilleval.intervention.evaluate import summarize_rows
+
+    rows = [
+        {
+            "method": "N0",
+            "quality": quality,
+            "utility": utility_value,
+            "checks": {},
+            "execution": {
+                "status": status,
+                "tail_seconds": seconds,
+                "controller_overhead_seconds": None,
+            },
+        }
+        for quality, utility_value, status, seconds in (
+            (True, 0.99, "COMPLETED", 100),
+            (None, None, "UNKNOWN_INTERRUPTED_ATTEMPT", None),
+        )
+    ]
+    result = summarize_rows(rows)["N0"]
+    assert result["runs"] == 2 and result["unknown"] == 1
+    assert result["mean_active_seconds"] == 100
+    assert result["active_seconds_measured_runs"] == 1
+    assert result["overhead_measured_runs"] == 0
+
+
 def event(command, exit_code, output=""):
     return {
         "method": "item/completed",

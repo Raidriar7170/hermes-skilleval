@@ -191,6 +191,11 @@ def summarize_rows(rows):
         selected = [r for r in rows if r["method"] == method]
         valid = [r for r in selected if r["quality"] is not None]
         decisions = [d for r in selected for d in r["execution"].get("decisions", [])]
+        active_seconds = [
+            r["execution"]["tail_seconds"]
+            for r in selected
+            if r["execution"].get("tail_seconds") is not None
+        ]
         results[method] = {
             "runs": len(selected),
             "valid": len(valid),
@@ -238,11 +243,9 @@ def summarize_rows(rows):
                 d["reason"] == "WAIT_MODEL_DECISION" for d in decisions
             ),
             "noops": sum(d["reason"] == "NOOP_MODEL_DECISION" for d in decisions),
-            "mean_active_seconds": sum(
-                r["execution"].get("tail_seconds") or 0 for r in selected
-            )
-            / len(selected)
-            if selected
+            "active_seconds_measured_runs": len(active_seconds),
+            "mean_active_seconds": sum(active_seconds) / len(active_seconds)
+            if active_seconds
             else None,
         }
     return results
