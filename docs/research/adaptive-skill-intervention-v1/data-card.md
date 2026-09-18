@@ -1,0 +1,23 @@
+# ASI v1 data card
+
+Status: collection in progress. Final counts and measured label distributions must be filled from the retained records after the frozen study completes; the planned maximum is not an observed sample count.
+
+| Split | Frozen mechanisms | Role |
+| --- | ---: | --- |
+| Train | 12 | Real paired utility supervision and task-excluded waiting targets |
+| Development | 4 | Fixed 80/160-epoch selection and predeclared diagnostics |
+| Test | 8 | Two complete trajectories for each of six frozen policies: 96 scheduled runs |
+
+Sources are public historical issues and code from sqlite-utils, csvkit and csv-diff. The [protocol](../../../configs/adaptive-skill-intervention-v1/protocol.json) identifies each task, source, split and public-request digest. The three projects occur in multiple splits: this is a mechanism-level split within known projects, not a held-out-project benchmark. Related upstream code and features can share structure. Public issues may also be present in the Agent's pretraining; contamination-free generalization is not established. The four development tasks had already been observed in earlier work and remain outside final testing.
+
+Each task includes a frozen historical base, public request and explicit interface clarifications where needed, a file policy, controller-owned behavioral checks and a qualification-only reference. References and hidden checks are never mounted into the acting Agent. Three already-correct bases remain valid no-op cases; their checks were qualified using functional negative controls. Derived requirements are scoped interpretations of public issues, not claims of reproducing an upstream benchmark's original oracle.
+
+Training/development examples come from naturally observed E0/E1/E2 checkpoints on an unintervened trajectory. E1 may be absent. At each observed state the study runs no intervention, two frozen-retrieval skill candidates and a generic reminder, with 12 potential repeated states chosen before outcomes. The maximum is 240 tails; nonexistent opportunities are not synthesized. All executions share the original 600-second activity budget, with the checkpoint prefix deducted before any tail. Each task's hidden labels are computed only after all its Agent tails finish.
+
+The supervision is the difference between actual terminal utility and the matching same-state, same-repeat no-intervention tail. Quality requires target, protected regression and file-policy success. Real failures remain negative outcomes; execution and verifier failures remain distinguishable unknowns. Shared baselines, states and repetitions are correlated. Repetitions are averaged for fitting and task/state weighting prevents treating them as independent mechanisms. Statistical intervals resample whole tasks.
+
+Official conversation forks and independent source/scratch snapshots match the observable prefix. Provider RNG and process memory are not cloned, and a FIFO snapshot preserves the node rather than buffered contents. Thus paired differences include stochastic execution variation; they are not exact individual causal effects. Missing or interrupted attempts are retained without replacement.
+
+During collection a confirmed CSV checker adapter error affected training issues 202, 223, 228 and 250. The [versioned amendment](../../../artifacts/adaptive-skill-intervention-v1/checker-amendment-002.json) replaces simulated stdin with identical bytes in ordinary files, preserves functional assertions and file policy, and qualifies all four bases/references again. Collection v2, all original executions and verdicts remain immutable. Revised labels under protocol v3 symmetrically recheck every affected saved patch; they are not new Agent samples. This post-observation correction is disclosed as an evaluation limitation.
+
+Public delivery includes compact records, actual patches, fixed checks, verifier XML, model identities and training diagnostics. Full source snapshots, raw Agent histories, account material and model weights remain outside Git. Public usage notifications provide observed token counts with replayed prefix notifications excluded; incomplete coverage is reported. Monetary bills remain unavailable. No weak labels, mocked outcomes or reference patches are used as training supervision.

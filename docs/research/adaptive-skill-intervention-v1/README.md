@@ -6,7 +6,7 @@ This additive experiment asks whether one explicit skill intervention, selected 
 
 ## Frozen protocol
 
-Twelve train mechanisms, four previously observed development mechanisms and eight project-held-out test mechanisms come from sqlite-utils, csvkit and csv-diff. Public issues may have appeared in the execution model's pretraining; this is not a contamination-free benchmark. The four repeatedly observed development mechanisms never enter the final test split. Task refinements are public in each task request before execution; source links and request hashes appear in the protocol. Full external source snapshots, raw traces and weights stay outside Git.
+Twelve train mechanisms, four previously observed development mechanisms and eight mechanism-held-out test tasks come from sqlite-utils, csvkit and csv-diff. Public issues may have appeared in the execution model's pretraining; this is not a contamination-free benchmark. The four repeatedly observed development mechanisms never enter the final test split. Task refinements are public in each task request before execution; source links and request hashes appear in the protocol. Full external source snapshots, raw traces and weights stay outside Git.
 
 Each trajectory uses Codex 0.154.0, `gpt-5.6-sol`, medium reasoning and a 600-second activity budget in the inherited isolated Docker execution boundary. Source and scratch copies, session setup, model turns, state extraction, snapshots, online scoring and teardown count against the original budget. Process stop latency can overrun the wall-clock deadline; utility time is capped at one, and any overrun is separately observable in the execution record. No branch receives a fresh 600 seconds.
 
