@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import hashlib
 import json
 from pathlib import Path
 
-from .session import dump
+from .session import dump, inventory
 from .study import read, assets, paired_rows
 from .value import (
     fit_gain,
@@ -15,6 +16,7 @@ from .value import (
     cross_fitted_wait_targets,
     save_models,
     load_models,
+    make_gain,
 )
 
 
@@ -79,13 +81,55 @@ def cheap_baselines(train, dev):
     }
 
 
+def asset_identity(payload_dir, encoder_path):
+    manifest = read(Path(payload_dir) / "manifest.json")
+    names = (
+        "model.safetensors",
+        "config.json",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "special_tokens_map.json",
+        "vocab.txt",
+    )
+    return {
+        "encoder_files": {
+            p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in Path(encoder_path).iterdir()
+            if p.name in names
+        },
+        "payload_files": inventory(Path(payload_dir)),
+        "registry_sha256": hashlib.sha256(
+            (Path(payload_dir) / manifest["registry_relative_path"]).read_bytes()
+        ).hexdigest(),
+    }
+
+
+def model_identity(output):
+    return {
+        name: hashlib.sha256((Path(output) / name).read_bytes()).hexdigest()
+        for name in ("weights.pt", "model.json")
+    }
+
+
 def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
     import torch
 
     torch.set_num_threads(2)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
-    records = read(records_path)["rows"]
+    bundle = read(records_path)
+    records = bundle["rows"]
+    data_binding = {
+        "protocol_sha256": bundle["protocol_sha256"],
+        "records_sha256": hashlib.sha256(Path(records_path).read_bytes()).hexdigest(),
+        **asset_identity(payload_dir, encoder_path),
+    }
+    native_status = {
+        tid: read(Path(records_path).parent / tid / "records.json")["native_chain"][
+            "status"
+        ]
+        for tid in {r["task_id"] for r in records}
+    }
     encoder, retriever, _, _ = assets(payload_dir, encoder_path)
     report = {
         "selection": "minimum task-macro dev MSE of paired net-utility delta; fixed epochs grid",
@@ -94,10 +138,20 @@ def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
     }
     for name, no_state in [("full", False), ("no-state", True)]:
         raw, chains, missing = paired_rows(
-            records, encoder, retriever, split="train", no_state=no_state
+            records,
+            encoder,
+            retriever,
+            split="train",
+            no_state=no_state,
+            native_status=native_status,
         )
         dev_raw, _, dev_missing = paired_rows(
-            records, encoder, retriever, split="dev", no_state=no_state
+            records,
+            encoder,
+            retriever,
+            split="dev",
+            no_state=no_state,
+            native_status=native_status,
         )
         rows = aggregate_pairs(raw)
         dev = aggregate_pairs(dev_raw)
@@ -121,6 +175,7 @@ def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
                 "wait": float(wait(probe_state)[0, 0]),
             }
         meta = {
+            "data_binding": data_binding,
             "state_dim": rows[0]["x"].numel(),
             "skill_dim": rows[0]["k"].numel(),
             "no_state": no_state,
@@ -132,7 +187,8 @@ def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
                 "skill": probe_skill.tolist(),
                 "expected": expected,
             },
-            "train_tasks": sorted(chains),
+            "train_tasks": sorted({r["task_id"] for r in rows}),
+            "native_chain_tasks": sorted(chains),
             "cost_weights": {"time": 0.05, "context": 0.02},
         }
         save_models(output / name, gain, wait, meta)
@@ -180,6 +236,47 @@ def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
             ),
             flush=True,
         )
+    # Predeclared diagnostic only: one fixed schedule, no extra runtime arm.
+    raw, _, _ = paired_rows(
+        records, encoder, retriever, split="train", native_status=native_status
+    )
+    dev_raw, _, _ = paired_rows(
+        records, encoder, retriever, split="dev", native_status=native_status
+    )
+    state_only_train, state_only_dev = aggregate_pairs(raw), aggregate_pairs(dev_raw)
+    request_dim = encoder.encode("request dimensionality").numel()
+    for row in state_only_train + state_only_dev:
+        row["x"] = row["x"].clone()
+        row["x"][:request_dim] = 0
+    state_gain, state_log = fit_gain(state_only_train, epochs=160, seed=7170)
+    diagnostic = output / "state-only"
+    diagnostic.mkdir()
+    torch.save({"gain": state_gain.state_dict()}, diagnostic / "weights.pt")
+    sx, sk = state_only_dev[0]["x"][None], state_only_dev[0]["k"][None]
+    with torch.no_grad():
+        expected = float(state_gain(sx, sk)[0])
+    dump(
+        diagnostic / "model.json",
+        {
+            "kind": "STATE_ONLY_GAIN_DIAGNOSTIC",
+            "state_dim": sx.shape[1],
+            "skill_dim": sk.shape[1],
+            "epochs": 160,
+            "seed": 7170,
+            "data_binding": data_binding,
+            "probe": {
+                "state": sx.tolist(),
+                "skill": sk.tolist(),
+                "expected_gain": expected,
+            },
+        },
+    )
+    report["state_only_diagnostic"] = {
+        "scope": "fixed 160-epoch gain-only diagnostic; original candidate roster, no runtime arm",
+        "training": state_log,
+        "dev_scores": errors(state_gain, state_only_dev),
+    }
+    dump(output / "training.json", report)
     return report
 
 
@@ -197,7 +294,36 @@ def reload_probe(output):
         expected = meta["probe"]["expected"]
         if any(abs(actual[key] - expected[key]) > 1e-6 for key in actual):
             raise ValueError("reload mismatch")
-        results[name] = {"actual": actual, "expected": expected, "match": True}
+        results[name] = {
+            "actual": actual,
+            "expected": expected,
+            "match": True,
+            "model_identity": model_identity(Path(output) / name),
+        }
+    diagnostic = Path(output) / "state-only"
+    meta = read(diagnostic / "model.json")
+    gain = make_gain(meta["state_dim"], meta["skill_dim"])
+    gain.load_state_dict(
+        torch.load(diagnostic / "weights.pt", weights_only=True, map_location="cpu")[
+            "gain"
+        ]
+    )
+    gain.eval()
+    with torch.no_grad():
+        actual = float(
+            gain(
+                torch.tensor(meta["probe"]["state"]),
+                torch.tensor(meta["probe"]["skill"]),
+            )[0]
+        )
+    if abs(actual - meta["probe"]["expected_gain"]) > 1e-6:
+        raise ValueError("state-only reload mismatch")
+    results["state-only"] = {
+        "actual_gain": actual,
+        "expected_gain": meta["probe"]["expected_gain"],
+        "match": True,
+        "model_identity": model_identity(diagnostic),
+    }
     dump(Path(output) / "independent-reload.json", results)
     return results
 

@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 
 from .controller import Controller, METHODS
-from .learning import Predictor
+from .learning import Predictor, model_identity
 from .session import dump
 from .study import read, assets, verify_freeze, run_once, check_once, qualify_quality
 from .rollouts import utility
@@ -24,6 +24,27 @@ def evaluate(
     verify_freeze(protocol, tasks, payload_dir, skill_dir, encoder_path)
     if not (models / "independent-reload.json").exists():
         raise ValueError("independent reload required")
+    protocol_digest = hashlib.sha256(Path(protocol_path).read_bytes()).hexdigest()
+    reload_record = read(models / "independent-reload.json")
+    training_records = set()
+    for name in ("full", "no-state"):
+        if reload_record[name].get("model_identity") != model_identity(
+            models / name
+        ) or not reload_record[name].get("match"):
+            raise ValueError("reload record does not bind the current model")
+        binding = read(models / name / "model.json")["data_binding"]
+        training_records.add(binding["records_sha256"])
+        if (
+            binding["protocol_sha256"] != protocol_digest
+            or binding["encoder_files"] != protocol["representation"]["files"]
+            or binding["payload_files"] != protocol["payloads"]
+            or binding["registry_sha256"] != protocol["registry_sha256"]
+        ):
+            raise ValueError(
+                "trained model and evaluation assets/protocol do not match"
+            )
+    if len(training_records) != 1:
+        raise ValueError("policy models were trained on different record sets")
     output.mkdir(parents=True, exist_ok=True)
     identity = {
         str(p.relative_to(models)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -34,7 +55,12 @@ def evaluate(
     }
     lock = output / "policy-freeze.json"
     if lock.exists():
-        if read(lock)["models"] != identity:
+        frozen = read(lock)
+        if (
+            frozen["models"] != identity
+            or frozen["protocol_sha256"] != protocol_digest
+            or frozen["methods"] != list(METHODS)
+        ):
             raise ValueError("models changed after final policy freeze")
     else:
         dump(
@@ -95,8 +121,18 @@ def evaluate(
                         "repeat": repeat,
                         "run": str(run),
                         "execution": result,
-                        "gain_model_calls": predictor.gain_calls if predictor else 0,
-                        "wait_model_calls": predictor.wait_calls if predictor else 0,
+                        "gain_model_calls": sum(
+                            d.get("gains") is not None
+                            for d in result.get("decisions", [])
+                        )
+                        if predictor
+                        else 0,
+                        "wait_model_calls": sum(
+                            d.get("waiting_value") is not None and d["stage"] != "E2"
+                            for d in result.get("decisions", [])
+                        )
+                        if predictor and predictor.use_wait
+                        else 0,
                     }
                 )
                 print(

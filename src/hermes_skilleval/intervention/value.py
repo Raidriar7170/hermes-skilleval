@@ -273,31 +273,65 @@ def cross_fitted_wait_targets(rows, chains, *, epochs=160):
         for t in outside:
             chain = chains[t]
             gain = gain_without({held, t})
-            for i, state in enumerate(chain[:-1]):
-                if state["stage"] == "E1":
-                    intermediate.append(
-                        {
-                            **state,
-                            "task_id": t,
-                            "target": value(gain, None, chain[i + 1]),
-                        }
-                    )
+            for i, state in enumerate(chain):
+                if state["stage"] != "E1":
+                    continue
+                if i + 1 < len(chain):
+                    target = value(gain, None, chain[i + 1])
+                elif state.get("terminal_confirmed", False):
+                    target = 0.0
+                else:
+                    continue
+                intermediate.append({**state, "task_id": t, "target": target})
         wait = fit_wait(intermediate, epochs=epochs)[0] if intermediate else None
         gain = gain_without({held})
         chain = chains[held]
+        unknown = []
         for i, state in enumerate(chain):
-            target = (
-                0.0
-                if i == len(chain) - 1
-                else value(
-                    gain, wait if chain[i + 1]["stage"] == "E1" else None, chain[i + 1]
+            if i == len(chain) - 1:
+                if not state.get("terminal_confirmed", state["stage"] == "E2"):
+                    unknown.append(
+                        {
+                            "state_id": state["state_id"],
+                            "reason": "UNCONFIRMED_NATIVE_TERMINATION",
+                        }
+                    )
+                    continue
+                target = 0.0
+            elif (
+                chain[i + 1]["stage"] == "E1"
+                and wait is None
+                and not (
+                    i + 1 == len(chain) - 1
+                    and chain[i + 1].get("terminal_confirmed", False)
                 )
-            )
+            ):
+                unknown.append(
+                    {
+                        "state_id": state["state_id"],
+                        "reason": "NO_OUT_OF_TASK_DOWNSTREAM_WAIT_TARGETS",
+                    }
+                )
+                continue
+            else:
+                next_is_known_terminal = i + 1 == len(chain) - 1 and chain[i + 1].get(
+                    "terminal_confirmed", False
+                )
+                target = value(
+                    gain,
+                    wait
+                    if chain[i + 1]["stage"] == "E1" and not next_is_known_terminal
+                    else None,
+                    chain[i + 1],
+                )
             result.append({**state, "task_id": held, "target": target})
         provenance.append(
             {
                 "target_task": held,
-                "gain_training_tasks": outside,
+                "unknown_wait_targets": unknown,
+                "gain_training_tasks": sorted(
+                    {r["task_id"] for r in rows if r["task_id"] != held}
+                ),
                 "wait_training_tasks": sorted({r["task_id"] for r in intermediate}),
             }
         )

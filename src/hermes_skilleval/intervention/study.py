@@ -301,7 +301,9 @@ def collect(protocol_path, tasks, output, skill_dir, payload_dir, encoder_path):
     return {"rows": len(rows), "valid": sum(r["quality"] is not None for r in rows)}
 
 
-def paired_rows(records, encoder, retriever, *, split, no_state=False):
+def paired_rows(
+    records, encoder, retriever, *, split, no_state=False, native_status=None
+):
     rows = []
     chains = {}
     missing = []
@@ -347,8 +349,6 @@ def paired_rows(records, encoder, retriever, *, split, no_state=False):
         chain = chains.setdefault(tid, {})
         if row["state_id"] in chain:
             continue
-        if not any(r["state_id"] == row["state_id"] for r in rows):
-            continue
         state = State(**row["state"])
         candidates = (
             retriever.rank(state.request + "\n" + state.repo_facts)[:2]
@@ -358,17 +358,17 @@ def paired_rows(records, encoder, retriever, *, split, no_state=False):
         chain[row["state_id"]] = {
             "state_id": row["state_id"],
             "stage": row["stage"],
+            "terminal_confirmed": row["stage"] == "E2",
             "x": encoder.features(state, no_state=no_state),
             "candidates": [
                 encoder.encode(retriever.full_bodies[k]) for k in candidates
             ],
         }
-    return (
-        rows,
-        {
-            t: sorted(c.values(), key=lambda r: r["stage"])
-            for t, c in chains.items()
-            if c
-        },
-        missing,
-    )
+    ordered = {
+        t: sorted(c.values(), key=lambda r: r["stage"]) for t, c in chains.items() if c
+    }
+    for task, chain in ordered.items():
+        chain[-1]["terminal_confirmed"] = chain[-1]["terminal_confirmed"] or (
+            native_status or {}
+        ).get(task) in ("COMPLETED", "TIMEOUT")
+    return rows, ordered, missing

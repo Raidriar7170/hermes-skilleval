@@ -157,3 +157,70 @@ def test_completion_is_schema_value_not_prose():
     assert not task_complete(events("CONTINUE", "Do not mark TASK_COMPLETE yet"))
     assert task_complete(events("TASK_COMPLETE", "Candidate ready"))
     assert not task_complete([])
+
+
+def test_unknown_labels_do_not_remove_real_wait_chain_states():
+    from dataclasses import replace
+    from hermes_skilleval.intervention.study import paired_rows
+
+    class TextFixtureEncoder:
+        def encode(self, text):
+            return text
+
+        def features(self, observation, no_state=False):
+            return observation.stage
+
+    class CatalogFixture:
+        full_bodies = {"skill": "body"}
+
+    rows = []
+    for stage in ("E0", "E1", "E2"):
+        observation = replace(state([]), stage=stage)
+        for action in ("NO_INTERVENTION", "skill"):
+            rows.append(
+                {
+                    "task_id": "task",
+                    "split": "train",
+                    "state_id": "task:" + stage,
+                    "stage": stage,
+                    "state": observation.to_dict(),
+                    "repeat": 1,
+                    "action": action,
+                    "quality": None,
+                    "utility": None,
+                    "candidates": ["skill"],
+                    "run": "not-executed-test-fixture",
+                }
+            )
+    paired, chains, missing = paired_rows(
+        rows,
+        TextFixtureEncoder(),
+        CatalogFixture(),
+        split="train",
+        native_status={"task": "EXECUTOR_ERROR"},
+    )
+    assert paired == [] and len(missing) == 3
+    assert [r["stage"] for r in chains["task"]] == ["E0", "E1", "E2"]
+    assert not chains["task"][1]["terminal_confirmed"]
+    assert chains["task"][2]["terminal_confirmed"]
+
+
+def test_final_uncertainty_clusters_repeats_by_task():
+    from hermes_skilleval.intervention.report import final_comparisons
+
+    rows = [
+        {
+            "task_id": task,
+            "method": method,
+            "repeat": repeat,
+            "quality": True,
+            "utility": 0.9 + (0.02 if method == "H-full" else 0),
+        }
+        for task in ("first", "second")
+        for method in ("N0", "H-full")
+        for repeat in (1, 2)
+    ]
+    result = final_comparisons(rows)["N0"]
+    assert result["paired_runs"] == 4
+    assert result["utility"]["independent_tasks"] == 2
+    assert result["utility"]["mean"] == pytest.approx(0.02)
