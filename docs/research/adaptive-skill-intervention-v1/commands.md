@@ -1,10 +1,11 @@
 # Reproducible entry points
 
-All commands run from the ASI worktree with an isolated Python environment. No global Codex configuration is changed. Use `python -m hermes_skilleval.intervention.cli` before package installation; `pip install -e '.[intervention-train]'` in a separate virtual environment installs the equivalent `hermes-intervention` entry point. The training extra is optional; ordinary Hermes commands and records-only replay do not load model weights.
+All commands run from the ASI worktree with an isolated Python environment. No global Codex configuration is changed. For source-tree execution, set `PYTHONPATH=src` for the command (for example, `PYTHONPATH=src python -m hermes_skilleval.intervention.cli --help`); `pip install -e '.[intervention-train]'` in a separate virtual environment installs the equivalent `hermes-intervention` entry point. The training extra is optional; ordinary Hermes commands and records-only replay do not load model weights.
 
 Set task-specific paths, not `HOME` or `CODEX_HOME`:
 
 ```sh
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 ASI_PRIVATE=/path/to/private/asi
 ASI_ENCODER=/path/to/pinned/all-MiniLM-L6-v2/snapshot
 ASI_TASKS="$ASI_PRIVATE/tasks-candidate-v5"
