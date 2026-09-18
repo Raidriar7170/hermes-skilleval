@@ -15,6 +15,7 @@ from hermes_skilleval.intervention.report import (
     final_comparisons,
 )
 from hermes_skilleval.intervention.learning import model_identity
+from hermes_skilleval.intervention.usage import reported_usage
 
 p = argparse.ArgumentParser()
 for key in ("collection", "evaluation", "models", "tasks", "protocol", "output"):
@@ -59,6 +60,7 @@ def export_rows(rows, group):
                 "tail_seconds",
                 "prefix_seconds",
                 "preparation_seconds",
+                "controller_overhead_seconds",
                 "model_input_observed",
                 "injected",
                 "payload_tokens",
@@ -89,6 +91,7 @@ def export_rows(rows, group):
         }
         record.update(
             execution=small_execution,
+            reported_usage=reported_usage(run),
             evidence_path=relative.as_posix(),
             checks={},
             artifact_sha256={},
@@ -160,6 +163,13 @@ def export_rows(rows, group):
 
 public_collection = export_rows(collection, "collection")
 public_evaluation = export_rows(evaluation, "evaluation")
+native_usage = {}
+for row in collection:
+    tid = row["task_id"]
+    if tid not in native_usage:
+        task_root = next(p for p in Path(row["run"]).parents if p.name == tid)
+        native_usage[tid] = reported_usage(task_root / "native-chain")
+dump(a.output / "native-prefix-usage.json", native_usage)
 for kind, rows in [
     ("collection", public_collection),
     ("evaluation", public_evaluation),
@@ -216,7 +226,26 @@ summary = {
     "gain_model_calls": sum(r["gain_model_calls"] for r in evaluation),
     "wait_model_calls": sum(r["wait_model_calls"] for r in evaluation),
     "unknown_runs": sum(r["quality"] is None for r in evaluation),
-    "api_total_tokens": None,
+    "reported_token_usage": {
+        label: {
+            "total_tokens": sum(
+                (r["tokens"] or {}).get("totalTokens", 0) for r in usages
+            ),
+            "runs_with_usage": sum(r["tokens"] is not None for r in usages),
+            "runs_with_all_started_turns_completed_with_usage": sum(
+                r["all_started_turns_completed_with_usage"] for r in usages
+            ),
+            "runs": len(usages),
+        }
+        for label, usages in (
+            (
+                "collection_tails_excluding_prefix",
+                [r["reported_usage"] for r in public_collection],
+            ),
+            ("native_collection_prefixes", list(native_usage.values())),
+            ("final_trajectories", [r["reported_usage"] for r in public_evaluation]),
+        )
+    },
     "dollar_bill": None,
 }
 dump(a.output / "results.json", summary)

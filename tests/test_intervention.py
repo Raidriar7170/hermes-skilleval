@@ -30,6 +30,46 @@ def test_versioned_checks_are_verified_at_their_explicit_root(tmp_path):
         verify_artifacts(row)
 
 
+def test_public_usage_excludes_resumed_prefix_and_duplicate_updates(tmp_path):
+    import json
+    from hermes_skilleval.intervention.usage import reported_usage
+
+    def usage(turn, total, last):
+        def counter(n):
+            return dict(
+                totalTokens=n,
+                inputTokens=n,
+                cachedInputTokens=0,
+                cacheWriteInputTokens=0,
+                outputTokens=0,
+                reasoningOutputTokens=0,
+            )
+
+        return {
+            "method": "thread/tokenUsage/updated",
+            "params": {
+                "threadId": "fork",
+                "turnId": turn,
+                "tokenUsage": {"total": counter(total), "last": counter(last)},
+            },
+        }
+
+    directory = tmp_path / "turn-001"
+    directory.mkdir()
+    events = [
+        usage("prefix", 100, 20),
+        {"method": "turn/started", "params": {"turn": {"id": "tail"}}},
+        usage("tail", 110, 10),
+        usage("tail", 110, 10),
+        {"method": "turn/completed", "params": {"turn": {"id": "tail"}}},
+    ]
+    (directory / "events.jsonl").write_text("\n".join(map(json.dumps, events)))
+    result = reported_usage(tmp_path)
+    assert result["tokens"]["totalTokens"] == 10
+    assert result["request_updates"] == 1
+    assert result["all_started_turns_completed_with_usage"]
+
+
 def event(command, exit_code, output=""):
     return {
         "method": "item/completed",

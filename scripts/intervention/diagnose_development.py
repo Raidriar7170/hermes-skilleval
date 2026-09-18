@@ -32,6 +32,12 @@ for (state_id, repeat), group in sorted(groups.items()):
     native = next(r for r in group if r["action"] == "NO_INTERVENTION")
     allowed = forced if gains[chosen] > 0 else native
     valid = forced["utility"] is not None and allowed["utility"] is not None
+    supported = [
+        r
+        for r in group
+        if r["action"] in (*candidates, "NO_INTERVENTION") and r["utility"] is not None
+    ]
+    observed_best = max((r["utility"] for r in supported), default=None)
     results.append(
         {
             "state_id": state_id,
@@ -45,6 +51,12 @@ for (state_id, repeat), group in sorted(groups.items()):
             "allowed_minus_forced": allowed["utility"] - forced["utility"]
             if valid
             else None,
+            "observed_supported_actions": [r["action"] for r in supported],
+            "all_deployable_actions_observed": len(supported) == len(candidates) + 1,
+            "observed_best_utility": observed_best,
+            "observed_opportunity_loss": observed_best - allowed["utility"]
+            if observed_best is not None and allowed["utility"] is not None
+            else None,
         }
     )
 by_task = defaultdict(list)
@@ -57,6 +69,7 @@ report = {
     "allowed_minus_forced": interval([sum(v) / len(v) for v in by_task.values()]),
     "generic_and_damage_controls": collection_diagnostics(rows),
     "full_policy_uncertainty": "WAIT trajectories cannot be valued by choosing the best observed future branch",
+    "opportunity_loss_scope": "post-hoc E2 observed valid actions only, excluding generic reminders; stochastic realized upper bound, never a training target or an end-to-end WAIT value",
 }
 dump(a.output, report)
 print(

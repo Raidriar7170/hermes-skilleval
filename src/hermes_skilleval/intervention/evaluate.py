@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections import Counter
 import random
 import shutil
 from pathlib import Path
@@ -200,6 +201,39 @@ def summarize_rows(rows):
             if valid
             else None,
             "injections": sum(r["execution"].get("injected", False) for r in selected),
+            "decision_reasons": dict(Counter(d["reason"] for d in decisions)),
+            "decisions_by_stage": {
+                stage: dict(
+                    Counter(d["reason"] for d in decisions if d["stage"] == stage)
+                )
+                for stage in ("E0", "E1", "E2")
+            },
+            "regression_failures": sum(
+                r["checks"].get("regression", {}).get("valid", False)
+                and not r["checks"]["regression"]["passed"]
+                for r in selected
+            ),
+            "policy_failures": sum(
+                r["checks"].get("policy", {}).get("valid", False)
+                and not r["checks"]["policy"]["passed"]
+                for r in selected
+            ),
+            "execution_statuses": dict(
+                Counter(r["execution"]["status"] for r in selected)
+            ),
+            "overhead_measured_runs": sum(
+                isinstance(r["execution"].get("controller_overhead_seconds"), dict)
+                for r in selected
+            ),
+            "controller_overhead_seconds": {
+                kind: sum(
+                    (r["execution"].get("controller_overhead_seconds") or {}).get(
+                        kind, 0
+                    )
+                    for r in selected
+                )
+                for kind in ("state", "retrieval", "checkpoint", "decision")
+            },
             "waiting_decisions": sum(
                 d["reason"] == "WAIT_MODEL_DECISION" for d in decisions
             ),

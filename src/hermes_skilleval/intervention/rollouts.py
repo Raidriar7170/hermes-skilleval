@@ -191,6 +191,7 @@ def execute(
     input_observed = False
     spent = 0.0
     new_events = []
+    overhead = dict(state=0.0, retrieval=0.0, checkpoint=0.0, decision=0.0)
     current_stage = meta["state"]["stage"] if from_checkpoint else "E0"
     dump(
         root / "started.json",
@@ -208,6 +209,7 @@ def execute(
             remaining = initial_remaining - (time.monotonic() - budget_started)
             if remaining <= 0:
                 break
+            measured = time.monotonic()
             state = state_for(
                 task, root, events, current_stage, turns, remaining, total
             )
@@ -217,6 +219,7 @@ def execute(
                 if from_checkpoint and turns == initial_turns
                 else opportunity(state, seen, candidate_complete=done)
             )
+            overhead["state"] += time.monotonic() - measured
             guidance = (
                 payload
                 if turns
@@ -227,12 +230,15 @@ def execute(
                 state = replace(state, stage=event_stage)
                 current_stage = event_stage
                 seen.append(event_stage)
+                measured = time.monotonic()
                 if controller and controller.method == "H-no-state":
                     candidates = retriever.rank(
                         state.request + "\n" + state.repo_facts
                     )[:2]
                 else:
                     candidates = retriever.candidates(state) if retriever else []
+                overhead["retrieval"] += time.monotonic() - measured
+                measured = time.monotonic()
                 cp = checkpoint(
                     root,
                     event_stage,
@@ -254,7 +260,9 @@ def execute(
                 frozen.update(state=state.to_dict(), remaining_seconds=remaining)
                 dump(cp / "checkpoint.json", frozen)
                 checkpoints.append(str(cp))
+                overhead["checkpoint"] += time.monotonic() - measured
                 if controller:
+                    measured = time.monotonic()
                     gains, wait = (
                         predict(state, candidates)
                         if predict and controller.remaining_interventions
@@ -268,8 +276,15 @@ def execute(
                         has_future=event_stage != "E2" and remaining > 0,
                         dynamic_top=retriever.dynamic_top(state),
                     )
+                    decision_seconds = time.monotonic() - measured
+                    overhead["decision"] += decision_seconds
                     decisions.append(
-                        {**decision, "stage": event_stage, "state": state.to_dict()}
+                        {
+                            **decision,
+                            "stage": event_stage,
+                            "state": state.to_dict(),
+                            "decision_seconds": decision_seconds,
+                        }
                     )
                     if decision["action"] == "UNAVAILABLE":
                         status = "METHOD_UNAVAILABLE"
@@ -395,6 +410,7 @@ def execute(
         "initial_remaining": initial_remaining,
         "tail_seconds": elapsed,
         "preparation_seconds": prepared - started,
+        "controller_overhead_seconds": overhead,
         "prefix_seconds": total - initial_remaining,
         "model_input_observed": input_observed,
         "injected": bool(payload) or any(d["action"] == "INJECT" for d in decisions),
