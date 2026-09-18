@@ -38,7 +38,9 @@ The predetermined development diagnostics compare skills with generic reminders 
 
 See [commands](commands.md) for preparation, collection, fitting, independent-process reload, comparison and records-only replay. Research outcomes are reported separately from successful implementation and training. No routing support certification or default promotion follows from this prototype.
 
-The initial preflight freeze was superseded before the first research model call solely to pass the same retriever into offline tails, preserving subsequent retrieval overhead. The original preflight manifest remains in Git; the active public protocol is `configs/adaptive-skill-intervention-v1/protocol.json`, bound to private `protocol-v2.json`. Subsequent report/records-replay work does not change frozen execution or sampling semantics.
+The initial preflight freeze was superseded before the first research model call solely to pass the same retriever into offline tails, preserving subsequent retrieval overhead. The original preflight manifest remains in Git; raw collection remains bound to private `protocol-v2.json`, archived publicly as `protocol-collection-v2.json`. The active public protocol now binds private `protocol-v3.json` for revised labels and final evaluation.
+
+During collection, independent review confirmed a checker adapter defect in four training tasks (202, 223, 228, 250): simulated Click stdin lacks file-descriptor interfaces used by their historical CSV import implementations. The versioned repair writes identical CSV/TSV/BOM bytes to actual temporary files, matching the public requests and retaining all feature assertions. Four bases remain target-red/regression-green and references target-green/regression-green. Raw executions, source patches, budgets, action roster and file-policy verdicts remain unchanged. Every affected saved branch/repeat is rechecked symmetrically without Agent resampling; original verdicts remain alongside revised verdicts. Training waits for the derivative records. This post-observation checker repair is a disclosed validity limitation, not a new sampling opportunity.
 
 ## Related mechanisms
 

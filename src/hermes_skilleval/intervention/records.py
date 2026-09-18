@@ -18,7 +18,7 @@ def verify_artifacts(row):
     execution = row["execution"]
     if (run / "execution.json").exists() and read(run / "execution.json") != execution:
         raise ValueError("execution record mismatch: " + str(run))
-    checks_root = run.parent / (run.name + "-checks")
+    checks_root = Path(row.get("checks_root", run.parent / (run.name + "-checks")))
     if not (checks_root / "acceptance.json").exists():
         if row["quality"] is not None:
             raise ValueError("label without acceptance record")

@@ -46,7 +46,7 @@ def export_rows(rows, group):
         )
         dest = a.output / relative
         dest.mkdir(parents=True, exist_ok=True)
-        source = run.parent / (run.name + "-checks")
+        source = Path(row.get("checks_root", run.parent / (run.name + "-checks")))
         execution = row["execution"]
         small_execution = {
             k: execution.get(k)
@@ -93,6 +93,17 @@ def export_rows(rows, group):
             checks={},
             artifact_sha256={},
         )
+        if "previous_verdict" in row:
+            old = row["previous_verdict"]
+            record["previous_verdict"] = {
+                "quality": old["quality"],
+                "utility": old["utility"],
+                "checks": {
+                    k: {field: check.get(field) for field in ("valid", "passed")}
+                    for k, check in old["checks"].items()
+                },
+            }
+            record["original_records_sha256"] = row["original_records_sha256"]
         if "state" in row:
             record["state_summary"] = {
                 k: row["state"][k]
@@ -158,6 +169,15 @@ for kind, rows in [
         {
             "format": "asi-public-v1",
             "protocol_sha256": sha(a.protocol),
+            "label_provenance": {
+                key: read(a.collection)[key]
+                for key in (
+                    "collection_protocol_sha256",
+                    "original_records_sha256",
+                    "checker_amendment",
+                )
+                if kind == "collection" and key in read(a.collection)
+            },
             "rows": rows,
             "scope": "captured patch and verifier-record recomputation; fresh clean-base source verification requires private source evidence",
         },

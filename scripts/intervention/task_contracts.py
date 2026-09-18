@@ -44,7 +44,8 @@ from sqlite_utils import Database
 from sqlite_utils.cli import cli
 from click.testing import CliRunner
 p=str(tmp_path/'data.db')
-r=CliRunner().invoke(cli,['insert',p,'articles','-','--csv','-f','title','-f','body'],input='id,title,body\\n1,alpha,bravo\\n2,charlie,delta\\n')
+src=tmp_path/'articles.csv';src.write_text('id,title,body\\n1,alpha,bravo\\n2,charlie,delta\\n',encoding='utf-8')
+r=CliRunner().invoke(cli,['insert',p,'articles',str(src),'--csv','-f','title','-f','body'])
 assert r.exit_code==0,r.output
 db=Database(p)
 for term in ['alpha','bravo']:
@@ -67,7 +68,8 @@ from sqlite_utils.cli import cli
 from click.testing import CliRunner
 for sep in [';', '|']:
  p=str(tmp_path/('data'+str(ord(sep))+'.db'))
- r=CliRunner().invoke(cli,['insert',p,'items','-','--delimiter',sep],input=f'id{sep}name\\n1{sep}alpha\\n2{sep}beta\\n')
+ src=tmp_path/('input'+str(ord(sep))+'.csv');src.write_text(f'id{sep}name\\n1{sep}alpha\\n2{sep}beta\\n',encoding='utf-8')
+ r=CliRunner().invoke(cli,['insert',p,'items',str(src),'--delimiter',sep])
  assert r.exit_code==0,r.output
  assert [{k:str(v) for k,v in row.items()} for row in Database(p)['items'].rows]==[{'id':'1','name':'alpha'},{'id':'2','name':'beta'}]
 """,
@@ -77,7 +79,8 @@ from sqlite_utils.cli import cli
 from click.testing import CliRunner
 for sep,opt in [(',', '--csv'),('\\t','--tsv')]:
  p=str(tmp_path/('data'+str(ord(sep))+'.db'))
- r=CliRunner().invoke(cli,['insert',p,'items','-',opt,'--no-headers'],input=f'alpha{sep}17\\nbeta{sep}29\\n')
+ src=tmp_path/('input'+str(ord(sep))+'.csv');src.write_text(f'alpha{sep}17\\nbeta{sep}29\\n',encoding='utf-8')
+ r=CliRunner().invoke(cli,['insert',p,'items',str(src),opt,'--no-headers'])
  assert r.exit_code==0,r.output
  rows=list(Database(p)['items'].rows)
  assert len(rows)==2 and list(map(str,rows[0].values()))==['alpha','17'] and list(map(str,rows[1].values()))==['beta','29']
@@ -109,7 +112,8 @@ from sqlite_utils.cli import cli
 from click.testing import CliRunner
 for mark in ['\\ufeff','']:
  p=str(tmp_path/('bom.db' if mark else 'plain.db'))
- r=CliRunner().invoke(cli,['insert',p,'items','-','--csv'],input=mark+'id,name\\n1,alpha\\n2,beta\\n')
+ src=tmp_path/('bom.csv' if mark else 'plain.csv');src.write_bytes((mark+'id,name\\n1,alpha\\n2,beta\\n').encode('utf-8'))
+ r=CliRunner().invoke(cli,['insert',p,'items',str(src),'--csv'])
  assert r.exit_code==0,r.output
  assert [{k:str(v) for k,v in row.items()} for row in Database(p)['items'].rows]==[{'id':'1','name':'alpha'},{'id':'2','name':'beta'}]
 """,

@@ -22,6 +22,7 @@ for key in (
 ):
     p.add_argument("--" + key, type=Path, required=True)
 p.add_argument("--collector-pid", type=int, required=True)
+p.add_argument("--revalidated-collection", type=Path)
 a = p.parse_args()
 
 
@@ -47,6 +48,21 @@ try:
         time.sleep(5)
     status("VERIFYING_COLLECTED_ARTIFACTS")
     run("-m", "hermes_skilleval.intervention.cli", "replay", "--records", records)
+    if a.revalidated_collection:
+        status("REVALIDATING_SAVED_PATCHES_WITH_VERSIONED_CHECKER")
+        run(
+            "scripts/intervention/revalidate_labels.py",
+            "--collection",
+            a.collection,
+            "--protocol",
+            a.protocol,
+            "--tasks",
+            a.tasks,
+            "--output",
+            a.revalidated_collection,
+        )
+        records = a.revalidated_collection / "records.json"
+        run("-m", "hermes_skilleval.intervention.cli", "replay", "--records", records)
     status("TRAINING_REAL_PAIRED_VALUES")
     run(
         "-m",

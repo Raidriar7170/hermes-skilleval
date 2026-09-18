@@ -7,8 +7,8 @@ Set task-specific paths, not `HOME` or `CODEX_HOME`:
 ```sh
 ASI_PRIVATE=/path/to/private/asi
 ASI_ENCODER=/path/to/pinned/all-MiniLM-L6-v2/snapshot
-ASI_TASKS="$ASI_PRIVATE/tasks-candidate-v4"
-ASI_PROTOCOL="$ASI_PRIVATE/protocol-v2.json"
+ASI_TASKS="$ASI_PRIVATE/tasks-candidate-v5"
+ASI_PROTOCOL="$ASI_PRIVATE/protocol-v3.json"
 ASI_SKILLS=configs/conditional-applicability-v1/skills
 ASI_PAYLOADS=configs/adaptive-skill-intervention-v1/payloads
 ```
@@ -29,18 +29,23 @@ python -m hermes_skilleval.intervention.cli prepare \
   --skills "$ASI_SKILLS" --payloads "$ASI_PAYLOADS" --encoder "$ASI_ENCODER"
 
 python -m hermes_skilleval.intervention.cli collect \
-  --protocol "$ASI_PROTOCOL" --tasks "$ASI_TASKS" --output "$ASI_PRIVATE/collection-v1" \
+  --protocol "$ASI_PRIVATE/protocol-v2.json" --tasks "$ASI_PRIVATE/tasks-candidate-v4" --output "$ASI_PRIVATE/collection-v1" \
   --skills "$ASI_SKILLS" --payloads "$ASI_PAYLOADS" --encoder "$ASI_ENCODER"
 
+# Preserve the original collection; revise only the four confirmed checker adapters.
+python scripts/intervention/revalidate_labels.py \
+  --collection "$ASI_PRIVATE/collection-v1" --protocol "$ASI_PROTOCOL" \
+  --tasks "$ASI_TASKS" --output "$ASI_PRIVATE/collection-v2-labels"
+
 python -m hermes_skilleval.intervention.cli train \
-  --records "$ASI_PRIVATE/collection-v1/records.json" --output "$ASI_PRIVATE/models-v1" \
+  --records "$ASI_PRIVATE/collection-v2-labels/records.json" --output "$ASI_PRIVATE/models-v1" \
   --payloads "$ASI_PAYLOADS" --encoder "$ASI_ENCODER"
 
 # A separate process must reproduce the saved probes before final evaluation.
 python -m hermes_skilleval.intervention.cli reload --models "$ASI_PRIVATE/models-v1"
 
 python scripts/intervention/diagnose_development.py \
-  --records "$ASI_PRIVATE/collection-v1/records.json" --models "$ASI_PRIVATE/models-v1" \
+  --records "$ASI_PRIVATE/collection-v2-labels/records.json" --models "$ASI_PRIVATE/models-v1" \
   --payloads "$ASI_PAYLOADS" --encoder "$ASI_ENCODER" \
   --output "$ASI_PRIVATE/development-diagnostics.json"
 
@@ -49,7 +54,7 @@ python -m hermes_skilleval.intervention.cli evaluate \
   --skills "$ASI_SKILLS" --payloads "$ASI_PAYLOADS" --encoder "$ASI_ENCODER" \
   --models "$ASI_PRIVATE/models-v1"
 
-python -m hermes_skilleval.intervention.cli replay --records "$ASI_PRIVATE/collection-v1/records.json"
+python -m hermes_skilleval.intervention.cli replay --records "$ASI_PRIVATE/collection-v2-labels/records.json"
 python -m hermes_skilleval.intervention.cli replay --records "$ASI_PRIVATE/evaluation-v1/records.json"
 ```
 
@@ -63,3 +68,5 @@ The final table must include all 96 scheduled runs, including unknowns. Interpre
 After private replay passes, `scripts/intervention/export_study.py` exports all captured patches, fixed checks, verifier XML, compact rows, model identities and training diagnostics. The export contains neither full source datasets nor model weights or raw Agent history. `hermes-intervention replay --records artifacts/adaptive-skill-intervention-v1/evaluation-records.json` verifies this portable record package without loading a model. This proves consistency with captured verifier outputs; rerunning source behavior still requires the original public bases and isolated checker.
 
 `continue_study.py` can wait for the existing collector process, then run private replay, actual training, independent reload, the predetermined development diagnostics, all final comparisons and final replay in sequence. It has no outcome-based retry or model selection loop. Any engineering exception stops the chain with a diagnostic status and leaves all attempts intact.
+
+For this study, pass `--revalidated-collection "$ASI_PRIVATE/collection-v2-labels"` to `continue_study.py`. The coordinator verifies the raw records, performs the versioned checker revalidation without Agent calls, verifies derivative records, and only then trains. Original collection v2 and revised protocol v3 remain separate immutable identities.

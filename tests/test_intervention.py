@@ -8,6 +8,28 @@ from hermes_skilleval.intervention.state import observe, opportunity, is_test_co
 from hermes_skilleval.intervention.rollouts import utility
 
 
+def test_versioned_checks_are_verified_at_their_explicit_root(tmp_path):
+    import json
+    from hermes_skilleval.intervention.records import verify_artifacts
+
+    run = tmp_path / "retained-run"
+    revised = tmp_path / "revised-checks"
+    revised.mkdir()
+    checks = {"policy": {"valid": True, "passed": False}}
+    (revised / "acceptance.json").write_text(json.dumps({"checks": checks}))
+    row = {
+        "run": str(run),
+        "checks_root": str(revised),
+        "execution": {"status": "COMPLETED"},
+        "quality": False,
+        "checks": checks,
+    }
+    assert verify_artifacts(row)["status"] == "VERIFIED"
+    row["checks"] = {"policy": {"valid": True, "passed": True}}
+    with pytest.raises(ValueError, match="acceptance record mismatch"):
+        verify_artifacts(row)
+
+
 def event(command, exit_code, output=""):
     return {
         "method": "item/completed",
