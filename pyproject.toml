@@ -24,12 +24,15 @@ embedding = [
   "socksio>=1.0.0",
 ]
 
+intervention-train = ["torch>=2.6", "transformers>=5.0", "tiktoken==0.12.0"]
+
 repo-routing-train = ["torch>=2.6", "transformers>=5.0", "peft>=0.18", "scikit-learn>=1.7", "scipy>=1.11"]
 
 [project.scripts]
 skilleval = "hermes_skilleval.cli:main"
 hermes-maintain = "hermes_skilleval.maintenance_cli:main"
 hermes-applicability = "hermes_skilleval.repo_routing.decision_cli:main"
+hermes-intervention = "hermes_skilleval.intervention.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
