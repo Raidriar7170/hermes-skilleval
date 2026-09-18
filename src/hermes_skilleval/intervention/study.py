@@ -360,6 +360,7 @@ def paired_rows(
             "stage": row["stage"],
             "terminal_confirmed": row["stage"] == "E2",
             "x": encoder.features(state, no_state=no_state),
+            "candidate_ids": candidates,
             "candidates": [
                 encoder.encode(retriever.full_bodies[k]) for k in candidates
             ],

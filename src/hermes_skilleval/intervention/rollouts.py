@@ -9,7 +9,17 @@ from pathlib import Path
 import shutil
 import time
 
-from .session import Session, NEUTRAL, CWD, SCRATCH, IMAGE, dump, inventory, snapshot
+from .session import (
+    Session,
+    NEUTRAL,
+    CWD,
+    SCRATCH,
+    IMAGE,
+    dump,
+    inventory,
+    snapshot,
+    clone_scratch,
+)
 from .state import observe, opportunity, prefix_digest
 
 GENERIC = (
@@ -75,7 +85,7 @@ def state_for(task, root, events, stage, turns, remaining, total):
     if not source:
         # Public snippets from actually observed tool output, never hidden assets.
         source = "\n".join(
-            e["params"]["item"].get("aggregatedOutput", "")
+            (e["params"]["item"].get("aggregatedOutput") or "")
             for e in events
             if e.get("method") == "item/completed"
             and e.get("params", {}).get("item", {}).get("type") == "commandExecution"
@@ -153,7 +163,7 @@ def execute(
         meta = json.loads((cp / "checkpoint.json").read_text())
         root.mkdir(parents=True, exist_ok=False)
         shutil.copytree(cp / "source", root / "source", symlinks=True)
-        shutil.copytree(cp / "scratch", root / "scratch", symlinks=True)
+        clone_scratch(cp / "scratch", root / "scratch")
         remaining = meta["remaining_seconds"]
         total = meta["total_seconds"]
         events = list(meta["visible_events"])

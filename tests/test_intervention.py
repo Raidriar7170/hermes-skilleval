@@ -224,3 +224,34 @@ def test_final_uncertainty_clusters_repeats_by_task():
     assert result["paired_runs"] == 4
     assert result["utility"]["independent_tasks"] == 2
     assert result["utility"]["mean"] == pytest.approx(0.02)
+
+
+def test_failed_tool_with_null_output_is_observable_not_parser_failure():
+    observation = state(
+        [event("rg absent first.py", 1, None), event("rg other second.py", 1, None)]
+    )
+    assert observation.repeated_error_count == 1
+    assert observation.failure_text is None
+    assert not observation.public_test_failure_seen
+    failed_test = state([event("pytest -q", 1, None)])
+    assert failed_test.public_test_failure_seen
+    assert opportunity(failed_test, ["E0"]) == "E1"
+
+
+def test_scratch_snapshot_preserves_independent_fifo_nodes(tmp_path):
+    import os
+    from hermes_skilleval.intervention.session import clone_scratch
+
+    source = tmp_path / "source"
+    source.mkdir()
+    os.mkfifo(source / "stream")
+    clone_scratch(source, tmp_path / "first")
+    clone_scratch(source, tmp_path / "second")
+    assert (
+        inventory(source)
+        == inventory(tmp_path / "first")
+        == inventory(tmp_path / "second")
+    )
+    assert (tmp_path / "first/stream").is_fifo()
+    (tmp_path / "first/stream").unlink()
+    assert (source / "stream").is_fifo() and (tmp_path / "second/stream").is_fifo()

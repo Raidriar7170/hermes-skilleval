@@ -104,3 +104,62 @@ def verify_artifacts(row):
         ):
             raise ValueError("fork prefix mismatch")
     return {"status": "VERIFIED", "artifacts_verified": count}
+
+
+def verify_public_artifacts(row, root):
+    """Verify portable captured evidence; not a new source execution claim."""
+    directory = Path(root) / row["evidence_path"]
+    for name, digest in row["artifact_sha256"].items():
+        if hashlib.sha256((directory / name).read_bytes()).hexdigest() != digest:
+            raise ValueError("public artifact digest mismatch: " + name)
+    if row.get("patch_sha256"):
+        if (
+            hashlib.sha256((directory / "candidate.patch").read_bytes()).hexdigest()
+            != row["patch_sha256"]
+        ):
+            raise ValueError("public patch changed")
+    for kind in ("target", "regression"):
+        check = row["checks"].get(kind)
+        junit = directory / (kind + "-junit.xml")
+        if not check or not junit.exists():
+            if check and check.get("valid"):
+                raise ValueError("valid check without public JUnit")
+            continue
+        cases = []
+        for case in ET.parse(junit).iter("testcase"):
+            outcome = (
+                "error"
+                if case.find("error") is not None
+                else "failed"
+                if case.find("failure") is not None
+                else "skipped"
+                if case.find("skipped") is not None
+                else "passed"
+            )
+            cases.append(
+                {
+                    "id": case.attrib["classname"] + "::" + case.attrib["name"],
+                    "outcome": outcome,
+                }
+            )
+        expected = read(directory / (kind + "-collected.json"))
+        valid = (
+            bool(expected)
+            and sorted(c["id"] for c in cases) == sorted(expected)
+            and all(c["outcome"] not in ("error", "skipped") for c in cases)
+        )
+        passed = (
+            valid
+            and check["returncode"] == 0
+            and all(c["outcome"] == "passed" for c in cases)
+        )
+        if (
+            cases != check["cases"]
+            or valid != check["valid"]
+            or passed != check["passed"]
+        ):
+            raise ValueError("public JUnit recomputation mismatch")
+    return {
+        "status": "CAPTURED_PUBLIC_RECORDS_VERIFIED",
+        "artifacts": len(row["artifact_sha256"]),
+    }

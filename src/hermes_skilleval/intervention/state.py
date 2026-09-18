@@ -128,16 +128,21 @@ def observe(
     tests = [c for c in commands if is_test_command(c.get("command", ""))]
     failures = [c for c in commands if c.get("exitCode") not in (None, 0)]
     last_test = tests[-1] if tests else None
-    errors = [c.get("aggregatedOutput", "")[-2000:] for c in failures[-4:]]
-    signatures = [re.sub(r"\b\d+\b", "#", e.strip()) for e in errors]
+    errors = [(c.get("aggregatedOutput") or "")[-2000:] for c in failures[-4:]]
+    signatures = [
+        re.sub(r"\b\d+\b", "#", (e or str(c.get("command", ""))).strip())
+        for e, c in zip(errors, failures[-4:])
+    ]
     repeated = max(Counter(signatures).values(), default=0)
     reads = sorted({f for c in commands for f in FILE.findall(c.get("command", ""))})
     skill_reads = sorted({f for f in reads if "SKILL.md" in f})
     raw_failure = (
-        last_test.get("aggregatedOutput", "")
+        (last_test.get("aggregatedOutput") or "")
         if last_test and last_test.get("exitCode")
         else "\n".join(errors)
     )
+    if not raw_failure.strip():
+        raw_failure = ""
     # Independent per-field limits ensure errors and real source survive together.
     cap = text_limit // 4
     retained = [raw_failure[-cap:], diff[:cap], source[:cap], "\n".join(errors)[-cap:]]

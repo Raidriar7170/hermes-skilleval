@@ -194,6 +194,19 @@ def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
         save_models(output / name, gain, wait, meta)
         report["methods"][name] = {
             "selected_epochs": count,
+            "candidate_observation_coverage": [
+                {
+                    "state_id": state["state_id"],
+                    "candidate": action,
+                    "observed_valid_pair": any(
+                        r["state_id"] == state["state_id"] and r["action"] == action
+                        for r in rows
+                    ),
+                }
+                for chain in chains.values()
+                for state in chain
+                for action in state["candidate_ids"]
+            ],
             "gain_training": log,
             "wait_training": wait_log,
             "dev_candidates": [

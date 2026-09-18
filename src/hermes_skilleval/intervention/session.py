@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import queue
 import shutil
+import stat
 import subprocess
 import threading
 import time
@@ -58,11 +59,30 @@ def inventory(root: Path):
         if p.is_symlink():
             result[str(p.relative_to(root))] = "symlink:" + os.readlink(p)
             continue
+        if p.is_fifo():
+            result[str(p.relative_to(root))] = "fifo:" + oct(
+                stat.S_IMODE(p.stat().st_mode)
+            )
+            continue
         if p.is_file():
             result[str(p.relative_to(root))] = hashlib.sha256(
                 p.read_bytes()
             ).hexdigest()
     return result
+
+
+def clone_scratch(source, output):
+    """Completed tools have no live pipe handles; preserve FIFO nodes, not buffers."""
+
+    def copy_file(src, dst):
+        mode = os.stat(src, follow_symlinks=False).st_mode
+        if stat.S_ISFIFO(mode):
+            os.mkfifo(dst, stat.S_IMODE(mode))
+            shutil.copystat(src, dst)
+            return dst
+        return shutil.copy2(src, dst)
+
+    return shutil.copytree(source, output, symlinks=True, copy_function=copy_file)
 
 
 def snapshot(source: Path, scratch: Path, output: Path, metadata: dict):
@@ -72,7 +92,7 @@ def snapshot(source: Path, scratch: Path, output: Path, metadata: dict):
     output.mkdir(parents=True, exist_ok=False)
     before = {"source": inventory(source), "scratch": inventory(scratch)}
     shutil.copytree(source, output / "source", symlinks=True)
-    shutil.copytree(scratch, output / "scratch", symlinks=True)
+    clone_scratch(scratch, output / "scratch")
     after = {
         "source": inventory(output / "source"),
         "scratch": inventory(output / "scratch"),

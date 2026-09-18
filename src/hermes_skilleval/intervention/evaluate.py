@@ -216,11 +216,15 @@ def summarize_rows(rows):
 
 def replay(records_path):
     """Records only: imports no torch/models and never runs Docker or an Agent."""
-    from .records import verify_artifacts
+    from .records import verify_artifacts, verify_public_artifacts
 
-    rows = read(records_path)["rows"]
+    bundle = read(records_path)
+    rows = bundle["rows"]
     for row in rows:
-        verify_artifacts(row)
+        if bundle.get("format") == "asi-public-v1":
+            verify_public_artifacts(row, Path(records_path).parent)
+        else:
+            verify_artifacts(row)
         execution = row["execution"]
         checks = row["checks"]
         quality = qualify_quality(execution, checks)
