@@ -150,6 +150,7 @@ def execute(
     payload=None,
     payload_tokens=0,
     token_counts=None,
+    initialization_seconds=0.0,
 ):
     """One trajectory. `predict` receives current State only, never outcomes.
 
@@ -157,7 +158,11 @@ def execute(
     only the chosen continuation. Files and recorded attempts are never overwritten.
     """
     task, root = Path(task), Path(root)
-    started = time.monotonic()
+    import math
+
+    if not math.isfinite(initialization_seconds) or initialization_seconds < 0:
+        raise ValueError("invalid charged policy initialization time")
+    started = time.monotonic() - initialization_seconds
     if from_checkpoint:
         cp = Path(from_checkpoint)
         meta = json.loads((cp / "checkpoint.json").read_text())
@@ -410,6 +415,7 @@ def execute(
         "initial_remaining": initial_remaining,
         "tail_seconds": elapsed,
         "preparation_seconds": prepared - started,
+        "policy_initialization_seconds": initialization_seconds,
         "controller_overhead_seconds": overhead,
         "prefix_seconds": total - initial_remaining,
         "model_input_observed": input_observed,

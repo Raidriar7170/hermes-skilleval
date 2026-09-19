@@ -27,6 +27,13 @@ replay(a.collection)
 replay(a.evaluation)
 collection = read(a.collection)["rows"]
 evaluation = read(a.evaluation)["rows"]
+setup_log = a.evaluation.parent / "controller-setup.jsonl"
+shared_setup = (
+    [json.loads(line) for line in setup_log.read_text().splitlines()]
+    if setup_log.exists()
+    else []
+)
+dump(a.output / "shared-controller-setup.json", shared_setup)
 assert len(evaluation) == protocol["final_runs"]
 assert len({r["task_id"] for r in evaluation}) == protocol["split_counts"]["test"]
 
@@ -60,6 +67,7 @@ def export_rows(rows, group):
                 "tail_seconds",
                 "prefix_seconds",
                 "preparation_seconds",
+                "policy_initialization_seconds",
                 "controller_overhead_seconds",
                 "model_input_observed",
                 "injected",
@@ -241,6 +249,9 @@ summary = {
     "paired_H_full_vs": final_comparisons(evaluation),
     "scheduled_final_runs": 96,
     "actual_final_runs": len(evaluation),
+    "shared_controller_setup_seconds": sum(r["seconds"] for r in shared_setup)
+    if shared_setup
+    else None,
     "execution_statuses": dict(Counter(r["execution"]["status"] for r in evaluation)),
     "gain_model_calls": sum(r["gain_model_calls"] for r in evaluation),
     "wait_model_calls": sum(r["wait_model_calls"] for r in evaluation),

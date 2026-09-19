@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import time
 from collections import Counter
 import random
 import shutil
@@ -74,7 +76,18 @@ def evaluate(
                 ).hexdigest(),
             },
         )
+    setup_started = time.monotonic()
     encoder, retriever, counts, _ = assets(payload_dir, encoder_path)
+    with (output / "controller-setup.jsonl").open("a") as setup_log:
+        setup_log.write(
+            json.dumps(
+                {
+                    "seconds": time.monotonic() - setup_started,
+                    "scope": "shared encoder and catalog setup once per evaluator process; outside per-trajectory budgets for every arm",
+                }
+            )
+            + "\n"
+        )
     home = output / "session-home"
     home.mkdir(mode=0o700, exist_ok=True)
     auth = home / "auth.json"
@@ -98,11 +111,14 @@ def evaluate(
             random.Random(protocol["order_seed"] + sum(tid.encode())).shuffle(order)
             rows = []
             for method, repeat in order:
+                initialization_started = time.monotonic()
                 predictor = (
                     Predictor(models, method, encoder, retriever)
                     if method.startswith("H-")
                     else None
                 )
+                controller = Controller(method)
+                initialization_seconds = time.monotonic() - initialization_started
                 run = root / (method + f"-r{repeat}")
                 result = run_once(
                     task,
@@ -111,9 +127,10 @@ def evaluate(
                     skill_dir,
                     total=protocol["total_seconds"],
                     retriever=retriever,
-                    controller=Controller(method),
+                    controller=controller,
                     predict=predictor,
                     token_counts=counts,
+                    initialization_seconds=initialization_seconds,
                 )
                 rows.append(
                     {

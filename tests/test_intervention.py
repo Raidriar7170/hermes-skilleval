@@ -50,6 +50,27 @@ def test_incomplete_acceptance_is_unknown_not_success_or_failure():
     assert qualify_quality(execution, checks) is None
 
 
+def test_policy_loading_consumes_original_budget_without_an_agent_call(tmp_path):
+    from hermes_skilleval.intervention.rollouts import execute
+
+    task = tmp_path / "task"
+    (task / "base").mkdir(parents=True)
+    result = execute(
+        task,
+        tmp_path / "run",
+        tmp_path / "home",
+        tmp_path / "skills",
+        total=1,
+        initialization_seconds=2,
+    )
+    assert result["status"] == "TIMEOUT"
+    assert result["thread_id"] is None and result["turns"] == 0
+    assert result["total_seconds"] == 1 and result["tail_seconds"] >= 2
+    assert result["policy_initialization_seconds"] == 2
+    with pytest.raises(ValueError, match="invalid charged policy initialization time"):
+        execute(task, tmp_path / "invalid", None, None, initialization_seconds=-1)
+
+
 def test_public_usage_excludes_resumed_prefix_and_duplicate_updates(tmp_path):
     import json
     from hermes_skilleval.intervention.usage import reported_usage
