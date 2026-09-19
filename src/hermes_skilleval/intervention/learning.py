@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 import hashlib
 import json
+import time
 from pathlib import Path
 
 from .session import dump, inventory
@@ -112,6 +113,7 @@ def model_identity(output):
 
 
 def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
+    wall_started, cpu_started = time.monotonic(), time.process_time()
     import torch
 
     torch.set_num_threads(2)
@@ -288,6 +290,11 @@ def train(records_path, output, payload_dir, encoder_path, epochs=(80, 160)):
         "scope": "fixed 160-epoch gain-only diagnostic; original candidate roster, no runtime arm",
         "training": state_log,
         "dev_scores": errors(state_gain, state_only_dev),
+    }
+    report["offline_training_cost"] = {
+        "wall_seconds": time.monotonic() - wall_started,
+        "process_cpu_seconds": time.process_time() - cpu_started,
+        "scope": "encoder loading and features, fixed dev selection, nested cross-fit, final heads and state-only diagnostic; excludes Agent collection and independent reload",
     }
     dump(output / "training.json", report)
     return report
