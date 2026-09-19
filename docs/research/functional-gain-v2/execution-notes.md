@@ -185,3 +185,13 @@ not experimental trajectories or fitting evidence. Real matrix/panel/delay
 execution, complete exports and claim verification remain pending. Native
 collection process 94494 / exec session 69002 remained live at the last check;
 8/16 registered first native trajectories had completed, all functional pass.
+
+
+Native probe update: the ninth registered task `sqlite-utils-fix-60811e7`
+completed normally with `VERIFIED`, target=0, protected regression=1,
+functional=0, file-policy=PASS. This is an observed functional failure, not a
+policy-only difference. The next task passed, bringing the recorded first
+trajectories to 10/16 (9 functional pass, 1 fail, 0 unknown). Preserve this
+candidate and all previous successful trajectories; no failure-only sampling.
+No skill rescue or damage has yet been observed because paired tails have not
+started. Full remaining registered native continuation stays active.
