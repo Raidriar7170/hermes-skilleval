@@ -251,3 +251,23 @@ The first real paired skill tail completed with actual guidance input observed,
 658 payload tokens, original remaining budget 599.9063987500267 seconds, and
 205.268419791013 active seconds. Hidden functional checks are still held until
 all scheduled tails of that task finish; normal execution is not yet success.
+
+## 2026-09-19 continuation: sample identity and intervention receipts
+
+A focused integrity review found two concrete gaps: common-panel reporting had
+not rejected equal-sized sets containing an unregistered action, and paired
+verification had not independently compared each saved row with its reservation,
+actual initial source inventory and newly observed guidance text. Added those
+checks, plus delayed-stage/single-use/fixed-skill receipt checks. Existing sampled
+executions remain untouched; later replay/training applies the stronger checks
+symmetrically. No hidden functional checks or Agent calls were used to validate
+these receipts. All seven completed real tails available at the check passed.
+
+The final matrix will persist actual gain/wait head call counters and gain
+artifact identity beside each execution. Reused executions without a saved call
+receipt are explicitly unknown, never reported as zero fresh calls. Private and
+portable verification reject a myopic receipt containing wait-head calls.
+
+57 focused tests passed, including changed-source/wrong-guidance and wrong-panel-
+action counterexamples. These changes do not modify sample selection, objective,
+model configuration, budgets, repetitions or any already produced trajectory.

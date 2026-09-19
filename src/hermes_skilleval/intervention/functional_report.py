@@ -142,6 +142,13 @@ def secondary_table(rows):
 
 def mechanism_tables(panel_rows, delay_rows, panel_locks, families, registered_delays):
     actions = indexed(panel_rows, ("task_id", "repeat", "action"))
+    planned_actions = {
+        (tid, r["repeat"], r["action"])
+        for tid, lock in panel_locks
+        for r in lock["action_roster"]
+    }
+    if not set(actions) <= planned_actions:
+        raise ValueError("unregistered common-panel sample")
     delayed = indexed(delay_rows, ("task_id", "repeat", "action"))
     planned_delays = indexed(registered_delays, ("task_id", "repeat", "action"))
     if not set(delayed) <= set(planned_delays):

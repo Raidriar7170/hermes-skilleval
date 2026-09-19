@@ -146,6 +146,7 @@ def matrix(
                 seconds = time.monotonic() - init
                 dump(root / (run.name + "-intent.json"), sample)
                 print(json.dumps({"starting": sample}), flush=True)
+                already_reserved = run.exists()
                 execution = run_once(
                     task,
                     run,
@@ -158,7 +159,25 @@ def matrix(
                     token_counts=counts,
                     initialization_seconds=seconds,
                 )
+                calls_path = root / (run.name + "-model-calls.json")
+                if not already_reserved:
+                    dump(
+                        calls_path,
+                        {
+                            "gain_calls": predictor.gain_calls if predictor else 0,
+                            "wait_calls": predictor.wait_calls if predictor else 0,
+                            "method": method,
+                            "gain_artifact": frozen["models"].get(
+                                "task-only" if method == "H-task-fixedC-v2" else "full"
+                            )
+                            if method.startswith("H-")
+                            else None,
+                        },
+                    )
                 row = {
+                    "model_calls": read(calls_path)
+                    if calls_path.exists()
+                    else {"status": "UNKNOWN_INTERRUPTED_RECEIPT"},
                     **sample,
                     "family": info["family"],
                     "split": "test",

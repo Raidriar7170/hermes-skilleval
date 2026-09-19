@@ -40,6 +40,12 @@ def replay(records_path, objective_path, *, public_root=None):
             )
             if read(root / "checks.json") != row["checks"]:
                 raise ValueError("portable checks mismatch")
+            if row.get("model_calls") and "status" not in row["model_calls"]:
+                calls = read(root / "model-calls.json")
+                if calls != row["model_calls"] or calls["method"] != row["method"]:
+                    raise ValueError("portable model call receipt mismatch")
+                if row["method"] == "H-myopic-v2" and calls["wait_calls"] != 0:
+                    raise ValueError("portable myopic receipt includes wait calls")
             if (root / "fork.json").exists():
                 fork = read(root / "fork.json")
                 if (
@@ -134,6 +140,7 @@ def export(records_path, objective_path, output, *, group):
             "intervention_mode",
             "panel_lock_sha256",
             "reference_samples",
+            "model_calls",
             "y_target",
             "y_regression",
             "y_functional",
@@ -178,6 +185,9 @@ def export(records_path, objective_path, output, *, group):
                 if fork.get(key):
                     fork[key] = hashlib.sha256(fork[key].encode()).hexdigest()
             dump(dest / "fork.json", fork)
+        calls_path = run.parent / (run.name + "-model-calls.json")
+        if calls_path.exists():
+            shutil.copyfile(calls_path, dest / "model-calls.json")
         dump(dest / "checks.json", record["checks"])
         record["artifact_sha256"] = {
             p.name: sha(p) for p in dest.iterdir() if p.is_file()

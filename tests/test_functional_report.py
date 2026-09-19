@@ -105,3 +105,15 @@ def test_delayed_success_without_sensitive_state_cannot_claim_wait_head_value():
         == 1
     )
     assert result["state_incremental_claim"] == "NOT_ESTABLISHED"
+
+
+def test_same_count_of_wrong_panel_samples_is_not_complete():
+    import pytest
+    from hermes_skilleval.intervention.functional_report import mechanism_tables
+
+    lock = {"action_roster": [{"repeat": 1, "action": "NO_INTERVENTION"}]}
+    rows = [
+        {"task_id": "task", "repeat": 1, "action": "unregistered", "y_functional": 1}
+    ]
+    with pytest.raises(ValueError, match="unregistered common-panel"):
+        mechanism_tables(rows, [], [("task", lock)], {"task": "family"}, [])

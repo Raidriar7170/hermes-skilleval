@@ -49,10 +49,98 @@ def bind_checkpoint(path, payloads):
     return {**binding, "binding_sha256": digest(binding)}
 
 
+def verify_pair_receipt(row, meta):
+    """Bind row identity to the reserved sample and the observed branch input."""
+    run = Path(row["run"])
+    if run.name != row["action"] or run.parents[2].name != row["task_id"]:
+        raise ValueError("paired row identity differs from reserved run")
+    intent = read(run.parent / (run.name + "-intent.json"))
+    for key in (
+        "task_id",
+        "state_id",
+        "repeat",
+        "action",
+        "binding_sha256",
+        "panel_lock_sha256",
+    ):
+        if key in intent and intent[key] != row.get(key):
+            raise ValueError("paired row differs from pre-execution intent: " + key)
+    started = read(run / "started.json")
+    if (
+        started["initial_files"] != meta["files"]["source"]
+        or started["initial_remaining"] != meta["remaining_seconds"]
+        or Path(started["from_checkpoint"]).resolve()
+        != Path(row["checkpoint"]).resolve()
+    ):
+        raise ValueError("branch did not start from the bound source/checkpoint/budget")
+    execution = row["execution"]
+    delayed = row.get("intervention_mode") == "CONTINGENT_DELAY"
+    if delayed:
+        if row["action"] not in ("DEFER_SAME-v2", "WAIT_THEN_FULL-v2"):
+            raise ValueError("invalid delayed intervention identity")
+        if any(
+            d["stage"] <= meta["state"]["stage"] for d in execution.get("decisions", [])
+        ):
+            raise ValueError(
+                "delayed controller acted before a new natural opportunity"
+            )
+        injections = [
+            d for d in execution.get("decisions", []) if d["action"] == "INJECT"
+        ]
+        if len(injections) > 1:
+            raise ValueError("more than one delayed intervention")
+        if (
+            row["action"] == "DEFER_SAME-v2"
+            and injections
+            and injections[0]["skill_id"] != intent["fixed_skill"]
+        ):
+            raise ValueError("deferred fixed skill changed")
+        if row["action"] == "WAIT_THEN_FULL-v2":
+            return  # Its future choice may differ from initial candidates.
+    if not execution.get("injected") or not execution.get("model_input_observed"):
+        return
+    action = intent["fixed_skill"] if delayed else row["action"]
+    expected = (
+        GENERIC
+        if action == "GENERIC_REMINDER"
+        else next(
+            (p["payload"] for p in row["candidate_payloads"] if p["id"] == action), None
+        )
+    )
+    if expected is None:
+        raise ValueError("injected skill absent from bound payloads")
+    if (
+        "payload_sha256" in intent
+        and intent["payload_sha256"] != hashlib.sha256(expected.encode()).hexdigest()
+    ):
+        raise ValueError("reserved payload differs from row action")
+    observed = False
+    for path in sorted(run.glob("turn-*/public-history.json")):
+        turns = read(path)["turns"]
+        for turn in turns[-1:]:
+            for item in turn.get("items", []):
+                if item.get("type") == "userMessage":
+                    text = "\n".join(
+                        p.get("text", "")
+                        for p in item.get("content", [])
+                        if p.get("type") == "text"
+                    )
+                    observed |= "External skill guidance:\n" + expected in text
+    if not observed:
+        raise ValueError("claimed guidance not found in newly observed model input")
+
+
 def verify_row(row):
     """Recompute outcome only after capture, reconstruction and verifier evidence checks."""
     integrity = "VERIFIED"
     try:
+        if row.get("model_calls") and "status" not in row["model_calls"]:
+            run = Path(row["run"])
+            calls = read(run.parent / (run.name + "-model-calls.json"))
+            if calls != row["model_calls"] or calls["method"] != row["method"]:
+                raise ValueError("model call receipt differs from method record")
+            if row["method"] == "H-myopic-v2" and calls["wait_calls"] != 0:
+                raise ValueError("myopic trajectory called the wait head")
         if row.get("checkpoint"):
             cp = Path(row["checkpoint"])
             meta = read(cp / "checkpoint.json")
@@ -68,6 +156,7 @@ def verify_row(row):
                 raise ValueError("row differs from frozen observable checkpoint")
             execution = row["execution"]
             if execution.get("thread_id"):
+                verify_pair_receipt(row, meta)
                 if execution["initial_remaining"] != binding["initial_remaining"]:
                     raise ValueError("row tail budget differs from frozen checkpoint")
                 if row.get("intervention_mode") != "CONTINGENT_DELAY" and bool(

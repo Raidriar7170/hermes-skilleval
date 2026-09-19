@@ -80,3 +80,66 @@ def test_no_candidate_capture_cannot_support_functional_label(tmp_path):
     )
     assert row["y_functional"] is None
     assert row["verifier_integrity_status"] == "INTEGRITY_UNKNOWN"
+
+
+def test_receipt_rejects_changed_source_and_wrong_guidance(tmp_path):
+    from hermes_skilleval.intervention.functional_collection import verify_pair_receipt
+
+    run = tmp_path / "task/E0/r1/skill"
+    run.mkdir(parents=True)
+    cp = tmp_path / "checkpoint"
+    cp.mkdir()
+    meta = {
+        "files": {"source": {"file": "source-hash"}},
+        "remaining_seconds": 300,
+        "state": {"stage": "E0"},
+    }
+    row = {
+        "run": str(run),
+        "task_id": "task",
+        "action": "skill",
+        "repeat": 1,
+        "checkpoint": str(cp),
+        "candidate_payloads": [{"id": "skill", "payload": "frozen instruction"}],
+        "execution": {"injected": True, "model_input_observed": True},
+    }
+    (run.parent / "skill-intent.json").write_text(
+        json.dumps({"task_id": "task", "action": "skill", "repeat": 1})
+    )
+    started = {
+        "initial_files": meta["files"]["source"],
+        "initial_remaining": 300,
+        "from_checkpoint": str(cp),
+    }
+    (run / "started.json").write_text(json.dumps(started))
+    history = run / "turn-000/public-history.json"
+    history.parent.mkdir()
+    history.write_text(
+        json.dumps(
+            {
+                "turns": [
+                    {
+                        "items": [
+                            {
+                                "type": "userMessage",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": "External skill guidance:\nfrozen instruction",
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                ]
+            }
+        )
+    )
+    verify_pair_receipt(row, meta)
+    history.write_text(json.dumps({"turns": []}))
+    with pytest.raises(ValueError, match="not found"):
+        verify_pair_receipt(row, meta)
+    started["initial_files"] = {"file": "changed"}
+    (run / "started.json").write_text(json.dumps(started))
+    with pytest.raises(ValueError, match="bound source"):
+        verify_pair_receipt(row, meta)
