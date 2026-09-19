@@ -230,3 +230,13 @@ Native continuation finished: 16/16 registered train/dev first trajectories,
 15 functional pass, 1 functional fail, 0 unknown. Zero-model replay verified all
 16 saved records. The native-only process ended normally and removed its auth
 copy. G1 is complete; G2 uses the same recorded prefixes and session home.
+
+G2 paired collector is now live: exec session 82437, process originally 4821;
+log `../hermes-functional-gain-v2-private/collection-paired-v1.log`. It reused
+all 16 native executions before starting the first real sqlite-fulltext E0 tail.
+Do not restart a live collector or remove its session-home auth copy. Derived
+from the frozen rules: 39 natural checkpoints of 48 possible slots, 192 planned
+actual tails of the maximum 240, with nine naturally absent slots. The realized
+roster is public configuration; it does not select on paired functional results.
+All 16 native original patch/check records were exported to
+`artifacts/functional-gain-v2/native` and passed portable records-only replay.

@@ -1,0 +1,1833 @@
+{
+  "objective_sha256": "a27f96401b8a21f0c4262f26b5dc00d93303a787045a7b81df7384c4fbd84ead",
+  "source_records_sha256": "63cf6135a220c850f493afa9dac946f6f227f460eca1e91a8b26580b0c4227a5",
+  "private_replay": {
+    "status": "RECORDS_ONLY_RECOMPUTED",
+    "records": 16,
+    "integrity_counts": {
+      "VERIFIED": 16
+    },
+    "agent_calls": 0,
+    "model_calls": 0,
+    "new_verifier_executions": 0,
+    "scope": "saved captured candidate/verdict integrity; not a fresh Agent or source re-execution"
+  },
+  "rows": [
+    {
+      "task_id": "sqlite-utils-fix-f66ddcb",
+      "split": "train",
+      "family": "schema-transaction",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 160.19425941701047,
+        "preparation_seconds": 0.0206648749881424,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.08421970903873444,
+          "retrieval": 0.08752870897296816,
+          "checkpoint": 0.30881391698494554,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "2967acb692f8d168d80d2bcb648ab253cc4f1e4a50c7a7070265e6547cc495e8",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-f66ddcb/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 591784,
+          "inputTokens": 586302,
+          "cachedInputTokens": 514688,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 5482,
+          "reasoningOutputTokens": 1697
+        },
+        "request_updates": 19,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "2aaddb4747604a73e07183f6496a9ab4193f41f92df0eaff22bc0e6ce3345c83",
+          "turn-001/events.jsonl": "33823627242a7a577929791acc428c69ad4316789ea39ad44b30bfacf718fa1c",
+          "turn-002/events.jsonl": "b16ffe80695533cd572508d562fae52ecb6bb11b2cc041ec58d832715df9fcbc",
+          "turn-003/events.jsonl": "e476d7bfaadd65d52b7a1b6f1adef5a90c4e608da65479e4c35c26b77271e489"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_transform_in_transaction_refuses_destructive_on_delete[CASCADE]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_in_transaction_refuses_destructive_on_delete[SET NULL]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_in_transaction_refuses_destructive_on_delete[SET DEFAULT]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_in_transaction_refuses_destructive_on_delete[cascade]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_in_transaction_refuses_self_referential_cascade",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_in_transaction_allowed_with_no_action_foreign_key",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_in_transaction_allowed_for_child_table",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_in_transaction_allowed_with_foreign_keys_off",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "0ffad2a20d06fdb43d1e53a73b07868e6190cc0ba03dfb9c65019fd5eed00ffe",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_atomic.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "0ffad2a20d06fdb43d1e53a73b07868e6190cc0ba03dfb9c65019fd5eed00ffe",
+        "target-junit.xml": "b4fea2295a706cb73d74f6d5ed0bc216c782d216fad9ad1fb75dce167cb70e3b",
+        "checks.json": "0673179f4fe1c1378164513319fbc6ec5051495b3ccf04d59b258ed88cbce161",
+        "regression-junit.xml": "4ab1f2e703c706d954fc1d80539a4f7b6afdea232b87e8da640c311b0aa32c98",
+        "target-collected.json": "4906d6eb7cbfbcf84a415e48dfe6e4d5132883f073e8210f19b3c643c2181a3a",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "sqlite-utils-fix-8572d1e",
+      "split": "train",
+      "family": "sqlite-issue-769",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 2,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 76.08274491602788,
+        "preparation_seconds": 0.021794083004351705,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.06084583303891122,
+          "retrieval": 0.044844499963801354,
+          "checkpoint": 0.07188420905731618,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "c6847a99dbfc5a5a714e9c20899bfc1180b543253e14a02bd186d2cb3261df5c",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-8572d1e/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 175505,
+          "inputTokens": 172904,
+          "cachedInputTokens": 127104,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 2601,
+          "reasoningOutputTokens": 723
+        },
+        "request_updates": 10,
+        "started_turns": 2,
+        "completed_turns": 2,
+        "turns_with_usage": 2,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "9f4d336bef39fcb8750935b0e8c549f044b187c241787bba7028e56f5159faa3",
+          "turn-001/events.jsonl": "9247ba8a4f0af7a168396321de78455a870e5baee9a1fb4497c9c495ef55fb4c"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_extract_null_values_existing_lookup_table_with_null_row",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_repeated_into_shared_lookup_with_nulls",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_repeated_into_shared_lookup_no_nulls",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "61e0ef16af93e90748c1584e199cacc7ddc19d36a72a62d53d3f990e8b3c0719",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_extract.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "61e0ef16af93e90748c1584e199cacc7ddc19d36a72a62d53d3f990e8b3c0719",
+        "target-junit.xml": "e4da988099f1b65d9bdb0e758874895ede39c052192b82fea669117abd03e8df",
+        "checks.json": "e1360f5663aa4b3ff9d44bc945b54f24ee93b7cbba364ec77617a5c54104a28f",
+        "regression-junit.xml": "b8d307097f43c9dfe2159649cbd96ac7933ddffdde8a80dc07614590b5f1713a",
+        "target-collected.json": "fd83e0d131f9bf98fa09a37adea71d6802bd0f02d858a03394ef816a2f9856fa",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "csvkit-fix-3f9d8b6",
+      "split": "train",
+      "family": "relational-join",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 115.08239237504313,
+        "preparation_seconds": 0.07182237500092015,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.2830612489487976,
+          "retrieval": 0.053338751080445945,
+          "checkpoint": 0.16902320797089487,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "48cecd3e574aa964e0ead632de6d3f38f18dc9e882dca20764f69af2a259d3fb",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-fix-3f9d8b6/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 286733,
+          "inputTokens": 283244,
+          "cachedInputTokens": 228352,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3489,
+          "reasoningOutputTokens": 1662
+        },
+        "request_updates": 14,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "cd8b44cb7b491b841e08db4882058b31b59f95c9a1b648042cb0a97c2f4de84d",
+          "turn-001/events.jsonl": "17ab3b84276ea211005ed23b4ce2339251eb9de2ca3a267edc4bf1db7f2a6f8c",
+          "turn-002/events.jsonl": "6b77f1c2744ef3c2687811418f58215f0f85ee73526663f6d60e81161357d81b",
+          "turn-003/events.jsonl": "429b5bf8426ebc826726bb38a2119665a47817e65c881d801d64a936708f1cad"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target[1,3]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[left_id,right_id]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "321d4a0243f87ae71ddc1977228b17dc19e5b8ab4ddb4313f48f0f5c1ce01729",
+      "changed_files": [
+        "csvkit/utilities/csvjoin.py",
+        "tests/join_right_left.csv",
+        "tests/join_right_right.csv",
+        "tests/test_utilities/test_csvjoin.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "321d4a0243f87ae71ddc1977228b17dc19e5b8ab4ddb4313f48f0f5c1ce01729",
+        "target-junit.xml": "b98023f29977b1709385e67b0832c9f143fde914047687551b5a0b3cc37ed9d8",
+        "checks.json": "35f55c006a52becabf50507d2c242d57654b9212b37e2b72538b1aaaab207bbc",
+        "regression-junit.xml": "26ccfa07f1c903653113275ea32ad7003b22d8c09c7c3a690f2bf396636369ee",
+        "target-collected.json": "4923cbd928c75987a331ee58f34ee8514b4d7f125457b0782d205a725696a524",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "csv-diff-fix-9574395",
+      "split": "train",
+      "family": "diff-column-path",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 125.0021214169683,
+        "preparation_seconds": 0.003045499965082854,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.02074666606495157,
+          "retrieval": 0.05395220802165568,
+          "checkpoint": 0.03365124994888902,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "e962ec74454e16b01be2a8951fdf77f17f9d66d805657fa22ee440e80fc367d4",
+        "decisions": []
+      },
+      "evidence_path": "native/csv-diff-fix-9574395/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 319795,
+          "inputTokens": 314919,
+          "cachedInputTokens": 273920,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 4876,
+          "reasoningOutputTokens": 1117
+        },
+        "request_updates": 16,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "700d715a7957d063ec57ac249318a3a371570bc52ce05511fd36fa18c6e4a37e",
+          "turn-001/events.jsonl": "fafc6d995548cf22c5445770fc098a79644ebc81c6a639c15a41d5694e2d37da",
+          "turn-002/events.jsonl": "5d19e39ad7ddaa6f08e7f746ac0206e77f954eba44c78144258f34fad442e319",
+          "turn-003/events.jsonl": "c55ada86350e8e892ee629d4934b4995791f44b37607b6b95291f9b58294edcc"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target[foo.bar]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[a.b.c]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "b4aab7b8b69dbc917954ffa080754b634d863029f1d21b33515703979d882240",
+      "changed_files": [
+        "csv_diff/__init__.py",
+        "tests/test_cli.py",
+        "tests/test_csv_diff.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "b4aab7b8b69dbc917954ffa080754b634d863029f1d21b33515703979d882240",
+        "target-junit.xml": "67bfaad76b52c9f1efd5debc906fd7c747d2202e4292a1d7742b82f3f12dc085",
+        "checks.json": "9fa35520118a314a130ff6b30a45406432063a67f436ef3dcd127225bab22b03",
+        "regression-junit.xml": "63f0474eb2b869bb664e32057292545ec34733a0de5935cfb21617c5b0717bfc",
+        "target-collected.json": "539c78c413c68de67699b313b415d2bc5bb23cce3e5ce15feed3517e7a8cf8fa",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "sqlite-utils-fix-75ba588",
+      "split": "train",
+      "family": "schema-transaction",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "FAIL",
+      "file_policy_reason": "policy rejected modify: docs/changelog.rst",
+      "qualified_delivery": 0,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 8,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 307.6802703330177,
+        "preparation_seconds": 0.02187516598496586,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.23969187506008893,
+          "retrieval": 0.12922070897184312,
+          "checkpoint": 0.5438597910106182,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "f46a67da39e23d89350f5b67389207dedc5aed41117fa6efc116d65f864cef37",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-75ba588/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 1445267,
+          "inputTokens": 1434086,
+          "cachedInputTokens": 1320960,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 11181,
+          "reasoningOutputTokens": 2381
+        },
+        "request_updates": 34,
+        "started_turns": 8,
+        "completed_turns": 8,
+        "turns_with_usage": 8,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "41ab7cb07ae940e7218598ba23df338c6af89b3bbd23ed755a4fbe85634d4375",
+          "turn-001/events.jsonl": "900fbc8fc5e437f39d35de49042df34b80042a2bd2ebcc6e3cabcd927af5aa48",
+          "turn-002/events.jsonl": "f302c095cfda3e5cd35f25dd37a5074a5e3c78bceca37fecd7f935db3fb84d81",
+          "turn-003/events.jsonl": "37b574b22f1d1af6c74a5381634b43a42ae9fcf2bf7b59b8373affb18f5cc7f5",
+          "turn-004/events.jsonl": "5ca02126c335e3f6c2729acd0c6195a2daff408afea8ad3ed616c35e178aa4d1",
+          "turn-005/events.jsonl": "a4cb5b41c0fb4450fe5b137c7ae362988e1e52056aeb638bc74609a08cb83ccc",
+          "turn-006/events.jsonl": "61efce2a7928b5205008c5c45c1bb546a7c39756d1a9d9cbb13d82bd12417bcb",
+          "turn-007/events.jsonl": "e63225483b04230bb4c038fef9e125768b4539cff6d305164e82829c2e5ecfca"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_transform_with_unique_constraint_implicit_index",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_preserves_composite_unique_constraint",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_preserves_column_unique_collation",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_drops_entire_composite_unique_constraint",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": false,
+          "error": "policy rejected modify: docs/changelog.rst"
+        }
+      },
+      "patch_sha256": "053c8b32df60849c89f31d739895f00035aa35f3e06c11449d079dcd9e484dca",
+      "changed_files": [
+        "docs/changelog.rst",
+        "docs/python-api.rst",
+        "sqlite_utils/create_table_parser.py",
+        "sqlite_utils/db.py",
+        "tests/test_create_table_parser.py",
+        "tests/test_transform.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "053c8b32df60849c89f31d739895f00035aa35f3e06c11449d079dcd9e484dca",
+        "target-junit.xml": "451bf5b62697c966148ada91bdca17b23784a708504a4335364780c04614e54f",
+        "checks.json": "71e4cc577a18109a107301d2254310c3ed3c9d01e00103ec036bc3f5748b6b14",
+        "regression-junit.xml": "babc96fcad536402a0b3a6f13a990eb4ca716935a2eced4f20463411c713c6cc",
+        "target-collected.json": "e07bedcb60aa375e87e8bdbf6e0804f1ae95d7eb643da88e45b491325c9a9492",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "sqlite-utils-fix-be27a96",
+      "split": "train",
+      "family": "schema-transaction",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "FAIL",
+      "file_policy_reason": "policy rejected modify: docs/python-api.rst",
+      "qualified_delivery": 0,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 6,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 212.9582572079962,
+        "preparation_seconds": 0.023366375011391938,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.15895396086852998,
+          "retrieval": 0.09299175103660673,
+          "checkpoint": 0.2912809590343386,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "c1987c46b00d82e1572c8b7191511223bc039d893fe8c12243e92e3807e079f6",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-be27a96/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 1006257,
+          "inputTokens": 998449,
+          "cachedInputTokens": 904832,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 7808,
+          "reasoningOutputTokens": 1878
+        },
+        "request_updates": 27,
+        "started_turns": 6,
+        "completed_turns": 6,
+        "turns_with_usage": 6,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "07abf249cdf13c114f8d627ef2103c78a64b76369507b1a161d81a693c4976f6",
+          "turn-001/events.jsonl": "7fd98d7cd697978e0f88a4237d39d27b203c48d6b0a9b26e2d2d1afd0a1f9a18",
+          "turn-002/events.jsonl": "5aa81492f86e1a61b88f1d0b8c857c8b39dc3ef19d4f577ef26114816d918c7e",
+          "turn-003/events.jsonl": "f17a99d6841b36a7fe58bc1af9ac38734e24bb4adfcc51ce175686c36a15f4de",
+          "turn-004/events.jsonl": "95ffc683b2e7ecb0dde7c757a962abfc8befa9c9705224071a8217432d6da9e9",
+          "turn-005/events.jsonl": "ec244bdf6ca950cd1ad266296184c233d9687b54c38711b7a08da4c006374ea3"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_foreign_key_captures_on_delete_and_on_update",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_foreign_key_on_delete_defaults_to_no_action",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_create_table_foreign_key_with_on_delete",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_preserves_on_delete_cascade",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_preserves_compound_foreign_key_on_delete",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": false,
+          "error": "policy rejected modify: docs/python-api.rst"
+        }
+      },
+      "patch_sha256": "6d8f6e2132223411e2a9c15c2de17a235ef0443b628d18ff76ccbde7b14a4996",
+      "changed_files": [
+        "docs/python-api.rst",
+        "sqlite_utils/db.py",
+        "tests/test_foreign_keys.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "6d8f6e2132223411e2a9c15c2de17a235ef0443b628d18ff76ccbde7b14a4996",
+        "target-junit.xml": "875e7ba142a5249b4c1f94cc2e5477649e8790d60e58eb1c26d95fa63490ff49",
+        "checks.json": "f76888dc08138a997a263d27d61a4e67333d0dffc2e59f4ac6c38da506a8e7a4",
+        "regression-junit.xml": "d09aec6b07c65404391ac8f90e95dc7080097dd04e88aa069944b227247de60b",
+        "target-collected.json": "a5d79fa8c3e2b50dd376f03a7d7bb9967a0338561d6ac1aad0da6d8784044493",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "sqlite-utils-fix-d9a0fd2",
+      "split": "train",
+      "family": "sqlite-issue-769",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 3,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 111.87253229197813,
+        "preparation_seconds": 0.024296958988998085,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.07796970795607194,
+          "retrieval": 0.06110654101939872,
+          "checkpoint": 0.2639521670062095,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "4c79326767213739d79fcb57abb9da46aeca2d67a902a7e644f347c37c847f59",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-d9a0fd2/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 286795,
+          "inputTokens": 282909,
+          "cachedInputTokens": 252544,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3886,
+          "reasoningOutputTokens": 1274
+        },
+        "request_updates": 14,
+        "started_turns": 3,
+        "completed_turns": 3,
+        "turns_with_usage": 3,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "3ddca1d9c9c9275f24bf00a0319ae46064508b2327e2391db898fb8af8514537",
+          "turn-001/events.jsonl": "2ae40990a308acebb55f3b8f56dbe0904fd773fecae3a126cfb87895a5043fdf",
+          "turn-002/events.jsonl": "9925c04942c0a1cbeb68d0f93a59dc96e3a1b8799c9ba1d4a1444fee1efe7a29"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_query_preserves_error_from_transaction_destroying_trigger",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target_atomic_rollback",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "409cb0ef27bdb5b9342da94742094f53de7bb962e6d2d1a73e31118bbf69aead",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_atomic.py",
+        "tests/test_query.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "409cb0ef27bdb5b9342da94742094f53de7bb962e6d2d1a73e31118bbf69aead",
+        "target-junit.xml": "2a0270914a82312066fb39ea2a34b22d3b34dfe5968abb54bfc0796a260e3021",
+        "checks.json": "6af5f7c5422783934cab69b01a322670977c2822240e70c8992976fe1509ce84",
+        "regression-junit.xml": "91fb91263bf27a6c1192d0fd3c1fc7b29c9491236f5a081fb49914d0b8965ac0",
+        "target-collected.json": "75ca7f4ed6a2b0c56d799e28a021502b38dc5ae5c1a5a226cd1f9f4fa92cd994",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "sqlite-utils-fix-7d86118",
+      "split": "train",
+      "family": "sqlite-issue-769",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 127.44723370898282,
+        "preparation_seconds": 0.023663542000576854,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.1032831659540534,
+          "retrieval": 0.05486774997552857,
+          "checkpoint": 0.31718774896580726,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "fcacaae9229dd707be0885e04ae492c3a4c6ddf758662b76df4bb2215b39401f",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-7d86118/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 393755,
+          "inputTokens": 390124,
+          "cachedInputTokens": 338560,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3631,
+          "reasoningOutputTokens": 1249
+        },
+        "request_updates": 16,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "4c937263e74a6648fe4847a450d43ac5d84f196719d823dae7c984e5b289a679",
+          "turn-001/events.jsonl": "179420f63123709423d4bfd1f75022831e8321ff35a2e3368970e00bfe06a5cc",
+          "turn-002/events.jsonl": "b64994b179f3e4b305424fa79c606555dd6ddb071f8362d7d30cf6081c9191c8",
+          "turn-003/events.jsonl": "9a8d623b48c594ad2ba8f696a18f8dee712d535967f9c9f4f685a212dd7c9d7c"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_execute_failed_write_rolls_back_implicit_transaction",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_execute_failed_write_preserves_explicit_transaction",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_execute_failed_write_inside_atomic_preserves_block",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "a8e8c892d95ca1fa8c6c74172daa46058bc4b914c83a81ea19e8e6f52a5084d8",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_atomic.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "a8e8c892d95ca1fa8c6c74172daa46058bc4b914c83a81ea19e8e6f52a5084d8",
+        "target-junit.xml": "3994877f5318e2819b1f3330f2cea447e52f25579a0f19cf465fda39a35eead7",
+        "checks.json": "a6e5caa8e1e18cca68abe3e526633764ac630bb0ca7a20cba4bf19e88cf5b535",
+        "regression-junit.xml": "658fbfe3139c2c4a89b9e69c5146dea274d1705030f865f49e526d74601e2d7f",
+        "target-collected.json": "142a9d336f8117ab19d01459f76f744b416ed5117977f0b831ff0fd6f7a67f3e",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "sqlite-utils-fix-60811e7",
+      "split": "train",
+      "family": "sqlite-issue-769",
+      "action": "NO_INTERVENTION",
+      "y_target": 0,
+      "y_regression": 1,
+      "y_functional": 0,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 0,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 9,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 462.88783279201016,
+        "preparation_seconds": 0.02305504202377051,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.2262150858878158,
+          "retrieval": 0.07593662390718237,
+          "checkpoint": 0.3054775000200607,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "57c5dfec89d36c290408dfb3e90a2242695caa44d02cd7db14774ea6723f6c25",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-60811e7/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 2099159,
+          "inputTokens": 2082363,
+          "cachedInputTokens": 1944448,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 16796,
+          "reasoningOutputTokens": 6235
+        },
+        "request_updates": 44,
+        "started_turns": 9,
+        "completed_turns": 9,
+        "turns_with_usage": 9,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "bde815f72fcaac5cd6ae1495ea072c55abd414e819acb285ef63317b4d439706",
+          "turn-001/events.jsonl": "c7ab3d89b0eb63d0e3bb405f7f4449a21b50da9c4092e053c0940a155f12c34d",
+          "turn-002/events.jsonl": "86407d14bc7d62abfc3f8fc9eb12c5c0a7a39e19c5b7a18eb9398664dc0c3f9a",
+          "turn-003/events.jsonl": "57f6773998385ab678eda67d055356a93e007de1db30241c31f795ca3ab08792",
+          "turn-004/events.jsonl": "862adde17b090cd52140bd31dcc73b48804db57f66878de54d60760c1c035bed",
+          "turn-005/events.jsonl": "e81fc87aa8db7a69cdf479180cbb2a0f610c2135a24c6531670437072095226b",
+          "turn-006/events.jsonl": "91401b390fdc349089c44b98795488021d81a5d4b86c10b4dac85828c26ea4f2",
+          "turn-007/events.jsonl": "9e82731d84226313c852d8b25457c222c159d7665a8686cfcf89d9b4c690c9a8",
+          "turn-008/events.jsonl": "6f84cd493c333a0c2516e9a83e44cda8aed37b2ca362a9ae1490a44a39ea67bc"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": false,
+          "cases": [
+            {
+              "id": "test_behavior::test_insert_ignore_reports_existing_row",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-rowid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-oid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-oid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_reports_existing_row_compound_pk",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_reports_existing_row_list_mode",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_hash_id_reports_pk",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+              "outcome": "failed"
+            }
+          ],
+          "returncode": 1
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "a443114c25a3aed5c0671ca086aa14113100f818448588e812063767d68e829f",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_create.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "a443114c25a3aed5c0671ca086aa14113100f818448588e812063767d68e829f",
+        "target-junit.xml": "1c55a90b085f2cd63c4b52bfe306f7638a83d54f11f8d09d2edb80eb2d354b8a",
+        "checks.json": "7cbe7792bcd38840c8746fb56ac35ca5d30ba811fb58cfd7720a434e5684cdcd",
+        "regression-junit.xml": "828751f275cdc7842359c3a7cc8541f5d423abe8aa8be1b6d38dae717ce4fb76",
+        "target-collected.json": "c3cda557681dc2ba9060c07f881205ea79aecacec64c74ca05bff41df62053c0",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "csvkit-fix-6a47526",
+      "split": "train",
+      "family": "stack-boundaries",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 2,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 63.323885667021386,
+        "preparation_seconds": 0.06531175004784018,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.1680372920818627,
+          "retrieval": 0.02876941702561453,
+          "checkpoint": 0.17551124998135492,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "3885122ae45b51394df0544b03b2f8bded5a3acc1027099dec3b4a28c68c9ad6",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-fix-6a47526/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 155814,
+          "inputTokens": 153802,
+          "cachedInputTokens": 125568,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 2012,
+          "reasoningOutputTokens": 675
+        },
+        "request_updates": 9,
+        "started_turns": 2,
+        "completed_turns": 2,
+        "turns_with_usage": 2,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "0c8f0ed0086b38c2ecca0fa94a7bcd1b4a8ee156c0e79909d4eb19b0e904987a",
+          "turn-001/events.jsonl": "70c7e98dd0b3414008ecc5438c89c344928b1b33288058983c104aa0140c528b"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target[-False]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[-True]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[id,name\\n-False]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[id,name\\n-True]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "89cd47e0a6c1b4e8f87b91e2b6b159eb639765ffb49a23dab8f9f34934b2c815",
+      "changed_files": [
+        "csvkit/utilities/csvstack.py",
+        "tests/fixtures/csvstack_header_only.csv",
+        "tests/test_utilities/test_csvstack.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "89cd47e0a6c1b4e8f87b91e2b6b159eb639765ffb49a23dab8f9f34934b2c815",
+        "target-junit.xml": "584add5f1082426a10446d5148e6d3a03253a4a0bf3f005c0d76a0fc10aaaee2",
+        "checks.json": "6d21757437a434d387b4770d7ecc904d2d7ee703f803e437e896253bc20c462a",
+        "regression-junit.xml": "4baef7e33a1de0bb77afd0ce0aa76963c2d055fd722c36d5d3dfde4fd69995b6",
+        "target-collected.json": "68bd24457a7d748db38de7811c636d11773fb3ea7c28b242f9befdfc9841f756",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "csvkit-fix-8119565",
+      "split": "train",
+      "family": "dictreader-options",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 5,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 148.34675958403386,
+        "preparation_seconds": 0.05944712500786409,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.35324220708571374,
+          "retrieval": 0.0722101250430569,
+          "checkpoint": 0.2515547500224784,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "5e374fce321781be1a72a32163647b50084419f298b041a0862d9c75b35df83b",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-fix-8119565/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 575124,
+          "inputTokens": 570327,
+          "cachedInputTokens": 487040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 4797,
+          "reasoningOutputTokens": 1292
+        },
+        "request_updates": 22,
+        "started_turns": 5,
+        "completed_turns": 5,
+        "turns_with_usage": 5,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "d54989d226c4da7770337a070d75d30547c5c0d8c5232ef078e3e11cf3e72b64",
+          "turn-001/events.jsonl": "a0a8076adbbb593cc5c806d0a704ad257545c60d7fe780f8433c43d89b73dff2",
+          "turn-002/events.jsonl": "0fcf97563674fea9c08f94da6ae5bca2931519dac9e52e1cbbf3d187bcb9ea32",
+          "turn-003/events.jsonl": "7a87fd524ea6688d2a0f1db394def4243b9e4fbcdbe3ecb6bea3f4ae77043b4c",
+          "turn-004/events.jsonl": "8b98579180e4677b36e7b97d1d06f141fc82495acb8624d367a16ed3a43cb964"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target_stack[12]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target_stack[140000]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target_csvpy_reader",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "3b50e21ffa1f38b780f535b3430b4706a8332475a164302c6e1e182b2aefd401",
+      "changed_files": [
+        "csvkit/cli.py",
+        "tests/test_utilities/test_csvpy.py",
+        "tests/test_utilities/test_csvstack.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "3b50e21ffa1f38b780f535b3430b4706a8332475a164302c6e1e182b2aefd401",
+        "target-junit.xml": "2cbdf5d2ae4276bf248a1274d42e9204105e02b452e152bcee95f5050ebe01fb",
+        "checks.json": "bae4ea4ddbb290853adb417a8bbf9e6d9ca952d7e02be36481fd89faff162a6b",
+        "regression-junit.xml": "c1b9139bb35a747c4d638ed51d0d8cab183c681050a65971e22e59c680d5127c",
+        "target-collected.json": "36f72b4e5c59fc3eddaf37f1a5fe07687ceaae0c33d116d4f19a9b63f9d67be4",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "csv-diff-fix-33e0a59",
+      "split": "train",
+      "family": "json-diff-input",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 2,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 79.18586479098303,
+        "preparation_seconds": 0.0053924579988233745,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.009593000053428113,
+          "retrieval": 0.02947254100581631,
+          "checkpoint": 0.021623000968247652,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "2905daf6f31112d588f3a903de54d8719f3a80cf6cebf126736439f2c1943513",
+        "decisions": []
+      },
+      "evidence_path": "native/csv-diff-fix-33e0a59/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 158958,
+          "inputTokens": 155809,
+          "cachedInputTokens": 105856,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3149,
+          "reasoningOutputTokens": 958
+        },
+        "request_updates": 9,
+        "started_turns": 2,
+        "completed_turns": 2,
+        "turns_with_usage": 2,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "0c7d83d4a1982621570ebe082470a3188deb56cc1b82d48938dbbe794dac63d8",
+          "turn-001/events.jsonl": "4f2bf25b5170b3cf85bec2204e1cc6e5aad3d804378d9f83858e49b7d4ca7f53"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "61ab88eaab40b03eaba14363067e3a8276903ffdca224cea5bf8eb8f6eae0f2b",
+      "changed_files": [
+        "csv_diff/__init__.py",
+        "tests/test_cli.py",
+        "tests/test_csv_diff.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "61ab88eaab40b03eaba14363067e3a8276903ffdca224cea5bf8eb8f6eae0f2b",
+        "target-junit.xml": "3740a68f542a76e76b7667c291be833811354a76829b21d9f7e4811eecf499ea",
+        "checks.json": "c7b6277621ac471ac8ada35354d1ae0c454d8f946ef32a5c3179f4ec320d8862",
+        "regression-junit.xml": "69d5cf1bfb719c891d018f22fd6d47efd0b23054796ad1143421123d146c77c6",
+        "target-collected.json": "0a228b69ab2caa8972d50639cacb6e3007efd06dd1ea237b6d4aa46f31ded2e4",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "sqlite-utils-fix-2b0cc04",
+      "split": "dev",
+      "family": "type-detection",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 3,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 105.13372341694776,
+        "preparation_seconds": 0.021734624984674156,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.06818054191535339,
+          "retrieval": 0.03525354102021083,
+          "checkpoint": 0.19082420907216147,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "decd68cb0099e6af0bdc661e2c06f1373edc751f8dbb3c2eae782f4fc90de11a",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-fix-2b0cc04/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 332469,
+          "inputTokens": 329214,
+          "cachedInputTokens": 295040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3255,
+          "reasoningOutputTokens": 840
+        },
+        "request_updates": 15,
+        "started_turns": 3,
+        "completed_turns": 3,
+        "turns_with_usage": 3,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "fb3f023761db8f2ab74710fcadaa88863562380f39e2fbac362a17310182bf4c",
+          "turn-001/events.jsonl": "f9ecaa6e2879b5569e1d46571780115e8c08f9ae81f76afb5c898453e91df3de",
+          "turn-002/events.jsonl": "b3490764950e9b0549c54f324b13342eacb09ecad012a08b8d2e80739c560abe"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target_insert[detect0]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target_insert[detect1]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target_memory",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "0959a44e195b7ab8eaea056517ae2696b9af11581b28d3c1313fc34f04bae35c",
+      "changed_files": [
+        "sqlite_utils/cli.py",
+        "tests/test_cli.py",
+        "tests/test_cli_memory.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "0959a44e195b7ab8eaea056517ae2696b9af11581b28d3c1313fc34f04bae35c",
+        "target-junit.xml": "e0e77c22d83b3719d7f2a50083a756b8d18cf9672ecc279f992f2a7cf4e52f06",
+        "checks.json": "ef6ca64351fb5467a6f013b1e685513273afb94c8959ffbee7f13b8440bd78f5",
+        "regression-junit.xml": "f48468850577ac27eacde8265d79044bd1d0d0358dab37e6bf7c14217660b585",
+        "target-collected.json": "527615bd85dfb2effaf31330ed0bbff4c2c8dd4e86288b9e10e06efca333b6ee",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "csvkit-fix-c327a1b",
+      "split": "dev",
+      "family": "inference-precedence",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 112.13900399999693,
+        "preparation_seconds": 0.06641891598701477,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.2964089170563966,
+          "retrieval": 0.0413142079487443,
+          "checkpoint": 0.17922629095846787,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "3f6baf549ee45ea90f321bc286da74b3587049c1a0a4f3f1fdd9d428036a0d05",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-fix-c327a1b/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 306705,
+          "inputTokens": 303064,
+          "cachedInputTokens": 249088,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3641,
+          "reasoningOutputTokens": 1292
+        },
+        "request_updates": 16,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "ca23a3015de7b789f8e9ac9a5e6e38cfe64ad660154e2cec632d8c24c26b8b83",
+          "turn-001/events.jsonl": "5b3c17b7ea0f5605b5bb29857641d15aa7ddf2deabc975df157371f557c1277c",
+          "turn-002/events.jsonl": "896d6a51612a967dc0efbacd3dbe42ff5d8db3670ae69343a97ceba20e6df705",
+          "turn-003/events.jsonl": "60ed719b6b916781819125a70c0a12bf0b1d86724d194810f3b0fee4575f7e51"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target[5.5]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[6.5]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "8c98fa89fd6ec5ecce237340791b9e97abc93fa98bf31d2c6145f035bdf27ef1",
+      "changed_files": [
+        "csvkit/cli.py",
+        "tests/test_utilities/test_in2csv.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "8c98fa89fd6ec5ecce237340791b9e97abc93fa98bf31d2c6145f035bdf27ef1",
+        "target-junit.xml": "acfc70e2f2750f3843f1a898c2bfccaf8a4a1caaa7794c8fbe320b96f7f708b9",
+        "checks.json": "0cc4a8cfcdb33b3252a2da16d47b65a7feea90642ea9ca201d9de4d9c8e594c0",
+        "regression-junit.xml": "3732a5ca19197937cef5d9e37a890b19aeba5041adaa3a7b4c2d2acfd52c6a6b",
+        "target-collected.json": "126ebee4e5f1fd3504b28c540241bd479c67b99945d8c5497297661e5bb0b397",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    },
+    {
+      "task_id": "csv-diff-fix-0cf7d3c",
+      "split": "dev",
+      "family": "dialect-sniff",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 3,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 65.33756841602735,
+        "preparation_seconds": 0.004898708022665232,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.011026457941625267,
+          "retrieval": 0.03007437603082508,
+          "checkpoint": 0.035706333990674466,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "f1d3c4e90415dcc09ee47168ba5dd1770bd16a4a65a2bfe91eeca6573cd373ce",
+        "decisions": []
+      },
+      "evidence_path": "native/csv-diff-fix-0cf7d3c/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 196370,
+          "inputTokens": 194173,
+          "cachedInputTokens": 164736,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 2197,
+          "reasoningOutputTokens": 419
+        },
+        "request_updates": 12,
+        "started_turns": 3,
+        "completed_turns": 3,
+        "turns_with_usage": 3,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "b51ea697eec5f6ab9b81279985451c049e5dca87a54604d9ff804f8c66576afe",
+          "turn-001/events.jsonl": "2d585902e86d2ed8dcf05f2cf07150d067f1bebc4dec8b3d19c4c7b9635c998a",
+          "turn-002/events.jsonl": "b1c3ec093880a91e724fbf69f9b745058e0120171c81cecf890e9a1d39d5e129"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target[True]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[False]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression[,]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_regression[\\t]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "e04670ffe078de089a8edbba6cf51dc51cfb1483481cda5d8c6bb9028d9fcd64",
+      "changed_files": [
+        "csv_diff/__init__.py",
+        "tests/test_cli.py",
+        "tests/test_csv_diff.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "e04670ffe078de089a8edbba6cf51dc51cfb1483481cda5d8c6bb9028d9fcd64",
+        "target-junit.xml": "94bc168df5e1a0894c112a4e0f82cc7abd135d3c2ea5edc964f617baf7a1f174",
+        "checks.json": "f040598662090aa85aa3c8348533b393e3888ee153c17806274a7b3d532c85ef",
+        "regression-junit.xml": "cdd9b91fa14db32ccbf2d05019e0e669253884f2f0ea8429be0468fdd6c08189",
+        "target-collected.json": "eb8f077f95c32192e983f51c7a03384bfa11e7d3dc00164a80e35dbe9a67c99a",
+        "regression-collected.json": "2fc6a1e233ac6a3d4790a970769166e9139fb1d4370c1f8855bfeea47c22ef92"
+      }
+    },
+    {
+      "task_id": "csvkit-fix-95dc26d",
+      "split": "dev",
+      "family": "output-quoting",
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "repeat": 1,
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 5,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 162.30328429100337,
+        "preparation_seconds": 0.07184279098873958,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.3475103340460919,
+          "retrieval": 0.07167770899832249,
+          "checkpoint": 0.24710616696393117,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "09608f475e94267d2b3b738bd364660945cc1b8ad0a4a24d65c668d7024c13da",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-fix-95dc26d/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 541444,
+          "inputTokens": 535839,
+          "cachedInputTokens": 470016,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 5605,
+          "reasoningOutputTokens": 2164
+        },
+        "request_updates": 20,
+        "started_turns": 5,
+        "completed_turns": 5,
+        "turns_with_usage": 5,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "a8c61913a457dd4ce4f40d78a8c1d02b4acea01b7c5fda56cf3eb93e81a0caec",
+          "turn-001/events.jsonl": "8b895e838c1028c695dc53037cb5dff09c0e3753d8b5a2b38b5ab166674b9dfe",
+          "turn-002/events.jsonl": "8cb56a97c969c9a4f6f16b1e94fe613918db7ec84a97f053c63b51339c500bb4",
+          "turn-003/events.jsonl": "b61adbd86a3d224f4a6e989f2427bafd481bfc7cc8ee9f1619932fac60899f1b",
+          "turn-004/events.jsonl": "7bd543bcd478c58412d175be11bc7dbaac3fdfa4acc713ab9b7b7771a2ec2590"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_target[False]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_target[True]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "cf146fcec626fe96972db40e0ed4ad37ad75f51c648101bc7482f44c4397145b",
+      "changed_files": [
+        "csvkit/utilities/csvformat.py",
+        "tests/test_utilities/test_csvformat.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "cf146fcec626fe96972db40e0ed4ad37ad75f51c648101bc7482f44c4397145b",
+        "target-junit.xml": "e2d80b4031a994cafaad16ff831483924f415c511c9c38498cfe8b48a089198b",
+        "checks.json": "eddee7a6eb96597d1def9c43cedf092d48ae9a8418f1c31a9fdfc51ced06d3ab",
+        "regression-junit.xml": "f54633081d37ec4912c783d0e05822f55080b5cc50ebcd8f9305d553b9144d1f",
+        "target-collected.json": "eb8f077f95c32192e983f51c7a03384bfa11e7d3dc00164a80e35dbe9a67c99a",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      }
+    }
+  ],
+  "planned": 16,
+  "scope": "complete original candidate patches and compact verifier outputs; no session transcript/source copy/weights"
+}
