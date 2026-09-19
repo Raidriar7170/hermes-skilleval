@@ -195,3 +195,38 @@ trajectories to 10/16 (9 functional pass, 1 fail, 0 unknown). Preserve this
 candidate and all previous successful trajectories; no failure-only sampling.
 No skill rescue or damage has yet been observed because paired tails have not
 started. Full remaining registered native continuation stays active.
+
+## 2026-09-19 continuation: functional report and portable evidence
+
+Added functional-only main and mechanism tables. Planned matrix cells remain in
+the denominator; a task with a missing paired repeat is not summarized from only
+its surviving repeat. Intervals first average repeats per task, then tasks per
+public mechanism family (fixed seed 7170, 10000 percentile-bootstrap draws;
+small-n unstable). Positive point estimates alone are INCONCLUSIVE; the report
+uses OBSERVED_WITH_LIMITATIONS only for a complete contrast with a positive lower
+interval endpoint and at least two independent families. Zero/negative means
+remain NOT_ESTABLISHED. Policy and costs cannot change this computation.
+
+Mechanism tables retain prelocked full/task-only/prior immediate choices,
+skill-versus-reminder outcomes, both real delay modes, and the prespecified
+positive-current-gain/wait-sensitive subset. An empty sensitive subset keeps the
+wait-head claim NOT_IDENTIFIABLE even if a forced delayed branch happens to win.
+
+Implemented `functional-v2 replay` (private or portable evidence) and `export`.
+A real export validation on all eight retained native pilot samples completed in
+private `export-pilot-validation-v1`; all eight portable records recomputed.
+This made zero new Agent/model/verifier calls. Only original patches, compact
+JUnit/collected-test/check outputs, hashed thread/fork identities, action metadata
+and usage counters were exported; no session transcript, full source or weights.
+The currently recorded first 12 native trajectories also passed private
+records-only recomputation, preserving the true target failure on 60811e7.
+
+Focused tests now pass 55 checks; Ruff passed. Current resource observation from
+the Codex account tool: ordinary usage allowed, weekly used 53% (47% remaining),
+no credit purchase or reset use. This is available-capacity evidence, not a
+billing statement or guarantee of the whole campaign's future capacity.
+
+Native continuation finished: 16/16 registered train/dev first trajectories,
+15 functional pass, 1 functional fail, 0 unknown. Zero-model replay verified all
+16 saved records. The native-only process ended normally and removed its auth
+copy. G1 is complete; G2 uses the same recorded prefixes and session home.

@@ -3,7 +3,7 @@
 - [x] 1.2 Implement objective lock, pure-functional outcomes and invariance tests; decompose old train/dev only.
 ## 2. G1 task qualification and pilot
 - [x] 2.1 Register public mechanism categories, ordered pool and disjoint splits; qualify base-red/reference-green with semantic coverage.
-- [ ] 2.2 Verify existing runtime/resources and run fixed native pilots, retaining every attempted sample.
+- [x] 2.2 Verify existing runtime/resources and run fixed native pilots, retaining every attempted sample.
 ## 3. G2 paired collection
 - [ ] 3.1 Bind common candidates/payloads and real observable prefixes; collect skills/no-op/reminder under fixed budgets and repeats.
 ## 4. G3 learning
