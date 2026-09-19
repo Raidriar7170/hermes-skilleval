@@ -1,0 +1,82 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..9cfedb0f599aa8c1f5db9a3f09901b9f0edcbace 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -516,6 +516,12 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+         columns = []
+ 
+         for c in ids.split(','):
++            # A hyphen can be part of a column name, so resolve exact names before
++            # interpreting either supported range separator.
++            if not c.isdigit() and c in column_names:
++                columns.append(column_names.index(c))
++                continue
++
+             try:
+                 columns.append(match_column_identifier(column_names, c, column_offset))
+             except ColumnIdentifierError:
+@@ -542,6 +548,11 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+ 
+     if excluded_columns:
+         for c in excluded_columns.split(','):
++            # As above, column names take precedence over range notation.
++            if not c.isdigit() and c in column_names:
++                excludes.append(column_names.index(c))
++                continue
++
+             try:
+                 excludes.append(match_column_identifier(column_names, c, column_offset))
+             except ColumnIdentifierError:
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..4d33bbf3f60bc8baa5b8871dce7c7b74d12c7b1e 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -6,7 +6,7 @@ from csvkit.cli import match_column_identifier, parse_column_identifiers
+ class TestCli(unittest.TestCase):
+ 
+     def setUp(self):
+-        self.headers = ['id', 'name', 'i_work_here', '1', 'more-header-values', 'stuff', 'blueberry']
++        self.headers = ['id', 'name', 'i_work_here', '1', 'more-header-values', 'stuff', 'blueberry', '2020-2021']
+ 
+     def test_match_column_identifier_string(self):
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here'))
+@@ -24,6 +24,18 @@ class TestCli(unittest.TestCase):
+         self.assertEqual([2, 0, 1], parse_column_identifiers('i_work_here,1,name', self.headers))
+         self.assertEqual([2, 1, 1], parse_column_identifiers('i_work_here,1,name', self.headers, column_offset=0))
+ 
++    def test_parse_hyphenated_column_identifier(self):
++        self.assertEqual([4], parse_column_identifiers('more-header-values', self.headers))
++        self.assertEqual([7], parse_column_identifiers('2020-2021', self.headers))
++
++        expected = list(range(len(self.headers)))
++        expected.remove(4)
++        expected.remove(7)
++        self.assertEqual(
++            expected,
++            parse_column_identifiers(None, self.headers, excluded_columns='more-header-values,2020-2021'),
++        )
++
+     def test_range_notation(self):
+         self.assertEqual([0, 1, 2], parse_column_identifiers('1:3', self.headers))
+         self.assertEqual([1, 2, 3], parse_column_identifiers('1:3', self.headers, column_offset=0))
+diff --git a/tests/test_utilities/test_csvgrep.py b/tests/test_utilities/test_csvgrep.py
+index 35bdaef51df9d94d1f5667e99912044c82081f90..45f9ac5fc3380be380bf287026c808ae299d6948 100644
+--- a/tests/test_utilities/test_csvgrep.py
++++ b/tests/test_utilities/test_csvgrep.py
+@@ -95,6 +95,16 @@ class TestCSVGrep(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['14', 'ILLINOIS', 'IL', '17', '15,659', '2,491', '2,025', '1,770', '19', '21,964', ''],
+         ])
+ 
++    def test_hyphenated_column_name(self):
++        self.assertRows(['-c', 'Montgomery GI Bill-Active Duty', '-m', '15,659',
++                         'examples/realdata/FY09_EDU_Recipients_by_State.csv'], [
++            ['State Name', 'State Abbreviate', 'Code', 'Montgomery GI Bill-Active Duty',
++                'Montgomery GI Bill- Selective Reserve', 'Dependents\' Educational Assistance',
++                'Reserve Educational Assistance Program', 'Post-Vietnam Era Veteran\'s Educational Assistance Program',
++                'TOTAL', ''],
++            ['ILLINOIS', 'IL', '17', '15,659', '2,491', '2,025', '1,770', '19', '21,964', ''],
++        ])
++
+     def test_kwargs_with_line_numbers(self):
+         self.assertRows(['-t', '-c', '1', '-m', '1', '--linenumbers', 'examples/dummy.tsv'], [
+             ['line_numbers', 'a', 'b', 'c'],

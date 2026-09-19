@@ -1,0 +1,137 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index a30e7cfc08ef039541c82f995025b1bb378e1580..e1abcb450640f5c55a9be22c7c680a37989c4b8c 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -7,6 +7,7 @@
+ 3.19 (2021-11-20)
+ -----------------
+ 
++- ``sqlite-utils insert`` now has a ``--convert`` option for transforming each incoming object using Python code before it is inserted. See :ref:`cli_inserting_data_convert`.
+ - The :ref:`table.lookup() method <python_api_lookup_tables>` now accepts keyword arguments that match those on the underlying ``table.insert()`` method: ``foreign_keys=``, ``column_order=``, ``not_null=``, ``defaults=``, ``extracts=``, ``conversions=`` and ``columns=``. You can also now pass ``pk=`` to specify a different column name to use for the primary key. (:issue:`342`)
+ 
+ .. _v3_18:
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..17ba9c2e827766d37900f0aacc3c7d704415e633 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -753,6 +753,19 @@ This also means you pipe ``sqlite-utils`` together to easily create a new SQLite
+     207368,920 Kirkham St,37.760210314285,-122.47073935813
+     188702,1501 Evans Ave,37.7422086702947,-122.387293152263
+ 
++.. _cli_inserting_data_convert:
++
++Transforming data before inserting it
++-------------------------------------
++
++Use ``--convert`` to execute Python code against each incoming object before it is inserted. The object is available to the code as ``row`` and can be modified in place. For example, this converts ``n`` to an integer and increments it::
++
++    $ cat rows.json \
++        | sqlite-utils insert data.db rows - --nl \
++            --convert 'row["n"] = int(row["n"]) + 1'
++
++Every input object is inserted after the conversion code has run. The code passed to this option is executed as Python, so only use code that you trust.
++
+ .. _cli_inserting_data_flatten:
+ 
+ Flattening nested JSON objects
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..a770cf62081de3e692065baf58d04cb50f5b7b11 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    convert=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -774,6 +775,15 @@ def insert_upsert_implementation(
+         if flatten:
+             docs = (dict(_flatten(doc)) for doc in docs)
+ 
++    if convert:
++        convert_code = compile(convert, "<string>", "exec")
++
++        def convert_doc(doc):
++            exec(convert_code, {"row": doc})
++            return doc
++
++        docs = (convert_doc(doc) for doc in docs)
++
+     extra_kwargs = {"ignore": ignore, "replace": replace, "truncate": truncate}
+     if not_null:
+         extra_kwargs["not_null"] = set(not_null)
+@@ -848,6 +858,10 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--convert",
++    help='Python code to run against each row, e.g. row["name"] = row["name"].upper()',
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +884,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    convert,
+     not_null,
+     default,
+ ):
+@@ -905,6 +920,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            convert=convert,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..433ce0e0b5b3b15c6bb5de7ea2f05bcc9f747be2 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -778,6 +778,41 @@ def test_insert_newline_delimited(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++@pytest.mark.parametrize(
++    ("input_", "format_args"),
++    (
++        (
++            json.dumps(
++                [{"name": "one", "n": "1"}, {"name": "two", "n": "2"}]
++            ),
++            [],
++        ),
++        ('{"name": "one", "n": "1"}\n{"name": "two", "n": "2"}', ["--nl"]),
++    ),
++)
++def test_insert_convert_preserves_and_transforms_all_objects(
++    db_path, input_, format_args
++):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "converted",
++            "-",
++            "--convert",
++            'row["n"] = int(row["n"]) + 1',
++        ]
++        + format_args,
++        input=input_,
++    )
++    assert result.exit_code == 0, result.output
++    assert list(Database(db_path)["converted"].rows) == [
++        {"name": "one", "n": 2},
++        {"name": "two", "n": 3},
++    ]
++
++
+ def test_insert_ignore(db_path, tmpdir):
+     db = Database(db_path)
+     db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")

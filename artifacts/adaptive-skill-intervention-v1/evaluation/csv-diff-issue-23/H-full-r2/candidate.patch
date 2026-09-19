@@ -1,0 +1,63 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..cf3debe957955b7e1a10fb0dfcc01e3770a19b64 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if isinstance(key, (list, tuple)):
++        keyfn = lambda r: tuple(r[column] for column in key)
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..bcb94402d1248ee2a68bed55706959cf3c4ce1d4 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -1,5 +1,6 @@
+ from csv_diff import load_csv, compare
+ import io
++import pytest
+ 
+ ONE = """id,name,age
+ 1,Cleo,4
+@@ -51,6 +52,36 @@ TEN = """id,name,age
+ 1,Cleo,5
+ 2,Pancakes,3"""
+ 
++COMPOSITE_ONE = """account_id,id,name
++1,1,Cleo
++2,1,Pancakes"""
++
++COMPOSITE_TWO = """account_id,id,name
++1,1,Cleo
++2,1,Waffles"""
++
++
++@pytest.mark.parametrize("key", [["account_id", "id"], ("account_id", "id")])
++def test_composite_key(key):
++    rows = load_csv(io.StringIO(COMPOSITE_ONE), key=key)
++
++    assert rows == {
++        ("1", "1"): {"account_id": "1", "id": "1", "name": "Cleo"},
++        ("2", "1"): {"account_id": "2", "id": "1", "name": "Pancakes"},
++    }
++
++
++@pytest.mark.parametrize("key", [["account_id", "id"], ("account_id", "id")])
++def test_composite_key_compare(key):
++    diff = compare(
++        load_csv(io.StringIO(COMPOSITE_ONE), key=key),
++        load_csv(io.StringIO(COMPOSITE_TWO), key=key),
++    )
++
++    assert diff["changed"] == [
++        {"key": ("2", "1"), "changes": {"name": ["Pancakes", "Waffles"]}}
++    ]
++
+ 
+ def test_row_changed():
+     diff = compare(

@@ -1,0 +1,48 @@
+diff --git a/sqlite_utils/__main__.py b/sqlite_utils/__main__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..491a4d1368f38f563fca67faa1796b717d8e30da
+--- /dev/null
++++ b/sqlite_utils/__main__.py
+@@ -0,0 +1,5 @@
++from .cli import cli
++
++
++if __name__ == "__main__":
++    cli()
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 624f47e7b50e79f6a7e3e76b048e940fa8293641..37c4a7c0976f3916d5bd11c3e6edcd5ecd0a292b 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -2358,3 +2358,7 @@ def _load_extensions(db, load_extension):
+             if ext == "spatialite" and not os.path.exists(ext):
+                 ext = find_spatialite()
+             db.conn.load_extension(ext)
++
++
++if __name__ == "__main__":
++    cli()
+diff --git a/tests/test_cli_entrypoints.py b/tests/test_cli_entrypoints.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..7879183e900175c4d599fc65483d8ef380a03639
+--- /dev/null
++++ b/tests/test_cli_entrypoints.py
+@@ -0,0 +1,19 @@
++import subprocess
++import sys
++
++import pytest
++
++
++@pytest.mark.parametrize("module", ("sqlite_utils", "sqlite_utils.cli"))
++def test_python_m_entrypoint(module):
++    result = subprocess.run(
++        [sys.executable, "-m", module, "--help"],
++        capture_output=True,
++        encoding="utf-8",
++    )
++
++    assert result.returncode == 0
++    assert result.stdout.startswith("Usage: ")
++    assert "Commands:" in result.stdout
++    assert "  insert" in result.stdout
++    assert result.stderr == ""

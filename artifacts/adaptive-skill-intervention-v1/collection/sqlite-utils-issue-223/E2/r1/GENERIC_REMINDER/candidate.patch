@@ -1,0 +1,139 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index 974fe68903b2d8de7df1b66e46998a335613faee..8a5baf2c61182e404894df5b963a09e50cea242b 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -481,6 +481,11 @@ If your data is in CSV format, you can insert it using the ``--csv`` option::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.csv --csv
+ 
++CSV files that use a delimiter other than a comma can be imported using the
++``--delimiter`` option. This option implies ``--csv``::
++
++    $ sqlite-utils insert places.db places places.csv --delimiter ';'
++
+ For tab-delimited data, use ``--tsv``::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.tsv --tsv
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 0bc03fed5cdad29dab3544fb4320b564f3895582..e488ead318c133504a1d2250d3d0de6b3cdae97e 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -601,6 +601,10 @@ def insert_upsert_options(fn):
+             click.option("--nl", is_flag=True, help="Expect newline-delimited JSON"),
+             click.option("-c", "--csv", is_flag=True, help="Expect CSV"),
+             click.option("--tsv", is_flag=True, help="Expect TSV"),
++            click.option(
++                "--delimiter",
++                help="Delimiter to use for CSV input",
++            ),
+             click.option(
+                 "--batch-size", type=int, default=100, help="Commit every X records"
+             ),
+@@ -640,6 +644,7 @@ def insert_upsert_implementation(
+     nl,
+     csv,
+     tsv,
++    delimiter,
+     batch_size,
+     alter,
+     upsert,
+@@ -654,6 +659,11 @@ def insert_upsert_implementation(
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
++    if delimiter is not None and len(delimiter) != 1:
++        raise click.ClickException("--delimiter must be a single character")
++    if delimiter is not None and (nl or tsv):
++        raise click.ClickException("--delimiter cannot be used with --nl or --tsv")
++    csv = csv or delimiter is not None
+     if (nl + csv + tsv) >= 2:
+         raise click.ClickException("Use just one of --nl, --csv or --tsv")
+     if encoding and not (csv or tsv):
+@@ -665,7 +675,8 @@ def insert_upsert_implementation(
+     if csv or tsv:
+         dialect = "excel-tab" if tsv else "excel"
+         with file_progress(json_file, silent=silent) as json_file:
+-            reader = csv_std.reader(json_file, dialect=dialect)
++            reader_kwargs = {"delimiter": delimiter} if delimiter is not None else {}
++            reader = csv_std.reader(json_file, dialect=dialect, **reader_kwargs)
+             headers = next(reader)
+             docs = (dict(zip(headers, row)) for row in reader)
+     else:
+@@ -720,6 +731,7 @@ def insert(
+     nl,
+     csv,
+     tsv,
++    delimiter,
+     batch_size,
+     alter,
+     encoding,
+@@ -746,6 +758,7 @@ def insert(
+             nl,
+             csv,
+             tsv,
++            delimiter,
+             batch_size,
+             alter=alter,
+             upsert=False,
+@@ -772,6 +785,7 @@ def upsert(
+     nl,
+     csv,
+     tsv,
++    delimiter,
+     batch_size,
+     alter,
+     not_null,
+@@ -794,6 +808,7 @@ def upsert(
+             nl,
+             csv,
+             tsv,
++            delimiter,
+             batch_size,
+             alter=alter,
+             upsert=True,
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 381997b04ab6feaa5d9ea99b99b7dd108490d35e..7698446502df0ae6a70458a55d16c9cb13992c20 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -736,6 +736,41 @@ def test_insert_csv_tsv(content, option, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "3"}] == list(db["data"].rows)
+ 
+ 
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++def test_insert_upsert_csv_delimiter(command, db_path, tmpdir):
++    db = Database(db_path)
++    file_path = str(tmpdir / "semicolon.csv")
++    open(file_path, "w").write("id;name;age\n1;Cleo;4\n2;Pancakes;2\n")
++    result = CliRunner().invoke(
++        cli.cli,
++        [command, db_path, "dogs", file_path, "--delimiter", ";", "--pk", "id"],
++        catch_exceptions=False,
++    )
++    assert 0 == result.exit_code
++    assert [
++        {"id": "1", "name": "Cleo", "age": "4"},
++        {"id": "2", "name": "Pancakes", "age": "2"},
++    ] == list(db["dogs"].rows)
++
++
++@pytest.mark.parametrize(
++    "options,error",
++    (
++        (("--delimiter", ";;"), "--delimiter must be a single character"),
++        (("--delimiter", ";", "--nl"), "--delimiter cannot be used with --nl"),
++        (("--delimiter", ";", "--tsv"), "--delimiter cannot be used with --nl"),
++    ),
++)
++def test_csv_delimiter_errors(options, error, db_path, tmpdir):
++    file_path = str(tmpdir / "data.csv")
++    open(file_path, "w").write("id;name\n1;Cleo\n")
++    result = CliRunner().invoke(
++        cli.cli, ["insert", db_path, "dogs", file_path] + list(options)
++    )
++    assert result.exit_code == 1
++    assert error in result.output
++
++
+ @pytest.mark.parametrize(
+     "options",
+     (

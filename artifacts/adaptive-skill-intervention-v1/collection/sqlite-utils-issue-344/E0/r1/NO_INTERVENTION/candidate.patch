@@ -1,0 +1,530 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index cd0be829bec462d3ffead2e003307d4872e0be91..4d256f85840aed9a1041118eb3b86190b46c9a33 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -29,7 +29,7 @@ from .utils import (
+ 
+ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+ 
+-VALID_COLUMN_TYPES = ("INTEGER", "TEXT", "FLOAT", "BLOB")
++VALID_COLUMN_TYPES = ("INT", "INTEGER", "TEXT", "FLOAT", "REAL", "BLOB", "ANY")
+ 
+ UNICODE_ERROR = """
+ {}
+@@ -684,6 +684,11 @@ def insert_upsert_options(fn):
+                 envvar="SQLITE_UTILS_DETECT_TYPES",
+                 help="Detect types for columns in CSV/TSV data",
+             ),
++            click.option(
++                "--strict",
++                is_flag=True,
++                help="Create a STRICT table",
++            ),
+             load_extension_option,
+             click.option("--silent", is_flag=True, help="Do not show progress bar"),
+         )
+@@ -717,6 +722,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    strict=False,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -784,7 +790,12 @@ def insert_upsert_implementation(
+     docs = (decode_base64_values(doc) for doc in docs)
+     try:
+         db[table].insert_all(
+-            docs, pk=pk, batch_size=batch_size, alter=alter, **extra_kwargs
++            docs,
++            pk=pk,
++            batch_size=batch_size,
++            alter=alter,
++            strict=strict,
++            **extra_kwargs
+         )
+     except Exception as e:
+         if (
+@@ -871,6 +882,7 @@ def insert(
+     truncate,
+     not_null,
+     default,
++    strict,
+ ):
+     """
+     Insert records from JSON file into a table, creating the table if it
+@@ -904,6 +916,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            strict=strict,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+@@ -932,6 +945,7 @@ def upsert(
+     detect_types,
+     load_extension,
+     silent,
++    strict,
+ ):
+     """
+     Upsert records based on their primary key. Works like 'insert' but if
+@@ -960,6 +974,7 @@ def upsert(
+             encoding=encoding,
+             load_extension=load_extension,
+             silent=silent,
++            strict=strict,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+@@ -1001,9 +1016,20 @@ def upsert(
+     is_flag=True,
+     help="If table already exists, replace it",
+ )
++@click.option("--strict", is_flag=True, help="Create a STRICT table")
+ @load_extension_option
+ def create_table(
+-    path, table, columns, pk, not_null, default, fk, ignore, replace, load_extension
++    path,
++    table,
++    columns,
++    pk,
++    not_null,
++    default,
++    fk,
++    ignore,
++    replace,
++    strict,
++    load_extension,
+ ):
+     """
+     Add a table with the specified columns. Columns should be specified using
+@@ -1045,7 +1071,12 @@ def create_table(
+                 )
+             )
+     db[table].create(
+-        coltypes, pk=pk, not_null=not_null, defaults=dict(default), foreign_keys=fk
++        coltypes,
++        pk=pk,
++        not_null=not_null,
++        defaults=dict(default),
++        foreign_keys=fk,
++        strict=strict,
+     )
+ 
+ 
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index aebca897b7f5672666c9fa3a70d33f66d3ed7926..b69da382c0206866084c289107e998da8fa090d0 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -180,13 +180,19 @@ COLUMN_TYPE_MAPPING = {
+     None.__class__: "TEXT",
+     uuid.UUID: "TEXT",
+     # SQLite explicit types
++    "INT": "INT",
+     "TEXT": "TEXT",
+     "INTEGER": "INTEGER",
+     "FLOAT": "FLOAT",
++    "REAL": "REAL",
++    "ANY": "ANY",
+     "BLOB": "BLOB",
++    "int": "INT",
+     "text": "TEXT",
+     "integer": "INTEGER",
+     "float": "FLOAT",
++    "real": "REAL",
++    "any": "ANY",
+     "blob": "BLOB",
+ }
+ # If numpy is available, add more types
+@@ -641,6 +647,7 @@ class Database:
+         defaults: Optional[Dict[str, Any]] = None,
+         hash_id: Optional[str] = None,
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
++        strict: bool = False,
+     ) -> str:
+         "Returns the SQL ``CREATE TABLE`` statement for creating the specified table."
+         foreign_keys = self.resolve_foreign_keys(name, foreign_keys or [])
+@@ -652,7 +659,12 @@ class Database:
+                 assert False
+             # Ensure other table exists
+             if not self[extract_table].exists():
+-                self.create_table(extract_table, {"id": int, "value": str}, pk="id")
++                self.create_table(
++                    extract_table,
++                    {"id": int, "value": str},
++                    pk="id",
++                    strict=strict,
++                )
+             columns[extract_column] = int
+             foreign_keys_by_column[extract_column] = ForeignKey(
+                 name, extract_column, extract_table, "id"
+@@ -719,7 +731,11 @@ class Database:
+             column_defs.append(
+                 "   [{column_name}] {column_type}{column_extras}".format(
+                     column_name=column_name,
+-                    column_type=COLUMN_TYPE_MAPPING[column_type],
++                    column_type=(
++                        "REAL"
++                        if strict and COLUMN_TYPE_MAPPING[column_type] == "FLOAT"
++                        else COLUMN_TYPE_MAPPING[column_type]
++                    ),
+                     column_extras=(" " + " ".join(column_extras))
+                     if column_extras
+                     else "",
+@@ -733,9 +749,12 @@ class Database:
+         columns_sql = ",\n".join(column_defs)
+         sql = """CREATE TABLE [{table}] (
+ {columns_sql}{extra_pk}
+-);
++){strict};
+         """.format(
+-            table=name, columns_sql=columns_sql, extra_pk=extra_pk
++            table=name,
++            columns_sql=columns_sql,
++            extra_pk=extra_pk,
++            strict=" STRICT" if strict else "",
+         )
+         return sql
+ 
+@@ -750,6 +769,7 @@ class Database:
+         defaults: Optional[Dict[str, Any]] = None,
+         hash_id: Optional[str] = None,
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
++        strict: bool = False,
+     ) -> "Table":
+         """
+         Create a table with the specified name and the specified ``{column_name: type}`` columns.
+@@ -766,6 +786,7 @@ class Database:
+             defaults=defaults,
+             hash_id=hash_id,
+             extracts=extracts,
++            strict=strict,
+         )
+         self.execute(sql)
+         table = self.table(
+@@ -776,6 +797,7 @@ class Database:
+             not_null=not_null,
+             defaults=defaults,
+             hash_id=hash_id,
++            strict=strict,
+         )
+         return cast(Table, table)
+ 
+@@ -1053,6 +1075,7 @@ class Table(Queryable):
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
+         conversions: Optional[dict] = None,
+         columns: Optional[Union[Dict[str, Any]]] = None,
++        strict: bool = False,
+     ):
+         super().__init__(db, name)
+         self._defaults = dict(
+@@ -1069,6 +1092,7 @@ class Table(Queryable):
+             extracts=extracts,
+             conversions=conversions or {},
+             columns=columns,
++            strict=strict,
+         )
+ 
+     def __repr__(self) -> str:
+@@ -1104,6 +1128,11 @@ class Table(Queryable):
+         "Does this table use ``rowid`` for its primary key (no other primary keys are specified)?"
+         return not any(column for column in self.columns if column.is_pk)
+ 
++    @property
++    def strict(self) -> bool:
++        "Does this table use SQLite's STRICT mode?"
++        return bool(self.exists() and self.schema.rstrip().upper().endswith(" STRICT"))
++
+     def get(self, pk_values: Union[list, tuple, str, int]) -> dict:
+         """
+         Return row (as dictionary) for the specified primary key.
+@@ -1229,6 +1258,7 @@ class Table(Queryable):
+         defaults: Optional[Dict[str, Any]] = None,
+         hash_id: Optional[str] = None,
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
++        strict: bool = False,
+     ) -> "Table":
+         """
+         Create a table with the specified columns.
+@@ -1247,6 +1277,7 @@ class Table(Queryable):
+                 defaults=defaults,
+                 hash_id=hash_id,
+                 extracts=extracts,
++                strict=strict,
+             )
+         return self
+ 
+@@ -1316,7 +1347,12 @@ class Table(Queryable):
+         new_table_name = "{}_new_{}".format(
+             self.name, tmp_suffix or os.urandom(6).hex()
+         )
+-        current_column_pairs = list(self.columns_dict.items())
++        # STRICT tables can use the ANY type, which does not have an equivalent
++        # Python affinity type. Preserve declared types when rebuilding them.
++        if self.strict:
++            current_column_pairs = [(column.name, column.type) for column in self.columns]
++        else:
++            current_column_pairs = list(self.columns_dict.items())
+         new_column_pairs = []
+         copy_from_to = {column: column for column, _ in current_column_pairs}
+         for name, type_ in current_column_pairs:
+@@ -1391,6 +1427,7 @@ class Table(Queryable):
+                 defaults=create_table_defaults,
+                 foreign_keys=create_table_foreign_keys,
+                 column_order=column_order,
++                strict=self.strict,
+             ).strip()
+         )
+ 
+@@ -2474,6 +2511,7 @@ class Table(Queryable):
+         extracts: Optional[Union[Dict[str, str], List[str], Default]] = DEFAULT,
+         conversions: Optional[Union[Dict[str, str], Default]] = DEFAULT,
+         columns: Optional[Union[Dict[str, Any], Default]] = DEFAULT,
++        strict: Optional[Union[bool, Default]] = DEFAULT,
+     ) -> "Table":
+         """
+         Insert a single record into the table. The table will be created with a schema that matches
+@@ -2505,6 +2543,7 @@ class Table(Queryable):
+           is being inserted, for example ``{"name": "upper(?)"}``. See :ref:`python_api_conversions`.
+         - ``columns`` - dictionary over-riding the detected types used for the columns, for example
+           ``{"age": int, "weight": float}``.
++        - ``strict`` - create the table in SQLite STRICT mode.
+         """
+         return self.insert_all(
+             [record],
+@@ -2520,6 +2559,7 @@ class Table(Queryable):
+             extracts=extracts,
+             conversions=conversions,
+             columns=columns,
++            strict=strict,
+         )
+ 
+     def insert_all(
+@@ -2540,6 +2580,7 @@ class Table(Queryable):
+         conversions=DEFAULT,
+         columns=DEFAULT,
+         upsert=False,
++        strict=DEFAULT,
+     ) -> "Table":
+         """
+         Like ``.insert()`` but takes a list of records and ensures that the table
+@@ -2558,6 +2599,7 @@ class Table(Queryable):
+         extracts = self.value_or_default("extracts", extracts)
+         conversions = self.value_or_default("conversions", conversions) or {}
+         columns = self.value_or_default("columns", columns)
++        strict = self.value_or_default("strict", strict)
+ 
+         if upsert and (not pk and not hash_id):
+             raise PrimaryKeyRequired("upsert() requires a pk")
+@@ -2607,6 +2649,7 @@ class Table(Queryable):
+                         defaults=defaults,
+                         hash_id=hash_id,
+                         extracts=extracts,
++                        strict=strict,
+                     )
+                 all_columns_set = set()
+                 for record in chunk:
+@@ -2651,6 +2694,7 @@ class Table(Queryable):
+         extracts=DEFAULT,
+         conversions=DEFAULT,
+         columns=DEFAULT,
++        strict=DEFAULT,
+     ) -> "Table":
+         """
+         Like ``.insert()`` but performs an ``UPSERT``, where records are inserted if they do
+@@ -2670,6 +2714,7 @@ class Table(Queryable):
+             extracts=extracts,
+             conversions=conversions,
+             columns=columns,
++            strict=strict,
+         )
+ 
+     def upsert_all(
+@@ -2686,6 +2731,7 @@ class Table(Queryable):
+         extracts=DEFAULT,
+         conversions=DEFAULT,
+         columns=DEFAULT,
++        strict=DEFAULT,
+     ) -> "Table":
+         """
+         Like ``.upsert()`` but can be applied to a list of records.
+@@ -2703,6 +2749,7 @@ class Table(Queryable):
+             extracts=extracts,
+             conversions=conversions,
+             columns=columns,
++            strict=strict,
+             upsert=True,
+         )
+ 
+@@ -2726,6 +2773,7 @@ class Table(Queryable):
+         extracts: Optional[Union[Dict[str, str], List[str]]] = None,
+         conversions: Optional[Dict[str, str]] = None,
+         columns: Optional[Dict[str, Any]] = None,
++        strict: bool = False,
+     ):
+         """
+         Create or populate a lookup table with the specified values.
+@@ -2776,6 +2824,7 @@ class Table(Queryable):
+                     extracts=extracts,
+                     conversions=conversions,
+                     columns=columns,
++                    strict=strict,
+                 ).last_pk
+         else:
+             pk = self.insert(
+@@ -2788,6 +2837,7 @@ class Table(Queryable):
+                 extracts=extracts,
+                 conversions=conversions,
+                 columns=columns,
++                strict=strict,
+             ).last_pk
+             self.create_index(lookup_values.keys(), unique=True)
+             return pk
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..df1a2385e5bc155ffb99d29fa1e5e934e9331318 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1347,6 +1347,48 @@ def test_create_table(args, schema):
+         assert schema == db["t"].schema
+ 
+ 
++def test_create_table_strict():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        result = runner.invoke(
++            cli.cli,
++            [
++                "create-table",
++                "test.db",
++                "t",
++                "name",
++                "text",
++                "weight",
++                "float",
++                "--strict",
++            ],
++            catch_exceptions=False,
++        )
++        assert result.exit_code == 0
++        assert Database("test.db")["t"].schema == (
++            "CREATE TABLE [t] (\n   [name] TEXT,\n   [weight] REAL\n) STRICT"
++        )
++
++
++@pytest.mark.parametrize(
++    "command,extra_args", (("insert", ()), ("upsert", ("--pk", "id")))
++)
++def test_insert_upsert_strict(tmpdir, command, extra_args):
++    db_path = str(tmpdir / "strict.db")
++    json_path = str(tmpdir / "rows.json")
++    with open(json_path, "w") as fp:
++        json.dump([{"id": 1, "name": "Cleo", "weight": 12.5}], fp)
++    result = CliRunner().invoke(
++        cli.cli,
++        [command, db_path, "dogs", json_path, "--strict"] + list(extra_args),
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++    table = Database(db_path)["dogs"]
++    assert table.strict is True
++    assert table.columns_dict["weight"] is float
++
++
+ def test_create_table_foreign_key():
+     runner = CliRunner()
+     creates = (
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 187d20a97c9012c186d3c8cd1ed2b4f58867b367..d1a3d5ed6684c72daa1e29144aa1bc767a4b21b3 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -60,6 +60,46 @@ def test_create_table(fresh_db):
+     ) == table.schema
+ 
+ 
++def test_create_table_strict(fresh_db):
++    table = fresh_db.create_table(
++        "strict_table",
++        {"text_col": str, "float_col": float, "int_col": int},
++        strict=True,
++    )
++    assert table.strict is True
++    assert (
++        "CREATE TABLE [strict_table] (\n"
++        "   [text_col] TEXT,\n"
++        "   [float_col] REAL,\n"
++        "   [int_col] INTEGER\n"
++        ") STRICT"
++    ) == table.schema
++    with pytest.raises(sqlite3.IntegrityError):
++        table.insert({"text_col": "ok", "float_col": "not-a-number", "int_col": 1})
++
++
++def test_create_table_strict_explicit_types(fresh_db):
++    table = fresh_db["strict_table"].create(
++        {"int_col": "INT", "real_col": "REAL", "any_col": "ANY"}, strict=True
++    )
++    assert "[int_col] INT" in table.schema
++    assert "[real_col] REAL" in table.schema
++    assert "[any_col] ANY" in table.schema
++
++
++def test_create_strict_table_from_insert(fresh_db):
++    table = fresh_db["people"].insert(
++        {"name": "Cleo", "weight": 12.5}, strict=True
++    )
++    assert table.strict is True
++    assert "[weight] REAL" in table.schema
++
++
++def test_strict_table_as_table_default(fresh_db):
++    table = fresh_db.table("people", strict=True).insert({"name": "Cleo"})
++    assert table.strict is True
++
++
+ def test_create_table_compound_primary_key(fresh_db):
+     table = fresh_db.create_table(
+         "test_table", {"id1": str, "id2": str, "value": int}, pk=("id1", "id2")
+diff --git a/tests/test_lookup.py b/tests/test_lookup.py
+index 31be414ceba10af186ce26fb29e0100fb194acfd..4d4afe8cd55770fc9e7a740f103bd0a4b2223584 100644
+--- a/tests/test_lookup.py
++++ b/tests/test_lookup.py
+@@ -151,3 +151,9 @@ def test_lookup_with_extra_insert_parameters(fresh_db):
+             columns=["name", "type"],
+         )
+     ]
++
++
++def test_lookup_strict(fresh_db):
++    species = fresh_db["species"]
++    species.lookup({"name": "Palm"}, strict=True)
++    assert species.strict is True
+diff --git a/tests/test_transform.py b/tests/test_transform.py
+index 06e57293e4acc0a8ca7569f76483d2968b531423..d668c3d6e480e8a2d69841c0f42892401dd85d00 100644
+--- a/tests/test_transform.py
++++ b/tests/test_transform.py
+@@ -204,6 +204,24 @@ def test_transform_sql_with_no_primary_key_to_primary_key_of_id(fresh_db):
+     )
+ 
+ 
++def test_transform_preserves_strict(fresh_db):
++    dogs = fresh_db["dogs"].insert(
++        {"id": 1, "name": "Cleo", "age": 5, "metadata": "5"},
++        pk="id",
++        strict=True,
++        columns={"metadata": "ANY"},
++    )
++    dogs.transform(rename={"age": "dog_age"})
++    assert dogs.strict is True
++    assert "[metadata] ANY" in dogs.schema
++    assert dogs.get(1) == {
++        "id": 1,
++        "name": "Cleo",
++        "dog_age": 5,
++        "metadata": "5",
++    }
++
++
+ def test_transform_rename_pk(fresh_db):
+     dogs = fresh_db["dogs"]
+     dogs.insert({"id": 1, "name": "Cleo", "age": "5"}, pk="id")

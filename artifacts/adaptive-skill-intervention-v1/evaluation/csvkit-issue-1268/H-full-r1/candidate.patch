@@ -1,0 +1,78 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index 07d4ee5007c7853c040336ab5e354ffe9b01a57b..0dc62f6b48f8840375755ab55029d0b8ba002d33 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python
+ 
++import io
+ import sys
+ 
+ import agate
+@@ -72,14 +73,26 @@ class CSVJoin(CSVKitUtility):
+         column_types = self.get_column_types()
+ 
+         for f in self.input_files:
+-            tables.append(agate.Table.from_csv(
+-                f,
+-                skip_lines=self.args.skip_lines,
+-                sniff_limit=sniff_limit,
+-                column_types=column_types,
+-                **self.reader_kwargs,
+-            ))
+-            f.close()
++            buffered = None
++            try:
++                # agate seeks while sniffing the dialect, but inputs such as
++                # Bash process substitutions are pipes and cannot be seeked.
++                if f.seekable():
++                    handle = f
++                else:
++                    buffered = handle = io.StringIO(f.read())
++
++                tables.append(agate.Table.from_csv(
++                    handle,
++                    skip_lines=self.args.skip_lines,
++                    sniff_limit=sniff_limit,
++                    column_types=column_types,
++                    **self.reader_kwargs,
++                ))
++            finally:
++                if buffered is not None:
++                    buffered.close()
++                f.close()
+ 
+         join_column_ids = []
+ 
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index 47a2fbe915fca3e61c63a7ceb07020afd351a9dd..8a40791b8a50173f87401fb1e4d6ffef95163ed3 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -1,3 +1,4 @@
++import io
+ import os
+ import sys
+ import unittest
+@@ -52,6 +53,22 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['-c', 'a', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 3)
+ 
++    def test_inner_non_seekable(self):
++        def pipe(content):
++            read_fd, write_fd = os.pipe()
++            with os.fdopen(write_fd, 'w') as writer:
++                writer.write(content)
++            return os.fdopen(read_fd)
++
++        inputs = [pipe('A,B,C\n1,2,3\n'), pipe('C,D,E\n3,4,5\n')]
++        output_file = io.StringIO()
++        utility = self.Utility(['--no-inference', '-c', 'C', 'first', 'second'], output_file)
++
++        with patch.object(utility, '_open_input_file', side_effect=inputs):
++            utility.run()
++
++        self.assertEqual(output_file.getvalue(), 'A,B,C,D,E\n1,2,3,4,5\n')
++
+     def test_left(self):
+         output = self.get_output_as_io(['-c', 'a', '--left', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 5)

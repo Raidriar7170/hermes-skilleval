@@ -1,0 +1,48 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index e42be837368ab8b0c5cb44355507dde4549351f5..de8b9dec88fbc793ac83825776b18174899700ad 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -685,6 +685,10 @@ def insert_upsert_implementation(
+     if encoding and not (csv or tsv):
+         raise click.ClickException("--encoding must be used with --csv or --tsv")
+     encoding = encoding or "utf-8"
++    # utf-8-sig behaves like utf-8 for regular input, but consumes a UTF-8 BOM
++    # if one is present instead of including it in the first CSV field.
++    if (csv or tsv) and encoding.lower().replace("_", "-") in ("utf-8", "utf8"):
++        encoding = "utf-8-sig"
+     buffered = io.BufferedReader(json_file, buffer_size=4096)
+     decoded = io.TextIOWrapper(buffered, encoding=encoding)
+     if pk and len(pk) == 1:
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 87753965c039f184f6e5fee71719524b67ffa188..977919ee91cf40e9d7a8f4507be2c1553636ca28 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -726,6 +726,7 @@ def test_insert_ignore(db_path, tmpdir):
+     [
+         ("foo\tbar\tbaz\n1\t2\tcat,dog", ["--tsv"]),
+         ('foo,bar,baz\n1,2,"cat,dog"', ["--csv"]),
++        ('\ufefffoo,bar,baz\n1,2,"cat,dog"', ["--csv"]),
+         ('foo;bar;baz\n1;2;"cat,dog"', ["--csv", "--delimiter", ";"]),
+         # --delimiter implies --csv:
+         ('foo;bar;baz\n1;2;"cat,dog"', ["--delimiter", ";"]),
+@@ -1844,7 +1845,7 @@ def test_csv_import_no_headers(tmpdir, args):
+     db_path = str(tmpdir / "test.db")
+     csv_path = str(tmpdir / "test.csv")
+     csv_file = open(csv_path, "w")
+-    csv_file.write("Cleo,Dog,5\n")
++    csv_file.write("\ufeffCleo,Dog,5\n")
+     csv_file.write("Tracy,Spider,7\n")
+     csv_file.close()
+     result = CliRunner().invoke(
+@@ -1862,6 +1863,11 @@ def test_csv_import_no_headers(tmpdir, args):
+         "   [untitled_3] TEXT\n"
+         ")"
+     )
++    assert list(db["creatures"].rows)[0] == {
++        "untitled_1": "Cleo",
++        "untitled_2": "Dog",
++        "untitled_3": "5",
++    }
+     rows = list(db["creatures"].rows)
+     assert rows == [
+         {"untitled_1": "Cleo", "untitled_2": "Dog", "untitled_3": "5"},

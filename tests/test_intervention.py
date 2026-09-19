@@ -110,6 +110,23 @@ def test_public_usage_excludes_resumed_prefix_and_duplicate_updates(tmp_path):
     assert result["request_updates"] == 1
     assert result["all_started_turns_completed_with_usage"]
 
+    events.extend(
+        [
+            {"method": "turn/started", "params": {"turn": {"id": "failed"}}},
+            usage("failed", 110, 10),
+            {
+                "method": "turn/completed",
+                "params": {"turn": {"id": "failed", "status": "failed"}},
+            },
+        ]
+    )
+    (directory / "events.jsonl").write_text("\n".join(map(json.dumps, events)))
+    result = reported_usage(tmp_path)
+    assert result["tokens"]["totalTokens"] == 10
+    assert result["request_updates"] == 1
+    assert result["started_turns"] == 2 and result["turns_with_usage"] == 1
+    assert not result["all_started_turns_completed_with_usage"]
+
 
 def test_missing_runtime_cost_is_not_reported_as_zero():
     from hermes_skilleval.intervention.evaluate import summarize_rows

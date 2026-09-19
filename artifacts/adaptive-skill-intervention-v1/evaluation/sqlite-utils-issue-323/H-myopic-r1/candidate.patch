@@ -1,0 +1,126 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 93d25b23e5975fd5c2d1ece8881da9b3f6b6a3f2..e828d1d1f7abc3deb42fd6506d71702e2b30949a 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2180,23 +2180,29 @@ class Table(Queryable):
+                     return v
+                 return fn(v)
+ 
+-            self.db.register_function(convert_value)
++            function_name = "convert_value_{}".format(uuid.uuid4().hex)
++            self.db.conn.create_function(function_name, 1, convert_value)
+             sql = "update [{table}] set {sets}{where};".format(
+                 table=self.name,
+                 sets=", ".join(
+                     [
+-                        "[{output_column}] = convert_value([{column}])".format(
+-                            output_column=output or column, column=column
++                        "[{output_column}] = {function_name}([{column}])".format(
++                            output_column=output or column,
++                            function_name=function_name,
++                            column=column,
+                         )
+                         for column in columns
+                     ]
+                 ),
+                 where=" where {}".format(where) if where is not None else "",
+             )
+-            with self.db.conn:
+-                self.db.execute(sql, where_args or [])
+-                if drop:
+-                    self.transform(drop=columns)
++            try:
++                with self.db.conn:
++                    self.db.execute(sql, where_args or [])
++                    if drop:
++                        self.transform(drop=columns)
++            finally:
++                self.db.conn.create_function(function_name, 1, None)
+         return self
+ 
+     def _convert_multi(
+diff --git a/tests/test_convert.py b/tests/test_convert.py
+index 796a08f2e59f14d4299177089a4856bc2763826f..4a26b1d0e742568ce7a0a364dd523b73d90aa2b1 100644
+--- a/tests/test_convert.py
++++ b/tests/test_convert.py
+@@ -1,7 +1,27 @@
+-from sqlite_utils.db import BadMultiValues
++from sqlite_utils.db import BadMultiValues, OperationalError
+ import pytest
+ 
+ 
++class TracingConnection:
++    def __init__(self, connection):
++        self.connection = connection
++        self.function_calls = []
++
++    def __getattr__(self, attr):
++        return getattr(self.connection, attr)
++
++    def __enter__(self):
++        self.connection.__enter__()
++        return self
++
++    def __exit__(self, *args):
++        return self.connection.__exit__(*args)
++
++    def create_function(self, name, arity, function, **kwargs):
++        self.function_calls.append((name, arity, function, kwargs))
++        return self.connection.create_function(name, arity, function, **kwargs)
++
++
+ @pytest.mark.parametrize(
+     "columns,fn,expected",
+     (
+@@ -24,6 +44,51 @@ def test_convert(fresh_db, columns, fn, expected):
+     assert list(table.rows) == [expected]
+ 
+ 
++def test_convert_uses_unique_temporary_functions(fresh_db):
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    fresh_db.conn.create_function("convert_value", 1, lambda value: "existing")
++    fresh_db.conn = TracingConnection(fresh_db.conn)
++
++    table.convert("title", lambda value: value.upper())
++    table.convert("title", lambda value: value.lower())
++
++    registrations = [
++        call
++        for call in fresh_db.conn.function_calls
++        if call[0].startswith("convert_value_") and call[2] is not None
++    ]
++    assert len(registrations) == 2
++    assert registrations[0][0] != registrations[1][0]
++    for name, arity, _, _ in registrations:
++        assert (name, arity, None, {}) in fresh_db.conn.function_calls
++    assert fresh_db.execute("select convert_value('x')").fetchone()[0] == "existing"
++
++
++def test_convert_cleans_up_temporary_function_after_error(fresh_db, monkeypatch):
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    fresh_db.conn = TracingConnection(fresh_db.conn)
++    original_execute = fresh_db.execute
++
++    def execute(sql, parameters=None):
++        if sql.startswith("update"):
++            raise OperationalError("update failed")
++        return original_execute(sql, parameters)
++
++    monkeypatch.setattr(fresh_db, "execute", execute)
++
++    with pytest.raises(OperationalError):
++        table.convert("title", lambda value: value.upper())
++
++    registration, unregister = fresh_db.conn.function_calls
++    assert registration[0].startswith("convert_value_")
++    assert registration[1] == 1
++    assert callable(registration[2])
++    assert registration[3] == {}
++    assert unregister == (registration[0], 1, None, {})
++
++
+ @pytest.mark.parametrize(
+     "where,where_args", (("id > 1", None), ("id > :id", {"id": 1}), ("id > ?", [1]))
+ )

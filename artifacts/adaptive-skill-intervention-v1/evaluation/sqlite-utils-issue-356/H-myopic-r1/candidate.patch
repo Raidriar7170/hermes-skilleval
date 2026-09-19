@@ -1,0 +1,121 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..ff1c4d557347e84aaf999ec826a588bfb5571335 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -712,6 +712,24 @@ You can delete all the existing rows in the table before inserting the new recor
+ 
+     $ sqlite-utils insert dogs.db dogs dogs.json --truncate
+ 
++Transforming data while inserting
++----------------------------------
++
++The ``--convert`` option can run a snippet of Python against each incoming
++object before it is inserted. The object is available as ``row`` and can be
++modified in place. For example, this increments ``n`` and converts it from a
++string to an integer::
++
++    $ sqlite-utils insert data.db numbers numbers.json \
++        --convert 'row["n"] = int(row["n"]) + 1'
++
++Every input object is preserved and inserted after the conversion has run.
++This also works with newline-delimited JSON, including data piped to standard
++input::
++
++    $ cat numbers.jsonl | sqlite-utils insert data.db numbers - --nl \
++        --convert 'row["n"] = int(row["n"]) + 1'
++
+ .. _cli_inserting_data_binary:
+ 
+ Inserting binary data
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..557c98006e272ed9d9317fc3cfb385f951465bb5 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    convert=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -774,6 +775,20 @@ def insert_upsert_implementation(
+         if flatten:
+             docs = (dict(_flatten(doc)) for doc in docs)
+ 
++    if convert:
++        # Compile the code into a function body called fn(row). The row is
++        # returned after the code runs so mutation-only snippets preserve every
++        # incoming object.
++        new_code = ["def fn(row):"]
++        for line in convert.split("\n"):
++            new_code.append("    {}".format(line))
++        new_code.append("    return row")
++        code_o = compile("\n".join(new_code), "<string>", "exec")
++        locals = {}
++        exec(code_o, {"r": recipes, "recipes": recipes}, locals)
++        fn = locals["fn"]
++        docs = (fn(doc) for doc in docs)
++
+     extra_kwargs = {"ignore": ignore, "replace": replace, "truncate": truncate}
+     if not_null:
+         extra_kwargs["not_null"] = set(not_null)
+@@ -848,6 +863,10 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--convert",
++    help='Python code to run against each row, e.g. \'row["name"] = row["name"].upper()\'',
++)
+ def insert(
+     path,
+     table,
+@@ -872,6 +891,7 @@ def insert(
+     truncate,
+     not_null,
+     default,
++    convert,
+ ):
+     """
+     Insert records from JSON file into a table, creating the table if it
+@@ -905,6 +925,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            convert=convert,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..7d758a01611c6a123f07157ce4dc4d11848e83ee 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -778,6 +778,27 @@ def test_insert_newline_delimited(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++def test_insert_convert_preserves_and_transforms_all_objects(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "converted",
++            "-",
++            "--nl",
++            "--convert",
++            'row["n"] = int(row["n"]) + 1',
++        ],
++        input='{"name": "one", "n": "1"}\n{"name": "two", "n": "2"}',
++    )
++    assert 0 == result.exit_code, result.output
++    assert [
++        {"name": "one", "n": 2},
++        {"name": "two", "n": 3},
++    ] == list(Database(db_path)["converted"].rows)
++
++
+ def test_insert_ignore(db_path, tmpdir):
+     db = Database(db_path)
+     db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")

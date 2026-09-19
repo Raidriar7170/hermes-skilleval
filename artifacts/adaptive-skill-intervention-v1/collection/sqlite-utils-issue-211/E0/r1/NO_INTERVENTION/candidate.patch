@@ -1,0 +1,57 @@
+diff --git a/docs/python-api.rst b/docs/python-api.rst
+index ac7a8305c18d720dd7c70ef69e7de38e04f93e06..3dfc011e410f8a7ab4b410be9e5d264fad334a40 100644
+--- a/docs/python-api.rst
++++ b/docs/python-api.rst
+@@ -1458,6 +1458,13 @@ The ``.triggers`` property lists database triggers. It can be used on both datab
+     >>> db.triggers
+     ... similar output to db["authors"].triggers
+ 
++The ``.triggers_dict`` property on a table returns a dictionary mapping trigger names to their SQL definitions::
++
++    >>> db["authors"].triggers_dict
++    {'authors_ai': 'CREATE TRIGGER [authors_ai] AFTER INSERT...',
++     'authors_ad': 'CREATE TRIGGER [authors_ad] AFTER DELETE...',
++     'authors_au': 'CREATE TRIGGER [authors_au] AFTER UPDATE...'}
++
+ The ``detect_fts()`` method returns the associated SQLite FTS table name, if one exists for this table. If the table has not been configured for full-text search it returns ``None``.
+ 
+ ::
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 90427bf89eb2b22dcf62cd6dc705b9a82639b9cb..b7afc9cc7e913f78047e01e934785154714b5b7d 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -759,6 +759,11 @@ class Table(Queryable):
+             ).fetchall()
+         ]
+ 
++    @property
++    def triggers_dict(self):
++        "Returns {trigger-name: trigger-sql} dictionary"
++        return {trigger.name: trigger.sql for trigger in self.triggers}
++
+     def create(
+         self,
+         columns,
+diff --git a/tests/test_introspect.py b/tests/test_introspect.py
+index 80cfee6ad6c437faa7d59a3a92adee3b10c2eded..8ac7e79baef52bb69f8b7d4dae6a9774aeac35fe 100644
+--- a/tests/test_introspect.py
++++ b/tests/test_introspect.py
+@@ -144,6 +144,18 @@ def test_triggers(fresh_db):
+     assert [] == fresh_db["other"].triggers
+ 
+ 
++def test_triggers_dict(fresh_db):
++    authors = fresh_db["authors"].create({"name": str})
++    assert {} == authors.triggers_dict
++    trigger_sql = """CREATE TRIGGER authors_uppercase_name
++    AFTER INSERT ON authors
++    BEGIN
++        UPDATE authors SET name = upper(new.name) WHERE rowid = new.rowid;
++    END"""
++    fresh_db.execute(trigger_sql)
++    assert {"authors_uppercase_name": trigger_sql} == authors.triggers_dict
++
++
+ @pytest.mark.parametrize(
+     "sql,expected_name,expected_using",
+     [

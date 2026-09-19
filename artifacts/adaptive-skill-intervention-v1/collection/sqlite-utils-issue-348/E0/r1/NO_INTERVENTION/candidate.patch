@@ -1,0 +1,86 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..0d7431a6bf76acfbbd8311945402ada2e205ad37 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1120,6 +1120,16 @@ The type of the returned values will be taken into account when creating the new
+ 
+ The code function can also return ``None``, in which case its output will be ignored. You can drop the original column at the end of the operation by adding ``--drop``.
+ 
++Creating an empty database
++==========================
++
++The ``create-database`` command creates a new, empty SQLite database file::
++
++    $ sqlite-utils create-database mydb.db
++
++The command returns an error if the file already exists, to avoid overwriting
++an existing database.
++
+ .. _cli_create_table:
+ 
+ Creating tables
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..3cb27b99224c36cbfcc3bc38b38c7f731d0a185a 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -561,6 +561,28 @@ def disable_fts(path, table, load_extension):
+     db[table].disable_fts()
+ 
+ 
++@cli.command(name="create-database")
++@click.argument(
++    "path",
++    type=click.Path(file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def create_database(path):
++    "Create a new, empty SQLite database"
++    try:
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
++    except FileExistsError:
++        raise click.ClickException("Database already exists: {}".format(path))
++    os.close(fd)
++    try:
++        db = sqlite3.connect(path)
++        db.execute("vacuum")
++        db.close()
++    except Exception:
++        os.unlink(path)
++        raise
++
++
+ @cli.command(name="enable-wal")
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..1f382bfc3e33c5945e6655e7349b89e401a758ac 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1576,6 +1576,27 @@ def test_drop_view_error():
+         assert 0 == result.exit_code
+ 
+ 
++def test_create_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        result = runner.invoke(cli.cli, ["create-database", "empty.db"])
++        assert 0 == result.exit_code
++        assert os.path.getsize("empty.db") > 0
++        assert Database("empty.db").table_names() == []
++
++
++def test_create_database_does_not_overwrite_existing_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        Database("existing.db")["data"].insert({"value": "still here"})
++        result = runner.invoke(cli.cli, ["create-database", "existing.db"])
++        assert 1 == result.exit_code
++        assert "Database already exists: existing.db" in result.output
++        assert list(Database("existing.db")["data"].rows) == [
++            {"value": "still here"}
++        ]
++
++
+ def test_enable_wal():
+     runner = CliRunner()
+     dbs = ["test.db", "test2.db"]

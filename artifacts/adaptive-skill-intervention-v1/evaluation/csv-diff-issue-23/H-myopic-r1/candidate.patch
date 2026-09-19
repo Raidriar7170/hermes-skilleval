@@ -1,0 +1,49 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..cf3debe957955b7e1a10fb0dfcc01e3770a19b64 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if isinstance(key, (list, tuple)):
++        keyfn = lambda r: tuple(r[column] for column in key)
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..28599d297f9e4eb0f191bb89adbdd505032da793 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -115,3 +115,29 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_load_csv_with_composite_key_list():
++    rows = load_csv(io.StringIO(ONE), key=["id", "name"])
++
++    assert {
++        ("1", "Cleo"): {"id": "1", "name": "Cleo", "age": "4"},
++        ("2", "Pancakes"): {"id": "2", "name": "Pancakes", "age": "2"},
++    } == rows
++
++
++def test_compare_with_composite_key_tuple():
++    diff = compare(
++        load_csv(io.StringIO(ONE), key=("id", "name")),
++        load_csv(io.StringIO(TWO), key=("id", "name")),
++    )
++
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {"key": ("1", "Cleo"), "changes": {"age": ["4", "5"]}}
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff

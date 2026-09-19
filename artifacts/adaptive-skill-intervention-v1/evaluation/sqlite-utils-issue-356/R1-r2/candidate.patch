@@ -1,0 +1,89 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..abf5e5566c22a3c5972c17db802da122525f63c9 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    convert=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -781,6 +782,15 @@ def insert_upsert_implementation(
+         extra_kwargs["defaults"] = dict(default)
+     if upsert:
+         extra_kwargs["upsert"] = upsert
++    if convert:
++        code = compile(convert, "<string>", "exec")
++
++        def convert_rows(rows):
++            for row in rows:
++                exec(code, {}, {"row": row})
++                yield row
++
++        docs = convert_rows(docs)
+     # Apply {"$base64": true, ...} decoding, if needed
+     docs = (decode_base64_values(doc) for doc in docs)
+     try:
+@@ -848,6 +858,10 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--convert",
++    help='Python code to run against each row, e.g. \'row["name"] = row["name"].upper()\'',
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +884,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    convert,
+     not_null,
+     default,
+ ):
+@@ -905,6 +920,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            convert=convert,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..5a06d4e115b6a7d4351ab60a431ea9d9a6d4f12c 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -778,6 +778,29 @@ def test_insert_newline_delimited(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++@pytest.mark.parametrize(
++    "input,extra_args",
++    (
++        (json.dumps([{"n": "1"}, {"n": "2"}, {"n": "3"}]), []),
++        ('{"n": "1"}\n{"n": "2"}\n{"n": "3"}', ["--nl"]),
++    ),
++)
++def test_insert_convert_preserves_and_transforms_all_objects(
++    tmpdir, input, extra_args
++):
++    db_path = str(tmpdir / "converted.db")
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "rows", "-", "--convert", 'row["n"] = int(row["n"]) + 1']
++        + extra_args,
++        input=input,
++    )
++    assert result.exit_code == 0, result.output
++    assert [{"n": 2}, {"n": 3}, {"n": 4}] == list(
++        Database(db_path).query("select n from rows order by rowid")
++    )
++
++
+ def test_insert_ignore(db_path, tmpdir):
+     db = Database(db_path)
+     db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")

@@ -1,0 +1,512 @@
+{
+  "scope": "FROZEN_12_TRAIN_4_DEV_8_TEST_TWO_FINAL_REPEATS",
+  "collection": {
+    "paired_outcomes": {
+      "tie_failure": 35,
+      "tie_success": 42,
+      "damage": 8,
+      "rescue": 3
+    },
+    "by_stage": {
+      "E0": {
+        "tie_failure": 9,
+        "tie_success": 25,
+        "damage": 7
+      },
+      "E1": {
+        "tie_failure": 7,
+        "tie_success": 4,
+        "rescue": 1
+      },
+      "E2": {
+        "tie_failure": 19,
+        "tie_success": 13,
+        "rescue": 2,
+        "damage": 1
+      }
+    },
+    "skill_stage_delta": {
+      "sqlite-fulltext@E0": {
+        "pairs": 16,
+        "mean": -0.1359922833591607
+      },
+      "sqlite-ingest@E0": {
+        "pairs": 11,
+        "mean": -0.2905569518712121
+      },
+      "sqlite-ingest@E1": {
+        "pairs": 4,
+        "mean": 0.23197878076214498
+      },
+      "sqlite-fulltext@E1": {
+        "pairs": 2,
+        "mean": -0.013804763079877484
+      },
+      "sqlite-fulltext@E2": {
+        "pairs": 5,
+        "mean": -0.011593939113901205
+      },
+      "sqlite-ingest@E2": {
+        "pairs": 10,
+        "mean": 0.0802403608462089
+      },
+      "sqlite-schema@E2": {
+        "pairs": 8,
+        "mean": 0.10678800065886511
+      },
+      "csv-dialect@E0": {
+        "pairs": 5,
+        "mean": -0.008128457021516303
+      },
+      "csv-dialect@E2": {
+        "pairs": 6,
+        "mean": -0.17793915190737508
+      },
+      "keyed-csv-diff@E0": {
+        "pairs": 5,
+        "mean": -0.21215886082293295
+      },
+      "verification-before-completion@E0": {
+        "pairs": 1,
+        "mean": -0.015586402628499973
+      },
+      "keyed-csv-diff@E2": {
+        "pairs": 4,
+        "mean": -0.012335315348938688
+      },
+      "tabular-conversion@E2": {
+        "pairs": 2,
+        "mean": -0.018454113517421256
+      },
+      "sqlite-schema@E0": {
+        "pairs": 3,
+        "mean": -0.35124939202544275
+      },
+      "sqlite-schema@E1": {
+        "pairs": 4,
+        "mean": -0.01761130204252185
+      },
+      "csv-dialect@E1": {
+        "pairs": 1,
+        "mean": -0.01264360506591422
+      },
+      "sql-query-export@E1": {
+        "pairs": 1,
+        "mean": -0.013851608225662448
+      }
+    },
+    "unknown_pairs": [
+      [
+        "sqlite-utils-issue-202:E2",
+        "sqlite-ingest",
+        1
+      ],
+      [
+        "sqlite-utils-issue-211:E0",
+        "sqlite-ingest",
+        1
+      ]
+    ],
+    "skill_vs_generic_task_cluster": {
+      "mean": -0.04744902314764194,
+      "lower_95": -0.13921511703371867,
+      "upper_95": 0.03140033918543395,
+      "independent_tasks": 16,
+      "method": "paired task-cluster percentile bootstrap; small-n unstable"
+    },
+    "actual_states": 37,
+    "natural_stages": {
+      "E0": 16,
+      "E2": 15,
+      "E1": 6
+    },
+    "counterfactual_collection_active_seconds": 17160.80261849868,
+    "actual_api_tokens": null,
+    "actual_dollar_bill": null
+  },
+  "native_prefix_statuses": {
+    "COMPLETED": 15,
+    "EXECUTOR_ERROR": 1
+  },
+  "final": {
+    "N0": {
+      "runs": 16,
+      "valid": 16,
+      "successes": 9,
+      "unknown": 0,
+      "failure": 7,
+      "mean_utility": 0.5516657171885836,
+      "injections": 0,
+      "decision_reasons": {
+        "NATIVE_CONTINUATION": 38
+      },
+      "decisions_by_stage": {
+        "E0": {
+          "NATIVE_CONTINUATION": 16
+        },
+        "E1": {
+          "NATIVE_CONTINUATION": 6
+        },
+        "E2": {
+          "NATIVE_CONTINUATION": 16
+        }
+      },
+      "regression_failures": 0,
+      "policy_failures": 7,
+      "execution_statuses": {
+        "COMPLETED": 16
+      },
+      "overhead_measured_runs": 16,
+      "controller_overhead_seconds": {
+        "state": 1.9123351214220747,
+        "retrieval": 0.37243903998751193,
+        "checkpoint": 2.7102586258552037,
+        "decision": 0.002962375874631107
+      },
+      "waiting_decisions": 0,
+      "noops": 0,
+      "active_seconds_measured_runs": 16,
+      "mean_active_seconds": 130.01139373699698
+    },
+    "S1": {
+      "runs": 16,
+      "valid": 16,
+      "successes": 9,
+      "unknown": 0,
+      "failure": 7,
+      "mean_utility": 0.5382183717510896,
+      "injections": 16,
+      "decision_reasons": {
+        "POLICY_DECISION": 16,
+        "NATIVE_CONTINUATION": 20
+      },
+      "decisions_by_stage": {
+        "E0": {
+          "POLICY_DECISION": 16
+        },
+        "E1": {
+          "NATIVE_CONTINUATION": 4
+        },
+        "E2": {
+          "NATIVE_CONTINUATION": 16
+        }
+      },
+      "regression_failures": 0,
+      "policy_failures": 7,
+      "execution_statuses": {
+        "COMPLETED": 16
+      },
+      "overhead_measured_runs": 16,
+      "controller_overhead_seconds": {
+        "state": 1.8374535869224928,
+        "retrieval": 0.26890320307575166,
+        "checkpoint": 2.8113862458849326,
+        "decision": 0.003156794176902622
+      },
+      "waiting_decisions": 0,
+      "noops": 0,
+      "active_seconds_measured_runs": 16,
+      "mean_active_seconds": 114.55453898692576
+    },
+    "R1": {
+      "runs": 16,
+      "valid": 16,
+      "successes": 11,
+      "unknown": 0,
+      "failure": 5,
+      "mean_utility": 0.6627000110481561,
+      "injections": 16,
+      "decision_reasons": {
+        "FIXED_SCHEDULE": 16,
+        "POLICY_DECISION": 16,
+        "NATIVE_CONTINUATION": 5
+      },
+      "decisions_by_stage": {
+        "E0": {
+          "FIXED_SCHEDULE": 16
+        },
+        "E1": {
+          "POLICY_DECISION": 5
+        },
+        "E2": {
+          "POLICY_DECISION": 11,
+          "NATIVE_CONTINUATION": 5
+        }
+      },
+      "regression_failures": 0,
+      "policy_failures": 5,
+      "execution_statuses": {
+        "COMPLETED": 16
+      },
+      "overhead_measured_runs": 16,
+      "controller_overhead_seconds": {
+        "state": 1.7901830869959667,
+        "retrieval": 0.3390448719728738,
+        "checkpoint": 2.8980085389339365,
+        "decision": 0.003531164024025202
+      },
+      "waiting_decisions": 0,
+      "noops": 0,
+      "active_seconds_measured_runs": 16,
+      "mean_active_seconds": 123.11236742212714
+    },
+    "H-myopic": {
+      "runs": 16,
+      "valid": 16,
+      "successes": 12,
+      "unknown": 0,
+      "failure": 4,
+      "mean_utility": 0.7365045844850322,
+      "injections": 5,
+      "decision_reasons": {
+        "WAIT_MODEL_DECISION": 17,
+        "POLICY_DECISION": 5,
+        "NOOP_MODEL_DECISION": 11,
+        "NATIVE_CONTINUATION": 5
+      },
+      "decisions_by_stage": {
+        "E0": {
+          "WAIT_MODEL_DECISION": 14,
+          "POLICY_DECISION": 2
+        },
+        "E1": {
+          "WAIT_MODEL_DECISION": 3,
+          "POLICY_DECISION": 1,
+          "NATIVE_CONTINUATION": 2
+        },
+        "E2": {
+          "POLICY_DECISION": 2,
+          "NOOP_MODEL_DECISION": 11,
+          "NATIVE_CONTINUATION": 3
+        }
+      },
+      "regression_failures": 0,
+      "policy_failures": 4,
+      "execution_statuses": {
+        "COMPLETED": 16
+      },
+      "overhead_measured_runs": 16,
+      "controller_overhead_seconds": {
+        "state": 1.723886501044035,
+        "retrieval": 0.5456377549562603,
+        "checkpoint": 2.805649457848631,
+        "decision": 0.22502979112323374
+      },
+      "waiting_decisions": 17,
+      "noops": 11,
+      "active_seconds_measured_runs": 16,
+      "mean_active_seconds": 110.01998617961362
+    },
+    "H-no-state": {
+      "runs": 16,
+      "valid": 16,
+      "successes": 10,
+      "unknown": 0,
+      "failure": 6,
+      "mean_utility": 0.6098072324969581,
+      "injections": 6,
+      "decision_reasons": {
+        "WAIT_MODEL_DECISION": 23,
+        "NOOP_MODEL_DECISION": 10,
+        "POLICY_DECISION": 6
+      },
+      "decisions_by_stage": {
+        "E0": {
+          "WAIT_MODEL_DECISION": 16
+        },
+        "E1": {
+          "WAIT_MODEL_DECISION": 7
+        },
+        "E2": {
+          "NOOP_MODEL_DECISION": 10,
+          "POLICY_DECISION": 6
+        }
+      },
+      "regression_failures": 0,
+      "policy_failures": 6,
+      "execution_statuses": {
+        "COMPLETED": 16
+      },
+      "overhead_measured_runs": 16,
+      "controller_overhead_seconds": {
+        "state": 1.7871189629659057,
+        "retrieval": 0.026669545390177518,
+        "checkpoint": 2.9986090048914775,
+        "decision": 0.4193053332855925
+      },
+      "waiting_decisions": 23,
+      "noops": 10,
+      "active_seconds_measured_runs": 16,
+      "mean_active_seconds": 114.363210036503
+    },
+    "H-full": {
+      "runs": 16,
+      "valid": 16,
+      "successes": 12,
+      "unknown": 0,
+      "failure": 4,
+      "mean_utility": 0.7337043280828973,
+      "injections": 7,
+      "decision_reasons": {
+        "WAIT_MODEL_DECISION": 22,
+        "POLICY_DECISION": 7,
+        "NOOP_MODEL_DECISION": 9,
+        "NATIVE_CONTINUATION": 6
+      },
+      "decisions_by_stage": {
+        "E0": {
+          "WAIT_MODEL_DECISION": 14,
+          "POLICY_DECISION": 2
+        },
+        "E1": {
+          "WAIT_MODEL_DECISION": 8,
+          "POLICY_DECISION": 2,
+          "NATIVE_CONTINUATION": 2
+        },
+        "E2": {
+          "POLICY_DECISION": 3,
+          "NOOP_MODEL_DECISION": 9,
+          "NATIVE_CONTINUATION": 4
+        }
+      },
+      "regression_failures": 0,
+      "policy_failures": 4,
+      "execution_statuses": {
+        "COMPLETED": 16
+      },
+      "overhead_measured_runs": 16,
+      "controller_overhead_seconds": {
+        "state": 1.9297830822179094,
+        "retrieval": 0.534067582397256,
+        "checkpoint": 2.982831669098232,
+        "decision": 0.2209109142422676
+      },
+      "waiting_decisions": 22,
+      "noops": 9,
+      "active_seconds_measured_runs": 16,
+      "mean_active_seconds": 121.72306300523269
+    }
+  },
+  "paired_H_full_vs": {
+    "N0": {
+      "utility": {
+        "mean": 0.1820386108943137,
+        "lower_95": 0.05314587253039386,
+        "upper_95": 0.3675178404693968,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "success": {
+        "mean": 0.1875,
+        "lower_95": 0.0625,
+        "upper_95": 0.375,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "paired_runs": 16,
+      "unknown_pairs": []
+    },
+    "S1": {
+      "utility": {
+        "mean": 0.19548595633180776,
+        "lower_95": -0.11160562878972631,
+        "upper_95": 0.5072741012415383,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "success": {
+        "mean": 0.1875,
+        "lower_95": -0.125,
+        "upper_95": 0.5,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "paired_runs": 16,
+      "unknown_pairs": []
+    },
+    "R1": {
+      "utility": {
+        "mean": 0.07100431703474118,
+        "lower_95": -0.1764477781110825,
+        "upper_95": 0.3817232100987394,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "success": {
+        "mean": 0.0625,
+        "lower_95": -0.1875,
+        "upper_95": 0.375,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "paired_runs": 16,
+      "unknown_pairs": []
+    },
+    "H-myopic": {
+      "utility": {
+        "mean": -0.002800256402134896,
+        "lower_95": -0.3154610538600201,
+        "upper_95": 0.2465568795668134,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "success": {
+        "mean": 0.0,
+        "lower_95": -0.3125,
+        "upper_95": 0.25,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "paired_runs": 16,
+      "unknown_pairs": []
+    },
+    "H-no-state": {
+      "utility": {
+        "mean": 0.12389709558593923,
+        "lower_95": -0.31688980531920624,
+        "upper_95": 0.5624207287892663,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "success": {
+        "mean": 0.125,
+        "lower_95": -0.3125,
+        "upper_95": 0.5625,
+        "independent_tasks": 8,
+        "method": "paired task-cluster percentile bootstrap; small-n unstable"
+      },
+      "paired_runs": 16,
+      "unknown_pairs": []
+    }
+  },
+  "scheduled_final_runs": 96,
+  "actual_final_runs": 96,
+  "shared_controller_setup_seconds": 2.1607781660277396,
+  "execution_statuses": {
+    "COMPLETED": 96
+  },
+  "gain_model_calls": 110,
+  "wait_model_calls": 49,
+  "unknown_runs": 0,
+  "reported_token_usage": {
+    "collection_tails_excluding_prefix": {
+      "total_tokens": 70978841,
+      "runs_with_usage": 180,
+      "runs_with_all_started_turns_completed_with_usage": 179,
+      "runs": 180
+    },
+    "native_collection_prefixes": {
+      "total_tokens": 7451580,
+      "runs_with_usage": 16,
+      "runs_with_all_started_turns_completed_with_usage": 15,
+      "runs": 16
+    },
+    "final_trajectories": {
+      "total_tokens": 35957933,
+      "runs_with_usage": 96,
+      "runs_with_all_started_turns_completed_with_usage": 96,
+      "runs": 96
+    }
+  },
+  "dollar_bill": null
+}

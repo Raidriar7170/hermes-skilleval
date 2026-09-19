@@ -1,0 +1,114 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index 4e9710d5fbb71135b7031bd9172c1a83bb01f477..9d97897b121737c269756bd417f3237031654099 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -366,6 +366,12 @@ If your data is in CSV format, you can insert it using the ``--csv`` option::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.csv --csv
+ 
++You can configure one or more columns for full-text search as part of the
++initial import using the repeatable ``-f`` option::
++
++    $ sqlite-utils insert articles.db articles articles.csv --csv \
++        -f title -f body
++
+ For tab-delimited data, use ``--tsv``::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.tsv --tsv
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index cfc57c636463f0ddd3284286ae073835b1cc5a6f..2d5d1e8d53dec37131b03feb604b01cdea64549f 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -667,6 +667,12 @@ def insert_upsert_implementation(
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "-f",
++    "fts",
++    multiple=True,
++    help="Columns to use for full-text search",
++)
+ def insert(
+     path,
+     table,
+@@ -683,6 +689,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    fts,
+     not_null,
+     default,
+ ):
+@@ -692,6 +699,8 @@ def insert(
+ 
+     Input should be a JSON array of objects, unless --nl or --csv is used.
+     """
++    if fts and not csv:
++        raise click.ClickException("-f can only be used with --csv")
+     try:
+         insert_upsert_implementation(
+             path,
+@@ -713,6 +722,8 @@ def insert(
+             not_null=not_null,
+             default=default,
+         )
++        if fts:
++            sqlite_utils.Database(path)[table].enable_fts(fts)
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+ 
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 0179b5085b01e915d5e7e8eb54107d08f544362f..5d917e1e493b43b060e35ad69bb400b794516f42 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -718,6 +718,49 @@ def test_insert_csv_tsv(content, option, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "3"}] == list(db["data"].rows)
+ 
+ 
++def test_insert_csv_with_fts(db_path, tmpdir):
++    csv_path = str(tmpdir / "articles.csv")
++    open(csv_path, "w").write(
++        "id,title,body\n"
++        "1,First article,This is the introduction\n"
++        "2,Second article,This is the conclusion\n"
++    )
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "articles",
++            csv_path,
++            "--csv",
++            "-f",
++            "title",
++            "-f",
++            "body",
++        ],
++        catch_exceptions=False,
++    )
++    assert 0 == result.exit_code, result.output
++    db = Database(db_path)
++    assert "articles_fts" == db["articles"].detect_fts()
++    assert ["title", "body"] == [
++        column.name for column in db["articles_fts"].columns
++    ]
++    assert [{"id": "2", "title": "Second article"}] == list(
++        db["articles"].search("conclusion", columns=["id", "title"])
++    )
++
++
++def test_insert_fts_requires_csv(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "articles", "-", "-f", "title"],
++        input='[{"title": "First article"}]',
++    )
++    assert 0 != result.exit_code
++    assert "Error: -f can only be used with --csv" == result.output.strip()
++
++
+ @pytest.mark.parametrize(
+     "options",
+     (

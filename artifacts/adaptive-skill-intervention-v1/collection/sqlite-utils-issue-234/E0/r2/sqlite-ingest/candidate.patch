@@ -1,0 +1,56 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 17d79deb2bba74cd5973d8c87aebe9f1f3758c8e..7c43ba46ee708c9297574605ee56e229fadf19f5 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1904,12 +1904,12 @@ class Table(Queryable):
+                 if hash_id:
+                     all_columns.insert(0, hash_id)
+             else:
+-                all_columns += [
+-                    column
+-                    for record in chunk
+-                    for column in record
+-                    if column not in all_columns
+-                ]
++                # A column may occur in more than one record in this chunk.
++                # Add each newly encountered column only once.
++                for record in chunk:
++                    for column in record:
++                        if column not in all_columns:
++                            all_columns.append(column)
+ 
+             validate_column_names(all_columns)
+             first = False
+diff --git a/tests/test_create.py b/tests/test_create.py
+index bee47a7749e7bce54d4283c05e81a37ccb8f487d..45e55264ca3a85466cfc63fe6f301d7b29745f60 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -629,6 +629,28 @@ def test_columns_not_in_first_record_should_not_cause_batch_to_be_too_large(fres
+         raise
+ 
+ 
++def test_insert_all_alter_columns_in_later_batches(fresh_db):
++    queries = []
++    fresh_db.conn.set_trace_callback(queries.append)
++    records = [
++        {"id": 1, "name": "Cleo"},
++        {"id": 2, "name": "Pancakes"},
++        {"id": 3, "name": "Bailey", "age": 2},
++        {"id": 4, "name": "Marnie", "age": 5, "breed": "Labrador"},
++    ]
++
++    fresh_db["dogs"].insert_all(records, pk="id", alter=True, batch_size=2)
++
++    insert_queries = [q for q in queries if q.lstrip().startswith("INSERT")]
++    assert "([id], [name], [age], [breed])" in insert_queries[-1]
++    assert list(fresh_db["dogs"].rows) == [
++        {"id": 1, "name": "Cleo", "age": None, "breed": None},
++        {"id": 2, "name": "Pancakes", "age": None, "breed": None},
++        {"id": 3, "name": "Bailey", "age": 2, "breed": None},
++        {"id": 4, "name": "Marnie", "age": 5, "breed": "Labrador"},
++    ]
++
++
+ @pytest.mark.parametrize(
+     "columns,index_name,expected_index",
+     (

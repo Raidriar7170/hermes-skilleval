@@ -1,0 +1,63 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..d7ef1a158acde0fb7d308ffbb7145694a2a88c07 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,6 +17,8 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
++    if key == "__rowid__":
++        return {row_number: row for row_number, row in enumerate(rows)}
+     if key:
+         keyfn = lambda r: r[key]
+     else:
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..08f408ddf515bc1e33de9945a5f32b8131984328 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -65,6 +65,45 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_row_changed_using_row_number_as_key():
++    diff = compare(
++        load_csv(io.StringIO(ONE), key="__rowid__"),
++        load_csv(io.StringIO(TWO), key="__rowid__"),
++    )
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": 0, "changes": {"age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
++def test_rows_inserted_using_row_number_as_key():
++    before = """name,age
++Cleo,4
++Pancakes,2"""
++    after = """name,age
++Bailey,1
++Cleo,4
++Pancakes,2"""
++
++    diff = compare(
++        load_csv(io.StringIO(before), key="__rowid__"),
++        load_csv(io.StringIO(after), key="__rowid__"),
++    )
++
++    assert [0, 1, 2] == list(load_csv(io.StringIO(after), key="__rowid__"))
++    assert [{"name": "Pancakes", "age": "2"}] == diff["added"]
++    assert [
++        {"key": 0, "changes": {"name": ["Cleo", "Bailey"], "age": ["4", "1"]}},
++        {
++            "key": 1,
++            "changes": {"name": ["Pancakes", "Cleo"], "age": ["2", "4"]},
++        },
++    ] == diff["changed"]
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

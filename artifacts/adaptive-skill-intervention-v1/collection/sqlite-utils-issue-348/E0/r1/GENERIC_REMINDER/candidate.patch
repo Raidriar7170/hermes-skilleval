@@ -1,0 +1,82 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..53c5c76a7adce39fdda0691c4ece697f4f418924 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1634,6 +1634,17 @@ To optimize specific tables rather than every FTS table, pass those tables as ex
+ 
+     $ sqlite-utils optimize mydb.db table_1 table_2
+ 
++.. _cli_create_database:
++
++Creating an empty database
++==========================
++
++The ``create-database`` command creates a new, empty SQLite database file::
++
++    $ sqlite-utils create-database mydb.db
++
++It will return an error if the file already exists, without modifying that file.
++
+ .. _cli_wal:
+ 
+ WAL mode
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..e701b9baa3dba1c2be7ddd75065fc9d3295ed470 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -593,6 +593,22 @@ def disable_wal(path, load_extension):
+         db.disable_wal()
+ 
+ 
++@cli.command(name="create-database")
++@click.argument(
++    "path",
++    type=click.Path(file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def create_database(path):
++    "Create a new, empty SQLite database"
++    try:
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o666)
++    except FileExistsError:
++        raise click.ClickException('File already exists: "{}"'.format(path))
++    os.close(fd)
++    sqlite_utils.Database(path).vacuum()
++
++
+ @cli.command(name="enable-counts")
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..f3fe7adeab2d53abf2cab13e007748872a8840f0 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1591,6 +1591,28 @@ def test_enable_wal():
+             assert db.journal_mode == "wal"
+ 
+ 
++def test_create_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        result = runner.invoke(cli.cli, ["create-database", "empty.db"])
++        assert result.exit_code == 0
++        assert os.path.exists("empty.db")
++        db = Database("empty.db")
++        assert db.table_names() == []
++        assert db.execute("pragma integrity_check").fetchone()[0] == "ok"
++
++
++def test_create_database_does_not_overwrite_existing_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        db = Database("existing.db")
++        db["items"].insert({"name": "one"})
++        result = runner.invoke(cli.cli, ["create-database", "existing.db"])
++        assert result.exit_code == 1
++        assert 'File already exists: "existing.db"' in result.output
++        assert list(Database("existing.db")["items"].rows) == [{"name": "one"}]
++
++
+ def test_disable_wal():
+     runner = CliRunner()
+     dbs = ["test.db", "test2.db"]

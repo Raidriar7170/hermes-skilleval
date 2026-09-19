@@ -1,0 +1,58 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 420883090e2a9aa0ee3e7fb4d8904ca4cbc9b2f3..90f05aee4b06f1be6798740a25ff0cdfdc016387 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1368,6 +1368,19 @@ def schema(
+     click.echo(db.schema)
+ 
+ 
++@cli.command()
++@click.argument(
++    "path",
++    type=click.Path(exists=True, file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def dump(path):
++    "Dump the database as executable SQL"
++    db = sqlite_utils.Database(path)
++    for statement in db.conn.iterdump():
++        click.echo(statement)
++
++
+ @cli.command()
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 5cb4af03257ba2d0574d2f665dab79be71b86a10..65318454e66666e5fa643565012a0f675dd21330 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -108,6 +108,29 @@ def test_tables_schema(db_path):
+     ) == result.output.strip()
+ 
+ 
++def test_dump(tmpdir):
++    path = str(tmpdir / "dump.db")
++    db = Database(path)
++    db["creatures"].create(
++        {"id": int, "name": str, "data": bytes}, pk="id"
++    ).insert_all(
++        [
++            {"id": 1, "name": "Ape's friend", "data": b"\x00\xff"},
++            {"id": 2, "name": "Dog", "data": None},
++        ]
++    )
++
++    result = CliRunner().invoke(cli.cli, ["dump", path])
++
++    assert result.exit_code == 0
++    restored = sqlite3.connect(":memory:")
++    restored.executescript(result.output)
++    assert restored.execute(
++        "select id, name, data from creatures order by id"
++    ).fetchall() == [(1, "Ape's friend", b"\x00\xff"), (2, "Dog", None)]
++    assert "CREATE TABLE [creatures]" in result.output
++
++
+ @pytest.mark.parametrize(
+     "fmt,expected",
+     [

@@ -1,0 +1,43 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index e42be837368ab8b0c5cb44355507dde4549351f5..9cc2787382fbec559d514217bf7bfd1a759ff513 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -684,7 +684,10 @@ def insert_upsert_implementation(
+         raise click.ClickException("Use just one of --nl, --csv or --tsv")
+     if encoding and not (csv or tsv):
+         raise click.ClickException("--encoding must be used with --csv or --tsv")
+-    encoding = encoding or "utf-8"
++    # utf-8-sig behaves like utf-8 for files without a BOM, and strips the BOM
++    # from files that include one rather than including it in the first column
++    # name.
++    encoding = encoding or "utf-8-sig"
+     buffered = io.BufferedReader(json_file, buffer_size=4096)
+     decoded = io.TextIOWrapper(buffered, encoding=encoding)
+     if pk and len(pk) == 1:
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 87753965c039f184f6e5fee71719524b67ffa188..3b44cfb3f2ddae28784d1750bf986332dfd0b3c5 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1744,6 +1744,22 @@ def test_insert_encoding(tmpdir):
+     ]
+ 
+ 
++def test_insert_csv_with_utf8_bom(tmpdir):
++    db_path = str(tmpdir / "test.db")
++    csv_path = str(tmpdir / "test.csv")
++    with open(csv_path, "wb") as fp:
++        fp.write(b"\xef\xbb\xbfname,age\nCleo,4\n")
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "dogs", csv_path, "--csv"],
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++    db = Database(db_path)
++    assert db["dogs"].columns_dict == {"name": str, "age": str}
++    assert list(db["dogs"].rows) == [{"name": "Cleo", "age": "4"}]
++
++
+ @pytest.mark.parametrize("fts", ["FTS4", "FTS5"])
+ @pytest.mark.parametrize(
+     "extra_arg,expected",

@@ -1,0 +1,59 @@
+diff --git a/docs/python-api.rst b/docs/python-api.rst
+index ac7a8305c18d720dd7c70ef69e7de38e04f93e06..c753eb760711c682d813d23865e1aa54ebbe93d1 100644
+--- a/docs/python-api.rst
++++ b/docs/python-api.rst
+@@ -1458,6 +1458,14 @@ The ``.triggers`` property lists database triggers. It can be used on both datab
+     >>> db.triggers
+     ... similar output to db["authors"].triggers
+ 
++The ``.triggers_dict`` property is available on table objects. It returns a
++dictionary mapping trigger names to their SQL definitions::
++
++    >>> db["authors"].triggers_dict
++    {'authors_ai': 'CREATE TRIGGER [authors_ai] AFTER INSERT...',
++     'authors_ad': 'CREATE TRIGGER [authors_ad] AFTER DELETE...',
++     'authors_au': 'CREATE TRIGGER [authors_au] AFTER UPDATE...'}
++
+ The ``detect_fts()`` method returns the associated SQLite FTS table name, if one exists for this table. If the table has not been configured for full-text search it returns ``None``.
+ 
+ ::
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 90427bf89eb2b22dcf62cd6dc705b9a82639b9cb..42cc150d67061012bb416c6711a1288638fb5288 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -759,6 +759,11 @@ class Table(Queryable):
+             ).fetchall()
+         ]
+ 
++    @property
++    def triggers_dict(self):
++        "Returns {trigger-name: sql-definition} dictionary"
++        return {trigger.name: trigger.sql for trigger in self.triggers}
++
+     def create(
+         self,
+         columns,
+diff --git a/tests/test_introspect.py b/tests/test_introspect.py
+index 80cfee6ad6c437faa7d59a3a92adee3b10c2eded..7c90659dbc001320b7c31a9181763f2e3a116c8e 100644
+--- a/tests/test_introspect.py
++++ b/tests/test_introspect.py
+@@ -128,6 +128,7 @@ def test_triggers(fresh_db):
+     )
+     fresh_db["other"].insert({"foo": "bar"})
+     assert [] == authors.triggers
++    assert {} == authors.triggers_dict
+     assert [] == fresh_db["other"].triggers
+     authors.enable_fts(
+         ["name", "famous_works"], fts_version="FTS4", create_triggers=True
+@@ -141,7 +142,11 @@ def test_triggers(fresh_db):
+     assert expected_triggers == {
+         (t.name, t.table) for t in fresh_db["authors"].triggers
+     }
++    assert {
++        trigger.name: trigger.sql for trigger in fresh_db["authors"].triggers
++    } == fresh_db["authors"].triggers_dict
+     assert [] == fresh_db["other"].triggers
++    assert {} == fresh_db["other"].triggers_dict
+ 
+ 
+ @pytest.mark.parametrize(

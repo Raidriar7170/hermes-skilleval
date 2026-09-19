@@ -1,0 +1,104 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index 3ac5c4bd54a67c233f0f4952726a0ced33d43692..d62b1be111584a478faa2a4aabfe9ea4d1ee257b 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -487,6 +487,12 @@ For tab-delimited data, use ``--tsv``::
+ 
+     $ sqlite-utils insert dogs.db dogs dogs.tsv --tsv
+ 
++CSV and TSV files are expected to have a header row. If the file has no
++headers, use ``--no-headers`` to import every row using generated column
++names::
++
++    $ sqlite-utils insert dogs.db dogs dogs.csv --csv --no-headers
++
+ Data is expected to be encoded as Unicode UTF-8. If your data is an another character encoding you can specify it using the ``--encoding`` option::
+ 
+     $ sqlite-utils insert dogs.db dogs dogs.tsv --tsv --encoding=latin-1
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 03ac3f57cda744a8be963c3090d38cd60d1586ca..1774da6734776438ec80b2800fe160f2d0a2fa1c 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -655,6 +655,7 @@ def insert_upsert_implementation(
+     encoding=None,
+     load_extension=None,
+     silent=False,
++    no_headers=False,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -677,7 +678,12 @@ def insert_upsert_implementation(
+             if quotechar:
+                 csv_reader_args["quotechar"] = quotechar
+             reader = csv_std.reader(json_file, **csv_reader_args)
+-            headers = next(reader)
++            first_row = next(reader)
++            if no_headers:
++                headers = ["column{}".format(i + 1) for i in range(len(first_row))]
++                reader = itertools.chain([first_row], reader)
++            else:
++                headers = first_row
+             docs = (dict(zip(headers, row)) for row in reader)
+     else:
+         try:
+@@ -723,6 +729,11 @@ def insert_upsert_implementation(
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--no-headers",
++    is_flag=True,
++    help="CSV or TSV input has no header row",
++)
+ def insert(
+     path,
+     table,
+@@ -741,6 +752,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    no_headers,
+     not_null,
+     default,
+ ):
+@@ -772,6 +784,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            no_headers=no_headers,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 52a80e90f63f628c6103d3192846381334112ddb..873b4f8cbcd2b8ef4c439c9e2d3269b5fa929a1a 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -746,6 +746,28 @@ def test_insert_csv_tsv(content, options, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "cat,dog"}] == list(db["data"].rows)
+ 
+ 
++@pytest.mark.parametrize(
++    "content,option",
++    [
++        ("1,Cleo,4\n2,Pancakes,2\n", "--csv"),
++        ("1\tCleo\t4\n2\tPancakes\t2\n", "--tsv"),
++    ],
++)
++def test_insert_csv_tsv_no_headers(content, option, db_path, tmpdir):
++    file_path = str(tmpdir / "no-headers.csv-tsv")
++    open(file_path, "w").write(content)
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "data", file_path, option, "--no-headers"],
++        catch_exceptions=False,
++    )
++    assert 0 == result.exit_code
++    assert [
++        {"column1": "1", "column2": "Cleo", "column3": "4"},
++        {"column1": "2", "column2": "Pancakes", "column3": "2"},
++    ] == list(Database(db_path)["data"].rows)
++
++
+ @pytest.mark.parametrize(
+     "options",
+     (

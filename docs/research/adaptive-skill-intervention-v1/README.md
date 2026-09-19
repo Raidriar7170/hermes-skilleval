@@ -2,7 +2,7 @@
 
 This additive experiment asks whether one explicit skill intervention, selected from the current observable maintenance state, improves terminal utility over continuing without external guidance. Existing maintenance and routing defaults, PR #48 results and prior evidence remain unchanged. The active contract is [the saved Goal](../../goals/Hermes_vNext_Adaptive_Skill_Intervention_Codex_Goal.md).
 
-**Execution status:** formal collection is running; training, independent model reload and the final 96-run matrix are not yet complete. The following describes the frozen method, not a claim of measured improvement.
+**Execution status:** actual collection, CPU fitting, independent reload and all 96 frozen final trajectories are complete. See the [results](results.md) and [Chinese architecture retrospective](architecture-retrospective.zh.md). H-full observed a file-policy-inclusive advantage over N0; all final target/regression checks passed, and incremental state/wait utility is not established. Publication remains pending.
 
 ## Frozen protocol
 
@@ -46,7 +46,7 @@ See [commands](commands.md) for preparation, collection, fitting, independent-pr
 
 The initial preflight freeze was superseded before the first research model call solely to pass the same retriever into offline tails, preserving subsequent retrieval overhead. The original preflight manifest remains in Git; raw collection remains bound to private `protocol-v2.json`, archived publicly as `protocol-collection-v2.json`. The active public protocol now binds private `protocol-v3.json` for revised labels and final evaluation.
 
-During collection, independent review confirmed a checker adapter defect in four training tasks (202, 223, 228, 250): simulated Click stdin lacks file-descriptor interfaces used by their historical CSV import implementations. The versioned repair writes identical CSV/TSV/BOM bytes to actual temporary files, matching the public requests and retaining all feature assertions. Four bases remain target-red/regression-green and references target-green/regression-green. Raw executions, source patches, budgets, action roster and file-policy verdicts remain unchanged. Every affected saved branch/repeat is rechecked symmetrically without Agent resampling; original verdicts remain alongside revised verdicts. Training waits for the derivative records. This post-observation checker repair is a disclosed validity limitation, not a new sampling opportunity.
+During collection, independent review confirmed a checker adapter defect in four training tasks (202, 223, 228, 250): simulated Click stdin lacks file-descriptor interfaces used by their historical CSV import implementations. The versioned repair writes identical CSV/TSV/BOM bytes to actual temporary files, matching the public requests and retaining all feature assertions. Four bases remain target-red/regression-green and references target-green/regression-green. Raw executions, source patches, budgets, action roster and file-policy verdicts remain unchanged. Every affected saved branch/repeat is rechecked symmetrically without Agent resampling; original verdicts remain alongside revised verdicts. Training used the independently checked derivative records. This post-observation checker repair is a disclosed validity limitation, not a new sampling opportunity.
 
 ## Related mechanisms
 

@@ -1,0 +1,106 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 93d25b23e5975fd5c2d1ece8881da9b3f6b6a3f2..fc3e91343612a35d80b1f3f0aa812859b1850e5d 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2174,29 +2174,36 @@ class Table(Queryable):
+         todo_count = self.count_where(where, where_args) * len(columns)
+         with progressbar(length=todo_count, silent=not show_progress) as bar:
+ 
++            function_name = "convert_value_{}".format(uuid.uuid4().hex)
++
+             def convert_value(v):
+                 bar.update(1)
+                 if not v:
+                     return v
+                 return fn(v)
+ 
+-            self.db.register_function(convert_value)
++            self.db.conn.create_function(function_name, 1, convert_value)
+             sql = "update [{table}] set {sets}{where};".format(
+                 table=self.name,
+                 sets=", ".join(
+                     [
+-                        "[{output_column}] = convert_value([{column}])".format(
+-                            output_column=output or column, column=column
++                        "[{output_column}] = {function_name}([{column}])".format(
++                            output_column=output or column,
++                            function_name=function_name,
++                            column=column,
+                         )
+                         for column in columns
+                     ]
+                 ),
+                 where=" where {}".format(where) if where is not None else "",
+             )
+-            with self.db.conn:
+-                self.db.execute(sql, where_args or [])
+-                if drop:
+-                    self.transform(drop=columns)
++            try:
++                with self.db.conn:
++                    self.db.execute(sql, where_args or [])
++                    if drop:
++                        self.transform(drop=columns)
++            finally:
++                self.db.conn.create_function(function_name, 1, None)
+         return self
+ 
+     def _convert_multi(
+diff --git a/tests/test_convert.py b/tests/test_convert.py
+index 796a08f2e59f14d4299177089a4856bc2763826f..d7df06e10613bb1c5561c8c68cdc334165ee2b27 100644
+--- a/tests/test_convert.py
++++ b/tests/test_convert.py
+@@ -1,4 +1,6 @@
+-from sqlite_utils.db import BadMultiValues
++from sqlite_utils.db import BadMultiValues, Database
++from sqlite_utils.utils import sqlite3
++import contextlib
+ import pytest
+ 
+ 
+@@ -24,6 +26,45 @@ def test_convert(fresh_db, columns, fn, expected):
+     assert list(table.rows) == [expected]
+ 
+ 
++def test_convert_does_not_clobber_existing_function(fresh_db):
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    fresh_db.conn.create_function("convert_value", 1, lambda value: "existing")
++
++    table.convert("title", lambda value: value.upper())
++
++    assert list(table.rows) == [{"title": "MIXED CASE"}]
++    assert fresh_db.execute("select convert_value('x')").fetchone()[0] == "existing"
++
++
++@pytest.mark.parametrize("raises", (False, True))
++def test_convert_unregisters_temporary_function(raises):
++    class TrackingConnection(sqlite3.Connection):
++        def create_function(self, name, num_params, func, **kwargs):
++            self.function_calls.append((name, num_params, func))
++            return super().create_function(name, num_params, func, **kwargs)
++
++    connection = sqlite3.connect(":memory:", factory=TrackingConnection)
++    connection.function_calls = []
++    db = Database(connection)
++    table = db["table"]
++    table.insert({"title": "Mixed Case"})
++
++    def convert(value):
++        if raises:
++            raise ValueError
++        return value.upper()
++
++    with pytest.raises(Exception) if raises else contextlib.nullcontext():
++        table.convert("title", convert)
++
++    register_call, unregister_call = connection.function_calls
++    assert register_call[0].startswith("convert_value_")
++    assert register_call[1] == 1
++    assert callable(register_call[2])
++    assert unregister_call == (register_call[0], 1, None)
++
++
+ @pytest.mark.parametrize(
+     "where,where_args", (("id > 1", None), ("id > :id", {"id": 1}), ("id > ?", [1]))
+ )

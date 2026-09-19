@@ -1,0 +1,78 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..13c05ffd70924f6183168d46735aa991d094e6cd 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -503,6 +503,7 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+     """
+     Parse a comma-separated list of column indices AND/OR names into a list of integer indices.
+     Ranges of integers can be specified with two integers separated by a '-' or ':' character.
++    The end of a range can be omitted to select through the last column.
+     Ranges of non-integers (e.g. column names) are not supported.
+     Note: Column indices are 1-based.
+     """
+@@ -528,7 +529,7 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+ 
+                 try:
+                     a = int(a) if a else 1
+-                    b = int(b) + 1 if b else len(column_names) + 1
++                    b = int(b) + 1 if b else len(column_names) + column_offset
+                 except ValueError:
+                     raise ColumnIdentifierError(
+                         "Invalid range %s. Ranges must be two integers separated by a - or : character.")
+@@ -554,7 +555,7 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+ 
+                 try:
+                     a = int(a) if a else 1
+-                    b = int(b) + 1 if b else len(column_names)
++                    b = int(b) + 1 if b else len(column_names) + column_offset
+                 except ValueError:
+                     raise ColumnIdentifierError(
+                         "Invalid range %s. Ranges must be two integers separated by a - or : character.")
+diff --git a/csvkit/utilities/csvcut.py b/csvkit/utilities/csvcut.py
+index 1214cc8577608d74e892ed02906a5e9d936bcdf2..3896d7db2a4ed3480eddb10ab48703871eb62e8e 100644
+--- a/csvkit/utilities/csvcut.py
++++ b/csvkit/utilities/csvcut.py
+@@ -27,6 +27,7 @@ class CSVCut(CSVKitUtility):
+         self.argparser.add_argument(
+             '-c', '--columns', dest='columns',
+             help='A comma-separated list of column indices, names or ranges to be extracted, e.g. "1,id,3-5". '
++                 'Ranges can be open-ended, e.g. "2-" selects the second through last columns. '
+                  'Defaults to all columns.')
+         self.argparser.add_argument(
+             '-C', '--not-columns', dest='not_columns',
+diff --git a/tests/test_utilities/test_csvcut.py b/tests/test_utilities/test_csvcut.py
+index 92a2dcf9dc8b587366060690399c6f5687f03b51..354170e9d5638a705ff25247da921ded6cad0b74 100644
+--- a/tests/test_utilities/test_csvcut.py
++++ b/tests/test_utilities/test_csvcut.py
+@@ -24,6 +24,18 @@ class TestCSVCut(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['1', '3'],
+         ])
+ 
++    def test_open_ended_range(self):
++        self.assertRows(['-c', '2-', 'examples/dummy.csv'], [
++            ['b', 'c'],
++            ['2', '3'],
++        ])
++
++    def test_open_ended_range_zero_based(self):
++        self.assertRows(['--zero', '-c', '1-', 'examples/dummy.csv'], [
++            ['b', 'c'],
++            ['2', '3'],
++        ])
++
+     def test_linenumbers(self):
+         self.assertRows(['-c', '1,3', '-l', 'examples/dummy.csv'], [
+             ['line_number', 'a', 'c'],
+@@ -55,6 +67,12 @@ class TestCSVCut(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['2'],
+         ])
+ 
++    def test_exclude_open_ended_range(self):
++        self.assertRows(['-C', '2-', 'examples/dummy.csv'], [
++            ['a'],
++            ['1'],
++        ])
++
+     def test_include_and_exclude(self):
+         self.assertRows(['-c', '1,3', '-C', '3', 'examples/dummy.csv'], [
+             ['a'],

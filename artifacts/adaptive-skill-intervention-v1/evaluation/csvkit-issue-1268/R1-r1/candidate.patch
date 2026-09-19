@@ -1,0 +1,65 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index 07d4ee5007c7853c040336ab5e354ffe9b01a57b..7477b24c5a5318806f6feb1304d06cb559137c3b 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python
+ 
++import io
+ import sys
+ 
+ import agate
+@@ -72,14 +73,23 @@ class CSVJoin(CSVKitUtility):
+         column_types = self.get_column_types()
+ 
+         for f in self.input_files:
+-            tables.append(agate.Table.from_csv(
+-                f,
+-                skip_lines=self.args.skip_lines,
+-                sniff_limit=sniff_limit,
+-                column_types=column_types,
+-                **self.reader_kwargs,
+-            ))
+-            f.close()
++            # Process substitution and named pipes produce non-seekable streams,
++            # but agate's dialect sniffing seeks back to the start of its sample.
++            # csvjoin already loads each input into memory, so buffer these streams.
++            source = f if f.seekable() else io.StringIO(f.read())
++
++            try:
++                tables.append(agate.Table.from_csv(
++                    source,
++                    skip_lines=self.args.skip_lines,
++                    sniff_limit=sniff_limit,
++                    column_types=column_types,
++                    **self.reader_kwargs,
++                ))
++            finally:
++                if source is not f:
++                    source.close()
++                f.close()
+ 
+         join_column_ids = []
+ 
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index 47a2fbe915fca3e61c63a7ceb07020afd351a9dd..c534c37fff35e8b2237b7e5f200e3d0682751c9e 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -79,6 +79,17 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_non_seekable_inputs(self):
++        inputs = []
++        for content in ('A,B,C\n', 'C,D,E\n'):
++            read_fd, write_fd = os.pipe()
++            with os.fdopen(write_fd, 'w') as stream:
++                stream.write(content)
++            inputs.append(os.fdopen(read_fd))
++
++        with patch.object(self.Utility, '_open_input_file', side_effect=inputs):
++            self.assertEqual(self.get_output(['-c', 'C', 'first', 'second']), 'A,B,C,D,E\n')
++
+     def test_no_blanks(self):
+         self.assertRows(['examples/blanks.csv', 'examples/blanks.csv'], [
+             ['a', 'b', 'c', 'd', 'e', 'f', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2'],

@@ -1,0 +1,174 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index a30e7cfc08ef039541c82f995025b1bb378e1580..ab2bd4200fa1f04b29ba9849c612865133302e0a 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -7,6 +7,8 @@
+ 3.19 (2021-11-20)
+ -----------------
+ 
++- ``sqlite-utils insert`` now has a repeatable ``--extract`` option for
++  extracting columns into separate lookup tables while inserting rows.
+ - The :ref:`table.lookup() method <python_api_lookup_tables>` now accepts keyword arguments that match those on the underlying ``table.insert()`` method: ``foreign_keys=``, ``column_order=``, ``not_null=``, ``defaults=``, ``extracts=``, ``conversions=`` and ``columns=``. You can also now pass ``pk=`` to specify a different column name to use for the primary key. (:issue:`342`)
+ 
+ .. _v3_18:
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..b008b45109d4833d18db4732b0927776f13f6a22 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -712,6 +712,15 @@ You can delete all the existing rows in the table before inserting the new recor
+ 
+     $ sqlite-utils insert dogs.db dogs dogs.json --truncate
+ 
++You can extract repeated values in a column into a separate lookup table using
++``--extract``::
++
++    $ sqlite-utils insert trees.db trees trees.json --extract species
++
++This replaces values in the ``species`` column with integer foreign keys to a
++new ``species`` table. Use ``--extract`` more than once to extract multiple
++columns.
++
+ .. _cli_inserting_data_binary:
+ 
+ Inserting binary data
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..d558cfe998fc657bc6b3ce0c79175b076e8ac4d6 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    extracts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -785,7 +786,12 @@ def insert_upsert_implementation(
+     docs = (decode_base64_values(doc) for doc in docs)
+     try:
+         db[table].insert_all(
+-            docs, pk=pk, batch_size=batch_size, alter=alter, **extra_kwargs
++            docs,
++            pk=pk,
++            batch_size=batch_size,
++            alter=alter,
++            extracts=extracts,
++            **extra_kwargs
+         )
+     except Exception as e:
+         if (
+@@ -848,6 +854,12 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--extract",
++    "extracts",
++    multiple=True,
++    help="Extract this column into a separate lookup table",
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +882,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    extracts,
+     not_null,
+     default,
+ ):
+@@ -899,6 +912,7 @@ def insert(
+             ignore=ignore,
+             replace=replace,
+             truncate=truncate,
++            extracts=extracts,
+             encoding=encoding,
+             detect_types=detect_types,
+             load_extension=load_extension,
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..042d54347447ad1e5f0f52ce52f9bebfa3d8e785 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -776,6 +776,25 @@ def test_insert_newline_delimited(db_path):
+         {"foo": "bar", "n": 1},
+         {"foo": "baz", "n": 2},
+     ] == list(db.query("select foo, n from from_json_nl"))
++    # Truncate and insert new rows
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "from_json_nl",
++            "-",
++            "--nl",
++            "--truncate",
++            "--batch-size=1",
++        ],
++        input='{"foo": "bam", "n": 3}\n{"foo": "bat", "n": 4}',
++    )
++    assert 0 == result.exit_code, result.output
++    assert [
++        {"foo": "bam", "n": 3},
++        {"foo": "bat", "n": 4},
++    ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
+ def test_insert_ignore(db_path, tmpdir):
+@@ -875,25 +894,44 @@ def test_insert_truncate(db_path):
+         {"foo": "bar", "n": 1},
+         {"foo": "baz", "n": 2},
+     ] == list(db.query("select foo, n from from_json_nl"))
+-    # Truncate and insert new rows
++
++
++def test_insert_extract_repeatable(db_path):
+     result = CliRunner().invoke(
+         cli.cli,
+         [
+             "insert",
+             db_path,
+-            "from_json_nl",
++            "trees",
+             "-",
+-            "--nl",
+-            "--truncate",
+-            "--batch-size=1",
++            "--extract",
++            "species",
++            "--extract",
++            "city",
+         ],
+-        input='{"foo": "bam", "n": 3}\n{"foo": "bat", "n": 4}',
++        input=json.dumps(
++            [
++                {"name": "One", "species": "Oak", "city": "Cardiff"},
++                {"name": "Two", "species": "Oak", "city": "London"},
++                {"name": "Three", "species": "Palm", "city": "Cardiff"},
++            ]
++        ),
+     )
+-    assert 0 == result.exit_code, result.output
+-    assert [
+-        {"foo": "bam", "n": 3},
+-        {"foo": "bat", "n": 4},
+-    ] == list(db.query("select foo, n from from_json_nl"))
++    assert result.exit_code == 0, result.output
++    db = Database(db_path)
++    assert list(db["species"].rows) == [
++        {"id": 1, "value": "Oak"},
++        {"id": 2, "value": "Palm"},
++    ]
++    assert list(db["city"].rows) == [
++        {"id": 1, "value": "Cardiff"},
++        {"id": 2, "value": "London"},
++    ]
++    assert list(db["trees"].rows) == [
++        {"name": "One", "species": 1, "city": 1},
++        {"name": "Two", "species": 1, "city": 2},
++        {"name": "Three", "species": 2, "city": 1},
++    ]
+ 
+ 
+ def test_insert_alter(db_path, tmpdir):

@@ -41,6 +41,10 @@ def reported_usage(run):
                 previous[thread] = total
                 if turn != active:
                     continue
+                # A failed newly started turn can re-emit the preceding request's
+                # counters under its new turn ID without consuming new tokens.
+                if before == total:
+                    continue
                 key = (thread, turn, json.dumps(total, sort_keys=True))
                 if key in seen:
                     continue

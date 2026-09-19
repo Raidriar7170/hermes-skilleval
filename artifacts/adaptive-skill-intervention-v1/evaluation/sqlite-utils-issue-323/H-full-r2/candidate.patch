@@ -1,0 +1,133 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 93d25b23e5975fd5c2d1ece8881da9b3f6b6a3f2..fc274b9b11d2fa2db1ac038bcc1801c3bfc58a76 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2180,23 +2180,29 @@ class Table(Queryable):
+                     return v
+                 return fn(v)
+ 
+-            self.db.register_function(convert_value)
+-            sql = "update [{table}] set {sets}{where};".format(
+-                table=self.name,
+-                sets=", ".join(
+-                    [
+-                        "[{output_column}] = convert_value([{column}])".format(
+-                            output_column=output or column, column=column
+-                        )
+-                        for column in columns
+-                    ]
+-                ),
+-                where=" where {}".format(where) if where is not None else "",
+-            )
+-            with self.db.conn:
+-                self.db.execute(sql, where_args or [])
+-                if drop:
+-                    self.transform(drop=columns)
++            function_name = "convert_value_{}".format(uuid.uuid4().hex)
++            self.db.conn.create_function(function_name, 1, convert_value)
++            try:
++                sql = "update [{table}] set {sets}{where};".format(
++                    table=self.name,
++                    sets=", ".join(
++                        [
++                            "[{output_column}] = {function_name}([{column}])".format(
++                                output_column=output or column,
++                                function_name=function_name,
++                                column=column,
++                            )
++                            for column in columns
++                        ]
++                    ),
++                    where=" where {}".format(where) if where is not None else "",
++                )
++                with self.db.conn:
++                    self.db.execute(sql, where_args or [])
++                    if drop:
++                        self.transform(drop=columns)
++            finally:
++                self.db.conn.create_function(function_name, 1, None)
+         return self
+ 
+     def _convert_multi(
+diff --git a/tests/test_convert.py b/tests/test_convert.py
+index 796a08f2e59f14d4299177089a4856bc2763826f..318eb64205103fdef3008b280c7f55476e1df904 100644
+--- a/tests/test_convert.py
++++ b/tests/test_convert.py
+@@ -1,6 +1,22 @@
+-from sqlite_utils.db import BadMultiValues
+ import pytest
+ 
++from sqlite_utils import Database
++from sqlite_utils.db import BadMultiValues
++from sqlite_utils.utils import OperationalError, sqlite3
++
++
++class RecordingConnection(sqlite3.Connection):
++    def create_function(self, name, num_params, func, *args, **kwargs):
++        self.create_function_calls.append((name, num_params, func))
++        return super().create_function(name, num_params, func, *args, **kwargs)
++
++
++@pytest.fixture
++def recording_db():
++    connection = sqlite3.connect(":memory:", factory=RecordingConnection)
++    connection.create_function_calls = []
++    return Database(connection)
++
+ 
+ @pytest.mark.parametrize(
+     "columns,fn,expected",
+@@ -24,6 +40,53 @@ def test_convert(fresh_db, columns, fn, expected):
+     assert list(table.rows) == [expected]
+ 
+ 
++def test_convert_uses_temporary_function_without_clobbering(recording_db):
++    table = recording_db["table"]
++    table.insert({"title": "Mixed Case"})
++
++    def convert_value(value):
++        return "existing: {}".format(value)
++
++    recording_db.register_function(convert_value)
++    table.convert("title", lambda value: value.upper())
++
++    assert table.get(1)["title"] == "MIXED CASE"
++    assert (
++        recording_db.execute("select convert_value('test')").fetchone()[0]
++        == "existing: test"
++    )
++    temporary_calls = [
++        call
++        for call in recording_db.conn.create_function_calls
++        if call[0].startswith("convert_value_")
++    ]
++    assert len(temporary_calls) == 2
++    assert temporary_calls[0][:2] == temporary_calls[1][:2]
++    assert callable(temporary_calls[0][2])
++    assert temporary_calls[1][2] is None
++
++
++def test_convert_cleans_up_temporary_function_on_error(recording_db):
++    table = recording_db["table"]
++    table.insert({"title": "Mixed Case"})
++
++    def raise_error(value):
++        raise ValueError
++
++    with pytest.raises(OperationalError):
++        table.convert("title", raise_error)
++
++    temporary_calls = [
++        call
++        for call in recording_db.conn.create_function_calls
++        if call[0].startswith("convert_value_")
++    ]
++    assert len(temporary_calls) == 2
++    assert temporary_calls[0][:2] == temporary_calls[1][:2]
++    assert callable(temporary_calls[0][2])
++    assert temporary_calls[1][2] is None
++
++
+ @pytest.mark.parametrize(
+     "where,where_args", (("id > 1", None), ("id > :id", {"id": 1}), ("id > ?", [1]))
+ )

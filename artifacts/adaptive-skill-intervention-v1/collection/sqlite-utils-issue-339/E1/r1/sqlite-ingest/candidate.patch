@@ -1,0 +1,130 @@
+diff --git a/docs/python-api.rst b/docs/python-api.rst
+index 8932656e1e1f72aa04a388ef12e8f62b910a4b38..5b658df9d784f1d63fda3488bace1ccec9b17123 100644
+--- a/docs/python-api.rst
++++ b/docs/python-api.rst
+@@ -807,6 +807,18 @@ Creating lookup tables explicitly
+ 
+ Calling ``db["Species"].lookup({"name": "Palm"})`` creates a table called ``Species`` (if one does not already exist) with two columns: ``id`` and ``name``. It sets up a unique constraint on the ``name`` column to guarantee it will not contain duplicate rows. It then inserts a new row with the ``name`` set to ``Palm`` and returns the new integer primary key value.
+ 
++An optional second dictionary can provide additional values to use when inserting a
++new row::
++
++    species_id = db["Species"].lookup(
++        {"name": "Palm"},
++        {"common_name": "Arecaceae"}
++    )
++
++These additional values are ignored if the lookup finds an existing row, so they
++will never overwrite values already stored in that row. Only the values in the
++first dictionary are used for the unique constraint.
++
+ If the ``Species`` table already exists, it will insert the new row and return the primary key. If a row with that ``name`` already exists, it will return the corresponding primary key value directly.
+ 
+ If you call ``.lookup()`` against an existing table without the unique constraint it will attempt to add the constraint, raising an ``IntegrityError`` if the constraint cannot be created.
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 828ef6812f664da9c56e6eff99bba0c27603c111..7b969b058aaa0f059020d36f027749adfd5cca6f 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2713,7 +2713,11 @@ class Table(Queryable):
+                 self.add_column(col_name, col_type)
+         return self
+ 
+-    def lookup(self, column_values: Dict[str, Any]):
++    def lookup(
++        self,
++        lookup_values: Dict[str, Any],
++        extra_values: Optional[Dict[str, Any]] = None,
++    ):
+         """
+         Create or populate a lookup table with the specified values.
+ 
+@@ -2723,30 +2727,35 @@ class Table(Queryable):
+         contain duplicate rows.
+ 
+         It will then insert a new row with the ``name`` set to ``Palm`` and return the
+-        new integer primary key value.
++        new integer primary key value. Additional values can be provided using
++        ``extra_values``; these will be used only if a new row is inserted.
+ 
+         See :ref:`python_api_lookup_tables` for more details.
+         """
+-        # lookups is a dictionary - all columns will be used for a unique index
+-        assert isinstance(column_values, dict)
++        # lookup_values is a dictionary - all columns will be used for a unique index
++        assert isinstance(lookup_values, dict)
++        assert extra_values is None or isinstance(extra_values, dict)
++        extra_values = extra_values or {}
++        insert_values = {**extra_values, **lookup_values}
+         if self.exists():
+-            self.add_missing_columns([column_values])
++            self.add_missing_columns([lookup_values])
+             unique_column_sets = [set(i.columns) for i in self.indexes]
+-            if set(column_values.keys()) not in unique_column_sets:
+-                self.create_index(column_values.keys(), unique=True)
+-            wheres = ["[{}] = ?".format(column) for column in column_values]
++            if set(lookup_values.keys()) not in unique_column_sets:
++                self.create_index(lookup_values.keys(), unique=True)
++            wheres = ["[{}] = ?".format(column) for column in lookup_values]
+             rows = list(
+                 self.rows_where(
+-                    " and ".join(wheres), [value for _, value in column_values.items()]
++                    " and ".join(wheres), [value for _, value in lookup_values.items()]
+                 )
+             )
+             try:
+                 return rows[0]["id"]
+             except IndexError:
+-                return self.insert(column_values, pk="id").last_pk
++                self.add_missing_columns([insert_values])
++                return self.insert(insert_values, pk="id").last_pk
+         else:
+-            pk = self.insert(column_values, pk="id").last_pk
+-            self.create_index(column_values.keys(), unique=True)
++            pk = self.insert(insert_values, pk="id").last_pk
++            self.create_index(lookup_values.keys(), unique=True)
+             return pk
+ 
+     def m2m(
+diff --git a/tests/test_lookup.py b/tests/test_lookup.py
+index ac8e1c29b660ec5a12c86d22c67c5e5a3891e29a..70e262caf26cd73652e8bfa77847791b193b57a5 100644
+--- a/tests/test_lookup.py
++++ b/tests/test_lookup.py
+@@ -42,6 +42,38 @@ def test_lookup_new_table_compound_key(fresh_db):
+     ] == species.indexes
+ 
+ 
++def test_lookup_with_extra_values(fresh_db):
++    species = fresh_db["species"]
++    palm_id = species.lookup(
++        lookup_values={"name": "Palm"},
++        extra_values={"common_name": "Arecaceae", "score": 1},
++    )
++    assert {
++        "id": palm_id,
++        "name": "Palm",
++        "common_name": "Arecaceae",
++        "score": 1,
++    } == species.get(palm_id)
++    # Extra values are only applied when inserting, not when a match already exists
++    assert palm_id == species.lookup(
++        {"name": "Palm"}, {"common_name": "Palmae", "score": 2}
++    )
++    assert "Arecaceae" == species.get(palm_id)["common_name"]
++    assert 1 == species.get(palm_id)["score"]
++    # Only the lookup values participate in the unique index
++    assert ["name"] == species.indexes[0].columns
++
++
++def test_lookup_with_extra_values_existing_table(fresh_db):
++    species = fresh_db.table("species", pk="id")
++    palm_id = species.insert({"name": "Palm"}).last_pk
++    assert palm_id == species.lookup({"name": "Palm"}, {"score": 1})
++    assert "score" not in species.columns_dict
++
++    oak_id = species.lookup({"name": "Oak"}, {"score": 2})
++    assert 2 == species.get(oak_id)["score"]
++
++
+ def test_lookup_adds_unique_constraint_to_existing_table(fresh_db):
+     species = fresh_db.table("species", pk="id")
+     palm_id = species.insert({"name": "Palm"}).last_pk

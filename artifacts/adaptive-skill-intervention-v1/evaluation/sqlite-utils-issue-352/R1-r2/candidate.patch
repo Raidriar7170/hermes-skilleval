@@ -1,0 +1,133 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..fb8acd5639e146d1d954b884c809d203d6c240ee 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -712,6 +712,24 @@ You can delete all the existing rows in the table before inserting the new recor
+ 
+     $ sqlite-utils insert dogs.db dogs dogs.json --truncate
+ 
++Extracting columns into lookup tables
++-------------------------------------
++
++Use ``--extract=column_name`` to extract all values for a column into a separate
++lookup table. The original values will be replaced by integer references to rows
++in that table, and a foreign key relationship will be created.
++
++For example, this extracts the ``breed`` column into a table named ``breed``::
++
++    $ sqlite-utils insert dogs.db dogs dogs.json --extract=breed
++
++The lookup table will contain one row for each distinct value, so repeated values
++in the input data will reference the same row. Use ``--extract`` more than once to
++extract multiple columns::
++
++    $ sqlite-utils insert dogs.db dogs dogs.json \
++        --extract=breed --extract=size
++
+ .. _cli_inserting_data_binary:
+ 
+ Inserting binary data
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..b82fa7474b9e0469447756284af3e4a18173c44e 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    extracts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -785,7 +786,12 @@ def insert_upsert_implementation(
+     docs = (decode_base64_values(doc) for doc in docs)
+     try:
+         db[table].insert_all(
+-            docs, pk=pk, batch_size=batch_size, alter=alter, **extra_kwargs
++            docs,
++            pk=pk,
++            batch_size=batch_size,
++            alter=alter,
++            extracts=extracts,
++            **extra_kwargs
+         )
+     except Exception as e:
+         if (
+@@ -848,6 +854,12 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--extract",
++    "extracts",
++    multiple=True,
++    help="Columns to extract into a separate table",
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +882,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    extracts,
+     not_null,
+     default,
+ ):
+@@ -899,6 +912,7 @@ def insert(
+             ignore=ignore,
+             replace=replace,
+             truncate=truncate,
++            extracts=extracts,
+             encoding=encoding,
+             detect_types=detect_types,
+             load_extension=load_extension,
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..d50bf17f2c25d8b254ea4b49357511b5807cd738 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -634,6 +634,44 @@ def test_insert_from_stdin(tmpdir):
+     )
+ 
+ 
++def test_insert_extract_repeatable(tmpdir):
++    db_path = str(tmpdir / "dogs.db")
++    dogs = [
++        {"name": "Cleo", "breed": "mixed", "size": "small"},
++        {"name": "Pancakes", "breed": "mixed", "size": "large"},
++        {"name": "Marnie", "breed": "terrier", "size": "small"},
++    ]
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "dogs", "-", "--extract", "breed", "--extract", "size"],
++        input=json.dumps(dogs),
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(db_path)
++    assert list(db.query("select name, breed, size from dogs order by rowid")) == [
++        {"name": "Cleo", "breed": 1, "size": 1},
++        {"name": "Pancakes", "breed": 1, "size": 2},
++        {"name": "Marnie", "breed": 2, "size": 1},
++    ]
++    assert list(db.query("select id, value from breed order by id")) == [
++        {"id": 1, "value": "mixed"},
++        {"id": 2, "value": "terrier"},
++    ]
++    assert list(db.query("select id, value from size order by id")) == [
++        {"id": 1, "value": "small"},
++        {"id": 2, "value": "large"},
++    ]
++    assert db["dogs"].count == len(dogs)
++    foreign_keys = {
++        (fk.column, fk.other_table, fk.other_column)
++        for fk in db["dogs"].foreign_keys
++    }
++    assert foreign_keys == {
++        ("breed", "breed", "id"),
++        ("size", "size", "id"),
++    }
++
++
+ def test_insert_invalid_json_error(tmpdir):
+     db_path = str(tmpdir / "dogs.db")
+     result = CliRunner().invoke(

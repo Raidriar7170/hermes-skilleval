@@ -1,0 +1,70 @@
+diff --git a/README.md b/README.md
+index ecd93b960c4ffaef5e7039c17b15f69c8c775a94..149b3652bdc9bf84a0fa0e2c7960e6b91292224d 100644
+--- a/README.md
++++ b/README.md
+@@ -51,6 +51,10 @@ Consider two CSV files:
+ 
+ The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.
+ 
++When using the Python API, pass `key="__rowid__"` to `load_csv()` to match
++rows by their position in the CSV (excluding the header). If the CSV has a
++column named `__rowid__`, that column is used as the key instead.
++
+ The tool will automatically detect if your files are comma- or tab-separated. You can over-ride this automatic detection and force the tool to use a specific format using `--format=tsv` or `--format=csv`.
+ 
+ You can also feed it JSON files, provided they are a JSON array of objects where each object has the same keys. Use `--format=json` if your input files are JSON.
+@@ -125,4 +129,4 @@ If the columns in the CSV have changed, those added or removed columns will be i
+ 
+ Suppose current directory contains two csv files : one.csv two.csv
+ 
+-    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+\ No newline at end of file
++    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..289bbcc933f647662a6e46bec1ebe6288ba2b993 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if key == "__rowid__" and key not in headings:
++        return {row_number: row for row_number, row in enumerate(rows)}
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..718ca1d23ab11c7e685234ba12d01b0df6fc06a2 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -65,6 +65,28 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_row_number_key():
++    diff = compare(
++        load_csv(io.StringIO(ONE), key="__rowid__"),
++        load_csv(io.StringIO(TWO), key="__rowid__"),
++    )
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": 0, "changes": {"age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
++def test_row_number_key_defers_to_matching_header():
++    csv_with_rowid = """__rowid__,name
++custom,Cleo"""
++    assert {"custom": {"__rowid__": "custom", "name": "Cleo"}} == load_csv(
++        io.StringIO(csv_with_rowid), key="__rowid__"
++    )
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

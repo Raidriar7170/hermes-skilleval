@@ -1,0 +1,129 @@
+diff --git a/docs/python-api.rst b/docs/python-api.rst
+index 8932656e1e1f72aa04a388ef12e8f62b910a4b38..6339cfbac132a061e5f5f908abe271fc0e954da7 100644
+--- a/docs/python-api.rst
++++ b/docs/python-api.rst
+@@ -807,6 +807,17 @@ Creating lookup tables explicitly
+ 
+ Calling ``db["Species"].lookup({"name": "Palm"})`` creates a table called ``Species`` (if one does not already exist) with two columns: ``id`` and ``name``. It sets up a unique constraint on the ``name`` column to guarantee it will not contain duplicate rows. It then inserts a new row with the ``name`` set to ``Palm`` and returns the new integer primary key value.
+ 
++An optional second dictionary can provide additional values to use only when a
++new row is inserted::
++
++    species_id = db["Species"].lookup(
++        {"name": "Palm"},
++        {"latin_name": "Arecaceae"}
++    )
++
++These additional values are not used to look up the row. If a matching row
++already exists it is returned without updating it.
++
+ If the ``Species`` table already exists, it will insert the new row and return the primary key. If a row with that ``name`` already exists, it will return the corresponding primary key value directly.
+ 
+ If you call ``.lookup()`` against an existing table without the unique constraint it will attempt to add the constraint, raising an ``IntegrityError`` if the constraint cannot be created.
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 828ef6812f664da9c56e6eff99bba0c27603c111..50613e8c3e362f76b0296f692596e6e960312dce 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2713,7 +2713,11 @@ class Table(Queryable):
+                 self.add_column(col_name, col_type)
+         return self
+ 
+-    def lookup(self, column_values: Dict[str, Any]):
++    def lookup(
++        self,
++        lookup_values: Dict[str, Any],
++        extra_values: Optional[Dict[str, Any]] = None,
++    ):
+         """
+         Create or populate a lookup table with the specified values.
+ 
+@@ -2725,28 +2729,35 @@ class Table(Queryable):
+         It will then insert a new row with the ``name`` set to ``Palm`` and return the
+         new integer primary key value.
+ 
++        Additional values can be provided using ``extra_values``. These will be
++        included when a new row is inserted, but will not be used to find an
++        existing row or update one.
++
+         See :ref:`python_api_lookup_tables` for more details.
+         """
+         # lookups is a dictionary - all columns will be used for a unique index
+-        assert isinstance(column_values, dict)
++        assert isinstance(lookup_values, dict)
++        assert extra_values is None or isinstance(extra_values, dict)
++        extra_values = extra_values or {}
++        insert_values = {**extra_values, **lookup_values}
+         if self.exists():
+-            self.add_missing_columns([column_values])
++            self.add_missing_columns([insert_values])
+             unique_column_sets = [set(i.columns) for i in self.indexes]
+-            if set(column_values.keys()) not in unique_column_sets:
+-                self.create_index(column_values.keys(), unique=True)
+-            wheres = ["[{}] = ?".format(column) for column in column_values]
++            if set(lookup_values.keys()) not in unique_column_sets:
++                self.create_index(lookup_values.keys(), unique=True)
++            wheres = ["[{}] = ?".format(column) for column in lookup_values]
+             rows = list(
+                 self.rows_where(
+-                    " and ".join(wheres), [value for _, value in column_values.items()]
++                    " and ".join(wheres), [value for _, value in lookup_values.items()]
+                 )
+             )
+             try:
+                 return rows[0]["id"]
+             except IndexError:
+-                return self.insert(column_values, pk="id").last_pk
++                return self.insert(insert_values, pk="id").last_pk
+         else:
+-            pk = self.insert(column_values, pk="id").last_pk
+-            self.create_index(column_values.keys(), unique=True)
++            pk = self.insert(insert_values, pk="id").last_pk
++            self.create_index(lookup_values.keys(), unique=True)
+             return pk
+ 
+     def m2m(
+diff --git a/tests/test_lookup.py b/tests/test_lookup.py
+index ac8e1c29b660ec5a12c86d22c67c5e5a3891e29a..192434601dbecf9e605901bb03725b25dea8db3e 100644
+--- a/tests/test_lookup.py
++++ b/tests/test_lookup.py
+@@ -66,3 +66,40 @@ def test_lookup_fails_if_constraint_cannot_be_added(fresh_db):
+     # This will fail because the name column is not unique
+     with pytest.raises(Exception, match="UNIQUE constraint failed"):
+         species.lookup({"name": "Palm"})
++
++
++def test_lookup_with_extra_values_new_table(fresh_db):
++    species = fresh_db["species"]
++    palm_id = species.lookup(
++        lookup_values={"name": "Palm"},
++        extra_values={"latin_name": "Arecaceae", "score": 1},
++    )
++    assert {
++        "id": palm_id,
++        "name": "Palm",
++        "latin_name": "Arecaceae",
++        "score": 1,
++    } == species.get(palm_id)
++    assert ["name"] == species.indexes[0].columns
++
++    oak_id = species.lookup({"name": "Oak"}, {"latin_name": "Quercus"})
++    assert {
++        "id": oak_id,
++        "name": "Oak",
++        "latin_name": "Quercus",
++        "score": None,
++    } == species.get(oak_id)
++
++
++def test_lookup_with_extra_values_does_not_update_existing_record(fresh_db):
++    species = fresh_db["species"]
++    palm_id = species.lookup({"name": "Palm"}, {"latin_name": "Arecaceae"})
++    assert palm_id == species.lookup(
++        {"name": "Palm"}, {"latin_name": "Palmae", "score": 2}
++    )
++    assert {
++        "id": palm_id,
++        "name": "Palm",
++        "latin_name": "Arecaceae",
++        "score": None,
++    } == species.get(palm_id)

@@ -1,0 +1,24 @@
+diff --git a/tests/test_utilities/test_csvgrep.py b/tests/test_utilities/test_csvgrep.py
+index 35bdaef51df9d94d1f5667e99912044c82081f90..ad4dca1e57210baf10262b72123281140690b1e0 100644
+--- a/tests/test_utilities/test_csvgrep.py
++++ b/tests/test_utilities/test_csvgrep.py
+@@ -1,3 +1,4 @@
++import io
+ import sys
+ from unittest.mock import patch
+ 
+@@ -34,6 +35,14 @@ class TestCSVGrep(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_match_hyphenated_column_name(self):
++        stdin = io.TextIOWrapper(io.BytesIO(b'first-name,status\nAlice,active\nBob,inactive\n'))
++        with patch.object(sys, 'stdin', stdin):
++            self.assertRows(['-c', 'first-name', '-m', 'Alice'], [
++                ['first-name', 'status'],
++                ['Alice', 'active'],
++            ])
++
+     def test_any_match(self):
+         self.assertRows(['-c', '1,2,3', '-a', '-m', '1', 'examples/dummy.csv'], [
+             ['a', 'b', 'c'],

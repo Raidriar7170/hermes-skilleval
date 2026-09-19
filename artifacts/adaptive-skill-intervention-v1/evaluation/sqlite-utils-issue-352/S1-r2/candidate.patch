@@ -1,0 +1,130 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index a30e7cfc08ef039541c82f995025b1bb378e1580..b1c08e4281c8a96fcacc8c7c1f3ee75ee300af25 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -7,6 +7,8 @@
+ 3.19 (2021-11-20)
+ -----------------
+ 
++- ``sqlite-utils insert`` now accepts a repeatable ``--extract`` option for
++  extracting columns into separate lookup tables.
+ - The :ref:`table.lookup() method <python_api_lookup_tables>` now accepts keyword arguments that match those on the underlying ``table.insert()`` method: ``foreign_keys=``, ``column_order=``, ``not_null=``, ``defaults=``, ``extracts=``, ``conversions=`` and ``columns=``. You can also now pass ``pk=`` to specify a different column name to use for the primary key. (:issue:`342`)
+ 
+ .. _v3_18:
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..fadfbd7cf1bdd0b792c5d7f25a113325d1b779bc 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -712,6 +712,15 @@ You can delete all the existing rows in the table before inserting the new recor
+ 
+     $ sqlite-utils insert dogs.db dogs dogs.json --truncate
+ 
++You can extract repeated values into a separate lookup table using
++``--extract COLUMN``::
++
++    $ sqlite-utils insert trees.db trees trees.json --extract species
++
++The ``species`` values in the inserted rows will be replaced by integer foreign
++keys to a new ``species`` table. Use ``--extract`` more than once to extract
++multiple columns.
++
+ .. _cli_inserting_data_binary:
+ 
+ Inserting binary data
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..a2c869a2d929d5138b4241947a746e2e02c76031 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    extracts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -783,6 +784,8 @@ def insert_upsert_implementation(
+         extra_kwargs["upsert"] = upsert
+     # Apply {"$base64": true, ...} decoding, if needed
+     docs = (decode_base64_values(doc) for doc in docs)
++    if extracts:
++        extra_kwargs["extracts"] = extracts
+     try:
+         db[table].insert_all(
+             docs, pk=pk, batch_size=batch_size, alter=alter, **extra_kwargs
+@@ -848,6 +851,12 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--extract",
++    "extracts",
++    multiple=True,
++    help="Columns to extract into separate lookup tables",
++)
+ def insert(
+     path,
+     table,
+@@ -872,6 +881,7 @@ def insert(
+     truncate,
+     not_null,
+     default,
++    extracts,
+ ):
+     """
+     Insert records from JSON file into a table, creating the table if it
+@@ -905,6 +915,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            extracts=extracts,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..f3ea132d2c4fd966b70677a0adf0e4c8c47de3e1 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -896,6 +896,42 @@ def test_insert_truncate(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++def test_insert_extract(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "trees",
++            "-",
++            "--extract",
++            "species",
++            "--extract",
++            "city",
++        ],
++        input=json.dumps(
++            [
++                {"id": 1, "species": "Oak", "city": "London"},
++                {"id": 2, "species": "Oak", "city": "Paris"},
++                {"id": 3, "species": "Palm", "city": "London"},
++            ]
++        ),
++    )
++    assert 0 == result.exit_code, result.output
++    db = Database(db_path)
++    assert [{"id": 1, "value": "Oak"}, {"id": 2, "value": "Palm"}] == list(
++        db["species"].rows
++    )
++    assert [{"id": 1, "value": "London"}, {"id": 2, "value": "Paris"}] == list(
++        db["city"].rows
++    )
++    assert [
++        {"id": 1, "species": 1, "city": 1},
++        {"id": 2, "species": 1, "city": 2},
++        {"id": 3, "species": 2, "city": 1},
++    ] == list(db["trees"].rows)
++
++
+ def test_insert_alter(db_path, tmpdir):
+     result = CliRunner().invoke(
+         cli.cli,

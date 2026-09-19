@@ -1,0 +1,63 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..99388d7e6775bee429b7f893e239260f3c84df09 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if key == "__rowid__" and key not in headings:
++        return {row_number: row for row_number, row in enumerate(rows, start=1)}
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..5eac82d9822940e0a3e97c93b1d37bf027e51993 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -65,6 +65,43 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_row_number_key():
++    diff = compare(
++        load_csv(io.StringIO(ONE), key="__rowid__"),
++        load_csv(io.StringIO(TWO), key="__rowid__"),
++    )
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": 1, "changes": {"age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
++def test_row_number_key_matches_by_position_when_content_moves():
++    reordered = """id,name,age
++2,Pancakes,2
++1,Cleo,4"""
++    diff = compare(
++        load_csv(io.StringIO(ONE), key="__rowid__"),
++        load_csv(io.StringIO(reordered), key="__rowid__"),
++    )
++    assert not diff["added"]
++    assert not diff["removed"]
++    assert [change["key"] for change in diff["changed"]] == [1, 2]
++
++
++def test_row_number_key_falls_back_to_column_with_same_name():
++    csv_with_rowid = """__rowid__,name
++second,Cleo
++first,Pancakes"""
++    assert load_csv(io.StringIO(csv_with_rowid), key="__rowid__") == {
++        "second": {"__rowid__": "second", "name": "Cleo"},
++        "first": {"__rowid__": "first", "name": "Pancakes"},
++    }
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

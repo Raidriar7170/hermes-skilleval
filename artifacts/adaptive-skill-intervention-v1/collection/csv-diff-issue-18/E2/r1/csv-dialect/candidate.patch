@@ -1,0 +1,90 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..d5252e0ef5ee4245a115b47f8fce7858bf75af85 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -61,8 +61,15 @@ def compare(previous, current, show_unchanged=False):
+         "columns_removed": [],
+     }
+     # Have the columns changed?
+-    previous_columns = set(next(iter(previous.values())).keys())
+-    current_columns = set(next(iter(current.values())).keys())
++    previous_columns = set(next(iter(previous.values()), {}).keys())
++    current_columns = set(next(iter(current.values()), {}).keys())
++    # An empty mapping does not retain the headings read by load_csv(). In
++    # that case, use the columns from the non-empty side so all rows are
++    # reported as added or removed without also reporting a schema change.
++    if not previous:
++        previous_columns = current_columns
++    if not current:
++        current_columns = previous_columns
+     ignore_columns = None
+     if previous_columns != current_columns:
+         result["columns_added"] = [
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..3d4421ff1b10a2bfb910af5dda2947623102cf41 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -51,6 +51,8 @@ TEN = """id,name,age
+ 1,Cleo,5
+ 2,Pancakes,3"""
+ 
++EMPTY = """id,name,age"""
++
+ 
+ def test_row_changed():
+     diff = compare(
+@@ -91,6 +93,54 @@ def test_row_removed():
+     } == diff
+ 
+ 
++def test_rows_added_to_empty_csv():
++    diff = compare(
++        load_csv(io.StringIO(EMPTY), key="id"),
++        load_csv(io.StringIO(TWO), key="id"),
++    )
++    assert {
++        "changed": [],
++        "removed": [],
++        "added": [
++            {"age": "5", "id": "1", "name": "Cleo"},
++            {"age": "2", "id": "2", "name": "Pancakes"},
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
++def test_rows_removed_from_empty_csv():
++    diff = compare(
++        load_csv(io.StringIO(TWO), key="id"),
++        load_csv(io.StringIO(EMPTY), key="id"),
++    )
++    assert {
++        "changed": [],
++        "removed": [
++            {"age": "5", "id": "1", "name": "Cleo"},
++            {"age": "2", "id": "2", "name": "Pancakes"},
++        ],
++        "added": [],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
++def test_both_csvs_empty():
++    diff = compare(
++        load_csv(io.StringIO(EMPTY), key="id"),
++        load_csv(io.StringIO(EMPTY), key="id"),
++    )
++    assert {
++        "changed": [],
++        "removed": [],
++        "added": [],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
+ def test_columns_changed():
+     diff = compare(
+         load_csv(io.StringIO(SIX), key="id"), load_csv(io.StringIO(SEVEN), key="id")

@@ -1,0 +1,182 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 971bf6ffa96292e9193f365e3c8714fd852c2a3d..009b16ba5e57af8e87bc095381ebac5c60047a84 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -593,7 +593,7 @@ class Database:
+         table_sql = {}
+         for table, column, other_table, other_column in foreign_keys_to_create:
+             old_sql = table_sql.get(table, self[table].schema)
+-            extra_sql = ",\n   FOREIGN KEY({column}) REFERENCES {other_table}({other_column})\n".format(
++            extra_sql = ",\n   FOREIGN KEY([{column}]) REFERENCES [{other_table}]([{other_column}])\n".format(
+                 column=column, other_table=other_table, other_column=other_column
+             )
+             # Stick that bit in at the very end just before the closing ')'
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 988b41fbdcc8be541f7c40fa8191ebd378de99c2..b9d5246444e9e3a9adf4f94b9a6d26dc860dc1ba 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -322,7 +322,7 @@ def test_add_column_foreign_key(db_path):
+     )
+     assert 0 == result.exit_code, result.output
+     assert (
+-        "CREATE TABLE [books] ( [title] TEXT , [author_id] INTEGER, FOREIGN KEY(author_id) REFERENCES authors(id) )"
++        "CREATE TABLE [books] ( [title] TEXT , [author_id] INTEGER, FOREIGN KEY([author_id]) REFERENCES [authors]([id]) )"
+         == collapse_whitespace(db["books"].schema)
+     )
+     # Try it again with a custom --fk-col
+@@ -342,8 +342,8 @@ def test_add_column_foreign_key(db_path):
+     assert 0 == result.exit_code, result.output
+     assert (
+         "CREATE TABLE [books] ( [title] TEXT , [author_id] INTEGER, [author_name_ref] TEXT, "
+-        "FOREIGN KEY(author_id) REFERENCES authors(id), "
+-        "FOREIGN KEY(author_name_ref) REFERENCES authors(name) )"
++        "FOREIGN KEY([author_id]) REFERENCES [authors]([id]), "
++        "FOREIGN KEY([author_name_ref]) REFERENCES [authors]([name]) )"
+         == collapse_whitespace(db["books"].schema)
+     )
+     # Throw an error if the --fk table does not exist
+@@ -1640,22 +1640,22 @@ _common_other_schema = (
+     [
+         (
+             [],
+-            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [species_id] INTEGER,\n   FOREIGN KEY(species_id) REFERENCES species(id)\n)',
++            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [species_id] INTEGER,\n   FOREIGN KEY([species_id]) REFERENCES [species]([id])\n)',
+             _common_other_schema,
+         ),
+         (
+             ["--table", "custom_table"],
+-            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [custom_table_id] INTEGER,\n   FOREIGN KEY(custom_table_id) REFERENCES custom_table(id)\n)',
++            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [custom_table_id] INTEGER,\n   FOREIGN KEY([custom_table_id]) REFERENCES [custom_table]([id])\n)',
+             "CREATE TABLE [custom_table] (\n   [id] INTEGER PRIMARY KEY,\n   [species] TEXT\n)",
+         ),
+         (
+             ["--fk-column", "custom_fk"],
+-            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [custom_fk] INTEGER,\n   FOREIGN KEY(custom_fk) REFERENCES species(id)\n)',
++            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [custom_fk] INTEGER,\n   FOREIGN KEY([custom_fk]) REFERENCES [species]([id])\n)',
+             _common_other_schema,
+         ),
+         (
+             ["--rename", "name", "name2"],
+-            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [species_id] INTEGER,\n   FOREIGN KEY(species_id) REFERENCES species(id)\n)',
++            'CREATE TABLE "trees" (\n   [id] INTEGER PRIMARY KEY,\n   [address] TEXT,\n   [species_id] INTEGER,\n   FOREIGN KEY([species_id]) REFERENCES [species]([id])\n)',
+             "CREATE TABLE [species] (\n   [id] INTEGER PRIMARY KEY,\n   [species] TEXT\n)",
+         ),
+     ],
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 2975deac351d0404316dba8e042fc3f67dbb25ca..eacad88a35a10674e04d314d9f90c84cbfbe4340 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -418,12 +418,41 @@ def test_add_foreign_keys(fresh_db):
+     ] == sorted(fresh_db["books"].foreign_keys)
+ 
+ 
++def test_add_foreign_key_with_spaces_in_identifiers(fresh_db):
++    fresh_db["Reporters table"].insert({"Reporter ID": 1, "name": "Sally"}, pk="Reporter ID")
++    fresh_db["Reports table"].insert(
++        {"id": 1, "Reported by ID": 1, "title": "Hedgehogs of the world"},
++        pk="id",
++    )
++
++    fresh_db["Reports table"].add_foreign_key(
++        "Reported by ID", "Reporters table", "Reporter ID"
++    )
++
++    assert [
++        ForeignKey(
++            table="Reports table",
++            column="Reported by ID",
++            other_table="Reporters table",
++            other_column="Reporter ID",
++        )
++    ] == fresh_db["Reports table"].foreign_keys
++    assert [
++        {
++            "id": 1,
++            "Reported by ID": 1,
++            "title": "Hedgehogs of the world",
++        }
++    ] == list(fresh_db["Reports table"].rows)
++    assert [("ok",)] == fresh_db.execute("PRAGMA integrity_check").fetchall()
++
++
+ def test_add_column_foreign_key(fresh_db):
+     fresh_db.create_table("dogs", {"name": str})
+     fresh_db.create_table("breeds", {"name": str})
+     fresh_db["dogs"].add_column("breed_id", fk="breeds")
+     assert (
+-        "CREATE TABLE [dogs] ( [name] TEXT , [breed_id] INTEGER, FOREIGN KEY(breed_id) REFERENCES breeds(rowid) )"
++        "CREATE TABLE [dogs] ( [name] TEXT , [breed_id] INTEGER, FOREIGN KEY([breed_id]) REFERENCES [breeds]([rowid]) )"
+         == collapse_whitespace(fresh_db["dogs"].schema)
+     )
+     # And again with an explicit primary key column
+@@ -431,8 +460,8 @@ def test_add_column_foreign_key(fresh_db):
+     fresh_db["dogs"].add_column("subbreed_id", fk="subbreeds")
+     assert (
+         "CREATE TABLE [dogs] ( [name] TEXT , [breed_id] INTEGER, [subbreed_id] TEXT, "
+-        "FOREIGN KEY(breed_id) REFERENCES breeds(rowid), "
+-        "FOREIGN KEY(subbreed_id) REFERENCES subbreeds(primkey) )"
++        "FOREIGN KEY([breed_id]) REFERENCES [breeds]([rowid]), "
++        "FOREIGN KEY([subbreed_id]) REFERENCES [subbreeds]([primkey]) )"
+         == collapse_whitespace(fresh_db["dogs"].schema)
+     )
+ 
+@@ -443,7 +472,7 @@ def test_add_foreign_key_guess_table(fresh_db):
+     fresh_db["dogs"].add_column("breed_id", int)
+     fresh_db["dogs"].add_foreign_key("breed_id")
+     assert (
+-        "CREATE TABLE [dogs] ( [name] TEXT , [breed_id] INTEGER, FOREIGN KEY(breed_id) REFERENCES breeds(id) )"
++        "CREATE TABLE [dogs] ( [name] TEXT , [breed_id] INTEGER, FOREIGN KEY([breed_id]) REFERENCES [breeds]([id]) )"
+         == collapse_whitespace(fresh_db["dogs"].schema)
+     )
+ 
+diff --git a/tests/test_extract.py b/tests/test_extract.py
+index 25dd6e228257f1300fd8f9c9df6afecd674a8a6c..27957fe644832a80b6ebeb6f837c64f03ae80248 100644
+--- a/tests/test_extract.py
++++ b/tests/test_extract.py
+@@ -28,7 +28,9 @@ def test_extract_single_column(fresh_db, table, fk_column):
+         "   [name] TEXT,\n"
+         "   [{}] INTEGER,\n".format(expected_fk)
+         + "   [end] INTEGER,\n"
+-        + "   FOREIGN KEY({}) REFERENCES {}(id)\n".format(expected_fk, expected_table)
++            + "   FOREIGN KEY([{}]) REFERENCES [{}]([id])\n".format(
++                expected_fk, expected_table
++            )
+         + ")"
+     )
+     assert fresh_db[expected_table].schema == (
+@@ -75,7 +77,7 @@ def test_extract_multiple_columns_with_rename(fresh_db):
+         "   [id] INTEGER PRIMARY KEY,\n"
+         "   [name] TEXT,\n"
+         "   [common_name_latin_name_id] INTEGER,\n"
+-        "   FOREIGN KEY(common_name_latin_name_id) REFERENCES common_name_latin_name(id)\n"
++        "   FOREIGN KEY([common_name_latin_name_id]) REFERENCES [common_name_latin_name]([id])\n"
+         ")"
+     )
+     assert fresh_db["common_name_latin_name"].schema == (
+@@ -127,7 +129,7 @@ def test_extract_rowid_table(fresh_db):
+         "   [rowid] INTEGER PRIMARY KEY,\n"
+         "   [name] TEXT,\n"
+         "   [common_name_latin_name_id] INTEGER,\n"
+-        "   FOREIGN KEY(common_name_latin_name_id) REFERENCES common_name_latin_name(id)\n"
++        "   FOREIGN KEY([common_name_latin_name_id]) REFERENCES [common_name_latin_name]([id])\n"
+         ")"
+     )
+ 
+@@ -144,7 +146,7 @@ def test_reuse_lookup_table(fresh_db):
+         'CREATE TABLE "sightings" (\n'
+         "   [id] INTEGER PRIMARY KEY,\n"
+         "   [species_id] INTEGER,\n"
+-        "   FOREIGN KEY(species_id) REFERENCES species(id)\n"
++        "   FOREIGN KEY([species_id]) REFERENCES [species]([id])\n"
+         ")"
+     )
+     assert fresh_db["individuals"].schema == (
+@@ -152,7 +154,7 @@ def test_reuse_lookup_table(fresh_db):
+         "   [id] INTEGER PRIMARY KEY,\n"
+         "   [name] TEXT,\n"
+         "   [species_id] INTEGER,\n"
+-        "   FOREIGN KEY(species_id) REFERENCES species(id)\n"
++        "   FOREIGN KEY([species_id]) REFERENCES [species]([id])\n"
+         ")"
+     )
+     assert list(fresh_db["species"].rows) == [

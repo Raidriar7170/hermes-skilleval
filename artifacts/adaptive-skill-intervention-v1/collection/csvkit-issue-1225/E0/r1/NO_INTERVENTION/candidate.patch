@@ -1,0 +1,48 @@
+diff --git a/csvkit/utilities/in2csv.py b/csvkit/utilities/in2csv.py
+index 9ee188e18d44b7e74f0ddbcd2ccb882e68067e22..997357996960734075523ed375b40e321a956646 100644
+--- a/csvkit/utilities/in2csv.py
++++ b/csvkit/utilities/in2csv.py
+@@ -65,7 +65,14 @@ class In2CSV(CSVKitUtility):
+ 
+     def open_excel_input_file(self, path):
+         if not path or path == '-':
+-            return BytesIO(sys.stdin.buffer.read())
++            # Excel readers need a seekable file, and --write-sheets opens the
++            # workbook more than once. STDIN can only be read once, so retain
++            # its bytes and return a fresh buffer for each pass.
++            if not hasattr(self, '_excel_stdin_data'):
++                self._excel_stdin_data = sys.stdin.buffer.read()
++            input_file = BytesIO(self._excel_stdin_data)
++            input_file.name = 'stdin'
++            return input_file
+         return open(path, 'rb')
+ 
+     def sheet_names(self, path, filetype):
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index 95b691572f0fbe2f11fe62c46c9e88720d49e2b4..75f1549c2fd1b5cbb5b4d837d77da59e7492a45a 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -258,6 +258,23 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+                 if os.path.exists(path):
+                     os.remove(path)
+ 
++    def test_convert_xlsx_stdin_with_write_sheets(self):
++        try:
++            with open('examples/sheets.xlsx', 'rb') as input_file, stdin_as_string(input_file):
++                output = self.get_output(['-f', 'xlsx', '--no-inference', '--sheet', 'data', '--write-sheets', '-'])
++
++            with open('examples/testxlsx_noinference_converted.csv') as expected:
++                self.assertEqual(output, expected.read())
++            with open('stdin_1.csv') as output_file, open('examples/testxlsx_noinference_converted.csv') as expected:
++                self.assertEqual(output_file.read(), expected.read())
++            with open('stdin_2.csv') as output_file, open('examples/testxlsx_unicode_converted.csv') as expected:
++                self.assertEqual(output_file.read(), expected.read())
++        finally:
++            for suffix in (0, 1, 2):
++                path = 'stdin_%d.csv' % suffix
++                if os.path.exists(path):
++                    os.remove(path)
++
+     def test_convert_xls_with_write_sheets_with_names(self):
+         try:
+             self.assertConverted('xls', 'examples/sheets.xls', 'examples/testxls_converted.csv',

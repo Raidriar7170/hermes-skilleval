@@ -1,0 +1,96 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..6f13d270cd8620f412ebe8de074f1acde660657a 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1634,6 +1634,15 @@ To optimize specific tables rather than every FTS table, pass those tables as ex
+ 
+     $ sqlite-utils optimize mydb.db table_1 table_2
+ 
++Creating an empty database
++==========================
++
++The ``create-database`` command creates a new, empty SQLite database file::
++
++    $ sqlite-utils create-database mydb.db
++
++The command returns an error if the file already exists, without modifying it.
++
+ .. _cli_wal:
+ 
+ WAL mode
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..afb84d44981981ed3d7dbd3b5256fcb501af6545 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -561,6 +561,34 @@ def disable_fts(path, table, load_extension):
+     db[table].disable_fts()
+ 
+ 
++@cli.command(name="create-database")
++@click.argument(
++    "path",
++    type=click.Path(file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def create_database(path):
++    "Create an empty SQLite database file"
++    try:
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o666)
++    except FileExistsError:
++        raise click.ClickException('File "{}" already exists'.format(path))
++    except OSError as ex:
++        raise click.ClickException(str(ex))
++    os.close(fd)
++
++    try:
++        db = sqlite3.connect(path)
++        try:
++            db.execute("VACUUM")
++        finally:
++            db.close()
++    except Exception:
++        # Only remove the file that this invocation exclusively created.
++        os.unlink(path)
++        raise
++
++
+ @cli.command(name="enable-wal")
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..04516c373b6f7277e9f778fbc2ff80e806b806d5 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1591,6 +1591,32 @@ def test_enable_wal():
+             assert db.journal_mode == "wal"
+ 
+ 
++def test_create_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        result = runner.invoke(cli.cli, ["create-database", "empty.db"])
++        assert result.exit_code == 0
++        assert os.path.exists("empty.db")
++        assert os.path.getsize("empty.db") > 0
++        with open("empty.db", "rb") as fp:
++            assert fp.read(16) == b"SQLite format 3\x00"
++        assert Database("empty.db").table_names() == []
++
++
++def test_create_database_does_not_modify_existing_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        Database("existing.db")["data"].insert({"value": "original"})
++        before = open("existing.db", "rb").read()
++        result = runner.invoke(cli.cli, ["create-database", "existing.db"])
++        assert result.exit_code == 1
++        assert 'Error: File "existing.db" already exists' == result.output.strip()
++        assert open("existing.db", "rb").read() == before
++        assert list(Database("existing.db")["data"].rows) == [
++            {"value": "original"}
++        ]
++
++
+ def test_disable_wal():
+     runner = CliRunner()
+     dbs = ["test.db", "test2.db"]

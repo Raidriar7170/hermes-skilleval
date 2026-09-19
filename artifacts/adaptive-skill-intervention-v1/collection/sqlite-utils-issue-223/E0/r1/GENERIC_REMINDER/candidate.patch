@@ -1,0 +1,118 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index 974fe68903b2d8de7df1b66e46998a335613faee..f00733ba33bd307f07791c3b7dfca69e478d5faf 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -485,6 +485,11 @@ For tab-delimited data, use ``--tsv``::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.tsv --tsv
+ 
++For CSV files that use a different delimiter, pass ``--delimiter``. This
++option implies ``--csv``::
++
++    $ sqlite-utils insert places.db places places.csv --delimiter ';'
++
+ Data is expected to be encoded as Unicode UTF-8. If your data is an another character encoding you can specify it using the ``--encoding`` option::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.tsv --tsv --encoding=latin-1
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 0bc03fed5cdad29dab3544fb4320b564f3895582..e9f0c52fde0b43fd6ae877b853f8b8f2db3ceaa1 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -601,6 +601,10 @@ def insert_upsert_options(fn):
+             click.option("--nl", is_flag=True, help="Expect newline-delimited JSON"),
+             click.option("-c", "--csv", is_flag=True, help="Expect CSV"),
+             click.option("--tsv", is_flag=True, help="Expect TSV"),
++            click.option(
++                "--delimiter",
++                help="Delimiter to use for CSV input (implies --csv)",
++            ),
+             click.option(
+                 "--batch-size", type=int, default=100, help="Commit every X records"
+             ),
+@@ -640,6 +644,7 @@ def insert_upsert_implementation(
+     nl,
+     csv,
+     tsv,
++    delimiter,
+     batch_size,
+     alter,
+     upsert,
+@@ -654,6 +659,9 @@ def insert_upsert_implementation(
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
++    if delimiter is not None and len(delimiter) != 1:
++        raise click.ClickException("--delimiter must be a single character")
++    csv = csv or delimiter is not None
+     if (nl + csv + tsv) >= 2:
+         raise click.ClickException("Use just one of --nl, --csv or --tsv")
+     if encoding and not (csv or tsv):
+@@ -665,7 +673,8 @@ def insert_upsert_implementation(
+     if csv or tsv:
+         dialect = "excel-tab" if tsv else "excel"
+         with file_progress(json_file, silent=silent) as json_file:
+-            reader = csv_std.reader(json_file, dialect=dialect)
++            reader_kwargs = {"delimiter": delimiter} if delimiter is not None else {}
++            reader = csv_std.reader(json_file, dialect=dialect, **reader_kwargs)
+             headers = next(reader)
+             docs = (dict(zip(headers, row)) for row in reader)
+     else:
+@@ -720,6 +729,7 @@ def insert(
+     nl,
+     csv,
+     tsv,
++    delimiter,
+     batch_size,
+     alter,
+     encoding,
+@@ -746,6 +756,7 @@ def insert(
+             nl,
+             csv,
+             tsv,
++            delimiter,
+             batch_size,
+             alter=alter,
+             upsert=False,
+@@ -772,6 +783,7 @@ def upsert(
+     nl,
+     csv,
+     tsv,
++    delimiter,
+     batch_size,
+     alter,
+     not_null,
+@@ -794,6 +806,7 @@ def upsert(
+             nl,
+             csv,
+             tsv,
++            delimiter,
+             batch_size,
+             alter=alter,
+             upsert=True,
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 381997b04ab6feaa5d9ea99b99b7dd108490d35e..dc1ad9d42590f57382b62b65fb448341f52389ee 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -736,6 +736,22 @@ def test_insert_csv_tsv(content, option, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "3"}] == list(db["data"].rows)
+ 
+ 
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++def test_insert_delimiter_implies_csv(command, db_path, tmpdir):
++    db = Database(db_path)
++    file_path = str(tmpdir / "semicolon.csv")
++    open(file_path, "w").write("id;name\n1;Cleo\n2;Pancakes\n")
++    result = CliRunner().invoke(
++        cli.cli,
++        [command, db_path, "data", file_path, "--delimiter", ";", "--pk", "id"],
++        catch_exceptions=False,
++    )
++    assert 0 == result.exit_code
++    assert [{"id": "1", "name": "Cleo"}, {"id": "2", "name": "Pancakes"}] == list(
++        db["data"].rows
++    )
++
++
+ @pytest.mark.parametrize(
+     "options",
+     (

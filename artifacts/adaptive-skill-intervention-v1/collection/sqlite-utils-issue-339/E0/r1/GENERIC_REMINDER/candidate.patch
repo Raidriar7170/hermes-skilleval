@@ -1,0 +1,109 @@
+diff --git a/docs/python-api.rst b/docs/python-api.rst
+index 8932656e1e1f72aa04a388ef12e8f62b910a4b38..5cebbcfbb295e4ab900daf377261ddcd982e2f97 100644
+--- a/docs/python-api.rst
++++ b/docs/python-api.rst
+@@ -811,6 +811,15 @@ If the ``Species`` table already exists, it will insert the new row and return t
+ 
+ If you call ``.lookup()`` against an existing table without the unique constraint it will attempt to add the constraint, raising an ``IntegrityError`` if the constraint cannot be created.
+ 
++You can pass a second dictionary containing additional values to populate when a
++new record is created. These values will not be used to find the record, and an
++existing record will not be updated::
++
++    species_id = db["Species"].lookup(
++        {"name": "Palm"},
++        {"description": "A tropical tree"}
++    )
++
+ If you pass in a dictionary with multiple values, both values will be used to insert or retrieve the corresponding ID and any unique constraint that is created will cover all of those columns, for example:
+ 
+ .. code-block:: python
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 828ef6812f664da9c56e6eff99bba0c27603c111..722aa56b7fcb896e0d3e7b479ae80b2b3049d7b8 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2713,7 +2713,11 @@ class Table(Queryable):
+                 self.add_column(col_name, col_type)
+         return self
+ 
+-    def lookup(self, column_values: Dict[str, Any]):
++    def lookup(
++        self,
++        column_values: Dict[str, Any],
++        extra_values: Optional[Dict[str, Any]] = None,
++    ):
+         """
+         Create or populate a lookup table with the specified values.
+ 
+@@ -2725,10 +2729,17 @@ class Table(Queryable):
+         It will then insert a new row with the ``name`` set to ``Palm`` and return the
+         new integer primary key value.
+ 
++        Additional columns can be provided using ``extra_values``. These will be
++        populated when a new record is created, but will not update an existing
++        matching record.
++
+         See :ref:`python_api_lookup_tables` for more details.
+         """
+         # lookups is a dictionary - all columns will be used for a unique index
+         assert isinstance(column_values, dict)
++        assert extra_values is None or isinstance(extra_values, dict)
++        extra_values = extra_values or {}
++        assert not set(column_values).intersection(extra_values)
+         if self.exists():
+             self.add_missing_columns([column_values])
+             unique_column_sets = [set(i.columns) for i in self.indexes]
+@@ -2743,9 +2754,11 @@ class Table(Queryable):
+             try:
+                 return rows[0]["id"]
+             except IndexError:
+-                return self.insert(column_values, pk="id").last_pk
++                values = {**column_values, **extra_values}
++                self.add_missing_columns([values])
++                return self.insert(values, pk="id").last_pk
+         else:
+-            pk = self.insert(column_values, pk="id").last_pk
++            pk = self.insert({**column_values, **extra_values}, pk="id").last_pk
+             self.create_index(column_values.keys(), unique=True)
+             return pk
+ 
+diff --git a/tests/test_lookup.py b/tests/test_lookup.py
+index ac8e1c29b660ec5a12c86d22c67c5e5a3891e29a..a4b02402c19d2cb5970b81458bdfa3b794b7987a 100644
+--- a/tests/test_lookup.py
++++ b/tests/test_lookup.py
+@@ -66,3 +66,35 @@ def test_lookup_fails_if_constraint_cannot_be_added(fresh_db):
+     # This will fail because the name column is not unique
+     with pytest.raises(Exception, match="UNIQUE constraint failed"):
+         species.lookup({"name": "Palm"})
++
++
++def test_lookup_extra_values_new_table(fresh_db):
++    species = fresh_db["species"]
++    palm_id = species.lookup({"name": "Palm"}, {"common_name": "Arecaceae"})
++
++    assert species.get(palm_id) == {
++        "id": palm_id,
++        "name": "Palm",
++        "common_name": "Arecaceae",
++    }
++    assert species.indexes[0].columns == ["name"]
++
++
++def test_lookup_extra_values_only_used_for_new_record(fresh_db):
++    species = fresh_db["species"]
++    palm_id = species.lookup({"name": "Palm"}, {"description": "original"})
++
++    assert palm_id == species.lookup(
++        {"name": "Palm"}, {"description": "replacement", "new_column": "value"}
++    )
++    assert species.get(palm_id)["description"] == "original"
++    assert "new_column" not in species.columns_dict
++
++
++def test_lookup_extra_values_existing_table_new_record(fresh_db):
++    species = fresh_db["species"]
++    species.lookup({"name": "Palm"})
++
++    oak_id = species.lookup({"name": "Oak"}, {"description": "A tree"})
++
++    assert species.get(oak_id)["description"] == "A tree"

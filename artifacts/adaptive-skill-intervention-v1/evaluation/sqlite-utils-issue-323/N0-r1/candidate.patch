@@ -1,0 +1,120 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 93d25b23e5975fd5c2d1ece8881da9b3f6b6a3f2..fc3e91343612a35d80b1f3f0aa812859b1850e5d 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2174,29 +2174,36 @@ class Table(Queryable):
+         todo_count = self.count_where(where, where_args) * len(columns)
+         with progressbar(length=todo_count, silent=not show_progress) as bar:
+ 
++            function_name = "convert_value_{}".format(uuid.uuid4().hex)
++
+             def convert_value(v):
+                 bar.update(1)
+                 if not v:
+                     return v
+                 return fn(v)
+ 
+-            self.db.register_function(convert_value)
++            self.db.conn.create_function(function_name, 1, convert_value)
+             sql = "update [{table}] set {sets}{where};".format(
+                 table=self.name,
+                 sets=", ".join(
+                     [
+-                        "[{output_column}] = convert_value([{column}])".format(
+-                            output_column=output or column, column=column
++                        "[{output_column}] = {function_name}([{column}])".format(
++                            output_column=output or column,
++                            function_name=function_name,
++                            column=column,
+                         )
+                         for column in columns
+                     ]
+                 ),
+                 where=" where {}".format(where) if where is not None else "",
+             )
+-            with self.db.conn:
+-                self.db.execute(sql, where_args or [])
+-                if drop:
+-                    self.transform(drop=columns)
++            try:
++                with self.db.conn:
++                    self.db.execute(sql, where_args or [])
++                    if drop:
++                        self.transform(drop=columns)
++            finally:
++                self.db.conn.create_function(function_name, 1, None)
+         return self
+ 
+     def _convert_multi(
+diff --git a/tests/test_convert.py b/tests/test_convert.py
+index 796a08f2e59f14d4299177089a4856bc2763826f..421bef41c8fe1c2114098068c81c6d7a02b7137b 100644
+--- a/tests/test_convert.py
++++ b/tests/test_convert.py
+@@ -1,5 +1,25 @@
+ from sqlite_utils.db import BadMultiValues
+ import pytest
++import sqlite3
++
++
++class TrackedConnection:
++    def __init__(self, connection):
++        self.connection = connection
++        self.function_calls = []
++
++    def __getattr__(self, attr):
++        return getattr(self.connection, attr)
++
++    def __enter__(self):
++        return self.connection.__enter__()
++
++    def __exit__(self, *args):
++        return self.connection.__exit__(*args)
++
++    def create_function(self, name, arity, function, **kwargs):
++        self.function_calls.append((name, arity, function, kwargs))
++        return self.connection.create_function(name, arity, function, **kwargs)
+ 
+ 
+ @pytest.mark.parametrize(
+@@ -24,6 +44,41 @@ def test_convert(fresh_db, columns, fn, expected):
+     assert list(table.rows) == [expected]
+ 
+ 
++def test_convert_does_not_clobber_function_and_cleans_up(fresh_db):
++    fresh_db.conn.create_function("convert_value", 1, lambda value: "existing")
++    fresh_db.conn = TrackedConnection(fresh_db.conn)
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    table.convert("title", lambda value: value.upper())
++    table.convert("title", lambda value: value.lower())
++
++    assert list(table.rows) == [{"title": "mixed case"}]
++    assert fresh_db.execute("select convert_value('x')").fetchone()[0] == "existing"
++    first_register, first_unregister, second_register, second_unregister = (
++        fresh_db.conn.function_calls
++    )
++    assert first_register[0].startswith("convert_value_")
++    assert second_register[0].startswith("convert_value_")
++    assert first_register[0] != second_register[0]
++    assert first_register[1] == second_register[1] == 1
++    assert callable(first_register[2])
++    assert callable(second_register[2])
++    assert first_unregister == (first_register[0], 1, None, {})
++    assert second_unregister == (second_register[0], 1, None, {})
++
++
++def test_convert_cleans_up_function_after_error(fresh_db):
++    fresh_db.conn = TrackedConnection(fresh_db.conn)
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++
++    with pytest.raises(sqlite3.OperationalError):
++        table.convert("title", lambda value: 1 / 0)
++
++    register, unregister = fresh_db.conn.function_calls
++    assert unregister == (register[0], 1, None, {})
++
++
+ @pytest.mark.parametrize(
+     "where,where_args", (("id > 1", None), ("id > :id", {"id": 1}), ("id > ?", [1]))
+ )

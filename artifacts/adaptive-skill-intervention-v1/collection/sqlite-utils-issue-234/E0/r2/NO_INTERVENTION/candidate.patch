@@ -1,0 +1,61 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 17d79deb2bba74cd5973d8c87aebe9f1f3758c8e..6f1ed8c7171532b7fb28d4a1e2213913e5ccb3fb 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1904,12 +1904,18 @@ class Table(Queryable):
+                 if hash_id:
+                     all_columns.insert(0, hash_id)
+             else:
+-                all_columns += [
+-                    column
+-                    for record in chunk
+-                    for column in record
+-                    if column not in all_columns
+-                ]
++                new_columns = []
++                for record in chunk:
++                    for column in record:
++                        if column not in all_columns and column not in new_columns:
++                            new_columns.append(column)
++                all_columns += new_columns
++
++                # Add columns discovered in later batches before attempting the
++                # insert. Relying on a failed INSERT to trigger this can roll
++                # back rows inserted by earlier batches on some SQLite setups.
++                if alter and new_columns:
++                    self.add_missing_columns(chunk)
+ 
+             validate_column_names(all_columns)
+             first = False
+diff --git a/tests/test_create.py b/tests/test_create.py
+index bee47a7749e7bce54d4283c05e81a37ccb8f487d..4a131f8307964a0b2e33b3ba7897a33c876fb378 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -593,6 +593,27 @@ def test_bulk_insert_more_than_999_values(fresh_db):
+     assert 100 == fresh_db["big"].count
+ 
+ 
++def test_insert_all_alter_adds_columns_from_later_batches(fresh_db):
++    records = [
++        {"id": 1, "name": "Cleo"},
++        {"id": 2, "name": "Pancakes"},
++        {"id": 3, "name": "Bailey", "age": 2},
++        {"id": 4, "name": "Marnie", "age": 5, "is_good": True},
++    ]
++
++    fresh_db["dogs"].insert_all(records, pk="id", alter=True, batch_size=2)
++
++    assert ["id", "name", "age", "is_good"] == [
++        column.name for column in fresh_db["dogs"].columns
++    ]
++    assert [
++        {"id": 1, "name": "Cleo", "age": None, "is_good": None},
++        {"id": 2, "name": "Pancakes", "age": None, "is_good": None},
++        {"id": 3, "name": "Bailey", "age": 2, "is_good": None},
++        {"id": 4, "name": "Marnie", "age": 5, "is_good": 1},
++    ] == list(fresh_db["dogs"].rows)
++
++
+ @pytest.mark.parametrize(
+     "num_columns,should_error", ((900, False), (999, False), (1000, True))
+ )

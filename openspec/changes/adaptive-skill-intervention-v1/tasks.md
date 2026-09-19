@@ -7,7 +7,7 @@
 - [x] 2.2 Collect real native, skill and reminder tails with retained patches and post-execution labels.
 - [x] 2.3 Fit gain models, cheap baselines and task-cross-fitted waiting models; verify independent reload.
 ## 3. Runtime comparisons and delivery
-- [ ] 3.1 Freeze selected policy; execute complete comparison and ablation matrix.
-- [ ] 3.2 Recompute records, inspect actual patches and obtain independent evidence review.
+- [x] 3.1 Freeze selected policy; execute complete comparison and ablation matrix.
+- [x] 3.2 Recompute records, inspect actual patches and obtain independent evidence review.
 - [ ] 3.3 Complete focused/regression CI, runnable entry points, data/model/results documentation and one-page Chinese retrospective.
 - [ ] 3.4 Commit and push stacked Draft PR, verify final scope, preserve defaults and stop.
