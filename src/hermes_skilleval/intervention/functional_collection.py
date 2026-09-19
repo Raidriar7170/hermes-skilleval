@@ -70,7 +70,9 @@ def verify_row(row):
             if execution.get("thread_id"):
                 if execution["initial_remaining"] != binding["initial_remaining"]:
                     raise ValueError("row tail budget differs from frozen checkpoint")
-                if bool(execution["injected"]) != (row["action"] != "NO_INTERVENTION"):
+                if row.get("intervention_mode") != "CONTINGENT_DELAY" and bool(
+                    execution["injected"]
+                ) != (row["action"] != "NO_INTERVENTION"):
                     raise ValueError("row action differs from executed intervention")
                 if meta["thread_id"]:
                     fork = read(Path(row["run"]) / "fork.json")
@@ -381,6 +383,21 @@ def collect(
             )
     finally:
         auth.unlink(missing_ok=True)
+    # Also rebuild the aggregate when every per-task record was reused. A crash
+    # between the last task save and aggregate save must not strand completion.
+    dump(
+        output / "records.json",
+        {
+            "identity": identity,
+            "rows": all_rows,
+            "completed_tasks": [
+                r["task_id"]
+                for r in protocol["tasks"]
+                if r["split"] != "test"
+                and (output / r["task_id"] / "records.json").exists()
+            ],
+        },
+    )
     return {
         "recorded_tails": len(all_rows),
         "known_functional": sum(r["y_functional"] is not None for r in all_rows),

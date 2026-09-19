@@ -76,10 +76,14 @@ def train(
     expected = {r["task_id"] for r in protocol["tasks"] if r["split"] != "test"}
     if set(bundle["completed_tasks"]) != expected:
         raise ValueError("collection incomplete; retain planned denominator")
+    task_info = {r["task_id"]: r for r in protocol["tasks"] if r["split"] != "test"}
     records = []
     for row in bundle["rows"]:
         if row["task_id"] not in expected or row["split"] == "test":
             raise ValueError("unregistered or final record in training input")
+        info = task_info[row["task_id"]]
+        if row["split"] != info["split"] or row["family"] != info["family"]:
+            raise ValueError("row split or cross-fit family differs from protocol")
         actual = verify_row(row)
         if any(
             actual[k] != row[k]

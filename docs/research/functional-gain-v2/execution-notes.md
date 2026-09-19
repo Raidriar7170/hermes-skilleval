@@ -148,3 +148,40 @@ OpenSpec strict validation passed. These checks are not real fitting/evaluation
 results. At the last live check, 6/16 registered native first trajectories were
 recorded, all functional pass; the seventh was active. Paired tails remain zero.
 The earlier 8/8 pilot includes repeats and is not eight distinct tasks.
+
+## 2026-09-19 continuation: final-policy and mechanism execution paths
+
+Implemented v2 policy classes and an isolated `functional-v2 evaluate` command
+with ordered phases `matrix`, `panels`, and `delays`. These have not been run on
+final tasks. The matrix entry requires current full/task-only model identities,
+their independent reload evidence, matching functional collection/objective and
+assets, and a prospective policy/code/96-cell roster freeze. N0 repeat 1 is first
+within each task so its public checkpoint and model decisions can be locked
+before hidden checks; other cells have a fixed seed-shuffled order.
+
+The stable score tie rule is common candidate order; margin remains zero.
+Myopic loads the same full gain artifact and never calls its wait head. Missing
+learned assets fail closed and are not converted to successful native choices.
+The delay controller uses actual branch-local future opportunities under the
+original remaining budget; absence of a later opportunity permits no injection.
+
+Panel selection is first real E1, else E2, else E0. First four nonterminal panels
+in registered task order define the delay roster regardless of scores/outcomes.
+Panel locks retain both immediate gain-only choices (representation contrast)
+and full stopping-policy decisions. A WAIT decision is explicitly not identified
+by the immediate no-op action panel; never equate it with no further intervention.
+A separately measured common prediction overhead is charged equally to panel
+and delay tails, along with each tail's own initialization and execution costs.
+
+Resume repair: aggregates are rebuilt even when all per-task records were
+already saved before an interruption. Completed samples are not redrawn.
+Training now rejects any row whose train/dev split or mechanism family disagrees
+with the frozen protocol. Delayed branches retain known functional outcomes
+when they legitimately encounter no future intervention opportunity.
+
+Validation: 52 focused contract tests passed, Ruff passed, and the evaluate CLI
+help was checked. Synthetic test fixtures only validate code behavior and are
+not experimental trajectories or fitting evidence. Real matrix/panel/delay
+execution, complete exports and claim verification remain pending. Native
+collection process 94494 / exec session 69002 remained live at the last check;
+8/16 registered first native trajectories had completed, all functional pass.

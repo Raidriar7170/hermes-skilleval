@@ -57,11 +57,42 @@ def main(argv=None):
         "reload", help="independent process functional model reload probe"
     )
     p.add_argument("--models", type=Path, required=True)
+    p = commands.add_parser(
+        "evaluate", help="frozen functional matrix or prospective mechanism panels"
+    )
+    for key in (
+        "protocol",
+        "objective",
+        "tasks",
+        "output",
+        "skills",
+        "payloads",
+        "encoder",
+        "models",
+    ):
+        p.add_argument("--" + key, type=Path, required=True)
+    p.add_argument("--phase", choices=("matrix", "panels", "delays"), required=True)
     args = parser.parse_args(argv)
     from .functional_outcomes import decompose
 
     if args.command == "decompose":
         result = decompose(args.records, args.objective, args.output)
+    elif args.command == "evaluate":
+        from .functional_evaluate import matrix, panels
+
+        call = matrix if args.phase == "matrix" else panels
+        kwargs = {} if args.phase == "matrix" else {"delayed": args.phase == "delays"}
+        result = call(
+            args.protocol,
+            args.objective,
+            args.tasks,
+            args.output,
+            args.skills,
+            args.payloads,
+            args.encoder,
+            args.models,
+            **kwargs,
+        )
     elif args.command == "train":
         from .functional_learning import train
 
