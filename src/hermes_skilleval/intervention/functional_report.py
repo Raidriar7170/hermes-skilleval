@@ -245,7 +245,9 @@ def mechanism_tables(panel_rows, delay_rows, panel_locks, families, registered_d
     eligible_rep = [r for r in representation if r["representation_identifiable"]]
     rep_effect = effect(eligible_rep, "full_minus_task")
     rep_claim = (
-        "NOT_IDENTIFIABLE"
+        "NOT_ESTABLISHED"
+        if not panel_locks
+        else "NOT_IDENTIFIABLE"
         if not eligible_rep
         else claim_from_effect(
             rep_effect["effect"], complete=rep_effect["unknown_pairs"] == 0
@@ -262,7 +264,9 @@ def mechanism_tables(panel_rows, delay_rows, panel_locks, families, registered_d
         }
     sensitive = timing["WAIT_THEN_FULL-v2"]["wait_sensitive"]
     wait_claim = (
-        "NOT_IDENTIFIABLE"
+        "NOT_ESTABLISHED"
+        if not panel_locks
+        else "NOT_IDENTIFIABLE"
         if not timing["WAIT_THEN_FULL-v2"]["sensitive_pairs"]
         else claim_from_effect(
             sensitive["effect"], complete=sensitive["unknown_pairs"] == 0
@@ -283,3 +287,155 @@ def mechanism_tables(panel_rows, delay_rows, panel_locks, families, registered_d
         "policy_metric_role": "SECONDARY_ONLY",
         "cost_metric_role": "SECONDARY_ONLY",
     }
+
+
+def summarize(protocol_path, objective_path, collection, evaluation, models, output):
+    """Recompute claims from verified saved records; no model or Agent execution."""
+    from pathlib import Path
+    from .functional_outcomes import load_objective
+    from .functional_pairs import paired_records, signal_summary
+    from .functional_export import replay
+    from .learning import model_identity
+    from .session import dump
+    from .study import read
+
+    objective = load_objective(objective_path)
+    protocol = read(protocol_path)
+    if protocol["objective_sha256"] != objective["sha256"]:
+        raise ValueError("report objective mismatch")
+    collection, evaluation, models, output = map(
+        Path, (collection, evaluation, models, output)
+    )
+    sources = {}
+
+    def verified_rows(path):
+        if not path.exists():
+            return []
+        sources[str(path)] = replay(path, objective_path)
+        return read(path)["rows"]
+
+    collected = verified_rows(collection / "records.json")
+    matrix = verified_rows(evaluation / "matrix-records.json")
+    panel = verified_rows(evaluation / "panel-records.json")
+    delayed = verified_rows(evaluation / "delay-records.json")
+    collection_bundle = (
+        read(collection / "records.json")
+        if (collection / "records.json").exists()
+        else {}
+    )
+    expected_training = {
+        r["task_id"] for r in protocol["tasks"] if r["split"] != "test"
+    }
+    collected_all = (
+        set(collection_bundle.get("completed_tasks", [])) == expected_training
+    )
+    signal = signal_summary(
+        paired_records(collected), collection_complete=collected_all
+    )
+    finals = [r for r in protocol["tasks"] if r["split"] == "test"]
+    roster = [
+        {"task_id": r["task_id"], "method": m, "repeat": n}
+        for r in finals
+        for m in METHODS
+        for n in (1, 2)
+    ]
+    families = {r["task_id"]: r["family"] for r in protocol["tasks"]}
+    main = functional_main_table(matrix, roster, families)
+    locks = []
+    for task in finals:
+        path = evaluation / task["task_id"] / "panel-lock.json"
+        if path.exists():
+            lock = read(path)
+            if "lock_sha256" in lock:
+                locks.append((task["task_id"], lock))
+    registered = (
+        read(evaluation / "delay-roster.json")["rows"]
+        if (evaluation / "delay-roster.json").exists()
+        else []
+    )
+    mechanism = mechanism_tables(panel, delayed, locks, families, registered)
+    training = "NOT_RUN"
+    if (models / "training.json").exists():
+        training_report = read(models / "training.json")
+        if training_report.get("status") == "PARTIAL_METHOD":
+            training = "INSUFFICIENT_SIGNAL"
+        elif (models / "independent-reload.json").exists():
+            reload = read(models / "independent-reload.json")
+            if all(
+                reload.get(name, {}).get("match") is True
+                and reload[name].get("model_identity") == model_identity(models / name)
+                for name in ("full", "task-only")
+            ):
+                training = "TRAINED_AND_RELOADED"
+    panel_planned = sum(len(lock["action_roster"]) for _, lock in locks)
+    panel_complete = (
+        len(locks) == len(finals)
+        and len(panel) == panel_planned
+        and all(r["y_functional"] is not None for r in panel)
+    )
+    delay_complete = (
+        panel_complete
+        and len(delayed) == len(registered)
+        and all(r["y_functional"] is not None for r in delayed)
+    )
+    complete = (
+        collected_all
+        and training == "TRAINED_AND_RELOADED"
+        and main["final_functional_evaluation"] == "COMPLETED"
+        and panel_complete
+        and delay_complete
+    )
+    truth = {
+        "objective_alignment": "VERIFIED",
+        "functional_signal": "VARIABLE"
+        if signal["nonzero_skill_pairs"]
+        else "CONSTANT"
+        if signal["status"] == "FUNCTIONAL_SIGNAL_NOT_IDENTIFIABLE"
+        else "UNKNOWN",
+        "functional_gain_training": training,
+        "final_functional_evaluation": main["final_functional_evaluation"],
+        "same_state_representation": "COMPLETED"
+        if panel_complete
+        else "PARTIAL"
+        if panel
+        else "NOT_RUN",
+        "waiting_counterfactuals": "NO_ELIGIBLE_OPPORTUNITY"
+        if panel_complete and not registered
+        else "COMPLETED"
+        if delay_complete
+        else "PARTIAL",
+        "functional_gain_claim": main["functional_gain_claim"],
+        "state_incremental_claim": mechanism["state_incremental_claim"],
+        "waiting_incremental_claim": mechanism["waiting_incremental_claim"],
+        "policy_metric_role": "SECONDARY_ONLY",
+        "cost_metric_role": "SECONDARY_ONLY",
+        "study_execution": "COMPLETE" if complete else "PARTIAL",
+        "method_upgrade": "IMPLEMENTED_AND_EVALUATED" if complete else "PARTIAL_METHOD",
+        "deployment": "KEEP_EXISTING_DEFAULT",
+        "publication": "PENDING",
+    }
+    report = {
+        "operation": "RECORDS_ONLY_SUMMARY",
+        "objective_sha256": objective["sha256"],
+        "collection_accounting": {
+            "planned_tasks": len(expected_training),
+            "completed_tasks": len(collection_bundle.get("completed_tasks", [])),
+            "maximum_tails": protocol["maximum_tails"],
+            "scored_tails": len(collected),
+            "uncompleted_tasks": sorted(
+                expected_training - set(collection_bundle.get("completed_tasks", []))
+            ),
+        },
+        "truth": truth,
+        "functional_main": main,
+        "same_state_mechanisms": mechanism,
+        "collection_signal": signal,
+        "secondary": secondary_table(matrix),
+        "records_replay": sources,
+        "final_repository_closure": "NOT_ASSESSED_BY_REPORTER",
+        "legacy_results": "REQUIRES_FINAL_BASELINE_DIFF_AUDIT",
+        "agent_calls": 0,
+        "model_calls": 0,
+    }
+    dump(output, report)
+    return truth

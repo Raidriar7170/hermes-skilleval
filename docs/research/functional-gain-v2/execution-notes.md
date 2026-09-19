@@ -240,3 +240,14 @@ actual tails of the maximum 240, with nine naturally absent slots. The realized
 roster is public configuration; it does not select on paired functional results.
 All 16 native original patch/check records were exported to
 `artifacts/functional-gain-v2/native` and passed portable records-only replay.
+
+The records-only `functional-v2 summarize` CLI now combines objective identity,
+verified saved labels, functional main/mechanism tables, training/reload identity
+and explicit pending statuses. An actual invocation during ongoing G2 reported
+functional gain training/final evaluation/representation as NOT_RUN, overall
+PARTIAL_METHOD/PARTIAL, and KEEP_EXISTING_DEFAULT. It does not assert final
+repository closure, legacy preservation or publication without separate evidence.
+The first real paired skill tail completed with actual guidance input observed,
+658 payload tokens, original remaining budget 599.9063987500267 seconds, and
+205.268419791013 active seconds. Hidden functional checks are still held until
+all scheduled tails of that task finish; normal execution is not yet success.

@@ -88,11 +88,34 @@ def main(argv=None):
         choices=("pilot", "native", "collection", "matrix", "panels", "delays"),
         required=True,
     )
+    p = commands.add_parser(
+        "summarize", help="verified functional-first status and mechanism tables"
+    )
+    for key in (
+        "protocol",
+        "objective",
+        "collection",
+        "evaluation",
+        "models",
+        "output",
+    ):
+        p.add_argument("--" + key, type=Path, required=True)
     args = parser.parse_args(argv)
     from .functional_outcomes import decompose
 
     if args.command == "decompose":
         result = decompose(args.records, args.objective, args.output)
+    elif args.command == "summarize":
+        from .functional_report import summarize
+
+        result = summarize(
+            args.protocol,
+            args.objective,
+            args.collection,
+            args.evaluation,
+            args.models,
+            args.output,
+        )
     elif args.command == "replay":
         from .functional_export import replay
 
