@@ -1,0 +1,16 @@
+{
+  "status": "FROZEN_BEFORE_PAIRED_LABELS",
+  "objective": "PAIRED_FUNCTIONAL_DELTA_ONLY",
+  "epochs": [80, 160],
+  "seed": 7170,
+  "width": 64,
+  "gain_output": "unrestricted real, same architecture as v1; permits negative gain",
+  "selection": "minimum task-state-action weighted dev functional MSE; exact tie chooses fewer epochs",
+  "prior": "training-task mean of within-task skill/stage means; unseen combination returns zero",
+  "ablation": "independently initialized/fitted task-only and full heads; exact common candidates and actual payloads",
+  "cross_fit_unit": "public mechanism family, including all sibling tasks",
+  "cost_or_policy_label_inputs": false,
+  "all_zero_train_deltas": "PARTIAL_METHOD; zero/prior diagnostics only, no fitted gain/wait claim",
+  "missing_labels": "retain unknown denominators; do not impute zero",
+  "myopic": "same full gain weights, wait call disabled"
+}

@@ -102,3 +102,49 @@ Next: finish pilot and remaining final-task qualification, bind unified assets
 and common candidates/payloads, then real paired collection, pure-functional
 learning, freeze and all required comparisons. Do not mark G1–G6 complete from
 these preparation checks.
+
+
+## 2026-09-19 continuation: full qualification and collection freeze
+
+All 24 registered v2 tasks are now base-red/reference-green. Final qualification
+is in `artifacts/functional-gain-v2/qualification/final.json`. The first XLSX
+qualification attempt was retained: current agate-excel automatically repairs
+A1:A1 dimensions even on the old csvkit base. The revised source-grounded fixture
+retains A1:A1 and adds stale A1:B2 dimensions; it tests the public fix's general
+recalculation contract, not an exact reproduction of the original issue file.
+No Agent had sampled that final task before this qualification repair.
+
+The fixed pilot completed all eight executions: functional pass 8, fail 0,
+unknown 0. Public compact counts: `artifacts/functional-gain-v2/pilot-summary.json`.
+This does not establish a ceiling across the remaining registered categories.
+
+`collection-protocol-v1.json` now freezes all task identities and the 48 potential
+train/dev state slots. Every fourth registered slot gets a second repeat (12
+slots), independently of observed availability/results. Maximum paired tails:
+240. Related sqlite issue 769 fixes are one cross-fitting family; source family
+metadata and the old pilot freeze remain intact. No family crosses a split.
+
+The collector first completes all 16 registered native chains, reusing exactly
+pilot repeat 1 for the first four tasks, before branching. The native-only phase
+is running in exec session 69002 (process originally 94494), with durable log
+`../hermes-functional-gain-v2-private/collection-native-v1.log`. Check live state
+before any continuation; never launch a second collector against the same home.
+Private assets: `collection-protocol-v1.json`, `collection-tasks-v1` (qualified
+source symlinks), `collection-v1`, `pilot-runs-v1/session-home`. Preserve that home
+for official forks. Completed native executions are reused by the full collect
+command; interrupted reserved attempts remain unknown rather than redrawn.
+
+New modules implement common checkpoint/payload binding, pure-functional pairing,
+actual-payload fixed-candidate feature tables, task-weighted skill/stage priors,
+and nested family-held-out wait targets. These are implementation and contract
+checks only: no v2 gain/wait model has been fit, no skill paired tail has run,
+and no final Agent trajectory has run. The training/reload CLI and fixed 80/160-epoch selection contract are implemented
+but have no real paired data yet; end-to-end training execution, full result
+exports, runtime policies, final freeze/matrix/panels and delivery remain pending.
+
+
+Focused verification for this slice: 45 contract tests passed, Ruff passed, and
+OpenSpec strict validation passed. These checks are not real fitting/evaluation
+results. At the last live check, 6/16 registered native first trajectories were
+recorded, all functional pass; the seventh was active. Paired tails remain zero.
+The earlier 8/8 pilot includes repeats and is not eight distinct tasks.

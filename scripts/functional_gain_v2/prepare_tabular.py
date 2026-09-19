@@ -17,17 +17,21 @@ def main():
     p = argparse.ArgumentParser()
     for key in ("pool", "objective", "upstreams", "output"):
         p.add_argument("--" + key, type=Path, required=True)
+    p.add_argument("--final", action="store_true")
     a = p.parse_args()
+    contracts = CONTRACTS
+    if a.final:
+        from final_contracts import CONTRACTS as contracts
     load_objective(a.objective)
     a.output.mkdir(parents=True, exist_ok=False)
     rows = [
         r
         for r in json.loads(a.pool.read_text())["rows"]
-        if r["fix_commit"][:7] in CONTRACTS
+        if r["fix_commit"][:7] in contracts
     ]
     for row in rows:
         ref = row["fix_commit"]
-        repo_name, request, code = CONTRACTS[ref[:7]]
+        repo_name, request, code = contracts[ref[:7]]
         repo = a.upstreams / repo_name
         root = a.output / row["task_id"]
         root.mkdir()
