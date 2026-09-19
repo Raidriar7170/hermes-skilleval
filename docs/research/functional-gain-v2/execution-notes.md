@@ -313,3 +313,29 @@ duplicate samples and cannot mark collection complete from task names alone.
 Eight focused pair/report tests, Ruff and scoped mypy passed. The original
 collector session 82437 / PID 4821 remained live throughout these read-only
 result checks and report changes; no trajectory was restarted.
+
+## 2026-09-19 secondary cost ledger
+
+Third task csvkit-fix-3f9d8b6 completed all 12 tails. Records-only replay verified
+36 total released tails, all functional pass; 18 skill pairs remain zero-delta,
+so the still-incomplete collection remains FUNCTIONAL_SIGNAL_UNRESOLVED.
+
+Added `scripts/functional_gain_v2/cost_ledger.py` for final secondary cost tables.
+It accepts repeated `--records CATEGORY=PATH` arguments (collection,
+online_evaluation, mechanism_probes), optional `--training training.json`, and
+`--output`. It counts a resolved execution directory once globally, rejects
+conflicting reused executions, excludes inherited prefix time, reports token
+subsets without double addition, and preserves unknown fields. Online decision
+budget charges are separate components, not added to active runtime or claimed
+as independently measured total compute; shared/amortized prediction charges
+are explicitly qualified. Training wall time is reported only when recorded.
+No billing dollars are inferred. Active/unreleased and unsupplied records are
+excluded explicitly, so this is not yet the entire campaign's accounting.
+
+The first real invocation exposed dictionary-valued controller overhead rather
+than scalar overhead. Fixed it by preserving state/retrieval/checkpoint/decision
+components and added the corresponding regression assertion. The corrected
+CLI ran on all currently released pilot/native/paired bundles: 60 references,
+56 unique executions, four reused references excluded. All 56 executions had
+complete usage notifications. Focused cost regression, Ruff and scoped mypy
+passed; no Agent, model or verifier calls were made by accounting.
