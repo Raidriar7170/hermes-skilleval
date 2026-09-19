@@ -26,6 +26,12 @@ The wait model learns from subsequent naturally observed no-op states. Nested le
 
 The no-state arm independently fits gain and waiting networks using task/repository, stage and budget, with static candidates. It does not simply mask a full-state model at deployment. Myopic uses the same full-state gain model without consulting the wait model. N0, S1, R1, H-myopic, H-no-state and H-full each run twice on all eight final mechanisms: 96 actual complete trajectories. Final policies execute only their selected continuation, never online candidate search.
 
+## Computation boundary
+
+The ten catalog embeddings are cached. At an opportunity, retrieval ranks that fixed catalog and the gain head scores two candidates; the wait head runs once when a future opportunity remains. Text encoding is bounded to 256 tokens per field, while source/state extraction and snapshot costs are measured separately. Each trajectory has at most three opportunities and one explicit intervention. No candidate executes speculatively during final-policy selection.
+
+Offline nested task exclusion is more expensive than online selection: for T training tasks it needs at most T + T(T-1)/2 distinct gain fits per representation, cached by excluded-task set, plus the corresponding intermediate wait fits. These CPU fits and the real counterfactual collection are reported separately from deployment activity. This is a small-catalog prototype; neither large-catalog latency nor transfer to unseen repositories is established.
+
 ## Labels and limits
 
 The controller reconstructs the actual captured patch on a clean base and runs source-grounded hidden target checks and protected regressions after every relevant task's Agent executions have ended. File-policy violations count as unsuccessful candidates. Patch capture preserves prohibited edits before rejection. Check infrastructure failures remain unknown. Task qualification requires a passing reference plus a rejected functional negative with protected regressions still passing; three already-green bases remain legitimate no-op cases.
