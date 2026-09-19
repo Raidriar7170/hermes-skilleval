@@ -2,7 +2,7 @@
 
 This additive experiment asks whether one explicit skill intervention, selected from the current observable maintenance state, improves terminal utility over continuing without external guidance. Existing maintenance and routing defaults, PR #48 results and prior evidence remain unchanged. The active contract is [the saved Goal](../../goals/Hermes_vNext_Adaptive_Skill_Intervention_Codex_Goal.md).
 
-**Execution status:** actual collection, CPU fitting, independent reload and all 96 frozen final trajectories are complete. See the [results](results.md) and [Chinese architecture retrospective](architecture-retrospective.zh.md). H-full observed a file-policy-inclusive advantage over N0; all final target/regression checks passed, and incremental state/wait utility is not established. Publication remains pending.
+**Execution status:** actual collection, CPU fitting, independent reload and all 96 frozen final trajectories are complete. See the [results](results.md) and [Chinese architecture retrospective](architecture-retrospective.zh.md). H-full observed a file-policy-inclusive advantage over N0; all final target/regression checks passed, and incremental state/wait utility is not established. Published as [Draft PR #49](https://github.com/Raidriar7170/hermes-skilleval/pull/49), stacked on unmerged PR #48; see [verification](verification.md).
 
 ## Frozen protocol
 

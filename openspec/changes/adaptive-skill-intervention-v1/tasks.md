@@ -9,5 +9,5 @@
 ## 3. Runtime comparisons and delivery
 - [x] 3.1 Freeze selected policy; execute complete comparison and ablation matrix.
 - [x] 3.2 Recompute records, inspect actual patches and obtain independent evidence review.
-- [ ] 3.3 Complete focused/regression CI, runnable entry points, data/model/results documentation and one-page Chinese retrospective.
-- [ ] 3.4 Commit and push stacked Draft PR, verify final scope, preserve defaults and stop.
+- [x] 3.3 Complete focused/regression CI, runnable entry points, data/model/results documentation and one-page Chinese retrospective.
+- [x] 3.4 Commit and push stacked Draft PR, verify final scope, preserve defaults and stop.
