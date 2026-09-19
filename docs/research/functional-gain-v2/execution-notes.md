@@ -393,3 +393,27 @@ The status remains FUNCTIONAL_SIGNAL_UNRESOLVED: collection is incomplete, and
 variation in absolute functional outcomes does not establish an action effect.
 No model fitting or final evaluation has started. The same live collector
 continued with registered task ten, csvkit-fix-6a47526.
+
+## 2026-09-19 G2 first nonzero skill contrast
+
+After eleven tasks, records-only replay recomputed 140/192 registered tails:
+139 VERIFIED and one UNKNOWN_NO_ACCEPTANCE, with no new Agent/model/verifier
+executions. Functional outcomes were 119 passes, 20 failures and one unknown.
+The exact prospective roster accepted this partial subset; 52 tails remained
+unreleased. Of 70 skill/no-op pairs, 67 were known ties, one was functional
+damage and two were unknown. Including generic-reminder contrasts, there were
+89 tie-pass, 12 tie-fail, one damage and three unknown transitions.
+
+The nonzero contrast is csvkit-fix-8119565, E1, repeat 1, csv-dialect: target=0,
+protected regression=1, functional=0 versus same-state no-op functional=1,
+delta=-1. Its integrity was VERIFIED and ordinary file policy PASS. This is a
+real observed functional action difference, not policy-only variation, a rescue
+or evidence of positive utility. The interim signal status is therefore
+FUNCTIONAL_ACTION_DIFFERENCE_OBSERVED. A single noisy negative contrast does not
+establish a general action effect or useful learned selection.
+
+The registered collection continues unchanged with task twelve. Training still
+requires the complete realized roster and independent record verification;
+neither model fitting nor final sampling has started. The observed damage is
+retained under the same weighting and model-selection protocol as all other
+pairs, without outcome-driven resampling, filtering or protocol expansion.
