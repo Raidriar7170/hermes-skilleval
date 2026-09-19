@@ -1,6 +1,6 @@
 # ASI v1 data card
 
-Status: collection in progress. Final counts and measured label distributions must be filled from the retained records after the frozen study completes; the planned maximum is not an observed sample count.
+Status: collection and CPU fitting completed; the frozen final comparison is running. Collection retained 180 actual tails: 124 training and 56 development. There are 178 valid labels and two unknown training executions, with no replacement samples. Training yields 91 valid same-state paired repeats, aggregated to 80 state/action rows; development yields 42 paired repeats, aggregated to 30 rows. The training paired repeats contain four quality rescues, six quality damages and 81 quality ties. These counts include the generic reminder control and correlated repetitions; they are not 91 independent tasks or a skill-specific success rate.
 
 | Split | Frozen mechanisms | Role |
 | --- | ---: | --- |

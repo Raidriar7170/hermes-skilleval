@@ -4,8 +4,8 @@
 - [x] 1.3 Implement visible state, opportunities, fixed payloads and equal remaining budget enforcement.
 ## 2. Data and learning
 - [x] 2.1 Qualify public mechanisms and checks; freeze resource-informed train/dev/test and repeat roster.
-- [ ] 2.2 Collect real native, skill and reminder tails with retained patches and post-execution labels.
-- [ ] 2.3 Fit gain models, cheap baselines and task-cross-fitted waiting models; verify independent reload.
+- [x] 2.2 Collect real native, skill and reminder tails with retained patches and post-execution labels.
+- [x] 2.3 Fit gain models, cheap baselines and task-cross-fitted waiting models; verify independent reload.
 ## 3. Runtime comparisons and delivery
 - [ ] 3.1 Freeze selected policy; execute complete comparison and ablation matrix.
 - [ ] 3.2 Recompute records, inspect actual patches and obtain independent evidence review.
