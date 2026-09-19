@@ -303,7 +303,13 @@ def summarize(
     import hashlib
     from pathlib import Path
     from .functional_outcomes import load_objective
-    from .functional_pairs import paired_records, signal_summary, verify_collection_roster
+    from .functional_pairs import (
+        paired_records,
+        signal_summary,
+        verify_collection_roster,
+    )
+    from .functional_panel import verified_delay_plan, verify_panel_rows
+    from .functional_collection import digest
     from .functional_export import replay
     from .learning import model_identity
     from .session import dump
@@ -364,11 +370,42 @@ def summarize(
             lock = read(path)
             if "lock_sha256" in lock:
                 locks.append((task["task_id"], lock))
-    registered = (
+    saved_delays = (
         read(evaluation / "delay-roster.json")["rows"]
         if (evaluation / "delay-roster.json").exists()
-        else []
+        else None
     )
+    registered, delay_plan_verified = verified_delay_plan(locks, saved_delays)
+    verify_panel_rows(panel + delayed, locks)
+    release_verified = False
+    if locks or matrix or panel or delayed:
+        from .functional_evaluate import freeze
+
+        frozen = freeze(protocol_path, objective_path, models)
+        if read(evaluation / "policy-freeze.json") != frozen or any(
+            lock["policy_freeze_sha256"] != digest(frozen) for _, lock in locks
+        ):
+            raise ValueError("reported panel model/policy freeze mismatch")
+        for kind in ("matrix", "panel", "delay"):
+            path = evaluation / (kind + "-records.json")
+            if path.exists() and read(path)["policy_freeze"] != frozen:
+                raise ValueError("reported result policy freeze mismatch")
+        release_path = evaluation / "release.json"
+        if release_path.exists():
+            receipt = read(release_path)
+            release_verified = (
+                receipt["status"] == "RELEASED_AFTER_ALL_REGISTERED_EXECUTIONS"
+                and receipt["policy_freeze_sha256"] == digest(frozen)
+                and all(
+                    receipt["execution_bundle_sha256"][kind]
+                    == hashlib.sha256(
+                        (evaluation / (kind + "-executions.json")).read_bytes()
+                    ).hexdigest()
+                    for kind in ("matrix", "panel", "delay")
+                )
+            )
+            if not release_verified:
+                raise ValueError("final release receipt mismatch")
     mechanism = mechanism_tables(panel, delayed, locks, families, registered)
     training = "NOT_RUN"
     if (models / "training.json").exists():
@@ -391,6 +428,7 @@ def summarize(
     )
     delay_complete = (
         panel_complete
+        and delay_plan_verified
         and len(delayed) == len(registered)
         and all(r["y_functional"] is not None for r in delayed)
     )
@@ -400,6 +438,7 @@ def summarize(
         and main["final_functional_evaluation"] == "COMPLETED"
         and panel_complete
         and delay_complete
+        and release_verified
     )
     truth = {
         "objective_alignment": "VERIFIED",
@@ -416,7 +455,7 @@ def summarize(
         if panel
         else "NOT_RUN",
         "waiting_counterfactuals": "NO_ELIGIBLE_OPPORTUNITY"
-        if panel_complete and not registered
+        if panel_complete and delay_plan_verified and not registered
         else "COMPLETED"
         if delay_complete
         else "PARTIAL",
@@ -449,6 +488,7 @@ def summarize(
         "collection_signal": signal,
         "secondary": secondary_table(matrix),
         "records_replay": sources,
+        "final_release_verified": release_verified,
         "final_repository_closure": "NOT_ASSESSED_BY_REPORTER",
         "legacy_results": "REQUIRES_FINAL_BASELINE_DIFF_AUDIT",
         "agent_calls": 0,

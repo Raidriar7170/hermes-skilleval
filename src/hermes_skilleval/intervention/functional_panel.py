@@ -8,6 +8,36 @@ from .state import State
 from .study import read
 
 
+def verify_panel_lock(lock):
+    if (
+        digest({k: v for k, v in lock.items() if k != "lock_sha256"})
+        != lock["lock_sha256"]
+    ):
+        raise ValueError("prospective panel lock changed")
+
+
+def verify_panel_rows(rows, panel_locks):
+    locks = dict(panel_locks)
+    for row in rows:
+        lock = locks[row["task_id"]]
+        if (
+            row["panel_lock_sha256"] != lock["lock_sha256"]
+            or row["binding_sha256"] != lock["binding"]["binding_sha256"]
+            or row["state"] != lock["state"]
+            or row["candidate_payloads"] != lock["binding"]["candidates"]
+        ):
+            raise ValueError("mechanism row differs from prospective panel lock")
+
+
+def verified_delay_plan(panel_locks, saved_rows):
+    for _, lock in panel_locks:
+        verify_panel_lock(lock)
+    expected = delay_roster(panel_locks)
+    if saved_rows is not None and saved_rows != expected:
+        raise ValueError("delay roster differs from prospective panels")
+    return expected, saved_rows is not None
+
+
 def select_checkpoint(execution):
     """First actual E1, else E2, else E0; never consult verifier outcomes."""
     checkpoints = [

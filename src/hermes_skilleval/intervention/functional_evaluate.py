@@ -9,7 +9,13 @@ import time
 
 from .functional_collection import verify_row, bind_checkpoint, digest
 from .functional_outcomes import load_objective
-from .functional_panel import select_checkpoint, lock_panel, delay_roster
+from .functional_panel import (
+    select_checkpoint,
+    lock_panel,
+    delay_roster,
+    verify_panel_lock,
+    verify_panel_rows,
+)
 from .functional_policy import METHODS, FunctionalController, FunctionalPredictor
 from .learning import model_identity
 from .session import dump
@@ -129,8 +135,8 @@ def matrix(
             tid = info["task_id"]
             task, root = tasks / tid, output / tid
             root.mkdir(exist_ok=True)
-            if (root / "matrix-records.json").exists():
-                all_rows.extend(read(root / "matrix-records.json")["rows"])
+            if (root / "matrix-executions.json").exists():
+                all_rows.extend(read(root / "matrix-executions.json")["rows"])
                 continue
             rows = []
             for sample in [r for r in frozen["roster"] if r["task_id"] == tid]:
@@ -209,6 +215,7 @@ def matrix(
                             panel["common_prediction_seconds"] = (
                                 time.monotonic() - measured
                             )
+                            panel["policy_freeze_sha256"] = digest(frozen)
                             panel["lock_sha256"] = digest(
                                 {k: v for k, v in panel.items() if k != "lock_sha256"}
                             )
@@ -217,16 +224,10 @@ def matrix(
                     json.dumps({"finished": sample, "status": execution["status"]}),
                     flush=True,
                 )
-            for row in rows:
-                run = Path(row["run"])
-                check_root = root / (run.name + "-checks")
-                row["checks_root"] = str(check_root)
-                row["checks"] = check_once(task, run, check_root, row["execution"])
-                row.update(verify_row(row))
-            dump(root / "matrix-records.json", {"rows": rows})
+            dump(root / "matrix-executions.json", {"rows": rows})
             all_rows.extend(rows)
             dump(
-                output / "matrix-records.json",
+                output / "matrix-executions.json",
                 {
                     "policy_freeze": frozen,
                     "planned": frozen["planned_matrix"],
@@ -236,7 +237,7 @@ def matrix(
     finally:
         auth.unlink(missing_ok=True)
     dump(
-        output / "matrix-records.json",
+        output / "matrix-executions.json",
         {
             "policy_freeze": frozen,
             "planned": frozen["planned_matrix"],
@@ -284,7 +285,7 @@ def panels(
     frozen = freeze(protocol_path, objective_path, models)
     if read(output / "policy-freeze.json") != frozen:
         raise ValueError("final freeze mismatch")
-    matrix_rows = read(output / "matrix-records.json")["rows"]
+    matrix_rows = read(output / "matrix-executions.json")["rows"]
     expected = {(r["task_id"], r["method"], r["repeat"]) for r in frozen["roster"]}
     if {(r["task_id"], r["method"], r["repeat"]) for r in matrix_rows} != expected:
         raise ValueError("matrix incomplete before common action panel phase")
@@ -294,6 +295,8 @@ def panels(
         if info["split"] == "test":
             lock = read(output / info["task_id"] / "panel-lock.json")
             if "lock_sha256" in lock:
+                if lock["policy_freeze_sha256"] != digest(frozen):
+                    raise ValueError("panel model/policy freeze changed")
                 if (
                     digest({k: v for k, v in lock.items() if k != "lock_sha256"})
                     != lock["lock_sha256"]
@@ -311,7 +314,7 @@ def panels(
     kind = "delay" if delayed else "panel"
     if delayed:
         for tid, _ in panel_locks:
-            if not (output / tid / "panel-records.json").exists():
+            if not (output / tid / "panel-executions.json").exists():
                 raise ValueError(
                     "common action references incomplete before delay phase"
                 )
@@ -331,7 +334,7 @@ def panels(
                 if delayed
                 else lock["action_roster"]
             )
-            target = root / (kind + "-records.json")
+            target = root / (kind + "-executions.json")
             if target.exists():
                 all_rows.extend(read(target)["rows"])
                 continue
@@ -419,12 +422,6 @@ def panels(
                 }
                 rows.append(row)
                 dump(root / (kind + "-started-rows.json"), {"rows": rows})
-            for row in rows:
-                run = Path(row["run"])
-                checks = run.parent / (run.name + "-checks")
-                row["checks_root"] = str(checks)
-                row["checks"] = check_once(task, run, checks, row["execution"])
-                row.update(verify_row(row))
             dump(
                 target,
                 {
@@ -435,7 +432,7 @@ def panels(
             )
             all_rows.extend(rows)
             dump(
-                output / (kind + "-records.json"),
+                output / (kind + "-executions.json"),
                 {
                     "policy_freeze": frozen,
                     "planned": len(registered_delays)
@@ -447,7 +444,7 @@ def panels(
     finally:
         auth.unlink(missing_ok=True)
     dump(
-        output / (kind + "-records.json"),
+        output / (kind + "-executions.json"),
         {
             "policy_freeze": frozen,
             "planned": len(registered_delays)
@@ -459,5 +456,89 @@ def panels(
     return {
         "kind": kind,
         "recorded": len(all_rows),
-        "known_functional": sum(r["y_functional"] is not None for r in all_rows),
+        "hidden_results": "WITHHELD_UNTIL_RELEASE",
     }
+
+
+def verify_release_rosters(frozen, panel_locks, bundles, registered_delays):
+    """Reject incomplete execution sets before any hidden verifier is called."""
+    if registered_delays != delay_roster(panel_locks):
+        raise ValueError("delay roster changed or missing")
+    expected = {
+        "matrix": frozen["roster"],
+        "panel": [
+            {"task_id": tid, **r}
+            for tid, lock in panel_locks
+            for r in lock["action_roster"]
+        ],
+        "delay": registered_delays,
+    }
+    for kind, planned in expected.items():
+        bundle = bundles[kind]
+        if bundle["policy_freeze"] != frozen:
+            raise ValueError("execution bundle policy freeze mismatch")
+        fields = ("task_id", "method" if kind == "matrix" else "action", "repeat")
+        wanted = {tuple(r[k] for k in fields) for r in planned}
+        actual = [tuple(r[k] for k in fields) for r in bundle["rows"]]
+        if len(actual) != len(wanted) or set(actual) != wanted:
+            raise ValueError("final execution roster incomplete: " + kind)
+        if any("checks" in r or "y_functional" in r for r in bundle["rows"]):
+            raise ValueError("hidden labels in unreleased execution bundle")
+        if kind != "matrix":
+            verify_panel_rows(bundle["rows"], panel_locks)
+
+
+def release(
+    protocol_path, objective_path, tasks, output, skills, payloads, encoder_path, models
+):
+    """Uniform hidden acceptance only after all matrix and mechanism executions."""
+    protocol = read(protocol_path)
+    tasks, output = Path(tasks), Path(output)
+    verify_freeze(protocol, tasks, payloads, skills, encoder_path)
+    frozen = freeze(protocol_path, objective_path, models)
+    if read(output / "policy-freeze.json") != frozen:
+        raise ValueError("final freeze mismatch")
+    locks = []
+    for info in protocol["tasks"]:
+        if info["split"] != "test":
+            continue
+        lock = read(output / info["task_id"] / "panel-lock.json")
+        if "lock_sha256" in lock:
+            verify_panel_lock(lock)
+            if lock["policy_freeze_sha256"] != digest(frozen):
+                raise ValueError("panel model/policy freeze changed")
+            locks.append((info["task_id"], lock))
+        elif lock.get("status") != "NO_OBSERVED_CHECKPOINT":
+            raise ValueError("unconfirmed panel availability")
+    kinds = ("matrix", "panel", "delay")
+    bundles = {kind: read(output / (kind + "-executions.json")) for kind in kinds}
+    registered = read(output / "delay-roster.json")["rows"]
+    verify_release_rosters(frozen, locks, bundles, registered)
+    # The preflight covers every category before the first hidden test runs.
+    totals = {}
+    for kind in kinds:
+        rows = []
+        for original in bundles[kind]["rows"]:
+            row = dict(original)
+            run = Path(row["run"])
+            checks = run.parent / (run.name + "-checks")
+            row["checks_root"] = str(checks)
+            row["checks"] = check_once(
+                tasks / row["task_id"], run, checks, row["execution"]
+            )
+            row.update(verify_row(row))
+            rows.append(row)
+        dump(output / (kind + "-records.json"), {**bundles[kind], "rows": rows})
+        totals[kind] = len(rows)
+    dump(
+        output / "release.json",
+        {
+            "status": "RELEASED_AFTER_ALL_REGISTERED_EXECUTIONS",
+            "policy_freeze_sha256": digest(frozen),
+            "execution_bundle_sha256": {
+                kind: sha(output / (kind + "-executions.json")) for kind in kinds
+            },
+            "records": totals,
+        },
+    )
+    return totals

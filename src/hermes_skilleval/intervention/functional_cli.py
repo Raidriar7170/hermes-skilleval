@@ -72,7 +72,9 @@ def main(argv=None):
         "models",
     ):
         p.add_argument("--" + key, type=Path, required=True)
-    p.add_argument("--phase", choices=("matrix", "panels", "delays"), required=True)
+    p.add_argument(
+        "--phase", choices=("matrix", "panels", "delays", "release"), required=True
+    )
     p = commands.add_parser(
         "replay", help="zero-model functional records recomputation"
     )
@@ -128,10 +130,10 @@ def main(argv=None):
 
         result = export(args.records, args.objective, args.output, group=args.group)
     elif args.command == "evaluate":
-        from .functional_evaluate import matrix, panels
+        from .functional_evaluate import matrix, panels, release
 
-        call = matrix if args.phase == "matrix" else panels
-        kwargs = {} if args.phase == "matrix" else {"delayed": args.phase == "delays"}
+        call = {"matrix": matrix, "release": release}.get(args.phase, panels)
+        kwargs = {"delayed": args.phase == "delays"} if call is panels else {}
         result = call(
             args.protocol,
             args.objective,

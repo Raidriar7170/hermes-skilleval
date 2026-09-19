@@ -38,3 +38,19 @@ def test_delay_selection_does_not_depend_on_sensitive_or_successful_states():
     assert {r["task_id"] for r in roster} == {"0", "2", "3", "4"}
     assert immediate_action(["b", "a"], {"b": 0.0, "a": -0.1}) == "NO_INTERVENTION"
     assert immediate_action(["b", "a"], {"b": 0.2, "a": 0.2}) == "b"
+
+
+def test_missing_delay_plan_is_not_no_opportunity_and_locks_are_verified():
+    import pytest
+    from hermes_skilleval.intervention.functional_collection import digest
+    from hermes_skilleval.intervention.functional_panel import verified_delay_plan
+
+    lock = {"delay_eligible": True, "now_skill": "skill"}
+    lock["lock_sha256"] = digest(lock)
+    expected, registered = verified_delay_plan([("task", lock)], None)
+    assert len(expected) == 4
+    assert registered is False
+    with pytest.raises(ValueError, match="delay roster differs"):
+        verified_delay_plan([("task", lock)], [])
+    with pytest.raises(ValueError, match="panel lock changed"):
+        verified_delay_plan([("task", {**lock, "delay_eligible": False})], None)

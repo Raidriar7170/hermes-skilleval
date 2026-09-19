@@ -339,3 +339,34 @@ CLI ran on all currently released pilot/native/paired bundles: 60 references,
 56 unique executions, four reused references excluded. All 56 executions had
 complete usage notifications. Focused cost regression, Ruff and scoped mypy
 passed; no Agent, model or verifier calls were made by accounting.
+
+## 2026-09-19 independent pre-final evidence review
+
+A read-only independent Reviewer examined bf81b33 against the complete Goal for
+same-state/family isolation, waiting counterfactuals and publication privacy.
+Two P1 findings were confirmed before any final trajectory or model fit: the
+matrix runner released hidden labels before mechanism tails; the reporter could
+interpret a missing delay roster as no eligible opportunity and had not bound
+panel predictions to their hashed lock and frozen policy/model identity.
+
+Final phases now write only `matrix-executions.json`, `panel-executions.json`
+and `delay-executions.json`. After those phases, use the same evaluate arguments
+with `--phase release`: its all-category exact-roster preflight rejects missing,
+extra or duplicate execution rows, wrong panel bindings and hidden labels in
+execution bundles before invoking any hidden verifier. Only release writes the
+scored `*-records.json` files and a release receipt. This is a stronger global
+release boundary than the minimum per-task boundary. Saved executions remain
+reusable after interruption, with no outcome-driven re-sampling.
+
+Panel locks now bind the full policy freeze, including model identities. The
+reporter verifies lock/row/model bindings, reconstructs the prospective delay
+roster, and distinguishes a missing plan from a verified empty one. Completion
+also requires the release receipt and matching execution bundle hashes.
+
+The same Reviewer statically rechecked both fixes and found no new blocking
+issue, explicitly withholding claims about future real execution/recovery.
+61 focused tests passed, including missing-bundle/no-hidden-check and missing-
+delay-plan regressions; Ruff and mypy on all 14 functional modules passed.
+These control-flow fixtures are not experimental evidence. G2 collector
+PID 4821 / session 82437 continued unchanged; final sampling, trained models,
+formal closure, publication and final evidence review remain pending.
