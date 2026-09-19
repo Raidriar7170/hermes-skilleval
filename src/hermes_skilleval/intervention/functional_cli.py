@@ -96,6 +96,7 @@ def main(argv=None):
         "protocol",
         "objective",
         "collection",
+        "roster",
         "evaluation",
         "models",
         "output",
@@ -116,6 +117,7 @@ def main(argv=None):
             args.evaluation,
             args.models,
             args.output,
+            args.roster,
         )
     elif args.command == "replay":
         from .functional_export import replay

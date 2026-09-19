@@ -74,6 +74,15 @@ def test_exact_roster_requires_unknown_samples_and_rejects_replacements():
         "samples": rows,
     }
     verify_collection_roster(rows, roster, "frozen")
+    partial = verify_collection_roster(
+        rows[:1], roster, "frozen", require_complete=False
+    )
+    assert partial == {
+        "realized_planned_tails": 2,
+        "recorded_tails": 1,
+        "missing_tails": 1,
+        "complete": False,
+    }
     for invalid in (
         rows[:1],
         rows + rows[:1],
@@ -84,3 +93,7 @@ def test_exact_roster_requires_unknown_samples_and_rejects_replacements():
             verify_collection_roster(invalid, roster, "frozen")
     with pytest.raises(ValueError, match="protocol mismatch"):
         verify_collection_roster(rows, roster, "changed")
+    with pytest.raises(ValueError, match="sample roster mismatch"):
+        verify_collection_roster(
+            [sample("unregistered", None)], roster, "frozen", require_complete=False
+        )

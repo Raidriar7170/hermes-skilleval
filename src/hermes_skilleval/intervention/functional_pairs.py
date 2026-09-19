@@ -5,7 +5,7 @@ from collections import Counter
 from .functional_outcomes import paired_delta, transition
 
 
-def verify_collection_roster(rows, roster, protocol_sha256):
+def verify_collection_roster(rows, roster, protocol_sha256, *, require_complete=True):
     """Require every prospectively registered tail, including unknown outcomes."""
     if roster["source_protocol_sha256"] != protocol_sha256:
         raise ValueError("realized roster protocol mismatch")
@@ -16,9 +16,16 @@ def verify_collection_roster(rows, roster, protocol_sha256):
         len(expected) != roster["realized_planned_tails"]
         or len(set(expected)) != len(expected)
         or len(set(actual)) != len(actual)
-        or set(actual) != set(expected)
+        or not set(actual) <= set(expected)
+        or (require_complete and set(actual) != set(expected))
     ):
         raise ValueError("collection sample roster mismatch; retain planned denominator")
+    return {
+        "realized_planned_tails": len(expected),
+        "recorded_tails": len(actual),
+        "missing_tails": len(set(expected) - set(actual)),
+        "complete": set(actual) == set(expected),
+    }
 
 
 def paired_records(rows):

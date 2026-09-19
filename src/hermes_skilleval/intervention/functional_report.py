@@ -296,11 +296,14 @@ def mechanism_tables(panel_rows, delay_rows, panel_locks, families, registered_d
     }
 
 
-def summarize(protocol_path, objective_path, collection, evaluation, models, output):
+def summarize(
+    protocol_path, objective_path, collection, evaluation, models, output, roster_path
+):
     """Recompute claims from verified saved records; no model or Agent execution."""
+    import hashlib
     from pathlib import Path
     from .functional_outcomes import load_objective
-    from .functional_pairs import paired_records, signal_summary
+    from .functional_pairs import paired_records, signal_summary, verify_collection_roster
     from .functional_export import replay
     from .learning import model_identity
     from .session import dump
@@ -333,7 +336,13 @@ def summarize(protocol_path, objective_path, collection, evaluation, models, out
     expected_training = {
         r["task_id"] for r in protocol["tasks"] if r["split"] != "test"
     }
-    collected_all = (
+    collection_roster = verify_collection_roster(
+        collected,
+        read(roster_path),
+        hashlib.sha256(Path(protocol_path).read_bytes()).hexdigest(),
+        require_complete=False,
+    )
+    collected_all = collection_roster["complete"] and (
         set(collection_bundle.get("completed_tasks", [])) == expected_training
     )
     signal = signal_summary(
@@ -425,6 +434,7 @@ def summarize(protocol_path, objective_path, collection, evaluation, models, out
         "operation": "RECORDS_ONLY_SUMMARY",
         "objective_sha256": objective["sha256"],
         "collection_accounting": {
+            **collection_roster,
             "planned_tasks": len(expected_training),
             "completed_tasks": len(collection_bundle.get("completed_tasks", [])),
             "maximum_tails": protocol["maximum_tails"],

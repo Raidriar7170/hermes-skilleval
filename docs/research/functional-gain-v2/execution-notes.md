@@ -303,3 +303,13 @@ The current partial 24-row collection was correctly rejected by this gate;
 all 24 available state bindings match the prospective roster. Seven focused
 pair/feature/wait tests and Ruff passed. No sampling order, runtime budget,
 trajectory, functional label, model training or final evaluation changed.
+
+The records-only summary now shares the exact roster check, allowing a strict
+subset only for explicitly partial progress reports. It rejects unregistered or
+duplicate samples and cannot mark collection complete from task names alone.
+`summarize` now also requires the same `--roster` path as training. Actual private
+`progress-report-v2.json` recorded 24/192 scored tails, 168 not yet released,
+2/16 completed tasks, and retained PARTIAL_METHOD / KEEP_EXISTING_DEFAULT.
+Eight focused pair/report tests, Ruff and scoped mypy passed. The original
+collector session 82437 / PID 4821 remained live throughout these read-only
+result checks and report changes; no trajectory was restarted.
