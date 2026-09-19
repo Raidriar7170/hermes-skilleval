@@ -164,12 +164,28 @@ def export_rows(rows, group):
 public_collection = export_rows(collection, "collection")
 public_evaluation = export_rows(evaluation, "evaluation")
 native_usage = {}
-for row in collection:
-    tid = row["task_id"]
-    if tid not in native_usage:
-        task_root = next(p for p in Path(row["run"]).parents if p.name == tid)
-        native_usage[tid] = reported_usage(task_root / "native-chain")
+native_records = {}
+raw_collection = next(
+    p for p in Path(collection[0]["run"]).parents if p.name == collection[0]["task_id"]
+).parent
+for task in protocol["tasks"]:
+    if task["split"] == "test":
+        continue
+    tid = task["task_id"]
+    task_records = a.collection.parent / tid / "records.json"
+    native = read(task_records)["native_chain"]
+    native_usage[tid] = reported_usage(raw_collection / tid / "native-chain")
+    native_records[tid] = {
+        "split": task["split"],
+        "status": native["status"],
+        "turns": native.get("turns"),
+        "active_seconds": native.get("tail_seconds"),
+        "observed_stages": [Path(p).name for p in native.get("checkpoints", [])],
+        "tail_rows": len(read(task_records)["rows"]),
+        "source_records_sha256": sha(task_records),
+    }
 dump(a.output / "native-prefix-usage.json", native_usage)
+dump(a.output / "native-prefix-records.json", native_records)
 for kind, rows in [
     ("collection", public_collection),
     ("evaluation", public_evaluation),
@@ -218,6 +234,9 @@ if (a.models / "development-diagnostics.json").exists():
 summary = {
     "scope": "FROZEN_12_TRAIN_4_DEV_8_TEST_TWO_FINAL_REPEATS",
     "collection": collection_diagnostics(collection),
+    "native_prefix_statuses": dict(
+        Counter(r["status"] for r in native_records.values())
+    ),
     "final": summarize_rows(evaluation),
     "paired_H_full_vs": final_comparisons(evaluation),
     "scheduled_final_runs": 96,
