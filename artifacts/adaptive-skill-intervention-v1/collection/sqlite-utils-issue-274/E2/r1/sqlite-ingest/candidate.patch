@@ -1,0 +1,59 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 420883090e2a9aa0ee3e7fb4d8904ca4cbc9b2f3..50cf4430363d93052e8856a7490a987b29a73aa2 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1368,6 +1368,19 @@ def schema(
+     click.echo(db.schema)
+ 
+ 
++@cli.command()
++@click.argument(
++    "path",
++    type=click.Path(exists=True, file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def dump(path):
++    """Output a SQL dump of the database"""
++    db = sqlite_utils.Database(path)
++    for line in db.conn.iterdump():
++        click.echo(line)
++
++
+ @cli.command()
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 5cb4af03257ba2d0574d2f665dab79be71b86a10..f3e5f27a9555363b21b7e564bba299c1a1170383 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -108,6 +108,30 @@ def test_tables_schema(db_path):
+     ) == result.output.strip()
+ 
+ 
++def test_dump(tmpdir):
++    path = str(tmpdir / "dump.db")
++    db = Database(path)
++    db.executescript(
++        """
++        create table people (id integer primary key, name text, photo blob);
++        create unique index people_name_idx on people(name);
++        create view names as select name from people;
++        """
++    )
++    db["people"].insert({"id": 1, "name": "O'Reilly", "photo": b"\x00\xff"})
++
++    result = CliRunner().invoke(cli.cli, ["dump", path])
++
++    assert result.exit_code == 0
++    restored = Database(memory=True)
++    restored.executescript(result.output)
++    assert list(restored["people"].rows) == [
++        {"id": 1, "name": "O'Reilly", "photo": b"\x00\xff"}
++    ]
++    assert "people_name_idx" in {index.name for index in restored["people"].indexes}
++    assert restored["names"].count == 1
++
++
+ @pytest.mark.parametrize(
+     "fmt,expected",
+     [

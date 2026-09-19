@@ -1,0 +1,127 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 03ac3f57cda744a8be963c3090d38cd60d1586ca..40f086e7665f052c7addc1f56daf419e5c196b66 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -601,6 +601,11 @@ def insert_upsert_options(fn):
+             click.option("--nl", is_flag=True, help="Expect newline-delimited JSON"),
+             click.option("-c", "--csv", is_flag=True, help="Expect CSV"),
+             click.option("--tsv", is_flag=True, help="Expect TSV"),
++            click.option(
++                "--no-headers",
++                is_flag=True,
++                help="CSV or TSV input has no header row",
++            ),
+             click.option("--delimiter", help="Delimiter to use for CSV files"),
+             click.option("--quotechar", help="Quote character to use for CSV/TSV"),
+             click.option(
+@@ -642,6 +647,7 @@ def insert_upsert_implementation(
+     nl,
+     csv,
+     tsv,
++    no_headers,
+     delimiter,
+     quotechar,
+     batch_size,
+@@ -677,7 +683,12 @@ def insert_upsert_implementation(
+             if quotechar:
+                 csv_reader_args["quotechar"] = quotechar
+             reader = csv_std.reader(json_file, **csv_reader_args)
+-            headers = next(reader)
++            first_row = next(reader)
++            if no_headers:
++                headers = ["column{}".format(i + 1) for i in range(len(first_row))]
++                reader = itertools.chain([first_row], reader)
++            else:
++                headers = first_row
+             docs = (dict(zip(headers, row)) for row in reader)
+     else:
+         try:
+@@ -731,6 +742,7 @@ def insert(
+     nl,
+     csv,
+     tsv,
++    no_headers,
+     delimiter,
+     quotechar,
+     batch_size,
+@@ -748,7 +760,10 @@ def insert(
+     Insert records from JSON file into a table, creating the table if it
+     does not already exist.
+ 
+-    Input should be a JSON array of objects, unless --nl or --csv is used.
++    Input should be a JSON array of objects, unless --nl, --csv or --tsv is used.
++
++    CSV and TSV files are expected to have a header row. Use --no-headers to
++    treat every row as data and generate column names automatically.
+     """
+     try:
+         insert_upsert_implementation(
+@@ -759,6 +774,7 @@ def insert(
+             nl,
+             csv,
+             tsv,
++            no_headers,
+             delimiter,
+             quotechar,
+             batch_size,
+@@ -787,6 +803,7 @@ def upsert(
+     nl,
+     csv,
+     tsv,
++    no_headers,
+     batch_size,
+     delimiter,
+     quotechar,
+@@ -801,6 +818,9 @@ def upsert(
+     Upsert records based on their primary key. Works like 'insert' but if
+     an incoming record has a primary key that matches an existing record
+     the existing record will be updated.
++
++    CSV and TSV files are expected to have a header row. Use --no-headers to
++    treat every row as data and generate column names automatically.
+     """
+     try:
+         insert_upsert_implementation(
+@@ -811,6 +831,7 @@ def upsert(
+             nl,
+             csv,
+             tsv,
++            no_headers,
+             delimiter,
+             quotechar,
+             batch_size,
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 52a80e90f63f628c6103d3192846381334112ddb..f6f15ccdea01919e5951801028af6426f31009c4 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -746,6 +746,30 @@ def test_insert_csv_tsv(content, options, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "cat,dog"}] == list(db["data"].rows)
+ 
+ 
++@pytest.mark.parametrize(
++    "separator,option",
++    ((",", "--csv"), ("\t", "--tsv")),
++)
++def test_insert_csv_tsv_no_headers(separator, option, db_path, tmpdir):
++    db = Database(db_path)
++    file_path = str(tmpdir / "insert.csv-tsv")
++    open(file_path, "w").write(
++        separator.join(("one", "two", "three"))
++        + "\n"
++        + separator.join(("four", "five", "six"))
++    )
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "data", file_path, option, "--no-headers"],
++        catch_exceptions=False,
++    )
++    assert 0 == result.exit_code
++    assert [
++        {"column1": "one", "column2": "two", "column3": "three"},
++        {"column1": "four", "column2": "five", "column3": "six"},
++    ] == list(db["data"].rows)
++
++
+ @pytest.mark.parametrize(
+     "options",
+     (

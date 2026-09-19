@@ -1,0 +1,58 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 971bf6ffa96292e9193f365e3c8714fd852c2a3d..314b8647492006ea6eb6574cc493355cb4e6385a 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -590,11 +590,18 @@ class Database:
+                 )
+ 
+         # Construct SQL for use with "UPDATE sqlite_master SET sql = ? WHERE name = ?"
++        def quote_fk_identifier(identifier):
++            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", identifier):
++                return identifier
++            return '"{}"'.format(identifier.replace('"', '""'))
++
+         table_sql = {}
+         for table, column, other_table, other_column in foreign_keys_to_create:
+             old_sql = table_sql.get(table, self[table].schema)
+             extra_sql = ",\n   FOREIGN KEY({column}) REFERENCES {other_table}({other_column})\n".format(
+-                column=column, other_table=other_table, other_column=other_column
++                column=quote_fk_identifier(column),
++                other_table=quote_fk_identifier(other_table),
++                other_column=quote_fk_identifier(other_column),
+             )
+             # Stick that bit in at the very end just before the closing ')'
+             last_paren = old_sql.rindex(")")
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 2975deac351d0404316dba8e042fc3f67dbb25ca..07fb033bc5dabf2eb25f74f409adb61c9ad488b3 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -360,6 +360,29 @@ def test_add_foreign_key(fresh_db):
+     ] == fresh_db["books"].foreign_keys
+ 
+ 
++def test_add_foreign_key_with_spaces_in_identifiers(fresh_db):
++    fresh_db["Reporters directory"].insert(
++        {"Reporter ID": 1, "name": "Sally"}, pk="Reporter ID"
++    )
++    fresh_db["Reports archive"].insert(
++        {"title": "A report", "Reported by ID": 1}
++    )
++
++    fresh_db["Reports archive"].add_foreign_key(
++        "Reported by ID", "Reporters directory", "Reporter ID"
++    )
++
++    assert [
++        ForeignKey(
++            table="Reports archive",
++            column="Reported by ID",
++            other_table="Reporters directory",
++            other_column="Reporter ID",
++        )
++    ] == fresh_db["Reports archive"].foreign_keys
++    assert ("ok",) == fresh_db.execute("PRAGMA integrity_check").fetchone()
++
++
+ def test_add_foreign_key_error_if_column_does_not_exist(fresh_db):
+     fresh_db["books"].insert(
+         {"id": 1, "title": "Hedgehogs of the world", "author_id": 1}

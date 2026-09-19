@@ -1,0 +1,59 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index 07d4ee5007c7853c040336ab5e354ffe9b01a57b..8c69514f4f60e52e68bf082a95caafbc284e7df3 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python
+ 
++import io
+ import sys
+ 
+ import agate
+@@ -72,6 +73,14 @@ class CSVJoin(CSVKitUtility):
+         column_types = self.get_column_types()
+ 
+         for f in self.input_files:
++            # agate needs to rewind file-like objects after dialect sniffing. Process substitution and named pipes are
++            # file-like objects, but aren't seekable, so buffer them before parsing. csvjoin already reads every input
++            # into memory (see the epilog), and regular files continue to stream directly to agate.
++            if not f.seekable():
++                input_file = f
++                f = io.StringIO(input_file.read())
++                input_file.close()
++
+             tables.append(agate.Table.from_csv(
+                 f,
+                 skip_lines=self.args.skip_lines,
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index 47a2fbe915fca3e61c63a7ceb07020afd351a9dd..3423469dd124f16cc4ee2f65ccaea500afc9464e 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -1,3 +1,4 @@
++import io
+ import os
+ import sys
+ import unittest
+@@ -52,6 +53,23 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['-c', 'a', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 3)
+ 
++    def test_inner_non_seekable(self):
++        inputs = []
++
++        for content in (b'A,B,C\n1,2,3\n', b'C,D,E\n3,4,5\n'):
++            read_fd, write_fd = os.pipe()
++            os.write(write_fd, content)
++            os.close(write_fd)
++            inputs.append(io.TextIOWrapper(os.fdopen(read_fd, 'rb')))
++
++        output = io.StringIO()
++        utility = self.Utility(['--no-inference', '-c', 'C', 'first', 'second'], output)
++
++        with patch.object(utility, '_open_input_file', side_effect=inputs):
++            utility.run()
++
++        self.assertEqual(output.getvalue(), 'A,B,C,D,E\n1,2,3,4,5\n')
++
+     def test_left(self):
+         output = self.get_output_as_io(['-c', 'a', '--left', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 5)

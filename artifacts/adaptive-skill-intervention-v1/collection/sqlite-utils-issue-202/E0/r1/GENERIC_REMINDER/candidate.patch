@@ -1,0 +1,122 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index 4e9710d5fbb71135b7031bd9172c1a83bb01f477..78505a4cd27fbdfb7322c0acfca623208277c2cd 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -366,6 +366,11 @@ If your data is in CSV format, you can insert it using the ``--csv`` option::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.csv --csv
+ 
++You can configure one or more imported columns for full-text search using the
++repeatable ``-f`` option::
++
++    $ sqlite-utils insert articles.db articles articles.csv --csv -f title -f body
++
+ For tab-delimited data, use ``--tsv``::
+ 
+     $ sqlite-utils insert dogs.db dogs docs.tsv --tsv
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index cfc57c636463f0ddd3284286ae073835b1cc5a6f..37bbeb7b8ab8736dcadf9190f20f33e794603a83 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -613,6 +613,7 @@ def insert_upsert_implementation(
+     encoding=None,
+     load_extension=None,
+     silent=False,
++    fts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -648,6 +649,8 @@ def insert_upsert_implementation(
+     db[table].insert_all(
+         docs, pk=pk, batch_size=batch_size, alter=alter, **extra_kwargs
+     )
++    if fts:
++        db[table].enable_fts(fts)
+ 
+ 
+ @cli.command()
+@@ -667,6 +670,12 @@ def insert_upsert_implementation(
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "-f",
++    "--fts",
++    multiple=True,
++    help="Column to use for SQLite full-text search",
++)
+ def insert(
+     path,
+     table,
+@@ -685,6 +694,7 @@ def insert(
+     truncate,
+     not_null,
+     default,
++    fts,
+ ):
+     """
+     Insert records from JSON file into a table, creating the table if it
+@@ -712,6 +722,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            fts=fts,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 0179b5085b01e915d5e7e8eb54107d08f544362f..382e347b8504f5553bcb1ce0623b5729e9dad1f8 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -718,6 +718,51 @@ def test_insert_csv_tsv(content, option, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "3"}] == list(db["data"].rows)
+ 
+ 
++def test_insert_csv_with_fts(db_path, tmpdir):
++    db = Database(db_path)
++    file_path = str(tmpdir / "articles.csv")
++    open(file_path, "w").write(
++        "title,body,category\nFirst article,About llamas,animals\n"
++    )
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "articles",
++            file_path,
++            "--csv",
++            "-f",
++            "title",
++            "-f",
++            "body",
++        ],
++        catch_exceptions=False,
++    )
++    assert 0 == result.exit_code
++    assert "articles_fts" == db["articles"].detect_fts()
++    assert {"title", "body"} == set(db["articles_fts"].columns_dict)
++    assert [
++        {
++            "rowid": 1,
++            "title": "First article",
++            "body": "About llamas",
++            "category": "animals",
++        }
++    ] == list(db["articles"].search("llamas"))
++
++
++def test_insert_csv_without_fts_does_not_enable_fts(db_path, tmpdir):
++    db = Database(db_path)
++    file_path = str(tmpdir / "articles.csv")
++    open(file_path, "w").write("title,body\nFirst article,About llamas\n")
++    result = CliRunner().invoke(
++        cli.cli, ["insert", db_path, "articles", file_path, "--csv"]
++    )
++    assert 0 == result.exit_code
++    assert db["articles"].detect_fts() is None
++
++
+ @pytest.mark.parametrize(
+     "options",
+     (

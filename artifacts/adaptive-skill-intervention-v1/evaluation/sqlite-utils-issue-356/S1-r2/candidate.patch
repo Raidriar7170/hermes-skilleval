@@ -1,0 +1,113 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..27b6a40d261d42d45cbf115d7b7778c3629ecdcd 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -744,6 +744,16 @@ This also means you pipe ``sqlite-utils`` together to easily create a new SQLite
+     $ sqlite-utils sf-trees.db \
+         "select TreeID, qAddress, Latitude, Longitude from Street_Tree_List" --nl \
+       | sqlite-utils insert saved.db trees - --nl
++
++You can use ``--convert`` to run Python code against each incoming object before
++it is inserted. The object is available as ``row`` and can be modified in
++place. Every input object will still be inserted::
++
++    $ echo '{"n": "1"}' | sqlite-utils insert numbers.db numbers - \
++        --convert 'row["n"] = int(row["n"]) + 1'
++
++The :mod:`sqlite_utils.recipes` module is available to conversion code as both
++``r`` and ``recipes``.
+     # This creates saved.db with a single table called trees:
+     $ sqlite-utils saved.db "select * from trees limit 5" --csv
+     TreeID,qAddress,Latitude,Longitude
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..5fc7694e4599f658287439df6a8a264ee1861cdb 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    convert=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -774,6 +775,15 @@ def insert_upsert_implementation(
+         if flatten:
+             docs = (dict(_flatten(doc)) for doc in docs)
+ 
++    if convert:
++        conversion = compile(convert, "<string>", "exec")
++
++        def convert_row(row):
++            exec(conversion, {"r": recipes, "recipes": recipes}, {"row": row})
++            return row
++
++        docs = (convert_row(doc) for doc in docs)
++
+     extra_kwargs = {"ignore": ignore, "replace": replace, "truncate": truncate}
+     if not_null:
+         extra_kwargs["not_null"] = set(not_null)
+@@ -848,6 +858,11 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--convert",
++    "convert_code",
++    help='Python code to run against each row, e.g. row["name"] = row["name"].upper()',
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +885,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    convert_code,
+     not_null,
+     default,
+ ):
+@@ -905,6 +921,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            convert=convert_code,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..912ec1ca4f22222000bf27c9bf70c4e187dc9d64 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -778,6 +778,31 @@ def test_insert_newline_delimited(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++@pytest.mark.parametrize(
++    "input_,options",
++    (
++        ('[{"n": "1"}, {"n": "2"}]', []),
++        ('{"n": "1"}\n{"n": "2"}', ["--nl"]),
++    ),
++)
++def test_insert_convert_preserves_and_converts_every_row(db_path, input_, options):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "numbers",
++            "-",
++            "--convert",
++            'row["n"] = int(row["n"]) + 1',
++        ]
++        + options,
++        input=input_,
++    )
++    assert 0 == result.exit_code, result.output
++    assert [{"n": 2}, {"n": 3}] == list(Database(db_path)["numbers"].rows)
++
++
+ def test_insert_ignore(db_path, tmpdir):
+     db = Database(db_path)
+     db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")

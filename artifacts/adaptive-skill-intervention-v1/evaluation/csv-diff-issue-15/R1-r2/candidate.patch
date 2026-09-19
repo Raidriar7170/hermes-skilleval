@@ -1,0 +1,71 @@
+diff --git a/README.md b/README.md
+index ecd93b960c4ffaef5e7039c17b15f69c8c775a94..fe217cda19cec82cffbccac4c0e1b37eb7b1edec 100644
+--- a/README.md
++++ b/README.md
+@@ -113,6 +113,10 @@ You can also import the Python library into your own code like so:
+ 
+ If the columns in the CSV have changed, those added or removed columns will be ignored when calculating changes made to specific rows.
+ 
++To match CSV rows by their position in the file (excluding the header), pass
++`key="__rowid__"` to `load_csv()`. This is useful when a CSV has no unique key
++column but row order is stable.
++
+ ## As a Docker container
+ 
+ ### Build the image
+@@ -125,4 +129,4 @@ If the columns in the CSV have changed, those added or removed columns will be i
+ 
+ Suppose current directory contains two csv files : one.csv two.csv
+ 
+-    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+\ No newline at end of file
++    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..d7ef1a158acde0fb7d308ffbb7145694a2a88c07 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,6 +17,8 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
++    if key == "__rowid__":
++        return {row_number: row for row_number, row in enumerate(rows)}
+     if key:
+         keyfn = lambda r: r[key]
+     else:
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..5191f3b210a21a662e817a6a492090783f373b79 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -115,3 +115,31 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_row_number_key():
++    previous = """name,age
++Cleo,4
++Pancakes,2"""
++    current = """name,age
++Cleo,5
++Pancakes,2"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="__rowid__"),
++        load_csv(io.StringIO(current), key="__rowid__"),
++    )
++
++    assert diff == {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": 0, "changes": {"age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    }
++
++
++def test_row_number_key_keeps_duplicate_rows():
++    rows = load_csv(io.StringIO("name\nCleo\nCleo"), key="__rowid__")
++
++    assert list(rows.values()) == [{"name": "Cleo"}, {"name": "Cleo"}]

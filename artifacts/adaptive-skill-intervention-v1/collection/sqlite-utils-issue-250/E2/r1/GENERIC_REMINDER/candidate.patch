@@ -1,0 +1,41 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index e42be837368ab8b0c5cb44355507dde4549351f5..39d16ecdcd79956e1d6e199751ad81a2ce8d81e2 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -684,7 +684,9 @@ def insert_upsert_implementation(
+         raise click.ClickException("Use just one of --nl, --csv or --tsv")
+     if encoding and not (csv or tsv):
+         raise click.ClickException("--encoding must be used with --csv or --tsv")
+-    encoding = encoding or "utf-8"
++    # utf-8-sig behaves like utf-8 for files without a BOM, and strips the
++    # UTF-8 BOM if one is present rather than including it in the first header.
++    encoding = encoding or "utf-8-sig"
+     buffered = io.BufferedReader(json_file, buffer_size=4096)
+     decoded = io.TextIOWrapper(buffered, encoding=encoding)
+     if pk and len(pk) == 1:
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 87753965c039f184f6e5fee71719524b67ffa188..26ed0e518a45eaad392c9dae77cccd5f4d871bb3 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1692,6 +1692,21 @@ def test_extract(db_path, args, expected_table_schema, expected_other_schema):
+     assert other_schema == expected_other_schema
+ 
+ 
++def test_insert_csv_utf8_bom(tmpdir):
++    db_path = str(tmpdir / "test.db")
++    csv_path = str(tmpdir / "test.csv")
++    open(csv_path, "wb").write(b"\xef\xbb\xbfname,age\nCleo,4\n")
++
++    result = CliRunner().invoke(
++        cli.cli, ["insert", db_path, "people", csv_path, "--csv"]
++    )
++
++    assert result.exit_code == 0
++    db = Database(db_path)
++    assert db["people"].columns_dict == {"name": str, "age": str}
++    assert list(db["people"].rows) == [{"name": "Cleo", "age": "4"}]
++
++
+ def test_insert_encoding(tmpdir):
+     db_path = str(tmpdir / "test.db")
+     latin1_csv = (

@@ -1,0 +1,91 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 17d79deb2bba74cd5973d8c87aebe9f1f3758c8e..172cfff37136608dfdf07c11d3b299c08ccf387f 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1882,6 +1882,7 @@ class Table(Queryable):
+         for chunk in chunks(itertools.chain([first_record], records), batch_size):
+             chunk = list(chunk)
+             num_records_processed += len(chunk)
++            new_columns = set()
+             if first:
+                 if not self.exists():
+                     # Use the first batch to derive the table names
+@@ -1904,14 +1905,18 @@ class Table(Queryable):
+                 if hash_id:
+                     all_columns.insert(0, hash_id)
+             else:
+-                all_columns += [
+-                    column
+-                    for record in chunk
+-                    for column in record
+-                    if column not in all_columns
+-                ]
++                chunk_columns = {
++                    column for record in chunk for column in record.keys()
++                }
++                new_columns = chunk_columns.difference(all_columns)
++                if new_columns:
++                    all_columns.extend(sorted(new_columns))
+ 
+             validate_column_names(all_columns)
++            if new_columns and alter:
++                # Ensure columns first encountered in a later batch are added
++                # before attempting to insert that batch.
++                self.add_missing_columns(chunk)
+             first = False
+ 
+             self.insert_chunk(
+diff --git a/tests/test_create.py b/tests/test_create.py
+index bee47a7749e7bce54d4283c05e81a37ccb8f487d..6ee7d312fe36402705b7f0723c5b4db19f7a3751 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -629,6 +629,49 @@ def test_columns_not_in_first_record_should_not_cause_batch_to_be_too_large(fres
+         raise
+ 
+ 
++def test_insert_all_alter_adds_columns_from_later_batches(fresh_db):
++    traced = []
++    records = iter(
++        [
++            {"id": 1, "name": "one"},
++            {"id": 2, "name": "two"},
++            {"id": 3, "name": "three", "color": "red"},
++            {"id": 4, "name": "four", "color": "blue", "rating": 4},
++        ]
++    )
++
++    with fresh_db.tracer(lambda sql, parameters: traced.append(sql)):
++        fresh_db["items"].insert_all(
++            records, pk="id", alter=True, batch_size=2
++        )
++
++    assert ["id", "name", "color", "rating"] == list(
++        fresh_db["items"].columns_dict
++    )
++    assert [
++        {"id": 1, "name": "one", "color": None, "rating": None},
++        {"id": 2, "name": "two", "color": None, "rating": None},
++        {"id": 3, "name": "three", "color": "red", "rating": None},
++        {"id": 4, "name": "four", "color": "blue", "rating": 4},
++    ] == list(fresh_db["items"].rows)
++    final_insert = [sql for sql in traced if sql.startswith("INSERT INTO")][-1]
++    assert 1 == final_insert.count("[color]")
++    assert 1 == final_insert.count("[rating]")
++
++
++def test_insert_all_alter_validates_columns_from_later_batches(fresh_db):
++    with pytest.raises(AssertionError):
++        fresh_db["items"].insert_all(
++            [{"id": 1}, {"id": 2, "invalid[column": "value"}],
++            pk="id",
++            alter=True,
++            batch_size=1,
++        )
++
++    assert ["id"] == list(fresh_db["items"].columns_dict)
++    assert [{"id": 1}] == list(fresh_db["items"].rows)
++
++
+ @pytest.mark.parametrize(
+     "columns,index_name,expected_index",
+     (

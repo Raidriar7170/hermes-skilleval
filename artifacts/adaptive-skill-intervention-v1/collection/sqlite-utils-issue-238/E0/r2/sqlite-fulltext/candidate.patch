@@ -1,0 +1,56 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 971bf6ffa96292e9193f365e3c8714fd852c2a3d..2c14dd181f8fa8ffe4c9792b810c9a8635fd7b68 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -590,11 +590,21 @@ class Database:
+                 )
+ 
+         # Construct SQL for use with "UPDATE sqlite_master SET sql = ? WHERE name = ?"
++        def quote_foreign_key_identifier(identifier):
++            if re.match(
++                r"^[A-Za-z_\u0080-\uffff][A-Za-z_\u0080-\uffff0-9\$]*\Z",
++                identifier,
++            ):
++                return identifier
++            return "[{}]".format(identifier)
++
+         table_sql = {}
+         for table, column, other_table, other_column in foreign_keys_to_create:
+             old_sql = table_sql.get(table, self[table].schema)
+             extra_sql = ",\n   FOREIGN KEY({column}) REFERENCES {other_table}({other_column})\n".format(
+-                column=column, other_table=other_table, other_column=other_column
++                column=quote_foreign_key_identifier(column),
++                other_table=quote_foreign_key_identifier(other_table),
++                other_column=quote_foreign_key_identifier(other_column),
+             )
+             # Stick that bit in at the very end just before the closing ')'
+             last_paren = old_sql.rindex(")")
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 2975deac351d0404316dba8e042fc3f67dbb25ca..a5153c86bfebdff9e792a49403b2899b4fc3ad7d 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -418,6 +418,24 @@ def test_add_foreign_keys(fresh_db):
+     ] == sorted(fresh_db["books"].foreign_keys)
+ 
+ 
++def test_add_foreign_key_with_spaces_in_identifiers(fresh_db):
++    fresh_db["Reporters"].insert({"id": 1, "name": "Sally"}, pk="id")
++    fresh_db["Reports"].insert({"id": 1, "Reported by ID": 1}, pk="id")
++
++    fresh_db["Reports"].add_foreign_key("Reported by ID", "Reporters", "id")
++
++    assert fresh_db["Reports"].foreign_keys == [
++        ForeignKey(
++            table="Reports",
++            column="Reported by ID",
++            other_table="Reporters",
++            other_column="id",
++        )
++    ]
++    assert list(fresh_db["Reports"].rows) == [{"id": 1, "Reported by ID": 1}]
++    assert fresh_db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
++
++
+ def test_add_column_foreign_key(fresh_db):
+     fresh_db.create_table("dogs", {"name": str})
+     fresh_db.create_table("breeds", {"name": str})

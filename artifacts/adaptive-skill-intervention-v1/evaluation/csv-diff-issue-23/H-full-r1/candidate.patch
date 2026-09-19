@@ -1,0 +1,56 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..cf3debe957955b7e1a10fb0dfcc01e3770a19b64 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if isinstance(key, (list, tuple)):
++        keyfn = lambda r: tuple(r[column] for column in key)
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..848d477d2ca31d9daf203fd5b8257b21cfda7ef1 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -115,3 +115,36 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_load_csv_with_composite_key_list():
++    csv_file = io.StringIO("country,id,name\nUS,1,Cleo\nCA,1,Pancakes")
++
++    rows = load_csv(csv_file, key=["country", "id"])
++
++    assert {
++        ("US", "1"): {"country": "US", "id": "1", "name": "Cleo"},
++        ("CA", "1"): {"country": "CA", "id": "1", "name": "Pancakes"},
++    } == rows
++
++
++def test_load_csv_with_composite_key_tuple():
++    csv_file = io.StringIO("country,id,name\nUS,1,Cleo\nCA,1,Pancakes")
++
++    rows = load_csv(csv_file, key=("country", "id"))
++
++    assert [("US", "1"), ("CA", "1")] == list(rows)
++
++
++def test_compare_with_composite_key():
++    previous = io.StringIO("country,id,name\nUS,1,Cleo\nCA,1,Pancakes")
++    current = io.StringIO("country,id,name\nUS,1,Cleo\nCA,1,Waffles")
++
++    result = compare(
++        load_csv(previous, key=["country", "id"]),
++        load_csv(current, key=["country", "id"]),
++    )
++
++    assert [{"key": ("CA", "1"), "changes": {"name": ["Pancakes", "Waffles"]}}] == result["changed"]
++    assert [] == result["added"]
++    assert [] == result["removed"]

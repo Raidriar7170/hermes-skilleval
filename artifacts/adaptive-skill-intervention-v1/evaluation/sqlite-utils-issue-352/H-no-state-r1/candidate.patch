@@ -1,0 +1,103 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..a880447f9dddfc85aa60cd8d68aa30fbffa78cec 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    extracts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -779,6 +780,8 @@ def insert_upsert_implementation(
+         extra_kwargs["not_null"] = set(not_null)
+     if default:
+         extra_kwargs["defaults"] = dict(default)
++    if extracts:
++        extra_kwargs["extracts"] = extracts
+     if upsert:
+         extra_kwargs["upsert"] = upsert
+     # Apply {"$base64": true, ...} decoding, if needed
+@@ -848,6 +851,12 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--extract",
++    "extracts",
++    multiple=True,
++    help="Column to extract into a separate lookup table (can be used multiple times)",
++)
+ def insert(
+     path,
+     table,
+@@ -872,6 +881,7 @@ def insert(
+     truncate,
+     not_null,
+     default,
++    extracts,
+ ):
+     """
+     Insert records from JSON file into a table, creating the table if it
+@@ -905,6 +915,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            extracts=extracts,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..3f303a60a4de2e82fcd462a99bd419783fb7567f 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -621,6 +621,48 @@ def test_insert_simple(tmpdir):
+     assert [] == db["dogs"].indexes
+ 
+ 
++def test_insert_extract_repeatable(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "Trees",
++            "-",
++            "--extract",
++            "species",
++            "--extract",
++            "region",
++        ],
++        input=json.dumps(
++            [
++                {"id": 1, "species": "Oak", "region": "North"},
++                {"id": 2, "species": "Oak", "region": "South"},
++                {"id": 3, "species": "Palm", "region": "South"},
++            ]
++        ),
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(db_path)
++    assert list(db["species"].rows) == [
++        {"id": 1, "value": "Oak"},
++        {"id": 2, "value": "Palm"},
++    ]
++    assert list(db["region"].rows) == [
++        {"id": 1, "value": "North"},
++        {"id": 2, "value": "South"},
++    ]
++    assert list(db["Trees"].rows) == [
++        {"id": 1, "species": 1, "region": 1},
++        {"id": 2, "species": 1, "region": 2},
++        {"id": 3, "species": 2, "region": 2},
++    ]
++    assert {(fk.column, fk.other_table) for fk in db["Trees"].foreign_keys} == {
++        ("species", "species"),
++        ("region", "region"),
++    }
++
++
+ def test_insert_from_stdin(tmpdir):
+     db_path = str(tmpdir / "dogs.db")
+     result = CliRunner().invoke(

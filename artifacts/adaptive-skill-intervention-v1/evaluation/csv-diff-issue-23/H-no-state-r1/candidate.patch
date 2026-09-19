@@ -1,0 +1,88 @@
+diff --git a/README.md b/README.md
+index ecd93b960c4ffaef5e7039c17b15f69c8c775a94..e5d10ce6df8547c40da43ce9ac307584b53df5a1 100644
+--- a/README.md
++++ b/README.md
+@@ -111,6 +111,14 @@ You can also import the Python library into your own code like so:
+ 
+ `diff` will now contain the same data structure as the output in the `--json` example above.
+ 
++For tables whose rows are identified by more than one column, pass a list or
++tuple of column names as `key`:
++
++    diff = compare(
++        load_csv(open("one.csv"), key=["family_id", "pet_id"]),
++        load_csv(open("two.csv"), key=["family_id", "pet_id"])
++    )
++
+ If the columns in the CSV have changed, those added or removed columns will be ignored when calculating changes made to specific rows.
+ 
+ ## As a Docker container
+@@ -125,4 +133,4 @@ If the columns in the CSV have changed, those added or removed columns will be i
+ 
+ Suppose current directory contains two csv files : one.csv two.csv
+ 
+-    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+\ No newline at end of file
++    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..cf3debe957955b7e1a10fb0dfcc01e3770a19b64 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if isinstance(key, (list, tuple)):
++        keyfn = lambda r: tuple(r[column] for column in key)
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..1658c703d3e6b6345a4a83084b3d49e8f033d6b8 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -51,6 +51,14 @@ TEN = """id,name,age
+ 1,Cleo,5
+ 2,Pancakes,3"""
+ 
++COMPOSITE_ONE = """family_id,pet_id,name,age
++1,1,Cleo,4
++1,2,Pancakes,2"""
++
++COMPOSITE_TWO = """family_id,pet_id,name,age
++1,1,Cleo,5
++1,2,Pancakes,2"""
++
+ 
+ def test_row_changed():
+     diff = compare(
+@@ -65,6 +73,27 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_load_csv_with_list_composite_key():
++    rows = load_csv(io.StringIO(COMPOSITE_ONE), key=["family_id", "pet_id"])
++
++    assert [("1", "1"), ("1", "2")] == list(rows)
++
++
++def test_load_csv_with_tuple_composite_key_and_compare():
++    diff = compare(
++        load_csv(io.StringIO(COMPOSITE_ONE), key=("family_id", "pet_id")),
++        load_csv(io.StringIO(COMPOSITE_TWO), key=("family_id", "pet_id")),
++    )
++
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": ("1", "1"), "changes": {"age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == diff
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

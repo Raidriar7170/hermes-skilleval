@@ -1,0 +1,124 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 17d79deb2bba74cd5973d8c87aebe9f1f3758c8e..7ad47d39af077759ee086d89a9aa5bf4c95b7860 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1904,14 +1904,19 @@ class Table(Queryable):
+                 if hash_id:
+                     all_columns.insert(0, hash_id)
+             else:
+-                all_columns += [
+-                    column
+-                    for record in chunk
+-                    for column in record
+-                    if column not in all_columns
+-                ]
++                new_columns = []
++                for record in chunk:
++                    for column in record:
++                        if column not in all_columns and column not in new_columns:
++                            new_columns.append(column)
++                all_columns.extend(new_columns)
+ 
+             validate_column_names(all_columns)
++            if not first and alter and new_columns:
++                # Add columns discovered in later batches before inserting
++                # the batch. This ensures an ALTER does not roll back rows
++                # that were successfully inserted by earlier batches.
++                self.add_missing_columns(chunk)
+             first = False
+ 
+             self.insert_chunk(
+diff --git a/tests/test_create.py b/tests/test_create.py
+index bee47a7749e7bce54d4283c05e81a37ccb8f487d..3fef66d6e6ce01af1502622dd73685db8196d459 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -777,6 +777,89 @@ def test_insert_thousands_adds_extra_columns_after_first_100_with_alter(fresh_db
+     assert [{"i": 101, "word": None, "extra": "Should trigger ALTER"}] == rows
+ 
+ 
++def test_insert_all_adds_columns_from_later_batches_with_alter(fresh_db):
++    if not hasattr(fresh_db.conn, "setlimit"):
++        pytest.skip("sqlite3.Connection.setlimit() is not available")
++    fresh_db.conn.setlimit(sqlite3.SQLITE_LIMIT_VARIABLE_NUMBER, 9)
++    fresh_db["test"].insert_all(
++        [
++            {"id": 1, "name": "one"},
++            {"id": 2, "name": "two"},
++            {
++                "id": 3,
++                "name": "three",
++                "middle": "first new column",
++                "third": 3,
++                "fourth": 4,
++                "fifth": 5,
++            },
++            {
++                "id": 4,
++                "name": "four",
++                "middle": "also present here",
++                "third": 3,
++                "fourth": 4,
++                "fifth": 5,
++            },
++            {"id": 5, "name": "five", "last": "second new column"},
++        ],
++        pk="id",
++        batch_size=2,
++        alter=True,
++    )
++
++    assert ["id", "name", "middle", "third", "fourth", "fifth", "last"] == [
++        column.name for column in fresh_db["test"].columns
++    ]
++    assert [
++        {
++            "id": 1,
++            "name": "one",
++            "middle": None,
++            "third": None,
++            "fourth": None,
++            "fifth": None,
++            "last": None,
++        },
++        {
++            "id": 2,
++            "name": "two",
++            "middle": None,
++            "third": None,
++            "fourth": None,
++            "fifth": None,
++            "last": None,
++        },
++        {
++            "id": 3,
++            "name": "three",
++            "middle": "first new column",
++            "third": 3,
++            "fourth": 4,
++            "fifth": 5,
++            "last": None,
++        },
++        {
++            "id": 4,
++            "name": "four",
++            "middle": "also present here",
++            "third": 3,
++            "fourth": 4,
++            "fifth": 5,
++            "last": None,
++        },
++        {
++            "id": 5,
++            "name": "five",
++            "middle": None,
++            "third": None,
++            "fourth": None,
++            "fifth": None,
++            "last": "second new column",
++        },
++    ] == list(fresh_db["test"].rows)
++
++
+ def test_insert_ignore(fresh_db):
+     fresh_db["test"].insert({"id": 1, "bar": 2}, pk="id")
+     # Should raise an error if we try this again

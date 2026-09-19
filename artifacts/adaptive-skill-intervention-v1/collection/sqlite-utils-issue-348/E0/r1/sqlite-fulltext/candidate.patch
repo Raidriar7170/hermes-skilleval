@@ -1,0 +1,90 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..d3026d56638572fe2ac33c69ab6f92fab69fb970 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1602,6 +1602,18 @@ If the ``_counts`` table ever becomes out-of-sync with the actual table counts y
+ 
+     $ sqlite-utils reset-counts mydb.db
+ 
++.. _cli_create_database:
++
++Creating an empty database
++==========================
++
++The ``create-database`` command creates a new, empty SQLite database file::
++
++    $ sqlite-utils create-database mydb.db
++
++The command returns an error if the file already exists, without changing the
++existing file.
++
+ .. _cli_vacuum:
+ 
+ Vacuum
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..610e4c4092bb66fb7564e3cc7bdc8c4df13c246f 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -316,6 +316,22 @@ def vacuum(path):
+     sqlite_utils.Database(path).vacuum()
+ 
+ 
++@cli.command(name="create-database")
++@click.argument(
++    "path",
++    type=click.Path(file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def create_database(path):
++    """Create a new, empty SQLite database"""
++    try:
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o666)
++    except FileExistsError:
++        raise click.ClickException("File already exists: {}".format(path))
++    os.close(fd)
++    sqlite_utils.Database(path).vacuum()
++
++
+ @cli.command()
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..26efa3fa8039a39e260cf18a1712b43cb6f16cb6 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -519,6 +519,35 @@ def test_vacuum(db_path):
+     assert 0 == result.exit_code
+ 
+ 
++def test_create_database(tmpdir):
++    path = str(tmpdir / "created.db")
++    result = CliRunner().invoke(cli.cli, ["create-database", path])
++    assert result.exit_code == 0
++    assert os.path.getsize(path) > 0
++    db = sqlite3.connect(path)
++    assert db.execute("pragma integrity_check").fetchone() == ("ok",)
++    assert db.execute(
++        "select name from sqlite_master where type = 'table'"
++    ).fetchall() == []
++
++
++def test_create_database_does_not_overwrite(tmpdir):
++    path = str(tmpdir / "existing.db")
++    db = sqlite3.connect(path)
++    db.execute("create table data (value text)")
++    db.execute("insert into data values ('still here')")
++    db.commit()
++    db.close()
++
++    result = CliRunner().invoke(cli.cli, ["create-database", path])
++
++    assert result.exit_code != 0
++    assert "File already exists" in result.output
++    assert sqlite3.connect(path).execute("select value from data").fetchall() == [
++        ("still here",)
++    ]
++
++
+ def test_dump(db_path):
+     result = CliRunner().invoke(cli.cli, ["dump", db_path])
+     assert result.exit_code == 0

@@ -1,0 +1,64 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..cf3debe957955b7e1a10fb0dfcc01e3770a19b64 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if isinstance(key, (list, tuple)):
++        keyfn = lambda r: tuple(r[column] for column in key)
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..4124e49fb5dd67a6d2e9d0c1c8241c6ad00ba279 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -51,6 +51,16 @@ TEN = """id,name,age
+ 1,Cleo,5
+ 2,Pancakes,3"""
+ 
++COMPOSITE_ONE = """family_id,pet_id,name,age
++1,1,Cleo,4
++1,2,Pancakes,2
++2,1,Bailey,1"""
++
++COMPOSITE_TWO = """family_id,pet_id,name,age
++1,1,Cleo,5
++1,2,Pancakes,2
++2,1,Bailey,1"""
++
+ 
+ def test_row_changed():
+     diff = compare(
+@@ -115,3 +125,27 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_load_csv_with_list_composite_key():
++    rows = load_csv(io.StringIO(COMPOSITE_ONE), key=["family_id", "pet_id"])
++
++    assert set(rows) == {("1", "1"), ("1", "2"), ("2", "1")}
++    assert rows[("1", "2")]["name"] == "Pancakes"
++
++
++def test_compare_with_tuple_composite_key():
++    diff = compare(
++        load_csv(io.StringIO(COMPOSITE_ONE), key=("family_id", "pet_id")),
++        load_csv(io.StringIO(COMPOSITE_TWO), key=("family_id", "pet_id")),
++    )
++
++    assert diff == {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {"key": ("1", "1"), "changes": {"age": ["4", "5"]}}
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    }

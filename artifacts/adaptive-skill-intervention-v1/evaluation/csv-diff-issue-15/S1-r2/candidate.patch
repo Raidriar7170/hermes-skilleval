@@ -1,0 +1,81 @@
+diff --git a/README.md b/README.md
+index ecd93b960c4ffaef5e7039c17b15f69c8c775a94..6f7516f90c0c234d7c872eb036862b29d812fdef 100644
+--- a/README.md
++++ b/README.md
+@@ -111,6 +111,15 @@ You can also import the Python library into your own code like so:
+ 
+ `diff` will now contain the same data structure as the output in the `--json` example above.
+ 
++Pass `key="__rowid__"` to `load_csv()` to match records by their data-row
++position (excluding the header), instead of by a column value or a hash of the
++row contents:
++
++    diff = compare(
++        load_csv(open("one.csv"), key="__rowid__"),
++        load_csv(open("two.csv"), key="__rowid__")
++    )
++
+ If the columns in the CSV have changed, those added or removed columns will be ignored when calculating changes made to specific rows.
+ 
+ ## As a Docker container
+@@ -125,4 +134,4 @@ If the columns in the CSV have changed, those added or removed columns will be i
+ 
+ Suppose current directory contains two csv files : one.csv two.csv
+ 
+-    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+\ No newline at end of file
++    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..01ef60ca8bc131461ae406d277eed51dccf235cf 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if key == "__rowid__":
++        return dict(enumerate(rows))
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..987e5987cb6556ee22975753dc3917c378eaf0b2 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -65,6 +65,34 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_row_number_key_matches_rows_by_position():
++    previous = """name,age
++Cleo,4
++Pancakes,2"""
++    current = """name,age
++Cleo,5
++Pancakes,2"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="__rowid__"),
++        load_csv(io.StringIO(current), key="__rowid__"),
++    )
++
++    assert diff["added"] == []
++    assert diff["removed"] == []
++    assert len(diff["changed"]) == 1
++    assert diff["changed"][0]["changes"] == {"age": ["4", "5"]}
++
++
++def test_existing_key_modes_are_preserved():
++    by_column = load_csv(io.StringIO(ONE), key="id")
++    by_hash = load_csv(io.StringIO(ONE))
++
++    assert list(by_column) == ["1", "2"]
++    assert len(by_hash) == 2
++    assert list(by_hash.values()) == list(by_column.values())
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

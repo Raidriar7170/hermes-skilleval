@@ -1,0 +1,52 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 420883090e2a9aa0ee3e7fb4d8904ca4cbc9b2f3..8bd82ba2b5aed04863b592fd0ab8929746d2ad93 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -96,6 +96,19 @@ def cli():
+     pass
+ 
+ 
++@cli.command()
++@click.argument(
++    "path",
++    type=click.Path(exists=True, file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def dump(path):
++    """Dump database schema and rows as SQL"""
++    db = sqlite_utils.Database(path)
++    for line in db.conn.iterdump():
++        click.echo(line)
++
++
+ @cli.command()
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 5cb4af03257ba2d0574d2f665dab79be71b86a10..5bd4ba28f044d0b842542de37620df3a1da08e02 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -24,6 +24,23 @@ def db_path(tmpdir):
+     return path
+ 
+ 
++def test_dump(db_path):
++    db = Database(db_path)
++    db["Gosh"].insert({"c1": "one", "c2": "It's two", "c3": None})
++
++    result = CliRunner().invoke(cli.cli, ["dump", db_path])
++
++    assert result.exit_code == 0
++    restored = sqlite3.connect(":memory:")
++    restored.executescript(result.output)
++    assert restored.execute(
++        "select c1, c2, c3 from Gosh"
++    ).fetchall() == [("one", "It's two", None)]
++    assert restored.execute(
++        "select sql from sqlite_master where name = 'Gosh'"
++    ).fetchone()[0] == "CREATE TABLE Gosh (c1 text, c2 text, c3 text)"
++
++
+ def test_tables(db_path):
+     result = CliRunner().invoke(cli.cli, ["tables", db_path])
+     assert '[{"table": "Gosh"},\n {"table": "Gosh2"}]' == result.output.strip()

@@ -1,0 +1,358 @@
+{
+  "amendment": {
+    "revision": "csv-file-input-v1",
+    "parent_protocol_sha256": "568304d85c1a28f63139da2720ff05c527fe5165f0e24bdd559c220524f10b73",
+    "affected_tasks": [
+      "sqlite-utils-issue-202",
+      "sqlite-utils-issue-223",
+      "sqlite-utils-issue-228",
+      "sqlite-utils-issue-250"
+    ],
+    "reason": "CliRunner simulated BytesIO lacks old CSV progress file-descriptor interfaces; use actual files matching public requests, preserving payloads and assertions. All saved patches rechecked symmetrically; no Agent resampling.",
+    "created_at": "2026-09-18T23:34:34.220278+00:00",
+    "qualification_sha256": "cb3e3899cb101af700ea70df60025dd946361669982d230a62a54b34732edd1e"
+  },
+  "qualification": [
+    {
+      "task_id": "sqlite-utils-issue-202",
+      "base": {
+        "valid": true,
+        "passed": false,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "failed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.6857062500203028
+      },
+      "reference": {
+        "valid": true,
+        "passed": true,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "passed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.8562694159918465
+      }
+    },
+    {
+      "task_id": "sqlite-utils-issue-223",
+      "base": {
+        "valid": true,
+        "passed": false,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "failed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.7003065419849008
+      },
+      "reference": {
+        "valid": true,
+        "passed": true,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "passed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.8299925420433283
+      }
+    },
+    {
+      "task_id": "sqlite-utils-issue-228",
+      "base": {
+        "valid": true,
+        "passed": false,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "failed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.6902760000084527
+      },
+      "reference": {
+        "valid": true,
+        "passed": true,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "passed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.8723397090216167
+      }
+    },
+    {
+      "task_id": "sqlite-utils-issue-250",
+      "base": {
+        "valid": true,
+        "passed": false,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "failed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.6914508339832537
+      },
+      "reference": {
+        "valid": true,
+        "passed": true,
+        "cases": [
+          {
+            "id": "test_behavior::test_target",
+            "outcome": "passed"
+          },
+          {
+            "id": "test_behavior::test_regression",
+            "outcome": "passed"
+          }
+        ],
+        "error": null,
+        "seconds": 1.8482902079704218
+      }
+    }
+  ],
+  "raw_collection_protocol": "protocol-v2",
+  "training_and_final_protocol": "protocol-v3",
+  "old_verdicts": "retained",
+  "policy_relaxed": false,
+  "agent_resampling": false,
+  "original_base_file_input_diagnostic": [
+    {
+      "task_id": "sqlite-utils-issue-202",
+      "valid": true,
+      "passed": true,
+      "cases": [
+        {
+          "id": "test_behavior::test_file_input",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-issue-223",
+      "valid": true,
+      "passed": true,
+      "cases": [
+        {
+          "id": "test_behavior::test_file_input",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-issue-228",
+      "valid": true,
+      "passed": true,
+      "cases": [
+        {
+          "id": "test_behavior::test_file_input",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-issue-250",
+      "valid": true,
+      "passed": true,
+      "cases": [
+        {
+          "id": "test_behavior::test_file_input",
+          "outcome": "passed"
+        }
+      ]
+    }
+  ],
+  "diagnostic_attempts": [
+    "001 INVALID missing trusted pytest.ini; preserved",
+    "002 actual base ordinary file import"
+  ],
+  "first_task_symmetric_revalidation": [
+    {
+      "state_id": "sqlite-utils-issue-202:E0",
+      "repeat": 1,
+      "action": "sqlite-fulltext",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E0",
+      "repeat": 1,
+      "action": "sqlite-ingest",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E0",
+      "repeat": 1,
+      "action": "GENERIC_REMINDER",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E0",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E1",
+      "repeat": 1,
+      "action": "sqlite-ingest",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E1",
+      "repeat": 1,
+      "action": "GENERIC_REMINDER",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E1",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E1",
+      "repeat": 1,
+      "action": "sqlite-fulltext",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 1,
+      "action": "GENERIC_REMINDER",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 1,
+      "action": "sqlite-fulltext",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 1,
+      "action": "sqlite-ingest",
+      "old_quality": null,
+      "new_quality": null,
+      "old_target": null,
+      "new_target": null
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 2,
+      "action": "sqlite-fulltext",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 2,
+      "action": "sqlite-ingest",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    },
+    {
+      "state_id": "sqlite-utils-issue-202:E2",
+      "repeat": 2,
+      "action": "GENERIC_REMINDER",
+      "old_quality": false,
+      "new_quality": false,
+      "old_target": false,
+      "new_target": true
+    }
+  ]
+}

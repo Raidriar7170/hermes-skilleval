@@ -1,0 +1,50 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..0e63692509e0ee20a3289bd29aa62ddac1a21d56 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,7 +17,9 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
+-    if key:
++    if key == "__rowid__":
++        return {row_number: row for row_number, row in enumerate(rows)}
++    elif key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..d1ef0bedd0c237da385c13d636378e5b834aae66 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -115,3 +115,30 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_row_number_key_matches_rows_by_position():
++    diff = compare(
++        load_csv(io.StringIO(ONE), key="__rowid__"),
++        load_csv(io.StringIO(TWO), key="__rowid__"),
++    )
++    assert diff["added"] == []
++    assert diff["removed"] == []
++    assert len(diff["changed"]) == 1
++    assert diff["changed"][0]["changes"] == {"age": ["4", "5"]}
++    assert diff["columns_added"] == []
++    assert diff["columns_removed"] == []
++
++
++def test_row_number_key_keeps_duplicate_rows():
++    csv_with_duplicates = """id,name
++1,Cleo
++1,Cleo"""
++
++    rows = load_csv(io.StringIO(csv_with_duplicates), key="__rowid__")
++
++    assert len(rows) == 2
++    assert list(rows.values()) == [
++        {"id": "1", "name": "Cleo"},
++        {"id": "1", "name": "Cleo"},
++    ]

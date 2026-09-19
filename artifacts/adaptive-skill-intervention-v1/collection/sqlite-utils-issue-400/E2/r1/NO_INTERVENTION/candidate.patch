@@ -1,0 +1,90 @@
+diff --git a/docs/cli-reference.rst b/docs/cli-reference.rst
+index 15b7b8cf52e2cf8db2f7647cf294ef95160d6019..2208e8838ce35f078996bc23959551e2d53dea41 100644
+--- a/docs/cli-reference.rst
++++ b/docs/cli-reference.rst
+@@ -782,6 +782,7 @@ See :ref:`cli_create_table`.
+       --fk <TEXT TEXT TEXT>...  Column, other table, other column to set as a
+                                 foreign key
+       --ignore                  If table already exists, do nothing
++      --if-not-exists           Ignore if table already exists
+       --replace                 If table already exists, replace it
+       --load-extension TEXT     SQLite extensions to load
+       -h, --help                Show this message and exit.
+diff --git a/docs/cli.rst b/docs/cli.rst
+index d8aed91929d0509ec994ad882829d2f42ca3acd1..bf2eb6414adf2df406db4f1671cb064aac5ca606 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1374,6 +1374,8 @@ This will create a table called ``mytable`` with two columns - an integer ``id``
+ 
+ You can pass as many column-name column-type pairs as you like. Valid types are ``integer``, ``text``, ``float`` and ``blob``.
+ 
++Use ``--if-not-exists`` to avoid an error if the table already exists.
++
+ You can specify columns that should be NOT NULL using ``--not-null colname``. You can specify default values for columns using ``--default colname defaultvalue``.
+ 
+ ::
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index b137d9b776f6b7af39b8cdda0779fa5c81a915b4..46a7bb21cb0543ece3ea7265344e32ede3174633 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1389,6 +1389,11 @@ def create_database(path, enable_wal):
+     is_flag=True,
+     help="If table already exists, do nothing",
+ )
++@click.option(
++    "--if-not-exists",
++    is_flag=True,
++    help="Ignore if table already exists",
++)
+ @click.option(
+     "--replace",
+     is_flag=True,
+@@ -1396,7 +1401,17 @@ def create_database(path, enable_wal):
+ )
+ @load_extension_option
+ def create_table(
+-    path, table, columns, pk, not_null, default, fk, ignore, replace, load_extension
++    path,
++    table,
++    columns,
++    pk,
++    not_null,
++    default,
++    fk,
++    ignore,
++    if_not_exists,
++    replace,
++    load_extension,
+ ):
+     """
+     Add a table with the specified columns. Columns should be specified using
+@@ -1427,7 +1442,7 @@ def create_table(
+         coltypes[name] = ctype.upper()
+     # Does table already exist?
+     if table in db.table_names():
+-        if ignore:
++        if ignore or if_not_exists:
+             return
+         elif replace:
+             db[table].drop()
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 244029d2e16f2c82e97f21683c9f2965495649ec..cad9eea9e42348fb3177b0b0d4b65f5ad2e75b14 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1124,13 +1124,14 @@ def test_create_table_error_if_table_exists():
+         )
+ 
+ 
+-def test_create_table_ignore():
++@pytest.mark.parametrize("option", ("--ignore", "--if-not-exists"))
++def test_create_table_ignore(option):
+     runner = CliRunner()
+     with runner.isolated_filesystem():
+         db = Database("test.db")
+         db["dogs"].insert({"name": "Cleo"})
+         result = runner.invoke(
+-            cli.cli, ["create-table", "test.db", "dogs", "id", "integer", "--ignore"]
++            cli.cli, ["create-table", "test.db", "dogs", "id", "integer", option]
+         )
+         assert 0 == result.exit_code
+         assert "CREATE TABLE [dogs] (\n   [name] TEXT\n)" == db["dogs"].schema

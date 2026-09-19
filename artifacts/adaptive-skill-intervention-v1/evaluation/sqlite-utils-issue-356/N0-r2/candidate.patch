@@ -1,0 +1,108 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..e18c1a77c16fa5fe42599ded5290d34fc4daee4f 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -753,6 +753,17 @@ This also means you pipe ``sqlite-utils`` together to easily create a new SQLite
+     207368,920 Kirkham St,37.760210314285,-122.47073935813
+     188702,1501 Evans Ave,37.7422086702947,-122.387293152263
+ 
++Converting data while inserting
++--------------------------------
++
++The ``--convert`` option runs Python code against every incoming JSON object before
++it is inserted. The object is available as ``row`` and can be modified in place.
++Every incoming object will still be inserted. For example::
++
++    $ printf '{"n": "1"}\n{"n": "2"}\n' \
++        | sqlite-utils insert numbers.db numbers - --nl \
++            --convert 'row["n"] = int(row["n"]) + 1'
++
+ .. _cli_inserting_data_flatten:
+ 
+ Flattening nested JSON objects
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..229bdd3fc2d96e4233badca324b6b1da3e95044b 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    convert=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -771,6 +772,15 @@ def insert_upsert_implementation(
+             raise click.ClickException(
+                 "Invalid JSON - use --csv for CSV or --tsv for TSV files"
+             )
++        if convert:
++            code = compile(convert, "<string>", "exec")
++
++            def convert_rows(rows):
++                for row in rows:
++                    exec(code, {"r": recipes, "recipes": recipes}, {"row": row})
++                    yield row
++
++            docs = convert_rows(docs)
+         if flatten:
+             docs = (dict(_flatten(doc)) for doc in docs)
+ 
+@@ -848,6 +858,10 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--convert",
++    help="Python code to run against each incoming object, using 'row'",
++)
+ def insert(
+     path,
+     table,
+@@ -872,6 +886,7 @@ def insert(
+     truncate,
+     not_null,
+     default,
++    convert,
+ ):
+     """
+     Insert records from JSON file into a table, creating the table if it
+@@ -905,6 +920,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            convert=convert,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..2479f3756e40d54c5e7cfeca538de62ca1a380a6 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -778,6 +778,26 @@ def test_insert_newline_delimited(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++def test_insert_convert(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "converted",
++            "-",
++            "--nl",
++            "--convert",
++            'row["n"] = int(row["n"]) + 1',
++        ],
++        input='{"n": "1"}\n{"n": "2"}',
++    )
++    assert result.exit_code == 0, result.output
++    assert [{"n": 2}, {"n": 3}] == list(
++        Database(db_path).query("select n from converted order by n")
++    )
++
++
+ def test_insert_ignore(db_path, tmpdir):
+     db = Database(db_path)
+     db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")

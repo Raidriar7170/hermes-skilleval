@@ -1,0 +1,37 @@
+{
+  "repository": "wireservice/csvkit",
+  "packages": {
+    "csvkit": "."
+  },
+  "cli_module": "csvkit.utilities.in2csv",
+  "cli_callable": "launch_new_instance",
+  "cli_name": "in2csv",
+  "image": "hermes-asi-executor:v1",
+  "writable_roots": [
+    "csvkit",
+    "tests"
+  ],
+  "file_policy": {
+    "version": "operations-v1",
+    "rules": [
+      {
+        "path": "csvkit",
+        "operations": [
+          "add",
+          "modify",
+          "delete"
+        ],
+        "max_bytes": 1000000
+      },
+      {
+        "path": "tests",
+        "operations": [
+          "add",
+          "modify",
+          "delete"
+        ],
+        "max_bytes": 1000000
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 17d79deb2bba74cd5973d8c87aebe9f1f3758c8e..3a9149e9afafe3b21c31eec600f3a634463bdf36 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1897,19 +1897,15 @@ class Table(Queryable):
+                         hash_id=hash_id,
+                         extracts=extracts,
+                     )
+-                all_columns = set()
+-                for record in chunk:
+-                    all_columns.update(record.keys())
+-                all_columns = list(sorted(all_columns))
+-                if hash_id:
+-                    all_columns.insert(0, hash_id)
+-            else:
+-                all_columns += [
+-                    column
+-                    for record in chunk
+-                    for column in record
+-                    if column not in all_columns
+-                ]
++
++            # Include columns from previous chunks, while using a set to avoid
++            # adding the same newly introduced column once for every record.
++            all_columns = set(all_columns or [])
++            for record in chunk:
++                all_columns.update(record.keys())
++            all_columns = list(sorted(all_columns))
++            if hash_id:
++                all_columns.insert(0, hash_id)
+ 
+             validate_column_names(all_columns)
+             first = False
+diff --git a/tests/test_create.py b/tests/test_create.py
+index bee47a7749e7bce54d4283c05e81a37ccb8f487d..0774204a961fbe31f6a73e7726efe7273056676e 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -629,6 +629,21 @@ def test_columns_not_in_first_record_should_not_cause_batch_to_be_too_large(fres
+         raise
+ 
+ 
++def test_insert_all_alter_columns_in_later_batch(fresh_db):
++    # https://github.com/simonw/sqlite-utils/issues/225
++    records = [{"id": i} for i in range(100)] + [
++        dict({"id": i}, **{"c{}".format(j): j for j in range(21)})
++        for i in range(100, 200)
++    ]
++    table = fresh_db["later_columns"]
++    table.insert_all(records, pk="id", alter=True, batch_size=100)
++
++    assert table.count == 200
++    assert len(table.columns) == 22
++    assert table.get(0)["c0"] is None
++    assert table.get(100)["c0"] == 0
++
++
+ @pytest.mark.parametrize(
+     "columns,index_name,expected_index",
+     (

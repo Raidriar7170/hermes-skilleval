@@ -1,0 +1,48 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index e42be837368ab8b0c5cb44355507dde4549351f5..a27898eab74f77a2ada2241177c5fc072151d862 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -704,6 +704,9 @@ def insert_upsert_implementation(
+                 csv_reader_args["quotechar"] = quotechar
+             reader = csv_std.reader(decoded, **csv_reader_args)
+             first_row = next(reader)
++            # Strip a UTF-8 byte order mark from the first field, if present
++            if first_row and first_row[0].startswith("\ufeff"):
++                first_row[0] = first_row[0][1:]
+             if no_headers:
+                 headers = ["untitled_{}".format(i + 1) for i in range(len(first_row))]
+                 reader = itertools.chain([first_row], reader)
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 87753965c039f184f6e5fee71719524b67ffa188..b59facfded11d9e6f1150ab6146790422eca83fb 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -746,6 +746,29 @@ def test_insert_csv_tsv(content, options, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "cat,dog"}] == list(db["data"].rows)
+ 
+ 
++@pytest.mark.parametrize(
++    "content,options,expected",
++    (
++        ("\ufeffname,age\nCleo,4", ["--csv"], {"name": "Cleo", "age": "4"}),
++        (
++            "\ufeffCleo,4",
++            ["--csv", "--no-headers"],
++            {"untitled_1": "Cleo", "untitled_2": "4"},
++        ),
++    ),
++)
++def test_insert_csv_with_bom(content, options, expected, db_path, tmpdir):
++    csv_path = str(tmpdir / "bom.csv")
++    open(csv_path, "w", encoding="utf-8").write(content)
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "data", csv_path] + options,
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++    assert [expected] == list(Database(db_path)["data"].rows)
++
++
+ @pytest.mark.parametrize(
+     "options",
+     (

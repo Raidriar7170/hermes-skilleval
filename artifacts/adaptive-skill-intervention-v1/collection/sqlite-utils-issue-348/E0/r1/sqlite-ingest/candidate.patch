@@ -1,0 +1,79 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..e026119934fc4a74ae881e4bdf637ed6a423f202 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -1120,6 +1120,16 @@ The type of the returned values will be taken into account when creating the new
+ 
+ The code function can also return ``None``, in which case its output will be ignored. You can drop the original column at the end of the operation by adding ``--drop``.
+ 
++Creating an empty database
++==========================
++
++You can create a new, empty SQLite database file using ``create-database``::
++
++    $ sqlite-utils create-database mydb.db
++
++The command will return an error if the file already exists, and will not alter
++the existing file.
++
+ .. _cli_create_table:
+ 
+ Creating tables
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..1d50401705687bb8f8ddae8817a998c4069dc928 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -115,6 +115,23 @@ def cli():
+     pass
+ 
+ 
++@cli.command(name="create-database")
++@click.argument(
++    "path",
++    type=click.Path(file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def create_database(path):
++    "Create an empty SQLite database"
++    try:
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
++    except FileExistsError:
++        raise click.ClickException('File already exists: "{}"'.format(path))
++    else:
++        os.close(fd)
++    sqlite_utils.Database(path).vacuum()
++
++
+ @cli.command()
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..08effd3d82a0480ae3b3a711b949ed230a4a5cba 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -41,6 +41,25 @@ def test_help(options):
+     assert "-h, --help" in result.output
+ 
+ 
++def test_create_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        result = runner.invoke(cli.cli, ["create-database", "empty.db"])
++        assert result.exit_code == 0
++        assert os.path.exists("empty.db")
++        assert Database("empty.db").table_names() == []
++
++
++def test_create_database_does_not_overwrite_existing_database():
++    runner = CliRunner()
++    with runner.isolated_filesystem():
++        Database("existing.db")["dogs"].insert({"name": "Cleo"})
++        result = runner.invoke(cli.cli, ["create-database", "existing.db"])
++        assert result.exit_code == 1
++        assert 'File already exists: "existing.db"' in result.output
++        assert list(Database("existing.db")["dogs"].rows) == [{"name": "Cleo"}]
++
++
+ def test_tables(db_path):
+     result = CliRunner().invoke(cli.cli, ["tables", db_path])
+     assert '[{"table": "Gosh"},\n {"table": "Gosh2"}]' == result.output.strip()

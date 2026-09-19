@@ -1,0 +1,98 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 93d25b23e5975fd5c2d1ece8881da9b3f6b6a3f2..e828d1d1f7abc3deb42fd6506d71702e2b30949a 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2180,23 +2180,29 @@ class Table(Queryable):
+                     return v
+                 return fn(v)
+ 
+-            self.db.register_function(convert_value)
++            function_name = "convert_value_{}".format(uuid.uuid4().hex)
++            self.db.conn.create_function(function_name, 1, convert_value)
+             sql = "update [{table}] set {sets}{where};".format(
+                 table=self.name,
+                 sets=", ".join(
+                     [
+-                        "[{output_column}] = convert_value([{column}])".format(
+-                            output_column=output or column, column=column
++                        "[{output_column}] = {function_name}([{column}])".format(
++                            output_column=output or column,
++                            function_name=function_name,
++                            column=column,
+                         )
+                         for column in columns
+                     ]
+                 ),
+                 where=" where {}".format(where) if where is not None else "",
+             )
+-            with self.db.conn:
+-                self.db.execute(sql, where_args or [])
+-                if drop:
+-                    self.transform(drop=columns)
++            try:
++                with self.db.conn:
++                    self.db.execute(sql, where_args or [])
++                    if drop:
++                        self.transform(drop=columns)
++            finally:
++                self.db.conn.create_function(function_name, 1, None)
+         return self
+ 
+     def _convert_multi(
+diff --git a/tests/test_convert.py b/tests/test_convert.py
+index 796a08f2e59f14d4299177089a4856bc2763826f..482784dd7add06deeed4a3580b7cf5ea65201055 100644
+--- a/tests/test_convert.py
++++ b/tests/test_convert.py
+@@ -24,6 +24,52 @@ def test_convert(fresh_db, columns, fn, expected):
+     assert list(table.rows) == [expected]
+ 
+ 
++def test_convert_does_not_clobber_existing_function(fresh_db):
++    fresh_db.conn.create_function("convert_value", 1, lambda value: "existing")
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    table.convert("title", lambda value: value.upper())
++    assert list(table.rows) == [{"title": "MIXED CASE"}]
++    assert fresh_db.execute("select convert_value('value')").fetchone()[0] == "existing"
++
++
++def test_convert_unregisters_temporary_function(fresh_db):
++    class RecordingConnection:
++        def __init__(self, connection):
++            self.connection = connection
++            self.create_function_calls = []
++
++        def __getattr__(self, attr):
++            return getattr(self.connection, attr)
++
++        def __enter__(self):
++            return self.connection.__enter__()
++
++        def __exit__(self, *args):
++            return self.connection.__exit__(*args)
++
++        def create_function(self, name, arity, fn, **kwargs):
++            self.create_function_calls.append((name, arity, fn))
++            return self.connection.create_function(name, arity, fn, **kwargs)
++
++    fresh_db.conn = RecordingConnection(fresh_db.conn)
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    table.convert("title", lambda value: value.upper())
++    table.convert("title", lambda value: value.lower())
++
++    register_one, unregister_one, register_two, unregister_two = (
++        fresh_db.conn.create_function_calls
++    )
++    assert register_one[0].startswith("convert_value_")
++    assert register_two[0].startswith("convert_value_")
++    assert register_one[0] != register_two[0]
++    assert callable(register_one[2])
++    assert callable(register_two[2])
++    assert unregister_one == (register_one[0], 1, None)
++    assert unregister_two == (register_two[0], 1, None)
++
++
+ @pytest.mark.parametrize(
+     "where,where_args", (("id > 1", None), ("id > :id", {"id": 1}), ("id > ?", [1]))
+ )

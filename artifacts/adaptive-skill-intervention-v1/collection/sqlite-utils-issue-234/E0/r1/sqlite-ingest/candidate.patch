@@ -1,0 +1,62 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 17d79deb2bba74cd5973d8c87aebe9f1f3758c8e..3e88b3208febf608e314d6d13420629f0a98cf2c 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1904,12 +1904,16 @@ class Table(Queryable):
+                 if hash_id:
+                     all_columns.insert(0, hash_id)
+             else:
+-                all_columns += [
+-                    column
+-                    for record in chunk
+-                    for column in record
+-                    if column not in all_columns
+-                ]
++                for record in chunk:
++                    for column in record:
++                        if column not in all_columns:
++                            all_columns.append(column)
++
++                # Add columns discovered in later batches before attempting the
++                # insert. This avoids relying on a failed INSERT to trigger the
++                # schema change, and leaves rows from earlier batches intact.
++                if alter:
++                    self.add_missing_columns(chunk)
+ 
+             validate_column_names(all_columns)
+             first = False
+diff --git a/tests/test_create.py b/tests/test_create.py
+index bee47a7749e7bce54d4283c05e81a37ccb8f487d..005e02b853a2d0990afc3b47472c9d4935175763 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -777,6 +777,30 @@ def test_insert_thousands_adds_extra_columns_after_first_100_with_alter(fresh_db
+     assert [{"i": 101, "word": None, "extra": "Should trigger ALTER"}] == rows
+ 
+ 
++def test_insert_all_alter_adds_columns_from_subsequent_batches(fresh_db):
++    fresh_db["test"].insert_all(
++        [
++            {"id": 1, "name": "Cleo"},
++            {"id": 2, "name": "Pancakes"},
++            {"id": 3, "age": 6},
++            {"id": 4, "age": 2},
++            {"id": 5, "breed": "pug"},
++            {"id": 6, "breed": "terrier"},
++        ],
++        pk="id",
++        alter=True,
++        batch_size=2,
++    )
++    assert list(fresh_db["test"].rows) == [
++        {"id": 1, "name": "Cleo", "age": None, "breed": None},
++        {"id": 2, "name": "Pancakes", "age": None, "breed": None},
++        {"id": 3, "name": None, "age": 6, "breed": None},
++        {"id": 4, "name": None, "age": 2, "breed": None},
++        {"id": 5, "name": None, "age": None, "breed": "pug"},
++        {"id": 6, "name": None, "age": None, "breed": "terrier"},
++    ]
++
++
+ def test_insert_ignore(fresh_db):
+     fresh_db["test"].insert({"id": 1, "bar": 2}, pk="id")
+     # Should raise an error if we try this again

@@ -1,0 +1,66 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 17d79deb2bba74cd5973d8c87aebe9f1f3758c8e..e494f943a7eef0261038ddefcf16f93abb61bb02 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1897,19 +1897,14 @@ class Table(Queryable):
+                         hash_id=hash_id,
+                         extracts=extracts,
+                     )
+-                all_columns = set()
+-                for record in chunk:
+-                    all_columns.update(record.keys())
+-                all_columns = list(sorted(all_columns))
+-                if hash_id:
+-                    all_columns.insert(0, hash_id)
+-            else:
+-                all_columns += [
+-                    column
+-                    for record in chunk
+-                    for column in record
+-                    if column not in all_columns
+-                ]
++            all_columns = set(all_columns or ())
++            for record in chunk:
++                all_columns.update(record.keys())
++            if hash_id:
++                all_columns.discard(hash_id)
++            all_columns = list(sorted(all_columns))
++            if hash_id:
++                all_columns.insert(0, hash_id)
+ 
+             validate_column_names(all_columns)
+             first = False
+diff --git a/tests/test_create.py b/tests/test_create.py
+index bee47a7749e7bce54d4283c05e81a37ccb8f487d..a3d7f74a566c76e462752ba9a658396393564843 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -593,6 +593,29 @@ def test_bulk_insert_more_than_999_values(fresh_db):
+     assert 100 == fresh_db["big"].count
+ 
+ 
++def test_insert_all_alter_adds_columns_from_later_batches(fresh_db):
++    later_columns = {"extra_{}".format(i): i for i in range(20)}
++    fresh_db["items"].insert_all(
++        [{"id": i, "name": "item {}".format(i)} for i in range(100)]
++        + [
++            dict({"id": i, "name": "item {}".format(i)}, **later_columns)
++            for i in range(100, 200)
++        ],
++        pk="id",
++        alter=True,
++        batch_size=100,
++    )
++
++    assert fresh_db["items"].count == 200
++    assert fresh_db["items"].get(0) == dict(
++        {"id": 0, "name": "item 0"},
++        **{"extra_{}".format(i): None for i in range(20)}
++    )
++    assert fresh_db["items"].get(199) == dict(
++        {"id": 199, "name": "item 199"}, **later_columns
++    )
++
++
+ @pytest.mark.parametrize(
+     "num_columns,should_error", ((900, False), (999, False), (1000, True))
+ )

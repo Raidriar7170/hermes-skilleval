@@ -1,0 +1,114 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..408e708b750b426cd69d2575e3297126d168ea5c 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    extracts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -781,6 +782,8 @@ def insert_upsert_implementation(
+         extra_kwargs["defaults"] = dict(default)
+     if upsert:
+         extra_kwargs["upsert"] = upsert
++    if extracts:
++        extra_kwargs["extracts"] = extracts
+     # Apply {"$base64": true, ...} decoding, if needed
+     docs = (decode_base64_values(doc) for doc in docs)
+     try:
+@@ -848,6 +851,12 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--extract",
++    "extracts",
++    multiple=True,
++    help="Columns to extract into separate lookup tables",
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +879,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    extracts,
+     not_null,
+     default,
+ ):
+@@ -899,6 +909,7 @@ def insert(
+             ignore=ignore,
+             replace=replace,
+             truncate=truncate,
++            extracts=extracts,
+             encoding=encoding,
+             detect_types=detect_types,
+             load_extension=load_extension,
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..b94ac350b83d40541fbfe5f5b1505b3071466efd 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -778,6 +778,59 @@ def test_insert_newline_delimited(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++def test_insert_extract(db_path):
++    help_result = CliRunner().invoke(cli.cli, ["insert", "--help"])
++    assert help_result.exit_code == 0
++    assert "--extract TEXT" in help_result.output
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "trees",
++            "-",
++            "--extract",
++            "species",
++            "--extract",
++            "region",
++        ],
++        input=json.dumps(
++            [
++                {"name": "One", "species": "Oak", "region": "North"},
++                {"name": "Two", "species": "Oak", "region": "South"},
++                {"name": "Three", "species": "Palm", "region": "South"},
++            ]
++        ),
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(db_path)
++    assert {"trees", "species", "region"}.issubset(db.table_names())
++    assert db["species"].schema == (
++        "CREATE TABLE [species] (\n   [id] INTEGER PRIMARY KEY,\n   [value] TEXT\n)"
++    )
++    assert db["region"].schema == (
++        "CREATE TABLE [region] (\n   [id] INTEGER PRIMARY KEY,\n   [value] TEXT\n)"
++    )
++    assert set(db["trees"].foreign_keys) == {
++        ForeignKey("trees", "species", "species", "id"),
++        ForeignKey("trees", "region", "region", "id"),
++    }
++    assert list(db["species"].rows) == [
++        {"id": 1, "value": "Oak"},
++        {"id": 2, "value": "Palm"},
++    ]
++    assert list(db["region"].rows) == [
++        {"id": 1, "value": "North"},
++        {"id": 2, "value": "South"},
++    ]
++    assert list(db["trees"].rows) == [
++        {"name": "One", "species": 1, "region": 1},
++        {"name": "Two", "species": 1, "region": 2},
++        {"name": "Three", "species": 2, "region": 2},
++    ]
++
++
+ def test_insert_ignore(db_path, tmpdir):
+     db = Database(db_path)
+     db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")

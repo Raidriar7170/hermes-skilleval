@@ -1,0 +1,73 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index 07d4ee5007c7853c040336ab5e354ffe9b01a57b..9ab32bcd02999185a68b7c193ebaf80697a8295f 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python
+ 
++import io
+ import sys
+ 
+ import agate
+@@ -72,6 +73,15 @@ class CSVJoin(CSVKitUtility):
+         column_types = self.get_column_types()
+ 
+         for f in self.input_files:
++            # Process substitutions and named pipes are not seekable, but agate
++            # seeks while sniffing a file-like object. csvjoin already reads
++            # every input into memory, so buffering these streams doesn't alter
++            # its memory guarantees.
++            if not f.seekable():
++                buffered = io.StringIO(f.read())
++                f.close()
++                f = buffered
++
+             tables.append(agate.Table.from_csv(
+                 f,
+                 skip_lines=self.args.skip_lines,
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index 47a2fbe915fca3e61c63a7ceb07020afd351a9dd..6f8995ce0762eb4d910d2f352ed754fec15c5d79 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -1,3 +1,4 @@
++import io
+ import os
+ import sys
+ import unittest
+@@ -7,6 +8,17 @@ from csvkit.utilities.csvjoin import CSVJoin, launch_new_instance
+ from tests.utils import CSVKitTestCase, EmptyFileTests
+ 
+ 
++class NonSeekableStringIO(io.StringIO):
++    def seekable(self):
++        return False
++
++    def seek(self, *args):
++        raise io.UnsupportedOperation('underlying stream is not seekable')
++
++    def tell(self):
++        raise io.UnsupportedOperation('underlying stream is not seekable')
++
++
+ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+     Utility = CSVJoin
+     default_args = ['examples/dummy.csv', '-']
+@@ -52,6 +64,18 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['-c', 'a', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 3)
+ 
++    def test_non_seekable_inputs(self):
++        inputs = [
++            NonSeekableStringIO('A,B,C\n1,2,3\n'),
++            NonSeekableStringIO('C,D,E\n3,4,5\n'),
++        ]
++
++        with patch.object(self.Utility, '_open_input_file', side_effect=inputs):
++            self.assertRows(['--no-inference', '-c', 'C', 'input1', 'input2'], [
++                ['A', 'B', 'C', 'D', 'E'],
++                ['1', '2', '3', '4', '5'],
++            ])
++
+     def test_left(self):
+         output = self.get_output_as_io(['-c', 'a', '--left', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 5)

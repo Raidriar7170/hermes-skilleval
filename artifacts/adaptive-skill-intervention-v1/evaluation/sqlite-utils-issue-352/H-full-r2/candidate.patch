@@ -1,0 +1,131 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a096fdeaa7887dacb1a4d37aa15f76c4236763e6..5e0ce030b8a38b2c9782dcee024fb4f32bbc9d21 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -712,6 +712,15 @@ You can delete all the existing rows in the table before inserting the new recor
+ 
+     $ sqlite-utils insert dogs.db dogs dogs.json --truncate
+ 
++You can extract repeated values into lookup tables using ``--extract``. The option
++can be repeated to extract more than one column::
++
++    $ sqlite-utils insert trees.db trees trees.json \
++        --extract species --extract family
++
++Each extracted column is replaced by an integer foreign key to a lookup table with
++the same name as that column. Duplicate values share the same lookup-table row.
++
+ .. _cli_inserting_data_binary:
+ 
+ Inserting binary data
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..7decbbafd9fa98112a97fffd2a8ee6a1a6db89fd 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    extracts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -785,7 +786,12 @@ def insert_upsert_implementation(
+     docs = (decode_base64_values(doc) for doc in docs)
+     try:
+         db[table].insert_all(
+-            docs, pk=pk, batch_size=batch_size, alter=alter, **extra_kwargs
++            docs,
++            pk=pk,
++            batch_size=batch_size,
++            alter=alter,
++            extracts=extracts,
++            **extra_kwargs
+         )
+     except Exception as e:
+         if (
+@@ -848,6 +854,12 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--extract",
++    "extracts",
++    multiple=True,
++    help="Columns to extract into separate lookup tables",
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +882,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    extracts,
+     not_null,
+     default,
+ ):
+@@ -905,6 +918,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            extracts=extracts,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..fc6377804fd4caf75adc0db8fb82ac32a15a42fb 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -621,6 +621,51 @@ def test_insert_simple(tmpdir):
+     assert [] == db["dogs"].indexes
+ 
+ 
++def test_insert_extract(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "trees",
++            "-",
++            "--extract",
++            "species",
++            "--extract",
++            "family",
++        ],
++        input=json.dumps(
++            [
++                {"id": 1, "species": "Oak", "family": "Fagaceae"},
++                {"id": 2, "species": "Oak", "family": "Fagaceae"},
++                {"id": 3, "species": "Palm", "family": "Arecaceae"},
++            ]
++        ),
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(db_path)
++    assert list(db["species"].rows) == [
++        {"id": 1, "value": "Oak"},
++        {"id": 2, "value": "Palm"},
++    ]
++    assert list(db["family"].rows) == [
++        {"id": 1, "value": "Fagaceae"},
++        {"id": 2, "value": "Arecaceae"},
++    ]
++    assert list(db["trees"].rows) == [
++        {"id": 1, "species": 1, "family": 1},
++        {"id": 2, "species": 1, "family": 1},
++        {"id": 3, "species": 2, "family": 2},
++    ]
++    assert {
++        (fk.column, fk.other_table, fk.other_column)
++        for fk in db["trees"].foreign_keys
++    } == {
++        ("species", "species", "id"),
++        ("family", "family", "id"),
++    }
++
++
+ def test_insert_from_stdin(tmpdir):
+     db_path = str(tmpdir / "dogs.db")
+     result = CliRunner().invoke(

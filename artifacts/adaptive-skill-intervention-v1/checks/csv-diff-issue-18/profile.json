@@ -1,0 +1,37 @@
+{
+  "repository": "simonw/csv-diff",
+  "packages": {
+    "csv_diff": "."
+  },
+  "cli_module": "csv_diff.cli",
+  "cli_callable": "cli",
+  "cli_name": "csv-diff",
+  "image": "hermes-asi-executor:v1",
+  "writable_roots": [
+    "csv_diff",
+    "tests"
+  ],
+  "file_policy": {
+    "version": "operations-v1",
+    "rules": [
+      {
+        "path": "csv_diff",
+        "operations": [
+          "add",
+          "modify",
+          "delete"
+        ],
+        "max_bytes": 1000000
+      },
+      {
+        "path": "tests",
+        "operations": [
+          "add",
+          "modify",
+          "delete"
+        ],
+        "max_bytes": 1000000
+      }
+    ]
+  }
+}

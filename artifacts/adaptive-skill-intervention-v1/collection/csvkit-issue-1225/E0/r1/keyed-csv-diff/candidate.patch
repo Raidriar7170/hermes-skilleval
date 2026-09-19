@@ -1,0 +1,64 @@
+diff --git a/csvkit/utilities/in2csv.py b/csvkit/utilities/in2csv.py
+index 9ee188e18d44b7e74f0ddbcd2ccb882e68067e22..543b034c56d8c830e40cf5fc2253aa321102f0c9 100644
+--- a/csvkit/utilities/in2csv.py
++++ b/csvkit/utilities/in2csv.py
+@@ -65,7 +65,11 @@ class In2CSV(CSVKitUtility):
+ 
+     def open_excel_input_file(self, path):
+         if not path or path == '-':
+-            return BytesIO(sys.stdin.buffer.read())
++            if not hasattr(self, '_stdin_excel_data'):
++                self._stdin_excel_data = sys.stdin.buffer.read()
++            input_file = BytesIO(self._stdin_excel_data)
++            input_file.name = 'stdin'
++            return input_file
+         return open(path, 'rb')
+ 
+     def sheet_names(self, path, filetype):
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index 95b691572f0fbe2f11fe62c46c9e88720d49e2b4..ecb5303a62966883c37a462cfe943b685da9072d 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -1,6 +1,7 @@
+ import io
+ import os
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.in2csv import In2CSV, launch_new_instance
+@@ -258,6 +259,34 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+                 if os.path.exists(path):
+                     os.remove(path)
+ 
++    def test_convert_xlsx_from_stdin_with_write_sheets(self):
++        input_path = os.path.abspath('examples/sheets.xlsx')
++        expected_paths = [
++            os.path.abspath('examples/testxlsx_noinference_converted.csv'),
++            os.path.abspath('examples/testxlsx_unicode_converted.csv'),
++        ]
++
++        with tempfile.TemporaryDirectory() as directory:
++            previous_directory = os.getcwd()
++            try:
++                os.chdir(directory)
++                with open(input_path, 'rb') as input_file, stdin_as_string(input_file):
++                    output = self.get_output([
++                        '-f', 'xlsx', '--no-inference', '--sheet', 'data', '--write-sheets', '-',
++                    ])
++
++                with open(expected_paths[0]) as expected:
++                    self.assertEqual(output, expected.read())
++
++                with open('stdin_0.csv') as actual:
++                    self.assertEqual(actual.read(), '\n')
++
++                for i, expected_path in enumerate(expected_paths, 1):
++                    with open(f'stdin_{i}.csv') as actual, open(expected_path) as expected:
++                        self.assertEqual(actual.read(), expected.read())
++            finally:
++                os.chdir(previous_directory)
++
+     def test_convert_xls_with_write_sheets_with_names(self):
+         try:
+             self.assertConverted('xls', 'examples/sheets.xls', 'examples/testxls_converted.csv',

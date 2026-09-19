@@ -1,0 +1,74 @@
+diff --git a/README.md b/README.md
+index ecd93b960c4ffaef5e7039c17b15f69c8c775a94..b03f55b97b52cb954b7c6c0ce74480fdc352930c 100644
+--- a/README.md
++++ b/README.md
+@@ -51,6 +51,8 @@ Consider two CSV files:
+ 
+ The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.
+ 
++Use `--key=__rowid__` to match CSV rows by their position in the file (excluding the header), which makes edits to a row appear as changes even when there is no unique key column. If the CSV has a column named `__rowid__`, that column is used as the key instead.
++
+ The tool will automatically detect if your files are comma- or tab-separated. You can over-ride this automatic detection and force the tool to use a specific format using `--format=tsv` or `--format=csv`.
+ 
+ You can also feed it JSON files, provided they are a JSON array of objects where each object has the same keys. Use `--format=json` if your input files are JSON.
+@@ -111,6 +113,8 @@ You can also import the Python library into your own code like so:
+ 
+ `diff` will now contain the same data structure as the output in the `--json` example above.
+ 
++Passing `key="__rowid__"` to `load_csv()` matches rows by their data-row position instead of hashing their contents.
++
+ If the columns in the CSV have changed, those added or removed columns will be ignored when calculating changes made to specific rows.
+ 
+ ## As a Docker container
+@@ -125,4 +129,4 @@ If the columns in the CSV have changed, those added or removed columns will be i
+ 
+ Suppose current directory contains two csv files : one.csv two.csv
+ 
+-    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+\ No newline at end of file
++    $ docker run --rm -v $(pwd):/files csvdiff one.csv two.csv
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..a73171dd05af6ce4639e33545c17c5378ee60ade 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,6 +17,8 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
++    if key == "__rowid__" and key not in headings:
++        return {row_number: row for row_number, row in enumerate(rows, start=1)}
+     if key:
+         keyfn = lambda r: r[key]
+     else:
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..8f455728ed9de02d023bfa89eb296fb8956ae11c 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -115,3 +115,27 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_row_number_key():
++    previous = """name,age
++Cleo,4
++Pancakes,2"""
++    current = """name,age
++Cleo,5
++Pancakes,2"""
++    diff = compare(
++        load_csv(io.StringIO(previous), key="__rowid__"),
++        load_csv(io.StringIO(current), key="__rowid__"),
++    )
++    assert diff["changed"] == [{"key": 1, "changes": {"age": ["4", "5"]}}]
++    assert diff["added"] == []
++    assert diff["removed"] == []
++
++
++def test_row_number_key_can_be_a_column_name():
++    csv_data = """__rowid__,name
++custom,Cleo"""
++    assert load_csv(io.StringIO(csv_data), key="__rowid__") == {
++        "custom": {"__rowid__": "custom", "name": "Cleo"}
++    }

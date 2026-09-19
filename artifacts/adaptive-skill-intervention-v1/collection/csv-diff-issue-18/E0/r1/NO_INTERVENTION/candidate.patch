@@ -1,0 +1,105 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..773c8052c53b2efb55d10cb9695059cda0f37894 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -4,6 +4,12 @@ import json
+ import hashlib
+ 
+ 
++class _Rows(dict):
++    def __init__(self, *args, columns=None, **kwargs):
++        super().__init__(*args, **kwargs)
++        self.columns = columns
++
++
+ def load_csv(fp, key=None, dialect=None):
+     if dialect is None and fp.seekable():
+         # Peek at first 1MB to sniff the delimiter and other dialect details
+@@ -23,7 +29,7 @@ def load_csv(fp, key=None, dialect=None):
+         keyfn = lambda r: hashlib.sha1(
+             json.dumps(r, sort_keys=True).encode("utf8")
+         ).hexdigest()
+-    return {keyfn(r): r for r in rows}
++    return _Rows({keyfn(r): r for r in rows}, columns=headings)
+ 
+ 
+ def load_json(fp, key=None):
+@@ -61,8 +67,8 @@ def compare(previous, current, show_unchanged=False):
+         "columns_removed": [],
+     }
+     # Have the columns changed?
+-    previous_columns = set(next(iter(previous.values())).keys())
+-    current_columns = set(next(iter(current.values())).keys())
++    previous_columns = _columns(previous)
++    current_columns = _columns(current)
+     ignore_columns = None
+     if previous_columns != current_columns:
+         result["columns_added"] = [
+@@ -107,6 +113,14 @@ def compare(previous, current, show_unchanged=False):
+     return result
+ 
+ 
++def _columns(rows):
++    columns = getattr(rows, "columns", None)
++    if columns is not None:
++        return set(columns)
++    first_row = next(iter(rows.values()), None)
++    return set(first_row.keys()) if first_row is not None else set()
++
++
+ def human_text(result, key=None, singular=None, plural=None, show_unchanged=False):
+     singular = singular or "row"
+     plural = plural or "rows"
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..1dc3c21ef89a38951ce6993f1aa98523222dbcc1 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -51,6 +51,9 @@ TEN = """id,name,age
+ 1,Cleo,5
+ 2,Pancakes,3"""
+ 
++EMPTY = """id,name,age
++"""
++
+ 
+ def test_row_changed():
+     diff = compare(
+@@ -91,6 +94,38 @@ def test_row_removed():
+     } == diff
+ 
+ 
++def test_rows_added_to_empty_csv():
++    diff = compare(
++        load_csv(io.StringIO(EMPTY), key="id"), load_csv(io.StringIO(TWO), key="id")
++    )
++    assert diff == {
++        "changed": [],
++        "removed": [],
++        "added": [
++            {"age": "5", "id": "1", "name": "Cleo"},
++            {"age": "2", "id": "2", "name": "Pancakes"},
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    }
++
++
++def test_rows_removed_from_empty_csv():
++    diff = compare(
++        load_csv(io.StringIO(TWO), key="id"), load_csv(io.StringIO(EMPTY), key="id")
++    )
++    assert diff == {
++        "changed": [],
++        "removed": [
++            {"age": "5", "id": "1", "name": "Cleo"},
++            {"age": "2", "id": "2", "name": "Pancakes"},
++        ],
++        "added": [],
++        "columns_added": [],
++        "columns_removed": [],
++    }
++
++
+ def test_columns_changed():
+     diff = compare(
+         load_csv(io.StringIO(SIX), key="id"), load_csv(io.StringIO(SEVEN), key="id")

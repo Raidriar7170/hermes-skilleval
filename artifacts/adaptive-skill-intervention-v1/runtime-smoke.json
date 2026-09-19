@@ -1,0 +1,76 @@
+{
+  "scope": "ENGINEERING_ONLY_SEEN_DEVELOPMENT_TASK",
+  "task_id": "sqlite-utils-issue-400",
+  "tails": [
+    {
+      "arm": "N",
+      "status": "COMPLETED",
+      "remaining_seconds": 535.6865264580119,
+      "tail_seconds": 19.660345958021935,
+      "fork": {
+        "visible_prefix_sha256": "e1ef019629cd1e2acd144ecf331c3ea22ab45c4b690cf5a757a55d8d29b0bb98",
+        "expected_prefix_sha256": "e1ef019629cd1e2acd144ecf331c3ea22ab45c4b690cf5a757a55d8d29b0bb98",
+        "matched": true,
+        "parent_thread": "01a0b6b9-2f0a-7d43-a388-a9097d9e0ef3",
+        "boundary_id": "01a0b6b9-b180-7ca2-9687-4025fe4a82af"
+      },
+      "guidance_from_actual_history": false,
+      "legacy_input_observed_field": false,
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true
+        },
+        "regression": {
+          "valid": true,
+          "passed": true
+        },
+        "policy": {
+          "valid": true,
+          "passed": true
+        }
+      },
+      "patch_sha256": "5ba0f526e96e07ff4ddd483a0565fb2696b78b0f33af36e9b40299ad423f1cb3",
+      "changed_files": [
+        "sqlite_utils/cli.py",
+        "tests/test_cli.py"
+      ]
+    },
+    {
+      "arm": "skill",
+      "status": "COMPLETED",
+      "remaining_seconds": 535.6865264580119,
+      "tail_seconds": 9.985922374995425,
+      "fork": {
+        "visible_prefix_sha256": "e1ef019629cd1e2acd144ecf331c3ea22ab45c4b690cf5a757a55d8d29b0bb98",
+        "expected_prefix_sha256": "e1ef019629cd1e2acd144ecf331c3ea22ab45c4b690cf5a757a55d8d29b0bb98",
+        "matched": true,
+        "parent_thread": "01a0b6b9-2f0a-7d43-a388-a9097d9e0ef3",
+        "boundary_id": "01a0b6b9-b180-7ca2-9687-4025fe4a82af"
+      },
+      "guidance_from_actual_history": true,
+      "legacy_input_observed_field": false,
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true
+        },
+        "regression": {
+          "valid": true,
+          "passed": true
+        },
+        "policy": {
+          "valid": true,
+          "passed": true
+        }
+      },
+      "patch_sha256": "5ba0f526e96e07ff4ddd483a0565fb2696b78b0f33af36e9b40299ad423f1cb3",
+      "changed_files": [
+        "sqlite_utils/cli.py",
+        "tests/test_cli.py"
+      ]
+    }
+  ],
+  "field_repair": "Original input_observed used str(list), escaping newlines; current code compares actual content text. Original executions preserved, not rerun.",
+  "records_only_verification": "patch digest, snapshot/reconstructed source, verifier hashes, independently parsed JUnit all match"
+}

@@ -1,0 +1,69 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index 07d4ee5007c7853c040336ab5e354ffe9b01a57b..973230395764b2e6b8f7c7623d06b1acc2a56d94 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python
+ 
++import io
+ import sys
+ 
+ import agate
+@@ -49,7 +50,18 @@ class CSVJoin(CSVKitUtility):
+         self.input_files = []
+ 
+         for path in self.args.input_paths:
+-            self.input_files.append(self._open_input_file(path))
++            f = self._open_input_file(path)
++
++            # agate.Table.from_csv() seeks after sniffing the CSV dialect. Process
++            # substitution and named pipes are readable, but not seekable, so copy
++            # those streams into memory first. csvjoin already reads every input
++            # into memory in order to perform the join.
++            if f != sys.stdin and not f.seekable():
++                buffered = io.StringIO(f.read())
++                f.close()
++                f = buffered
++
++            self.input_files.append(f)
+ 
+         if self.args.columns:
+             join_column_names = self._parse_join_column_names(self.args.columns)
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index 47a2fbe915fca3e61c63a7ceb07020afd351a9dd..e01d0a990115ba2f31715c6a54108d78a370bf28 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -1,3 +1,4 @@
++import io
+ import os
+ import sys
+ import unittest
+@@ -48,6 +49,28 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 4)
+ 
++    def test_non_seekable_inputs(self):
++        class NonSeekableStringIO(io.StringIO):
++            def seekable(self):
++                return False
++
++            def seek(self, *args, **kwargs):
++                raise io.UnsupportedOperation('underlying stream is not seekable')
++
++            def tell(self):
++                raise io.UnsupportedOperation('underlying stream is not seekable')
++
++        inputs = [
++            NonSeekableStringIO('A,B,C\n1,2,x\n'),
++            NonSeekableStringIO('C,D,E\nx,4,5\n'),
++        ]
++
++        with patch.object(CSVJoin, '_open_input_file', side_effect=inputs):
++            self.assertRows(['--no-inference', '-c', 'C', 'first', 'second'], [
++                ['A', 'B', 'C', 'D', 'E'],
++                ['1', '2', 'x', '4', '5'],
++            ])
++
+     def test_inner(self):
+         output = self.get_output_as_io(['-c', 'a', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 3)

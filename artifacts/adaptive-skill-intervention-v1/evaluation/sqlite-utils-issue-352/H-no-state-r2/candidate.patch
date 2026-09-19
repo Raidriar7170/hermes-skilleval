@@ -1,0 +1,100 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..408e708b750b426cd69d2575e3297126d168ea5c 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    extracts=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -781,6 +782,8 @@ def insert_upsert_implementation(
+         extra_kwargs["defaults"] = dict(default)
+     if upsert:
+         extra_kwargs["upsert"] = upsert
++    if extracts:
++        extra_kwargs["extracts"] = extracts
+     # Apply {"$base64": true, ...} decoding, if needed
+     docs = (decode_base64_values(doc) for doc in docs)
+     try:
+@@ -848,6 +851,12 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--extract",
++    "extracts",
++    multiple=True,
++    help="Columns to extract into separate lookup tables",
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +879,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    extracts,
+     not_null,
+     default,
+ ):
+@@ -899,6 +909,7 @@ def insert(
+             ignore=ignore,
+             replace=replace,
+             truncate=truncate,
++            extracts=extracts,
+             encoding=encoding,
+             detect_types=detect_types,
+             load_extension=load_extension,
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..6636087373405f8d8fc1521d053a39f4a0b1a786 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -397,6 +397,45 @@ def test_suggest_alter_if_column_missing(db_path):
+     )
+ 
+ 
++def test_insert_extract_repeatable(db_path):
++    records = [
++        {"name": "Alice", "city": "London", "species": "Human"},
++        {"name": "Bob", "city": "London", "species": "Human"},
++        {"name": "Cleo", "city": "Paris", "species": "Dog"},
++    ]
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "people",
++            "-",
++            "--extract",
++            "city",
++            "--extract",
++            "species",
++        ],
++        input=json.dumps(records),
++    )
++    assert result.exit_code == 0, result.output
++
++    db = Database(db_path)
++    assert list(db["city"].rows) == [
++        {"id": 1, "value": "London"},
++        {"id": 2, "value": "Paris"},
++    ]
++    assert list(db["species"].rows) == [
++        {"id": 1, "value": "Human"},
++        {"id": 2, "value": "Dog"},
++    ]
++    assert list(db["people"].rows) == [
++        {"name": "Alice", "city": 1, "species": 1},
++        {"name": "Bob", "city": 1, "species": 1},
++        {"name": "Cleo", "city": 2, "species": 2},
++    ]
++    assert {fk.column for fk in db["people"].foreign_keys} == {"city", "species"}
++
++
+ def test_index_foreign_keys(db_path):
+     test_add_column_foreign_key(db_path)
+     db = Database(db_path)

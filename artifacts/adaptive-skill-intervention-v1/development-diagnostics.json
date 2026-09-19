@@ -1,0 +1,218 @@
+{
+  "scope": "OFFLINE_DEVELOPMENT_E2_OBSERVED_ACTIONS_ONLY; not an end-to-end policy estimate",
+  "forced_injection": [
+    {
+      "state_id": "csvkit-issue-1225:E2",
+      "task_id": "csvkit-issue-1225",
+      "repeat": 1,
+      "gains": {
+        "csv-dialect": 5.8710575103759766e-05,
+        "tabular-conversion": 0.03022247925400734
+      },
+      "forced_action": "tabular-conversion",
+      "allowed_action": "tabular-conversion",
+      "forced_utility": 0.9657158335346622,
+      "allowed_utility": 0.9657158335346622,
+      "allowed_minus_forced": 0.0,
+      "observed_supported_actions": [
+        "csv-dialect",
+        "tabular-conversion",
+        "NO_INTERVENTION"
+      ],
+      "all_deployable_actions_observed": true,
+      "observed_best_utility": 0.984092132364584,
+      "observed_opportunity_loss": 0.018376298829921867
+    },
+    {
+      "state_id": "sqlite-utils-issue-344:E2",
+      "task_id": "sqlite-utils-issue-344",
+      "repeat": 1,
+      "gains": {
+        "sqlite-ingest": -0.16333331167697906,
+        "sqlite-schema": -0.12447798252105713
+      },
+      "forced_action": "sqlite-schema",
+      "allowed_action": "NO_INTERVENTION",
+      "forced_utility": -0.04645679361117072,
+      "allowed_utility": -0.02580183214583667,
+      "allowed_minus_forced": 0.020654961465334052,
+      "observed_supported_actions": [
+        "sqlite-schema",
+        "NO_INTERVENTION",
+        "sqlite-ingest"
+      ],
+      "all_deployable_actions_observed": true,
+      "observed_best_utility": -0.02580183214583667,
+      "observed_opportunity_loss": 0.0
+    },
+    {
+      "state_id": "sqlite-utils-issue-344:E2",
+      "task_id": "sqlite-utils-issue-344",
+      "repeat": 2,
+      "gains": {
+        "sqlite-ingest": -0.16333331167697906,
+        "sqlite-schema": -0.12447798252105713
+      },
+      "forced_action": "sqlite-schema",
+      "allowed_action": "NO_INTERVENTION",
+      "forced_utility": -0.04689534159383523,
+      "allowed_utility": -0.028333236649341415,
+      "allowed_minus_forced": 0.018562104944493816,
+      "observed_supported_actions": [
+        "NO_INTERVENTION",
+        "sqlite-ingest",
+        "sqlite-schema"
+      ],
+      "all_deployable_actions_observed": true,
+      "observed_best_utility": -0.028333236649341415,
+      "observed_opportunity_loss": 0.0
+    },
+    {
+      "state_id": "sqlite-utils-issue-368:E2",
+      "task_id": "sqlite-utils-issue-368",
+      "repeat": 1,
+      "gains": {
+        "sqlite-ingest": -0.015188561752438545,
+        "sqlite-fulltext": -0.0317225456237793
+      },
+      "forced_action": "sqlite-ingest",
+      "allowed_action": "NO_INTERVENTION",
+      "forced_utility": 0.9749920682569189,
+      "allowed_utility": 0.9947611450173378,
+      "allowed_minus_forced": 0.019769076760418947,
+      "observed_supported_actions": [
+        "NO_INTERVENTION",
+        "sqlite-ingest",
+        "sqlite-fulltext"
+      ],
+      "all_deployable_actions_observed": true,
+      "observed_best_utility": 0.9947611450173378,
+      "observed_opportunity_loss": 0.0
+    },
+    {
+      "state_id": "sqlite-utils-issue-400:E2",
+      "task_id": "sqlite-utils-issue-400",
+      "repeat": 1,
+      "gains": {
+        "sqlite-ingest": -0.32741689682006836,
+        "sqlite-fulltext": -0.3515797555446625
+      },
+      "forced_action": "sqlite-ingest",
+      "allowed_action": "NO_INTERVENTION",
+      "forced_utility": -0.02634006035066656,
+      "allowed_utility": -0.006996096722248088,
+      "allowed_minus_forced": 0.019343963628418472,
+      "observed_supported_actions": [
+        "NO_INTERVENTION",
+        "sqlite-ingest",
+        "sqlite-fulltext"
+      ],
+      "all_deployable_actions_observed": true,
+      "observed_best_utility": -0.006996096722248088,
+      "observed_opportunity_loss": 0.0
+    }
+  ],
+  "allowed_minus_forced": {
+    "mean": 0.014680393398437838,
+    "lower_95": 0.0049021333012284835,
+    "upper_95": 0.01968880498266644,
+    "independent_tasks": 4,
+    "method": "paired task-cluster percentile bootstrap; small-n unstable"
+  },
+  "generic_and_damage_controls": {
+    "paired_outcomes": {
+      "damage": 4,
+      "tie_success": 16,
+      "rescue": 1,
+      "tie_failure": 7
+    },
+    "by_stage": {
+      "E0": {
+        "damage": 4,
+        "tie_success": 10
+      },
+      "E1": {
+        "rescue": 1,
+        "tie_failure": 1,
+        "tie_success": 2
+      },
+      "E2": {
+        "tie_failure": 6,
+        "tie_success": 4
+      }
+    },
+    "skill_stage_delta": {
+      "sqlite-ingest@E0": {
+        "pairs": 5,
+        "mean": -0.4182832050215337
+      },
+      "sqlite-fulltext@E0": {
+        "pairs": 5,
+        "mean": -0.40887082541390074
+      },
+      "sqlite-ingest@E1": {
+        "pairs": 1,
+        "mean": 0.9880998210868351
+      },
+      "sqlite-schema@E1": {
+        "pairs": 1,
+        "mean": -0.013271368597163623
+      },
+      "sqlite-schema@E2": {
+        "pairs": 2,
+        "mean": -0.019608533204913934
+      },
+      "sqlite-ingest@E2": {
+        "pairs": 4,
+        "mean": -0.019789005055541715
+      },
+      "sqlite-fulltext@E2": {
+        "pairs": 2,
+        "mean": -0.010679690628460015
+      },
+      "csv-dialect@E0": {
+        "pairs": 2,
+        "mean": -0.008269275864585202
+      },
+      "keyed-csv-diff@E0": {
+        "pairs": 2,
+        "mean": -0.01695629915108343
+      },
+      "csv-dialect@E1": {
+        "pairs": 1,
+        "mean": -0.01264360506591422
+      },
+      "sql-query-export@E1": {
+        "pairs": 1,
+        "mean": -0.013851608225662448
+      },
+      "csv-dialect@E2": {
+        "pairs": 1,
+        "mean": -0.01044251835066723
+      },
+      "tabular-conversion@E2": {
+        "pairs": 1,
+        "mean": -0.018376298829921867
+      }
+    },
+    "unknown_pairs": [],
+    "skill_vs_generic_task_cluster": {
+      "mean": -0.02614430635447246,
+      "lower_95": -0.20049426330433362,
+      "upper_95": 0.13429242988582152,
+      "independent_tasks": 4,
+      "method": "paired task-cluster percentile bootstrap; small-n unstable"
+    },
+    "actual_states": 10,
+    "natural_stages": {
+      "E0": 4,
+      "E1": 2,
+      "E2": 4
+    },
+    "counterfactual_collection_active_seconds": 7057.404630209901,
+    "actual_api_tokens": null,
+    "actual_dollar_bill": null
+  },
+  "full_policy_uncertainty": "WAIT trajectories cannot be valued by choosing the best observed future branch",
+  "opportunity_loss_scope": "post-hoc E2 observed valid actions only, excluding generic reminders; stochastic realized upper bound, never a training target or an end-to-end WAIT value"
+}

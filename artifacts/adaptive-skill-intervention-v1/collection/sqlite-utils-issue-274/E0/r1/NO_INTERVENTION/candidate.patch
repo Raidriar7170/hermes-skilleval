@@ -1,0 +1,64 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 420883090e2a9aa0ee3e7fb4d8904ca4cbc9b2f3..881e61f8ddffc0247623b28b6d09581d21a11987 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -245,6 +245,19 @@ def views(
+     )
+ 
+ 
++@cli.command()
++@click.argument(
++    "path",
++    type=click.Path(exists=True, file_okay=True, dir_okay=False, allow_dash=False),
++    required=True,
++)
++def dump(path):
++    """Dump the database as executable SQL"""
++    db = sqlite_utils.Database(path)
++    for line in db.conn.iterdump():
++        click.echo(line)
++
++
+ @cli.command()
+ @click.argument(
+     "path",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 5cb4af03257ba2d0574d2f665dab79be71b86a10..b50346e16cb9a7e1a1dde140164f9a771a9249eb 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -39,6 +39,35 @@ def test_views(db_path):
+     ) == result.output.strip()
+ 
+ 
++def test_dump(tmpdir):
++    path = str(tmpdir / "source.db")
++    db = Database(path)
++    with db.conn:
++        db.conn.executescript(
++            """
++            create table people (
++                id integer primary key,
++                name text not null
++            );
++            create index people_name on people(name);
++            insert into people values (1, 'O''Reilly');
++            insert into people values (2, 'Síle');
++            """
++        )
++
++    result = CliRunner().invoke(cli.cli, ["dump", path])
++
++    assert result.exit_code == 0
++    restored = sqlite3.connect(":memory:")
++    restored.executescript(result.output)
++    assert restored.execute(
++        "select id, name from people order by id"
++    ).fetchall() == [(1, "O'Reilly"), (2, "Síle")]
++    assert restored.execute(
++        "select name from sqlite_master where type = 'index' and name = 'people_name'"
++    ).fetchone() == ("people_name",)
++
++
+ def test_tables_fts4(db_path):
+     Database(db_path)["Gosh"].enable_fts(["c2"], fts_version="FTS4")
+     result = CliRunner().invoke(cli.cli, ["tables", "--fts4", db_path])

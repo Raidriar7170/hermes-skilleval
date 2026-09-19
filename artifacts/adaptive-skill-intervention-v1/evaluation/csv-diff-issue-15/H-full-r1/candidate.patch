@@ -1,0 +1,51 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 650966d69823f6c3e00374bb4ca5f6e2245f404e..32c37b9ce35c5011ce2190edf6939b040cbfb840 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -17,6 +17,8 @@ def load_csv(fp, key=None, dialect=None):
+     fp = csv.reader(fp, dialect=(dialect or "excel"))
+     headings = next(fp)
+     rows = [dict(zip(headings, line)) for line in fp]
++    if key == "__rowid__" and key not in headings:
++        return {row_number: row for row_number, row in enumerate(rows)}
+     if key:
+         keyfn = lambda r: r[key]
+     else:
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..114cfb686dff9712653b1da52bacddc6a5346c43 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -65,6 +65,33 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_row_number_key_matches_rows_by_position():
++    before = """name,age
++Cleo,4
++Pancakes,2"""
++    after = """name,age
++Cleo,5
++Pancakes,2"""
++
++    diff = compare(
++        load_csv(io.StringIO(before), key="__rowid__"),
++        load_csv(io.StringIO(after), key="__rowid__"),
++    )
++
++    assert diff["added"] == []
++    assert diff["removed"] == []
++    assert diff["changed"] == [{"key": 0, "changes": {"age": ["4", "5"]}}]
++
++
++def test_row_number_key_defers_to_column_with_same_name():
++    csv_data = """__rowid__,name
++custom-id,Cleo"""
++
++    assert load_csv(io.StringIO(csv_data), key="__rowid__") == {
++        "custom-id": {"__rowid__": "custom-id", "name": "Cleo"}
++    }
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

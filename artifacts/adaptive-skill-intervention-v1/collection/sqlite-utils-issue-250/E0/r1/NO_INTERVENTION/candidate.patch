@@ -1,0 +1,27 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index e42be837368ab8b0c5cb44355507dde4549351f5..01263906b97df34fa794304d9e0905a7d1411ffc 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -684,7 +684,9 @@ def insert_upsert_implementation(
+         raise click.ClickException("Use just one of --nl, --csv or --tsv")
+     if encoding and not (csv or tsv):
+         raise click.ClickException("--encoding must be used with --csv or --tsv")
+-    encoding = encoding or "utf-8"
++    # utf-8-sig behaves like utf-8 for files without a BOM, and strips the BOM
++    # from the start of files that include one.
++    encoding = encoding or "utf-8-sig"
+     buffered = io.BufferedReader(json_file, buffer_size=4096)
+     decoded = io.TextIOWrapper(buffered, encoding=encoding)
+     if pk and len(pk) == 1:
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 87753965c039f184f6e5fee71719524b67ffa188..0a2beace6f0e5c8f16d0ed9556536bd04741fc3a 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -726,6 +726,7 @@ def test_insert_ignore(db_path, tmpdir):
+     [
+         ("foo\tbar\tbaz\n1\t2\tcat,dog", ["--tsv"]),
+         ('foo,bar,baz\n1,2,"cat,dog"', ["--csv"]),
++        ('\ufefffoo,bar,baz\n1,2,"cat,dog"', ["--csv"]),
+         ('foo;bar;baz\n1;2;"cat,dog"', ["--csv", "--delimiter", ";"]),
+         # --delimiter implies --csv:
+         ('foo;bar;baz\n1;2;"cat,dog"', ["--delimiter", ";"]),

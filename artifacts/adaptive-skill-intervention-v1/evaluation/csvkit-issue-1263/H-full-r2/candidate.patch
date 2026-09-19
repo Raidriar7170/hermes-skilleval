@@ -1,0 +1,75 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..0fb03823d4fada3f83e086c4f34a8e647968b8a6 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -502,6 +502,7 @@ def match_column_identifier(column_names, c, column_offset=1):
+ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_columns=None):
+     """
+     Parse a comma-separated list of column indices AND/OR names into a list of integer indices.
++    Column names can be quoted according to CSV rules.
+     Ranges of integers can be specified with two integers separated by a '-' or ':' character.
+     Ranges of non-integers (e.g. column names) are not supported.
+     Note: Column indices are 1-based.
+@@ -515,7 +516,7 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+     if ids:
+         columns = []
+ 
+-        for c in ids.split(','):
++        for c in next(csv.reader([ids])):
+             try:
+                 columns.append(match_column_identifier(column_names, c, column_offset))
+             except ColumnIdentifierError:
+@@ -541,7 +542,7 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+     excludes = []
+ 
+     if excluded_columns:
+-        for c in excluded_columns.split(','):
++        for c in next(csv.reader([excluded_columns])):
+             try:
+                 excludes.append(match_column_identifier(column_names, c, column_offset))
+             except ColumnIdentifierError:
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..5ae9d487fd70fdfbc913c761ab04150fd3583efc 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -23,6 +23,7 @@ class TestCli(unittest.TestCase):
+     def test_parse_column_identifiers(self):
+         self.assertEqual([2, 0, 1], parse_column_identifiers('i_work_here,1,name', self.headers))
+         self.assertEqual([2, 1, 1], parse_column_identifiers('i_work_here,1,name', self.headers, column_offset=0))
++        self.assertEqual([4], parse_column_identifiers('"more-header-values"', self.headers))
+ 
+     def test_range_notation(self):
+         self.assertEqual([0, 1, 2], parse_column_identifiers('1:3', self.headers))
+diff --git a/tests/test_utilities/test_csvgrep.py b/tests/test_utilities/test_csvgrep.py
+index 35bdaef51df9d94d1f5667e99912044c82081f90..8d8cdb07e6470e34323b9522f0e99dd0ccea50a5 100644
+--- a/tests/test_utilities/test_csvgrep.py
++++ b/tests/test_utilities/test_csvgrep.py
+@@ -1,8 +1,9 @@
++import io
+ import sys
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.csvgrep import CSVGrep, launch_new_instance
+-from tests.utils import ColumnsTests, CSVKitTestCase, EmptyFileTests, NamesTests
++from tests.utils import ColumnsTests, CSVKitTestCase, EmptyFileTests, NamesTests, stdin_as_string
+ 
+ 
+ class TestCSVGrep(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+@@ -34,6 +35,17 @@ class TestCSVGrep(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_match_hyphenated_column_name(self):
++        for column in ('first-name', '"first-name"'):
++            with self.subTest(column=column):
++                output = io.StringIO()
++                input_file = io.BytesIO(b'id,first-name\n1,Ada\n2,Grace\n')
++
++                with stdin_as_string(input_file):
++                    self.Utility(['-c', column, '-m', 'Ada'], output).run()
++
++                self.assertEqual(output.getvalue(), 'id,first-name\n1,Ada\n')
++
+     def test_any_match(self):
+         self.assertRows(['-c', '1,2,3', '-a', '-m', '1', 'examples/dummy.csv'], [
+             ['a', 'b', 'c'],

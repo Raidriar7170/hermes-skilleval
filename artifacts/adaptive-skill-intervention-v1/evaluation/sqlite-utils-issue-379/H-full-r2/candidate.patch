@@ -1,0 +1,65 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 05a7bcc918ad5ec930905b8c7b621dc95598fe9c..692ca420ee4542faf7fc2c1d32f5649fa9fe9281 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -464,6 +464,12 @@ def index_foreign_keys(path, load_extension):
+ @click.argument("column", nargs=-1, required=True)
+ @click.option("--name", help="Explicit name for the new index")
+ @click.option("--unique", help="Make this a unique index", default=False, is_flag=True)
++@click.option(
++    "--analyze",
++    help="Run ANALYZE after creating the index",
++    default=False,
++    is_flag=True,
++)
+ @click.option(
+     "--if-not-exists",
+     help="Ignore if index already exists",
+@@ -471,7 +477,9 @@ def index_foreign_keys(path, load_extension):
+     is_flag=True,
+ )
+ @load_extension_option
+-def create_index(path, table, column, name, unique, if_not_exists, load_extension):
++def create_index(
++    path, table, column, name, unique, analyze, if_not_exists, load_extension
++):
+     """
+     Add an index to the specified table covering the specified columns.
+     Use "sqlite-utils create-index mydb -- -column" to specify descending
+@@ -486,7 +494,11 @@ def create_index(path, table, column, name, unique, if_not_exists, load_extensio
+             col = DescIndex(col[1:])
+         columns.append(col)
+     db[table].create_index(
+-        columns, index_name=name, unique=unique, if_not_exists=if_not_exists
++        columns,
++        index_name=name,
++        unique=unique,
++        if_not_exists=if_not_exists,
++        analyze=analyze,
+     )
+ 
+ 
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index ca5c8203e90f4d335606f3b2a2a1e949542b7418..cc5627ae9efadec89db3850508fc143ec43bcce0 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -235,6 +235,19 @@ def test_create_index_desc(db_path):
+     )
+ 
+ 
++def test_create_index_analyze(db_path):
++    db = Database(db_path)
++    db["Gosh"].insert({"c1": "one"})
++    result = CliRunner().invoke(
++        cli.cli, ["create-index", db_path, "Gosh", "c1", "--analyze"]
++    )
++    assert result.exit_code == 0
++    assert db.execute(
++        "select idx from sqlite_stat1 where idx = 'idx_Gosh_c1'"
++    ).fetchone() == ("idx_Gosh_c1",)
++    assert list(db["Gosh"].rows) == [{"c1": "one", "c2": None, "c3": None}]
++
++
+ @pytest.mark.parametrize(
+     "col_name,col_type,expected_schema",
+     (

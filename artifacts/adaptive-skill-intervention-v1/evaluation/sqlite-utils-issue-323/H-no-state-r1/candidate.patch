@@ -1,0 +1,92 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 93d25b23e5975fd5c2d1ece8881da9b3f6b6a3f2..3af173bcacca8eae08ca2ad7552a7c86adba118b 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2180,23 +2180,31 @@ class Table(Queryable):
+                     return v
+                 return fn(v)
+ 
++            convert_value.__name__ = "convert_value_{}".format(uuid.uuid4().hex)
++            function_name = convert_value.__name__
+             self.db.register_function(convert_value)
+             sql = "update [{table}] set {sets}{where};".format(
+                 table=self.name,
+                 sets=", ".join(
+                     [
+-                        "[{output_column}] = convert_value([{column}])".format(
+-                            output_column=output or column, column=column
++                        "[{output_column}] = {function_name}([{column}])".format(
++                            output_column=output or column,
++                            function_name=function_name,
++                            column=column,
+                         )
+                         for column in columns
+                     ]
+                 ),
+                 where=" where {}".format(where) if where is not None else "",
+             )
+-            with self.db.conn:
+-                self.db.execute(sql, where_args or [])
+-                if drop:
+-                    self.transform(drop=columns)
++            try:
++                with self.db.conn:
++                    self.db.execute(sql, where_args or [])
++                    if drop:
++                        self.transform(drop=columns)
++            finally:
++                self.db.conn.create_function(function_name, 1, None)
++                self.db._registered_functions.discard((function_name, 1))
+         return self
+ 
+     def _convert_multi(
+diff --git a/tests/test_convert.py b/tests/test_convert.py
+index 796a08f2e59f14d4299177089a4856bc2763826f..bed2c2d2927e9d6a941bd6179a6bfdbf1d3c4171 100644
+--- a/tests/test_convert.py
++++ b/tests/test_convert.py
+@@ -1,5 +1,6 @@
+ from sqlite_utils.db import BadMultiValues
+ import pytest
++import sqlite3
+ 
+ 
+ @pytest.mark.parametrize(
+@@ -24,6 +25,38 @@ def test_convert(fresh_db, columns, fn, expected):
+     assert list(table.rows) == [expected]
+ 
+ 
++def test_convert_does_not_clobber_existing_function(fresh_db):
++    fresh_db.conn.create_function("convert_value", 1, lambda value: "existing")
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++
++    table.convert("title", lambda value: value.upper())
++
++    assert list(table.rows) == [{"title": "MIXED CASE"}]
++    assert fresh_db.execute("select convert_value('x')").fetchone()[0] == "existing"
++
++
++def test_convert_unregisters_temporary_function(fresh_db):
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    functions_before = set(fresh_db._registered_functions)
++
++    table.convert("title", lambda value: value.upper())
++
++    assert fresh_db._registered_functions == functions_before
++
++
++def test_convert_unregisters_temporary_function_on_error(fresh_db):
++    table = fresh_db["table"]
++    table.insert({"title": "Mixed Case"})
++    functions_before = set(fresh_db._registered_functions)
++
++    with pytest.raises(sqlite3.OperationalError):
++        table.convert("title", lambda value: value.upper(), where="invalid SQL")
++
++    assert fresh_db._registered_functions == functions_before
++
++
+ @pytest.mark.parametrize(
+     "where,where_args", (("id > 1", None), ("id > :id", {"id": 1}), ("id > ?", [1]))
+ )

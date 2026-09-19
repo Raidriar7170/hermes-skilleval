@@ -1,0 +1,72 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..b7dee7adf6a8c62f95ba9c998e6df4e36e6942b2 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -503,6 +503,8 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+     """
+     Parse a comma-separated list of column indices AND/OR names into a list of integer indices.
+     Ranges of integers can be specified with two integers separated by a '-' or ':' character.
++    Exact column name matches take precedence over range notation, so column names may contain
++    either range separator.
+     Ranges of non-integers (e.g. column names) are not supported.
+     Note: Column indices are 1-based.
+     """
+@@ -531,7 +533,7 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+                     b = int(b) + 1 if b else len(column_names) + 1
+                 except ValueError:
+                     raise ColumnIdentifierError(
+-                        "Invalid range %s. Ranges must be two integers separated by a - or : character.")
++                        "Invalid range %s. Ranges must be two integers separated by a - or : character." % c)
+ 
+                 for x in range(a, b):
+                     columns.append(match_column_identifier(column_names, x, column_offset))
+@@ -557,7 +559,7 @@ def parse_column_identifiers(ids, column_names, column_offset=1, excluded_column
+                     b = int(b) + 1 if b else len(column_names)
+                 except ValueError:
+                     raise ColumnIdentifierError(
+-                        "Invalid range %s. Ranges must be two integers separated by a - or : character.")
++                        "Invalid range %s. Ranges must be two integers separated by a - or : character." % c)
+ 
+                 for x in range(a, b):
+                     excludes.append(match_column_identifier(column_names, x, column_offset))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..a170ee7c33330ef9b331435d8410dd5e192ed07d 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,7 @@
+ import unittest
+ 
+ from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.exceptions import ColumnIdentifierError
+ 
+ 
+ class TestCli(unittest.TestCase):
+@@ -43,3 +44,7 @@ class TestCli(unittest.TestCase):
+         self.assertEqual(target, parse_column_identifiers('1,4:', self.headers))
+ 
+         self.assertEqual(list(range(0, len(self.headers))), parse_column_identifiers('1:', self.headers))
++
++    def test_invalid_range_error(self):
++        with self.assertRaisesRegex(ColumnIdentifierError, r'Invalid range unknown-header'):
++            parse_column_identifiers('unknown-header', self.headers)
+diff --git a/tests/test_utilities/test_csvgrep.py b/tests/test_utilities/test_csvgrep.py
+index 35bdaef51df9d94d1f5667e99912044c82081f90..c4d77506b074d8ea5c31e7821f335bc0083e66c4 100644
+--- a/tests/test_utilities/test_csvgrep.py
++++ b/tests/test_utilities/test_csvgrep.py
+@@ -85,6 +85,16 @@ class TestCSVGrep(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['ILLINOIS', 'IL', '17', '15,659', '2,491', '2,025', '1,770', '19', '21,964', ''],
+         ])
+ 
++    def test_column_name_with_hyphen(self):
++        reader = self.get_output_as_reader([
++            '-c', 'Montgomery GI Bill-Active Duty', '-m', '15,659',
++            'examples/realdata/FY09_EDU_Recipients_by_State.csv',
++        ])
++
++        self.assertEqual(next(reader)[0], 'State Name')
++        self.assertEqual(next(reader)[0], 'ILLINOIS')
++        self.assertRaises(StopIteration, next, reader)
++
+     def test_match_with_line_numbers(self):
+         self.assertRows(['-c', '1', '-m', 'ILLINOIS', '--linenumbers',
+                          'examples/realdata/FY09_EDU_Recipients_by_State.csv'], [

@@ -1,0 +1,95 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index c032bec36c1776fb0ccff9db7a79af1cd7c6e5ca..8d233f307d4017c34946ff262ce690acdac27f06 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -718,6 +718,7 @@ def insert_upsert_implementation(
+     detect_types=None,
+     load_extension=None,
+     silent=False,
++    convert_code=None,
+ ):
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -771,8 +772,20 @@ def insert_upsert_implementation(
+             raise click.ClickException(
+                 "Invalid JSON - use --csv for CSV or --tsv for TSV files"
+             )
+-        if flatten:
+-            docs = (dict(_flatten(doc)) for doc in docs)
++    if convert_code:
++        # Compile the conversion once, then evaluate it for every incoming row.
++        # The explicit return ensures mutation-only code preserves every object.
++        new_code = ["def fn(row):"]
++        for line in convert_code.split("\n"):
++            new_code.append("    {}".format(line))
++        new_code.append("    return row")
++        code_o = compile("\n".join(new_code), "<string>", "exec")
++        locals = {}
++        exec(code_o, {}, locals)
++        convert_fn = locals["fn"]
++        docs = (convert_fn(doc) for doc in docs)
++    if flatten:
++        docs = (dict(_flatten(doc)) for doc in docs)
+ 
+     extra_kwargs = {"ignore": ignore, "replace": replace, "truncate": truncate}
+     if not_null:
+@@ -848,6 +861,11 @@ def _find_variables(tb, vars):
+     default=False,
+     help="Truncate table before inserting records, if table already exists",
+ )
++@click.option(
++    "--convert",
++    "convert_code",
++    help='Python code to run against each incoming object, e.g. \'row["name"] = row["name"].upper()\'',
++)
+ def insert(
+     path,
+     table,
+@@ -870,6 +888,7 @@ def insert(
+     ignore,
+     replace,
+     truncate,
++    convert_code,
+     not_null,
+     default,
+ ):
+@@ -905,6 +924,7 @@ def insert(
+             silent=silent,
+             not_null=not_null,
+             default=default,
++            convert_code=convert_code,
+         )
+     except UnicodeDecodeError as ex:
+         raise click.ClickException(UNICODE_ERROR.format(ex))
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 47920c604e746c56ff7032c8034fe4b2c5da1afb..fd02d4d091bf588924380f9bc438144088f366ad 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -778,6 +778,27 @@ def test_insert_newline_delimited(db_path):
+     ] == list(db.query("select foo, n from from_json_nl"))
+ 
+ 
++def test_insert_convert_preserves_and_transforms_all_objects(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            "insert",
++            db_path,
++            "converted",
++            "-",
++            "--nl",
++            "--convert",
++            'row["n"] = int(row["n"]) + 1',
++        ],
++        input='{"name": "one", "n": "1"}\n{"name": "two", "n": "2"}',
++    )
++    assert 0 == result.exit_code, result.output
++    assert [
++        {"name": "one", "n": 2},
++        {"name": "two", "n": 3},
++    ] == list(Database(db_path).query("select name, n from converted order by n"))
++
++
+ def test_insert_ignore(db_path, tmpdir):
+     db = Database(db_path)
+     db["dogs"].insert({"id": 1, "name": "Cleo"}, pk="id")
