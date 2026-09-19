@@ -370,3 +370,26 @@ delay-plan regressions; Ruff and mypy on all 14 functional modules passed.
 These control-flow fixtures are not experimental evidence. G2 collector
 PID 4821 / session 82437 continued unchanged; final sampling, trained models,
 formal closure, publication and final evidence review remain pending.
+
+## 2026-09-19 G2 nine-task interim evidence
+
+The first nine registered tasks released 116 of 192 realized planned tails.
+Records-only replay independently recomputed 115 VERIFIED records and one
+UNKNOWN_NO_ACCEPTANCE record, with zero new Agent/model/verifier executions.
+The exact prospective roster check accepted this incomplete subset; 76 tails
+were not yet released. This is an interim snapshot, not collection completion.
+
+Functional outcomes were 100 passes, 15 failures and one unknown. All 15 known
+tails for sqlite-utils-fix-60811e7 failed functionally. Its E1 repeat-1
+NO_INTERVENTION attempt returned EXECUTOR_ERROR with serverOverloaded (selected
+model at capacity); the original attempt remains, without replacement sampling
+or a different executor model. Subsequent scheduled branches completed normally.
+This execution failure is not a functional zero or a known paired tie.
+
+Across 58 skill/no-op pairs, 56 were known zero deltas and two were unknown.
+Including the generic-reminder contrasts, transitions were 75 tie-pass, nine
+tie-fail and three unknown. Twelve policy-only transitions remain secondary.
+The status remains FUNCTIONAL_SIGNAL_UNRESOLVED: collection is incomplete, and
+variation in absolute functional outcomes does not establish an action effect.
+No model fitting or final evaluation has started. The same live collector
+continued with registered task ten, csvkit-fix-6a47526.
