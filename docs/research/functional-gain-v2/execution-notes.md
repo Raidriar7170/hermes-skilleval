@@ -271,3 +271,14 @@ portable verification reject a myopic receipt containing wait-head calls.
 57 focused tests passed, including changed-source/wrong-guidance and wrong-panel-
 action counterexamples. These changes do not modify sample selection, objective,
 model configuration, budgets, repetitions or any already produced trajectory.
+
+## 2026-09-19 first complete paired task
+
+The first registered task, sqlite-utils-fix-f66ddcb, finished all 16 planned
+E0/E1/E2 tails and external checks. The stronger receipt/candidate/JUnit replay
+verified all 16 without a new Agent, model inference or verifier execution.
+Every tail had y_functional=1: eight skill-versus-no-op pairs and four generic-
+reminder-versus-no-op pairs were all tie_pass. One pair had only a file-policy
+transition; it remains zero functional delta and is not a ranking preference.
+This is one completed task, not a full-pool constant-signal finding. The collector
+has moved to the next registered task without changing selection or repeats.
