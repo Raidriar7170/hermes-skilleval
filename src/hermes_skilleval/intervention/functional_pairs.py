@@ -5,6 +5,22 @@ from collections import Counter
 from .functional_outcomes import paired_delta, transition
 
 
+def verify_collection_roster(rows, roster, protocol_sha256):
+    """Require every prospectively registered tail, including unknown outcomes."""
+    if roster["source_protocol_sha256"] != protocol_sha256:
+        raise ValueError("realized roster protocol mismatch")
+    fields = ("task_id", "state_id", "repeat", "action")
+    expected = [tuple(row[k] for k in fields) for row in roster["samples"]]
+    actual = [tuple(row[k] for k in fields) for row in rows]
+    if (
+        len(expected) != roster["realized_planned_tails"]
+        or len(set(expected)) != len(expected)
+        or len(set(actual)) != len(actual)
+        or set(actual) != set(expected)
+    ):
+        raise ValueError("collection sample roster mismatch; retain planned denominator")
+
+
 def paired_records(rows):
     by_key = {}
     for row in rows:

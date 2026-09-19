@@ -7,7 +7,7 @@ import time
 from .functional_collection import verify_row
 from .functional_features import feature_tables, task_weighted_prior, prior_predict
 from .functional_outcomes import load_objective
-from .functional_pairs import paired_records, signal_summary
+from .functional_pairs import paired_records, signal_summary, verify_collection_roster
 from .functional_wait import cross_fitted_targets
 from .learning import asset_identity, model_identity
 from .session import dump
@@ -54,6 +54,7 @@ def train(
     output,
     payloads,
     encoder_path,
+    roster_path,
 ):
     started = time.monotonic()
     objective = load_objective(objective_path)
@@ -76,6 +77,9 @@ def train(
     expected = {r["task_id"] for r in protocol["tasks"] if r["split"] != "test"}
     if set(bundle["completed_tasks"]) != expected:
         raise ValueError("collection incomplete; retain planned denominator")
+    roster = read(roster_path)
+    verify_collection_roster(bundle["rows"], roster, identity["protocol_sha256"])
+    registered_states = {r["state_id"]: r for r in roster["states"]}
     task_info = {r["task_id"]: r for r in protocol["tasks"] if r["split"] != "test"}
     records = []
     for row in bundle["rows"]:
@@ -84,6 +88,15 @@ def train(
         info = task_info[row["task_id"]]
         if row["split"] != info["split"] or row["family"] != info["family"]:
             raise ValueError("row split or cross-fit family differs from protocol")
+        state = registered_states[row["state_id"]]
+        if (
+            row["candidates"] != state["candidate_ids"]
+            or hashlib.sha256(
+                (Path(row["checkpoint"]) / "checkpoint.json").read_bytes()
+            ).hexdigest()
+            != state["checkpoint_metadata_sha256"]
+        ):
+            raise ValueError("training state differs from prospective realized roster")
         actual = verify_row(row)
         if any(
             actual[k] != row[k]
@@ -101,6 +114,9 @@ def train(
     binding = {
         **identity,
         "records_sha256": hashlib.sha256(Path(records_path).read_bytes()).hexdigest(),
+        "realized_roster_sha256": hashlib.sha256(
+            Path(roster_path).read_bytes()
+        ).hexdigest(),
         "learning_protocol_sha256": hashlib.sha256(
             Path(learning_path).read_bytes()
         ).hexdigest(),

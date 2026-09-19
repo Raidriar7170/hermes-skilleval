@@ -48,6 +48,7 @@ def main(argv=None):
         "protocol",
         "objective",
         "learning",
+        "roster",
         "output",
         "payloads",
         "encoder",
@@ -151,6 +152,7 @@ def main(argv=None):
             args.output,
             args.payloads,
             args.encoder,
+            args.roster,
         )
     elif args.command == "reload":
         from .functional_learning import reload_probe

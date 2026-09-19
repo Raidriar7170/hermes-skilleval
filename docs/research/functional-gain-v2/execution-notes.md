@@ -282,3 +282,24 @@ reminder-versus-no-op pairs were all tie_pass. One pair had only a file-policy
 transition; it remains zero functional delta and is not a ranking preference.
 This is one completed task, not a full-pool constant-signal finding. The collector
 has moved to the next registered task without changing selection or repeats.
+
+## 2026-09-19 collection completeness gate
+
+The first two completed tasks now contain 24 verified functional-pass tails;
+12 skill pairs remain zero-delta, with 18 total skill/generic tie-pass pairs.
+The full collection remains FUNCTIONAL_SIGNAL_UNRESOLVED. Portable replay CLI
+requires the identity-bearing aggregate records, not the identity-free task
+fragment; the initial fragment invocation rejected identity, and aggregate
+records-only replay subsequently verified all 24 without new executions.
+
+Static checking passed all 13 functional modules. Inspection found that training
+previously checked the completed-task set without enforcing every prospective
+tail. Training now requires `--roster
+configs/functional-gain-v2/realized-collection-roster-v1.json`, verifies exact
+sample identities (including unknown outcomes), rejects omissions, duplicates
+and replacements, and checks candidate order and checkpoint metadata hashes
+against the prospective roster. Its hash is retained in model data binding.
+The current partial 24-row collection was correctly rejected by this gate;
+all 24 available state bindings match the prospective roster. Seven focused
+pair/feature/wait tests and Ruff passed. No sampling order, runtime budget,
+trajectory, functional label, model training or final evaluation changed.

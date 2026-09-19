@@ -3,6 +3,7 @@ import pytest
 from hermes_skilleval.intervention.functional_pairs import (
     paired_records,
     signal_summary,
+    verify_collection_roster,
 )
 
 
@@ -63,3 +64,23 @@ def test_damage_is_learnable_and_missing_baseline_is_unknown():
         signal_summary(pairs, collection_complete=True)["status"]
         == "FUNCTIONAL_SIGNAL_UNRESOLVED"
     )
+
+
+def test_exact_roster_requires_unknown_samples_and_rejects_replacements():
+    rows = [sample("NO_INTERVENTION", 1), sample("skill", None)]
+    roster = {
+        "source_protocol_sha256": "frozen",
+        "realized_planned_tails": 2,
+        "samples": rows,
+    }
+    verify_collection_roster(rows, roster, "frozen")
+    for invalid in (
+        rows[:1],
+        rows + rows[:1],
+        [rows[0], sample("unregistered-skill", None)],
+        [rows[0], sample("skill", None, repeat=2)],
+    ):
+        with pytest.raises(ValueError, match="sample roster mismatch"):
+            verify_collection_roster(invalid, roster, "frozen")
+    with pytest.raises(ValueError, match="protocol mismatch"):
+        verify_collection_roster(rows, roster, "changed")
