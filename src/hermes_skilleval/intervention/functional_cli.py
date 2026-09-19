@@ -72,11 +72,35 @@ def main(argv=None):
     ):
         p.add_argument("--" + key, type=Path, required=True)
     p.add_argument("--phase", choices=("matrix", "panels", "delays"), required=True)
+    p = commands.add_parser(
+        "replay", help="zero-model functional records recomputation"
+    )
+    for key in ("records", "objective"):
+        p.add_argument("--" + key, type=Path, required=True)
+    p.add_argument("--public-root", type=Path)
+    p = commands.add_parser(
+        "export", help="compact original patches and verifier evidence"
+    )
+    for key in ("records", "objective", "output"):
+        p.add_argument("--" + key, type=Path, required=True)
+    p.add_argument(
+        "--group",
+        choices=("pilot", "native", "collection", "matrix", "panels", "delays"),
+        required=True,
+    )
     args = parser.parse_args(argv)
     from .functional_outcomes import decompose
 
     if args.command == "decompose":
         result = decompose(args.records, args.objective, args.output)
+    elif args.command == "replay":
+        from .functional_export import replay
+
+        result = replay(args.records, args.objective, public_root=args.public_root)
+    elif args.command == "export":
+        from .functional_export import export
+
+        result = export(args.records, args.objective, args.output, group=args.group)
     elif args.command == "evaluate":
         from .functional_evaluate import matrix, panels
 
