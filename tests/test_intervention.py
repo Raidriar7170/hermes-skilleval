@@ -21,13 +21,33 @@ def test_versioned_checks_are_verified_at_their_explicit_root(tmp_path):
         "run": str(run),
         "checks_root": str(revised),
         "execution": {"status": "COMPLETED"},
-        "quality": False,
+        "quality": None,
         "checks": checks,
     }
     assert verify_artifacts(row)["status"] == "VERIFIED"
+    row["quality"] = False
+    with pytest.raises(ValueError, match="known quality without captured patch"):
+        verify_artifacts(row)
+    row["quality"] = None
     row["checks"] = {"policy": {"valid": True, "passed": True}}
     with pytest.raises(ValueError, match="acceptance record mismatch"):
         verify_artifacts(row)
+
+
+def test_incomplete_acceptance_is_unknown_not_success_or_failure():
+    from hermes_skilleval.intervention.study import qualify_quality
+
+    execution = {"status": "COMPLETED", "thread_id": "real-execution-required"}
+    assert qualify_quality(execution, {}) is None
+    assert (
+        qualify_quality(execution, {"policy": {"valid": True, "passed": True}}) is None
+    )
+    checks = {
+        k: {"valid": True, "passed": True} for k in ("target", "regression", "policy")
+    }
+    assert qualify_quality(execution, checks) is True
+    checks["target"]["passed"] = None
+    assert qualify_quality(execution, checks) is None
 
 
 def test_public_usage_excludes_resumed_prefix_and_duplicate_updates(tmp_path):

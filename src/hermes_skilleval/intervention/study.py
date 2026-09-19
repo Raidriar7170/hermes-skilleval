@@ -102,7 +102,12 @@ def qualify_quality(execution, checks):
         return None
     if execution.get("injected") and not execution.get("model_input_observed"):
         return None
-    if not all(r.get("valid") for r in checks.values()):
+    if not {"target", "regression", "policy"} <= checks.keys():
+        return None
+    if not all(
+        r.get("valid") is True and isinstance(r.get("passed"), bool)
+        for r in checks.values()
+    ):
         return None
     return all(r.get("passed") for r in checks.values())
 

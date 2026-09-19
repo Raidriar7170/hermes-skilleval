@@ -27,6 +27,8 @@ def verify_artifacts(row):
     if acceptance["checks"] != row["checks"]:
         raise ValueError("acceptance record mismatch")
     capture = acceptance.get("capture")
+    if row["quality"] is not None and not capture:
+        raise ValueError("known quality without captured patch")
     count = 0
     if capture:
         patch = checks_root / "capture/candidate.patch"
@@ -109,6 +111,8 @@ def verify_artifacts(row):
 def verify_public_artifacts(row, root):
     """Verify portable captured evidence; not a new source execution claim."""
     directory = Path(root) / row["evidence_path"]
+    if row["quality"] is not None and not row.get("patch_sha256"):
+        raise ValueError("known quality without public patch")
     for name, digest in row["artifact_sha256"].items():
         if hashlib.sha256((directory / name).read_bytes()).hexdigest() != digest:
             raise ValueError("public artifact digest mismatch: " + name)
