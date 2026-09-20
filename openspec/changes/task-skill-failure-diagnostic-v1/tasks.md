@@ -10,7 +10,7 @@
 - [x] 3.3 Execute triggered real N/G/K controls or preserve explicit non-trigger/blocker.
 ## 4. Report and delivery
 - [x] 4.1 Export raw functional evidence, counts/bounds, costs, replay and Chinese diagnosis.
-- [ ] 4.2 Focused regressions, independent evidence review, compatibility/CI and final verification.
-- [ ] 4.3 Commit, push stacked Draft PR and verify same-HEAD CI.
+- [x] 4.2 Focused regressions, independent evidence review, compatibility/CI and final verification.
+- [x] 4.3 Commit, push stacked Draft PR and verify same-HEAD CI.
 
 Native roster completed 16/16. Validity-audited panel is empty: 13 interpretable passes, 3 acceptance ambiguities, no independently supported failures. State-specific K and tails are NOT_TRIGGERED, not a zero-effect result. Diagnostic scientific evidence remains PARTIAL; frozen raw results are preserved.
