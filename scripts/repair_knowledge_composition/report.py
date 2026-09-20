@@ -83,7 +83,7 @@ def generate(evidence, plan, output):
                             f"{scores[k]:.6f}"
                             for k in [
                                 "coverage",
-                            "relevance",
+                                "relevance",
                                 "redundancy_penalty",
                                 "exposure_penalty",
                                 "total",
