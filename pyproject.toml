@@ -67,3 +67,8 @@ ignore_missing_imports = true
 [tool.ruff.format]
 # Frozen executable payload: formatting would change probe/image identities.
 exclude = ["src/hermes_skilleval/repo_routing/environment_probe_explicit.py"]
+
+[[tool.mypy.overrides]]
+# Used lazily by the opt-in repair study; lightweight CI has no model/tokenizer extras.
+module = ["tiktoken"]
+ignore_missing_imports = true

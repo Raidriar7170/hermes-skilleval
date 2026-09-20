@@ -1,0 +1,140 @@
+import io
+import json
+import sqlite3
+import pytest
+import sqlite_utils
+from sqlite_utils import Database, cli
+from sqlite_utils.db import ForeignKey, InvalidColumns, TransformError
+from click.testing import CliRunner
+ANY = getattr(sqlite_utils, 'ANY', object())
+
+@pytest.fixture
+def fresh_db():
+    db = Database(memory=True)
+    yield db
+    db.close()
+
+@pytest.fixture
+def db_path(tmp_path):
+    return str(tmp_path / 'test.db')
+
+def test_create_strict_with_any(fresh_db):
+    if not fresh_db.supports_strict:
+        pytest.skip('SQLite version does not support strict tables')
+    table = fresh_db.table('items').create({'id': int, 'data': ANY}, pk='id', strict=True)
+    table.insert_all([{'id': 1, 'data': 42}, {'id': 2, 'data': '000123'}, {'id': 3, 'data': 3.14}, {'id': 4, 'data': b'bytes'}, {'id': 5, 'data': None}])
+    assert table.columns_dict == {'id': int, 'data': ANY}
+    assert fresh_db.execute('select typeof(data), data from items order by id').fetchall() == [('integer', 42), ('text', '000123'), ('real', 3.14), ('blob', b'bytes'), ('null', None)]
+
+def test_extract_preserves_strict_any(fresh_db):
+    if not fresh_db.supports_strict:
+        pytest.skip('SQLite version does not support strict tables')
+    fresh_db.execute('create table items (id integer primary key, data any) strict')
+    fresh_db.execute('insert into items values (1, ?)', ('000123',))
+    fresh_db['items'].extract('data', table='data_values')
+    lookup = fresh_db['data_values']
+    assert lookup.strict is True
+    assert lookup.columns_dict == {'id': int, 'data': ANY}
+    assert fresh_db.execute('select typeof(data), data from data_values').fetchone() == ('text', '000123')
+
+def test_extract_strict_any_rejects_non_strict_lookup(fresh_db):
+    if not fresh_db.supports_strict:
+        pytest.skip('SQLite version does not support strict tables')
+    fresh_db.execute('create table items (data any) strict')
+    fresh_db.execute('insert into items values (?)', ('000123',))
+    fresh_db.execute('create table data_values (id integer primary key, data any)')
+    with pytest.raises(InvalidColumns):
+        fresh_db['items'].extract('data', table='data_values')
+    assert fresh_db.execute('select typeof(data), data from items').fetchone() == ('text', '000123')
+
+def test_transform_preserves_any_column_in_strict_table(fresh_db):
+    if not fresh_db.supports_strict:
+        pytest.skip('SQLite version does not support strict tables')
+    fresh_db.execute('create table items (id integer primary key, data any) strict')
+    fresh_db.conn.executemany('insert into items values (?, ?)', [(1, 42), (2, '000123'), (3, 3.14), (4, b'bytes'), (5, None)])
+    table = fresh_db['items']
+    table.transform()
+    assert table.strict is True
+    assert table.columns_dict == {'id': int, 'data': ANY}
+    assert fresh_db.execute('select typeof(data), data from items order by id').fetchall() == [('integer', 42), ('text', '000123'), ('real', 3.14), ('blob', b'bytes'), ('null', None)]
+
+def test_transform_any_column_from_strict_to_non_strict(fresh_db):
+    if not fresh_db.supports_strict:
+        pytest.skip('SQLite version does not support strict tables')
+    fresh_db.execute('create table items (data any) strict')
+    fresh_db.execute('insert into items values (?)', ('000123',))
+    table = fresh_db['items']
+    table.transform(strict=False)
+    assert table.strict is False
+    assert table.columns_dict == {'data': ANY}
+    assert fresh_db.execute('select typeof(data), data from items').fetchone() == ('integer', 123)
+
+def test_transform_column_to_any(db_path):
+    db = Database(db_path)
+    if not db.supports_strict:
+        pytest.skip('SQLite version does not support strict tables')
+    db.table('items').create({'data': str}, strict=True)
+    db.table('items').insert({'data': '000123'})
+    result = CliRunner().invoke(cli.cli, ['transform', db_path, 'items', '--type', 'data', 'any'])
+    assert result.exit_code == 0, result.output
+    assert db.table('items').columns_dict == {'data': ANY}
+    assert db.execute('select typeof(data), data from items').fetchone() == ('text', '000123')
+
+def test_create_table_strict_any():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        db = Database('test.db')
+        if not db.supports_strict:
+            pytest.skip('SQLite version does not support strict tables')
+        result = runner.invoke(cli.cli, ['create-table', 'test.db', 'items', 'id', 'integer', 'data', 'any', '--strict'])
+        assert result.exit_code == 0, result.output
+        assert db.table('items').strict is True
+        assert db.table('items').columns_dict == {'id': int, 'data': ANY}
+
+@pytest.mark.parametrize('method', ('insert', 'upsert'))
+def test_insert_upsert_strict_any(tmpdir, method):
+    db_path = str(tmpdir / 'test.db')
+    db = Database(db_path)
+    if not db.supports_strict:
+        pytest.skip('SQLite version does not support strict tables')
+    db.close()
+    result = CliRunner().invoke(cli.cli, [method, db_path, 'items', '-', '--csv', '--pk', 'id', '--type', 'data', 'any', '--strict'], input='id,data\n1,000123')
+    assert result.exit_code == 0, result.output
+    db = Database(db_path)
+    assert db.table('items').columns_dict == {'id': int, 'data': ANY}
+    assert db.execute('select typeof(data), data from items').fetchone() == ('text', '000123')
+
+def test_regression(fresh_db):
+    t = fresh_db['ordinary']
+    t.insert({'id': 1, 'value': 'keep'}, pk='id')
+    assert t.get(1) == {'id': 1, 'value': 'keep'}
+    t.transform(rename={'value': 'label'})
+    assert t.get(1) == {'id': 1, 'label': 'keep'}
+    with pytest.raises(sqlite3.IntegrityError):
+        t.insert({'id': 1, 'label': 'bad'})
+    assert t.get(1)['label'] == 'keep'
+
+def _posthoc_snapshot(db):
+    return tuple(db.conn.iterdump())
+
+def _posthoc_observe(db, operation):
+    before = _posthoc_snapshot(db)
+    error = None
+    try:
+        operation()
+    except Exception as exc:
+        error = exc
+    return (error, before == _posthoc_snapshot(db))
+
+@pytest.mark.parametrize('observation', ['rejection', 'preservation'])
+def test_posthoc_strict_any_observations(fresh_db, observation):
+    if not fresh_db.supports_strict:
+        pytest.skip('SQLite version lacks strict tables')
+    fresh_db.execute('create table items (data any) strict')
+    fresh_db.execute('insert into items values (?)', ('000123',))
+    fresh_db.execute('create table data_values (id integer primary key, data any)')
+    error, preserved = _posthoc_observe(fresh_db, lambda: fresh_db['items'].extract('data', table='data_values'))
+    if observation == 'rejection':
+        assert isinstance(error, InvalidColumns)
+    else:
+        assert preserved
