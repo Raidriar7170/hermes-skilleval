@@ -417,3 +417,54 @@ requires the complete realized roster and independent record verification;
 neither model fitting nor final sampling has started. The observed damage is
 retained under the same weighting and model-selection protocol as all other
 pairs, without outcome-driven resampling, filtering or protocol expansion.
+
+
+## G2 complete and G3 started
+
+The original paired collector exited 0 with exactly 192/192 registered tails
+across all 16 train/dev tasks. Independent saved-record replay recomputed 191
+VERIFIED outcomes and one UNKNOWN_NO_ACCEPTANCE, without new Agent, model or
+verifier calls. Functional outcomes are 170 pass, 21 fail, one unknown. The 96
+skill contrasts contain 94 known (92 ties, two damage) and two unknown pairs.
+Both nonzero contrasts are training-side: csvkit-fix-8119565 E1 csv-dialect and
+csv-diff-fix-33e0a59 E0 keyed-csv-diff, each delta -1. No rescue was observed.
+All non-noop contrasts including reminders comprise 127 tie-pass, 12 tie-fail,
+two damage and three unknown; 18 policy-only transitions remain secondary.
+
+Exact complete-roster validation passed. Fresh SHA-256 verification matched all
+51 frozen payload, skill and encoder files to the collection protocol. Phase
+integrity against baseline 87fd45f85f793361da016af3650fd7eb328b1f4b passed as
+SCOPED_VERIFICATION: 154 files scanned/hashed, 1,011,083 bytes read, zero cache
+hits, 115.058 ms, no full fallback. This is not FINAL_CLOSURE.
+Private receipts: collection-complete-preflight-v1.json and
+g2-phase-verification-v1.json. The fixed train command started with the complete
+records, original collection protocol, objective lock, learning-protocol-v1 and
+realized-collection-roster-v1, output models-v1, log training-v1.log. Training and
+independent reload are not yet claimed complete; final evaluation has not run.
+
+The actual training process then exited 0 in 21.498 seconds. A separate CLI
+reload process exited 0; both full and task-only gain/wait probes exactly match
+the saved expectations. Full weights SHA-256 is
+c70fa5b08c63dab9f1a062c54700ff5c5f17f8c5c32e646e62878ba748501fff;
+task-only weights SHA-256 is
+d289f7013250d4dc6d7f937e13e8920af2947142c7eb3f64175b4adad9131648.
+Independent reload evidence is models-v1/independent-reload.json. The training
+stage is TRAINED_AND_RELOADED; this makes no functional or mechanism gain claim.
+
+
+## G4 frozen; G5 matrix started
+
+Fresh verify_freeze passed for all 24 registered task base/trusted/reference
+assets, task profiles/requests, encoder, payloads, skills, registry and executor
+image before final execution. The final freeze binds both independently reloaded
+models, training receipt, runtime code, all 96 matrix cells, panel selection,
+two panel repeats and prospective delay selection. Saved privately at
+evaluation-v1/policy-freeze.json. Existing account usage allowed continuation
+with 36% of the current weekly window remaining; no resource purchase/reset.
+
+The real matrix command started with the same collection-protocol-v1,
+collection-tasks-v1, models-v1, frozen skills/payloads/encoder and 600-second
+budget, output evaluation-v1 and log evaluation-matrix-v1.log. It executes all
+six methods on all eight fresh final tasks with two repeats. Matrix, panels
+and delays must all finish before the separate release phase runs any hidden
+acceptance. No final functional outcomes or mechanism gains are claimed here.
