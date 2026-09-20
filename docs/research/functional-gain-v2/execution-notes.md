@@ -618,3 +618,15 @@ An additional secondary setup receipt preserves both original and resumed matrix
 coordinator loads (8.893562625 seconds total). Shared initialization without a
 standalone receipt in other phases remains UNKNOWN, not zero; it is not silently
 added to already charged per-state work.
+
+## Draft PR and first CI correction
+
+Draft PR #50 was created stacked on still-open/draft #49. First push encountered
+an unavailable pre-existing local Git proxy; a command-local empty proxy override
+succeeded without changing global configuration. First GitHub run 35491754811
+at bd7a711 passed pytest, OpenSpec, release and diagnostic gates, but the final
+summary correctly blocked on a new Ruff format finding in functional_pairs.py.
+The correction wraps one existing ValueError string across lines. AST comparison
+against the executed source is identical; no labels, frozen runtime policy,
+weights, candidates or experimental outcomes change. The failed CI is retained,
+and the next commit is checked afresh.

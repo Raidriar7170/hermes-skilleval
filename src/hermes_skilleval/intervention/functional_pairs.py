@@ -19,7 +19,9 @@ def verify_collection_roster(rows, roster, protocol_sha256, *, require_complete=
         or not set(actual) <= set(expected)
         or (require_complete and set(actual) != set(expected))
     ):
-        raise ValueError("collection sample roster mismatch; retain planned denominator")
+        raise ValueError(
+            "collection sample roster mismatch; retain planned denominator"
+        )
     return {
         "realized_planned_tails": len(expected),
         "recorded_tails": len(actual),
