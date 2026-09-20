@@ -8,6 +8,7 @@ import shutil
 import xml.etree.ElementTree as ET
 
 from hermes_skilleval.intervention.functional_outcomes import outcomes
+from hermes_skilleval.intervention.functional_costs import cost_ledger
 from hermes_skilleval.intervention.repair_checks import declared_api_absence
 from hermes_skilleval.intervention.repair_composer import (
     Candidate,
@@ -17,7 +18,7 @@ from hermes_skilleval.intervention.repair_composer import (
 )
 from hermes_skilleval.intervention.repair_content_report import summarize
 from hermes_skilleval.intervention.repair_knowledge import RepairKnowledgeUnit
-from hermes_skilleval.intervention.session import dump
+from hermes_skilleval.intervention.session import dump, inventory
 
 
 def sha(p):
@@ -29,9 +30,41 @@ def copy(src, dst):
     shutil.copyfile(src, dst)
 
 
+def public_checks(checks):
+    fields = {
+        "valid",
+        "passed",
+        "returncode",
+        "cases",
+        "failures",
+        "errors",
+        "skipped",
+        "skipped_ids",
+        "preexisting_skips",
+        "seconds",
+        "selectors",
+        "complete_expected_cases",
+        "required_public_api_absent",
+    }
+    return {
+        kind: {
+            **{k: v for k, v in result.items() if k in fields},
+            **(
+                {"error": "CHECK_UNAVAILABLE_SEE_PRIVATE_RECORD"}
+                if "error" in result
+                else {}
+            ),
+        }
+        for kind, result in checks.items()
+    }
+
+
 def prepare(private, output, plan):
     output.mkdir(parents=True, exist_ok=True)
-    copy(private / "qualification-final.json", output / "qualification.json")
+    qualification = json.loads((private / "qualification-final.json").read_text())
+    for row in qualification["rows"]:
+        row["variants"] = {k: public_checks(v) for k, v in row["variants"].items()}
+    dump(output / "qualification.json", qualification)
     copy(private / "preflight-v1/preflight.json", output / "preflight.json")
     copy(
         private / "pre-sampling-amendment.json", output / "pre-sampling-amendment.json"
@@ -158,7 +191,7 @@ def export_phase(private, output, plan, phase):
         public["execution"] = execution
         if (root / "acceptance/acceptance.json").exists():
             accepted = json.loads((root / "acceptance/acceptance.json").read_text())
-            public["checks"] = accepted["checks"]
+            public["checks"] = public_checks(accepted["checks"])
             copy(root / "acceptance/capture/candidate.patch", dest / "candidate.patch")
             public["candidate_patch_sha256"] = sha(dest / "candidate.patch")
             public["complete_before_inventory_sha256"] = hashlib.sha256(
@@ -223,7 +256,7 @@ def replay(output, phase):
                 if kind == "regression"
                 else []
             )
-            rc = row["checks"][kind]["returncode"]
+            rc = row["checks"][kind].get("returncode")
             valid = (
                 rc in (0, 1)
                 and sorted(collected) == sorted(ids)
@@ -261,11 +294,12 @@ def replay(output, phase):
                 raw["query"],
             )
             for method, entry in state["packs"].items():
+                fallback = entry["pack"]["method"] == "H-fallback-M"
                 scores = objective(
                     pool,
                     entry["pack"]["indices"],
-                    no_gap=method == "H-no-gap",
-                    no_exposure=method == "H-no-exposure",
+                    no_gap=method == "H-no-gap" and not fallback,
+                    no_exposure=method == "H-no-exposure" and not fallback,
                 )
                 assert all(
                     abs(scores[k] - entry["pack"]["scores"][k]) < 1e-10 for k in scores
@@ -284,9 +318,88 @@ def replay(output, phase):
     print(json.dumps(result))
 
 
+def costs(private, output):
+    """Count every reserved attempt, including prefixes and interrupted runs."""
+    study = private / "study-v1"
+    groups = {}
+    for phase in ["native", "pilot", "confirmation-prefixes", "confirm"]:
+        rows = []
+        for run in sorted((study / phase).glob("*/*")):
+            if not run.is_dir():
+                continue
+            path = run / "execution.json"
+            execution = (
+                json.loads(path.read_text())
+                if path.exists()
+                else {"status": "UNKNOWN_INTERRUPTED_ATTEMPT"}
+            )
+            rows.append({"run": str(run), "execution": execution})
+        if rows:
+            groups[phase] = rows
+    report = cost_ledger(groups)
+    report["research_reserved_attempts"] = {
+        key: len(rows) for key, rows in groups.items()
+    }
+    report["offline_knowledge_build"] = {
+        "model_calls": 0,
+        "wall_seconds": None,
+        "timing_status": "NOT_RECORDED",
+    }
+    report["online_selection_model_calls"] = 0
+    report["training"] = {"status": "NOT_RUN", "model_calls": 0}
+    report["agent_calls_semantics"] = (
+        "The zero agent_calls/model_calls fields describe this export operation. "
+        "research_reserved_attempts counts the real study attempts separately."
+    )
+    dump(output / "secondary-cost-ledger.json", report)
+
+
+def source_support(private, output, plan):
+    rows = []
+    for task in plan["tasks"]:
+        revision = task["base_commit"]
+        base = private / "tasks" / task["instance_id"] / "base"
+        assert (
+            hashlib.sha256(
+                json.dumps(inventory(base), sort_keys=True).encode()
+            ).hexdigest()
+            == task["files"]["base"]
+        )
+        assert (
+            sha(output / "knowledge" / revision / "units.json")
+            == task["knowledge_sha256"]
+        )
+        units = json.loads((output / "knowledge" / revision / "units.json").read_text())
+        verified = []
+        for raw in units:
+            unit = RepairKnowledgeUnit.from_dict(raw)
+            assert unit.source_revision == revision
+            for span in unit.source_spans:
+                path = (base / span.path_or_public_url).resolve()
+                assert path.is_relative_to(base.resolve())
+                assert span.revision == revision
+                lines = path.read_text().splitlines(keepends=True)
+                excerpt = "".join(lines[span.line_start - 1 : span.line_end])
+                assert excerpt == span.exact_excerpt
+            verified.append(unit.unit_id)
+        rows.append({"revision": revision, "verified_units": verified})
+    dump(
+        output / "source-support.json",
+        {
+            "status": "VERIFIED_FOR_SCOPE",
+            "method": "Fresh exact-span comparison against each frozen public base",
+            "limitation": "Source attribution only; observed implementation is not a correctness invariant or an answer.",
+            "rows": rows,
+            "model_calls": 0,
+        },
+    )
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("command", choices=["prepare", "phase", "replay"])
+    p.add_argument(
+        "command", choices=["prepare", "phase", "replay", "costs", "source-support"]
+    )
     p.add_argument("--private", type=Path)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--plan", type=Path)
@@ -294,9 +407,13 @@ if __name__ == "__main__":
     a = p.parse_args()
     if a.command == "replay":
         replay(a.output, a.phase)
+    elif a.command == "costs":
+        costs(a.private, a.output)
     else:
         plan = json.loads(a.plan.read_text())
         if a.command == "prepare":
             prepare(a.private, a.output, plan)
+        elif a.command == "source-support":
+            source_support(a.private, a.output, plan)
         else:
             export_phase(a.private, a.output, plan, a.phase)
