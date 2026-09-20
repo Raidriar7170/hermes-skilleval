@@ -1,0 +1,192 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 3c78e3b4e76e94f92d9832af803a7fbbe4f28d20..aaa496654914707ad25e38b9513af96768a1b67b 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -176,6 +176,9 @@ class ForeignKey:
+     are ``None`` - use ``columns`` and ``other_columns`` instead, and check
+     ``is_compound``.
+ 
++    ``on_delete`` and ``on_update`` contain the SQLite referential actions,
++    defaulting to ``NO ACTION``.
++
+     Prior to sqlite-utils 4.0 this was a ``namedtuple`` and could be unpacked
+     or indexed as ``(table, column, other_table, other_column)``. It is now a
+     dataclass - access its fields by name instead.
+@@ -190,6 +193,8 @@ class ForeignKey:
+     columns: List[str] = field(default_factory=list)
+     other_columns: List[str] = field(default_factory=list)
+     is_compound: bool = False
++    on_delete: str = "NO ACTION"
++    on_update: str = "NO ACTION"
+ 
+     def __post_init__(self):
+         # Populate columns/other_columns for single-column foreign keys
+@@ -1345,14 +1350,17 @@ class Database:
+                     "DEFAULT {}".format(self.quote_default_value(defaults[column_name]))
+                 )
+             if column_name in foreign_keys_by_column:
++                fk = foreign_keys_by_column[column_name]
++                actions = ""
++                if fk.on_delete != "NO ACTION" or fk.on_update != "NO ACTION":
++                    actions = " ON DELETE {} ON UPDATE {}".format(
++                        fk.on_delete, fk.on_update
++                    )
+                 column_extras.append(
+-                    "REFERENCES {}({})".format(
+-                        quote_identifier(
+-                            foreign_keys_by_column[column_name].other_table
+-                        ),
+-                        quote_identifier(
+-                            cast(str, foreign_keys_by_column[column_name].other_column)
+-                        ),
++                    "REFERENCES {}({}){}".format(
++                        quote_identifier(fk.other_table),
++                        quote_identifier(cast(str, fk.other_column)),
++                        actions,
+                     )
+                 )
+             column_type_str = COLUMN_TYPE_MAPPING[column_type]
+@@ -1384,13 +1392,22 @@ class Database:
+                 raise AlterError(
+                     "No such column: {}".format(", ".join(sorted(missing)))
+                 )
++            actions = ""
++            if fk.on_delete != "NO ACTION" or fk.on_update != "NO ACTION":
++                actions = " ON DELETE {} ON UPDATE {}".format(
++                    fk.on_delete, fk.on_update
++                )
+             column_defs.append(
+-                "   FOREIGN KEY ({columns}) REFERENCES {other_table}({other_columns})".format(
++                (
++                    "   FOREIGN KEY ({columns}) REFERENCES "
++                    "{other_table}({other_columns}){actions}"
++                ).format(
+                     columns=", ".join(quote_identifier(c) for c in fk.columns),
+                     other_table=quote_identifier(fk.other_table),
+                     other_columns=", ".join(
+                         quote_identifier(c) for c in fk.other_columns
+                     ),
++                    actions=actions,
+                 )
+             )
+         columns_sql = ",\n".join(column_defs)
+@@ -2055,7 +2072,9 @@ class Table(Queryable):
+         ).fetchall():
+             if row is not None:
+                 id, seq, table_name, from_, to_, on_update, on_delete, match = row
+-                by_id.setdefault(id, []).append((seq, table_name, from_, to_))
++                by_id.setdefault(id, []).append(
++                    (seq, table_name, from_, to_, on_delete, on_update)
++                )
+         fks = []
+         for id in sorted(by_id):
+             rows = sorted(by_id[id])  # order columns by seq
+@@ -2072,6 +2091,8 @@ class Table(Queryable):
+                     columns=columns,
+                     other_columns=other_columns,
+                     is_compound=is_compound,
++                    on_delete=rows[0][4],
++                    on_update=rows[0][5],
+                 )
+             )
+         return fks
+@@ -2434,9 +2455,16 @@ class Table(Queryable):
+                         columns=columns,
+                         other_columns=fk.other_columns,
+                         is_compound=True,
++                        on_delete=fk.on_delete,
++                        on_update=fk.on_update,
+                     )
+                 return ForeignKey(
+-                    self.name, columns[0], fk.other_table, fk.other_columns[0]
++                    self.name,
++                    columns[0],
++                    fk.other_table,
++                    fk.other_columns[0],
++                    on_delete=fk.on_delete,
++                    on_update=fk.on_update,
+                 )
+ 
+             create_table_foreign_keys = []
+diff --git a/tests/test_foreign_keys.py b/tests/test_foreign_keys.py
+index 1fabce75694889574a2d082fc493875b37c0b08b..e1468d9e5a7b3b6bd410d3a1e9e26f894fc3bbf0 100644
+--- a/tests/test_foreign_keys.py
++++ b/tests/test_foreign_keys.py
+@@ -324,3 +324,77 @@ def test_index_foreign_keys_compound_creates_composite_index(compound_db):
+     # No separate single-column indexes for the members
+     assert ["campus_name"] not in index_columns
+     assert ["dept_code"] not in index_columns
++
++
++@pytest.mark.parametrize("compound", (False, True))
++def test_foreign_key_actions_survive_transform(compound):
++    db = Database(memory=True)
++    db.executescript(
++        """
++        PRAGMA foreign_keys = ON;
++        CREATE TABLE parents (a INTEGER, b INTEGER, PRIMARY KEY (a, b));
++        CREATE TABLE children (
++            id INTEGER PRIMARY KEY,
++            a INTEGER,
++            b INTEGER,
++            note TEXT,
++            FOREIGN KEY (a, b) REFERENCES parents(a, b)
++                ON DELETE CASCADE ON UPDATE SET NULL
++        );
++        """
++        if compound
++        else """
++        PRAGMA foreign_keys = ON;
++        CREATE TABLE parents (id INTEGER PRIMARY KEY);
++        CREATE TABLE children (
++            id INTEGER PRIMARY KEY,
++            parent_id INTEGER REFERENCES parents(id)
++                ON DELETE CASCADE ON UPDATE SET NULL,
++            note TEXT
++        );
++        """
++    )
++    db["parents"].insert({"a": 1, "b": 2} if compound else {"id": 1})
++    child = {"id": 1, "note": "retained"}
++    child.update({"a": 1, "b": 2} if compound else {"parent_id": 1})
++    db["children"].insert(child)
++
++    fk = db["children"].foreign_keys[0]
++    assert fk.on_delete == "CASCADE"
++    assert fk.on_update == "SET NULL"
++    db["children"].transform(rename={"note": "description"})
++
++    fk = db["children"].foreign_keys[0]
++    assert fk.on_delete == "CASCADE"
++    assert fk.on_update == "SET NULL"
++    assert db["children"].get(1)["description"] == "retained"
++    if compound:
++        db["parents"].update((1, 2), {"a": 3})
++        assert db["children"].get(1)["a"] is None
++        assert db["children"].get(1)["b"] is None
++    else:
++        db["parents"].delete(1)
++        assert db["children"].count == 0
++
++
++def test_foreign_key_action_defaults_and_create_table_sql(departments_db):
++    fk = ForeignKey(
++        "courses",
++        None,
++        "departments",
++        None,
++        columns=["campus_name", "dept_code"],
++        other_columns=["campus_name", "dept_code"],
++        is_compound=True,
++        on_delete="CASCADE",
++        on_update="RESTRICT",
++    )
++    assert ForeignKey("t", "parent_id", "parents", "id").on_delete == "NO ACTION"
++    departments_db.create_table(
++        "courses",
++        {"campus_name": str, "dept_code": str},
++        foreign_keys=[fk],
++    )
++    introspected = departments_db["courses"].foreign_keys[0]
++    assert introspected.on_delete == "CASCADE"
++    assert introspected.on_update == "RESTRICT"

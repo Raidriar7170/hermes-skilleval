@@ -1,0 +1,83 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 0f2924c17b7e09ce2c8a44904d95b26ed52398fa..8403c0e51cc8d304b2144ef16172aad157d78a4f 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -870,10 +870,19 @@ class Database:
+         if self._tracer:
+             self._tracer(sql, parameters)
+         was_in_transaction = self.conn.in_transaction
+-        if parameters is not None:
+-            cursor = self.conn.execute(sql, parameters)
+-        else:
+-            cursor = self.conn.execute(sql)
++        try:
++            if parameters is not None:
++                cursor = self.conn.execute(sql, parameters)
++            else:
++                cursor = self.conn.execute(sql)
++        except BaseException:
++            if not was_in_transaction and self.conn.in_transaction:
++                # A failed write can still cause the sqlite3 driver to open an
++                # implicit transaction. It belongs to this execute() call, so
++                # close it without disturbing a transaction owned by the
++                # caller.
++                self.conn.rollback()
++            raise
+         if (
+             not was_in_transaction
+             and self.conn.in_transaction
+diff --git a/tests/test_atomic.py b/tests/test_atomic.py
+index f75c4eeb390f392a969d6e0bab314ad70b317579..4c4d7d3e8e2ac6c22046c948f9603405ee3b27ff 100644
+--- a/tests/test_atomic.py
++++ b/tests/test_atomic.py
+@@ -1,3 +1,5 @@
++import contextlib
++
+ import pytest
+ 
+ from sqlite_utils.db import Database, _iter_complete_sql_statements
+@@ -247,6 +249,44 @@ def test_execute_write_respects_explicit_transaction(fresh_db):
+     assert [r["id"] for r in fresh_db["t"].rows] == [1]
+ 
+ 
++def test_execute_failed_write_does_not_leave_implicit_transaction(tmpdir):
++    path = str(tmpdir / "test.db")
++    db = Database(path)
++    db["t"].insert({"id": 1}, pk="id")
++
++    with pytest.raises(sqlite3.IntegrityError):
++        db.execute("insert into t (id) values (1)")
++
++    assert not db.conn.in_transaction
++    db.execute("insert into t (id) values (2)")
++    db.close()
++    reopened = Database(path)
++    assert [row["id"] for row in reopened["t"].rows] == [1, 2]
++    reopened.close()
++
++
++@pytest.mark.parametrize("transaction", ["manual", "atomic"])
++def test_execute_failed_write_preserves_caller_transaction(fresh_db, transaction):
++    fresh_db["t"].insert({"id": 1}, pk="id")
++
++    if transaction == "manual":
++        fresh_db.begin()
++        context = contextlib.nullcontext()
++    else:
++        context = fresh_db.atomic()
++
++    with context:
++        fresh_db.execute("insert into t (id) values (2)")
++        with pytest.raises(sqlite3.IntegrityError):
++            fresh_db.execute("insert into t (id) values (1)")
++        assert fresh_db.conn.in_transaction
++        fresh_db.execute("insert into t (id) values (3)")
++
++    if transaction == "manual":
++        fresh_db.commit()
++    assert [row["id"] for row in fresh_db["t"].rows] == [1, 2, 3]
++
++
+ def test_execute_comment_prefixed_begin_leaves_transaction_open(fresh_db):
+     # A BEGIN hidden behind a leading comment must not be auto-committed
+     # out from under the caller

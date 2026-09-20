@@ -1,0 +1,120 @@
+diff --git a/csvkit/utilities/csvformat.py b/csvkit/utilities/csvformat.py
+index 655f5c44bf2ed3c1cbbaceedd79c3be921c7988d..72e6c09b96b062c317c322c68dbb52cbbee93493 100644
+--- a/csvkit/utilities/csvformat.py
++++ b/csvkit/utilities/csvformat.py
+@@ -9,7 +9,7 @@ from csvkit.cli import CSVKitUtility, make_default_headers
+ 
+ class CSVFormat(CSVKitUtility):
+     description = 'Convert a CSV file to a custom output format.'
+-    override_flags = ['L', 'blanks', 'date-format', 'datetime-format']
++    override_flags = ['blanks', 'date-format', 'datetime-format']
+ 
+     def add_arguments(self):
+         self.argparser.add_argument(
+@@ -83,9 +83,39 @@ class CSVFormat(CSVKitUtility):
+         if self.args.skip_header:
+             next(reader)
+ 
++        if self.args.out_quoting == 2:
++            number_type = agate.Number(locale=self.args.locale)
++
++            def infer_numbers(row):
++                inferred = []
++                for value in row:
++                    try:
++                        number = number_type.cast(value)
++                    except agate.CastError:
++                        inferred.append(value)
++                    else:
++                        inferred.append(NumericString(value) if number is not None else value)
++                return inferred
++
++            if not self.args.skip_header:
++                header = next(reader, None)
++                if header is not None:
++                    writer.writerow(header)
++            reader = map(infer_numbers, reader)
++
+         writer.writerows(reader)
+ 
+ 
++class NumericString(str):
++    """A string that csv.writer recognizes as numeric without changing its contents."""
++
++    def __float__(self):
++        return 0.0
++
++    def replace(self, old, new, count=-1):
++        return NumericString(super().replace(old, new, count))
++
++
+ def launch_new_instance():
+     utility = CSVFormat()
+     utility.run()
+diff --git a/tests/test_utilities/test_csvformat.py b/tests/test_utilities/test_csvformat.py
+index 7123f2c233683ed787b5de8a0910d4ebddb7698a..081178b3a4b4ab790d379391c79dfaedd4c15da7 100644
+--- a/tests/test_utilities/test_csvformat.py
++++ b/tests/test_utilities/test_csvformat.py
+@@ -91,6 +91,62 @@ class TestCSVFormat(CSVKitTestCase, EmptyFileTests):
+ 
+         input_file.close()
+ 
++    def test_quote_nonnumeric(self):
++        input_file = io.BytesIO(b'number,text\n01,hello\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2'], [
++                '"number","text"',
++                '01,"hello"',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_locale(self):
++        input_file = io.BytesIO('number,text\n"1.234,56",hello\n'.encode())
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2', '--locale', 'de_DE', '-D', ';'], [
++                '"number";"text"',
++                '1.234,56;"hello"',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_skip_header(self):
++        input_file = io.BytesIO(b'skip,me\n1,text\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2', '--skip-header'], [
++                '1,"text"',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_empty(self):
++        input_file = io.BytesIO()
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2'], [])
++
++        input_file.close()
++
++    def test_other_quoting_modes(self):
++        cases = (
++            ('0', ['a,b', '1,text']),
++            ('1', ['"a","b"', '"1","text"']),
++            ('3', ['a,b', '1,text']),
++        )
++
++        for mode, expected in cases:
++            with self.subTest(mode=mode):
++                input_file = io.BytesIO(b'a,b\n1,text\n')
++
++                with stdin_as_string(input_file):
++                    self.assertLines(['--out-quoting', mode], expected)
++
++                input_file.close()
++
+     def test_lineterminator(self):
+         self.assertLines(['-M', 'XYZ', 'examples/dummy.csv'], [
+             'a,b,cXYZ1,2,3XYZ',

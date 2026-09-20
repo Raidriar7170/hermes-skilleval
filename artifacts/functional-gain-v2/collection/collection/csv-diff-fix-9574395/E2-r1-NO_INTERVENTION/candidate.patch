@@ -1,0 +1,168 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..8d3840ed31e6830c50eccb7a65a1a0f4db995bf6 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -1,5 +1,4 @@
+ import csv
+-from dictdiffer import diff
+ import json
+ import hashlib
+ 
+@@ -35,7 +34,6 @@ def compare(previous, current, show_unchanged=False):
+     # Have the columns changed?
+     previous_columns = set(next(iter(previous.values())).keys())
+     current_columns = set(next(iter(current.values())).keys())
+-    ignore_columns = None
+     if previous_columns != current_columns:
+         result["columns_added"] = [
+             c for c in current_columns if c not in previous_columns
+@@ -43,7 +41,6 @@ def compare(previous, current, show_unchanged=False):
+         result["columns_removed"] = [
+             c for c in previous_columns if c not in current_columns
+         ]
+-        ignore_columns = current_columns.symmetric_difference(previous_columns)
+     # Have any rows been removed or added?
+     removed = [id for id in previous if id not in current]
+     added = [id for id in current if id not in previous]
+@@ -57,14 +54,15 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            d = list(diff(previous[id], current[id], ignore=ignore_columns))
+-            if d:
++            changed_values = {
++                field: [previous_value, current[id][field]]
++                for field, previous_value in previous[id].items()
++                if field in current[id] and previous_value != current[id][field]
++            }
++            if changed_values:
+                 changes = {
+                     "key": id,
+-                    "changes": {
+-                        field: [prev_value, current_value]
+-                        for _, field, (prev_value, current_value) in d
+-                    },
++                    "changes": changed_values,
+                 }
+                 if show_unchanged:
+                     changes["unchanged"] = {
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 11b4eef1bba305732e6e39e0e1f73673ef6d5bf0..c8d86ac7d313f8819cbf040e36e97fa40cd32280 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -86,6 +86,36 @@ def test_human_cli_json(tmpdir):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_cli_json_preserves_dotted_column_names(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write("id,user.name,user.age,meta.status\n1,Cleo,4,active")
++    two = tmpdir / "two.csv"
++    two.write("id,user.name,user.age,meta.status\n1,Clio,5,active")
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [str(one), str(two), "--key", "id", "--json", "--show-unchanged"],
++    )
++
++    assert result.exit_code == 0
++    assert json.loads(result.output) == {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {
++                    "user.name": ["Cleo", "Clio"],
++                    "user.age": ["4", "5"],
++                },
++                "unchanged": {"meta.status": "active"},
++            }
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    }
++
++
+ def test_tsv_files(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..6f6dd85991528d0d9b65c0996e7e8e685eb40f34 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -57,6 +57,74 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_dotted_column_names_are_preserved():
++    previous = """id,profile.name,profile.age,status.code,plain
++1,Cleo,4,active,same"""
++    current = """id,profile.name,profile.age,status.code,plain
++1,Clio,5,active,changed"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++        show_unchanged=True,
++    )
++
++    assert diff["changed"] == [
++        {
++            "key": "1",
++            "changes": {
++                "profile.name": ["Cleo", "Clio"],
++                "profile.age": ["4", "5"],
++                "plain": ["same", "changed"],
++            },
++            "unchanged": {"status.code": "active"},
++        }
++    ]
++
++
++def test_dotted_names_with_added_removed_rows_and_columns():
++    previous = """id,profile.name,same.dot,removed.dot
++1,Cleo,same,gone
++2,Deleted,same,gone"""
++    current = """id,profile.name,same.dot,added.dot
++1,Clio,same,here
++3,Added,same,here"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++        show_unchanged=True,
++    )
++
++    assert diff == {
++        "added": [
++            {
++                "id": "3",
++                "profile.name": "Added",
++                "same.dot": "same",
++                "added.dot": "here",
++            }
++        ],
++        "removed": [
++            {
++                "id": "2",
++                "profile.name": "Deleted",
++                "same.dot": "same",
++                "removed.dot": "gone",
++            }
++        ],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {"profile.name": ["Cleo", "Clio"]},
++                "unchanged": {"same.dot": "same", "removed.dot": "gone"},
++            }
++        ],
++        "columns_added": ["added.dot"],
++        "columns_removed": ["removed.dot"],
++    }
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

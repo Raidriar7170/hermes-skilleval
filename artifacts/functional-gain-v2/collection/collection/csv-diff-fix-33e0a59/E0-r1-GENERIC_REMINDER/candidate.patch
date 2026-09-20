@@ -1,0 +1,118 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index a9038aaba9befee79ea5bbc6a9779d3061d0abb5..5725382503e6ae9e49d3e9d88d744511886c2c09 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -35,15 +35,33 @@ def load_json(fp, key=None):
+         keyfn = lambda r: hashlib.sha1(
+             json.dumps(r, sort_keys=True).encode("utf8")
+         ).hexdigest()
+-    return {keyfn(r): _simplify_json_row(r) for r in raw_list}
++
++    # JSON objects in the same array do not necessarily all have the same
++    # fields. Treat those fields like CSV columns, filling absent values with
++    # None so that a value appearing or disappearing can be compared normally.
++    rows = []
++    fields = []
++    seen_fields = set()
++    for raw_row in raw_list:
++        row_key = keyfn(raw_row)
++        row = _simplify_json_row(raw_row)
++        rows.append((row_key, row))
++        for field in row:
++            if field not in seen_fields:
++                seen_fields.add(field)
++                fields.append(field)
++    return {
++        row_key: {field: row.get(field) for field in fields}
++        for row_key, row in rows
++    }
+ 
+ 
+ def _simplify_json_row(r):
+     # Convert list/dict values into JSON serialized strings
+-    for key, value in r.items():
+-        if isinstance(value, (dict, tuple, list)):
+-            r[key] = json.dumps(value)
+-    return r
++    return {
++        key: json.dumps(value) if isinstance(value, (dict, tuple, list)) else value
++        for key, value in r.items()
++    }
+ 
+ 
+ def compare(previous, current, show_unchanged=False):
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index de63c4c9c5c616fe06f7e3f40f750c849c3bfd30..d180ec4e3667e8b655310813b15d47af4f5411a9 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -146,6 +146,24 @@ def test_json_files(json_files):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_json_output_reports_missing_field_becoming_present(tmpdir):
++    one = tmpdir / "one.json"
++    one.write('[{"id": 1}, {"id": 2, "age": 2}]')
++    two = tmpdir / "two.json"
++    two.write('[{"id": 1, "age": 3}, {"id": 2, "age": 2}]')
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [str(one), str(two), "--key", "id", "--format", "json", "--json"],
++        catch_exceptions=False,
++    )
++
++    assert 0 == result.exit_code
++    assert [{"key": 1, "changes": {"age": [None, 3]}}] == json.loads(
++        result.output
++    )["changed"]
++
++
+ def test_sniff_format(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(cli.cli, [one, two, "--key", "id", "--json"])
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..bf1a64f7e13921a261ad38337df530a46cd6cdee 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -1,4 +1,4 @@
+-from csv_diff import load_csv, compare
++from csv_diff import load_csv, load_json, compare
+ import io
+ 
+ ONE = """id,name,age
+@@ -115,3 +115,35 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_load_json_fills_missing_fields_and_preserves_nested_values():
++    rows = load_json(
++        io.StringIO(
++            '[{"id": 1, "nested": {"items": [1, 2]}}, '
++            '{"id": 2, "name": "Pancakes"}]'
++        ),
++        key="id",
++    )
++
++    assert {
++        1: {"id": 1, "nested": '{"items": [1, 2]}', "name": None},
++        2: {"id": 2, "nested": None, "name": "Pancakes"},
++    } == rows
++
++
++def test_json_missing_field_becoming_present_is_a_change():
++    previous = load_json(
++        io.StringIO('[{"id": 1}, {"id": 2, "age": 2}]'), key="id"
++    )
++    current = load_json(
++        io.StringIO('[{"id": 1, "age": 3}, {"id": 2, "age": 2}]'), key="id"
++    )
++
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": 1, "changes": {"age": [None, 3]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == compare(previous, current)

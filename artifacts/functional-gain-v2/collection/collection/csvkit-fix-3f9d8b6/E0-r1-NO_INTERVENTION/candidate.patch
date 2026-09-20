@@ -1,0 +1,74 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index d8ad737d256ea6f9b250adcb982032b5c0b6c268..dc7f71fe64d3692c89e7c6bab427be43ddfdcbce 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -98,7 +98,7 @@ class CSVJoin(CSVKitUtility):
+             remaining_tables.reverse()
+ 
+             for i, table in enumerate(remaining_tables):
+-                jointab = agate.Table.join(jointab, table, join_column_ids[-(i + 2)], join_column_ids[-1])
++                jointab = agate.Table.join(jointab, table, join_column_ids[-1], join_column_ids[-(i + 2)])
+         elif self.args.outer_join:
+             # Full outer join
+             for i, table in enumerate(tables[1:]):
+diff --git a/tests/fixtures/join_left.csv b/tests/fixtures/join_left.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..d1e87d4ca9a879765ed1f1235b80134209ddf30f
+--- /dev/null
++++ b/tests/fixtures/join_left.csv
+@@ -0,0 +1,3 @@
++left_value,left_key,noise
++L1,k1,x
++L2,k2,k3
+diff --git a/tests/fixtures/join_right.csv b/tests/fixtures/join_right.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..94349bb7ef86bd982d3c0456b746ab6cd7bc2388
+--- /dev/null
++++ b/tests/fixtures/join_right.csv
+@@ -0,0 +1,3 @@
++right_value,unrelated,right_key
++R1,k2,k1
++R2,k1,k3
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index b7cb39ff240048b556ce209fabfe45f48f09fa7c..377f7f73479d248ef5a0d23edd8c915d0338f237 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -29,6 +29,38 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['-c', 'a', '--right', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 4)
+ 
++    def test_right_different_column_names_and_positions(self):
++        self.assertRows([
++            '-c', 'left_key,right_key', '--right',
++            'tests/fixtures/join_left.csv', 'tests/fixtures/join_right.csv',
++        ], [
++            ['right_value', 'unrelated', 'right_key', 'left_value', 'noise'],
++            ['R1', 'k2', 'k1', 'L1', 'x'],
++            ['R2', 'k1', 'k3', '', ''],
++        ])
++
++    def test_right_different_column_indices(self):
++        self.assertRows([
++            '-c', '2,3', '--right',
++            'tests/fixtures/join_left.csv', 'tests/fixtures/join_right.csv',
++        ], [
++            ['right_value', 'unrelated', 'right_key', 'left_value', 'noise'],
++            ['R1', 'k2', 'k1', 'L1', 'x'],
++            ['R2', 'k1', 'k3', '', ''],
++        ])
++
++    def test_right_three_files_uses_columns_in_input_order(self):
++        self.assertRows([
++            '-c', 'left_key,left_key,right_key', '--right',
++            'tests/fixtures/join_left.csv',
++            'tests/fixtures/join_left.csv',
++            'tests/fixtures/join_right.csv',
++        ], [
++            ['right_value', 'unrelated', 'right_key', 'left_value', 'noise', 'left_value2', 'noise2'],
++            ['R1', 'k2', 'k1', 'L1', 'x', 'L1', 'x'],
++            ['R2', 'k1', 'k3', '', '', '', ''],
++        ])
++
+     def test_outer(self):
+         output = self.get_output_as_io(['-c', 'a', '--outer', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 6)

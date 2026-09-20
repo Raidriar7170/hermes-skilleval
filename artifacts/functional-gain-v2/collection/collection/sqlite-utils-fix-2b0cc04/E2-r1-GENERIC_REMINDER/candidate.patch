@@ -1,0 +1,72 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 1c3ce8d98f6e0f0e0d7c1ee29f8e8ee06e3862a1..32a7bbc9b978d5652e5b873a0a7ce550eb78c011 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1177,7 +1177,7 @@ def insert_upsert_implementation(
+                 )
+             else:
+                 raise
+-        if tracker is not None:
++        if tracker is not None and db[table].exists():
+             db.table(table).transform(types=tracker.types)
+ 
+         # Clean up open file-like objects
+@@ -2034,7 +2034,7 @@ def memory(
+                 rows = (_flatten(row) for row in rows)
+ 
+             db.table(file_table).insert_all(rows, alter=True)
+-            if tracker is not None:
++            if tracker is not None and db[file_table].exists():
+                 db.table(file_table).transform(types=tracker.types)
+             # Add convenient t / t1 / t2 views
+             view_names = ["t{}".format(i + 1)]
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 565fbc28137ca47319aefe5ab735899fa7a2e5fc..20d87e411387285bb2803ca749f5cb4f88877597 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -2319,6 +2319,22 @@ def test_insert_detect_types(tmpdir, option):
+     ]
+ 
+ 
++@pytest.mark.parametrize("option", (None, "-d", "--detect-types"))
++def test_insert_csv_header_only_detect_types(tmpdir, option):
++    db_path = str(tmpdir / "test.db")
++    args = ["insert", db_path, "creatures", "-", "--csv"]
++    if option:
++        args.append(option)
++    result = CliRunner().invoke(
++        cli.cli,
++        args,
++        catch_exceptions=False,
++        input="name,age,weight\n",
++    )
++    assert result.exit_code == 0
++    assert Database(db_path).table_names() == []
++
++
+ @pytest.mark.parametrize("option", (None, "-d", "--detect-types"))
+ def test_upsert_detect_types(tmpdir, option):
+     """Test that type detection is now the default behavior for upsert"""
+diff --git a/tests/test_cli_memory.py b/tests/test_cli_memory.py
+index cf619855971aaf18e788545a0ed4b7559be5b2a6..36a458bc2f4bab3c7787a03a3343fe98395384b8 100644
+--- a/tests/test_cli_memory.py
++++ b/tests/test_cli_memory.py
+@@ -37,6 +37,18 @@ def test_memory_csv(tmpdir, sql_from, use_stdin):
+     )
+ 
+ 
++def test_memory_csv_header_only(tmpdir):
++    csv_path = str(tmpdir / "test.csv")
++    with open(csv_path, "w") as fp:
++        fp.write("id,name\n")
++    result = CliRunner().invoke(
++        cli.cli,
++        ["memory", csv_path, "select count(*) from sqlite_master"],
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++
++
+ @pytest.mark.parametrize("use_stdin", (True, False))
+ def test_memory_tsv(tmpdir, use_stdin):
+     data = "id\tname\n1\tCleo\n2\tBants"

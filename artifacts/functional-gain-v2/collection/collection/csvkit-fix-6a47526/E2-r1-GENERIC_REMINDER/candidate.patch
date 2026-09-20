@@ -1,0 +1,58 @@
+diff --git a/csvkit/utilities/csvstack.py b/csvkit/utilities/csvstack.py
+index 01178e2c17350e4e48304cb10a9da0ec6e96cae3..a3eaa5b7ffaf934418fcebb7d018fccad55adeb3 100644
+--- a/csvkit/utilities/csvstack.py
++++ b/csvkit/utilities/csvstack.py
+@@ -75,7 +75,7 @@ class CSVStack(CSVKitUtility):
+             rows = Reader(f, **self.reader_kwargs)
+ 
+             if use_fieldnames:
+-                for field in rows.fieldnames:
++                for field in rows.fieldnames or []:
+                     if field not in headers:
+                         headers.append(field)
+ 
+@@ -86,6 +86,7 @@ class CSVStack(CSVKitUtility):
+                     f.close()
+             else:
+                 row = next(rows, [])
++
+                 headers = list(make_default_headers(len(row)))
+ 
+                 # If the file is standard input, store the row that was used to calculate the number of columns.
+diff --git a/tests/fixtures/csvstack_header_only.csv b/tests/fixtures/csvstack_header_only.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..7d74878f1b8305170243e7e2a1629edceee83bd0
+--- /dev/null
++++ b/tests/fixtures/csvstack_header_only.csv
+@@ -0,0 +1 @@
++d,e
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 3e3898b91a608d0a3cfbd8e562d4eec266b5f178..ca0fea195adecb534ae5df273e41cac6376dd6ca 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -62,6 +62,25 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_multiple_file_stack_empty(self):
++        expected = [
++            ['a', 'b', 'c'],
++            ['1', '2', '3'],
++        ]
++
++        self.assertRows(['examples/empty.csv', 'examples/dummy.csv'], expected)
++        self.assertRows(['examples/dummy.csv', 'examples/empty.csv'], expected)
++
++    def test_multiple_file_stack_header_only(self):
++        self.assertRows(['tests/fixtures/csvstack_header_only.csv', 'examples/dummy.csv'], [
++            ['d', 'e', 'a', 'b', 'c'],
++            ['', '', '1', '2', '3'],
++        ])
++        self.assertRows(['examples/dummy.csv', 'tests/fixtures/csvstack_header_only.csv'], [
++            ['a', 'b', 'c', 'd', 'e'],
++            ['1', '2', '3', '', ''],
++        ])
++
+     def test_multiple_file_stack_col(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy_col_shuffled.csv'], [
+             ['a', 'b', 'c'],

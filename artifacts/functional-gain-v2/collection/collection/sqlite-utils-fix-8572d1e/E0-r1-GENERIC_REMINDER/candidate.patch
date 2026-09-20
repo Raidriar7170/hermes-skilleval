@@ -1,0 +1,72 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index eb59c500669815dcbb81eed1f3be4497d66fe80f..3680f3d55dbc3296c963883a82962ed8379f4a8e 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2920,14 +2920,30 @@ class Table(Queryable):
+                 "{} IS NULL".format(quote_identifier(c)) for c in columns
+             )
+             self.db.execute(
+-                "INSERT OR IGNORE INTO {} ({lookup_columns}) SELECT DISTINCT {table_cols} FROM {} WHERE NOT ({all_null})".format(
++                "INSERT OR IGNORE INTO {} ({lookup_columns}) "
++                "SELECT DISTINCT {table_cols} FROM {} AS source "
++                "WHERE NOT ({all_null}) AND NOT EXISTS ("
++                "SELECT 1 FROM {} AS lookup WHERE {lookup_match})".format(
+                     quote_identifier(table),
+                     quote_identifier(self.name),
++                    quote_identifier(table),
+                     lookup_columns=", ".join(
+                         quote_identifier(c) for c in lookup_columns
+                     ),
+-                    table_cols=", ".join(quote_identifier(c) for c in columns),
+-                    all_null=all_columns_are_null,
++                    table_cols=", ".join(
++                        "source.{}".format(quote_identifier(c)) for c in columns
++                    ),
++                    all_null=" AND ".join(
++                        "source.{} IS NULL".format(quote_identifier(c))
++                        for c in columns
++                    ),
++                    lookup_match=" AND ".join(
++                        "source.{} IS lookup.{}".format(
++                            quote_identifier(column),
++                            quote_identifier(rename.get(column) or column),
++                        )
++                        for column in columns
++                    ),
+                 )
+             )
+ 
+diff --git a/tests/test_extract.py b/tests/test_extract.py
+index 1c0fa01eb84cb83057cd815a824624dc23c77fb2..c26b00bce333aa65c0b14f28e79a41edae417fa7 100644
+--- a/tests/test_extract.py
++++ b/tests/test_extract.py
+@@ -271,3 +271,29 @@ def test_extract_null_values_existing_lookup_table_with_null_row(fresh_db):
+         {"id": 10, "name": "Terriana", "species_id": 2},
+         {"id": 11, "name": "Spenidorm", "species_id": None},
+     ]
++
++
++def test_reuse_lookup_table_with_null_value(fresh_db):
++    fresh_db["sightings"].insert(
++        {"id": 1, "common_name": "Wolf", "latin_name": None}, pk="id"
++    )
++    fresh_db["individuals"].insert(
++        {"id": 2, "name": "Terriana", "common_name": "Wolf", "latin_name": None},
++        pk="id",
++    )
++
++    extract_kwargs = {
++        "columns": ["common_name", "latin_name"],
++        "table": "species",
++        "fk_column": "species_id",
++    }
++    fresh_db["sightings"].extract(**extract_kwargs)
++    fresh_db["individuals"].extract(**extract_kwargs)
++
++    assert list(fresh_db["species"].rows) == [
++        {"id": 1, "common_name": "Wolf", "latin_name": None}
++    ]
++    assert list(fresh_db["sightings"].rows) == [{"id": 1, "species_id": 1}]
++    assert list(fresh_db["individuals"].rows) == [
++        {"id": 2, "name": "Terriana", "species_id": 1}
++    ]

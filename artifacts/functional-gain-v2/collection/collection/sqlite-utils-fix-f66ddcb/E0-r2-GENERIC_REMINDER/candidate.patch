@@ -1,0 +1,167 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index d709fb9cb95582c952e3add8e65d1999e32d5755..02746c3bb8994cc53ec18fc75be30ccd9a7c10a6 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2566,6 +2566,22 @@ class Table(Queryable):
+         should_defer_foreign_keys = (
+             pragma_foreign_keys_was_on and already_in_transaction
+         )
++        if should_defer_foreign_keys:
++            destructive_actions = {"CASCADE", "SET NULL", "SET DEFAULT"}
++            target_table = fold_identifier_case(self.name)
++            for table_name in self.db.table_names():
++                for fk in self.db.table(table_name).foreign_keys:
++                    if (
++                        fold_identifier_case(fk.other_table) == target_table
++                        and fk.on_delete.upper() in destructive_actions
++                    ):
++                        raise TransactionError(
++                            "Cannot transform table '{}' inside a transaction: "
++                            "table '{}' has an ON DELETE {} foreign key "
++                            "referencing it".format(
++                                self.name, table_name, fk.on_delete.upper()
++                            )
++                        )
+         defer_foreign_keys_was_on = False
+         try:
+             if should_disable_foreign_keys:
+diff --git a/tests/test_transform.py b/tests/test_transform.py
+index 3cc5ba60c853d2133540fc2ad2030cccec86d9b5..059924df219192b0a1f9f26ce62051f3f85976b3 100644
+--- a/tests/test_transform.py
++++ b/tests/test_transform.py
+@@ -1,6 +1,6 @@
+ import sqlite3
+ 
+-from sqlite_utils.db import ForeignKey, TransformError
++from sqlite_utils.db import ForeignKey, TransactionError, TransformError
+ from sqlite_utils.utils import OperationalError
+ import pytest
+ 
+@@ -469,6 +469,127 @@ def test_transform_on_delete_cascade_does_not_delete_records(
+         assert fresh_db.conn.execute("PRAGMA foreign_keys").fetchone()[0]
+ 
+ 
++@pytest.mark.parametrize("action", ["CASCADE", "SET NULL", "SET DEFAULT"])
++def test_transform_in_transaction_refuses_destructive_inbound_foreign_key(
++    fresh_db, action
++):
++    fresh_db.executescript(
++        """
++        PRAGMA foreign_keys=ON;
++        CREATE TABLE parents (id INTEGER PRIMARY KEY, name TEXT);
++        CREATE TABLE children (
++            id INTEGER PRIMARY KEY,
++            parent_id INTEGER DEFAULT 1
++                REFERENCES parents(id) ON DELETE {}
++        );
++        INSERT INTO parents VALUES (1, 'one');
++        INSERT INTO children VALUES (1, 1);
++        """.format(action)
++    )
++    schemas_before = dict(fresh_db.execute(
++        "SELECT name, sql FROM sqlite_master WHERE type = 'table'"
++    ).fetchall())
++
++    fresh_db.conn.execute("BEGIN")
++    with pytest.raises(TransactionError) as excinfo:
++        fresh_db["parents"].transform(rename={"name": "label"})
++
++    assert "children" in str(excinfo.value)
++    assert "ON DELETE {}".format(action) in str(excinfo.value)
++    assert dict(fresh_db.execute(
++        "SELECT name, sql FROM sqlite_master WHERE type = 'table'"
++    ).fetchall()) == schemas_before
++    assert list(fresh_db["parents"].rows) == [{"id": 1, "name": "one"}]
++    assert list(fresh_db["children"].rows) == [{"id": 1, "parent_id": 1}]
++    fresh_db.conn.rollback()
++
++
++def test_transform_in_transaction_refuses_destructive_self_reference(fresh_db):
++    fresh_db.executescript("""
++        PRAGMA foreign_keys=ON;
++        CREATE TABLE nodes (
++            id INTEGER PRIMARY KEY,
++            parent_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,
++            name TEXT
++        );
++        INSERT INTO nodes VALUES (1, NULL, 'root');
++        INSERT INTO nodes VALUES (2, 1, 'child');
++        """)
++
++    fresh_db.conn.execute("BEGIN")
++    with pytest.raises(TransactionError, match="nodes.*ON DELETE CASCADE"):
++        fresh_db["nodes"].transform(rename={"name": "label"})
++    assert list(fresh_db["nodes"].rows) == [
++        {"id": 1, "parent_id": None, "name": "root"},
++        {"id": 2, "parent_id": 1, "name": "child"},
++    ]
++    fresh_db.conn.rollback()
++
++
++@pytest.mark.parametrize("action", ["NO ACTION", "RESTRICT"])
++def test_transform_in_transaction_allows_non_destructive_inbound_foreign_key(
++    fresh_db, action
++):
++    fresh_db.executescript(
++        """
++        PRAGMA foreign_keys=ON;
++        CREATE TABLE parents (id INTEGER PRIMARY KEY, name TEXT);
++        CREATE TABLE children (
++            id INTEGER PRIMARY KEY,
++            parent_id INTEGER REFERENCES parents(id) ON DELETE {}
++        );
++        INSERT INTO parents VALUES (1, 'one');
++        INSERT INTO children VALUES (1, 1);
++        """.format(action)
++    )
++
++    fresh_db.conn.execute("BEGIN")
++    fresh_db["parents"].transform(rename={"name": "label"})
++    assert list(fresh_db["parents"].rows) == [{"id": 1, "label": "one"}]
++    assert list(fresh_db["children"].rows) == [{"id": 1, "parent_id": 1}]
++    fresh_db.conn.rollback()
++
++
++def test_transform_in_transaction_allows_outbound_key_and_foreign_keys_off(fresh_db):
++    fresh_db.executescript("""
++        CREATE TABLE parents (id INTEGER PRIMARY KEY);
++        CREATE TABLE children (
++            id INTEGER PRIMARY KEY,
++            parent_id INTEGER REFERENCES parents(id) ON DELETE CASCADE,
++            name TEXT
++        );
++        INSERT INTO parents VALUES (1);
++        INSERT INTO children VALUES (1, 1, 'child');
++        """)
++    fresh_db.conn.execute("BEGIN")
++    fresh_db["children"].transform(rename={"name": "label"})
++    assert list(fresh_db["children"].rows) == [
++        {"id": 1, "parent_id": 1, "label": "child"}
++    ]
++    # foreign_keys is off, so transforming the referenced table is allowed too
++    fresh_db["parents"].transform()
++    assert list(fresh_db["children"].rows) == [
++        {"id": 1, "parent_id": 1, "label": "child"}
++    ]
++    fresh_db.conn.rollback()
++
++
++def test_transform_in_transaction_preserves_rowids(fresh_db):
++    fresh_db.executescript("""
++        PRAGMA foreign_keys=ON;
++        CREATE TABLE items (name TEXT, quantity INTEGER);
++        INSERT INTO items(rowid, name, quantity) VALUES (2, 'two', 2);
++        INSERT INTO items(rowid, name, quantity) VALUES (9, 'nine', 9);
++        """)
++
++    fresh_db.conn.execute("BEGIN")
++    fresh_db["items"].transform(types={"quantity": str})
++    assert [tuple(row) for row in fresh_db.execute(
++        "SELECT rowid, name, quantity FROM items ORDER BY rowid"
++    )] == [(2, "two", "2"), (9, "nine", "9")]
++    fresh_db.conn.rollback()
++
++
+ def test_transform_add_foreign_keys_from_scratch(fresh_db):
+     _add_country_city_continent(fresh_db)
+     fresh_db["places"].insert(_CAVEAU)

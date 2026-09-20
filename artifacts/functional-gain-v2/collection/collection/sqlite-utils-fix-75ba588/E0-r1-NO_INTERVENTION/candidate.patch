@@ -1,0 +1,299 @@
+diff --git a/sqlite_utils/create_table_parser.py b/sqlite_utils/create_table_parser.py
+index d42628600fe9185563717fb7a34e3d01b84c2714..5b0ab62a5361a6e9f8e2cbd9cbedc6efd0867367 100644
+--- a/sqlite_utils/create_table_parser.py
++++ b/sqlite_utils/create_table_parser.py
+@@ -32,6 +32,15 @@ class ColumnComments:
+     after: str = ""
+ 
+ 
++@dataclass(frozen=True)
++class UniqueConstraint:
++    """A UNIQUE constraint, normalized to table-constraint components."""
++
++    columns: tuple[tuple[str, str, bool], ...]
++    name: str = ""
++    conflict: str = ""
++
++
+ class ParseError(ValueError):
+     pass
+ 
+@@ -564,6 +573,101 @@ def parse_checks(create_sql: str) -> list[Check]:
+     return checks
+ 
+ 
++def _unique_conflict(tokens: list[_Token], start: int) -> str:
++    if (
++        start + 2 < len(tokens)
++        and tokens[start].is_keyword("ON")
++        and tokens[start + 1].is_keyword("CONFLICT")
++    ):
++        return _unquote(tokens[start + 2].text).upper()
++    return ""
++
++
++def parse_unique_constraints(create_sql: str) -> list[UniqueConstraint]:
++    """Return column and table UNIQUE constraints from CREATE TABLE SQL.
++
++    Each indexed column includes its explicit collation and descending flag.
++    Column constraints are normalized so callers can recreate them as table
++    constraints without needing to preserve the rest of the column definition.
++    """
++    body_info = _table_body(create_sql)
++    if body_info is None:
++        return []
++    body, _ = body_info
++    constraints: list[UniqueConstraint] = []
++    for item, _, _ in _split_spans(body, _lex(body)):
++        tokens = _meaningful(_lex(item))
++        if not tokens:
++            continue
++        index = 0
++        name = ""
++        if tokens[index].is_keyword("CONSTRAINT"):
++            if len(tokens) < 3:
++                raise ParseError("CONSTRAINT is missing its definition")
++            name = _unquote(tokens[index + 1].text)
++            index += 2
++        if index < len(tokens) and tokens[index].is_keyword("UNIQUE"):
++            if index + 1 >= len(tokens) or tokens[index + 1].text != "(":
++                raise ParseError("UNIQUE must be followed by a column list")
++            close = _matching_paren(tokens, index + 1)
++            columns = []
++            inner = item[tokens[index + 1].end : tokens[close].start]
++            for part in _split_ranges(inner, _lex(inner)):
++                part_tokens = _meaningful(_lex(part))
++                if not part_tokens:
++                    raise ParseError("Empty column in UNIQUE constraint")
++                column = _unquote(part_tokens[0].text)
++                collate = ""
++                desc = False
++                for part_index, token in enumerate(part_tokens[1:], 1):
++                    if token.is_keyword("COLLATE") and part_index + 1 < len(part_tokens):
++                        collate = _unquote(part_tokens[part_index + 1].text)
++                    elif token.is_keyword("DESC"):
++                        desc = True
++                columns.append((column, collate, desc))
++            constraints.append(
++                UniqueConstraint(
++                    tuple(columns), name=name, conflict=_unique_conflict(tokens, close + 1)
++                )
++            )
++            continue
++
++        # Column definition: locate UNIQUE at top level, remembering the
++        # column's declared collation. Parenthesized type details are skipped.
++        column = _unquote(tokens[0].text)
++        collate = ""
++        unique_index = None
++        scan = 1
++        while scan < len(tokens):
++            token = tokens[scan]
++            if token.text == "(":
++                scan = _matching_paren(tokens, scan) + 1
++                continue
++            if token.is_keyword("COLLATE") and scan + 1 < len(tokens):
++                collate = _unquote(tokens[scan + 1].text)
++                scan += 2
++                continue
++            if token.is_keyword("UNIQUE"):
++                unique_index = scan
++                break
++            scan += 1
++        if unique_index is not None:
++            inline_name = ""
++            if (
++                unique_index >= 2
++                and tokens[unique_index - 2].is_keyword("CONSTRAINT")
++            ):
++                inline_name = _unquote(tokens[unique_index - 1].text)
++            constraints.append(
++                UniqueConstraint(
++                    ((column, collate, False),),
++                    name=inline_name,
++                    conflict=_unique_conflict(tokens, unique_index + 1),
++                )
++            )
++    return constraints
++
++
+ def parse_autoincrement(create_sql: str) -> str | None:
+     """Return the AUTOINCREMENT column from a valid CREATE TABLE statement."""
+     body_info = _table_body(create_sql)
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 48c5d5d858709a3051febb48b6869bba7bfedb5d..00c97665ddedcb51df284f8178d332c61d66b39f 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -32,10 +32,12 @@ from .create_table_parser import (
+     Check,
+     ColumnComments,
+     ParseError,
++    UniqueConstraint,
+     check_references_identifier,
+     parse_autoincrement,
+     parse_checks,
+     parse_column_comments,
++    parse_unique_constraints,
+     rewrite_check_expression,
+     sql_ends_in_line_comment,
+ )
+@@ -1424,6 +1426,7 @@ class Database:
+         _checks: Iterable[Check] | None = None,
+         _column_comments: Mapping[str, ColumnComments] | None = None,
+         _autoincrement: str | None = None,
++        _unique_constraints: Iterable[UniqueConstraint] | None = None,
+     ) -> str:
+         """
+         Returns the SQL ``CREATE TABLE`` statement for creating the specified table.
+@@ -1603,6 +1606,27 @@ class Database:
+         column_defs.extend(
+             f"   {_check_constraint_sql(check)}" for check in table_checks
+         )
++        for unique in _unique_constraints or ():
++            unique_columns = []
++            for column, collate, desc in unique.columns:
++                column = resolve_casing(column, columns)
++                if column not in columns:
++                    raise AlterError(
++                        f"No such column for UNIQUE constraint: {column}"
++                    )
++                column_sql = quote_identifier(column)
++                if collate:
++                    column_sql += f" COLLATE {quote_identifier(collate)}"
++                if desc:
++                    column_sql += " DESC"
++                unique_columns.append(column_sql)
++            constraint_sql = ""
++            if unique.name:
++                constraint_sql += f"CONSTRAINT {quote_identifier(unique.name)} "
++            constraint_sql += "UNIQUE ({})".format(", ".join(unique_columns))
++            if unique.conflict:
++                constraint_sql += f" ON CONFLICT {unique.conflict}"
++            column_defs.append(f"   {constraint_sql}")
+         columns_sql = ",\n".join(column_defs)
+         sql = """CREATE TABLE {if_not_exists}{table} (
+ {columns_sql}{extra_pk}
+@@ -2763,6 +2787,7 @@ class Table(Queryable):
+             existing_checks = self.checks
+             existing_column_comments = parse_column_comments(self.schema)
+             existing_autoincrement = parse_autoincrement(self.schema)
++            existing_unique_constraints = parse_unique_constraints(self.schema)
+         except ParseError as ex:
+             raise TransformError(
+                 f"Could not parse table schema for table {self.name!r}: {ex}"
+@@ -2795,6 +2820,29 @@ class Table(Queryable):
+             if owner not in drop:
+                 create_table_column_comments[rename.get(owner) or owner] = comments
+ 
++        # UNIQUE is represented by implicit sqlite_autoindex entries, which
++        # cannot be recreated using CREATE INDEX (and would lose ON CONFLICT
++        # behavior). Rebuild these constraints as part of CREATE TABLE.
++        create_table_unique_constraints = []
++        for unique in existing_unique_constraints:
++            resolved_columns = tuple(
++                (resolve_casing(column, existing_columns), collate, desc)
++                for column, collate, desc in unique.columns
++            )
++            # Dropping any member drops the entire composite constraint.
++            if any(column in drop for column, _, _ in resolved_columns):
++                continue
++            create_table_unique_constraints.append(
++                UniqueConstraint(
++                    tuple(
++                        (rename.get(column) or column, collate, desc)
++                        for column, collate, desc in resolved_columns
++                    ),
++                    name=unique.name,
++                    conflict=unique.conflict,
++                )
++            )
++
+         create_table_foreign_keys: list[ForeignKeyIndicator] = []
+ 
+         if foreign_keys is not None:
+@@ -2974,6 +3022,7 @@ class Table(Queryable):
+                 _checks=create_table_checks,
+                 _column_comments=create_table_column_comments,
+                 _autoincrement=create_table_autoincrement,
++                _unique_constraints=create_table_unique_constraints,
+             ).strip()
+         )
+ 
+@@ -3003,6 +3052,9 @@ class Table(Queryable):
+         for index in self.indexes:
+             if index.origin == "pk":
+                 continue
++            # UNIQUE constraints are already recreated in CREATE TABLE.
++            if index.origin == "u":
++                continue
+             index_sql = self.db.execute(
+                 """SELECT sql FROM sqlite_master WHERE type = 'index' AND name = :index_name;""",
+                 {"index_name": index.name},
+diff --git a/tests/test_transform.py b/tests/test_transform.py
+index e6096cd1c8a7ddef4bbaf780d5ad364fb340f632..fb65b3e227416da174f52e2cc30474a792c0ff1b 100644
+--- a/tests/test_transform.py
++++ b/tests/test_transform.py
+@@ -1039,19 +1039,54 @@ def test_transform_with_unique_constraint_implicit_index(fresh_db):
+     """)
+     dogs.insert({"id": 1, "name": "Cleo", "age": 5})
+ 
+-    # Attempt to transform the table without modifying 'name'
+-    with pytest.raises(TransformError) as excinfo:
+-        dogs.transform(types={"age": str})
++    dogs.transform(types={"age": str}, rename={"name": "full_name"})
+ 
+-    assert (
+-        "Index 'sqlite_autoindex_dogs_1' on table 'dogs' does not have a CREATE INDEX statement."
+-        in str(excinfo.value)
++    assert list(dogs.rows) == [{"id": 1, "full_name": "Cleo", "age": "5"}]
++    with pytest.raises(sqlite3.IntegrityError, match="UNIQUE constraint failed"):
++        dogs.insert({"full_name": "Cleo", "age": "6"})
++
++
++def test_transform_preserves_unique_constraint_details(fresh_db):
++    fresh_db.execute(
++        """CREATE TABLE contacts (
++            id INTEGER PRIMARY KEY,
++            email TEXT COLLATE NOCASE CONSTRAINT unique_email
++                UNIQUE ON CONFLICT IGNORE,
++            first TEXT,
++            last TEXT,
++            CONSTRAINT full_name UNIQUE(first COLLATE NOCASE, last)
++                ON CONFLICT IGNORE
++        )"""
+     )
+-    assert (
+-        "You must manually drop this index prior to running this transformation and manually recreate the new index after running this transformation."
+-        in str(excinfo.value)
++    contacts = fresh_db.table("contacts")
++    contacts.insert({"id": 1, "email": "A@example.com", "first": "Ada", "last": "L"})
++
++    contacts.transform(
++        rename={"email": "address", "first": "given"}, types={"last": float}
+     )
+ 
++    assert list(contacts.rows) == [
++        {"id": 1, "address": "A@example.com", "given": "Ada", "last": "L"}
++    ]
++    contacts.insert({"id": 2, "address": "a@EXAMPLE.com", "given": "Other", "last": "X"})
++    contacts.insert({"id": 3, "address": "other@example.com", "given": "ada", "last": "L"})
++    assert [row["id"] for row in contacts.rows] == [1]
++    assert "ON CONFLICT IGNORE" in contacts.schema
++    assert "COLLATE \"NOCASE\"" in contacts.schema
++    assert 'CONSTRAINT "unique_email" UNIQUE' in contacts.schema
++    assert 'CONSTRAINT "full_name" UNIQUE' in contacts.schema
++
++
++def test_transform_dropping_composite_unique_member_drops_constraint(fresh_db):
++    fresh_db.execute("CREATE TABLE pairs (left TEXT, right TEXT, UNIQUE(left, right))")
++    pairs = fresh_db.table("pairs")
++    pairs.insert({"left": "same", "right": "one"})
++
++    pairs.transform(drop={"right"})
++    pairs.insert({"left": "same"})
++
++    assert list(pairs.rows) == [{"left": "same"}, {"left": "same"}]
++
+ 
+ def test_transform_preserves_autoincrement_and_sequence(fresh_db):
+     fresh_db.execute(

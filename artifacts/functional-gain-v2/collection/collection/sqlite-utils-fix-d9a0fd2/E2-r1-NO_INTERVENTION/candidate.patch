@@ -1,0 +1,91 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index e69f996563aafa426b5fae09e2434470b871f226..a1f303ce866bf15461d57873f435a3ae2ce11d77 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -602,8 +602,13 @@ class Database:
+             try:
+                 yield self
+             except BaseException:
+-                self.conn.execute("ROLLBACK TO SAVEPOINT {};".format(savepoint))
+-                self.conn.execute("RELEASE SAVEPOINT {};".format(savepoint))
++                # RAISE(ROLLBACK) and INSERT OR ROLLBACK can destroy the
++                # entire transaction, including this savepoint. In that case
++                # there is nothing left to clean up, and attempting to do so
++                # would mask the original exception with "no such savepoint".
++                if self.conn.in_transaction:
++                    self.conn.execute("ROLLBACK TO SAVEPOINT {};".format(savepoint))
++                    self.conn.execute("RELEASE SAVEPOINT {};".format(savepoint))
+                 raise
+             else:
+                 self.conn.execute("RELEASE SAVEPOINT {};".format(savepoint))
+@@ -612,7 +617,11 @@ class Database:
+             try:
+                 yield self
+             except BaseException:
+-                self.conn.execute("ROLLBACK")
++                # A ROLLBACK conflict action may already have rolled back the
++                # transaction. Do not replace its exception with a cleanup
++                # error saying that no transaction is active.
++                if self.conn.in_transaction:
++                    self.conn.execute("ROLLBACK")
+                 raise
+             else:
+                 try:
+@@ -870,8 +879,10 @@ class Database:
+                 return (dict(zip(keys, row)) for row in fetched)
+             return (dict(zip(keys, row)) for row in cursor)
+         finally:
+-            if not released:
++            if not released and self.conn.in_transaction:
+                 # An error occurred - undo anything the statement changed
++                # unless SQLite already destroyed the transaction (for
++                # example due to RAISE(ROLLBACK) or INSERT OR ROLLBACK).
+                 self.conn.execute('ROLLBACK TO "sqlite_utils_query"')
+                 self.conn.execute('RELEASE "sqlite_utils_query"')
+ 
+diff --git a/tests/test_atomic.py b/tests/test_atomic.py
+index c3fd02f6c8d6e2b3de6185965535fe9749698fa0..b0085d68d43e20dff701d2191ff54595cc4f1a17 100644
+--- a/tests/test_atomic.py
++++ b/tests/test_atomic.py
+@@ -378,5 +378,7 @@ def test_atomic_preserves_error_from_insert_or_rollback(fresh_db):
+     fresh_db["t"].insert({"id": 1}, pk="id")
+     with pytest.raises(sqlite3.IntegrityError):
+         with fresh_db.atomic():
++            fresh_db.execute("insert into t (id) values (2)")
+             fresh_db.execute("insert or rollback into t (id) values (1)")
+     assert not fresh_db.conn.in_transaction
++    assert [r["id"] for r in fresh_db["t"].rows] == [1]
+diff --git a/tests/test_query.py b/tests/test_query.py
+index f4aa3369f49e0a25b5e1139cc22bb963837b76b5..05625de9e661b8be94e66b7d82588a030513818a 100644
+--- a/tests/test_query.py
++++ b/tests/test_query.py
+@@ -110,6 +110,29 @@ def test_query_error_leaves_no_transaction_open(fresh_db):
+     assert not fresh_db.conn.in_transaction
+ 
+ 
++def test_query_preserves_error_from_transaction_destroying_trigger(fresh_db):
++    fresh_db.execute("create table t (id integer primary key, v text)")
++    fresh_db.execute(
++        """
++        create trigger no_bad before insert on t when new.v = 'bad'
++        begin select raise(rollback, 'trigger says no'); end
++        """
++    )
++    with pytest.raises(sqlite3.IntegrityError, match="trigger says no"):
++        fresh_db.query("insert into t (v) values ('bad') returning id")
++    assert not fresh_db.conn.in_transaction
++    assert fresh_db.execute("select count(*) from t").fetchone()[0] == 0
++
++
++def test_query_preserves_error_from_insert_or_rollback(fresh_db):
++    fresh_db.execute("create table t (id integer primary key)")
++    fresh_db.execute("insert into t values (1)")
++    with pytest.raises(sqlite3.IntegrityError):
++        fresh_db.query("insert or rollback into t values (1) returning id")
++    assert not fresh_db.conn.in_transaction
++    assert fresh_db.execute("select id from t").fetchall() == [(1,)]
++
++
+ def test_query_pragma(tmpdir):
+     from sqlite_utils import Database
+ 

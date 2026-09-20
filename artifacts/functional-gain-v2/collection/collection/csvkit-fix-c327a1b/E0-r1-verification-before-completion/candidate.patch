@@ -1,0 +1,76 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..e7c85222009943d66b41c4f3a5386a4dbf5f1217 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -361,17 +361,30 @@ class CSVKitUtility:
+                 # See the order in the `agate.TypeTester` class.
+                 types = [
+                     agate.Boolean(**type_kwargs),
+-                    agate.TimeDelta(**type_kwargs),
+-                    agate.Date(date_format=self.args.date_format, **type_kwargs),
+-                    agate.DateTime(datetime_format=self.args.datetime_format, **type_kwargs),
+-                    text_type,
+                 ]
+ 
+-                # In order to parse dates like "20010101".
++                if not self.args.date_format and not self.args.datetime_format:
++                    types.append(number_type)
++
++                types.append(agate.TimeDelta(**type_kwargs))
++
++                # Explicit formats take precedence over Number, in order to parse dates like "20010101". Otherwise,
++                # prefer Number over the permissive default date parsers, which can interpret decimals like "5.5" as
++                # dates.
++                if self.args.date_format:
++                    types.append(agate.Date(date_format=self.args.date_format, **type_kwargs))
++                if self.args.datetime_format:
++                    types.append(agate.DateTime(datetime_format=self.args.datetime_format, **type_kwargs))
++
+                 if self.args.date_format or self.args.datetime_format:
+-                    types.insert(-1, number_type)
+-                else:
+-                    types.insert(1, number_type)
++                    types.append(number_type)
++
++                if not self.args.date_format:
++                    types.append(agate.Date(**type_kwargs))
++                if not self.args.datetime_format:
++                    types.append(agate.DateTime(**type_kwargs))
++
++                types.append(text_type)
+ 
+         return agate.TypeTester(types=types)
+ 
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index ccfe4c4b5a91b38d462553efe55b0c7dc62890dc..7e4d1fac20d7d95353e0f266cc09431a75e73124 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -104,6 +104,28 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_numeric_date_format_default(self):
+         self.assertConverted('csv', 'examples/test_numeric_date_format.csv', 'examples/test_numeric_date_format.csv')
+ 
++    def test_date_format_does_not_parse_decimal_as_datetime(self):
++        input_file = io.BytesIO(b'date,number\n20200101,5.5')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['-f', 'csv', '--date-format', '%Y%m%d'], [
++                'date,number',
++                '2020-01-01,5.5',
++            ])
++
++        input_file.close()
++
++    def test_datetime_format_takes_precedence_over_number(self):
++        input_file = io.BytesIO(b'datetime,number\n20200101,5.5')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['-f', 'csv', '--datetime-format', '%Y%m%d'], [
++                'datetime,number',
++                '2020-01-01T00:00:00,5.5',
++            ])
++
++        input_file.close()
++
+     def test_date_like_number(self):
+         self.assertConverted('csv', 'examples/date_like_number.csv', 'examples/date_like_number.csv')
+ 

@@ -1,0 +1,144 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..39687940ea9a4cb25ab1b2289e226e1fc396a886 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -1,5 +1,4 @@
+ import csv
+-from dictdiffer import diff
+ import json
+ import hashlib
+ 
+@@ -57,20 +56,25 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            d = list(diff(previous[id], current[id], ignore=ignore_columns))
+-            if d:
++            changes_by_column = {
++                field: [previous[id][field], current[id][field]]
++                for field in previous[id]
++                if field in current[id]
++                and (not ignore_columns or field not in ignore_columns)
++                and previous[id][field] != current[id][field]
++            }
++            if changes_by_column:
+                 changes = {
+                     "key": id,
+-                    "changes": {
+-                        field: [prev_value, current_value]
+-                        for _, field, (prev_value, current_value) in d
+-                    },
++                    "changes": changes_by_column,
+                 }
+                 if show_unchanged:
+                     changes["unchanged"] = {
+                         field: value
+                         for field, value in previous[id].items()
+-                        if field not in changes["changes"] and field != "id"
++                        if field in current[id]
++                        and field not in changes["changes"]
++                        and field != "id"
+                     }
+                 result["changed"].append(changes)
+     return result
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 11b4eef1bba305732e6e39e0e1f73673ef6d5bf0..8bdc6609a08557d1ab071c9c28fe5ed49b82f8eb 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -86,6 +86,37 @@ def test_human_cli_json(tmpdir):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_json_preserves_dotted_column_names(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write("id,a.b,c.d,unchanged.dot,name\n1,old,left,same,Cleo")
++    two = tmpdir / "two.csv"
++    two.write("id,a.b,c.d,unchanged.dot,name\n1,new,right,same,Chloe")
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [str(one), str(two), "--key", "id", "--json", "--show-unchanged"],
++    )
++
++    assert result.exit_code == 0
++    assert json.loads(result.output) == {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {
++                    "a.b": ["old", "new"],
++                    "c.d": ["left", "right"],
++                    "name": ["Cleo", "Chloe"],
++                },
++                "unchanged": {"unchanged.dot": "same"},
++            }
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    }
++
++
+ def test_tsv_files(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..f5b64b7cb5228ae272a9b1d31d64bd5108e41e5e 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -107,3 +107,54 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_dotted_column_names_are_preserved():
++    previous = """id,first.name,last.name,profile.state,age,old.column
++1,Cleo,Smith,active,4,remove me
++2,Pancakes,Jones,active,2,remove me"""
++    current = """id,first.name,last.name,profile.state,age,new.column
++1,Chloe,Jones,active,5,added value
++3,Bailey,Brown,active,1,added value"""
++
++    diff = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++        show_unchanged=True,
++    )
++
++    assert diff == {
++        "added": [
++            {
++                "id": "3",
++                "first.name": "Bailey",
++                "last.name": "Brown",
++                "profile.state": "active",
++                "age": "1",
++                "new.column": "added value",
++            }
++        ],
++        "removed": [
++            {
++                "id": "2",
++                "first.name": "Pancakes",
++                "last.name": "Jones",
++                "profile.state": "active",
++                "age": "2",
++                "old.column": "remove me",
++            }
++        ],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {
++                    "first.name": ["Cleo", "Chloe"],
++                    "last.name": ["Smith", "Jones"],
++                    "age": ["4", "5"],
++                },
++                "unchanged": {"profile.state": "active"},
++            }
++        ],
++        "columns_added": ["new.column"],
++        "columns_removed": ["old.column"],
++    }

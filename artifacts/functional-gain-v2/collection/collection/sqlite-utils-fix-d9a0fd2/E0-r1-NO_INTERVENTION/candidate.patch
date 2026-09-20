@@ -1,0 +1,134 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index 881423ce1df75b9ccb5fcac88aa6ce5b5fb974fa..85cf355814f0ac1547ee2a8a936377a9096211f7 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -9,6 +9,7 @@
+ Unreleased
+ ----------
+ 
++- Fixed ``db.query()`` and ``db.atomic()`` masking an ``sqlite3.IntegrityError`` with a cleanup ``OperationalError`` when a ``RAISE(ROLLBACK)`` trigger or ``INSERT OR ROLLBACK`` had already destroyed the transaction and its savepoints. The original error is now preserved, with no partial write or open transaction left behind.
+ - **Breaking change**: ``table.extract()`` - and the ``sqlite-utils extract`` command - no longer extract rows where every extracted column is ``null``. Those rows now keep a ``null`` value in the new foreign key column instead of pointing at an all-``null`` record in the lookup table. When extracting multiple columns, rows are still extracted if at least one of the columns has a value. (:issue:`186`)
+ - The ``extracts=`` option to ``table.insert()`` and friends no longer creates a lookup table record for ``None`` values - the column value stays ``null``. Previously every batch of inserted rows containing a ``None`` value would add a duplicate ``null`` record to the lookup table.
+ - Fixed a bug where ``table.lookup()`` inserted a duplicate row on every call if any of the lookup values were ``None``. Lookup values are now compared using ``IS`` so that ``None`` values match existing rows correctly.
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index e69f996563aafa426b5fae09e2434470b871f226..7ecfadc7440a29fedb8df5726a8183c038da9332 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -602,8 +602,13 @@ class Database:
+             try:
+                 yield self
+             except BaseException:
+-                self.conn.execute("ROLLBACK TO SAVEPOINT {};".format(savepoint))
+-                self.conn.execute("RELEASE SAVEPOINT {};".format(savepoint))
++                # RAISE(ROLLBACK) and INSERT OR ROLLBACK can end the entire
++                # transaction, destroying this savepoint before cleanup runs.
++                # In that case there is nothing left to roll back, and trying
++                # to do so would mask the original exception.
++                if self.conn.in_transaction:
++                    self.conn.execute("ROLLBACK TO SAVEPOINT {};".format(savepoint))
++                    self.conn.execute("RELEASE SAVEPOINT {};".format(savepoint))
+                 raise
+             else:
+                 self.conn.execute("RELEASE SAVEPOINT {};".format(savepoint))
+@@ -612,13 +617,16 @@ class Database:
+             try:
+                 yield self
+             except BaseException:
+-                self.conn.execute("ROLLBACK")
++                # A ROLLBACK conflict action may already have ended it.
++                if self.conn.in_transaction:
++                    self.conn.execute("ROLLBACK")
+                 raise
+             else:
+                 try:
+                     self.conn.execute("COMMIT")
+                 except BaseException:
+-                    self.conn.execute("ROLLBACK")
++                    if self.conn.in_transaction:
++                        self.conn.execute("ROLLBACK")
+                     raise
+ 
+     def begin(self) -> None:
+@@ -870,8 +878,10 @@ class Database:
+                 return (dict(zip(keys, row)) for row in fetched)
+             return (dict(zip(keys, row)) for row in cursor)
+         finally:
+-            if not released:
++            if not released and self.conn.in_transaction:
+                 # An error occurred - undo anything the statement changed
++                # unless a ROLLBACK conflict action already destroyed the
++                # transaction and this savepoint along with it.
+                 self.conn.execute('ROLLBACK TO "sqlite_utils_query"')
+                 self.conn.execute('RELEASE "sqlite_utils_query"')
+ 
+diff --git a/tests/test_atomic.py b/tests/test_atomic.py
+index c3fd02f6c8d6e2b3de6185965535fe9749698fa0..2d45ad05204c693c51420f7870229b71ab3c47e6 100644
+--- a/tests/test_atomic.py
++++ b/tests/test_atomic.py
+@@ -356,8 +356,10 @@ def test_atomic_preserves_error_from_transaction_destroying_trigger(fresh_db):
+     fresh_db.execute(TRIGGER_SQL)
+     with pytest.raises(sqlite3.IntegrityError, match="trigger says no"):
+         with fresh_db.atomic():
++            fresh_db.execute("insert into t (v) values ('good')")
+             fresh_db.execute("insert into t (v) values ('bad')")
+     assert not fresh_db.conn.in_transaction
++    assert fresh_db.execute("select count(*) from t").fetchone()[0] == 0
+ 
+ 
+ def test_nested_atomic_preserves_error_from_transaction_destroying_trigger(
+@@ -369,14 +371,19 @@ def test_nested_atomic_preserves_error_from_transaction_destroying_trigger(
+     fresh_db.execute(TRIGGER_SQL)
+     with pytest.raises(sqlite3.IntegrityError, match="trigger says no"):
+         with fresh_db.atomic():
++            fresh_db.execute("insert into t (v) values ('outer')")
+             with fresh_db.atomic():
++                fresh_db.execute("insert into t (v) values ('inner')")
+                 fresh_db.execute("insert into t (v) values ('bad')")
+     assert not fresh_db.conn.in_transaction
++    assert fresh_db.execute("select count(*) from t").fetchone()[0] == 0
+ 
+ 
+ def test_atomic_preserves_error_from_insert_or_rollback(fresh_db):
+     fresh_db["t"].insert({"id": 1}, pk="id")
+     with pytest.raises(sqlite3.IntegrityError):
+         with fresh_db.atomic():
++            fresh_db.execute("insert into t (id) values (2)")
+             fresh_db.execute("insert or rollback into t (id) values (1)")
+     assert not fresh_db.conn.in_transaction
++    assert [row["id"] for row in fresh_db["t"].rows] == [1]
+diff --git a/tests/test_query.py b/tests/test_query.py
+index f4aa3369f49e0a25b5e1139cc22bb963837b76b5..cba100647ddfad67f346d9fecd4f06f4ae6cc72e 100644
+--- a/tests/test_query.py
++++ b/tests/test_query.py
+@@ -110,6 +110,31 @@ def test_query_error_leaves_no_transaction_open(fresh_db):
+     assert not fresh_db.conn.in_transaction
+ 
+ 
++def test_query_preserves_error_from_transaction_destroying_trigger(fresh_db):
++    fresh_db.execute("create table t (id integer primary key, v text)")
++    fresh_db.execute(
++        """
++        create trigger no_bad before insert on t
++        when new.v = 'bad'
++        begin
++            select raise(rollback, 'trigger says no');
++        end
++        """
++    )
++    with pytest.raises(sqlite3.IntegrityError, match="trigger says no"):
++        fresh_db.query("insert into t (v) values ('bad') returning id")
++    assert not fresh_db.conn.in_transaction
++    assert fresh_db.execute("select count(*) from t").fetchone()[0] == 0
++
++
++def test_query_preserves_error_from_insert_or_rollback(fresh_db):
++    fresh_db["t"].insert({"id": 1}, pk="id")
++    with pytest.raises(sqlite3.IntegrityError, match="UNIQUE constraint failed"):
++        fresh_db.query("insert or rollback into t (id) values (1) returning id")
++    assert not fresh_db.conn.in_transaction
++    assert [row["id"] for row in fresh_db["t"].rows] == [1]
++
++
+ def test_query_pragma(tmpdir):
+     from sqlite_utils import Database
+ 

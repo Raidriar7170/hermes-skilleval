@@ -1,0 +1,265 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index bec68fc89c0da54ba54c002c3722809d6268804c..b745f296be9cb544531efdd7cff61707e88a1f8e 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -4347,6 +4347,10 @@ class Table(Queryable):
+                 col
+                 for col in pk_cols
+                 if resolve_casing(col, existing_columns) not in existing_columns
++                and not (
++                    self.use_rowid
++                    and fold_identifier_case(col) in ("rowid", "_rowid_", "oid")
++                )
+             ]
+             if missing_pk_cols:
+                 invalid_pk_error = InvalidColumns(
+@@ -4512,36 +4516,73 @@ class Table(Queryable):
+             if not upsert and result is not None:
+                 ignored_insert = ignore and result.rowcount == 0
+                 if ignored_insert:
++                    # lastrowid is unchanged when INSERT OR IGNORE skips a row,
++                    # so only report an identity if the supplied primary key
++                    # resolves to exactly one existing row.
+                     if list_mode:
+                         first_record_list = cast(Sequence[Any], first_record)
+                         if hash_id:
+-                            pass
+-                        elif isinstance(pk, str):
+-                            pk_index = column_names.index(
+-                                resolve_casing(pk, column_names)
+-                            )
+-                            self.last_pk = first_record_list[pk_index]
+-                        elif pk:
+-                            self.last_pk = tuple(
+-                                first_record_list[
+-                                    column_names.index(resolve_casing(p, column_names))
+-                                ]
+-                                for p in pk
+-                            )
++                            lookup_record = {}
++                        else:
++                            lookup_record = dict(zip(column_names, first_record_list))
+                     else:
+                         first_record_dict = cast(Dict[str, Any], first_record)
+                         if hash_id:
+-                            self.last_pk = hash_record(
+-                                first_record_dict, hash_id_columns
++                            lookup_record = {
++                                hash_id: hash_record(first_record_dict, hash_id_columns)
++                            }
++                        else:
++                            lookup_record = first_record_dict
++
++                    lookup_pk = pk or (hash_id if hash_id else self.pks)
++                    lookup_pks = (
++                        [lookup_pk] if isinstance(lookup_pk, str) else list(lookup_pk)
++                    )
++                    try:
++                        lookup_values = [
++                            jsonify_if_needed(
++                                lookup_record[resolve_casing(p, lookup_record)]
+                             )
+-                        elif isinstance(pk, str):
+-                            self.last_pk = first_record_dict[
+-                                resolve_casing(pk, first_record_dict)
++                            for p in lookup_pks
++                        ]
++                    except KeyError:
++                        lookup_values = []
++                    if lookup_values:
++                        where = " and ".join(
++                            "{} = ?".format(quote_identifier(p)) for p in lookup_pks
++                        )
++                        try:
++                            matches = list(
++                                self.rows_where(
++                                    where,
++                                    lookup_values,
++                                    select="rowid as __sqlite_utils_rowid__, *",
++                                    limit=2,
++                                )
++                            )
++                        except OperationalError:
++                            # WITHOUT ROWID tables still have a useful primary
++                            # key, but cannot provide last_rowid.
++                            matches = list(
++                                self.rows_where(where, lookup_values, limit=2)
++                            )
++                        if len(matches) == 1:
++                            row = matches[0]
++                            self.last_rowid = row.get("__sqlite_utils_rowid__")
++                            pk_values = [
++                                (
++                                    self.last_rowid
++                                    if fold_identifier_case(p)
++                                    in ("rowid", "_rowid_", "oid")
++                                    and resolve_casing(p, row) not in row
++                                    else row[resolve_casing(p, row)]
++                                )
++                                for p in lookup_pks
+                             ]
+-                        elif pk:
+-                            self.last_pk = tuple(
+-                                first_record_dict[resolve_casing(p, first_record_dict)]
+-                                for p in pk
++                            self.last_pk = (
++                                pk_values[0]
++                                if len(pk_values) == 1
++                                else tuple(pk_values)
+                             )
+                 else:
+                     self.last_rowid = result.lastrowid
+@@ -4551,7 +4592,10 @@ class Table(Queryable):
+                         if hash_id:
+                             self.last_pk = row[hash_id]
+                         elif isinstance(pk, str):
+-                            self.last_pk = row[resolve_casing(pk, row)]
++                            if fold_identifier_case(pk) in ("rowid", "_rowid_", "oid"):
++                                self.last_pk = self.last_rowid
++                            else:
++                                self.last_pk = row[resolve_casing(pk, row)]
+                         else:
+                             self.last_pk = tuple(
+                                 row[resolve_casing(p, row)] for p in pk
+diff --git a/tests/test_insert_identity.py b/tests/test_insert_identity.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0c03620fca5b395cc8f9290952b759386a4f8c48
+--- /dev/null
++++ b/tests/test_insert_identity.py
+@@ -0,0 +1,136 @@
++import pytest
++
++from sqlite_utils import Database
++
++
++@pytest.mark.parametrize("alias", ("rowid", "_rowid_", "oid"))
++@pytest.mark.parametrize("operation", ("upsert", "replace", "ignore"))
++@pytest.mark.parametrize("use_old_upsert", (False, True))
++def test_rowid_alias_can_be_used_as_primary_key(alias, operation, use_old_upsert):
++    db = Database(memory=True, use_old_upsert=use_old_upsert)
++    table = db["items"]
++    table.insert({"name": "original"})
++
++    record = {alias: 1, "name": "replacement"}
++    if operation == "upsert":
++        table.upsert(record, pk=alias)
++    else:
++        table.insert(record, pk=alias, **{operation: True})
++
++    expected_name = "original" if operation == "ignore" else "replacement"
++    assert list(table.rows) == [{"name": expected_name}]
++    assert table.last_pk == 1
++    if operation != "upsert":
++        assert table.last_rowid == 1
++
++
++def test_ignore_reports_existing_compound_primary_key_row():
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert(
++        {"kind": "book", "number": 1, "value": "original"},
++        pk=("kind", "number"),
++    )
++
++    table.insert(
++        {"kind": "book", "number": 1, "value": "ignored"},
++        pk=("kind", "number"),
++        ignore=True,
++    )
++
++    assert list(table.rows) == [{"kind": "book", "number": 1, "value": "original"}]
++    assert table.last_pk == ("book", 1)
++    assert table.last_rowid == 1
++
++
++def test_ignore_reports_without_rowid_compound_primary_key():
++    db = Database(memory=True)
++    db.execute(
++        "create table items (kind text, number integer, value text, "
++        "primary key (kind, number)) without rowid"
++    )
++    table = db["items"]
++    table.insert({"kind": "book", "number": 1, "value": "original"})
++
++    table.insert(
++        {"kind": "book", "number": 1, "value": "ignored"}, ignore=True
++    )
++
++    assert list(table.rows) == [
++        {"kind": "book", "number": 1, "value": "original"}
++    ]
++    assert table.last_pk == ("book", 1)
++    assert table.last_rowid is None
++
++
++def test_ignore_reports_existing_row_in_list_mode():
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert({"id": 1, "value": "original"}, pk="id")
++
++    table.insert_all([["id", "value"], [1, "ignored"]], pk="id", ignore=True)
++
++    assert list(table.rows) == [{"id": 1, "value": "original"}]
++    assert table.last_pk == 1
++    assert table.last_rowid == 1
++
++
++@pytest.mark.parametrize("alias", ("rowid", "_rowid_", "oid"))
++def test_ignore_reports_rowid_alias_in_list_mode(alias):
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert({"value": "original"})
++
++    table.insert_all([[alias, "value"], [1, "ignored"]], pk=alias, ignore=True)
++
++    assert list(table.rows) == [{"value": "original"}]
++    assert table.last_pk == 1
++    assert table.last_rowid == 1
++
++
++def test_ignore_does_not_report_unrelated_input_primary_key():
++    db = Database(memory=True)
++    table = db["items"]
++    table.create({"id": int, "name": str}, pk="id")
++    table.create_index(["name"], unique=True)
++    table.insert({"id": 1, "name": "one"})
++
++    table.insert({"id": 2, "name": "one"}, ignore=True)
++
++    assert list(table.rows) == [{"id": 1, "name": "one"}]
++    assert table.last_pk is None
++    assert table.last_rowid is None
++
++
++def test_ignore_reports_json_primary_key_as_stored():
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert({"id": [1, 2], "value": "original"}, pk="id")
++
++    table.insert({"id": [1, 2], "value": "ignored"}, ignore=True)
++
++    assert list(table.rows) == [{"id": "[1, 2]", "value": "original"}]
++    assert table.last_pk == "[1, 2]"
++    assert table.last_rowid == 1
++
++
++def test_ignore_preserves_hash_id_identity_and_original_values():
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert(
++        {"name": "one", "value": "original"},
++        hash_id="id",
++        hash_id_columns=("name",),
++    )
++    original_pk = table.last_pk
++
++    table.insert(
++        {"name": "one", "value": "ignored"},
++        hash_id="id",
++        hash_id_columns=("name",),
++        ignore=True,
++    )
++
++    assert list(table.rows) == [{"id": original_pk, "name": "one", "value": "original"}]
++    assert table.last_pk == original_pk
++    assert table.last_rowid == 1

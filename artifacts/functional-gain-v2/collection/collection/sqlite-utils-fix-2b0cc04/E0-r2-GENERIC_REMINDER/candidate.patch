@@ -1,0 +1,69 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 1c3ce8d98f6e0f0e0d7c1ee29f8e8ee06e3862a1..2f6268f7edab1749fecc6cc653bddb3687794b5e 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1177,7 +1177,7 @@ def insert_upsert_implementation(
+                 )
+             else:
+                 raise
+-        if tracker is not None:
++        if tracker is not None and db.table(table).exists():
+             db.table(table).transform(types=tracker.types)
+ 
+         # Clean up open file-like objects
+@@ -2034,7 +2034,7 @@ def memory(
+                 rows = (_flatten(row) for row in rows)
+ 
+             db.table(file_table).insert_all(rows, alter=True)
+-            if tracker is not None:
++            if tracker is not None and db.table(file_table).exists():
+                 db.table(file_table).transform(types=tracker.types)
+             # Add convenient t / t1 / t2 views
+             view_names = ["t{}".format(i + 1)]
+diff --git a/tests/test_cli_insert.py b/tests/test_cli_insert.py
+index 9f21b0010ea9245d9bfae7c655e6c3e499bcef55..46f50d84cc4bf80fd82c69f44c857d0b0d69cf62 100644
+--- a/tests/test_cli_insert.py
++++ b/tests/test_cli_insert.py
+@@ -234,6 +234,17 @@ def test_insert_csv_tsv(content, options, db_path, tmpdir):
+     assert [{"foo": "1", "bar": "2", "baz": "cat,dog"}] == list(db["data"].rows)
+ 
+ 
++def test_insert_csv_header_only_with_detect_types(db_path):
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "data", "-", "--csv"],
++        input="id,name\n",
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0, result.output
++    assert "data" not in Database(db_path).table_names()
++
++
+ @pytest.mark.parametrize("empty_null", (True, False))
+ def test_insert_csv_empty_null(db_path, empty_null):
+     options = ["--csv", "--no-detect-types"]
+diff --git a/tests/test_cli_memory.py b/tests/test_cli_memory.py
+index cf619855971aaf18e788545a0ed4b7559be5b2a6..c714c9f007b860ca5f499fdd3df22071a241d192 100644
+--- a/tests/test_cli_memory.py
++++ b/tests/test_cli_memory.py
+@@ -37,6 +37,20 @@ def test_memory_csv(tmpdir, sql_from, use_stdin):
+     )
+ 
+ 
++def test_memory_csv_header_only_with_detect_types():
++    result = CliRunner().invoke(
++        cli.cli,
++        ["memory", "-", "--schema"],
++        input="id,name\n",
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0, result.output
++    assert result.output == (
++        'CREATE VIEW "t1" AS select * from "stdin";\n'
++        'CREATE VIEW "t" AS select * from "stdin";\n'
++    )
++
++
+ @pytest.mark.parametrize("use_stdin", (True, False))
+ def test_memory_tsv(tmpdir, use_stdin):
+     data = "id\tname\n1\tCleo\n2\tBants"

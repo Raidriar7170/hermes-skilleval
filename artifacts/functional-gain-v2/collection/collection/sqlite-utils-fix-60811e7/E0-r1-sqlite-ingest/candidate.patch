@@ -1,0 +1,297 @@
+diff --git a/docs/changelog.rst b/docs/changelog.rst
+index 0943dca974da097822ebdf7b0b2e736208cde319..36d86a12451cb0de50e303b91f289b72c74f39fc 100644
+--- a/docs/changelog.rst
++++ b/docs/changelog.rst
+@@ -15,7 +15,8 @@
+ - JSON output from the command-line tool no longer escapes non-ASCII characters, so ``sqlite-utils data.db "select '日本語' as text"`` now outputs ``[{"text": "日本語"}]``. This matches how values were already stored by ``insert`` and how CSV/TSV output already behaved. A new ``--ascii`` option restores the previous behavior of escaping non-ASCII characters, for output destinations that cannot handle UTF-8 - see :ref:`cli_query_json_ascii`. The option is available on the ``query``, ``rows``, ``search``, ``tables``, ``views``, ``triggers``, ``indexes`` and ``memory`` commands. The ``convert --multi --dry-run`` preview and ``plugins`` output also no longer escape non-ASCII characters. (:issue:`625`)
+ - ``--no-headers`` now omits the header row from ``--fmt`` and ``--table`` output, not just CSV and TSV output. (:issue:`566`)
+ - ``table.insert_all(..., pk=...)`` now raises ``InvalidColumns`` if ``pk=`` names columns that do not exist in an existing table. Previously this behaved inconsistently, with single-row inserts raising a ``KeyError`` while other row counts succeeded. (:issue:`732`)
+-- Fixed an ``IndexError`` from ``table.insert(..., pk=..., ignore=True)`` when an ignored insert followed writes to another table on the same connection. ``last_pk`` is now populated from the explicit primary key value instead of looking up a stale ``lastrowid``. (:issue:`554`)
++- Fixed an ``IndexError`` from ``table.insert(..., pk=..., ignore=True)`` when an ignored insert followed writes to another table on the same connection. When the conflicting row can be identified, ``last_pk`` and ``last_rowid`` now report that existing row rather than an input primary key or stale ``lastrowid``; ambiguous conflicts leave both properties unset. This supports compound primary keys and list/tuple input. (:issue:`554`)
++- ``rowid``, ``_rowid_`` and ``oid`` can be used as ``pk=`` aliases when inserting, replacing or upserting rows in a rowid table, and ``last_pk`` reports the resulting row ID.
+ - Fixed a bug where a failed write statement executed with ``db.execute()`` left the driver's implicit transaction open. Every subsequent write then joined that phantom transaction, which nothing committed, so their work was silently rolled back when the connection was closed. The implicit transaction opened by a failed statement is now rolled back before the exception is raised. A failed write inside a transaction opened with ``db.begin()`` or ``db.atomic()`` leaves that transaction open and untouched, as before.
+ - Fixed a bug where transaction-control statements prefixed with an empty statement - ``db.query("; COMMIT")`` - or a UTF-8 byte order mark slipped past the check that rejects them, committing the caller's open transaction before raising a confusing ``OperationalError``. The keyword scanner used by ``db.query()`` and ``db.execute()`` now skips leading ``;`` and byte order marks, matching what the ``sqlite3`` driver tolerates before the first token, so these statements are rejected with a ``ValueError`` without being executed. The same fix means ``db.execute("; BEGIN")`` no longer auto-commits the transaction it just opened.
+ - Documented a limitation of ``db.query()``: a ``PRAGMA`` statement that returns no rows raises a ``ValueError`` but still takes effect, because PRAGMA statements run outside the savepoint guard used to roll back other rejected statements. Use ``db.execute()`` for row-less PRAGMA statements.
+diff --git a/docs/python-api.rst b/docs/python-api.rst
+index 11af1f4e889f00f1675ee8a4b51dc2eb707f7e43..185a5bc8e70e800ba7ee1727f6cf47dc9636040a 100644
+--- a/docs/python-api.rst
++++ b/docs/python-api.rst
+@@ -1020,6 +1020,8 @@ The function can accept an iterator or generator of rows and will commit them ac
+ 
+ You can skip inserting any records that have a primary key that already exists using ``ignore=True``. This works with both ``.insert({...}, ignore=True)`` and ``.insert_all([...], ignore=True)``.
+ 
++For a single ignored record, ``last_pk`` and ``last_rowid`` identify the existing conflicting row when that row can be determined from its primary key or unique constraints. If different constraints match different rows, both properties are left as ``None`` rather than reporting a misleading identity.
++
+ You can delete all the existing rows in the table before inserting the new records using ``truncate=True``. This is useful if you want to replace the data in the table.
+ 
+ Pass ``analyze=True`` to run ``ANALYZE`` against the table after inserting the new records.
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index bec68fc89c0da54ba54c002c3722809d6268804c..3fe202987aa3249fff8d95099f04da31063811c7 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2229,6 +2229,87 @@ class Table(Queryable):
+         "Does this table use ``rowid`` for its primary key (no other primary keys are specified)?"
+         return not any(column for column in self.columns if column.is_pk)
+ 
++    def _resolve_ignored_insert(
++        self,
++        record: Dict[str, Any],
++        conversions: Dict[str, str],
++        extracts: Optional[Union[Dict[str, str], List[str]]],
++    ) -> Optional[Tuple[Any, Optional[int]]]:
++        """Return the identity of the row that made an insert be ignored.
++
++        More than one unique constraint can match different rows. In that case
++        there is no single honest answer, so leave both identity attributes
++        unset. Partial and expression indexes, and values changed before insert,
++        are likewise not safe to infer from the original record.
++        """
++        record_keys = {key.lower(): key for key in record}
++        unsafe_columns = {key.lower() for key in conversions}
++        if isinstance(extracts, dict):
++            unsafe_columns.update(key.lower() for key in extracts)
++        else:
++            unsafe_columns.update(key.lower() for key in (extracts or ()))
++
++        unique_column_sets = []
++        if self.use_rowid:
++            # A supplied rowid can use any of SQLite's three aliases.
++            for alias in ("rowid", "_rowid_", "oid"):
++                if alias in record_keys:
++                    unique_column_sets.append((alias,))
++        else:
++            unique_column_sets.append(tuple(self.pks))
++        unique_column_sets.extend(
++            tuple(index.columns)
++            for index in self.indexes
++            if index.unique
++            and not index.partial
++            and index.columns
++            and all(column is not None for column in index.columns)
++        )
++
++        matches: Dict[Any, Tuple[Any, Optional[int]]] = {}
++        for columns in unique_column_sets:
++            lowered = [column.lower() for column in columns]
++            if (
++                any(column not in record_keys for column in lowered)
++                or any(column in unsafe_columns for column in lowered)
++            ):
++                continue
++            values = [
++                jsonify_if_needed(record[record_keys[column]]) for column in lowered
++            ]
++            # NULL values do not collide under SQLite unique constraints.
++            if any(value is None for value in values):
++                continue
++            where = " AND ".join(
++                "{} = ?".format(quote_identifier(column)) for column in columns
++            )
++            select = "*"
++            if self.use_rowid:
++                select = "rowid AS __sqlite_utils_rowid__, *"
++            rows = list(self.rows_where(where, values, select=select, limit=2))
++            for row in rows:
++                if self.use_rowid:
++                    rowid = row["__sqlite_utils_rowid__"]
++                    identity = rowid
++                else:
++                    pk_values = tuple(row[resolve_casing(pk, row)] for pk in self.pks)
++                    identity = pk_values[0] if len(pk_values) == 1 else pk_values
++                    # Named primary-key tables normally still have a rowid.
++                    try:
++                        rowid_row = self.db.execute(
++                            "SELECT rowid FROM {} WHERE {} LIMIT 1".format(
++                                quote_identifier(self.name), where
++                            ),
++                            values,
++                        ).fetchone()
++                        rowid = rowid_row[0] if rowid_row else None
++                    except OperationalError:
++                        rowid = None
++                matches[identity] = (identity, rowid)
++        if len(matches) == 1:
++            return next(iter(matches.values()))
++        return None
++
+     def get(self, pk_values: Union[list, tuple, str, int]) -> dict:
+         """
+         Return row (as dictionary) for the specified primary key.
+@@ -4347,6 +4428,11 @@ class Table(Queryable):
+                 col
+                 for col in pk_cols
+                 if resolve_casing(col, existing_columns) not in existing_columns
++                and not (
++                    self.use_rowid
++                    and isinstance(col, str)
++                    and col.lower() in {"rowid", "_rowid_", "oid"}
++                )
+             ]
+             if missing_pk_cols:
+                 invalid_pk_error = InvalidColumns(
+@@ -4513,36 +4599,20 @@ class Table(Queryable):
+                 ignored_insert = ignore and result.rowcount == 0
+                 if ignored_insert:
+                     if list_mode:
+-                        first_record_list = cast(Sequence[Any], first_record)
+-                        if hash_id:
+-                            pass
+-                        elif isinstance(pk, str):
+-                            pk_index = column_names.index(
+-                                resolve_casing(pk, column_names)
+-                            )
+-                            self.last_pk = first_record_list[pk_index]
+-                        elif pk:
+-                            self.last_pk = tuple(
+-                                first_record_list[
+-                                    column_names.index(resolve_casing(p, column_names))
+-                                ]
+-                                for p in pk
+-                            )
++                        values = list(cast(Sequence[Any], first_record))
++                        values += [None] * (len(column_names) - len(values))
++                        ignored_record = dict(zip(column_names, values))
+                     else:
+-                        first_record_dict = cast(Dict[str, Any], first_record)
+-                        if hash_id:
+-                            self.last_pk = hash_record(
+-                                first_record_dict, hash_id_columns
+-                            )
+-                        elif isinstance(pk, str):
+-                            self.last_pk = first_record_dict[
+-                                resolve_casing(pk, first_record_dict)
+-                            ]
+-                        elif pk:
+-                            self.last_pk = tuple(
+-                                first_record_dict[resolve_casing(p, first_record_dict)]
+-                                for p in pk
+-                            )
++                        ignored_record = dict(cast(Dict[str, Any], first_record))
++                    if hash_id:
++                        ignored_record[hash_id] = hash_record(
++                            ignored_record, hash_id_columns
++                        )
++                    resolved = self._resolve_ignored_insert(
++                        ignored_record, conversions, extracts
++                    )
++                    if resolved is not None:
++                        self.last_pk, self.last_rowid = resolved
+                 else:
+                     self.last_rowid = result.lastrowid
+                     if (hash_id or pk) and self.last_rowid:
+@@ -4551,7 +4621,14 @@ class Table(Queryable):
+                         if hash_id:
+                             self.last_pk = row[hash_id]
+                         elif isinstance(pk, str):
+-                            self.last_pk = row[resolve_casing(pk, row)]
++                            if self.use_rowid and pk.lower() in {
++                                "rowid",
++                                "_rowid_",
++                                "oid",
++                            }:
++                                self.last_pk = self.last_rowid
++                            else:
++                                self.last_pk = row[resolve_casing(pk, row)]
+                         else:
+                             self.last_pk = tuple(
+                                 row[resolve_casing(p, row)] for p in pk
+diff --git a/tests/test_insert_identity_reporting.py b/tests/test_insert_identity_reporting.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..d3cb3aa2dfcd1010d7033c951315c944a890bf58
+--- /dev/null
++++ b/tests/test_insert_identity_reporting.py
+@@ -0,0 +1,94 @@
++import pytest
++
++from sqlite_utils import Database
++
++
++@pytest.mark.parametrize("alias", ("rowid", "_rowid_", "oid"))
++@pytest.mark.parametrize("operation", ("upsert", "replace", "ignore"))
++def test_rowid_alias_identity_reporting(alias, operation):
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert({"name": "original"})
++
++    record = {alias: 1, "name": "changed"}
++    if operation == "upsert":
++        table.upsert(record, pk=alias)
++        expected_name = "changed"
++    elif operation == "replace":
++        table.insert(record, pk=alias, replace=True)
++        expected_name = "changed"
++    else:
++        table.insert(record, pk=alias, ignore=True)
++        expected_name = "original"
++
++    assert table.last_pk == 1
++    if operation != "upsert":
++        assert table.last_rowid == 1
++    assert list(db.query("select rowid, name from items")) == [
++        {"rowid": 1, "name": expected_name}
++    ]
++
++
++def test_ignore_reports_existing_row_for_unique_conflict_not_input_pk():
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert({"id": 1, "code": "one", "value": "original"}, pk="id")
++    table.create_index(["code"], unique=True)
++
++    table.insert(
++        {"id": 2, "code": "one", "value": "replacement"},
++        pk="id",
++        ignore=True,
++    )
++
++    assert table.last_pk == 1
++    assert table.last_rowid == 1
++    assert list(table.rows) == [{"id": 1, "code": "one", "value": "original"}]
++
++
++def test_ignore_reports_compound_pk_in_list_mode():
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert({"a": "x", "b": 2, "value": "original"}, pk=("a", "b"))
++
++    table.insert_all(
++        [["a", "b", "value"], ["x", 2, "replacement"]],
++        pk=("a", "b"),
++        ignore=True,
++    )
++
++    assert table.last_pk == ("x", 2)
++    assert table.last_rowid == 1
++    assert list(table.rows) == [{"a": "x", "b": 2, "value": "original"}]
++
++
++def test_ignore_does_not_report_ambiguous_conflicting_rows():
++    db = Database(memory=True)
++    table = db["items"]
++    table.insert_all(
++        [
++            {"id": 1, "email": "one@example.com", "username": "one"},
++            {"id": 2, "email": "two@example.com", "username": "two"},
++        ],
++        pk="id",
++    )
++    table.create_index(["email"], unique=True)
++    table.create_index(["username"], unique=True)
++
++    table.insert(
++        {"id": 3, "email": "one@example.com", "username": "two"},
++        pk="id",
++        ignore=True,
++    )
++
++    assert table.last_pk is None
++    assert table.last_rowid is None
++
++
++def test_ignore_hash_id_semantics_are_preserved():
++    db = Database(memory=True)
++    table = db["items"]
++    first_pk = table.insert({"name": "one"}, hash_id="id").last_pk
++    table.insert({"name": "one"}, hash_id="id", ignore=True)
++    assert table.last_pk == first_pk
++    assert table.last_rowid == 1

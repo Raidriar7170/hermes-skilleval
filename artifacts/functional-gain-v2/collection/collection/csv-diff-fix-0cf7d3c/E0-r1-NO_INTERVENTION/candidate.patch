@@ -1,0 +1,53 @@
+diff --git a/README.md b/README.md
+index b620f6e73c0027a61fe260edeaa97cf6f5a5a2a5..9c513bfb3224dc50f85239489aa98226ddbdb7b1 100644
+--- a/README.md
++++ b/README.md
+@@ -51,7 +51,7 @@ Consider two CSV files:
+ 
+ The `--key=id` option means that the `id` column should be treated as the unique key, to identify which records have changed.
+ 
+-The tool will automatically detect if your files are comma- or tab-separated. You can over-ride this automatic detection and force the tool to use a specific format using `--format=tsv` or `--format=csv`.
++The tool will automatically detect if your files are comma-, tab- or semicolon-separated. You can over-ride this automatic detection and force the tool to use a specific format using `--format=tsv` or `--format=csv`.
+ 
+ Use `--show-unchanged` to include full details of the unchanged rows in the diff output:
+ 
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index 7c018d0e4b6a88dbdb3a00ee44dac9544776a6d9..08ee893b9da4c1a358825a4ea103f97c1afaf70c 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -10,7 +10,7 @@ def load_csv(fp, key=None, dialect=None):
+         peek = fp.read(1024 ** 2)
+         fp.seek(0)
+         try:
+-            dialect = csv.Sniffer().sniff(peek, delimiters=",\t")
++            dialect = csv.Sniffer().sniff(peek, delimiters=",\t;")
+         except csv.Error:
+             # Oh well, we tried. Fallback to the default.
+             pass
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index bdaa47c53d24e459589e7a6b998e26a517a7a4da..a7af52f8500426d8e1818e0ab1d9f9fe0b7712f3 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -114,6 +114,22 @@ def test_sniff_format(tsv_files):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_sniff_semicolon_format(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write(ONE.replace(",", ";"))
++    two = tmpdir / "two.csv"
++    two.write(TWO.replace(",", ";"))
++    result = CliRunner().invoke(cli.cli, [str(one), str(two), "--key", "id", "--json"])
++    assert 0 == result.exit_code
++    assert {
++        "added": [],
++        "removed": [],
++        "changed": [{"key": "1", "changes": {"age": ["4", "5"]}}],
++        "columns_added": [],
++        "columns_removed": [],
++    } == json.loads(result.output.strip())
++
++
+ def test_format_overrides_sniff(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(

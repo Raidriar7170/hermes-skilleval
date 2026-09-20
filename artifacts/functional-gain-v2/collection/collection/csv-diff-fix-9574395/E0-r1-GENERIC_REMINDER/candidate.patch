@@ -1,0 +1,137 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..74fa34537c39cf66ebdee4cfdac1f8d8cdff1966 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -43,7 +43,12 @@ def compare(previous, current, show_unchanged=False):
+         result["columns_removed"] = [
+             c for c in previous_columns if c not in current_columns
+         ]
+-        ignore_columns = current_columns.symmetric_difference(previous_columns)
++        # dictdiffer treats keys containing dots as path components. Supplying
++        # one-item tuples makes it ignore the actual flat CSV column names.
++        ignore_columns = {
++            (column,)
++            for column in current_columns.symmetric_difference(previous_columns)
++        }
+     # Have any rows been removed or added?
+     removed = [id for id in previous if id not in current]
+     added = [id for id in current if id not in previous]
+@@ -59,10 +64,18 @@ def compare(previous, current, show_unchanged=False):
+         for id in changed:
+             d = list(diff(previous[id], current[id], ignore=ignore_columns))
+             if d:
++                # dictdiffer represents a flat dictionary key containing a dot as
++                # a one-item path (for example, ["address.city"]). CSV rows are
++                # always flat dictionaries, so restore the original column name.
++                def column_name(field):
++                    if isinstance(field, (list, tuple)) and len(field) == 1:
++                        return field[0]
++                    return field
++
+                 changes = {
+                     "key": id,
+                     "changes": {
+-                        field: [prev_value, current_value]
++                        column_name(field): [prev_value, current_value]
+                         for _, field, (prev_value, current_value) in d
+                     },
+                 }
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 11b4eef1bba305732e6e39e0e1f73673ef6d5bf0..079bc34f302a6cfdb51c9c757871511ad5f823aa 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -120,3 +120,34 @@ def test_format_overrides_sniff(tsv_files):
+         cli.cli, [one, two, "--key", "id", "--json", "--format", "csv"]
+     )
+     assert 1 == result.exit_code
++
++
++def test_json_dotted_column_names(tmpdir):
++    previous = tmpdir / "previous.csv"
++    previous.write("id,name.first,name.last,account.status\n1,Cleo,Smith,active")
++    current = tmpdir / "current.csv"
++    current.write("id,name.first,name.last,account.status\n1,Clio,Smyth,active")
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            str(previous),
++            str(current),
++            "--key",
++            "id",
++            "--json",
++            "--show-unchanged",
++        ],
++    )
++
++    assert result.exit_code == 0, result.output
++    assert json.loads(result.output)["changed"] == [
++        {
++            "key": "1",
++            "changes": {
++                "name.first": ["Cleo", "Clio"],
++                "name.last": ["Smith", "Smyth"],
++            },
++            "unchanged": {"account.status": "active"},
++        }
++    ]
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..15df4705ec9df798e6841741ff58f8b15ff78282 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -107,3 +107,55 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_dotted_column_names():
++    previous = """id,name.first,name.last,account.status
++1,Cleo,Smith,active
++2,Pancakes,Jones,active"""
++    current = """id,name.first,name.last,account.status
++1,Clio,Smyth,active
++2,Pancakes,Jones,active"""
++
++    result = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++        show_unchanged=True,
++    )
++
++    assert result["changed"] == [
++        {
++            "key": "1",
++            "changes": {
++                "name.first": ["Cleo", "Clio"],
++                "name.last": ["Smith", "Smyth"],
++            },
++            "unchanged": {"account.status": "active"},
++        }
++    ]
++
++
++def test_dotted_columns_preserve_records_and_column_changes():
++    previous = """id,profile.name,profile.old
++1,Cleo,yes
++2,Pancakes,no"""
++    current = """id,profile.name,profile.new
++1,Clio,yes
++3,Bailey,no"""
++
++    result = compare(
++        load_csv(io.StringIO(previous), key="id"),
++        load_csv(io.StringIO(current), key="id"),
++    )
++
++    assert result["changed"] == [
++        {"key": "1", "changes": {"profile.name": ["Cleo", "Clio"]}}
++    ]
++    assert result["added"] == [
++        {"id": "3", "profile.name": "Bailey", "profile.new": "no"}
++    ]
++    assert result["removed"] == [
++        {"id": "2", "profile.name": "Pancakes", "profile.old": "no"}
++    ]
++    assert result["columns_added"] == ["profile.new"]
++    assert result["columns_removed"] == ["profile.old"]
