@@ -494,3 +494,21 @@ weights again, or read evaluation-v1 or final hidden outcomes. It relies on the
 saved independent-reload receipt and identity bindings for reload evidence.
 It is not final study closure and does not establish functional, representation
 or waiting benefits. Final evaluation and final evidence review remain pending.
+
+## G5 interrupted process recovery
+
+After 63 completed matrix executions, the observation call was interrupted.
+On continuation, the original process handle was missing, no functional matrix
+process existed, and Docker reported no running containers. The next reserved
+sample, csvkit-fix-7bba1bd / H-task-fixedC-v2 / repeat 2, retained intermediate
+files but no execution.json. This establishes stopped execution, not merely an
+observation timeout; the precise process termination cause is not established.
+
+The stale task-local authentication copy was removed after these checks, and
+the unchanged matrix command resumed against the same output and policy freeze.
+Existing completed samples were reused. The existing run_once recovery path
+retained the reserved sample as UNKNOWN_INTERRUPTED_ATTEMPT, with no replacement
+sampling, and advanced to P1-v2 repeat 2. The original log and partial attempt
+remain intact; recovery-after-interruption-v1.json and
+evaluation-matrix-resume-v1.log record the recovery privately. All 96 planned
+cells remain in the denominator. No hidden final acceptance was released.
