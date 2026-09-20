@@ -1,0 +1,1919 @@
+[
+  {
+    "unit_id": "rku-a89c8cfd04f6371d52f4",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.config.manager.ensure_type"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    ''' return a configuration variable with casting\n    :arg value: The value to ensure correct typing of\n    :kwarg value_type: The type of the value.  This can be any of the following strings:\n        :boolean: sets the value to a True or False value\n        :bool: Same as 'boolean'\n        :integer: Sets the value to an integer or raises a ValueType error\n        :int: Same as 'integer'\n        :float: Sets the value to a float or raises a ValueType error\n        :list: Treats the value as a comma separated list.  Split the value\n            and return it as a python list.\n        :none: Sets the value to None\n        :path: Expands any environment variables and tilde's in the value.\n        :tmppath: Create a unique temporary directory inside of the directory\n            specified by value and return its path.\n        :temppath: Same as 'tmppath'\n        :tmp: Same as 'tmppath'\n        :pathlist: Treat the value as a typical PATH string.  (On POSIX, this\n            means colon separated strings.)  Split the value and then expand\n            each part for environment variables and tildes.\n        :pathspec: Treat the value as a PATH string. Expands any environment variables\n            tildes's in the value.\n        :str: Sets the value to string types.\n        :string: Same as 'str'\n    '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/config/manager.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 49,
+        "line_end": 72,
+        "exact_excerpt": "    ''' return a configuration variable with casting\n    :arg value: The value to ensure correct typing of\n    :kwarg value_type: The type of the value.  This can be any of the following strings:\n        :boolean: sets the value to a True or False value\n        :bool: Same as 'boolean'\n        :integer: Sets the value to an integer or raises a ValueType error\n        :int: Same as 'integer'\n        :float: Sets the value to a float or raises a ValueType error\n        :list: Treats the value as a comma separated list.  Split the value\n            and return it as a python list.\n        :none: Sets the value to None\n        :path: Expands any environment variables and tilde's in the value.\n        :tmppath: Create a unique temporary directory inside of the directory\n            specified by value and return its path.\n        :temppath: Same as 'tmppath'\n        :tmp: Same as 'tmppath'\n        :pathlist: Treat the value as a typical PATH string.  (On POSIX, this\n            means colon separated strings.)  Split the value and then expand\n            each part for environment variables and tildes.\n        :pathspec: Treat the value as a PATH string. Expands any environment variables\n            tildes's in the value.\n        :str: Sets the value to string types.\n        :string: Same as 'str'\n    '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.config.data",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.yaml.objects",
+      "ansible.utils",
+      "ansible.utils.path",
+      "atexit",
+      "collections",
+      "configparser",
+      "os",
+      "os.path",
+      "stat",
+      "sys",
+      "tempfile",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-a89c8cfd04f6371d52f4] Documented contract (quoted)\nApplies to: lib.ansible.config.manager.ensure_type\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/config/manager.py:49-72\nConditions and statement (complete source fragment):\n    ''' return a configuration variable with casting\n    :arg value: The value to ensure correct typing of\n    :kwarg value_type: The type of the value.  This can be any of the following strings:\n        :boolean: sets the value to a True or False value\n        :bool: Same as 'boolean'\n        :integer: Sets the value to an integer or raises a ValueType error\n        :int: Same as 'integer'\n        :float: Sets the value to a float or raises a ValueType error\n        :list: Treats the value as a comma separated list.  Split the value\n            and return it as a python list.\n        :none: Sets the value to None\n        :path: Expands any environment variables and tilde's in the value.\n        :tmppath: Create a unique temporary directory inside of the directory\n            specified by value and return its path.\n        :temppath: Same as 'tmppath'\n        :tmp: Same as 'tmppath'\n        :pathlist: Treat the value as a typical PATH string.  (On POSIX, this\n            means colon separated strings.)  Split the value and then expand\n            each part for environment variables and tildes.\n        :pathspec: Treat the value as a PATH string. Expands any environment variables\n            tildes's in the value.\n        :str: Sets the value to string types.\n        :string: Same as 'str'\n    '''\n"
+  },
+  {
+    "unit_id": "rku-786fecb501f9be5c152c",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.executor.interpreter_discovery.discover_interpreter"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if interpreter_name != 'python':\n        raise ValueError('Interpreter discovery not supported for {0}'.format(interpreter_name))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/executor/interpreter_discovery.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 47,
+        "line_end": 48,
+        "exact_excerpt": "    if interpreter_name != 'python':\n        raise ValueError('Interpreter discovery not supported for {0}'.format(interpreter_name))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.module_utils._text",
+      "ansible.module_utils.compat.version",
+      "ansible.module_utils.distro",
+      "ansible.utils.display",
+      "ansible.utils.plugin_docs",
+      "bisect",
+      "json",
+      "pkgutil",
+      "re",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-786fecb501f9be5c152c] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.executor.interpreter_discovery.discover_interpreter\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/executor/interpreter_discovery.py:47-48\nConditions and statement (complete source fragment):\n    if interpreter_name != 'python':\n        raise ValueError('Interpreter discovery not supported for {0}'.format(interpreter_name))\n"
+  },
+  {
+    "unit_id": "rku-fd5d6653342aadc1307b",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.parsing.dataloader._decrypt_if_vault_data"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        '''Decrypt b_vault_data if encrypted and return b_data and the show_content flag'''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 130,
+        "line_end": 130,
+        "exact_excerpt": "        '''Decrypt b_vault_data if encrypted and return b_data and the show_content flag'''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.basic",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.utils.yaml",
+      "ansible.parsing.vault",
+      "ansible.utils.display",
+      "ansible.utils.path",
+      "copy",
+      "os",
+      "os.path",
+      "re",
+      "tempfile"
+    ],
+    "serialized_payload": "[rku-fd5d6653342aadc1307b] Documented contract (quoted)\nApplies to: lib.ansible.parsing.dataloader._decrypt_if_vault_data\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/parsing/dataloader.py:130-130\nConditions and statement (complete source fragment):\n        '''Decrypt b_vault_data if encrypted and return b_data and the show_content flag'''\n"
+  },
+  {
+    "unit_id": "rku-159128c8a8f70a70bd43",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.playbook.__init__._load_playbook_data"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if ds is None:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"Empty playbook, nothing to do\", obj=ds)\n        elif not isinstance(ds, list):\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must be a list of plays, got a %s instead\" % type(ds), obj=ds)\n        elif not ds:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must contain at least one play\")\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/playbook/__init__.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 75,
+        "line_end": 83,
+        "exact_excerpt": "        if ds is None:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"Empty playbook, nothing to do\", obj=ds)\n        elif not isinstance(ds, list):\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must be a list of plays, got a %s instead\" % type(ds), obj=ds)\n        elif not ds:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must contain at least one play\")\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.playbook.play",
+      "ansible.playbook.playbook_include",
+      "ansible.plugins.loader",
+      "ansible.utils.display",
+      "os"
+    ],
+    "serialized_payload": "[rku-159128c8a8f70a70bd43] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.playbook.__init__._load_playbook_data\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/playbook/__init__.py:75-83\nConditions and statement (complete source fragment):\n        if ds is None:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"Empty playbook, nothing to do\", obj=ds)\n        elif not isinstance(ds, list):\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must be a list of plays, got a %s instead\" % type(ds), obj=ds)\n        elif not ds:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must contain at least one play\")\n"
+  },
+  {
+    "unit_id": "rku-b8ef4410f2b39194f495",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.plugins.filter.core.strftime"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    ''' return a date string using string. See https://docs.python.org/3/library/time.html#time.strftime for format '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/plugins/filter/core.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 92,
+        "line_end": 92,
+        "exact_excerpt": "    ''' return a date string using string. See https://docs.python.org/3/library/time.html#time.strftime for format '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.six",
+      "ansible.parsing.ajson",
+      "ansible.parsing.yaml.dumper",
+      "ansible.template",
+      "ansible.utils.display",
+      "ansible.utils.encrypt",
+      "ansible.utils.hashing",
+      "ansible.utils.unicode",
+      "ansible.utils.vars",
+      "base64",
+      "datetime",
+      "functools",
+      "glob",
+      "hashlib",
+      "jinja2.filters",
+      "jinja2.runtime",
+      "json",
+      "ntpath",
+      "os.path",
+      "random",
+      "re",
+      "shlex",
+      "sys",
+      "time",
+      "uuid",
+      "yaml"
+    ],
+    "serialized_payload": "[rku-b8ef4410f2b39194f495] Documented contract (quoted)\nApplies to: lib.ansible.plugins.filter.core.strftime\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/plugins/filter/core.py:92-92\nConditions and statement (complete source fragment):\n    ''' return a date string using string. See https://docs.python.org/3/library/time.html#time.strftime for format '''\n"
+  },
+  {
+    "unit_id": "rku-4bd6c3d8c2221f22fa2c",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.template.__init__.is_possibly_template"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    \"\"\"Determines if a string looks like a template, by seeing if it\n    contains a jinja2 start delimiter. Does not guarantee that the string\n    is actually a template.\n\n    This is different than ``is_template`` which is more strict.\n    This method may return ``True`` on a string that is not templatable.\n\n    Useful when guarding passing a string for templating, but when\n    you want to allow the templating engine to make the final\n    assessment which may result in ``TemplateSyntaxError``.\n    \"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/template/__init__.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 179,
+        "line_end": 189,
+        "exact_excerpt": "    \"\"\"Determines if a string looks like a template, by seeing if it\n    contains a jinja2 start delimiter. Does not guarantee that the string\n    is actually a template.\n\n    This is different than ``is_template`` which is more strict.\n    This method may return ``True`` on a string that is not templatable.\n\n    Useful when guarding passing a string for templating, but when\n    you want to allow the templating engine to make the final\n    assessment which may result in ``TemplateSyntaxError``.\n    \"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.compat.importlib",
+      "ansible.module_utils.six",
+      "ansible.plugins.loader",
+      "ansible.template.native_helpers",
+      "ansible.template.safe_eval",
+      "ansible.template.template",
+      "ansible.template.vars",
+      "ansible.utils.collection_loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.listify",
+      "ansible.utils.native_jinja",
+      "ansible.utils.unsafe_proxy",
+      "ast",
+      "contextlib",
+      "datetime",
+      "hashlib",
+      "jinja2",
+      "jinja2.exceptions",
+      "jinja2.loaders",
+      "jinja2.nativetypes",
+      "jinja2.runtime",
+      "jinja2.utils",
+      "numbers",
+      "os",
+      "pkgutil",
+      "pwd",
+      "re",
+      "sha",
+      "time",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-4bd6c3d8c2221f22fa2c] Documented contract (quoted)\nApplies to: lib.ansible.template.__init__.is_possibly_template\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/template/__init__.py:179-189\nConditions and statement (complete source fragment):\n    \"\"\"Determines if a string looks like a template, by seeing if it\n    contains a jinja2 start delimiter. Does not guarantee that the string\n    is actually a template.\n\n    This is different than ``is_template`` which is more strict.\n    This method may return ``True`` on a string that is not templatable.\n\n    Useful when guarding passing a string for templating, but when\n    you want to allow the templating engine to make the final\n    assessment which may result in ``TemplateSyntaxError``.\n    \"\"\"\n"
+  },
+  {
+    "unit_id": "rku-dd931ebceb3c1551ea11",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.utils._junit_xml._attributes"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    \"\"\"Return the given kwargs as a dictionary with values converted to strings. Items with a value of None will be omitted.\"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 262,
+        "line_end": 262,
+        "exact_excerpt": "    \"\"\"Return the given kwargs as a dictionary with values converted to strings. Items with a value of None will be omitted.\"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "abc",
+      "dataclasses",
+      "datetime",
+      "decimal",
+      "typing",
+      "xml.dom",
+      "xml.etree"
+    ],
+    "serialized_payload": "[rku-dd931ebceb3c1551ea11] Documented contract (quoted)\nApplies to: lib.ansible.utils._junit_xml._attributes\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/utils/_junit_xml.py:262-262\nConditions and statement (complete source fragment):\n    \"\"\"Return the given kwargs as a dictionary with values converted to strings. Items with a value of None will be omitted.\"\"\"\n"
+  },
+  {
+    "unit_id": "rku-cf6955b5f7308e78ef6c",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.vars.clean.strip_internal_keys"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/vars/clean.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 75,
+        "line_end": 93,
+        "exact_excerpt": "    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.plugins.loader",
+      "ansible.utils.display",
+      "os",
+      "re"
+    ],
+    "serialized_payload": "[rku-cf6955b5f7308e78ef6c] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.vars.clean.strip_internal_keys\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/vars/clean.py:75-93\nConditions and statement (complete source fragment):\n    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n"
+  },
+  {
+    "unit_id": "rku-af188064da3cdd899550",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.config.manager.get_config_type"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if cfile is not None:\n        ext = os.path.splitext(cfile)[-1]\n        if ext in ('.ini', '.cfg'):\n            ftype = 'ini'\n        elif ext in ('.yaml', '.yml'):\n            ftype = 'yaml'\n        else:\n            raise AnsibleOptionsError(\"Unsupported configuration file extension for %s: %s\" % (cfile, to_native(ext)))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/config/manager.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 173,
+        "line_end": 180,
+        "exact_excerpt": "    if cfile is not None:\n        ext = os.path.splitext(cfile)[-1]\n        if ext in ('.ini', '.cfg'):\n            ftype = 'ini'\n        elif ext in ('.yaml', '.yml'):\n            ftype = 'yaml'\n        else:\n            raise AnsibleOptionsError(\"Unsupported configuration file extension for %s: %s\" % (cfile, to_native(ext)))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.config.data",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.yaml.objects",
+      "ansible.utils",
+      "ansible.utils.path",
+      "atexit",
+      "collections",
+      "configparser",
+      "os",
+      "os.path",
+      "stat",
+      "sys",
+      "tempfile",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-af188064da3cdd899550] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.config.manager.get_config_type\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/config/manager.py:173-180\nConditions and statement (complete source fragment):\n    if cfile is not None:\n        ext = os.path.splitext(cfile)[-1]\n        if ext in ('.ini', '.cfg'):\n            ftype = 'ini'\n        elif ext in ('.yaml', '.yml'):\n            ftype = 'yaml'\n        else:\n            raise AnsibleOptionsError(\"Unsupported configuration file extension for %s: %s\" % (cfile, to_native(ext)))\n"
+  },
+  {
+    "unit_id": "rku-7c8809b6a62a8be2cb75",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.executor.module_common._slurp"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if not os.path.exists(path):\n        raise AnsibleError(\"imported module support code does not exist at %s\" % os.path.abspath(path))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/executor/module_common.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 588,
+        "line_end": 589,
+        "exact_excerpt": "    if not os.path.exists(path):\n        raise AnsibleError(\"imported module support code does not exist at %s\" % os.path.abspath(path))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.executor",
+      "ansible.executor.interpreter_discovery",
+      "ansible.executor.powershell",
+      "ansible.module_utils.common.json",
+      "ansible.module_utils.common.text.converters",
+      "ansible.plugins.loader",
+      "ansible.release",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ast",
+      "base64",
+      "collections",
+      "datetime",
+      "imp",
+      "importlib.machinery",
+      "importlib.util",
+      "io",
+      "json",
+      "os",
+      "pkgutil",
+      "re",
+      "shlex",
+      "zipfile"
+    ],
+    "serialized_payload": "[rku-7c8809b6a62a8be2cb75] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.executor.module_common._slurp\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/executor/module_common.py:588-589\nConditions and statement (complete source fragment):\n    if not os.path.exists(path):\n        raise AnsibleError(\"imported module support code does not exist at %s\" % os.path.abspath(path))\n"
+  },
+  {
+    "unit_id": "rku-1c56bd6a19f6a78dfda4",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.parsing.dataloader._get_file_contents"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 143,
+        "line_end": 154,
+        "exact_excerpt": "        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.basic",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.utils.yaml",
+      "ansible.parsing.vault",
+      "ansible.utils.display",
+      "ansible.utils.path",
+      "copy",
+      "os",
+      "os.path",
+      "re",
+      "tempfile"
+    ],
+    "serialized_payload": "[rku-1c56bd6a19f6a78dfda4] Documented contract (quoted)\nApplies to: lib.ansible.parsing.dataloader._get_file_contents\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/parsing/dataloader.py:143-154\nConditions and statement (complete source fragment):\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n"
+  },
+  {
+    "unit_id": "rku-bfa1baf9e8fcb96dcf3a",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.playbook.attribute.__init__"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if default is not None and self.isa in _CONTAINERS and not callable(default):\n            raise TypeError('defaults for FieldAttribute may not be mutable, please provide a callable instead')\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/playbook/attribute.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 94,
+        "line_end": 95,
+        "exact_excerpt": "        if default is not None and self.isa in _CONTAINERS and not callable(default):\n            raise TypeError('defaults for FieldAttribute may not be mutable, please provide a callable instead')\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "copy"
+    ],
+    "serialized_payload": "[rku-bfa1baf9e8fcb96dcf3a] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.playbook.attribute.__init__\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/playbook/attribute.py:94-95\nConditions and statement (complete source fragment):\n        if default is not None and self.isa in _CONTAINERS and not callable(default):\n            raise TypeError('defaults for FieldAttribute may not be mutable, please provide a callable instead')\n"
+  },
+  {
+    "unit_id": "rku-1854eff570ff9c523c14",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.plugins.filter.core.strftime"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if second is not None:\n        try:\n            second = float(second)\n        except Exception:\n            raise AnsibleFilterError('Invalid value for epoch value (%s)' % second)\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/plugins/filter/core.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 93,
+        "line_end": 97,
+        "exact_excerpt": "    if second is not None:\n        try:\n            second = float(second)\n        except Exception:\n            raise AnsibleFilterError('Invalid value for epoch value (%s)' % second)\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.six",
+      "ansible.parsing.ajson",
+      "ansible.parsing.yaml.dumper",
+      "ansible.template",
+      "ansible.utils.display",
+      "ansible.utils.encrypt",
+      "ansible.utils.hashing",
+      "ansible.utils.unicode",
+      "ansible.utils.vars",
+      "base64",
+      "datetime",
+      "functools",
+      "glob",
+      "hashlib",
+      "jinja2.filters",
+      "jinja2.runtime",
+      "json",
+      "ntpath",
+      "os.path",
+      "random",
+      "re",
+      "shlex",
+      "sys",
+      "time",
+      "uuid",
+      "yaml"
+    ],
+    "serialized_payload": "[rku-1854eff570ff9c523c14] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.plugins.filter.core.strftime\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/plugins/filter/core.py:93-97\nConditions and statement (complete source fragment):\n    if second is not None:\n        try:\n            second = float(second)\n        except Exception:\n            raise AnsibleFilterError('Invalid value for epoch value (%s)' % second)\n"
+  },
+  {
+    "unit_id": "rku-36a5c11fb61c2b00d9c1",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.template.__init__._count_newlines_from_end"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    '''\n    Counts the number of newlines at the end of a string. This is used during\n    the jinja2 templating to ensure the count matches the input, since some newlines\n    may be thrown away during the templating.\n    '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/template/__init__.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 236,
+        "line_end": 240,
+        "exact_excerpt": "    '''\n    Counts the number of newlines at the end of a string. This is used during\n    the jinja2 templating to ensure the count matches the input, since some newlines\n    may be thrown away during the templating.\n    '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.compat.importlib",
+      "ansible.module_utils.six",
+      "ansible.plugins.loader",
+      "ansible.template.native_helpers",
+      "ansible.template.safe_eval",
+      "ansible.template.template",
+      "ansible.template.vars",
+      "ansible.utils.collection_loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.listify",
+      "ansible.utils.native_jinja",
+      "ansible.utils.unsafe_proxy",
+      "ast",
+      "contextlib",
+      "datetime",
+      "hashlib",
+      "jinja2",
+      "jinja2.exceptions",
+      "jinja2.loaders",
+      "jinja2.nativetypes",
+      "jinja2.runtime",
+      "jinja2.utils",
+      "numbers",
+      "os",
+      "pkgutil",
+      "pwd",
+      "re",
+      "sha",
+      "time",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-36a5c11fb61c2b00d9c1] Documented contract (quoted)\nApplies to: lib.ansible.template.__init__._count_newlines_from_end\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/template/__init__.py:236-240\nConditions and statement (complete source fragment):\n    '''\n    Counts the number of newlines at the end of a string. This is used during\n    the jinja2 templating to ensure the count matches the input, since some newlines\n    may be thrown away during the templating.\n    '''\n"
+  },
+  {
+    "unit_id": "rku-1ac9ac63cd157bf43fdc",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.utils._junit_xml._pretty_xml"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    \"\"\"Return a pretty formatted XML string representing the given element.\"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 267,
+        "line_end": 267,
+        "exact_excerpt": "    \"\"\"Return a pretty formatted XML string representing the given element.\"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "abc",
+      "dataclasses",
+      "datetime",
+      "decimal",
+      "typing",
+      "xml.dom",
+      "xml.etree"
+    ],
+    "serialized_payload": "[rku-1ac9ac63cd157bf43fdc] Documented contract (quoted)\nApplies to: lib.ansible.utils._junit_xml._pretty_xml\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/utils/_junit_xml.py:267-267\nConditions and statement (complete source fragment):\n    \"\"\"Return a pretty formatted XML string representing the given element.\"\"\"\n"
+  },
+  {
+    "unit_id": "rku-380e53981d0ec67e12dd",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.vars.clean.namespace_facts"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    ''' return all facts inside 'ansible_facts' w/o an ansible_ prefix '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/vars/clean.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 168,
+        "line_end": 168,
+        "exact_excerpt": "    ''' return all facts inside 'ansible_facts' w/o an ansible_ prefix '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.plugins.loader",
+      "ansible.utils.display",
+      "os",
+      "re"
+    ],
+    "serialized_payload": "[rku-380e53981d0ec67e12dd] Documented contract (quoted)\nApplies to: lib.ansible.vars.clean.namespace_facts\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/vars/clean.py:168-168\nConditions and statement (complete source fragment):\n    ''' return all facts inside 'ansible_facts' w/o an ansible_ prefix '''\n"
+  },
+  {
+    "unit_id": "rku-74c3019076160d64cc5a",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.config.manager._parse_config_file"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        ''' return flat configuration settings from file(s) '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/config/manager.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 316,
+        "line_end": 316,
+        "exact_excerpt": "        ''' return flat configuration settings from file(s) '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.config.data",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.yaml.objects",
+      "ansible.utils",
+      "ansible.utils.path",
+      "atexit",
+      "collections",
+      "configparser",
+      "os",
+      "os.path",
+      "stat",
+      "sys",
+      "tempfile",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-74c3019076160d64cc5a] Documented contract (quoted)\nApplies to: lib.ansible.config.manager._parse_config_file\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/config/manager.py:316-316\nConditions and statement (complete source fragment):\n        ''' return flat configuration settings from file(s) '''\n"
+  },
+  {
+    "unit_id": "rku-8cd788850ee9aca34ea7",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.executor.module_common._get_shebang"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    \"\"\"\n    Note not stellar API:\n       Returns None instead of always returning a shebang line.  Doing it this\n       way allows the caller to decide to use the shebang it read from the\n       file rather than trust that we reformatted what they already have\n       correctly.\n    \"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/executor/module_common.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 596,
+        "line_end": 602,
+        "exact_excerpt": "    \"\"\"\n    Note not stellar API:\n       Returns None instead of always returning a shebang line.  Doing it this\n       way allows the caller to decide to use the shebang it read from the\n       file rather than trust that we reformatted what they already have\n       correctly.\n    \"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.executor",
+      "ansible.executor.interpreter_discovery",
+      "ansible.executor.powershell",
+      "ansible.module_utils.common.json",
+      "ansible.module_utils.common.text.converters",
+      "ansible.plugins.loader",
+      "ansible.release",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ast",
+      "base64",
+      "collections",
+      "datetime",
+      "imp",
+      "importlib.machinery",
+      "importlib.util",
+      "io",
+      "json",
+      "os",
+      "pkgutil",
+      "re",
+      "shlex",
+      "zipfile"
+    ],
+    "serialized_payload": "[rku-8cd788850ee9aca34ea7] Documented contract (quoted)\nApplies to: lib.ansible.executor.module_common._get_shebang\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/executor/module_common.py:596-602\nConditions and statement (complete source fragment):\n    \"\"\"\n    Note not stellar API:\n       Returns None instead of always returning a shebang line.  Doing it this\n       way allows the caller to decide to use the shebang it read from the\n       file rather than trust that we reformatted what they already have\n       correctly.\n    \"\"\"\n"
+  },
+  {
+    "unit_id": "rku-2c7d860a8c038470c83b",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.parsing.dataloader._get_file_contents"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 155,
+        "line_end": 156,
+        "exact_excerpt": "        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.basic",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.utils.yaml",
+      "ansible.parsing.vault",
+      "ansible.utils.display",
+      "ansible.utils.path",
+      "copy",
+      "os",
+      "os.path",
+      "re",
+      "tempfile"
+    ],
+    "serialized_payload": "[rku-2c7d860a8c038470c83b] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.parsing.dataloader._get_file_contents\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/parsing/dataloader.py:155-156\nConditions and statement (complete source fragment):\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n"
+  },
+  {
+    "unit_id": "rku-624d7d86dd8ab7397940",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.playbook.base.load_data"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if ds is None:\n            raise AnsibleAssertionError('ds (%s) should not be None but it is.' % ds)\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/playbook/base.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 250,
+        "line_end": 251,
+        "exact_excerpt": "        if ds is None:\n            raise AnsibleAssertionError('ds (%s) should not be None but it is.' % ds)\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.dataloader",
+      "ansible.playbook.attribute",
+      "ansible.plugins.loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.sentinel",
+      "ansible.utils.vars",
+      "copy",
+      "functools",
+      "itertools",
+      "jinja2.exceptions",
+      "operator",
+      "os"
+    ],
+    "serialized_payload": "[rku-624d7d86dd8ab7397940] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.playbook.base.load_data\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/playbook/base.py:250-251\nConditions and statement (complete source fragment):\n        if ds is None:\n            raise AnsibleAssertionError('ds (%s) should not be None but it is.' % ds)\n"
+  },
+  {
+    "unit_id": "rku-599b78d2b31250160845",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.plugins.filter.core.regex_findall"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    ''' Perform re.findall and return the list of matches '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/plugins/filter/core.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 128,
+        "line_end": 128,
+        "exact_excerpt": "    ''' Perform re.findall and return the list of matches '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.six",
+      "ansible.parsing.ajson",
+      "ansible.parsing.yaml.dumper",
+      "ansible.template",
+      "ansible.utils.display",
+      "ansible.utils.encrypt",
+      "ansible.utils.hashing",
+      "ansible.utils.unicode",
+      "ansible.utils.vars",
+      "base64",
+      "datetime",
+      "functools",
+      "glob",
+      "hashlib",
+      "jinja2.filters",
+      "jinja2.runtime",
+      "json",
+      "ntpath",
+      "os.path",
+      "random",
+      "re",
+      "shlex",
+      "sys",
+      "time",
+      "uuid",
+      "yaml"
+    ],
+    "serialized_payload": "[rku-599b78d2b31250160845] Documented contract (quoted)\nApplies to: lib.ansible.plugins.filter.core.regex_findall\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/plugins/filter/core.py:128-128\nConditions and statement (complete source fragment):\n    ''' Perform re.findall and return the list of matches '''\n"
+  },
+  {
+    "unit_id": "rku-9cf76b5cc46edb078e11",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.template.__init__.recursive_check_defined"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if isinstance(item, MutableMapping):\n        for key in item:\n            recursive_check_defined(item[key])\n    elif isinstance(item, list):\n        for i in item:\n            recursive_check_defined(i)\n    else:\n        if isinstance(item, Undefined):\n            raise AnsibleFilterError(\"{0} is undefined\".format(item))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/template/__init__.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 256,
+        "line_end": 264,
+        "exact_excerpt": "    if isinstance(item, MutableMapping):\n        for key in item:\n            recursive_check_defined(item[key])\n    elif isinstance(item, list):\n        for i in item:\n            recursive_check_defined(i)\n    else:\n        if isinstance(item, Undefined):\n            raise AnsibleFilterError(\"{0} is undefined\".format(item))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.compat.importlib",
+      "ansible.module_utils.six",
+      "ansible.plugins.loader",
+      "ansible.template.native_helpers",
+      "ansible.template.safe_eval",
+      "ansible.template.template",
+      "ansible.template.vars",
+      "ansible.utils.collection_loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.listify",
+      "ansible.utils.native_jinja",
+      "ansible.utils.unsafe_proxy",
+      "ast",
+      "contextlib",
+      "datetime",
+      "hashlib",
+      "jinja2",
+      "jinja2.exceptions",
+      "jinja2.loaders",
+      "jinja2.nativetypes",
+      "jinja2.runtime",
+      "jinja2.utils",
+      "numbers",
+      "os",
+      "pkgutil",
+      "pwd",
+      "re",
+      "sha",
+      "time",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-9cf76b5cc46edb078e11] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.template.__init__.recursive_check_defined\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/template/__init__.py:256-264\nConditions and statement (complete source fragment):\n    if isinstance(item, MutableMapping):\n        for key in item:\n            recursive_check_defined(item[key])\n    elif isinstance(item, list):\n        for i in item:\n            recursive_check_defined(i)\n    else:\n        if isinstance(item, Undefined):\n            raise AnsibleFilterError(\"{0} is undefined\".format(item))\n"
+  },
+  {
+    "unit_id": "rku-5e367a946cd9c520ddec",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.utils._junit_xml.tag"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        \"\"\"Tag name for the XML element created by this result type.\"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 32,
+        "line_end": 32,
+        "exact_excerpt": "        \"\"\"Tag name for the XML element created by this result type.\"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "abc",
+      "dataclasses",
+      "datetime",
+      "decimal",
+      "typing",
+      "xml.dom",
+      "xml.etree"
+    ],
+    "serialized_payload": "[rku-5e367a946cd9c520ddec] Documented contract (quoted)\nApplies to: lib.ansible.utils._junit_xml.tag\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/utils/_junit_xml.py:32-32\nConditions and statement (complete source fragment):\n        \"\"\"Tag name for the XML element created by this result type.\"\"\"\n"
+  },
+  {
+    "unit_id": "rku-dfb09ecd6422454e347d",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.vars.fact_cache.__init__"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if not self._plugin:\n            raise AnsibleError('Unable to load the facts cache plugin (%s).' % (C.CACHE_PLUGIN))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/vars/fact_cache.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 25,
+        "line_end": 26,
+        "exact_excerpt": "        if not self._plugin:\n            raise AnsibleError('Unable to load the facts cache plugin (%s).' % (C.CACHE_PLUGIN))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.plugins.loader",
+      "ansible.utils.display"
+    ],
+    "serialized_payload": "[rku-dfb09ecd6422454e347d] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.vars.fact_cache.__init__\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/vars/fact_cache.py:25-26\nConditions and statement (complete source fragment):\n        if not self._plugin:\n            raise AnsibleError('Unable to load the facts cache plugin (%s).' % (C.CACHE_PLUGIN))\n"
+  },
+  {
+    "unit_id": "rku-7c6e7e4f68d8b3cc9d4b",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.config.manager._parse_config_file"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if cfile is not None:\n            if ftype == 'ini':\n                self._parsers[cfile] = configparser.ConfigParser(inline_comment_prefixes=(';',))\n                with open(to_bytes(cfile), 'rb') as f:\n                    try:\n                        cfg_text = to_text(f.read(), errors='surrogate_or_strict')\n                    except UnicodeError as e:\n                        raise AnsibleOptionsError(\"Error reading config file(%s) because the config file was not utf8 encoded: %s\" % (cfile, to_native(e)))\n                try:\n                    self._parsers[cfile].read_string(cfg_text)\n                except configparser.Error as e:\n                    raise AnsibleOptionsError(\"Error reading config file (%s): %s\" % (cfile, to_native(e)))\n            # FIXME: this should eventually handle yaml config files\n            # elif ftype == 'yaml':\n            #     with open(cfile, 'rb') as config_stream:\n            #         self._parsers[cfile] = yaml_load(config_stream)\n            else:\n                raise AnsibleOptionsError(\"Unsupported configuration file type: %s\" % to_native(ftype))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/config/manager.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 323,
+        "line_end": 340,
+        "exact_excerpt": "        if cfile is not None:\n            if ftype == 'ini':\n                self._parsers[cfile] = configparser.ConfigParser(inline_comment_prefixes=(';',))\n                with open(to_bytes(cfile), 'rb') as f:\n                    try:\n                        cfg_text = to_text(f.read(), errors='surrogate_or_strict')\n                    except UnicodeError as e:\n                        raise AnsibleOptionsError(\"Error reading config file(%s) because the config file was not utf8 encoded: %s\" % (cfile, to_native(e)))\n                try:\n                    self._parsers[cfile].read_string(cfg_text)\n                except configparser.Error as e:\n                    raise AnsibleOptionsError(\"Error reading config file (%s): %s\" % (cfile, to_native(e)))\n            # FIXME: this should eventually handle yaml config files\n            # elif ftype == 'yaml':\n            #     with open(cfile, 'rb') as config_stream:\n            #         self._parsers[cfile] = yaml_load(config_stream)\n            else:\n                raise AnsibleOptionsError(\"Unsupported configuration file type: %s\" % to_native(ftype))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.config.data",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.yaml.objects",
+      "ansible.utils",
+      "ansible.utils.path",
+      "atexit",
+      "collections",
+      "configparser",
+      "os",
+      "os.path",
+      "stat",
+      "sys",
+      "tempfile",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-7c6e7e4f68d8b3cc9d4b] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.config.manager._parse_config_file\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/config/manager.py:323-340\nConditions and statement (complete source fragment):\n        if cfile is not None:\n            if ftype == 'ini':\n                self._parsers[cfile] = configparser.ConfigParser(inline_comment_prefixes=(';',))\n                with open(to_bytes(cfile), 'rb') as f:\n                    try:\n                        cfg_text = to_text(f.read(), errors='surrogate_or_strict')\n                    except UnicodeError as e:\n                        raise AnsibleOptionsError(\"Error reading config file(%s) because the config file was not utf8 encoded: %s\" % (cfile, to_native(e)))\n                try:\n                    self._parsers[cfile].read_string(cfg_text)\n                except configparser.Error as e:\n                    raise AnsibleOptionsError(\"Error reading config file (%s): %s\" % (cfile, to_native(e)))\n            # FIXME: this should eventually handle yaml config files\n            # elif ftype == 'yaml':\n            #     with open(cfile, 'rb') as config_stream:\n            #         self._parsers[cfile] = yaml_load(config_stream)\n            else:\n                raise AnsibleOptionsError(\"Unsupported configuration file type: %s\" % to_native(ftype))\n"
+  },
+  {
+    "unit_id": "rku-402e40fc137f675fd8d5",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.executor.module_common._get_shebang"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if interpreter_name == 'python':\n        # skip detection for network os execution, use playbook supplied one if possible\n        if remote_is_local:\n            interpreter_out = task_vars['ansible_playbook_python']\n\n        # a config def exists for this interpreter type; consult config for the value\n        elif C.config.get_configuration_definition(interpreter_config_key):\n\n            interpreter_from_config = C.config.get_config_value(interpreter_config_key, variables=task_vars)\n            interpreter_out = templar.template(interpreter_from_config.strip())\n\n            # handle interpreter discovery if requested or empty interpreter was provided\n            if not interpreter_out or interpreter_out in ['auto', 'auto_legacy', 'auto_silent', 'auto_legacy_silent']:\n\n                discovered_interpreter_config = u'discovered_interpreter_%s' % interpreter_name\n                facts_from_task_vars = task_vars.get('ansible_facts', {})\n\n                if discovered_interpreter_config not in facts_from_task_vars:\n                    # interpreter discovery is desired, but has not been run for this host\n                    raise InterpreterDiscoveryRequiredError(\"interpreter discovery needed\", interpreter_name=interpreter_name, discovery_mode=interpreter_out)\n                else:\n                    interpreter_out = facts_from_task_vars[discovered_interpreter_config]\n        else:\n            raise InterpreterDiscoveryRequiredError(\"interpreter discovery required\", interpreter_name=interpreter_name, discovery_mode='auto_legacy')\n\n    elif interpreter_config in task_vars:\n        # for non python we consult vars for a possible direct override\n        interpreter_out = templar.template(task_vars.get(interpreter_config).strip())\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/executor/module_common.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 615,
+        "line_end": 642,
+        "exact_excerpt": "    if interpreter_name == 'python':\n        # skip detection for network os execution, use playbook supplied one if possible\n        if remote_is_local:\n            interpreter_out = task_vars['ansible_playbook_python']\n\n        # a config def exists for this interpreter type; consult config for the value\n        elif C.config.get_configuration_definition(interpreter_config_key):\n\n            interpreter_from_config = C.config.get_config_value(interpreter_config_key, variables=task_vars)\n            interpreter_out = templar.template(interpreter_from_config.strip())\n\n            # handle interpreter discovery if requested or empty interpreter was provided\n            if not interpreter_out or interpreter_out in ['auto', 'auto_legacy', 'auto_silent', 'auto_legacy_silent']:\n\n                discovered_interpreter_config = u'discovered_interpreter_%s' % interpreter_name\n                facts_from_task_vars = task_vars.get('ansible_facts', {})\n\n                if discovered_interpreter_config not in facts_from_task_vars:\n                    # interpreter discovery is desired, but has not been run for this host\n                    raise InterpreterDiscoveryRequiredError(\"interpreter discovery needed\", interpreter_name=interpreter_name, discovery_mode=interpreter_out)\n                else:\n                    interpreter_out = facts_from_task_vars[discovered_interpreter_config]\n        else:\n            raise InterpreterDiscoveryRequiredError(\"interpreter discovery required\", interpreter_name=interpreter_name, discovery_mode='auto_legacy')\n\n    elif interpreter_config in task_vars:\n        # for non python we consult vars for a possible direct override\n        interpreter_out = templar.template(task_vars.get(interpreter_config).strip())\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.executor",
+      "ansible.executor.interpreter_discovery",
+      "ansible.executor.powershell",
+      "ansible.module_utils.common.json",
+      "ansible.module_utils.common.text.converters",
+      "ansible.plugins.loader",
+      "ansible.release",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ast",
+      "base64",
+      "collections",
+      "datetime",
+      "imp",
+      "importlib.machinery",
+      "importlib.util",
+      "io",
+      "json",
+      "os",
+      "pkgutil",
+      "re",
+      "shlex",
+      "zipfile"
+    ],
+    "serialized_payload": "[rku-402e40fc137f675fd8d5] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.executor.module_common._get_shebang\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/executor/module_common.py:615-642\nConditions and statement (complete source fragment):\n    if interpreter_name == 'python':\n        # skip detection for network os execution, use playbook supplied one if possible\n        if remote_is_local:\n            interpreter_out = task_vars['ansible_playbook_python']\n\n        # a config def exists for this interpreter type; consult config for the value\n        elif C.config.get_configuration_definition(interpreter_config_key):\n\n            interpreter_from_config = C.config.get_config_value(interpreter_config_key, variables=task_vars)\n            interpreter_out = templar.template(interpreter_from_config.strip())\n\n            # handle interpreter discovery if requested or empty interpreter was provided\n            if not interpreter_out or interpreter_out in ['auto', 'auto_legacy', 'auto_silent', 'auto_legacy_silent']:\n\n                discovered_interpreter_config = u'discovered_interpreter_%s' % interpreter_name\n                facts_from_task_vars = task_vars.get('ansible_facts', {})\n\n                if discovered_interpreter_config not in facts_from_task_vars:\n                    # interpreter discovery is desired, but has not been run for this host\n                    raise InterpreterDiscoveryRequiredError(\"interpreter discovery needed\", interpreter_name=interpreter_name, discovery_mode=interpreter_out)\n                else:\n                    interpreter_out = facts_from_task_vars[discovered_interpreter_config]\n        else:\n            raise InterpreterDiscoveryRequiredError(\"interpreter discovery required\", interpreter_name=interpreter_name, discovery_mode='auto_legacy')\n\n    elif interpreter_config in task_vars:\n        # for non python we consult vars for a possible direct override\n        interpreter_out = templar.template(task_vars.get(interpreter_config).strip())\n"
+  },
+  {
+    "unit_id": "rku-32dbe45e4da7c3c74c8f",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.parsing.dataloader._get_file_contents"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 161,
+        "line_end": 162,
+        "exact_excerpt": "        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.basic",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.utils.yaml",
+      "ansible.parsing.vault",
+      "ansible.utils.display",
+      "ansible.utils.path",
+      "copy",
+      "os",
+      "os.path",
+      "re",
+      "tempfile"
+    ],
+    "serialized_payload": "[rku-32dbe45e4da7c3c74c8f] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.parsing.dataloader._get_file_contents\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/parsing/dataloader.py:161-162\nConditions and statement (complete source fragment):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n"
+  },
+  {
+    "unit_id": "rku-0f51a7c4da95e4203ff8",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.playbook.base._post_validate_debugger"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if value and isinstance(value, string_types) and value not in valid_values:\n            raise AnsibleParserError(\"'%s' is not a valid value for debugger. Must be one of %s\" % (value, ', '.join(valid_values)), obj=self.get_ds())\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/playbook/base.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 307,
+        "line_end": 308,
+        "exact_excerpt": "        if value and isinstance(value, string_types) and value not in valid_values:\n            raise AnsibleParserError(\"'%s' is not a valid value for debugger. Must be one of %s\" % (value, ', '.join(valid_values)), obj=self.get_ds())\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.dataloader",
+      "ansible.playbook.attribute",
+      "ansible.plugins.loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.sentinel",
+      "ansible.utils.vars",
+      "copy",
+      "functools",
+      "itertools",
+      "jinja2.exceptions",
+      "operator",
+      "os"
+    ],
+    "serialized_payload": "[rku-0f51a7c4da95e4203ff8] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.playbook.base._post_validate_debugger\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/playbook/base.py:307-308\nConditions and statement (complete source fragment):\n        if value and isinstance(value, string_types) and value not in valid_values:\n            raise AnsibleParserError(\"'%s' is not a valid value for debugger. Must be one of %s\" % (value, ', '.join(valid_values)), obj=self.get_ds())\n"
+  },
+  {
+    "unit_id": "rku-6bf75313c72563c20d4d",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.plugins.filter.core.regex_search"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    ''' Perform re.search and return the list of matches or a backref '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/plugins/filter/core.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 141,
+        "line_end": 141,
+        "exact_excerpt": "    ''' Perform re.search and return the list of matches or a backref '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.six",
+      "ansible.parsing.ajson",
+      "ansible.parsing.yaml.dumper",
+      "ansible.template",
+      "ansible.utils.display",
+      "ansible.utils.encrypt",
+      "ansible.utils.hashing",
+      "ansible.utils.unicode",
+      "ansible.utils.vars",
+      "base64",
+      "datetime",
+      "functools",
+      "glob",
+      "hashlib",
+      "jinja2.filters",
+      "jinja2.runtime",
+      "json",
+      "ntpath",
+      "os.path",
+      "random",
+      "re",
+      "shlex",
+      "sys",
+      "time",
+      "uuid",
+      "yaml"
+    ],
+    "serialized_payload": "[rku-6bf75313c72563c20d4d] Documented contract (quoted)\nApplies to: lib.ansible.plugins.filter.core.regex_search\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/plugins/filter/core.py:141-141\nConditions and statement (complete source fragment):\n    ''' Perform re.search and return the list of matches or a backref '''\n"
+  },
+  {
+    "unit_id": "rku-63694416cb7213477f9c",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.template.__init__._unroll_iterator"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    \"\"\"Wrapper function, that intercepts the result of a filter\n    and auto unrolls a generator, so that users are not required to\n    explicitly use ``|list`` to unroll.\n    \"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/template/__init__.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 279,
+        "line_end": 282,
+        "exact_excerpt": "    \"\"\"Wrapper function, that intercepts the result of a filter\n    and auto unrolls a generator, so that users are not required to\n    explicitly use ``|list`` to unroll.\n    \"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.compat.importlib",
+      "ansible.module_utils.six",
+      "ansible.plugins.loader",
+      "ansible.template.native_helpers",
+      "ansible.template.safe_eval",
+      "ansible.template.template",
+      "ansible.template.vars",
+      "ansible.utils.collection_loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.listify",
+      "ansible.utils.native_jinja",
+      "ansible.utils.unsafe_proxy",
+      "ast",
+      "contextlib",
+      "datetime",
+      "hashlib",
+      "jinja2",
+      "jinja2.exceptions",
+      "jinja2.loaders",
+      "jinja2.nativetypes",
+      "jinja2.runtime",
+      "jinja2.utils",
+      "numbers",
+      "os",
+      "pkgutil",
+      "pwd",
+      "re",
+      "sha",
+      "time",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-63694416cb7213477f9c] Documented contract (quoted)\nApplies to: lib.ansible.template.__init__._unroll_iterator\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/template/__init__.py:279-282\nConditions and statement (complete source fragment):\n    \"\"\"Wrapper function, that intercepts the result of a filter\n    and auto unrolls a generator, so that users are not required to\n    explicitly use ``|list`` to unroll.\n    \"\"\"\n"
+  },
+  {
+    "unit_id": "rku-2402fe5f3ad7f3c3d91a",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.utils._junit_xml.get_attributes"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        \"\"\"Return a dictionary of attributes for this instance.\"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 35,
+        "line_end": 35,
+        "exact_excerpt": "        \"\"\"Return a dictionary of attributes for this instance.\"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "abc",
+      "dataclasses",
+      "datetime",
+      "decimal",
+      "typing",
+      "xml.dom",
+      "xml.etree"
+    ],
+    "serialized_payload": "[rku-2402fe5f3ad7f3c3d91a] Documented contract (quoted)\nApplies to: lib.ansible.utils._junit_xml.get_attributes\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/utils/_junit_xml.py:35-35\nConditions and statement (complete source fragment):\n        \"\"\"Return a dictionary of attributes for this instance.\"\"\"\n"
+  },
+  {
+    "unit_id": "rku-d087597204b615826832",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.vars.fact_cache.__getitem__"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if not self._plugin.contains(key):\n            raise KeyError\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/vars/fact_cache.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 31,
+        "line_end": 32,
+        "exact_excerpt": "        if not self._plugin.contains(key):\n            raise KeyError\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.plugins.loader",
+      "ansible.utils.display"
+    ],
+    "serialized_payload": "[rku-d087597204b615826832] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.vars.fact_cache.__getitem__\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/vars/fact_cache.py:31-32\nConditions and statement (complete source fragment):\n        if not self._plugin.contains(key):\n            raise KeyError\n"
+  },
+  {
+    "unit_id": "rku-3f89e74c02572ce463ba",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.config.manager.update_config_data"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        if not isinstance(defs, dict):\n            raise AnsibleOptionsError(\"Invalid configuration definition type: %s for %s\" % (type(defs), defs))\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/config/manager.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 577,
+        "line_end": 578,
+        "exact_excerpt": "        if not isinstance(defs, dict):\n            raise AnsibleOptionsError(\"Invalid configuration definition type: %s for %s\" % (type(defs), defs))\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.config.data",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.yaml.objects",
+      "ansible.utils",
+      "ansible.utils.path",
+      "atexit",
+      "collections",
+      "configparser",
+      "os",
+      "os.path",
+      "stat",
+      "sys",
+      "tempfile",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-3f89e74c02572ce463ba] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.config.manager.update_config_data\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/config/manager.py:577-578\nConditions and statement (complete source fragment):\n        if not isinstance(defs, dict):\n            raise AnsibleOptionsError(\"Invalid configuration definition type: %s for %s\" % (type(defs), defs))\n"
+  },
+  {
+    "unit_id": "rku-ace8f58251581af30159",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.executor.module_common._get_ansible_module_fqn"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if match:\n        path = match.group('path')\n        if '.' in path:\n            # FQNs must be valid as python identifiers.  This sanity check has failed.\n            # we could check other things as well\n            raise ValueError('Module name (or path) was not a valid python identifier')\n\n        remote_module_fqn = '.'.join(path.split('/'))\n    else:\n        # Currently we do not handle modules in roles so we can end up here for that reason\n        raise ValueError(\"Unable to determine module's fully qualified name\")\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/executor/module_common.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 1046,
+        "line_end": 1056,
+        "exact_excerpt": "    if match:\n        path = match.group('path')\n        if '.' in path:\n            # FQNs must be valid as python identifiers.  This sanity check has failed.\n            # we could check other things as well\n            raise ValueError('Module name (or path) was not a valid python identifier')\n\n        remote_module_fqn = '.'.join(path.split('/'))\n    else:\n        # Currently we do not handle modules in roles so we can end up here for that reason\n        raise ValueError(\"Unable to determine module's fully qualified name\")\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.executor",
+      "ansible.executor.interpreter_discovery",
+      "ansible.executor.powershell",
+      "ansible.module_utils.common.json",
+      "ansible.module_utils.common.text.converters",
+      "ansible.plugins.loader",
+      "ansible.release",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ast",
+      "base64",
+      "collections",
+      "datetime",
+      "imp",
+      "importlib.machinery",
+      "importlib.util",
+      "io",
+      "json",
+      "os",
+      "pkgutil",
+      "re",
+      "shlex",
+      "zipfile"
+    ],
+    "serialized_payload": "[rku-ace8f58251581af30159] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.executor.module_common._get_ansible_module_fqn\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/executor/module_common.py:1046-1056\nConditions and statement (complete source fragment):\n    if match:\n        path = match.group('path')\n        if '.' in path:\n            # FQNs must be valid as python identifiers.  This sanity check has failed.\n            # we could check other things as well\n            raise ValueError('Module name (or path) was not a valid python identifier')\n\n        remote_module_fqn = '.'.join(path.split('/'))\n    else:\n        # Currently we do not handle modules in roles so we can end up here for that reason\n        raise ValueError(\"Unable to determine module's fully qualified name\")\n"
+  },
+  {
+    "unit_id": "rku-3d3ec832859051471587",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.parsing.dataloader.path_dwim_relative_stack"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        '''\n        find one file in first path in stack taking roles into account and adding play basedir as fallback\n\n        :arg paths: A list of text strings which are the paths to look for the filename in.\n        :arg dirname: A text string representing a directory.  The directory\n            is prepended to the source to form the path to search for.\n        :arg source: A text string which is the filename to search for\n        :rtype: A text string\n        :returns: An absolute path to the filename ``source`` if found\n        :raises: An AnsibleFileNotFound Exception if the file is found to exist in the search paths\n        '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 287,
+        "line_end": 297,
+        "exact_excerpt": "        '''\n        find one file in first path in stack taking roles into account and adding play basedir as fallback\n\n        :arg paths: A list of text strings which are the paths to look for the filename in.\n        :arg dirname: A text string representing a directory.  The directory\n            is prepended to the source to form the path to search for.\n        :arg source: A text string which is the filename to search for\n        :rtype: A text string\n        :returns: An absolute path to the filename ``source`` if found\n        :raises: An AnsibleFileNotFound Exception if the file is found to exist in the search paths\n        '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.basic",
+      "ansible.module_utils.six",
+      "ansible.parsing.quoting",
+      "ansible.parsing.utils.yaml",
+      "ansible.parsing.vault",
+      "ansible.utils.display",
+      "ansible.utils.path",
+      "copy",
+      "os",
+      "os.path",
+      "re",
+      "tempfile"
+    ],
+    "serialized_payload": "[rku-3d3ec832859051471587] Documented contract (quoted)\nApplies to: lib.ansible.parsing.dataloader.path_dwim_relative_stack\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/parsing/dataloader.py:287-297\nConditions and statement (complete source fragment):\n        '''\n        find one file in first path in stack taking roles into account and adding play basedir as fallback\n\n        :arg paths: A list of text strings which are the paths to look for the filename in.\n        :arg dirname: A text string representing a directory.  The directory\n            is prepended to the source to form the path to search for.\n        :arg source: A text string which is the filename to search for\n        :rtype: A text string\n        :returns: An absolute path to the filename ``source`` if found\n        :raises: An AnsibleFileNotFound Exception if the file is found to exist in the search paths\n        '''\n"
+  },
+  {
+    "unit_id": "rku-5754aaaa9837716963c1",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.playbook.base._validate_attributes"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        '''\n        Ensures that there are no keys in the datastructure which do\n        not map to attributes for this object.\n        '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/playbook/base.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 312,
+        "line_end": 315,
+        "exact_excerpt": "        '''\n        Ensures that there are no keys in the datastructure which do\n        not map to attributes for this object.\n        '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.parsing.convert_bool",
+      "ansible.module_utils.six",
+      "ansible.parsing.dataloader",
+      "ansible.playbook.attribute",
+      "ansible.plugins.loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.sentinel",
+      "ansible.utils.vars",
+      "copy",
+      "functools",
+      "itertools",
+      "jinja2.exceptions",
+      "operator",
+      "os"
+    ],
+    "serialized_payload": "[rku-5754aaaa9837716963c1] Documented contract (quoted)\nApplies to: lib.ansible.playbook.base._validate_attributes\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/playbook/base.py:312-315\nConditions and statement (complete source fragment):\n        '''\n        Ensures that there are no keys in the datastructure which do\n        not map to attributes for this object.\n        '''\n"
+  },
+  {
+    "unit_id": "rku-6a86e9ae3a9ade649d50",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "precondition",
+    "applies_to": [
+      "lib.ansible.plugins.filter.core.regex_escape"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    if re_type == 'python':\n        return re.escape(string)\n    elif re_type == 'posix_basic':\n        # list of BRE special chars:\n        # https://en.wikibooks.org/wiki/Regular_Expressions/POSIX_Basic_Regular_Expressions\n        return regex_replace(string, r'([].[^$*\\\\])', r'\\\\\\1')\n    # TODO: implement posix_extended\n    # It's similar to, but different from python regex, which is similar to,\n    # but different from PCRE.  It's possible that re.escape would work here.\n    # https://remram44.github.io/regex-cheatsheet/regex.html#programs\n    elif re_type == 'posix_extended':\n        raise AnsibleFilterError('Regex type (%s) not yet implemented' % re_type)\n    else:\n        raise AnsibleFilterError('Invalid regex type (%s)' % re_type)\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/plugins/filter/core.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 186,
+        "line_end": 199,
+        "exact_excerpt": "    if re_type == 'python':\n        return re.escape(string)\n    elif re_type == 'posix_basic':\n        # list of BRE special chars:\n        # https://en.wikibooks.org/wiki/Regular_Expressions/POSIX_Basic_Regular_Expressions\n        return regex_replace(string, r'([].[^$*\\\\])', r'\\\\\\1')\n    # TODO: implement posix_extended\n    # It's similar to, but different from python regex, which is similar to,\n    # but different from PCRE.  It's possible that re.escape would work here.\n    # https://remram44.github.io/regex-cheatsheet/regex.html#programs\n    elif re_type == 'posix_extended':\n        raise AnsibleFilterError('Regex type (%s) not yet implemented' % re_type)\n    else:\n        raise AnsibleFilterError('Invalid regex type (%s)' % re_type)\n"
+      }
+    ],
+    "claim_role": "existing_behavior",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.common.yaml",
+      "ansible.module_utils.six",
+      "ansible.parsing.ajson",
+      "ansible.parsing.yaml.dumper",
+      "ansible.template",
+      "ansible.utils.display",
+      "ansible.utils.encrypt",
+      "ansible.utils.hashing",
+      "ansible.utils.unicode",
+      "ansible.utils.vars",
+      "base64",
+      "datetime",
+      "functools",
+      "glob",
+      "hashlib",
+      "jinja2.filters",
+      "jinja2.runtime",
+      "json",
+      "ntpath",
+      "os.path",
+      "random",
+      "re",
+      "shlex",
+      "sys",
+      "time",
+      "uuid",
+      "yaml"
+    ],
+    "serialized_payload": "[rku-6a86e9ae3a9ade649d50] Observed implementation; correctness is NOT established\nApplies to: lib.ansible.plugins.filter.core.regex_escape\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/plugins/filter/core.py:186-199\nConditions and statement (complete source fragment):\n    if re_type == 'python':\n        return re.escape(string)\n    elif re_type == 'posix_basic':\n        # list of BRE special chars:\n        # https://en.wikibooks.org/wiki/Regular_Expressions/POSIX_Basic_Regular_Expressions\n        return regex_replace(string, r'([].[^$*\\\\])', r'\\\\\\1')\n    # TODO: implement posix_extended\n    # It's similar to, but different from python regex, which is similar to,\n    # but different from PCRE.  It's possible that re.escape would work here.\n    # https://remram44.github.io/regex-cheatsheet/regex.html#programs\n    elif re_type == 'posix_extended':\n        raise AnsibleFilterError('Regex type (%s) not yet implemented' % re_type)\n    else:\n        raise AnsibleFilterError('Invalid regex type (%s)' % re_type)\n"
+  },
+  {
+    "unit_id": "rku-d10b893affe7006ff47e",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.template.__init__.AnsibleUndefined"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "    '''\n    A custom Undefined class, which returns further Undefined objects on access,\n    rather than throwing an exception.\n    '''\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/template/__init__.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 322,
+        "line_end": 325,
+        "exact_excerpt": "    '''\n    A custom Undefined class, which returns further Undefined objects on access,\n    rather than throwing an exception.\n    '''\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils._text",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.module_utils.common.collections",
+      "ansible.module_utils.compat.importlib",
+      "ansible.module_utils.six",
+      "ansible.plugins.loader",
+      "ansible.template.native_helpers",
+      "ansible.template.safe_eval",
+      "ansible.template.template",
+      "ansible.template.vars",
+      "ansible.utils.collection_loader",
+      "ansible.utils.collection_loader._collection_finder",
+      "ansible.utils.display",
+      "ansible.utils.listify",
+      "ansible.utils.native_jinja",
+      "ansible.utils.unsafe_proxy",
+      "ast",
+      "contextlib",
+      "datetime",
+      "hashlib",
+      "jinja2",
+      "jinja2.exceptions",
+      "jinja2.loaders",
+      "jinja2.nativetypes",
+      "jinja2.runtime",
+      "jinja2.utils",
+      "numbers",
+      "os",
+      "pkgutil",
+      "pwd",
+      "re",
+      "sha",
+      "time",
+      "traceback"
+    ],
+    "serialized_payload": "[rku-d10b893affe7006ff47e] Documented contract (quoted)\nApplies to: lib.ansible.template.__init__.AnsibleUndefined\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/template/__init__.py:322-325\nConditions and statement (complete source fragment):\n    '''\n    A custom Undefined class, which returns further Undefined objects on access,\n    rather than throwing an exception.\n    '''\n"
+  },
+  {
+    "unit_id": "rku-93efbeddf1d8449c3021",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.utils._junit_xml.get_xml_element"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        \"\"\"Return an XML element representing this instance.\"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 42,
+        "line_end": 42,
+        "exact_excerpt": "        \"\"\"Return an XML element representing this instance.\"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "abc",
+      "dataclasses",
+      "datetime",
+      "decimal",
+      "typing",
+      "xml.dom",
+      "xml.etree"
+    ],
+    "serialized_payload": "[rku-93efbeddf1d8449c3021] Documented contract (quoted)\nApplies to: lib.ansible.utils._junit_xml.get_xml_element\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/utils/_junit_xml.py:42-42\nConditions and statement (complete source fragment):\n        \"\"\"Return an XML element representing this instance.\"\"\"\n"
+  },
+  {
+    "unit_id": "rku-2a2d0324e8aeafd41d7a",
+    "repository": "ansible/ansible",
+    "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+    "kind": "invariant",
+    "applies_to": [
+      "lib.ansible.vars.fact_cache.copy"
+    ],
+    "preconditions": [
+      "See complete quoted source conditions; no additional conditions inferred."
+    ],
+    "statement": "        \"\"\" Return a primitive copy of the keys and values from the cache. \"\"\"\n",
+    "verification_pattern": null,
+    "source_spans": [
+      {
+        "path_or_public_url": "lib/ansible/vars/fact_cache.py",
+        "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "line_start": 51,
+        "line_end": 51,
+        "exact_excerpt": "        \"\"\" Return a primitive copy of the keys and values from the cache. \"\"\"\n"
+      }
+    ],
+    "claim_role": "documented_contract",
+    "version_status": "supported",
+    "dependencies": [
+      "__future__",
+      "ansible",
+      "ansible.errors",
+      "ansible.module_utils.common._collections_compat",
+      "ansible.plugins.loader",
+      "ansible.utils.display"
+    ],
+    "serialized_payload": "[rku-2a2d0324e8aeafd41d7a] Documented contract (quoted)\nApplies to: lib.ansible.vars.fact_cache.copy\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/vars/fact_cache.py:51-51\nConditions and statement (complete source fragment):\n        \"\"\" Return a primitive copy of the keys and values from the cache. \"\"\"\n"
+  }
+]

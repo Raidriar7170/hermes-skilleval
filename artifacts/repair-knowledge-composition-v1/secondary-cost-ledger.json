@@ -1,0 +1,187 @@
+{
+  "operation": "RECORDS_ONLY_SECONDARY_COST_LEDGER",
+  "scope": "All reserved study execution directories, including incomplete attempts and confirmation prefixes; partial usage is observed-only, never billing.",
+  "metric_role": "SECONDARY_ONLY",
+  "deduplication": "one resolved execution directory counted once globally; first listed category owns reused cost",
+  "timing_semantics": "active time excludes inherited prefix_seconds; decision charges are components, not additive totals, and may include amortized shared prediction charges",
+  "token_semantics": "input includes cached input; output includes reasoning output; subset fields must not be added again",
+  "groups": {
+    "native": {
+      "record_references": 8,
+      "unique_executions_charged": 8,
+      "reused_execution_references_excluded": 0,
+      "tokens": {
+        "inputTokens": {
+          "observed_sum": 5449345,
+          "known": 8,
+          "unknown": 0
+        },
+        "cachedInputTokens": {
+          "observed_sum": 4900736,
+          "known": 8,
+          "unknown": 0
+        },
+        "cacheWriteInputTokens": {
+          "observed_sum": 0,
+          "known": 8,
+          "unknown": 0
+        },
+        "outputTokens": {
+          "observed_sum": 57478,
+          "known": 8,
+          "unknown": 0
+        },
+        "reasoningOutputTokens": {
+          "observed_sum": 19494,
+          "known": 8,
+          "unknown": 0
+        },
+        "totalTokens": {
+          "observed_sum": 5506823,
+          "known": 8,
+          "unknown": 0
+        }
+      },
+      "active_seconds": {
+        "observed_sum": 1649.9353983738692,
+        "known": 8,
+        "unknown": 0
+      },
+      "preparation_seconds": {
+        "observed_sum": 10.911395498784259,
+        "known": 8,
+        "unknown": 0
+      },
+      "online_decision_budget_charges": {
+        "policy_initialization_seconds": {
+          "observed_sum": 0.0,
+          "known": 8,
+          "unknown": 0
+        },
+        "controller_overhead_seconds": {
+          "state": {
+            "observed_sum": 39.50452941399999,
+            "known": 8,
+            "unknown": 0
+          },
+          "retrieval": {
+            "observed_sum": 1.1917902156710625e-05,
+            "known": 8,
+            "unknown": 0
+          },
+          "checkpoint": {
+            "observed_sum": 27.032943168189377,
+            "known": 8,
+            "unknown": 0
+          },
+          "decision": {
+            "observed_sum": 0.0,
+            "known": 8,
+            "unknown": 0
+          }
+        }
+      },
+      "executions_with_complete_usage_notifications": 8
+    },
+    "pilot": {
+      "record_references": 48,
+      "unique_executions_charged": 48,
+      "reused_execution_references_excluded": 0,
+      "tokens": {
+        "inputTokens": {
+          "observed_sum": 10393980,
+          "known": 48,
+          "unknown": 0
+        },
+        "cachedInputTokens": {
+          "observed_sum": 8680960,
+          "known": 48,
+          "unknown": 0
+        },
+        "cacheWriteInputTokens": {
+          "observed_sum": 0,
+          "known": 48,
+          "unknown": 0
+        },
+        "outputTokens": {
+          "observed_sum": 89992,
+          "known": 48,
+          "unknown": 0
+        },
+        "reasoningOutputTokens": {
+          "observed_sum": 41657,
+          "known": 48,
+          "unknown": 0
+        },
+        "totalTokens": {
+          "observed_sum": 10483972,
+          "known": 48,
+          "unknown": 0
+        }
+      },
+      "active_seconds": {
+        "observed_sum": 2707.282969811582,
+        "known": 48,
+        "unknown": 0
+      },
+      "preparation_seconds": {
+        "observed_sum": 79.19232710229699,
+        "known": 48,
+        "unknown": 0
+      },
+      "online_decision_budget_charges": {
+        "policy_initialization_seconds": {
+          "observed_sum": 18.78204522654414,
+          "known": 48,
+          "unknown": 0
+        },
+        "controller_overhead_seconds": {
+          "state": {
+            "observed_sum": 102.65434249746613,
+            "known": 48,
+            "unknown": 0
+          },
+          "retrieval": {
+            "observed_sum": 2.6276102289557457e-06,
+            "known": 48,
+            "unknown": 0
+          },
+          "checkpoint": {
+            "observed_sum": 21.21566616394557,
+            "known": 48,
+            "unknown": 0
+          },
+          "decision": {
+            "observed_sum": 0.0,
+            "known": 48,
+            "unknown": 0
+          }
+        }
+      },
+      "executions_with_complete_usage_notifications": 48
+    }
+  },
+  "unique_executions": 56,
+  "billing_usd": null,
+  "billing_status": "UNKNOWN_NOT_INFERRED",
+  "agent_calls": 0,
+  "model_calls": 0,
+  "research_reserved_attempts": {
+    "native": 8,
+    "pilot": 48
+  },
+  "offline_knowledge_build": {
+    "model_calls": 0,
+    "wall_seconds": null,
+    "timing_status": "NOT_RECORDED"
+  },
+  "online_selection_model_calls": 0,
+  "executor_request_usage_notifications": 482,
+  "orchestration_model_calls": null,
+  "orchestration_model_calls_status": "NOT_OBSERVED_BY_RESEARCH_EXECUTOR",
+  "training": {
+    "status": "NOT_RUN",
+    "model_calls": 0
+  },
+  "agent_calls_semantics": "The zero agent_calls/model_calls fields describe this export operation. research_reserved_attempts counts the real study attempts separately."
+}

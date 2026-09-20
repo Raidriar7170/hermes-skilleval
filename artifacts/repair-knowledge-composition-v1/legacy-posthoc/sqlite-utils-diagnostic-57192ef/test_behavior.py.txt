@@ -1,0 +1,92 @@
+import io
+import json
+import sqlite3
+import pytest
+import sqlite_utils
+from sqlite_utils import Database, cli
+from sqlite_utils.db import ForeignKey, InvalidColumns, TransformError
+from click.testing import CliRunner
+ANY = getattr(sqlite_utils, 'ANY', object())
+
+@pytest.fixture
+def fresh_db():
+    db = Database(memory=True)
+    yield db
+    db.close()
+
+@pytest.fixture
+def db_path(tmp_path):
+    return str(tmp_path / 'test.db')
+
+def test_transform_recreates_renamed_index_from_metadata(fresh_db):
+    table = fresh_db.table('t')
+    table.insert({'alpha': 'one', 'beta': 'two'})
+    fresh_db.execute('CREATE UNIQUE INDEX swap_idx ON t(alpha COLLATE NOCASE DESC, beta)')
+    table.transform(rename={'alpha': 'beta', 'beta': 'alpha'})
+    assert table.columns_dict == {'beta': str, 'alpha': str}
+    assert [(index.name, index.unique, index.columns) for index in table.indexes] == [('swap_idx', 1, ['beta', 'alpha'])]
+    key_columns = [column for column in table.xindexes[0].columns if column.key]
+    assert [(column.name, column.desc, column.coll) for column in key_columns] == [('beta', 1, 'NOCASE'), ('alpha', 0, 'BINARY')]
+
+@pytest.mark.parametrize('index_sql', ('CREATE INDEX idx_t_name ON t(lower(name))', 'CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL'))
+def test_transform_rename_complex_index_errors(fresh_db, index_sql):
+    table = fresh_db.table('t')
+    table.insert({'id': 1, 'name': 'Cleo'}, pk='id')
+    fresh_db.execute(index_sql)
+    with pytest.raises(TransformError):
+        table.transform(rename={'name': 'full_name'})
+    assert table.columns_dict == {'id': int, 'name': str}
+    assert [index.name for index in table.indexes] == ['idx_t_name']
+
+@pytest.mark.parametrize('table_name,index_name', [('name', 'idx_name'), ('t', 'name')])
+def test_index_name_collision_behavior(fresh_db, table_name, index_name):
+    t = fresh_db[table_name]
+    t.insert({'id': 1, 'name': 'keep'}, pk='id')
+    t.create_index(['name'], index_name=index_name, unique=True)
+    t.transform(rename={'name': 'full_name'})
+    assert [(i.name, i.columns) for i in t.indexes] == [(index_name, ['full_name'])]
+    with pytest.raises(sqlite3.IntegrityError):
+        t.insert({'id': 2, 'full_name': 'keep'})
+    assert list(t.rows) == [{'id': 1, 'full_name': 'keep'}]
+
+def test_index_drop_rejection_preserves_rows(fresh_db):
+    t = fresh_db['t']
+    t.insert({'id': 1, 'name': 'keep'}, pk='id')
+    t.create_index(['name'])
+    with pytest.raises(TransformError):
+        t.transform(drop=['name'])
+    assert list(t.rows) == [{'id': 1, 'name': 'keep'}]
+
+def test_regression(fresh_db):
+    t = fresh_db['ordinary']
+    t.insert({'id': 1, 'value': 'keep'}, pk='id')
+    assert t.get(1) == {'id': 1, 'value': 'keep'}
+    t.transform(rename={'value': 'label'})
+    assert t.get(1) == {'id': 1, 'label': 'keep'}
+    with pytest.raises(sqlite3.IntegrityError):
+        t.insert({'id': 1, 'label': 'bad'})
+    assert t.get(1)['label'] == 'keep'
+
+def _posthoc_snapshot(db):
+    return tuple(db.conn.iterdump())
+
+def _posthoc_observe(db, operation):
+    before = _posthoc_snapshot(db)
+    error = None
+    try:
+        operation()
+    except Exception as exc:
+        error = exc
+    return (error, before == _posthoc_snapshot(db))
+
+@pytest.mark.parametrize('index_sql', ['create index idx on t(name) where id > 0', 'create index idx on t(lower(name))'])
+@pytest.mark.parametrize('observation', ['rejection', 'preservation'])
+def test_posthoc_index_observations(fresh_db, index_sql, observation):
+    table = fresh_db['t']
+    table.insert({'id': 1, 'name': 'keep'}, pk='id')
+    fresh_db.execute(index_sql)
+    error, preserved = _posthoc_observe(fresh_db, lambda: table.transform(rename={'name': 'full_name'}))
+    if observation == 'rejection':
+        assert isinstance(error, TransformError)
+    else:
+        assert preserved

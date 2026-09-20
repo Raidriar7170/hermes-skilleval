@@ -115,7 +115,7 @@ def prepare_root(task, root):
         (root / "scratch" / reserved).mkdir()
 
 
-def checkpoint(root, name, state, session_meta, events, candidates):
+def checkpoint(root, name, state, session_meta, events, candidates, image=IMAGE):
     meta = {
         **session_meta,
         "state": state.to_dict(),
@@ -125,7 +125,7 @@ def checkpoint(root, name, state, session_meta, events, candidates):
         "visible_events": events,
         "cwd_mapping": {"source": CWD, "scratch": SCRATCH},
         "environment_profile": {
-            "image": IMAGE,
+            "image": image,
             "source_write": True,
             "skills_readonly": True,
             "tool_network": False,
@@ -153,6 +153,8 @@ def execute(
     initialization_seconds=0.0,
     checkpoint_selector=None,
     public_docs=None,
+    image=None,
+    stop_at_checkpoint=False,
 ):
     """One trajectory. `predict` receives current State only, never outcomes.
 
@@ -262,6 +264,7 @@ def execute(
                     },
                     events,
                     candidates,
+                    image=image or IMAGE,
                 )
                 remaining = max(
                     0.0, initial_remaining - (time.monotonic() - budget_started)
@@ -272,6 +275,9 @@ def execute(
                 dump(cp / "checkpoint.json", frozen)
                 checkpoints.append(str(cp))
                 overhead["checkpoint"] += time.monotonic() - measured
+                if stop_at_checkpoint and event_stage in ("E1", "E2"):
+                    status = "PREFIX_SAVED"
+                    break
                 if controller:
                     measured = time.monotonic()
                     gains, wait = (
@@ -330,6 +336,7 @@ def execute(
                 home,
                 skills,
                 root / f"turn-{turns:03d}",
+                **({"image": image} if image is not None else {}),
                 **({"public_docs": public_docs} if public_docs is not None else {}),
             ) as session:
                 if thread_id:

