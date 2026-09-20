@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+
 from hermes_skilleval.intervention.repair_knowledge import (
     RepairKnowledgeUnit,
     SourceSpan,
@@ -264,3 +265,47 @@ def test_missing_public_api_requires_exact_exception_and_collector():
     ).text = "E   ModuleNotFoundError: No module named 'public.required'"
     case.set("name", "unrelated")
     assert not declared_api_absence(meta, [case], [case], 4)
+
+
+def test_trusted_test_overlay_preserves_candidate_and_rejects_parent_links(tmp_path):
+    from hermes_skilleval.intervention.repair_checks import install_test_overlay
+    from hermes_skilleval.intervention.session import dump, inventory
+
+    overlay = tmp_path / "overlay"
+    testfile = overlay / "files/test/check.py"
+    testfile.parent.mkdir(parents=True)
+    testfile.write_text("trusted assertions\n")
+    patch = tmp_path / "test.patch"
+    patch.write_text(
+        "diff --git a/test/check.py b/test/check.py\n--- a/test/check.py\n+++ b/test/check.py\n@@ -1 +1 @@\n-old\n+trusted assertions\n"
+    )
+    dump(
+        overlay / "manifest.json",
+        {
+            "files": inventory(overlay / "files"),
+            "modes": {"test/check.py": testfile.stat().st_mode & 0o777},
+            "test_patch_sha256": hashlib.sha256(patch.read_bytes()).hexdigest(),
+        },
+    )
+    candidate = tmp_path / "candidate"
+    (candidate / "test").mkdir(parents=True)
+    (candidate / "production.py").write_text("original full candidate")
+    (candidate / "test/extra.py").write_text("candidate added test")
+    outside = tmp_path / "outside.py"
+    outside.write_text("must not overwrite")
+    (candidate / "test/check.py").symlink_to(outside)
+    install_test_overlay(candidate, overlay, tmp_path / "checks", expected_patch=patch)
+    assert outside.read_text() == "must not overwrite"
+    assert (candidate / "production.py").read_text() == "original full candidate"
+    assert (candidate / "test/extra.py").read_text() == "candidate added test"
+    assert (candidate / "test/check.py").read_text() == testfile.read_text()
+    patch.write_text(patch.read_text() + "\n")
+    with pytest.raises(ValueError, match="different test patch"):
+        install_test_overlay(
+            candidate, overlay, tmp_path / "wrong-patch", expected_patch=patch
+        )
+    malicious = tmp_path / "parent-link"
+    malicious.mkdir()
+    (malicious / "test").symlink_to(candidate / "test", target_is_directory=True)
+    with pytest.raises(ValueError, match="parent is a symlink"):
+        install_test_overlay(malicious, overlay, tmp_path / "rejected")

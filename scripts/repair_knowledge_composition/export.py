@@ -143,11 +143,13 @@ def prepare(private, output, plan):
 def export_phase(private, output, plan, phase):
     study = private / "study-v1"
     records = json.loads((study / (phase + "-results.json")).read_text())
+    version = records.get("acceptance_version", "v1")
     rows = []
     for row in records["rows"]:
         tid, arm, repeat = row["task_id"], row["arm"], row["repeat"]
         cell = f"r{repeat}" if phase == "native" else f"{arm}-r{repeat}"
         root = study / phase / tid / cell
+        acceptance = root / ("acceptance-v2" if version == "v2" else "acceptance")
         dest = output / phase / tid / cell
         public = {
             k: row[k]
@@ -189,10 +191,10 @@ def export_phase(private, output, plan, phase):
             else None
         )
         public["execution"] = execution
-        if (root / "acceptance/acceptance.json").exists():
-            accepted = json.loads((root / "acceptance/acceptance.json").read_text())
+        if (acceptance / "acceptance.json").exists():
+            accepted = json.loads((acceptance / "acceptance.json").read_text())
             public["checks"] = public_checks(accepted["checks"])
-            copy(root / "acceptance/capture/candidate.patch", dest / "candidate.patch")
+            copy(acceptance / "capture/candidate.patch", dest / "candidate.patch")
             public["candidate_patch_sha256"] = sha(dest / "candidate.patch")
             public["complete_before_inventory_sha256"] = hashlib.sha256(
                 json.dumps(accepted["capture"]["before"], sort_keys=True).encode()
@@ -203,9 +205,12 @@ def export_phase(private, output, plan, phase):
             public["changed_files"] = accepted["capture"]["changed_files"]
             for kind in ["target", "regression"]:
                 for filename in ["junit.xml", "collected.json"]:
-                    src = root / "acceptance/checks" / kind / filename
+                    src = acceptance / "checks" / kind / filename
                     if src.exists():
                         copy(src, dest / (kind + "-" + filename))
+            overlay_record = acceptance / "checks/test-overlay.json"
+            if overlay_record.exists():
+                copy(overlay_record, dest / "test-overlay.json")
         else:
             public["checks"] = {}
         public["evidence_path"] = str(dest.relative_to(output))
@@ -216,6 +221,9 @@ def export_phase(private, output, plan, phase):
             "rows": rows,
             "planned": records["planned"],
             "plan_digest": records["plan_digest"],
+            "acceptance_version": version,
+            "acceptance_status": records.get("status", "ORIGINAL_ACCEPTANCE"),
+            "original_results_sha256": records.get("original_results_sha256"),
         },
     )
     if phase != "native":
@@ -337,6 +345,10 @@ def costs(private, output):
         if rows:
             groups[phase] = rows
     report = cost_ledger(groups)
+    report["scope"] = (
+        "All reserved study execution directories, including incomplete attempts "
+        "and confirmation prefixes; partial usage is observed-only, never billing."
+    )
     report["research_reserved_attempts"] = {
         key: len(rows) for key, rows in groups.items()
     }

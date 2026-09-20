@@ -23,6 +23,7 @@ def generate(evidence, plan, output):
         "# 修复知识与缺口组合：实际功能结果",
         "",
         "功能成功仅指目标行为通过且保护回归无新增失败。表中未知不记作失败；覆盖、策略与成本不参与此判定。",
+        "本表采用统一v2后验验收，标记 `POSTHOC_ACCEPTANCE_REVALIDATION`；原版测试补丁安装冲突与UNKNOWN完整保留，见 [posthoc-acceptance.md](posthoc-acceptance.md)。没有新增Agent。",
         "",
         "## 开发功能主表",
         "",
@@ -131,6 +132,22 @@ def generate(evidence, plan, output):
         "入口见 [reproduction.md](reproduction.md)。公共证据中的 replay 只重算原补丁身份、JUnit、冻结选择与功能表，不代表第二次Agent运行。",
         "默认策略 `UNCHANGED`；新 gain/wait 训练 `NOT_IN_SCOPE`。成本、策略与来源支持均为附表。",
     ]
+    lines += [
+        "",
+        "原版裁判与统一后验裁判的区别（不是算法改善）：",
+        "",
+        "| 相位/裁判 | 功能通过/计划（未知） |",
+        "|---|---|",
+    ]
+    for phase in ["native", "pilot"]:
+        for version, directory in [
+            ("v1", evidence / "acceptance-v1"),
+            ("v2", evidence),
+        ]:
+            data = read(directory / (phase + "-results.json"))
+            lines.append(
+                f"| {phase}/{version} | {cell(counts(data['rows'], data['planned']))} |"
+            )
     output.write_text("\n".join(lines) + "\n")
 
 
