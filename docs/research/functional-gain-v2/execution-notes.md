@@ -528,3 +528,16 @@ The panels phase started with the same protocol, task assets, output directory,
 models, skills, payloads and encoder as the matrix. Its log is
 evaluation-panels-v1.log. This phase runs the frozen common-state action table;
 delays and the separate hidden-acceptance release remain pending.
+
+## G5 panels recorded; forward delays started
+
+The panel process exited 0 with 64 recorded tails across eight locked states.
+Exact multiset comparison against each saved action roster found no missing or
+duplicate task/action/repeat entries; all 64 execution statuses are COMPLETED.
+These statuses do not assert functional acceptance. The task-local auth copy
+was removed normally and no release.json exists.
+
+The delays phase started using the unchanged protocol, assets, models and
+evaluation-v1 output, with log evaluation-delays-v1.log. It executes the 16
+registered DEFER_SAME/WAIT_THEN_FULL continuations from their common starting
+states. Final hidden acceptance and all final benefit claims remain withheld.
