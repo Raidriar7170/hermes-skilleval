@@ -468,3 +468,29 @@ budget, output evaluation-v1 and log evaluation-matrix-v1.log. It executes all
 six methods on all eight fresh final tasks with two repeats. Matrix, panels
 and delays must all finish before the separate release phase runs any hidden
 acceptance. No final functional outcomes or mechanism gains are claimed here.
+
+## Independent review of completed G2/G3/G4 exports
+
+The existing read-only reviewer inspected HEAD
+a8eb96f094ef8864d2115490bd3c2b72e2effb05 and reported no consequential
+findings within the completed collection, training and freeze export scope.
+Independent records-only replay reproduced 192 rows: 191 VERIFIED and one
+UNKNOWN_NO_ACCEPTANCE; 96 skill contrasts were 92 ties, two damage and two
+unknown, with no rescue. All 191 public patches matched their original captured
+bytes. Labels, payloads and state bindings matched completed private collection
+records; thread identities were hashed as intended.
+
+Public training/reload receipts matched their private originals, and both
+weight/metadata identities matched training, reload and final freeze. Saved
+cross-fitting family exclusions held. Development errors and documentation
+correctly report neither learned model outperforming the zero baseline.
+The public collection contained 1261 files (approximately 4.29 MB); the review
+found no authentication material, private sessions, raw thread IDs, full source
+copies or model weights, with no hits from its limited credential/local-path
+pattern scan.
+
+This review did not run new models or acceptance checks, independently reload
+weights again, or read evaluation-v1 or final hidden outcomes. It relies on the
+saved independent-reload receipt and identity bindings for reload evidence.
+It is not final study closure and does not establish functional, representation
+or waiting benefits. Final evaluation and final evidence review remain pending.
