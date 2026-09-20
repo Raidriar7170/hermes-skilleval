@@ -512,3 +512,19 @@ sampling, and advanced to P1-v2 repeat 2. The original log and partial attempt
 remain intact; recovery-after-interruption-v1.json and
 evaluation-matrix-resume-v1.log record the recovery privately. All 96 planned
 cells remain in the denominator. No hidden final acceptance was released.
+
+## G5 matrix recorded; common-state panels started
+
+The resumed matrix process exited 0. Exact multiset comparison against the
+frozen roster verified all 96 planned task/method/repeat cells without missing
+or duplicate entries: 95 COMPLETED executions and one
+UNKNOWN_INTERRUPTED_ATTEMPT. These are execution statuses, not functional
+acceptance results. The saved policy freeze is unchanged, all eight prospective
+panel states are available, and the registered forward-delay roster contains
+16 tails. The matrix session authentication copy was removed normally; no
+release.json exists.
+
+The panels phase started with the same protocol, task assets, output directory,
+models, skills, payloads and encoder as the matrix. Its log is
+evaluation-panels-v1.log. This phase runs the frozen common-state action table;
+delays and the separate hidden-acceptance release remain pending.
