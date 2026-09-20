@@ -13,5 +13,7 @@
 - [x] 5.2 Process all registered matrix cells, common-state action tables and actual forward delayed continuations; retain one interrupted matrix UNKNOWN without replacement (functional evidence PARTIAL).
 ## 6. G6 evidence and delivery
 - [x] 6.1 Aggregate full denominators, functional/representation/wait claims, secondary policy/cost and Chinese retrospective.
-- [ ] 6.2 Obtain necessary independent evidence review, scoped tests/compatibility and final verification.
-- [ ] 6.3 Commit, push new stacked Draft PR and verify same-HEAD CI; preserve defaults and legacy assets.
+- [x] 6.2 Obtain necessary independent evidence review, scoped tests/compatibility and final verification.
+- [x] 6.3 Commit, push new stacked Draft PR and verify same-HEAD CI; preserve defaults and legacy assets.
+
+Research evidence remains PARTIAL / PARTIAL_METHOD due to one retained interrupted matrix verdict. Checked delivery tasks do not assert complete functional evidence, utility, merge readiness, release or default promotion. Final documentation HEAD checks and formal closure identity are recorded on Draft PR #50.

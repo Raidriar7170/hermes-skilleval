@@ -1,7 +1,7 @@
 # Functional gain v2 execution record
 
 Active contract: [complete Goal](../../goals/Hermes_ASI_v2_Functional_Gain_Same_State_Codex_Goal.md).
-This is ongoing research, not a completion report. The task checklist lives only in
+This is the chronological execution record; final results and partial-evidence limits are in README.md. The task checklist lives only in
 `openspec/changes/functional-gain-v2/tasks.md`.
 
 ## 2026-09-19: G0 and G1 start
@@ -630,3 +630,28 @@ The correction wraps one existing ValueError string across lines. AST comparison
 against the executed source is identical; no labels, frozen runtime policy,
 weights, candidates or experimental outcomes change. The failed CI is retained,
 and the next commit is checked afresh.
+
+## G6 delivery verification boundary
+
+GitHub run 35491870013 passed every gate at
+fd8f036aa361ef42da01c1689d4b1fddc27a7f18. The initial failed run remains visible;
+the only correction was AST-identical formatting. Draft PR #50 remains stacked
+on #49, with no merge, ready transition, release or promotion. The final
+documentation/status commit is checked on its own HEAD before handoff.
+
+Fresh source-asset verification matched the 24-task protocol, requests, trusted
+checks, payloads, registry, encoder, executor image, runtime freeze and both model
+identities. Against baseline 87fd45f85f793361da016af3650fd7eb328b1f4b, only two
+pre-existing paths differ: .gitattributes (preserve raw evidence whitespace) and
+intervention/cli.py (explicit v2 dispatch). All other delta paths are new v2
+assets/code/tests/docs. Old study configs, artifacts and default behavior remain
+preserved. The final full-delta SHA-256 verification uses this same baseline,
+all tracked changed content, the declared v2 scopes and frozen v1 configuration
+and evidence. Its non-self-referential receipt stays outside the tracked delta;
+its identity, metrics and exact final HEAD are reported in the PR body.
+
+Publication is PUSHED_DRAFT_PR, but the original generated result snapshot keeps
+its historical PENDING field. delivery-status.json supplies current publication
+metadata without rewriting measured results. One final matrix cell remains
+UNKNOWN; functional evaluation and study/method evidence remain PARTIAL and
+PARTIAL_METHOD. There are no replacement samples or new expansion studies.

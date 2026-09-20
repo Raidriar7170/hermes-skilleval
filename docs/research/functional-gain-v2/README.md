@@ -64,8 +64,9 @@ full 对静态、先验、myopic 的已测功能差均为 0。full 对 task-only
 
 ## 工程与证据入口
 
-本地全仓 1507 测试通过，OpenSpec 39 项严格校验通过，隔离安装与旧/v2 入口检查通过。最终独立审阅、完整差异核验、新叠加 Draft PR 和同 HEAD CI 尚待完成。工程结果不改变三个未建立收益的结论。
+本地全仓 1507 测试通过，OpenSpec 39 项严格校验通过，隔离安装与旧/v2 入口检查通过。独立审阅已复算通过；[Draft PR #50](https://github.com/Raidriar7170/hermes-skilleval/pull/50) 已发布，修正单行格式后的 [同 HEAD CI](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/35491870013) 已通过。最终文档提交的 CI 与完整差异 SHA-256 收尾凭据以该 PR 正文及检查页为准。工程结果不改变三个未建立收益的结论。
 
+- [交付状态](../../../artifacts/functional-gain-v2/delivery-status.json)、[实际命令与复算边界](reproduction.md)
 - [完整机器报告](../../../artifacts/functional-gain-v2/final-report.json)、[次要成本账本](../../../artifacts/functional-gain-v2/cost-ledger.json)
 - [主矩阵与原补丁](../../../artifacts/functional-gain-v2/matrix/records.json)、[共同状态动作表](../../../artifacts/functional-gain-v2/panels/records.json)、[延迟续跑](../../../artifacts/functional-gain-v2/delays/records.json)
 - [结果前冻结的决策摘要](../../../artifacts/functional-gain-v2/panel-decisions.json)、[统一验收凭据](../../../artifacts/functional-gain-v2/release.json)
