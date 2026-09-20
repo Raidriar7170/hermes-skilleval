@@ -1,0 +1,57 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index d8ad737d256ea6f9b250adcb982032b5c0b6c268..dc7f71fe64d3692c89e7c6bab427be43ddfdcbce 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -98,7 +98,7 @@ class CSVJoin(CSVKitUtility):
+             remaining_tables.reverse()
+ 
+             for i, table in enumerate(remaining_tables):
+-                jointab = agate.Table.join(jointab, table, join_column_ids[-(i + 2)], join_column_ids[-1])
++                jointab = agate.Table.join(jointab, table, join_column_ids[-1], join_column_ids[-(i + 2)])
+         elif self.args.outer_join:
+             # Full outer join
+             for i, table in enumerate(tables[1:]):
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index b7cb39ff240048b556ce209fabfe45f48f09fa7c..422b2cc137409418394877ef24c6a8b901d5bf08 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -1,4 +1,6 @@
+ import sys
++from pathlib import Path
++from tempfile import TemporaryDirectory
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.csvjoin import CSVJoin, launch_new_instance
+@@ -29,6 +31,32 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['-c', 'a', '--right', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 4)
+ 
++    def test_right_with_different_join_column_names_and_positions(self):
++        with TemporaryDirectory() as directory:
++            left = Path(directory, 'left.csv')
++            right = Path(directory, 'right.csv')
++            left.write_text('left_value,left_key,unrelated\nL1,1,x\nL2,2,same\nL9,9,z\n')
++            right.write_text('unrelated,right_value,right_key\nx,R1,1\nsame,R3,3\n')
++
++            self.assertRows(['--right', '-c', 'left_key,right_key', str(left), str(right)], [
++                ['unrelated', 'right_value', 'right_key', 'left_value', 'unrelated2'],
++                ['x', 'R1', '1', 'L1', 'x'],
++                ['same', 'R3', '3', '', ''],
++            ])
++
++    def test_right_with_join_column_indexes_in_input_order(self):
++        with TemporaryDirectory() as directory:
++            left = Path(directory, 'left.csv')
++            right = Path(directory, 'right.csv')
++            left.write_text('value,key\nL1,1\nL2,2\n')
++            right.write_text('key,value\n1,R1\n3,R3\n')
++
++            self.assertRows(['--right', '-c', '2,1', str(left), str(right)], [
++                ['key', 'value', 'value2'],
++                ['1', 'R1', 'L1'],
++                ['3', 'R3', ''],
++            ])
++
+     def test_outer(self):
+         output = self.get_output_as_io(['-c', 'a', '--outer', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 6)

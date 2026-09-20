@@ -1,0 +1,67 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..93fe6d51d49eccac5a5e202a9827fe13ac00800d 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -197,8 +197,9 @@ class CSVKitUtility:
+                 '-z', '--maxfieldsize', dest='field_size_limit', type=int,
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
++            encoding = os.environ.get('PYTHONIOENCODING', 'utf-8-sig').partition(':')[0] or 'utf-8-sig'
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding', default=encoding,
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/docs/common_arguments.rst b/docs/common_arguments.rst
+index e279b67852df3bf2981d711e23a34357b053400e..019b5c3c072492b1a7e890d5691fe533edd19527 100644
+--- a/docs/common_arguments.rst
++++ b/docs/common_arguments.rst
+@@ -26,7 +26,7 @@ csvkit's tools share a set of common command-line arguments. Not every argument
+                          Maximum length of a single field in the input CSV
+                          file.
+    -e ENCODING, --encoding ENCODING
+-                         Specify the encoding of the input CSV file.
++                        Specify the encoding of the input CSV file.
+    -L LOCALE, --locale LOCALE
+                          Specify the locale (en_US) of any formatted numbers.
+    -S, --skipinitialspace
+@@ -71,3 +71,5 @@ See the documentation of :doc:`/scripts/csvclean` for a description of the defau
+ .. seealso::
+ 
+    For a list of possible values for the ``--encoding`` option, see the `Python documentation <https://docs.python.org/3/library/codecs.html#standard-encodings>`__.
++   The input encoding defaults to ``PYTHONIOENCODING`` when that environment variable is set, and to UTF-8 otherwise.
++   The ``--encoding`` option takes precedence over ``PYTHONIOENCODING``.
+diff --git a/tests/test_utilities/test_csvsort.py b/tests/test_utilities/test_csvsort.py
+index 1d82d4fcaf01171ba8f330b7e0ff1d84f204ad89..f0774cc4c5e287c673dd9159718fc5ade6228233 100644
+--- a/tests/test_utilities/test_csvsort.py
++++ b/tests/test_utilities/test_csvsort.py
+@@ -1,4 +1,5 @@
+ import io
++import os
+ import sys
+ from unittest.mock import patch
+ 
+@@ -27,6 +28,22 @@ class TestCSVSort(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['4', '5', '©'],
+         ])
+ 
++    def test_encoding_from_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1'}):
++            self.assertRows(['examples/test_latin1.csv'], [
++                ['a', 'b', 'c'],
++                ['1', '2', '3'],
++                ['4', '5', '©'],
++            ])
++
++    def test_encoding_option_overrides_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'ascii'}):
++            self.assertRows(['-e', 'latin1', 'examples/test_latin1.csv'], [
++                ['a', 'b', 'c'],
++                ['1', '2', '3'],
++                ['4', '5', '©'],
++            ])
++
+     def test_sort_string_reverse(self):
+         reader = self.get_output_as_reader(['-c', '1', '-r', 'examples/testxls_converted.csv'])
+         test_order = ['text', 'Unicode! Σ', 'This row has blanks',

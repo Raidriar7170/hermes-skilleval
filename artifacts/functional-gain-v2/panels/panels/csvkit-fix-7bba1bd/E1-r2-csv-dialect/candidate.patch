@@ -1,0 +1,40 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..814d75f6ef6d44a9629e23bab53b627a6f0ea024 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -46,10 +46,12 @@ class CSVLook(CSVKitUtility):
+             config.set_option('number_truncation_chars', '')
+ 
+         sniff_limit = self.args.sniff_limit if self.args.sniff_limit != -1 else None
++        row_limit = self.args.max_rows if self.args.max_rows is not None and self.args.max_rows > 0 else None
+         table = agate.Table.from_csv(
+             self.input_file,
+             skip_lines=self.args.skip_lines,
+             sniff_limit=sniff_limit,
++            row_limit=row_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
+             **self.reader_kwargs,
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..fcf3603e9842269b872f243cdae36e87cbfb9a05 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,18 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_rows(self):
++        output_file = io.StringIO()
++        utility = self.Utility(
++            ['--max-rows', '1', '--maxfieldsize', '100', '--snifflimit', '0'],
++            output_file,
++        )
++        utility.input_file = io.StringIO('a,b\nfoo,bar\n' + 'x' * 1024 + ',baz\n')
++
++        utility.main()
++
++        self.assertEqual(output_file.getvalue(), '| a   | b   |\n| --- | --- |\n| foo | bar |\n')
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

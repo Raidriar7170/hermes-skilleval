@@ -1,0 +1,102 @@
+diff --git a/csvkit/utilities/csvformat.py b/csvkit/utilities/csvformat.py
+index 655f5c44bf2ed3c1cbbaceedd79c3be921c7988d..ddc0ef56e60e1ebfabcd4eb9758f64b4a69bdb13 100644
+--- a/csvkit/utilities/csvformat.py
++++ b/csvkit/utilities/csvformat.py
+@@ -9,7 +9,18 @@ from csvkit.cli import CSVKitUtility, make_default_headers
+ 
+ class CSVFormat(CSVKitUtility):
+     description = 'Convert a CSV file to a custom output format.'
+-    override_flags = ['L', 'blanks', 'date-format', 'datetime-format']
++    override_flags = ['blanks', 'date-format', 'datetime-format']
++
++    class _NumericValue(float):
++        """A numeric value that preserves its original CSV representation."""
++
++        def __new__(cls, value):
++            number = super().__new__(cls, 0)
++            number.value = value
++            return number
++
++        def __str__(self):
++            return self.value
+ 
+     def add_arguments(self):
+         self.argparser.add_argument(
+@@ -83,6 +94,31 @@ class CSVFormat(CSVKitUtility):
+         if self.args.skip_header:
+             next(reader)
+ 
++        if self.args.out_quoting == 2:
++            number_type = agate.Number(locale=self.args.locale)
++
++            if not self.args.skip_header:
++                header = next(reader, None)
++                if header is None:
++                    return
++                writer.writerow(header)
++
++            def infer_numbers(rows):
++                for row in rows:
++                    values = []
++                    for value in row:
++                        try:
++                            number = number_type.cast(value)
++                        except agate.CastError:
++                            number = None
++
++                        if number is not None and isinstance(value, str):
++                            value = self._NumericValue(value)
++                        values.append(value)
++                    yield values
++
++            reader = infer_numbers(reader)
++
+         writer.writerows(reader)
+ 
+ 
+diff --git a/tests/test_utilities/test_csvformat.py b/tests/test_utilities/test_csvformat.py
+index 7123f2c233683ed787b5de8a0910d4ebddb7698a..3ecf89672d3e46c947d0a71cb53a0d4e3bcae7a8 100644
+--- a/tests/test_utilities/test_csvformat.py
++++ b/tests/test_utilities/test_csvformat.py
+@@ -95,3 +95,41 @@ class TestCSVFormat(CSVKitTestCase, EmptyFileTests):
+         self.assertLines(['-M', 'XYZ', 'examples/dummy.csv'], [
+             'a,b,cXYZ1,2,3XYZ',
+         ], newline_at_eof=False)
++
++    def test_quote_nonnumeric(self):
++        input_file = io.BytesIO(b'number,text,formatted\n001.20,foo,"1,234.56"\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2'], [
++                '"number","text","formatted"',
++                '001.20,"foo","1,234.56"',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_locale(self):
++        input_file = io.BytesIO('number;text\n1.234,56;foo\n'.encode())
++
++        with stdin_as_string(input_file):
++            self.assertLines(['-d', ';', '-D', ';', '--locale', 'de_DE', '-U', '2'], [
++                '"number";"text"',
++                '1.234,56;"foo"',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_skip_header(self):
++        self.assertLines(['--skip-header', '--out-quoting', '2', 'examples/dummy.csv'], [
++            '1,2,3',
++        ])
++
++    def test_quote_nonnumeric_with_nonnumeric_input(self):
++        input_file = io.BytesIO(b'"number","text"\n1,"foo"\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--quoting', '2', '--out-quoting', '2'], [
++                '"number","text"',
++                '1.0,"foo"',
++            ])
++
++        input_file.close()

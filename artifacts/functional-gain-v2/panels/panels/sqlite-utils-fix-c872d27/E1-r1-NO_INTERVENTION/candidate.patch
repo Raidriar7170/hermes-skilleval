@@ -1,0 +1,304 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 81548bcd4246850c01043a137c1071b934ee99fb..8dc9317154c222c8b5ab3acec14b2f2210eb97cd 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -44,7 +44,7 @@ from .utils import (
+ 
+ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+ 
+-VALID_COLUMN_TYPES = ("INTEGER", "TEXT", "FLOAT", "BLOB")
++VALID_COLUMN_TYPES = ("INTEGER", "TEXT", "REAL", "FLOAT", "BLOB")
+ 
+ UNICODE_ERROR = """
+ {}
+@@ -419,7 +419,7 @@ def dump(path, load_extension):
+ @click.argument(
+     "col_type",
+     type=click.Choice(
+-        ["integer", "int", "float", "text", "str", "blob", "bytes"],
++        ["integer", "int", "real", "float", "text", "str", "blob", "bytes"],
+         case_sensitive=False,
+     ),
+     required=False,
+@@ -1558,7 +1558,7 @@ def create_table(
+             height float \\
+             photo blob --pk id
+ 
+-    Valid column types are text, integer, float and blob.
++    Valid column types are text, integer, real (or float) and blob.
+     """
+     db = sqlite_utils.Database(path)
+     _load_extensions(db, load_extension)
+@@ -1575,7 +1575,7 @@ def create_table(
+             raise click.ClickException(
+                 "column types must be one of {}".format(VALID_COLUMN_TYPES)
+             )
+-        coltypes[name] = ctype.upper()
++        coltypes[name] = "REAL" if ctype.upper() == "FLOAT" else ctype.upper()
+     # Does table already exist?
+     if table in db.table_names():
+         if not ignore and not replace and not transform:
+@@ -2425,10 +2425,12 @@ def schema(
+     "--type",
+     type=(
+         str,
+-        click.Choice(["INTEGER", "TEXT", "FLOAT", "BLOB"], case_sensitive=False),
++        click.Choice(
++            ["INTEGER", "TEXT", "REAL", "FLOAT", "BLOB"], case_sensitive=False
++        ),
+     ),
+     multiple=True,
+-    help="Change column type to INTEGER, TEXT, FLOAT or BLOB",
++    help="Change column type to INTEGER, TEXT, REAL (or FLOAT) or BLOB",
+ )
+ @click.option("--drop", type=str, multiple=True, help="Drop this column")
+ @click.option(
+@@ -2504,7 +2506,7 @@ def transform(
+             raise click.ClickException(
+                 "column types must be one of {}".format(VALID_COLUMN_TYPES)
+             )
+-        types[column] = ctype.upper()
++        types[column] = "REAL" if ctype.upper() == "FLOAT" else ctype.upper()
+ 
+     not_null_dict = {}
+     for column in not_null:
+@@ -2957,7 +2959,7 @@ def _generate_convert_help():
+     "--output-type",
+     help="Column type to use for the output column",
+     default="text",
+-    type=click.Choice(["integer", "float", "blob", "text"]),
++    type=click.Choice(["integer", "real", "float", "blob", "text"]),
+ )
+ @click.option("--drop", is_flag=True, help="Drop original column afterwards")
+ @click.option("-s", "--silent", is_flag=True, help="Don't show a progress bar")
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index b1b6088e93879398fd703929dc6e0b7e16371bf7..a5d9ad657145c88921c27a73c19c76aff82cca8a 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -189,7 +189,7 @@ class Default:
+ DEFAULT = Default()
+ 
+ COLUMN_TYPE_MAPPING = {
+-    float: "FLOAT",
++    float: "REAL",
+     int: "INTEGER",
+     bool: "INTEGER",
+     str: "TEXT",
+@@ -203,19 +203,21 @@ COLUMN_TYPE_MAPPING = {
+     datetime.date: "TEXT",
+     datetime.time: "TEXT",
+     datetime.timedelta: "TEXT",
+-    decimal.Decimal: "FLOAT",
++    decimal.Decimal: "REAL",
+     None.__class__: "TEXT",
+     uuid.UUID: "TEXT",
+     # SQLite explicit types
+     "TEXT": "TEXT",
+     "INTEGER": "INTEGER",
+-    "FLOAT": "FLOAT",
++    "REAL": "REAL",
++    "FLOAT": "REAL",
+     "BLOB": "BLOB",
+     "text": "TEXT",
+     "str": "TEXT",
+     "integer": "INTEGER",
+     "int": "INTEGER",
+-    "float": "FLOAT",
++    "real": "REAL",
++    "float": "REAL",
+     "blob": "BLOB",
+     "bytes": "BLOB",
+ }
+@@ -232,9 +234,9 @@ if np:
+                 np.uint16: "INTEGER",
+                 np.uint32: "INTEGER",
+                 np.uint64: "INTEGER",
+-                np.float16: "FLOAT",
+-                np.float32: "FLOAT",
+-                np.float64: "FLOAT",
++                np.float16: "REAL",
++                np.float32: "REAL",
++                np.float64: "REAL",
+             }
+         )
+     except AttributeError:
+@@ -995,10 +997,6 @@ class Database:
+                     )
+                 )
+             column_type_str = COLUMN_TYPE_MAPPING[column_type]
+-            # Special case for strict tables to map FLOAT to REAL
+-            # Refs https://github.com/simonw/sqlite-utils/issues/644
+-            if strict and column_type_str == "FLOAT":
+-                column_type_str = "REAL"
+             column_defs.append(
+                 "   {} {column_type}{column_extras}".format(
+                     quote_identifier(column_name),
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index bcf3e98320dfc314c42a303b0b8d312fc012b19b..07121c436c29e00e2adce2f2fc74628495f1996f 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -284,7 +284,8 @@ def test_create_index_desc(db_path):
+             "int",
+             'CREATE TABLE "dogs" (\n   "name" TEXT\n, "integer" INTEGER)',
+         ),
+-        ("float", "FLOAT", 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "float" FLOAT)'),
++        ("float", "FLOAT", 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "float" REAL)'),
++        ("real", "REAL", 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "real" REAL)'),
+         ("blob", "blob", 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "blob" BLOB)'),
+         ("blob", "BLOB", 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "blob" BLOB)'),
+         ("blob", "bytes", 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "blob" BLOB)'),
+@@ -1162,7 +1163,7 @@ def test_upsert_alter(db_path, tmpdir):
+                 '   "id" INTEGER PRIMARY KEY,\n'
+                 '   "name" TEXT,\n'
+                 '   "age" INTEGER,\n'
+-                '   "weight" FLOAT,\n'
++                '   "weight" REAL,\n'
+                 '   "thumbnail" BLOB\n'
+                 ")"
+             ),
+@@ -2193,12 +2194,13 @@ def test_csv_insert_bom(tmpdir):
+ 
+ 
+ @pytest.mark.parametrize("option_or_env_var", (None, "-d", "--detect-types"))
+-def test_insert_detect_types(tmpdir, option_or_env_var):
++@pytest.mark.parametrize("strict", (False, True))
++def test_insert_detect_types(tmpdir, option_or_env_var, strict):
+     db_path = str(tmpdir / "test.db")
+     data = "name,age,weight\nCleo,6,45.5\nDori,1,3.5"
+-    extra = []
++    extra = ["--strict"] if strict else []
+     if option_or_env_var:
+-        extra = [option_or_env_var]
++        extra.append(option_or_env_var)
+ 
+     def _test():
+         result = CliRunner().invoke(
+@@ -2213,6 +2215,11 @@ def test_insert_detect_types(tmpdir, option_or_env_var):
+             {"name": "Cleo", "age": 6, "weight": 45.5},
+             {"name": "Dori", "age": 1, "weight": 3.5},
+         ]
++        assert next(
++            column.type
++            for column in db["creatures"].columns
++            if column.name == "weight"
++        ) == "REAL"
+ 
+     if option_or_env_var is None:
+         # Use environment variable instead of option
+diff --git a/tests/test_cli_convert.py b/tests/test_cli_convert.py
+index 45e6b7bf74cbae66deb044cfcbd4c8e7b3908b4d..d0991e39f178d68bba58f0fc6e9eb084f7a0b595 100644
+--- a/tests/test_cli_convert.py
++++ b/tests/test_cli_convert.py
+@@ -255,6 +255,7 @@ def test_convert_output_column(test_db_and_path, drop):
+     "output_type,expected",
+     (
+         ("text", [(1, "1"), (2, "2"), (3, "3"), (4, "4")]),
++        ("real", [(1, 1.0), (2, 2.0), (3, 3.0), (4, 4.0)]),
+         ("float", [(1, 1.0), (2, 2.0), (3, 3.0), (4, 4.0)]),
+         ("integer", [(1, 1), (2, 2), (3, 3), (4, 4)]),
+         (None, [(1, "1"), (2, "2"), (3, "3"), (4, "4")]),
+@@ -279,6 +280,10 @@ def test_convert_output_column_output_type(test_db_and_path, output_type, expect
+     )
+     assert result.exit_code == 0, result.output
+     assert expected == list(db.execute("select id, new_id from example"))
++    if output_type in ("real", "float"):
++        assert next(
++            column.type for column in db["example"].columns if column.name == "new_id"
++        ) == "REAL"
+ 
+ 
+ @pytest.mark.parametrize(
+@@ -408,7 +413,7 @@ def test_convert_multi_complex_column_types(fresh_db_and_path):
+     assert db["rows"].schema == (
+         'CREATE TABLE "rows" (\n'
+         '   "id" INTEGER PRIMARY KEY\n'
+-        ', "is_str" TEXT, "is_float" FLOAT, "is_int" INTEGER, "is_bytes" BLOB)'
++        ', "is_str" TEXT, "is_float" REAL, "is_int" INTEGER, "is_bytes" BLOB)'
+     )
+ 
+ 
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 25015e774d618cc9b437c6d058be75a45d0b863f..8f44f89ad3e9a0a227c68ea36dd7e29cbcaeb869 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -43,7 +43,7 @@ def test_create_table(fresh_db):
+     assert ["test_table"] == fresh_db.table_names()
+     assert [
+         {"name": "text_col", "type": "TEXT"},
+-        {"name": "float_col", "type": "FLOAT"},
++        {"name": "float_col", "type": "REAL"},
+         {"name": "int_col", "type": "INTEGER"},
+         {"name": "bool_col", "type": "INTEGER"},
+         {"name": "bytes_col", "type": "BLOB"},
+@@ -52,7 +52,7 @@ def test_create_table(fresh_db):
+     assert (
+         'CREATE TABLE "test_table" (\n'
+         '   "text_col" TEXT,\n'
+-        '   "float_col" FLOAT,\n'
++        '   "float_col" REAL,\n'
+         '   "int_col" INTEGER,\n'
+         '   "bool_col" INTEGER,\n'
+         '   "bytes_col" BLOB,\n'
+@@ -143,7 +143,7 @@ def test_create_table_with_not_null(fresh_db):
+             [{"name": "create", "type": "TEXT"}, {"name": "table", "type": "TEXT"}],
+         ),
+         ({"day": datetime.time(11, 0)}, [{"name": "day", "type": "TEXT"}]),
+-        ({"decimal": decimal.Decimal("1.2")}, [{"name": "decimal", "type": "FLOAT"}]),
++        ({"decimal": decimal.Decimal("1.2")}, [{"name": "decimal", "type": "REAL"}]),
+         (
+             {"memoryview": memoryview(b"hello")},
+             [{"name": "memoryview", "type": "BLOB"}],
+@@ -193,7 +193,7 @@ def test_create_table_with_custom_columns(method_name, use_old_upsert):
+         {"name": "id", "type": "INTEGER"},
+         {"name": "name", "type": "TEXT"},
+         {"name": "age", "type": "INTEGER"},
+-        {"name": "weight", "type": "FLOAT"},
++        {"name": "weight", "type": "REAL"},
+     ]
+     assert expected_columns == [
+         {"name": col.name, "type": col.type} for col in table.columns
+@@ -357,7 +357,7 @@ def test_create_error_if_invalid_self_referential_foreign_keys(fresh_db):
+             "weight",
+             float,
+             None,
+-            'CREATE TABLE "dogs" (\n   "name" TEXT\n, "weight" FLOAT)',
++            'CREATE TABLE "dogs" (\n   "name" TEXT\n, "weight" REAL)',
+         ),
+         ("text", "TEXT", None, 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "text" TEXT)'),
+         (
+@@ -370,7 +370,7 @@ def test_create_error_if_invalid_self_referential_foreign_keys(fresh_db):
+             "float",
+             "FLOAT",
+             None,
+-            'CREATE TABLE "dogs" (\n   "name" TEXT\n, "float" FLOAT)',
++            'CREATE TABLE "dogs" (\n   "name" TEXT\n, "float" REAL)',
+         ),
+         ("blob", "blob", None, 'CREATE TABLE "dogs" (\n   "name" TEXT\n, "blob" BLOB)'),
+         (
+@@ -561,7 +561,7 @@ def test_index_foreign_keys_if_index_name_is_already_used(fresh_db):
+         ),
+         (
+             {"hats": 5, "rating": 3.5},
+-            [{"name": "hats", "type": "INTEGER"}, {"name": "rating", "type": "FLOAT"}],
++            [{"name": "hats", "type": "INTEGER"}, {"name": "rating", "type": "REAL"}],
+         ),
+     ],
+ )
+@@ -1197,7 +1197,7 @@ def test_create(fresh_db):
+     assert fresh_db["t"].schema == (
+         'CREATE TABLE "t" (\n'
+         '   "id" INTEGER PRIMARY KEY,\n'
+-        '   "float" FLOAT NOT NULL,\n'
++        '   "float" REAL NOT NULL,\n'
+         '   "text" TEXT,\n'
+         '   "integer" INTEGER NOT NULL DEFAULT 0,\n'
+         '   "bytes" BLOB\n'
+@@ -1360,7 +1360,7 @@ def test_insert_upsert_strict(fresh_db, method_name, strict):
+ def test_create_table_strict(fresh_db, strict):
+     table = fresh_db.create_table("t", {"id": int, "f": float}, strict=strict)
+     assert table.strict == strict or not fresh_db.supports_strict
+-    expected_schema = 'CREATE TABLE "t" (\n' '   "id" INTEGER,\n' '   "f" FLOAT\n' ")"
++    expected_schema = 'CREATE TABLE "t" (\n' '   "id" INTEGER,\n' '   "f" REAL\n' ")"
+     if strict and not fresh_db.supports_strict:
+         return
+     if strict:

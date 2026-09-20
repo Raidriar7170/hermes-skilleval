@@ -1,0 +1,54 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..a36434e79712abbc3e7a1a4d08f6ab6ca0a4360d 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -367,9 +367,14 @@ class CSVKitUtility:
+                     text_type,
+                 ]
+ 
+-                # In order to parse dates like "20010101".
+-                if self.args.date_format or self.args.datetime_format:
++                # In order to parse datetimes like "20010101.1200".
++                if self.args.datetime_format:
+                     types.insert(-1, number_type)
++                # In order to parse dates like "20010101", while preventing
++                # the default DateTime parser from interpreting decimals like
++                # "5.5" as dates.
++                elif self.args.date_format:
++                    types.insert(-2, number_type)
+                 else:
+                     types.insert(1, number_type)
+ 
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index ccfe4c4b5a91b38d462553efe55b0c7dc62890dc..691a5a524c90ffecfb3a2c86e05695588bf842f9 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -104,6 +104,28 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_numeric_date_format_default(self):
+         self.assertConverted('csv', 'examples/test_numeric_date_format.csv', 'examples/test_numeric_date_format.csv')
+ 
++    def test_date_format_does_not_infer_decimal_as_datetime(self):
++        input_file = io.BytesIO(b'date,amount\n31/01/2024,5.5')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['-f', 'csv', '--date-format', '%d/%m/%Y'], [
++                'date,amount',
++                '2024-01-31,5.5',
++            ])
++
++        input_file.close()
++
++    def test_datetime_format_takes_precedence_over_number(self):
++        input_file = io.BytesIO(b'datetime\n20240131.1230')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['-f', 'csv', '--datetime-format', '%Y%m%d.%H%M'], [
++                'datetime',
++                '2024-01-31T12:30:00',
++            ])
++
++        input_file.close()
++
+     def test_date_like_number(self):
+         self.assertConverted('csv', 'examples/date_like_number.csv', 'examples/date_like_number.csv')
+ 

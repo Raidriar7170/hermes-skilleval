@@ -1,0 +1,56 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..0ed186aebd927e65efef1d8521f814c4c92f2788 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -46,10 +46,14 @@ class CSVLook(CSVKitUtility):
+             config.set_option('number_truncation_chars', '')
+ 
+         sniff_limit = self.args.sniff_limit if self.args.sniff_limit != -1 else None
++        # Preserve max_rows=0's existing behavior (an ellipsis row), while
++        # avoiding parsing records that a bounded preview will not display.
++        row_limit = self.args.max_rows if self.args.max_rows and self.args.max_rows > 0 else None
+         table = agate.Table.from_csv(
+             self.input_file,
+             skip_lines=self.args.skip_lines,
+             sniff_limit=sniff_limit,
++            row_limit=row_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
+             **self.reader_kwargs,
+diff --git a/docs/scripts/csvlook.rst b/docs/scripts/csvlook.rst
+index 38ab7b1ff8a58e708192fc8ab3a3af6b1e378993..cbedd9294b86db250a0e92a67565e2143def57b8 100644
+--- a/docs/scripts/csvlook.rst
++++ b/docs/scripts/csvlook.rst
+@@ -72,6 +72,9 @@ This tool is especially useful as a final operation when piping through other to
+ 
+    csvcut -c 9,1 examples/realdata/FY09_EDU_Recipients_by_State.csv | csvlook
+ 
++When :code:`--max-rows` is a positive number, csvlook only parses that many data rows. This makes it suitable for
++previewing a file whose later records may be large. A value of :code:`0` retains the ellipsis-only preview.
++
+ If a data row contains more cells than the header row, csvlook will error. To fix the header row, use :doc:`csvclean`.
+ 
+ To ignore the extra cells, instead:
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..aec9068f6a530939eb18feb8c0e7046291f4ce21 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,18 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_rows(self):
++        input_file = io.BytesIO(b'a,b\n1,2\n' + b'x' * 1024 * 1024 + b',3\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--snifflimit', '0', '--max-rows', '1'], [
++                '|    a | b |',
++                '| ---- | - |',
++                '| True | 2 |',
++            ])
++
++        input_file.close()
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

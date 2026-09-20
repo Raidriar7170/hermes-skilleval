@@ -1,0 +1,122 @@
+# v1 train/dev functional diagnosis
+
+Derived historical diagnostics, not v2 training or new experimental evidence.
+
+Records: 180; pairs (including reminder): 135; transitions: {'tie_pass': 133, 'unknown': 2}.
+Policy-only transitions: 19.
+
+Public captured patch and JUnit artifacts checked; same-prefix identities not available in this export. Saved-score waiting diagnostic unavailable. No old final records read.
+
+| Task | Stage | Action | Rescue | Damage | Tie pass | Tie fail | Unknown | Policy only |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| csv-diff-issue-18 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| csv-diff-issue-18 | E0 | keyed-csv-diff | 0 | 0 | 1 | 0 | 0 | 0 |
+| csv-diff-issue-18 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| csv-diff-issue-18 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| csv-diff-issue-18 | E2 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| csv-diff-issue-18 | E2 | keyed-csv-diff | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E0 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E0 | csv-dialect | 0 | 0 | 2 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E0 | keyed-csv-diff | 0 | 0 | 2 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E1 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E1 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E1 | sql-query-export | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E2 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1225 | E2 | tabular-conversion | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1264 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1264 | E0 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| csvkit-issue-1264 | E0 | keyed-csv-diff | 0 | 0 | 1 | 0 | 0 | 1 |
+| csvkit-issue-1264 | E2 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 2 |
+| csvkit-issue-1264 | E2 | csv-dialect | 0 | 0 | 2 | 0 | 0 | 1 |
+| csvkit-issue-1264 | E2 | keyed-csv-diff | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E0 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E1 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E1 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E1 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E2 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E2 | sqlite-fulltext | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-202 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 1 | 0 |
+| sqlite-utils-issue-211 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-211 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-211 | E0 | sqlite-ingest | 0 | 0 | 0 | 0 | 1 | 0 |
+| sqlite-utils-issue-211 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-211 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-211 | E2 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-223 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-223 | E0 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-223 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-223 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-223 | E2 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-223 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-228 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-228 | E0 | keyed-csv-diff | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-228 | E0 | verification-before-completion | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-228 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-228 | E2 | keyed-csv-diff | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-228 | E2 | tabular-conversion | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-234 | E0 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-234 | E0 | sqlite-fulltext | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-234 | E0 | sqlite-ingest | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E0 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E0 | sqlite-fulltext | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E0 | sqlite-schema | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E1 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E1 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E1 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E2 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-238 | E2 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-250 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-250 | E0 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-250 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-250 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-250 | E2 | csv-dialect | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-250 | E2 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-274 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-274 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-274 | E0 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-274 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-274 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-274 | E2 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-339 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-339 | E0 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-339 | E0 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-339 | E1 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-339 | E1 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-339 | E1 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-339 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-339 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-339 | E2 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-344 | E0 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 2 |
+| sqlite-utils-issue-344 | E0 | sqlite-fulltext | 0 | 0 | 2 | 0 | 0 | 2 |
+| sqlite-utils-issue-344 | E0 | sqlite-ingest | 0 | 0 | 2 | 0 | 0 | 1 |
+| sqlite-utils-issue-344 | E1 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-344 | E1 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-344 | E1 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-344 | E2 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-344 | E2 | sqlite-ingest | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-344 | E2 | sqlite-schema | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E0 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E1 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E1 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E1 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-348 | E2 | sqlite-schema | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-368 | E0 | GENERIC_REMINDER | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-368 | E0 | sqlite-fulltext | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-368 | E0 | sqlite-ingest | 0 | 0 | 2 | 0 | 0 | 0 |
+| sqlite-utils-issue-368 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-368 | E2 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-368 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-400 | E0 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-400 | E0 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-400 | E0 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-400 | E2 | GENERIC_REMINDER | 0 | 0 | 1 | 0 | 0 | 1 |
+| sqlite-utils-issue-400 | E2 | sqlite-fulltext | 0 | 0 | 1 | 0 | 0 | 0 |
+| sqlite-utils-issue-400 | E2 | sqlite-ingest | 0 | 0 | 1 | 0 | 0 | 0 |

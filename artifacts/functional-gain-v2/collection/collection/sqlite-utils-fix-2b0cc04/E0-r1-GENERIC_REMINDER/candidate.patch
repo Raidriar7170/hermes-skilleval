@@ -1,0 +1,90 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 1c3ce8d98f6e0f0e0d7c1ee29f8e8ee06e3862a1..45f285a563f9f3bb1cc3c142ad3d2e7011082c12 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1177,7 +1177,7 @@ def insert_upsert_implementation(
+                 )
+             else:
+                 raise
+-        if tracker is not None:
++        if tracker is not None and db.table(table).exists():
+             db.table(table).transform(types=tracker.types)
+ 
+         # Clean up open file-like objects
+@@ -2034,18 +2034,20 @@ def memory(
+                 rows = (_flatten(row) for row in rows)
+ 
+             db.table(file_table).insert_all(rows, alter=True)
+-            if tracker is not None:
++            table_exists = db.table(file_table).exists()
++            if tracker is not None and table_exists:
+                 db.table(file_table).transform(types=tracker.types)
+             # Add convenient t / t1 / t2 views
+-            view_names = ["t{}".format(i + 1)]
+-            if i == 0:
+-                view_names.append("t")
+-            for view_name in view_names:
+-                if not db[view_name].exists():
+-                    db.create_view(
+-                        view_name,
+-                        "select * from {}".format(quote_identifier(file_table)),
+-                    )
++            if table_exists:
++                view_names = ["t{}".format(i + 1)]
++                if i == 0:
++                    view_names.append("t")
++                for view_name in view_names:
++                    if not db[view_name].exists():
++                        db.create_view(
++                            view_name,
++                            "select * from {}".format(quote_identifier(file_table)),
++                        )
+         finally:
+             if should_close_fp and fp:
+                 fp.close()
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 565fbc28137ca47319aefe5ab735899fa7a2e5fc..9b741a7320dd888f7ab0ecb32824b612844e0f55 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -2363,6 +2363,19 @@ def test_csv_detect_types_creates_real_columns(tmpdir):
+     )
+ 
+ 
++@pytest.mark.parametrize("option", ([], ["--detect-types"]))
++def test_insert_csv_header_only_with_detect_types(tmpdir, option):
++    db_path = str(tmpdir / "test.db")
++    result = CliRunner().invoke(
++        cli.cli,
++        ["insert", db_path, "creatures", "-", "--csv"] + option,
++        input="name,age,weight\n",
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++    assert Database(db_path).table_names() == []
++
++
+ def test_insert_no_detect_types(tmpdir):
+     """Test that --no-detect-types treats all columns as TEXT"""
+     db_path = str(tmpdir / "test.db")
+diff --git a/tests/test_cli_memory.py b/tests/test_cli_memory.py
+index cf619855971aaf18e788545a0ed4b7559be5b2a6..aabd082db63f23da7d3262c93cc33dc495bc0e26 100644
+--- a/tests/test_cli_memory.py
++++ b/tests/test_cli_memory.py
+@@ -37,6 +37,17 @@ def test_memory_csv(tmpdir, sql_from, use_stdin):
+     )
+ 
+ 
++def test_memory_csv_header_only_with_detect_types():
++    result = CliRunner().invoke(
++        cli.cli,
++        ["memory", "-", "--schema"],
++        input="id,name\n",
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++    assert result.output == "\n"
++
++
+ @pytest.mark.parametrize("use_stdin", (True, False))
+ def test_memory_tsv(tmpdir, use_stdin):
+     data = "id\tname\n1\tCleo\n2\tBants"

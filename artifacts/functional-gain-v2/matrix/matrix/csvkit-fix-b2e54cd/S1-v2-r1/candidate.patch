@@ -1,0 +1,73 @@
+diff --git a/csvkit/utilities/in2csv.py b/csvkit/utilities/in2csv.py
+index 03e9b5f055f40a60543b059715037efd92650a3e..50bbc04e2348bcaa7a2e37cdc26989c09a3232a1 100644
+--- a/csvkit/utilities/in2csv.py
++++ b/csvkit/utilities/in2csv.py
+@@ -155,7 +155,8 @@ class In2CSV(CSVKitUtility):
+                 table = agate.Table.from_xls(self.input_file, sheet=self.args.sheet,
+                                              encoding_override=self.args.encoding_xls, **kwargs)
+             elif filetype == 'xlsx':
+-                table = agate.Table.from_xlsx(self.input_file, sheet=self.args.sheet, **kwargs)
++                table = agate.Table.from_xlsx(
++                    self.input_file, sheet=self.args.sheet, reset_dimensions=True, **kwargs)
+             elif filetype == 'dbf':
+                 if not hasattr(self.input_file, 'name'):
+                     raise ValueError('DBF files can not be converted from stdin. You must pass a filename.')
+@@ -177,7 +178,8 @@ class In2CSV(CSVKitUtility):
+                 tables = agate.Table.from_xls(self.input_file, sheet=sheets,
+                                               encoding_override=self.args.encoding_xls, **kwargs)
+             elif filetype == 'xlsx':
+-                tables = agate.Table.from_xlsx(self.input_file, sheet=sheets, **kwargs)
++                tables = agate.Table.from_xlsx(
++                    self.input_file, sheet=sheets, reset_dimensions=True, **kwargs)
+ 
+             base = splitext(self.input_file.name)[0]
+             for i, (sheet_name, table) in enumerate(tables.items()):
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index 95b691572f0fbe2f11fe62c46c9e88720d49e2b4..5994cc69b6427f94682426cddc222435cd25928e 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -1,8 +1,12 @@
+ import io
+ import os
++import re
+ import sys
++import zipfile
+ from unittest.mock import patch
+ 
++import openpyxl
++
+ from csvkit.utilities.in2csv import In2CSV, launch_new_instance
+ from tests.utils import CSVKitTestCase, EmptyFileTests, stdin_as_string
+ 
+@@ -127,6 +131,31 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_convert_xlsx_with_sheet(self):
+         self.assertConverted('xlsx', 'examples/sheets.xlsx', 'examples/testxlsx_converted.csv', ['--sheet', 'data'])
+ 
++    def test_convert_xlsx_recalculates_understated_dimensions(self):
++        source = io.BytesIO()
++        workbook = openpyxl.Workbook()
++        workbook.active.title = 'not this one'
++        sheet = workbook.create_sheet('data')
++        sheet.append(['a', 'b', 'c', 'd'])
++        sheet.append([1, 2, 3, 4])
++        sheet.append([5, 6, 7, 8])
++        workbook.save(source)
++
++        understated = io.BytesIO()
++        with zipfile.ZipFile(source) as input_zip, zipfile.ZipFile(understated, 'w') as output_zip:
++            for item in input_zip.infolist():
++                content = input_zip.read(item.filename)
++                if item.filename == 'xl/worksheets/sheet2.xml':
++                    content = re.sub(b'<dimension ref="[^"]+"', b'<dimension ref="A1:B2"', content)
++                output_zip.writestr(item, content)
++
++        with patch.object(In2CSV, 'open_excel_input_file', return_value=io.BytesIO(understated.getvalue())):
++            self.assertLines(['-f', 'xlsx', '--sheet', 'data', '-'], [
++                'a,b,c,d',
++                '1,2,3,4',
++                '5,6,7,8',
++            ])
++
+     def test_convert_xlsx_with_unicode_sheet(self):
+         self.assertLines(['--sheet', 'ʤ', '--no-inference', 'examples/sheets.xlsx'], [
+             'a,b,c',

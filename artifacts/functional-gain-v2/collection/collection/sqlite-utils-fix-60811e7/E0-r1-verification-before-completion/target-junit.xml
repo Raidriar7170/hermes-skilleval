@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="14" time="0.022" timestamp="2026-09-19T22:23:40.225209+00:00" hostname="a1d6fa948a5e"><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row" time="0.001" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-rowid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[upsert-oid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_replace-oid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]" time="0.000" /><testcase classname="test_behavior" name="test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]" time="0.000" /><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row_compound_pk" time="0.000" /><testcase classname="test_behavior" name="test_insert_ignore_reports_existing_row_list_mode" time="0.000" /><testcase classname="test_behavior" name="test_insert_ignore_hash_id_reports_pk" time="0.000"><failure message="assert 1 is None&#10; +  where 1 = &lt;Table dogs (id, name)&gt;.last_rowid">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffa6be9990&gt;&gt;
+
+    def test_insert_ignore_hash_id_reports_pk(fresh_db):
+        first = fresh_db['dogs'].insert({'name': 'Cleo'}, hash_id='id')
+        table = fresh_db['dogs'].insert({'name': 'Cleo'}, hash_id='id', ignore=True)
+        assert table.last_pk == first.last_pk
+&gt;       assert table.last_rowid is None
+E       assert 1 is None
+E        +  where 1 = &lt;Table dogs (id, name)&gt;.last_rowid
+
+/trusted/test_behavior.py:52: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_insert_ignore_unresolvable_conflict_leaves_pk_unset" time="0.000"><failure message="assert 1 is None&#10; +  where 1 = &lt;Table u (title)&gt;.last_pk">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffa6bea3e0&gt;&gt;
+
+    def test_insert_ignore_unresolvable_conflict_leaves_pk_unset(fresh_db):
+        fresh_db['u'].db.execute('create table u (title text unique)')
+        fresh_db['u'].insert({'title': 'x'})
+        table = fresh_db['u'].insert({'title': 'x'}, ignore=True)
+&gt;       assert table.last_pk is None
+E       assert 1 is None
+E        +  where 1 = &lt;Table u (title)&gt;.last_pk
+
+/trusted/test_behavior.py:59: AssertionError</failure></testcase></testsuite></testsuites>

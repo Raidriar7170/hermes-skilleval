@@ -1,0 +1,42 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..cf10c96c037013ccb4ef4c915c7c97dff3b4aa29 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -50,6 +50,7 @@ class CSVLook(CSVKitUtility):
+             self.input_file,
+             skip_lines=self.args.skip_lines,
+             sniff_limit=sniff_limit,
++            row_limit=self.args.max_rows if self.args.max_rows and self.args.max_rows > 0 else None,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
+             **self.reader_kwargs,
+diff --git a/tests/test_utilities/fixtures/csvlook_max_rows.csv b/tests/test_utilities/fixtures/csvlook_max_rows.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..8f60d3d73edd25eb9b9330c8a0abd76dcff46b8c
+--- /dev/null
++++ b/tests/test_utilities/fixtures/csvlook_max_rows.csv
+@@ -0,0 +1,3 @@
++a,b
++foo,bar
++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,baz
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..eb89fafc473b09272d864b0f6b7bebb571b63780 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,16 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_rows(self):
++        self.assertLines([
++            '--max-rows', '1', '--maxfieldsize', '100', '--snifflimit', '0',
++            'tests/test_utilities/fixtures/csvlook_max_rows.csv',
++        ], [
++            '| a   | b   |',
++            '| --- | --- |',
++            '| foo | bar |',
++        ])
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

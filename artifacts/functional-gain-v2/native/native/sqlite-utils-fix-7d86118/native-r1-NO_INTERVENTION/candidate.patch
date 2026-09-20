@@ -1,0 +1,93 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 0f2924c17b7e09ce2c8a44904d95b26ed52398fa..b8fb687bc44094c070335ca23a73d22c2f3bbb0b 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -863,6 +863,10 @@ class Database:
+         which case it becomes part of that transaction. See
+         :ref:`python_api_transactions`.
+ 
++        If a standalone write fails, its implicit transaction is rolled back.
++        A failure inside a caller-managed transaction leaves that transaction
++        open for the caller to continue, commit or roll back.
++
+         :param sql: SQL query to execute
+         :param parameters: Parameters to use in that query - an iterable for ``where id = ?``
+           parameters, or a dictionary for ``where id = :id``
+@@ -870,10 +874,18 @@ class Database:
+         if self._tracer:
+             self._tracer(sql, parameters)
+         was_in_transaction = self.conn.in_transaction
+-        if parameters is not None:
+-            cursor = self.conn.execute(sql, parameters)
+-        else:
+-            cursor = self.conn.execute(sql)
++        try:
++            if parameters is not None:
++                cursor = self.conn.execute(sql, parameters)
++            else:
++                cursor = self.conn.execute(sql)
++        except BaseException:
++            if not was_in_transaction and self.conn.in_transaction:
++                # A failed write can still open an implicit transaction. It
++                # belongs to execute(), so clean it up without rolling back a
++                # transaction that was opened by the caller.
++                self.conn.execute("ROLLBACK")
++            raise
+         if (
+             not was_in_transaction
+             and self.conn.in_transaction
+diff --git a/tests/test_atomic.py b/tests/test_atomic.py
+index f75c4eeb390f392a969d6e0bab314ad70b317579..78a80e5340688bfacf7db9d377015031862bdd9d 100644
+--- a/tests/test_atomic.py
++++ b/tests/test_atomic.py
+@@ -247,6 +247,50 @@ def test_execute_write_respects_explicit_transaction(fresh_db):
+     assert [r["id"] for r in fresh_db["t"].rows] == [1]
+ 
+ 
++def test_execute_failed_write_does_not_leave_implicit_transaction(tmpdir):
++    path = str(tmpdir / "test.db")
++    db = Database(path)
++    db["t"].insert({"id": 1}, pk="id")
++
++    with pytest.raises(sqlite3.IntegrityError):
++        db.execute("insert into t (id) values (1)")
++
++    assert not db.conn.in_transaction
++    db.execute("insert into t (id) values (2)")
++    db.close()
++
++    reopened = Database(path)
++    assert [row["id"] for row in reopened["t"].rows] == [1, 2]
++    reopened.close()
++
++
++def test_execute_failed_write_preserves_manual_transaction(fresh_db):
++    fresh_db["t"].insert({"id": 1}, pk="id")
++    fresh_db.begin()
++    fresh_db.execute("insert into t (id) values (2)")
++
++    with pytest.raises(sqlite3.IntegrityError):
++        fresh_db.execute("insert into t (id) values (1)")
++
++    assert fresh_db.conn.in_transaction
++    fresh_db.execute("insert into t (id) values (3)")
++    fresh_db.commit()
++    assert [row["id"] for row in fresh_db["t"].rows] == [1, 2, 3]
++
++
++def test_execute_failed_write_preserves_atomic_transaction(fresh_db):
++    fresh_db["t"].insert({"id": 1}, pk="id")
++
++    with fresh_db.atomic():
++        fresh_db.execute("insert into t (id) values (2)")
++        with pytest.raises(sqlite3.IntegrityError):
++            fresh_db.execute("insert into t (id) values (1)")
++        assert fresh_db.conn.in_transaction
++        fresh_db.execute("insert into t (id) values (3)")
++
++    assert [row["id"] for row in fresh_db["t"].rows] == [1, 2, 3]
++
++
+ def test_execute_comment_prefixed_begin_leaves_transaction_open(fresh_db):
+     # A BEGIN hidden behind a leading comment must not be auto-committed
+     # out from under the caller

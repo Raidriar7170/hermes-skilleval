@@ -1,0 +1,171 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..8cf7a1191951ab8b728df0495538d65978e40303 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -28,6 +28,18 @@ except ImportError:
+ QUOTING_CHOICES = sorted(getattr(csv, name) for name in dir(csv) if name.startswith('QUOTE_'))
+ 
+ 
++def _default_input_encoding():
++    """Return the input encoding configured for Python's standard streams."""
++    python_io_encoding = os.environ.get('PYTHONIOENCODING')
++    if python_io_encoding:
++        # PYTHONIOENCODING can include an error handler (for example, ``cp1252:strict``).
++        encoding = python_io_encoding.split(':', 1)[0]
++        if encoding:
++            return encoding
++
++    return 'utf-8-sig'
++
++
+ class LazyFile:
+     """
+     A proxy for a File object that delays opening it until
+@@ -198,7 +210,7 @@ class CSVKitUtility:
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding', default=_default_input_encoding(),
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/csvkit/utilities/sql2csv.py b/csvkit/utilities/sql2csv.py
+index e40a5d1da282a2f3fed4f136cd31ecf60d5e7f66..451f1dd919ddf8f3cca4f1f94b96205f60dcbc75 100644
+--- a/csvkit/utilities/sql2csv.py
++++ b/csvkit/utilities/sql2csv.py
+@@ -2,7 +2,7 @@
+ import agate
+ from sqlalchemy import create_engine
+ 
+-from csvkit.cli import CSVKitUtility, parse_list
++from csvkit.cli import CSVKitUtility, _default_input_encoding, parse_list
+ 
+ 
+ class SQL2CSV(CSVKitUtility):
+@@ -11,6 +11,7 @@ class SQL2CSV(CSVKitUtility):
+     override_flags = ['f', 'b', 'd', 'e', 'H', 'I', 'K', 'L', 'p', 'q', 'S', 't', 'u', 'z', 'zero']
+ 
+     def add_arguments(self):
++        default_input_encoding = _default_input_encoding()
+         self.argparser.add_argument(
+             '--db', dest='connection_string', default='sqlite://',
+             help='A SQLAlchemy connection string to connect to a database.')
+@@ -33,7 +34,7 @@ class SQL2CSV(CSVKitUtility):
+             '--query',
+             help="The SQL query to execute. Overrides FILE and STDIN.")
+         self.argparser.add_argument(
+-            '-e', '--encoding', dest='encoding', default='utf-8',
++            '-e', '--encoding', dest='encoding', default=default_input_encoding,
+             help='Specify the encoding of the input query file.')
+         self.argparser.add_argument(
+             '-H', '--no-header-row', dest='no_header_row', action='store_true',
+@@ -43,7 +44,7 @@ class SQL2CSV(CSVKitUtility):
+             delimiter=None,
+             doublequote=None,
+             escapechar=None,
+-            encoding='utf-8',
++            encoding=default_input_encoding,
+             field_size_limit=None,
+             quotechar=None,
+             quoting=None,
+diff --git a/docs/common_arguments.rst b/docs/common_arguments.rst
+index e279b67852df3bf2981d711e23a34357b053400e..3ae9fc6b825b920485308caa8bb9836dd64b17ae 100644
+--- a/docs/common_arguments.rst
++++ b/docs/common_arguments.rst
+@@ -70,4 +70,4 @@ See the documentation of :doc:`/scripts/csvclean` for a description of the defau
+ 
+ .. seealso::
+ 
+-   For a list of possible values for the ``--encoding`` option, see the `Python documentation <https://docs.python.org/3/library/codecs.html#standard-encodings>`__.
++   The input encoding defaults to ``PYTHONIOENCODING`` if that environment variable is set, and to UTF-8 otherwise. An explicit ``--encoding`` option takes precedence. For a list of possible values for the ``--encoding`` option, see the `Python documentation <https://docs.python.org/3/library/codecs.html#standard-encodings>`__.
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..ebb669a281c9eca5156b7258b5eeab40fa88898c 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,13 @@
+ import unittest
++from unittest.mock import patch
+ 
+-from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.cli import CSVKitUtility, match_column_identifier, parse_column_identifiers
++
++
++class DummyUtility(CSVKitUtility):
++
++    def add_arguments(self):
++        pass
+ 
+ 
+ class TestCli(unittest.TestCase):
+@@ -8,6 +15,18 @@ class TestCli(unittest.TestCase):
+     def setUp(self):
+         self.headers = ['id', 'name', 'i_work_here', '1', 'more-header-values', 'stuff', 'blueberry']
+ 
++    def test_default_input_encoding(self):
++        with patch.dict('os.environ', {}, clear=True):
++            self.assertEqual('utf-8-sig', DummyUtility([]).args.encoding)
++
++    def test_pythonioencoding_is_default_input_encoding(self):
++        with patch.dict('os.environ', {'PYTHONIOENCODING': 'cp1252:strict'}, clear=True):
++            self.assertEqual('cp1252', DummyUtility([]).args.encoding)
++
++    def test_encoding_option_overrides_pythonioencoding(self):
++        with patch.dict('os.environ', {'PYTHONIOENCODING': 'ascii'}, clear=True):
++            self.assertEqual('latin-1', DummyUtility(['--encoding', 'latin-1']).args.encoding)
++
+     def test_match_column_identifier_string(self):
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here'))
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here', column_offset=0))
+diff --git a/tests/test_utilities/test_csvcut.py b/tests/test_utilities/test_csvcut.py
+index 92a2dcf9dc8b587366060690399c6f5687f03b51..9c4071c4feabdd3a81f749c363f8b76ed3ce9b9c 100644
+--- a/tests/test_utilities/test_csvcut.py
++++ b/tests/test_utilities/test_csvcut.py
+@@ -1,4 +1,6 @@
++import os
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.csvcut import CSVCut, launch_new_instance
+@@ -37,6 +39,17 @@ class TestCSVCut(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['4', 'ʤ'],
+         ])
+ 
++    def test_pythonioencoding(self):
++        with tempfile.NamedTemporaryFile() as input_file:
++            input_file.write('name\nélodie\n'.encode('cp1252'))
++            input_file.flush()
++
++            with patch.dict(os.environ, {'PYTHONIOENCODING': 'cp1252:strict'}):
++                self.assertRows(['-c', '1', input_file.name], [
++                    ['name'],
++                    ['élodie'],
++                ])
++
+     def test_with_gzip(self):
+         self.assertRows(['-c', '1,3', 'examples/dummy.csv.gz'], [
+             ['a', 'c'],
+diff --git a/tests/test_utilities/test_sql2csv.py b/tests/test_utilities/test_sql2csv.py
+index e5349a2bf7607384e4833438db0e3fcdbbc5c4b9..2520eefd341256a6ecf9c3dad2e825c61d38881e 100644
+--- a/tests/test_utilities/test_sql2csv.py
++++ b/tests/test_utilities/test_sql2csv.py
+@@ -52,6 +52,18 @@ class TestSQL2CSV(CSVKitTestCase, EmptyFileTests):
+         # Test that csvstat doesn't error on Latin-1 input.
+         self.get_output(['-e', 'latin1', 'examples/test.sql'])
+ 
++    def test_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin-1:strict'}):
++            utility = self.Utility(['--query', 'select 1'])
++
++        self.assertEqual(utility.args.encoding, 'latin-1')
++
++    def test_encoding_overrides_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'ascii'}):
++            utility = self.Utility(['--encoding', 'latin-1', '--query', 'select 1'])
++
++        self.assertEqual(utility.args.encoding, 'latin-1')
++
+     def test_query(self):
+         csv = self.get_output(['--query', 'select 6*9 as question'])
+ 

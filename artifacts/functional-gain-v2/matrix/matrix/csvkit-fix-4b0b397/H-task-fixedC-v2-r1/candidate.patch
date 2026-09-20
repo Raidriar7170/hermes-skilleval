@@ -1,0 +1,56 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..46388214536a79e0922ba8d2ea21b1916288fbe5 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -198,7 +198,8 @@ class CSVKitUtility:
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding',
++                default=os.environ.get('PYTHONIOENCODING', 'utf-8-sig').split(':', 1)[0] or 'utf-8-sig',
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/tests/test_cli_encoding.py b/tests/test_cli_encoding.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e16c89b325997b9ecb94307b6322b84a8e6ca1b0
+--- /dev/null
++++ b/tests/test_cli_encoding.py
+@@ -0,0 +1,36 @@
++import os
++import unittest
++from unittest.mock import patch
++
++from csvkit.cli import CSVKitUtility
++
++
++class DummyUtility(CSVKitUtility):
++    def add_arguments(self):
++        pass
++
++
++class EncodingTests(unittest.TestCase):
++    def test_default_encoding(self):
++        with patch.dict(os.environ, {}, clear=True):
++            utility = DummyUtility([])
++
++        self.assertEqual(utility.args.encoding, 'utf-8-sig')
++
++    def test_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1:replace'}, clear=True):
++            utility = DummyUtility([])
++
++        self.assertEqual(utility.args.encoding, 'latin1')
++
++        input_file = utility._open_input_file('examples/test_latin1.csv')
++        try:
++            self.assertEqual(input_file.read(), 'a,b,c\n1,2,3\n4,5,©')
++        finally:
++            input_file.close()
++
++    def test_explicit_encoding_overrides_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1'}, clear=True):
++            utility = DummyUtility(['--encoding', 'utf-8'])
++
++        self.assertEqual(utility.args.encoding, 'utf-8')

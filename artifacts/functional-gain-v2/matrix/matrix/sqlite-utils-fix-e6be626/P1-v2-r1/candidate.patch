@@ -1,0 +1,113 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 66dc700b7dd13098050f6bae1ea10a4c687d5372..a59597bb5042adce9b0729ec140aad85359b4784 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2375,14 +2375,11 @@ class Table(Queryable):
+     @property
+     def indexes(self) -> list[Index]:
+         "List of indexes defined on this table."
+-        sql = f'PRAGMA index_list("{self.name}")'
++        sql = f"PRAGMA index_list({quote_identifier(self.name)})"
+         indexes = []
+         for row in self.db.execute_returning_dicts(sql):
+             index_name = row["name"]
+-            index_name_quoted = (
+-                f'"{index_name}"' if not index_name.startswith('"') else index_name
+-            )
+-            column_sql = f"PRAGMA index_info({index_name_quoted})"
++            column_sql = f"PRAGMA index_info({quote_identifier(index_name)})"
+             columns = []
+             for seqno, cid, name in self.db.execute(column_sql).fetchall():
+                 columns.append(name)
+@@ -2397,14 +2394,11 @@ class Table(Queryable):
+     @property
+     def xindexes(self) -> list[XIndex]:
+         "List of indexes defined on this table using the more detailed ``XIndex`` format."
+-        sql = f'PRAGMA index_list("{self.name}")'
++        sql = f"PRAGMA index_list({quote_identifier(self.name)})"
+         indexes = []
+         for row in self.db.execute_returning_dicts(sql):
+             index_name = row["name"]
+-            index_name_quoted = (
+-                f'"{index_name}"' if not index_name.startswith('"') else index_name
+-            )
+-            column_sql = f"PRAGMA index_xinfo({index_name_quoted})"
++            column_sql = f"PRAGMA index_xinfo({quote_identifier(index_name)})"
+             index_columns = []
+             for info in self.db.execute(column_sql).fetchall():
+                 index_columns.append(XIndexColumn(*info))
+diff --git a/tests/test_introspect.py b/tests/test_introspect.py
+index b0953f15abb6c39958b9befa4f68690f4e8762ce..b79c2f436067bb75bb9cf140efcb2b0b450a9fc8 100644
+--- a/tests/test_introspect.py
++++ b/tests/test_introspect.py
+@@ -161,6 +161,45 @@ def test_xindexes(fresh_db):
+     ]
+ 
+ 
++def test_indexes_with_double_quotes_in_identifiers(fresh_db):
++    table = fresh_db.table('table "one"').insert({'column "one"': "value"})
++    table.create_index(['column "one"'], index_name='index "one"')
++
++    assert table.indexes == [
++        Index(
++            seq=0,
++            name='index "one"',
++            unique=0,
++            origin="c",
++            partial=0,
++            columns=['column "one"'],
++        )
++    ]
++    assert table.xindexes == [
++        XIndex(
++            name='index "one"',
++            columns=[
++                XIndexColumn(
++                    seqno=0,
++                    cid=0,
++                    name='column "one"',
++                    desc=0,
++                    coll="BINARY",
++                    key=1,
++                ),
++                XIndexColumn(
++                    seqno=1,
++                    cid=-1,
++                    name=None,
++                    desc=0,
++                    coll="BINARY",
++                    key=0,
++                ),
++            ],
++        )
++    ]
++
++
+ @pytest.mark.parametrize(
+     "column,expected_table_guess",
+     (
+diff --git a/tests/test_transform.py b/tests/test_transform.py
+index 28fa4d75eed823fd6bfac99437c5cfd9a0596c89..927cb35105001ad21410cbe57a50d5deb174b844 100644
+--- a/tests/test_transform.py
++++ b/tests/test_transform.py
+@@ -893,6 +893,20 @@ def test_transform_retains_indexes_with_foreign_keys(fresh_db):
+     ), f"Indexes before transform: {indexes_before_transform}\nIndexes after transform: {dogs.indexes}"
+ 
+ 
++def test_transform_table_with_double_quotes_in_identifiers(fresh_db):
++    table = fresh_db.table('table "one"').insert(
++        {"id": 1, 'column "one"': "value"}, pk="id"
++    )
++    table.create_index(['column "one"'], index_name='index "one"')
++
++    table.transform(types={'column "one"': str})
++
++    assert list(table.rows) == [{"id": 1, 'column "one"': "value"}]
++    assert [(index.name, index.columns) for index in table.indexes] == [
++        ('index "one"', ['column "one"'])
++    ]
++
++
+ @pytest.mark.parametrize(
+     "transform_params",
+     [

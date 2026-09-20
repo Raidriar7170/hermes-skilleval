@@ -1,0 +1,183 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4c3d1bdf25852c19abae995b147d7435b4c36ac1..1d2bdd988311347593361205b36bf238bb791cb8 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -2,6 +2,7 @@
+ 
+ import argparse
+ import bz2
++import csv
+ import datetime
+ import decimal
+ import gzip
+@@ -279,6 +280,22 @@ class CSVKitUtility:
+ 
+         return kwargs
+ 
++    def _extract_csv_dict_reader_kwargs(self):
++        """
++        Adapt the input CSV reader arguments for ``agate.csv.DictReader``.
++
++        Unlike ``agate.csv.reader``, ``DictReader`` does not accept a
++        ``field_size_limit`` keyword. The underlying csv module's field size
++        limit is process-wide, so apply it before constructing the reader.
++        """
++        kwargs = self.reader_kwargs.copy()
++        field_size_limit = kwargs.pop('field_size_limit', None)
++
++        if field_size_limit is not None:
++            csv.field_size_limit(field_size_limit)
++
++        return kwargs
++
+     def _extract_csv_writer_kwargs(self):
+         """
+         Extracts those from the command-line arguments those would should be passed through to the output CSV writer.
+diff --git a/csvkit/utilities/csvpy.py b/csvkit/utilities/csvpy.py
+index d454157243f61c7151326915edc4481481d1c5e8..485e8a62f6220880d75f5fb798e575649184297e 100644
+--- a/csvkit/utilities/csvpy.py
++++ b/csvkit/utilities/csvpy.py
+@@ -39,6 +39,7 @@ class CSVPy(CSVKitUtility):
+ 
+         # Attempt reading filename, will cause lazy loader to access file and raise error if it does not exist
+         filename = self.input_file.name
++        reader_kwargs = self.reader_kwargs
+ 
+         if self.args.as_dict:
+             klass = agate.csv.DictReader
+@@ -46,6 +47,7 @@ class CSVPy(CSVKitUtility):
+             variable_name = 'reader'
+             input_file = self.skip_lines()
+             kwargs = {}
++            reader_kwargs = self._extract_csv_dict_reader_kwargs()
+         elif self.args.as_agate:
+             klass = agate.Table.from_csv
+             class_name = 'agate.Table'
+@@ -65,7 +67,7 @@ class CSVPy(CSVKitUtility):
+             input_file = self.skip_lines()
+             kwargs = {}
+ 
+-        variable = klass(input_file, **kwargs, **self.reader_kwargs)
++        variable = klass(input_file, **kwargs, **reader_kwargs)
+ 
+         welcome_message = 'Welcome! "{}" has been loaded in an {} object named "{}".'.format(
+             filename, class_name, variable_name)
+diff --git a/csvkit/utilities/csvstack.py b/csvkit/utilities/csvstack.py
+index 1a07ee96b363dcd1a0dca8fdc625dbf1ce52b9b3..ab78b4aa1726158fb6bfd6f59b43ce919286baf8 100644
+--- a/csvkit/utilities/csvstack.py
++++ b/csvkit/utilities/csvstack.py
+@@ -60,8 +60,10 @@ class CSVStack(CSVKitUtility):
+ 
+         if use_fieldnames:
+             Reader = agate.csv.DictReader
++            reader_kwargs = self._extract_csv_dict_reader_kwargs()
+         else:
+             Reader = agate.csv.reader
++            reader_kwargs = self.reader_kwargs
+ 
+         headers = []
+         stdin_fieldnames = []
+@@ -72,7 +74,7 @@ class CSVStack(CSVKitUtility):
+             file_is_stdin = path == '-'
+ 
+             _skip_lines(f, self.args)
+-            rows = Reader(f, **self.reader_kwargs)
++            rows = Reader(f, **reader_kwargs)
+ 
+             if use_fieldnames:
+                 for field in rows.fieldnames:
+@@ -126,7 +128,7 @@ class CSVStack(CSVKitUtility):
+             if file_is_stdin and use_fieldnames:
+                 kwargs['fieldnames'] = stdin_fieldnames
+ 
+-            rows = Reader(f, **self.reader_kwargs, **kwargs)
++            rows = Reader(f, **reader_kwargs, **kwargs)
+ 
+             # If the file is standard input, we need to add back the row we used to calculate the number of columns.
+             if file_is_stdin and stdin_first_row:
+diff --git a/tests/test_utilities/test_csvpy.py b/tests/test_utilities/test_csvpy.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..49beec78025f9e194db129b2803a8702520fb18b
+--- /dev/null
++++ b/tests/test_utilities/test_csvpy.py
+@@ -0,0 +1,37 @@
++import csv
++import tempfile
++from unittest.mock import patch
++
++from csvkit.utilities.csvpy import CSVPy
++from tests.utils import CSVKitTestCase
++
++
++class TestCSVPy(CSVKitTestCase):
++    Utility = CSVPy
++
++    def test_dict_field_size_limit(self):
++        previous_limit = csv.field_size_limit()
++        self.addCleanup(csv.field_size_limit, previous_limit)
++        value = 'x' * (previous_limit + 1)
++        rows = []
++
++        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as f:
++            f.write(f'a\n{value}\n')
++            f.flush()
++
++            with patch('code.interact', side_effect=lambda banner, local: rows.extend(local['reader'])):
++                self.Utility(['--dict', '-z', str(len(value)), f.name]).run()
++
++        self.assertEqual(rows, [{'a': value}])
++
++    def test_dict_field_size_limit_bound(self):
++        previous_limit = csv.field_size_limit()
++        self.addCleanup(csv.field_size_limit, previous_limit)
++
++        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as f:
++            f.write('a\n12345\n')
++            f.flush()
++
++            with patch('code.interact', side_effect=lambda banner, local: list(local['reader'])):
++                with self.assertRaises(csv.Error):
++                    self.Utility(['--dict', '-z', '4', f.name]).run()
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 7187971a6eb32374fe6b038f4fd57009a2564ac4..7fa23120386099e2489b30b4ddbbcc6c8eb07f23 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,4 +1,6 @@
++import csv
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.csvstack import CSVStack, launch_new_instance
+@@ -34,6 +36,31 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_field_size_limit_with_header_row(self):
++        previous_limit = csv.field_size_limit()
++        self.addCleanup(csv.field_size_limit, previous_limit)
++        value = 'x' * (previous_limit + 1)
++
++        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as f:
++            f.write(f'a\n{value}\n')
++            f.flush()
++
++            self.assertRows(['--maxfieldsize', str(len(value)), f.name], [
++                ['a'],
++                [value],
++            ])
++
++    def test_field_size_limit_bound_with_header_row(self):
++        previous_limit = csv.field_size_limit()
++        self.addCleanup(csv.field_size_limit, previous_limit)
++
++        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as f:
++            f.write('a\n12345\n')
++            f.flush()
++
++            with self.assertRaises(csv.Error):
++                self.get_output(['-z', '4', f.name])
++
+     def test_multiple_file_stack(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy2.csv'], [
+             ['a', 'b', 'c'],

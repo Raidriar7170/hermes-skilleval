@@ -1,0 +1,161 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index a9038aaba9befee79ea5bbc6a9779d3061d0abb5..f142d9aa099cb3ca2a7fa13815141cf7c6b9c066 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -1,5 +1,4 @@
+ import csv
+-from dictdiffer import diff
+ import json
+ import hashlib
+ 
+@@ -29,21 +28,22 @@ def load_csv(fp, key=None, dialect=None):
+ def load_json(fp, key=None):
+     raw_list = json.load(fp)
+     assert isinstance(raw_list, list)
++    columns = []
++    for row in raw_list:
++        for column in row:
++            if column not in columns:
++                columns.append(column)
++    rows = [
++        dict(row, **{column: None for column in columns if column not in row})
++        for row in raw_list
++    ]
+     if key:
+         keyfn = lambda r: r[key]
+     else:
+         keyfn = lambda r: hashlib.sha1(
+             json.dumps(r, sort_keys=True).encode("utf8")
+         ).hexdigest()
+-    return {keyfn(r): _simplify_json_row(r) for r in raw_list}
+-
+-
+-def _simplify_json_row(r):
+-    # Convert list/dict values into JSON serialized strings
+-    for key, value in r.items():
+-        if isinstance(value, (dict, tuple, list)):
+-            r[key] = json.dumps(value)
+-    return r
++    return {keyfn(r): r for r in rows}
+ 
+ 
+ def compare(previous, current, show_unchanged=False):
+@@ -79,17 +79,16 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            diffs = list(diff(previous[id], current[id], ignore=ignore_columns))
+-            if diffs:
++            changes_for_row = {
++                field: [previous[id][field], current[id][field]]
++                for field in previous[id]
++                if field not in (ignore_columns or ())
++                and previous[id][field] != current[id][field]
++            }
++            if changes_for_row:
+                 changes = {
+                     "key": id,
+-                    "changes": {
+-                        # field can be a list if id contained '.' - #7
+-                        field[0]
+-                        if isinstance(field, list)
+-                        else field: [prev_value, current_value]
+-                        for _, field, (prev_value, current_value) in diffs
+-                    },
++                    "changes": changes_for_row,
+                 }
+                 if show_unchanged:
+                     changes["unchanged"] = {
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index de63c4c9c5c616fe06f7e3f40f750c849c3bfd30..fbd019dfa5290629be9a19880f97d1b9a813111a 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -138,7 +138,10 @@ def test_json_files(json_files):
+         "added": [],
+         "removed": [],
+         "changed": [
+-            {"key": 1, "changes": {"nested": ['{"foo": 3}', '{"foo": 3, "bar": 5}']}},
++            {
++                "key": 1,
++                "changes": {"nested": [{"foo": 3}, {"foo": 3, "bar": 5}]},
++            },
+             {"key": 2, "changes": {"name": ["Pancakes", "Pancakes!"]}},
+         ],
+         "columns_added": [],
+@@ -146,6 +149,24 @@ def test_json_files(json_files):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_json_output_for_missing_field_becoming_present(tmpdir):
++    one = tmpdir / "one.json"
++    one.write('[{"id": 1}, {"id": 2, "name": "Pancakes"}]')
++    two = tmpdir / "two.json"
++    two.write('[{"id": 1, "name": "Cleo"}, {"id": 2, "name": "Pancakes"}]')
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [str(one), str(two), "--key", "id", "--json", "--format", "json"],
++        catch_exceptions=False,
++    )
++
++    assert result.exit_code == 0
++    assert json.loads(result.output)["changed"] == [
++        {"key": 1, "changes": {"name": [None, "Cleo"]}}
++    ]
++
++
+ def test_sniff_format(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(cli.cli, [one, two, "--key", "id", "--json"])
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index 0e3670fde97b4b3859040eb038f7bf99a4767379..878885031550454b594461003610701f4688c900 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -1,5 +1,6 @@
+-from csv_diff import load_csv, compare
++from csv_diff import load_csv, load_json, compare
+ import io
++import json
+ 
+ ONE = """id,name,age
+ 1,Cleo,4
+@@ -65,6 +66,39 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_load_json_fills_missing_fields_and_preserves_nested_values():
++    rows = load_json(
++        io.StringIO(
++            json.dumps(
++                [
++                    {"id": 1, "details": {"kind": "cat"}},
++                    {"id": 2, "tags": ["friendly"]},
++                ]
++            )
++        ),
++        key="id",
++    )
++
++    assert rows == {
++        1: {"id": 1, "details": {"kind": "cat"}, "tags": None},
++        2: {"id": 2, "tags": ["friendly"], "details": None},
++    }
++
++
++def test_json_missing_field_becoming_present_is_a_change():
++    previous = load_json(
++        io.StringIO('[{"id": 1}, {"id": 2, "name": "Pancakes"}]'), key="id"
++    )
++    current = load_json(
++        io.StringIO('[{"id": 1, "name": "Cleo"}, {"id": 2, "name": "Pancakes"}]'),
++        key="id",
++    )
++
++    assert compare(previous, current)["changed"] == [
++        {"key": 1, "changes": {"name": [None, "Cleo"]}}
++    ]
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

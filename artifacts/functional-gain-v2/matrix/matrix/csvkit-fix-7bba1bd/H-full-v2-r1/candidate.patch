@@ -1,0 +1,71 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..6d1dbdd83c5b119bc98f3e19f4263798837fe36c 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -52,9 +52,25 @@ class CSVLook(CSVKitUtility):
+             sniff_limit=sniff_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
++            row_limit=max(0, self.args.max_rows) if self.args.max_rows is not None else None,
+             **self.reader_kwargs,
+         )
+ 
++        if (
++            self.args.max_rows is not None
++            and table.columns
++            and self.args.max_rows <= len(table.rows)
++        ):
++            # print_table only adds its truncation row when the table contains
++            # more rows than max_rows. Add an unrendered sentinel so that an
++            # explicitly bounded preview retains that marker without reading
++            # one more (potentially very large) CSV record.
++            table = agate.Table(
++                list(table.rows) + [[None] * len(table.columns)],
++                table.column_names,
++                table.column_types,
++            )
++
+         table.print_table(
+             output=self.output_file,
+             max_rows=self.args.max_rows,
+diff --git a/docs/scripts/csvlook.rst b/docs/scripts/csvlook.rst
+index 38ab7b1ff8a58e708192fc8ab3a3af6b1e378993..c378a981435890973a5a4a03cfaa58ed6176e489 100644
+--- a/docs/scripts/csvlook.rst
++++ b/docs/scripts/csvlook.rst
+@@ -87,3 +87,5 @@ If these rows are at the top of the file (for example, copyright notices), you c
+    csvlook --skip-lines 1 examples/bad.csv
+ 
+ This error can also occur if csvlook incorrectly deduces ("sniffs") the CSV format. To disable CSV sniffing, set :code:`--snifflimit 0` and then, if necessary, set the :code:`--delimiter` and :code:`--quotechar` options yourself. Or, set :code:`--snifflimit -1` to use the entire file as the sample, instead of the first 1024 bytes.
++
++When :code:`--max-rows` is set, csvlook reads only that many data rows. This is useful for previewing input whose later records are very large.
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..c494baeaa72f051a85e74f06711a840e07baab70 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,26 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_rows(self):
++        input_file = io.BytesIO(b'a,b\n1,2\n3,' + b'x' * 131073 + b'\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--max-rows', '1', '--snifflimit', '0', '--no-inference'], [
++                '| a | b |',
++                '| - | - |',
++                '| 1 | 2 |',
++                '| ... | ... |',
++            ])
++
++        input_file.close()
++
++    def test_max_rows_larger_than_input(self):
++        self.assertLines(['--max-rows', '5', 'examples/dummy.csv'], [
++            '|    a | b | c |',
++            '| ---- | - | - |',
++            '| True | 2 | 3 |',
++        ])
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

@@ -1,0 +1,1130 @@
+{
+  "scope": "Derived prospective decision summaries; raw checkpoint/session/source state omitted. Original lock SHA identifies the private frozen lock and is not a digest of this redacted summary.",
+  "rows": [
+    {
+      "binding": {
+        "observable_state_sha256": "dcbf82f686baaa515a3e00cc2675cb1a0f25b6b82b462af5e69198f04ec0a722",
+        "visible_prefix_sha256": "2b80bd2c5455877f9af7d12ecdb42265367e799b2cbb1ec8f91f23c971597814",
+        "source_sha256": "31da0bb16b17740c92a874168fd8f33f20f7b13b460ca6e3dbd531373ad1dd6c",
+        "scratch_sha256": "8f73f30812c46f2c67647b1be437bdec344dc52c84be80569988afbffe535ffb",
+        "initial_remaining": 535.0076475839596,
+        "candidates": [
+          {
+            "id": "tabular-conversion",
+            "payload": "# tabular-conversion\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for in2csv conversion of the documented input formats to CSV. Select the actual input format and applicable flags. Check headers, types and missing values in a small fixture. Format-specific flags are not interchangeable; follow the source limitations below.\n\n## Versioned reference\n\n======\nin2csv\n======\n\nDescription\n===========\n\nConverts various tabular data formats into CSV.\n\nConverting fixed width requires that you provide a schema file with the \"-s\" option. The schema file should have the following format::\n\n    column,start,length\n    name,0,30\n    birthday,30,10\n    age,40,3\n\nThe header line is required though the columns may be in any order::\n\n    usage: in2csv [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                  [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]\n                  [-S] [--blanks] [--date-format DATE_FORMAT]\n                  [--datetime-format DATETIME_FORMAT] [-H] [-K SKIP_LINES] [-v]\n                  [-l] [--zero] [-V] [-f FILETYPE] [-s SCHEMA] [-k KEY] [-n]\n                  [--sheet SHEET] [--write-sheets WRITE_SHEETS]\n                  [--encoding-xls ENCODING_XLS] [-y SNIFF_LIMIT] [-I]\n                  [FILE]\n\n    Convert common, but less awesome, tabular data formats to CSV.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -f FILETYPE, --format FILETYPE\n                            The format of the input file. If not specified will be\n                            inferred from the file type. Supported formats: csv,\n                            dbf, fixed, geojson, json, ndjson, xls, xlsx.\n      -s SCHEMA, --schema SCHEMA\n                            Specify a CSV-formatted schema file for converting\n                            fixed-width files. See documentation for details.\n      -k KEY, --key KEY     Specify a top-level key to use look within for a list\n                            of objects to be converted when processing JSON.\n      -n, --names           Display sheet names from the input Excel file.\n      --sheet SHEET         The name of the Excel sheet to operate on.\n      --write-sheets WRITE_SHEETS\n                            The names of the Excel sheets to write to files, or\n                            \"-\" to write all sheets.\n      -y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT\n                            Limit CSV dialect sniffing to the specified number of\n                            bytes. Specify \"0\" to disable sniffing entirely.\n      -I, --no-inference    Disable type inference (and --locale, --date-format,\n                            --datetime-format) when parsing CSV input.\n\n    Some command-line flags only pertain to specific input formats.\n\nSee also: :doc:`../common_arguments`.\n\n.. note::\n\n    The \"ndjson\" format refers to \"newline delimited JSON\", as used by many streaming APIs.\n\n.. note::\n\n    If an XLS looks identical to an XLSX when viewed in Excel, they may not be identical as CSV. For example, XLSX has an integer type, but XLS doesn't. Numbers that look like integers from an XLS will have decimals in CSV, but those from an XLSX won't.\n\n.. note::\n\n    To convert from HTML, consider `messytables <https://messytables.readthedocs.io/>`_.\n\nExamples\n========\n\nConvert the 2000 census geo headers file from fixed-width to CSV and from latin-1 encoding to utf8::\n\n    in2csv -e iso-8859-1 -f fixed -s examples/realdata/census_2000/census2000_geo_schema.csv examples/realdata/census_2000/usgeo_excerpt.upl\n\n.. note::\n\n    A library of fixed-width schemas is maintained in the ``ffs`` project:\n\n    https://github.com/wireservice/ffs\n\nConvert an Excel .xls file::\n\n    in2csv examples/test.xls\n\nStandardize the formatting of a CSV file (quoting, line endings, etc.)::\n\n    in2csv examples/realdata/FY09_EDU_Recipients_by_State.csv\n\nFetch csvkit's open issues from the GitHub API, convert the JSON response into a CSV and write it to a file::\n\n    curl https://api.github.com/repos/wireservice/csvkit/issues?state=open | in2csv -f json -v\n\nConvert a DBase DBF file to an equivalent CSV::\n\n    in2csv examples/testdbf.dbf\n\nThis tool names unnamed headers. To avoid that behavior, run::\n\n    in2csv --no-header-row examples/test.xlsx | tail -n +2\n\n",
+            "payload_sha256": "0e7d972aa124f02d13a9f18544f6e706309bee425d9528dd4d0ef7e3670b18de"
+          },
+          {
+            "id": "csv-dialect",
+            "payload": "# csv-dialect\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for CSV delimiter, quoting, escaping and line-ending conversion with csvformat. Separate input dialect flags from output dialect flags, run a minimal fixture, and compare parsed field contents before and after. This is serialization conversion; it does not implement arbitrary sorting, joins or database schema changes.\n\n## Versioned reference\n\n=========\ncsvformat\n=========\n\nDescription\n===========\n\nConvert a CSV file to a custom output format.::\n\n    usage: csvformat [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                     [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S]\n                     [--blanks] [-K SKIP_LINES] [-v] [-V] [-D OUT_DELIMITER] [-T]\n                     [-Q OUT_QUOTECHAR] [-U {0,1,2,3}] [-B] [-P OUT_ESCAPECHAR]\n                     [-M OUT_LINETERMINATOR]\n                     [FILE]\n\n    Convert a CSV file to a custom output format.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -D OUT_DELIMITER, --out-delimiter OUT_DELIMITER\n                            Delimiting character of the output CSV file.\n      -T, --out-tabs        Specify that the output CSV file is delimited with\n                            tabs. Overrides \"-D\".\n      -Q OUT_QUOTECHAR, --out-quotechar OUT_QUOTECHAR\n                            Character used to quote strings in the output CSV\n                            file.\n      -U {0,1,2,3}, --out-quoting {0,1,2,3}\n                            Quoting style used in the output CSV file. 0 = Quote\n                            Minimal, 1 = Quote All, 2 = Quote Non-numeric, 3 =\n                            Quote None.\n      -B, --out-no-doublequote\n                            Whether or not double quotes are doubled in the output\n                            CSV file.\n      -P OUT_ESCAPECHAR, --out-escapechar OUT_ESCAPECHAR\n                            Character used to escape the delimiter in the output\n                            CSV file if --quoting 3 (\"Quote None\") is specified\n                            and to escape the QUOTECHAR if --no-doublequote is\n                            specified.\n      -M OUT_LINETERMINATOR, --out-lineterminator OUT_LINETERMINATOR\n                            Character used to terminate lines in the output CSV\n                            file.\n\nSee also: :doc:`../common_arguments`.\n\nExamples\n========\n\nConvert a comma-separated file to a pipe-delimited file::\n\n    csvformat -D \"|\" examples/dummy.csv\n\nConvert to carriage return line-endings::\n\n    csvformat -M $'\\r' examples/dummy.csv\n\nTo avoid escaping quote characters when using :code:`--quoting 3`, add :code:`--out-quotechar \"\"`::\n\n    csvformat -u 3 -U 3 -Q \"\" examples/optional_quote_characters.csv\n\n",
+            "payload_sha256": "92929ab4e242edd3183a1379b0c110800d7a851b2ab0d47c9b399f2a9ca9e7d0"
+          }
+        ],
+        "binding_sha256": "061d397349725fba7f763a553fb63d8ee138448e01c273d4f86fcd97537d556c"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "tabular-conversion": 0.024340461939573288,
+            "csv-dialect": -0.13204167783260345
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "tabular-conversion",
+          "stopping_policy_decision": {
+            "action": "INJECT",
+            "skill_id": "tabular-conversion",
+            "reason": "FUNCTIONAL_POLICY_DECISION",
+            "gains": {
+              "tabular-conversion": 0.024340461939573288,
+              "csv-dialect": -0.13204167783260345
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "tabular-conversion": -5.604419857263565e-05,
+            "csv-dialect": 0.03266631066799164
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "csv-dialect",
+          "stopping_policy_decision": {
+            "action": "INJECT",
+            "skill_id": "csv-dialect",
+            "reason": "FUNCTIONAL_POLICY_DECISION",
+            "gains": {
+              "tabular-conversion": -5.604419857263565e-05,
+              "csv-dialect": 0.03266631066799164
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "P1-v2": {
+          "gains": {
+            "tabular-conversion": 0.0,
+            "csv-dialect": 0.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "NO_INTERVENTION",
+            "reason": "FUNCTIONAL_NOOP",
+            "gains": {
+              "tabular-conversion": 0.0,
+              "csv-dialect": 0.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        }
+      },
+      "now_skill": "tabular-conversion",
+      "representation_identifiable": true,
+      "delay_eligible": false,
+      "wait_sensitive": false,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 1,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 2,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "1a2d729fcb3a878075ad942e56f138f77e525f4f92ac1ba622ca62797d080045",
+      "common_prediction_seconds": 0.04954933398403227,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "csvkit-fix-0867890",
+      "state_summary": {
+        "stage": "E2",
+        "completed_turn_index": 2,
+        "remaining_seconds": 535.0076475839596,
+        "total_seconds": 600,
+        "public_test_exit": 1,
+        "repeated_error_count": 1,
+        "public_tests_run": 2,
+        "public_test_failure_seen": true,
+        "observed_pass_count": 1,
+        "observed_fail_count": 1,
+        "text_original_chars": 13191,
+        "text_retained_chars": 9375
+      },
+      "original_state_sha256": "efd4cca763745464e7cead73a79cf075b7f8ea5d4f4f723c1bfd07a6f511b48b"
+    },
+    {
+      "binding": {
+        "observable_state_sha256": "1e966a8e06b36d539445146499d7ea8aaed7f5045063545d6975c9e119893c9a",
+        "visible_prefix_sha256": "61b8ae57baebb5229783af0b034965d9604240e5999d681ab9cdb96fce35f9f4",
+        "source_sha256": "1fce2fe6cbf2f12cf97bad978f59d63783793405c5143c77cfd33d24f0bb83d8",
+        "scratch_sha256": "8f73f30812c46f2c67647b1be437bdec344dc52c84be80569988afbffe535ffb",
+        "initial_remaining": 551.4327425840311,
+        "candidates": [
+          {
+            "id": "csv-dialect",
+            "payload": "# csv-dialect\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for CSV delimiter, quoting, escaping and line-ending conversion with csvformat. Separate input dialect flags from output dialect flags, run a minimal fixture, and compare parsed field contents before and after. This is serialization conversion; it does not implement arbitrary sorting, joins or database schema changes.\n\n## Versioned reference\n\n=========\ncsvformat\n=========\n\nDescription\n===========\n\nConvert a CSV file to a custom output format.::\n\n    usage: csvformat [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                     [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S]\n                     [--blanks] [-K SKIP_LINES] [-v] [-V] [-D OUT_DELIMITER] [-T]\n                     [-Q OUT_QUOTECHAR] [-U {0,1,2,3}] [-B] [-P OUT_ESCAPECHAR]\n                     [-M OUT_LINETERMINATOR]\n                     [FILE]\n\n    Convert a CSV file to a custom output format.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -D OUT_DELIMITER, --out-delimiter OUT_DELIMITER\n                            Delimiting character of the output CSV file.\n      -T, --out-tabs        Specify that the output CSV file is delimited with\n                            tabs. Overrides \"-D\".\n      -Q OUT_QUOTECHAR, --out-quotechar OUT_QUOTECHAR\n                            Character used to quote strings in the output CSV\n                            file.\n      -U {0,1,2,3}, --out-quoting {0,1,2,3}\n                            Quoting style used in the output CSV file. 0 = Quote\n                            Minimal, 1 = Quote All, 2 = Quote Non-numeric, 3 =\n                            Quote None.\n      -B, --out-no-doublequote\n                            Whether or not double quotes are doubled in the output\n                            CSV file.\n      -P OUT_ESCAPECHAR, --out-escapechar OUT_ESCAPECHAR\n                            Character used to escape the delimiter in the output\n                            CSV file if --quoting 3 (\"Quote None\") is specified\n                            and to escape the QUOTECHAR if --no-doublequote is\n                            specified.\n      -M OUT_LINETERMINATOR, --out-lineterminator OUT_LINETERMINATOR\n                            Character used to terminate lines in the output CSV\n                            file.\n\nSee also: :doc:`../common_arguments`.\n\nExamples\n========\n\nConvert a comma-separated file to a pipe-delimited file::\n\n    csvformat -D \"|\" examples/dummy.csv\n\nConvert to carriage return line-endings::\n\n    csvformat -M $'\\r' examples/dummy.csv\n\nTo avoid escaping quote characters when using :code:`--quoting 3`, add :code:`--out-quotechar \"\"`::\n\n    csvformat -u 3 -U 3 -Q \"\" examples/optional_quote_characters.csv\n\n",
+            "payload_sha256": "92929ab4e242edd3183a1379b0c110800d7a851b2ab0d47c9b399f2a9ca9e7d0"
+          },
+          {
+            "id": "tabular-conversion",
+            "payload": "# tabular-conversion\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for in2csv conversion of the documented input formats to CSV. Select the actual input format and applicable flags. Check headers, types and missing values in a small fixture. Format-specific flags are not interchangeable; follow the source limitations below.\n\n## Versioned reference\n\n======\nin2csv\n======\n\nDescription\n===========\n\nConverts various tabular data formats into CSV.\n\nConverting fixed width requires that you provide a schema file with the \"-s\" option. The schema file should have the following format::\n\n    column,start,length\n    name,0,30\n    birthday,30,10\n    age,40,3\n\nThe header line is required though the columns may be in any order::\n\n    usage: in2csv [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                  [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]\n                  [-S] [--blanks] [--date-format DATE_FORMAT]\n                  [--datetime-format DATETIME_FORMAT] [-H] [-K SKIP_LINES] [-v]\n                  [-l] [--zero] [-V] [-f FILETYPE] [-s SCHEMA] [-k KEY] [-n]\n                  [--sheet SHEET] [--write-sheets WRITE_SHEETS]\n                  [--encoding-xls ENCODING_XLS] [-y SNIFF_LIMIT] [-I]\n                  [FILE]\n\n    Convert common, but less awesome, tabular data formats to CSV.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -f FILETYPE, --format FILETYPE\n                            The format of the input file. If not specified will be\n                            inferred from the file type. Supported formats: csv,\n                            dbf, fixed, geojson, json, ndjson, xls, xlsx.\n      -s SCHEMA, --schema SCHEMA\n                            Specify a CSV-formatted schema file for converting\n                            fixed-width files. See documentation for details.\n      -k KEY, --key KEY     Specify a top-level key to use look within for a list\n                            of objects to be converted when processing JSON.\n      -n, --names           Display sheet names from the input Excel file.\n      --sheet SHEET         The name of the Excel sheet to operate on.\n      --write-sheets WRITE_SHEETS\n                            The names of the Excel sheets to write to files, or\n                            \"-\" to write all sheets.\n      -y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT\n                            Limit CSV dialect sniffing to the specified number of\n                            bytes. Specify \"0\" to disable sniffing entirely.\n      -I, --no-inference    Disable type inference (and --locale, --date-format,\n                            --datetime-format) when parsing CSV input.\n\n    Some command-line flags only pertain to specific input formats.\n\nSee also: :doc:`../common_arguments`.\n\n.. note::\n\n    The \"ndjson\" format refers to \"newline delimited JSON\", as used by many streaming APIs.\n\n.. note::\n\n    If an XLS looks identical to an XLSX when viewed in Excel, they may not be identical as CSV. For example, XLSX has an integer type, but XLS doesn't. Numbers that look like integers from an XLS will have decimals in CSV, but those from an XLSX won't.\n\n.. note::\n\n    To convert from HTML, consider `messytables <https://messytables.readthedocs.io/>`_.\n\nExamples\n========\n\nConvert the 2000 census geo headers file from fixed-width to CSV and from latin-1 encoding to utf8::\n\n    in2csv -e iso-8859-1 -f fixed -s examples/realdata/census_2000/census2000_geo_schema.csv examples/realdata/census_2000/usgeo_excerpt.upl\n\n.. note::\n\n    A library of fixed-width schemas is maintained in the ``ffs`` project:\n\n    https://github.com/wireservice/ffs\n\nConvert an Excel .xls file::\n\n    in2csv examples/test.xls\n\nStandardize the formatting of a CSV file (quoting, line endings, etc.)::\n\n    in2csv examples/realdata/FY09_EDU_Recipients_by_State.csv\n\nFetch csvkit's open issues from the GitHub API, convert the JSON response into a CSV and write it to a file::\n\n    curl https://api.github.com/repos/wireservice/csvkit/issues?state=open | in2csv -f json -v\n\nConvert a DBase DBF file to an equivalent CSV::\n\n    in2csv examples/testdbf.dbf\n\nThis tool names unnamed headers. To avoid that behavior, run::\n\n    in2csv --no-header-row examples/test.xlsx | tail -n +2\n\n",
+            "payload_sha256": "0e7d972aa124f02d13a9f18544f6e706309bee425d9528dd4d0ef7e3670b18de"
+          }
+        ],
+        "binding_sha256": "40b377258c496d51aaf7703f010d972f1a00e28260e1ba21a642749592c9dcff"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "csv-dialect": -0.43203988671302795,
+            "tabular-conversion": 0.003680916503071785
+          },
+          "wait": 0.015318699181079865,
+          "immediate_gain_action": "tabular-conversion",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "csv-dialect": -0.43203988671302795,
+              "tabular-conversion": 0.003680916503071785
+            },
+            "waiting_value": 0.015318699181079865,
+            "wait_sensitive": true
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "csv-dialect": -0.15066923201084137,
+            "tabular-conversion": -0.0041029201820492744
+          },
+          "wait": 0.006594158709049225,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "csv-dialect": -0.15066923201084137,
+              "tabular-conversion": -0.0041029201820492744
+            },
+            "waiting_value": 0.006594158709049225,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "P1-v2": {
+          "gains": {
+            "csv-dialect": -1.0,
+            "tabular-conversion": 0.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "csv-dialect": -1.0,
+              "tabular-conversion": 0.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        }
+      },
+      "now_skill": "tabular-conversion",
+      "representation_identifiable": true,
+      "delay_eligible": true,
+      "wait_sensitive": true,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 1,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 2,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "4213604308ee9ff94ecceb8be33cea639e9c8f78e3e849d9c973604a7c614221",
+      "common_prediction_seconds": 0.07301412499509752,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "csvkit-fix-4b0b397",
+      "state_summary": {
+        "stage": "E1",
+        "completed_turn_index": 1,
+        "remaining_seconds": 551.4327425840311,
+        "total_seconds": 600,
+        "public_test_exit": 1,
+        "repeated_error_count": 1,
+        "public_tests_run": 1,
+        "public_test_failure_seen": true,
+        "observed_pass_count": 0,
+        "observed_fail_count": 1,
+        "text_original_chars": 15048,
+        "text_retained_chars": 9691
+      },
+      "original_state_sha256": "38a25a62108463429476bf73debdd7d053549b7453db1680c382f5e6b77102f4"
+    },
+    {
+      "binding": {
+        "observable_state_sha256": "2a5fb87084ee3982d80d4341961150c3075f948b1580d718bd91802fc79585a0",
+        "visible_prefix_sha256": "c5385f81c553b8684b117193bf7e9351a7022cc2d1c2c8be2266c0c836c16f2d",
+        "source_sha256": "10c07a2db918efd2d906c00b469605ac2bd875cdf34c0a3f5e3883c3a36d439a",
+        "scratch_sha256": "8f73f30812c46f2c67647b1be437bdec344dc52c84be80569988afbffe535ffb",
+        "initial_remaining": 522.4269980009994,
+        "candidates": [
+          {
+            "id": "csv-dialect",
+            "payload": "# csv-dialect\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for CSV delimiter, quoting, escaping and line-ending conversion with csvformat. Separate input dialect flags from output dialect flags, run a minimal fixture, and compare parsed field contents before and after. This is serialization conversion; it does not implement arbitrary sorting, joins or database schema changes.\n\n## Versioned reference\n\n=========\ncsvformat\n=========\n\nDescription\n===========\n\nConvert a CSV file to a custom output format.::\n\n    usage: csvformat [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                     [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S]\n                     [--blanks] [-K SKIP_LINES] [-v] [-V] [-D OUT_DELIMITER] [-T]\n                     [-Q OUT_QUOTECHAR] [-U {0,1,2,3}] [-B] [-P OUT_ESCAPECHAR]\n                     [-M OUT_LINETERMINATOR]\n                     [FILE]\n\n    Convert a CSV file to a custom output format.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -D OUT_DELIMITER, --out-delimiter OUT_DELIMITER\n                            Delimiting character of the output CSV file.\n      -T, --out-tabs        Specify that the output CSV file is delimited with\n                            tabs. Overrides \"-D\".\n      -Q OUT_QUOTECHAR, --out-quotechar OUT_QUOTECHAR\n                            Character used to quote strings in the output CSV\n                            file.\n      -U {0,1,2,3}, --out-quoting {0,1,2,3}\n                            Quoting style used in the output CSV file. 0 = Quote\n                            Minimal, 1 = Quote All, 2 = Quote Non-numeric, 3 =\n                            Quote None.\n      -B, --out-no-doublequote\n                            Whether or not double quotes are doubled in the output\n                            CSV file.\n      -P OUT_ESCAPECHAR, --out-escapechar OUT_ESCAPECHAR\n                            Character used to escape the delimiter in the output\n                            CSV file if --quoting 3 (\"Quote None\") is specified\n                            and to escape the QUOTECHAR if --no-doublequote is\n                            specified.\n      -M OUT_LINETERMINATOR, --out-lineterminator OUT_LINETERMINATOR\n                            Character used to terminate lines in the output CSV\n                            file.\n\nSee also: :doc:`../common_arguments`.\n\nExamples\n========\n\nConvert a comma-separated file to a pipe-delimited file::\n\n    csvformat -D \"|\" examples/dummy.csv\n\nConvert to carriage return line-endings::\n\n    csvformat -M $'\\r' examples/dummy.csv\n\nTo avoid escaping quote characters when using :code:`--quoting 3`, add :code:`--out-quotechar \"\"`::\n\n    csvformat -u 3 -U 3 -Q \"\" examples/optional_quote_characters.csv\n\n",
+            "payload_sha256": "92929ab4e242edd3183a1379b0c110800d7a851b2ab0d47c9b399f2a9ca9e7d0"
+          },
+          {
+            "id": "tabular-conversion",
+            "payload": "# tabular-conversion\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for in2csv conversion of the documented input formats to CSV. Select the actual input format and applicable flags. Check headers, types and missing values in a small fixture. Format-specific flags are not interchangeable; follow the source limitations below.\n\n## Versioned reference\n\n======\nin2csv\n======\n\nDescription\n===========\n\nConverts various tabular data formats into CSV.\n\nConverting fixed width requires that you provide a schema file with the \"-s\" option. The schema file should have the following format::\n\n    column,start,length\n    name,0,30\n    birthday,30,10\n    age,40,3\n\nThe header line is required though the columns may be in any order::\n\n    usage: in2csv [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                  [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]\n                  [-S] [--blanks] [--date-format DATE_FORMAT]\n                  [--datetime-format DATETIME_FORMAT] [-H] [-K SKIP_LINES] [-v]\n                  [-l] [--zero] [-V] [-f FILETYPE] [-s SCHEMA] [-k KEY] [-n]\n                  [--sheet SHEET] [--write-sheets WRITE_SHEETS]\n                  [--encoding-xls ENCODING_XLS] [-y SNIFF_LIMIT] [-I]\n                  [FILE]\n\n    Convert common, but less awesome, tabular data formats to CSV.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -f FILETYPE, --format FILETYPE\n                            The format of the input file. If not specified will be\n                            inferred from the file type. Supported formats: csv,\n                            dbf, fixed, geojson, json, ndjson, xls, xlsx.\n      -s SCHEMA, --schema SCHEMA\n                            Specify a CSV-formatted schema file for converting\n                            fixed-width files. See documentation for details.\n      -k KEY, --key KEY     Specify a top-level key to use look within for a list\n                            of objects to be converted when processing JSON.\n      -n, --names           Display sheet names from the input Excel file.\n      --sheet SHEET         The name of the Excel sheet to operate on.\n      --write-sheets WRITE_SHEETS\n                            The names of the Excel sheets to write to files, or\n                            \"-\" to write all sheets.\n      -y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT\n                            Limit CSV dialect sniffing to the specified number of\n                            bytes. Specify \"0\" to disable sniffing entirely.\n      -I, --no-inference    Disable type inference (and --locale, --date-format,\n                            --datetime-format) when parsing CSV input.\n\n    Some command-line flags only pertain to specific input formats.\n\nSee also: :doc:`../common_arguments`.\n\n.. note::\n\n    The \"ndjson\" format refers to \"newline delimited JSON\", as used by many streaming APIs.\n\n.. note::\n\n    If an XLS looks identical to an XLSX when viewed in Excel, they may not be identical as CSV. For example, XLSX has an integer type, but XLS doesn't. Numbers that look like integers from an XLS will have decimals in CSV, but those from an XLSX won't.\n\n.. note::\n\n    To convert from HTML, consider `messytables <https://messytables.readthedocs.io/>`_.\n\nExamples\n========\n\nConvert the 2000 census geo headers file from fixed-width to CSV and from latin-1 encoding to utf8::\n\n    in2csv -e iso-8859-1 -f fixed -s examples/realdata/census_2000/census2000_geo_schema.csv examples/realdata/census_2000/usgeo_excerpt.upl\n\n.. note::\n\n    A library of fixed-width schemas is maintained in the ``ffs`` project:\n\n    https://github.com/wireservice/ffs\n\nConvert an Excel .xls file::\n\n    in2csv examples/test.xls\n\nStandardize the formatting of a CSV file (quoting, line endings, etc.)::\n\n    in2csv examples/realdata/FY09_EDU_Recipients_by_State.csv\n\nFetch csvkit's open issues from the GitHub API, convert the JSON response into a CSV and write it to a file::\n\n    curl https://api.github.com/repos/wireservice/csvkit/issues?state=open | in2csv -f json -v\n\nConvert a DBase DBF file to an equivalent CSV::\n\n    in2csv examples/testdbf.dbf\n\nThis tool names unnamed headers. To avoid that behavior, run::\n\n    in2csv --no-header-row examples/test.xlsx | tail -n +2\n\n",
+            "payload_sha256": "0e7d972aa124f02d13a9f18544f6e706309bee425d9528dd4d0ef7e3670b18de"
+          }
+        ],
+        "binding_sha256": "0b86b478bbc0cfdf6bf42969c430b596f7f7dec06d1169d942b2c14ad86133fa"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "csv-dialect": -0.5373905897140503,
+            "tabular-conversion": -0.058542825281620026
+          },
+          "wait": -0.008871667087078094,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "csv-dialect": -0.5373905897140503,
+              "tabular-conversion": -0.058542825281620026
+            },
+            "waiting_value": -0.008871667087078094,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "csv-dialect": -0.16242535412311554,
+            "tabular-conversion": -0.007974761538207531
+          },
+          "wait": -0.0006569847464561462,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "csv-dialect": -0.16242535412311554,
+              "tabular-conversion": -0.007974761538207531
+            },
+            "waiting_value": -0.0006569847464561462,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "P1-v2": {
+          "gains": {
+            "csv-dialect": -1.0,
+            "tabular-conversion": 0.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "csv-dialect": -1.0,
+              "tabular-conversion": 0.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        }
+      },
+      "now_skill": "tabular-conversion",
+      "representation_identifiable": true,
+      "delay_eligible": true,
+      "wait_sensitive": false,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 1,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 2,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "844b17db18642c2527dbbde9048d6a4eafbab61617a279e81f7baff3cc2a9360",
+      "common_prediction_seconds": 0.04659187496872619,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "csvkit-fix-7bba1bd",
+      "state_summary": {
+        "stage": "E1",
+        "completed_turn_index": 2,
+        "remaining_seconds": 522.4269980009994,
+        "total_seconds": 600,
+        "public_test_exit": 1,
+        "repeated_error_count": 1,
+        "public_tests_run": 1,
+        "public_test_failure_seen": true,
+        "observed_pass_count": 0,
+        "observed_fail_count": 1,
+        "text_original_chars": 18185,
+        "text_retained_chars": 8607
+      },
+      "original_state_sha256": "0e821db01732858009f1d1b0dca9cd9a583078569617e599726452e6dc7e7ba4"
+    },
+    {
+      "binding": {
+        "observable_state_sha256": "ec4211680c79da42700ca3681374da5cf6432936e403329162fde32a25557701",
+        "visible_prefix_sha256": "f0fabdac519422ca23de4519c5e2dbe2b5afdaeae3388eb946cfb47e6880acf1",
+        "source_sha256": "076243e81f8398d7597a7ef206c7723de01fd524837cb64f20e0bcb806f9e443",
+        "scratch_sha256": "8f73f30812c46f2c67647b1be437bdec344dc52c84be80569988afbffe535ffb",
+        "initial_remaining": 541.7649200420128,
+        "candidates": [
+          {
+            "id": "tabular-conversion",
+            "payload": "# tabular-conversion\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for in2csv conversion of the documented input formats to CSV. Select the actual input format and applicable flags. Check headers, types and missing values in a small fixture. Format-specific flags are not interchangeable; follow the source limitations below.\n\n## Versioned reference\n\n======\nin2csv\n======\n\nDescription\n===========\n\nConverts various tabular data formats into CSV.\n\nConverting fixed width requires that you provide a schema file with the \"-s\" option. The schema file should have the following format::\n\n    column,start,length\n    name,0,30\n    birthday,30,10\n    age,40,3\n\nThe header line is required though the columns may be in any order::\n\n    usage: in2csv [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                  [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]\n                  [-S] [--blanks] [--date-format DATE_FORMAT]\n                  [--datetime-format DATETIME_FORMAT] [-H] [-K SKIP_LINES] [-v]\n                  [-l] [--zero] [-V] [-f FILETYPE] [-s SCHEMA] [-k KEY] [-n]\n                  [--sheet SHEET] [--write-sheets WRITE_SHEETS]\n                  [--encoding-xls ENCODING_XLS] [-y SNIFF_LIMIT] [-I]\n                  [FILE]\n\n    Convert common, but less awesome, tabular data formats to CSV.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -f FILETYPE, --format FILETYPE\n                            The format of the input file. If not specified will be\n                            inferred from the file type. Supported formats: csv,\n                            dbf, fixed, geojson, json, ndjson, xls, xlsx.\n      -s SCHEMA, --schema SCHEMA\n                            Specify a CSV-formatted schema file for converting\n                            fixed-width files. See documentation for details.\n      -k KEY, --key KEY     Specify a top-level key to use look within for a list\n                            of objects to be converted when processing JSON.\n      -n, --names           Display sheet names from the input Excel file.\n      --sheet SHEET         The name of the Excel sheet to operate on.\n      --write-sheets WRITE_SHEETS\n                            The names of the Excel sheets to write to files, or\n                            \"-\" to write all sheets.\n      -y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT\n                            Limit CSV dialect sniffing to the specified number of\n                            bytes. Specify \"0\" to disable sniffing entirely.\n      -I, --no-inference    Disable type inference (and --locale, --date-format,\n                            --datetime-format) when parsing CSV input.\n\n    Some command-line flags only pertain to specific input formats.\n\nSee also: :doc:`../common_arguments`.\n\n.. note::\n\n    The \"ndjson\" format refers to \"newline delimited JSON\", as used by many streaming APIs.\n\n.. note::\n\n    If an XLS looks identical to an XLSX when viewed in Excel, they may not be identical as CSV. For example, XLSX has an integer type, but XLS doesn't. Numbers that look like integers from an XLS will have decimals in CSV, but those from an XLSX won't.\n\n.. note::\n\n    To convert from HTML, consider `messytables <https://messytables.readthedocs.io/>`_.\n\nExamples\n========\n\nConvert the 2000 census geo headers file from fixed-width to CSV and from latin-1 encoding to utf8::\n\n    in2csv -e iso-8859-1 -f fixed -s examples/realdata/census_2000/census2000_geo_schema.csv examples/realdata/census_2000/usgeo_excerpt.upl\n\n.. note::\n\n    A library of fixed-width schemas is maintained in the ``ffs`` project:\n\n    https://github.com/wireservice/ffs\n\nConvert an Excel .xls file::\n\n    in2csv examples/test.xls\n\nStandardize the formatting of a CSV file (quoting, line endings, etc.)::\n\n    in2csv examples/realdata/FY09_EDU_Recipients_by_State.csv\n\nFetch csvkit's open issues from the GitHub API, convert the JSON response into a CSV and write it to a file::\n\n    curl https://api.github.com/repos/wireservice/csvkit/issues?state=open | in2csv -f json -v\n\nConvert a DBase DBF file to an equivalent CSV::\n\n    in2csv examples/testdbf.dbf\n\nThis tool names unnamed headers. To avoid that behavior, run::\n\n    in2csv --no-header-row examples/test.xlsx | tail -n +2\n\n",
+            "payload_sha256": "0e7d972aa124f02d13a9f18544f6e706309bee425d9528dd4d0ef7e3670b18de"
+          },
+          {
+            "id": "csv-dialect",
+            "payload": "# csv-dialect\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for CSV delimiter, quoting, escaping and line-ending conversion with csvformat. Separate input dialect flags from output dialect flags, run a minimal fixture, and compare parsed field contents before and after. This is serialization conversion; it does not implement arbitrary sorting, joins or database schema changes.\n\n## Versioned reference\n\n=========\ncsvformat\n=========\n\nDescription\n===========\n\nConvert a CSV file to a custom output format.::\n\n    usage: csvformat [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]\n                     [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S]\n                     [--blanks] [-K SKIP_LINES] [-v] [-V] [-D OUT_DELIMITER] [-T]\n                     [-Q OUT_QUOTECHAR] [-U {0,1,2,3}] [-B] [-P OUT_ESCAPECHAR]\n                     [-M OUT_LINETERMINATOR]\n                     [FILE]\n\n    Convert a CSV file to a custom output format.\n\n    positional arguments:\n      FILE                  The CSV file to operate on. If omitted, will accept\n                            input as piped data via STDIN.\n\n    optional arguments:\n      -h, --help            show this help message and exit\n      -D OUT_DELIMITER, --out-delimiter OUT_DELIMITER\n                            Delimiting character of the output CSV file.\n      -T, --out-tabs        Specify that the output CSV file is delimited with\n                            tabs. Overrides \"-D\".\n      -Q OUT_QUOTECHAR, --out-quotechar OUT_QUOTECHAR\n                            Character used to quote strings in the output CSV\n                            file.\n      -U {0,1,2,3}, --out-quoting {0,1,2,3}\n                            Quoting style used in the output CSV file. 0 = Quote\n                            Minimal, 1 = Quote All, 2 = Quote Non-numeric, 3 =\n                            Quote None.\n      -B, --out-no-doublequote\n                            Whether or not double quotes are doubled in the output\n                            CSV file.\n      -P OUT_ESCAPECHAR, --out-escapechar OUT_ESCAPECHAR\n                            Character used to escape the delimiter in the output\n                            CSV file if --quoting 3 (\"Quote None\") is specified\n                            and to escape the QUOTECHAR if --no-doublequote is\n                            specified.\n      -M OUT_LINETERMINATOR, --out-lineterminator OUT_LINETERMINATOR\n                            Character used to terminate lines in the output CSV\n                            file.\n\nSee also: :doc:`../common_arguments`.\n\nExamples\n========\n\nConvert a comma-separated file to a pipe-delimited file::\n\n    csvformat -D \"|\" examples/dummy.csv\n\nConvert to carriage return line-endings::\n\n    csvformat -M $'\\r' examples/dummy.csv\n\nTo avoid escaping quote characters when using :code:`--quoting 3`, add :code:`--out-quotechar \"\"`::\n\n    csvformat -u 3 -U 3 -Q \"\" examples/optional_quote_characters.csv\n\n",
+            "payload_sha256": "92929ab4e242edd3183a1379b0c110800d7a851b2ab0d47c9b399f2a9ca9e7d0"
+          }
+        ],
+        "binding_sha256": "e36894a6e3740e1709f1c5daa5fbab5a7c50c0d23bdb38d0ba46d45e4adb2cbf"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "tabular-conversion": 0.0047592539340257645,
+            "csv-dialect": -0.38495004177093506
+          },
+          "wait": 0.09862329810857773,
+          "immediate_gain_action": "tabular-conversion",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "tabular-conversion": 0.0047592539340257645,
+              "csv-dialect": -0.38495004177093506
+            },
+            "waiting_value": 0.09862329810857773,
+            "wait_sensitive": true
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "tabular-conversion": -0.009737172164022923,
+            "csv-dialect": -0.11109420657157898
+          },
+          "wait": 0.014490686357021332,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "tabular-conversion": -0.009737172164022923,
+              "csv-dialect": -0.11109420657157898
+            },
+            "waiting_value": 0.014490686357021332,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "P1-v2": {
+          "gains": {
+            "tabular-conversion": 0.0,
+            "csv-dialect": -1.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "tabular-conversion": 0.0,
+              "csv-dialect": -1.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        }
+      },
+      "now_skill": "tabular-conversion",
+      "representation_identifiable": true,
+      "delay_eligible": true,
+      "wait_sensitive": true,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 1,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "tabular-conversion"
+        },
+        {
+          "repeat": 2,
+          "action": "csv-dialect"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "af3c42fe109df8dd9c4a661afb95065a6220e660972d6623d900953253f91d65",
+      "common_prediction_seconds": 0.047531999996863306,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "csvkit-fix-b2e54cd",
+      "state_summary": {
+        "stage": "E1",
+        "completed_turn_index": 2,
+        "remaining_seconds": 541.7649200420128,
+        "total_seconds": 600,
+        "public_test_exit": 1,
+        "repeated_error_count": 1,
+        "public_tests_run": 2,
+        "public_test_failure_seen": true,
+        "observed_pass_count": 1,
+        "observed_fail_count": 1,
+        "text_original_chars": 30064,
+        "text_retained_chars": 10000
+      },
+      "original_state_sha256": "3903c8d53d03de996b2353ec428d66c4c4e857c191412df996a93dea065f5584"
+    },
+    {
+      "binding": {
+        "observable_state_sha256": "1aefa0693ef254e3fc68bc402db7f58c8759ccd71b60d500beb305ee58263992",
+        "visible_prefix_sha256": "fcc1deda1e3a9f38695e0d2489a63bcb2932e7d159a93e6589e637f98c3b68d6",
+        "source_sha256": "db77f1ab3b1529b9e3a62061c4bd1640549b328a54b4068c5d129579b4bde5ab",
+        "scratch_sha256": "a018fc1b0299e58ecb3f241645daa9be2427ea345723ac54d830071f3dffa9a6",
+        "initial_remaining": 536.5996615840704,
+        "candidates": [
+          {
+            "id": "sqlite-ingest",
+            "payload": "# sqlite-ingest\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert. Confirm input format and whether mutation is requested; these commands write a database. Compare stored rows to the input; do not use ingestion as a read-only inspection step.\n\n## Versioned reference\n\n.. _cli_inserting_data:\n\nInserting JSON data\n===================\n\nIf you have data as JSON, you can use ``sqlite-utils insert tablename`` to insert it into a database. The table will be created with the correct (automatically detected) columns if it does not already exist.\n\nYou can pass in a single JSON object or a list of JSON objects, either as a filename or piped directly to standard-in (by using ``-`` as the filename).\n\nHere's the simplest possible example::\n\n    $ echo '{\"name\": \"Cleo\", \"age\": 4}' | sqlite-utils insert dogs.db dogs -\n\nTo specify a column as the primary key, use ``--pk=column_name``.\n\nTo create a compound primary key across more than one column, use ``--pk`` multiple times.\n\nIf you feed it a JSON list it will insert multiple records. For example, if ``dogs.json`` looks like this::\n\n    [\n        {\n            \"id\": 1,\n            \"name\": \"Cleo\",\n            \"age\": 4\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Pancakes\",\n            \"age\": 2\n        },\n        {\n            \"id\": 3,\n            \"name\": \"Toby\",\n            \"age\": 6\n        }\n    ]\n\nYou can import all three records into an automatically created ``dogs`` table and set the ``id`` column as the primary key like so::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --pk=id\n\nYou can skip inserting any records that have a primary key that already exists using ``--ignore``::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --ignore\n\nYou can also import newline-delimited JSON using the ``--nl`` option. Since `Datasette <https://datasette.readthedocs.io/>`__ can export newline-delimited JSON, you can combine the two tools like so::\n\n    $ curl -L \"https://latest.datasette.io/fixtures/facetable.json?_shape=array&_nl=on\" \\\n        | sqlite-utils insert nl-demo.db facetable - --pk=id --nl\n\nThis also means you pipe ``sqlite-utils`` together to easily create a new SQLite database file containing the results of a SQL query against another database::\n\n    $ sqlite-utils json sf-trees.db \\\n        \"select TreeID, qAddress, Latitude, Longitude from Street_Tree_List\" --nl \\\n      | sqlite-utils insert saved.db trees - --nl\n    # This creates saved.db with a single table called trees:\n    $ sqlite-utils csv saved.db \"select * from trees limit 5\"\n    TreeID,qAddress,Latitude,Longitude\n    141565,501X Baker St,37.7759676911831,-122.441396661871\n    232565,940 Elizabeth St,37.7517102172731,-122.441498017841\n    119263,495X Lakeshore Dr,,\n    207368,920 Kirkham St,37.760210314285,-122.47073935813\n    188702,1501 Evans Ave,37.7422086702947,-122.387293152263\n\nInserting CSV or TSV data\n=========================\n\nIf your data is in CSV format, you can insert it using the ``--csv`` option::\n\n    $ sqlite-utils insert dogs.db dogs docs.csv --csv\n\nFor tab-delimited data, use ``--tsv``::\n\n    $ sqlite-utils insert dogs.db dogs docs.tsv --tsv\n\n.. _cli_insert_replace:\n\nInsert-replacing data\n=====================\n\nInsert-replacing works exactly like inserting, with the exception that if your data has a primary key that matches an already existing record that record will be replaced with the new data.\n\nAfter running the above ``dogs.json`` example, try running this::\n\n    $ echo '{\"id\": 2, \"name\": \"Pancakes\", \"age\": 3}' | \\\n        sqlite-utils insert dogs.db dogs - --pk=id --replace\n\nThis will replace the record for id=2 (Pancakes) with a new record with an updated age.\n\n.. _cli_upsert:\n\nUpserting data\n==============\n\nUpserting is update-or-insert. If a row exists with the specified primary key the provided columns will be updated. If no row exists that row will be created.\n\nUnlike ``insert --replace``, an upsert will ignore any column values that exist but are not present in the upsert document.\n\nFor example::\n\n    $ echo '{\"id\": 2, \"age\": 4}' | \\\n        sqlite-utils upsert dogs.db dogs - --pk=id\n\nThis will update the dog with id=2 to have an age of 4, creating a new record (with a null name) if one does not exist. If a row DOES exist the name will be left as-is.\n\nThe command will fail if you reference columns that do not exist on the table. To automatically create missing columns, use the ``--alter`` option.\n\n.. note::\n    ``upsert`` in sqlite-utils 1.x worked like ``insert ... --replace`` does in 2.x. See `issue #66 <https://github.com/simonw/sqlite-utils/issues/66>`__ for details of this change.\n",
+            "payload_sha256": "acb386a28c8304ab153491b158ac97b92e61a056f74a6e5b7fd21a8015c309f0"
+          },
+          {
+            "id": "sqlite-schema",
+            "payload": "# sqlite-schema\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for SQLite column, foreign-key or index changes. Inspect the existing schema before mutation, apply only the requested operation in a disposable reproduction, then check schema and preserved rows. These APIs require a writable SQLite database; they do not describe CSV formatting.\n\n## Versioned reference\n\n.. _python_api_add_column:\n\nAdding columns\n==============\n\nYou can add a new column to a table using the ``.add_column(col_name, col_type)`` method:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"instagram\", str)\n    db[\"dogs\"].add_column(\"weight\", float)\n    db[\"dogs\"].add_column(\"dob\", datetime.date)\n    db[\"dogs\"].add_column(\"image\", \"BLOB\")\n    db[\"dogs\"].add_column(\"website\") # str by default\n\nYou can specify the ``col_type`` argument either using a SQLite type as a string, or by directly passing a Python type e.g. ``str`` or ``float``.\n\nThe ``col_type`` is optional - if you omit it the type of ``TEXT`` will be used.\n\nSQLite types you can specify are ``\"TEXT\"``, ``\"INTEGER\"``, ``\"FLOAT\"`` or ``\"BLOB\"``.\n\nIf you pass a Python type, it will be mapped to SQLite types as shown here::\n\n    float: \"FLOAT\"\n    int: \"INTEGER\"\n    bool: \"INTEGER\"\n    str: \"TEXT\"\n    bytes: \"BLOB\"\n    datetime.datetime: \"TEXT\"\n    datetime.date: \"TEXT\"\n    datetime.time: \"TEXT\"\n\n    # If numpy is installed\n    np.int8: \"INTEGER\"\n    np.int16: \"INTEGER\"\n    np.int32: \"INTEGER\"\n    np.int64: \"INTEGER\"\n    np.uint8: \"INTEGER\"\n    np.uint16: \"INTEGER\"\n    np.uint32: \"INTEGER\"\n    np.uint64: \"INTEGER\"\n    np.float16: \"FLOAT\"\n    np.float32: \"FLOAT\"\n    np.float64: \"FLOAT\"\n\nYou can also add a column that is a foreign key reference to another table using the ``fk`` parameter:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\")\n\nThis will automatically detect the name of the primary key on the species table and use that (and its type) for the new column.\n\nYou can explicitly specify the column you wish to reference using ``fk_col``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\", fk_col=\"ref\")\n\nYou can set a ``NOT NULL DEFAULT 'x'`` constraint on the new column using ``not_null_default``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"friends_count\", int, not_null_default=0)\n\n.. _python_api_add_foreign_key:\n\nAdding foreign key constraints\n==============================\n\nThe SQLite ``ALTER TABLE`` statement doesn't have the ability to add foreign key references to an existing column.\n\nIt's possible to add these references through very careful manipulation of SQLite's ``sqlite_master`` table, using ``PRAGMA writable_schema``.\n\n``sqlite-utils`` can do this for you, though there is a significant risk of data corruption if something goes wrong so it is advisable to create a fresh copy of your database file before attempting this.\n\nHere's an example of this mechanism in action:\n\n.. code-block:: python\n\n    db[\"authors\"].insert_all([\n        {\"id\": 1, \"name\": \"Sally\"},\n        {\"id\": 2, \"name\": \"Asheesh\"}\n    ], pk=\"id\")\n    db[\"books\"].insert_all([\n        {\"title\": \"Hedgehogs of the world\", \"author_id\": 1},\n        {\"title\": \"How to train your wolf\", \"author_id\": 2},\n    ])\n    db[\"books\"].add_foreign_key(\"author_id\", \"authors\", \"id\")\n\nThe ``table.add_foreign_key(column, other_table, other_column)`` method takes the name of the column, the table that is being referenced and the key column within that other table. If you ommit the ``other_column`` argument the primary key from that table will be used automatically. If you omit the ``other_table`` argument the table will be guessed based on some simple rules:\n\n- If the column is of format ``author_id``, look for tables called ``author`` or ``authors``\n- If the column does not end in ``_id``, try looking for a table with the exact name of the column or that name with an added ``s``\n\n.. _python_api_index_foreign_keys:\n\nAdding indexes for all foreign keys\n-----------------------------------\n\nIf you want to ensure that every foreign key column in your database has a corresponding index, you can do so like this:\n\n.. code-block:: python\n\n    db.index_foreign_keys()\n",
+            "payload_sha256": "3c93c41556d95dd257f67c4648e1ea6fa674e1402ad3205eabd0a63ba3ebd838"
+          }
+        ],
+        "binding_sha256": "43e00e6e171317d24008dc9cce1b3121ea3803d93bb37f33ed1326913efdeca7"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "sqlite-ingest": 0.006091861054301262,
+            "sqlite-schema": -0.014611156657338142
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "sqlite-ingest",
+          "stopping_policy_decision": {
+            "action": "INJECT",
+            "skill_id": "sqlite-ingest",
+            "reason": "FUNCTIONAL_POLICY_DECISION",
+            "gains": {
+              "sqlite-ingest": 0.006091861054301262,
+              "sqlite-schema": -0.014611156657338142
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "sqlite-ingest": -0.003598138689994812,
+            "sqlite-schema": -0.004839261062443256
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "NO_INTERVENTION",
+            "reason": "FUNCTIONAL_NOOP",
+            "gains": {
+              "sqlite-ingest": -0.003598138689994812,
+              "sqlite-schema": -0.004839261062443256
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "P1-v2": {
+          "gains": {
+            "sqlite-ingest": 0.0,
+            "sqlite-schema": 0.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "NO_INTERVENTION",
+            "reason": "FUNCTIONAL_NOOP",
+            "gains": {
+              "sqlite-ingest": 0.0,
+              "sqlite-schema": 0.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        }
+      },
+      "now_skill": "sqlite-ingest",
+      "representation_identifiable": true,
+      "delay_eligible": false,
+      "wait_sensitive": false,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "985ab53d2f90958904d8cd2936b7087752ac86473b8139f4319c36716ce27009",
+      "common_prediction_seconds": 0.04901679197791964,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "sqlite-utils-fix-a7b29bf",
+      "state_summary": {
+        "stage": "E2",
+        "completed_turn_index": 2,
+        "remaining_seconds": 536.5996615840704,
+        "total_seconds": 600,
+        "public_test_exit": 0,
+        "repeated_error_count": 1,
+        "public_tests_run": 2,
+        "public_test_failure_seen": false,
+        "observed_pass_count": 2,
+        "observed_fail_count": 0,
+        "text_original_chars": 5494,
+        "text_retained_chars": 3955
+      },
+      "original_state_sha256": "20e9b719ebee7211cb0769a4beeed89a5d39b15b27380503492c7cd21f6ef59c"
+    },
+    {
+      "binding": {
+        "observable_state_sha256": "c0e47b2c35890e6be9979d30037084b42874a9b3e6cd3ef515ec0fbb05a17f3e",
+        "visible_prefix_sha256": "82920df3b36fdd93246a152c2c55c5b0871c350c370069da8131a73a81def075",
+        "source_sha256": "8f27aac573dde17463b1e2fdb33948b1279d3f86c0b70eb25907e8d382b70da6",
+        "scratch_sha256": "e50778f899c92aabb9d8681fcc3a53836a0d0eea269eb11e63a39b41192b42d7",
+        "initial_remaining": 539.2204943750403,
+        "candidates": [
+          {
+            "id": "sqlite-ingest",
+            "payload": "# sqlite-ingest\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert. Confirm input format and whether mutation is requested; these commands write a database. Compare stored rows to the input; do not use ingestion as a read-only inspection step.\n\n## Versioned reference\n\n.. _cli_inserting_data:\n\nInserting JSON data\n===================\n\nIf you have data as JSON, you can use ``sqlite-utils insert tablename`` to insert it into a database. The table will be created with the correct (automatically detected) columns if it does not already exist.\n\nYou can pass in a single JSON object or a list of JSON objects, either as a filename or piped directly to standard-in (by using ``-`` as the filename).\n\nHere's the simplest possible example::\n\n    $ echo '{\"name\": \"Cleo\", \"age\": 4}' | sqlite-utils insert dogs.db dogs -\n\nTo specify a column as the primary key, use ``--pk=column_name``.\n\nTo create a compound primary key across more than one column, use ``--pk`` multiple times.\n\nIf you feed it a JSON list it will insert multiple records. For example, if ``dogs.json`` looks like this::\n\n    [\n        {\n            \"id\": 1,\n            \"name\": \"Cleo\",\n            \"age\": 4\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Pancakes\",\n            \"age\": 2\n        },\n        {\n            \"id\": 3,\n            \"name\": \"Toby\",\n            \"age\": 6\n        }\n    ]\n\nYou can import all three records into an automatically created ``dogs`` table and set the ``id`` column as the primary key like so::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --pk=id\n\nYou can skip inserting any records that have a primary key that already exists using ``--ignore``::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --ignore\n\nYou can also import newline-delimited JSON using the ``--nl`` option. Since `Datasette <https://datasette.readthedocs.io/>`__ can export newline-delimited JSON, you can combine the two tools like so::\n\n    $ curl -L \"https://latest.datasette.io/fixtures/facetable.json?_shape=array&_nl=on\" \\\n        | sqlite-utils insert nl-demo.db facetable - --pk=id --nl\n\nThis also means you pipe ``sqlite-utils`` together to easily create a new SQLite database file containing the results of a SQL query against another database::\n\n    $ sqlite-utils json sf-trees.db \\\n        \"select TreeID, qAddress, Latitude, Longitude from Street_Tree_List\" --nl \\\n      | sqlite-utils insert saved.db trees - --nl\n    # This creates saved.db with a single table called trees:\n    $ sqlite-utils csv saved.db \"select * from trees limit 5\"\n    TreeID,qAddress,Latitude,Longitude\n    141565,501X Baker St,37.7759676911831,-122.441396661871\n    232565,940 Elizabeth St,37.7517102172731,-122.441498017841\n    119263,495X Lakeshore Dr,,\n    207368,920 Kirkham St,37.760210314285,-122.47073935813\n    188702,1501 Evans Ave,37.7422086702947,-122.387293152263\n\nInserting CSV or TSV data\n=========================\n\nIf your data is in CSV format, you can insert it using the ``--csv`` option::\n\n    $ sqlite-utils insert dogs.db dogs docs.csv --csv\n\nFor tab-delimited data, use ``--tsv``::\n\n    $ sqlite-utils insert dogs.db dogs docs.tsv --tsv\n\n.. _cli_insert_replace:\n\nInsert-replacing data\n=====================\n\nInsert-replacing works exactly like inserting, with the exception that if your data has a primary key that matches an already existing record that record will be replaced with the new data.\n\nAfter running the above ``dogs.json`` example, try running this::\n\n    $ echo '{\"id\": 2, \"name\": \"Pancakes\", \"age\": 3}' | \\\n        sqlite-utils insert dogs.db dogs - --pk=id --replace\n\nThis will replace the record for id=2 (Pancakes) with a new record with an updated age.\n\n.. _cli_upsert:\n\nUpserting data\n==============\n\nUpserting is update-or-insert. If a row exists with the specified primary key the provided columns will be updated. If no row exists that row will be created.\n\nUnlike ``insert --replace``, an upsert will ignore any column values that exist but are not present in the upsert document.\n\nFor example::\n\n    $ echo '{\"id\": 2, \"age\": 4}' | \\\n        sqlite-utils upsert dogs.db dogs - --pk=id\n\nThis will update the dog with id=2 to have an age of 4, creating a new record (with a null name) if one does not exist. If a row DOES exist the name will be left as-is.\n\nThe command will fail if you reference columns that do not exist on the table. To automatically create missing columns, use the ``--alter`` option.\n\n.. note::\n    ``upsert`` in sqlite-utils 1.x worked like ``insert ... --replace`` does in 2.x. See `issue #66 <https://github.com/simonw/sqlite-utils/issues/66>`__ for details of this change.\n",
+            "payload_sha256": "acb386a28c8304ab153491b158ac97b92e61a056f74a6e5b7fd21a8015c309f0"
+          },
+          {
+            "id": "sqlite-schema",
+            "payload": "# sqlite-schema\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for SQLite column, foreign-key or index changes. Inspect the existing schema before mutation, apply only the requested operation in a disposable reproduction, then check schema and preserved rows. These APIs require a writable SQLite database; they do not describe CSV formatting.\n\n## Versioned reference\n\n.. _python_api_add_column:\n\nAdding columns\n==============\n\nYou can add a new column to a table using the ``.add_column(col_name, col_type)`` method:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"instagram\", str)\n    db[\"dogs\"].add_column(\"weight\", float)\n    db[\"dogs\"].add_column(\"dob\", datetime.date)\n    db[\"dogs\"].add_column(\"image\", \"BLOB\")\n    db[\"dogs\"].add_column(\"website\") # str by default\n\nYou can specify the ``col_type`` argument either using a SQLite type as a string, or by directly passing a Python type e.g. ``str`` or ``float``.\n\nThe ``col_type`` is optional - if you omit it the type of ``TEXT`` will be used.\n\nSQLite types you can specify are ``\"TEXT\"``, ``\"INTEGER\"``, ``\"FLOAT\"`` or ``\"BLOB\"``.\n\nIf you pass a Python type, it will be mapped to SQLite types as shown here::\n\n    float: \"FLOAT\"\n    int: \"INTEGER\"\n    bool: \"INTEGER\"\n    str: \"TEXT\"\n    bytes: \"BLOB\"\n    datetime.datetime: \"TEXT\"\n    datetime.date: \"TEXT\"\n    datetime.time: \"TEXT\"\n\n    # If numpy is installed\n    np.int8: \"INTEGER\"\n    np.int16: \"INTEGER\"\n    np.int32: \"INTEGER\"\n    np.int64: \"INTEGER\"\n    np.uint8: \"INTEGER\"\n    np.uint16: \"INTEGER\"\n    np.uint32: \"INTEGER\"\n    np.uint64: \"INTEGER\"\n    np.float16: \"FLOAT\"\n    np.float32: \"FLOAT\"\n    np.float64: \"FLOAT\"\n\nYou can also add a column that is a foreign key reference to another table using the ``fk`` parameter:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\")\n\nThis will automatically detect the name of the primary key on the species table and use that (and its type) for the new column.\n\nYou can explicitly specify the column you wish to reference using ``fk_col``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\", fk_col=\"ref\")\n\nYou can set a ``NOT NULL DEFAULT 'x'`` constraint on the new column using ``not_null_default``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"friends_count\", int, not_null_default=0)\n\n.. _python_api_add_foreign_key:\n\nAdding foreign key constraints\n==============================\n\nThe SQLite ``ALTER TABLE`` statement doesn't have the ability to add foreign key references to an existing column.\n\nIt's possible to add these references through very careful manipulation of SQLite's ``sqlite_master`` table, using ``PRAGMA writable_schema``.\n\n``sqlite-utils`` can do this for you, though there is a significant risk of data corruption if something goes wrong so it is advisable to create a fresh copy of your database file before attempting this.\n\nHere's an example of this mechanism in action:\n\n.. code-block:: python\n\n    db[\"authors\"].insert_all([\n        {\"id\": 1, \"name\": \"Sally\"},\n        {\"id\": 2, \"name\": \"Asheesh\"}\n    ], pk=\"id\")\n    db[\"books\"].insert_all([\n        {\"title\": \"Hedgehogs of the world\", \"author_id\": 1},\n        {\"title\": \"How to train your wolf\", \"author_id\": 2},\n    ])\n    db[\"books\"].add_foreign_key(\"author_id\", \"authors\", \"id\")\n\nThe ``table.add_foreign_key(column, other_table, other_column)`` method takes the name of the column, the table that is being referenced and the key column within that other table. If you ommit the ``other_column`` argument the primary key from that table will be used automatically. If you omit the ``other_table`` argument the table will be guessed based on some simple rules:\n\n- If the column is of format ``author_id``, look for tables called ``author`` or ``authors``\n- If the column does not end in ``_id``, try looking for a table with the exact name of the column or that name with an added ``s``\n\n.. _python_api_index_foreign_keys:\n\nAdding indexes for all foreign keys\n-----------------------------------\n\nIf you want to ensure that every foreign key column in your database has a corresponding index, you can do so like this:\n\n.. code-block:: python\n\n    db.index_foreign_keys()\n",
+            "payload_sha256": "3c93c41556d95dd257f67c4648e1ea6fa674e1402ad3205eabd0a63ba3ebd838"
+          }
+        ],
+        "binding_sha256": "c07c3a94d49256fc6ee80d758c15d5f4c48d26a3453f5725c9f4dc57e8c97077"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "sqlite-ingest": -0.1330195516347885,
+            "sqlite-schema": -0.12548135221004486
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "NO_INTERVENTION",
+            "reason": "FUNCTIONAL_NOOP",
+            "gains": {
+              "sqlite-ingest": -0.1330195516347885,
+              "sqlite-schema": -0.12548135221004486
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "sqlite-ingest": 0.001031585969030857,
+            "sqlite-schema": -0.0010987641289830208
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "sqlite-ingest",
+          "stopping_policy_decision": {
+            "action": "INJECT",
+            "skill_id": "sqlite-ingest",
+            "reason": "FUNCTIONAL_POLICY_DECISION",
+            "gains": {
+              "sqlite-ingest": 0.001031585969030857,
+              "sqlite-schema": -0.0010987641289830208
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "P1-v2": {
+          "gains": {
+            "sqlite-ingest": 0.0,
+            "sqlite-schema": 0.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "NO_INTERVENTION",
+            "reason": "FUNCTIONAL_NOOP",
+            "gains": {
+              "sqlite-ingest": 0.0,
+              "sqlite-schema": 0.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        }
+      },
+      "now_skill": "sqlite-schema",
+      "representation_identifiable": true,
+      "delay_eligible": false,
+      "wait_sensitive": false,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "fa9f6b9020b2972877da48acbf044c37bbc6e2c2fbe1eb524cd2cde5fd729d89",
+      "common_prediction_seconds": 0.05011925002327189,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "sqlite-utils-fix-b962909",
+      "state_summary": {
+        "stage": "E2",
+        "completed_turn_index": 2,
+        "remaining_seconds": 539.2204943750403,
+        "total_seconds": 600,
+        "public_test_exit": 1,
+        "repeated_error_count": 1,
+        "public_tests_run": 3,
+        "public_test_failure_seen": true,
+        "observed_pass_count": 1,
+        "observed_fail_count": 2,
+        "text_original_chars": 20785,
+        "text_retained_chars": 9803
+      },
+      "original_state_sha256": "da68fd08866c613b080e2b921dd826d194ca2947ccb6f1704faf6fa74ef13b74"
+    },
+    {
+      "binding": {
+        "observable_state_sha256": "8d70ccbed95bf9380d50abea21df9c175ed4001c43f733e73e274eafa643469d",
+        "visible_prefix_sha256": "3be6c6f28eb1fc7f487908d2f5b0a5d5e9133655ad7ba4b7d02aa707780ed604",
+        "source_sha256": "ff7e9a3c786975248822b01f84b958fcbc2e56f0a6dbe52bddbb1650b76f6e7e",
+        "scratch_sha256": "8a2198c99a16d1532c8cc3126d385dfd45a8a942f0e0ba078e8d7875bbb46b2a",
+        "initial_remaining": 510.7861763329711,
+        "candidates": [
+          {
+            "id": "sqlite-schema",
+            "payload": "# sqlite-schema\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for SQLite column, foreign-key or index changes. Inspect the existing schema before mutation, apply only the requested operation in a disposable reproduction, then check schema and preserved rows. These APIs require a writable SQLite database; they do not describe CSV formatting.\n\n## Versioned reference\n\n.. _python_api_add_column:\n\nAdding columns\n==============\n\nYou can add a new column to a table using the ``.add_column(col_name, col_type)`` method:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"instagram\", str)\n    db[\"dogs\"].add_column(\"weight\", float)\n    db[\"dogs\"].add_column(\"dob\", datetime.date)\n    db[\"dogs\"].add_column(\"image\", \"BLOB\")\n    db[\"dogs\"].add_column(\"website\") # str by default\n\nYou can specify the ``col_type`` argument either using a SQLite type as a string, or by directly passing a Python type e.g. ``str`` or ``float``.\n\nThe ``col_type`` is optional - if you omit it the type of ``TEXT`` will be used.\n\nSQLite types you can specify are ``\"TEXT\"``, ``\"INTEGER\"``, ``\"FLOAT\"`` or ``\"BLOB\"``.\n\nIf you pass a Python type, it will be mapped to SQLite types as shown here::\n\n    float: \"FLOAT\"\n    int: \"INTEGER\"\n    bool: \"INTEGER\"\n    str: \"TEXT\"\n    bytes: \"BLOB\"\n    datetime.datetime: \"TEXT\"\n    datetime.date: \"TEXT\"\n    datetime.time: \"TEXT\"\n\n    # If numpy is installed\n    np.int8: \"INTEGER\"\n    np.int16: \"INTEGER\"\n    np.int32: \"INTEGER\"\n    np.int64: \"INTEGER\"\n    np.uint8: \"INTEGER\"\n    np.uint16: \"INTEGER\"\n    np.uint32: \"INTEGER\"\n    np.uint64: \"INTEGER\"\n    np.float16: \"FLOAT\"\n    np.float32: \"FLOAT\"\n    np.float64: \"FLOAT\"\n\nYou can also add a column that is a foreign key reference to another table using the ``fk`` parameter:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\")\n\nThis will automatically detect the name of the primary key on the species table and use that (and its type) for the new column.\n\nYou can explicitly specify the column you wish to reference using ``fk_col``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\", fk_col=\"ref\")\n\nYou can set a ``NOT NULL DEFAULT 'x'`` constraint on the new column using ``not_null_default``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"friends_count\", int, not_null_default=0)\n\n.. _python_api_add_foreign_key:\n\nAdding foreign key constraints\n==============================\n\nThe SQLite ``ALTER TABLE`` statement doesn't have the ability to add foreign key references to an existing column.\n\nIt's possible to add these references through very careful manipulation of SQLite's ``sqlite_master`` table, using ``PRAGMA writable_schema``.\n\n``sqlite-utils`` can do this for you, though there is a significant risk of data corruption if something goes wrong so it is advisable to create a fresh copy of your database file before attempting this.\n\nHere's an example of this mechanism in action:\n\n.. code-block:: python\n\n    db[\"authors\"].insert_all([\n        {\"id\": 1, \"name\": \"Sally\"},\n        {\"id\": 2, \"name\": \"Asheesh\"}\n    ], pk=\"id\")\n    db[\"books\"].insert_all([\n        {\"title\": \"Hedgehogs of the world\", \"author_id\": 1},\n        {\"title\": \"How to train your wolf\", \"author_id\": 2},\n    ])\n    db[\"books\"].add_foreign_key(\"author_id\", \"authors\", \"id\")\n\nThe ``table.add_foreign_key(column, other_table, other_column)`` method takes the name of the column, the table that is being referenced and the key column within that other table. If you ommit the ``other_column`` argument the primary key from that table will be used automatically. If you omit the ``other_table`` argument the table will be guessed based on some simple rules:\n\n- If the column is of format ``author_id``, look for tables called ``author`` or ``authors``\n- If the column does not end in ``_id``, try looking for a table with the exact name of the column or that name with an added ``s``\n\n.. _python_api_index_foreign_keys:\n\nAdding indexes for all foreign keys\n-----------------------------------\n\nIf you want to ensure that every foreign key column in your database has a corresponding index, you can do so like this:\n\n.. code-block:: python\n\n    db.index_foreign_keys()\n",
+            "payload_sha256": "3c93c41556d95dd257f67c4648e1ea6fa674e1402ad3205eabd0a63ba3ebd838"
+          },
+          {
+            "id": "sqlite-ingest",
+            "payload": "# sqlite-ingest\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert. Confirm input format and whether mutation is requested; these commands write a database. Compare stored rows to the input; do not use ingestion as a read-only inspection step.\n\n## Versioned reference\n\n.. _cli_inserting_data:\n\nInserting JSON data\n===================\n\nIf you have data as JSON, you can use ``sqlite-utils insert tablename`` to insert it into a database. The table will be created with the correct (automatically detected) columns if it does not already exist.\n\nYou can pass in a single JSON object or a list of JSON objects, either as a filename or piped directly to standard-in (by using ``-`` as the filename).\n\nHere's the simplest possible example::\n\n    $ echo '{\"name\": \"Cleo\", \"age\": 4}' | sqlite-utils insert dogs.db dogs -\n\nTo specify a column as the primary key, use ``--pk=column_name``.\n\nTo create a compound primary key across more than one column, use ``--pk`` multiple times.\n\nIf you feed it a JSON list it will insert multiple records. For example, if ``dogs.json`` looks like this::\n\n    [\n        {\n            \"id\": 1,\n            \"name\": \"Cleo\",\n            \"age\": 4\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Pancakes\",\n            \"age\": 2\n        },\n        {\n            \"id\": 3,\n            \"name\": \"Toby\",\n            \"age\": 6\n        }\n    ]\n\nYou can import all three records into an automatically created ``dogs`` table and set the ``id`` column as the primary key like so::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --pk=id\n\nYou can skip inserting any records that have a primary key that already exists using ``--ignore``::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --ignore\n\nYou can also import newline-delimited JSON using the ``--nl`` option. Since `Datasette <https://datasette.readthedocs.io/>`__ can export newline-delimited JSON, you can combine the two tools like so::\n\n    $ curl -L \"https://latest.datasette.io/fixtures/facetable.json?_shape=array&_nl=on\" \\\n        | sqlite-utils insert nl-demo.db facetable - --pk=id --nl\n\nThis also means you pipe ``sqlite-utils`` together to easily create a new SQLite database file containing the results of a SQL query against another database::\n\n    $ sqlite-utils json sf-trees.db \\\n        \"select TreeID, qAddress, Latitude, Longitude from Street_Tree_List\" --nl \\\n      | sqlite-utils insert saved.db trees - --nl\n    # This creates saved.db with a single table called trees:\n    $ sqlite-utils csv saved.db \"select * from trees limit 5\"\n    TreeID,qAddress,Latitude,Longitude\n    141565,501X Baker St,37.7759676911831,-122.441396661871\n    232565,940 Elizabeth St,37.7517102172731,-122.441498017841\n    119263,495X Lakeshore Dr,,\n    207368,920 Kirkham St,37.760210314285,-122.47073935813\n    188702,1501 Evans Ave,37.7422086702947,-122.387293152263\n\nInserting CSV or TSV data\n=========================\n\nIf your data is in CSV format, you can insert it using the ``--csv`` option::\n\n    $ sqlite-utils insert dogs.db dogs docs.csv --csv\n\nFor tab-delimited data, use ``--tsv``::\n\n    $ sqlite-utils insert dogs.db dogs docs.tsv --tsv\n\n.. _cli_insert_replace:\n\nInsert-replacing data\n=====================\n\nInsert-replacing works exactly like inserting, with the exception that if your data has a primary key that matches an already existing record that record will be replaced with the new data.\n\nAfter running the above ``dogs.json`` example, try running this::\n\n    $ echo '{\"id\": 2, \"name\": \"Pancakes\", \"age\": 3}' | \\\n        sqlite-utils insert dogs.db dogs - --pk=id --replace\n\nThis will replace the record for id=2 (Pancakes) with a new record with an updated age.\n\n.. _cli_upsert:\n\nUpserting data\n==============\n\nUpserting is update-or-insert. If a row exists with the specified primary key the provided columns will be updated. If no row exists that row will be created.\n\nUnlike ``insert --replace``, an upsert will ignore any column values that exist but are not present in the upsert document.\n\nFor example::\n\n    $ echo '{\"id\": 2, \"age\": 4}' | \\\n        sqlite-utils upsert dogs.db dogs - --pk=id\n\nThis will update the dog with id=2 to have an age of 4, creating a new record (with a null name) if one does not exist. If a row DOES exist the name will be left as-is.\n\nThe command will fail if you reference columns that do not exist on the table. To automatically create missing columns, use the ``--alter`` option.\n\n.. note::\n    ``upsert`` in sqlite-utils 1.x worked like ``insert ... --replace`` does in 2.x. See `issue #66 <https://github.com/simonw/sqlite-utils/issues/66>`__ for details of this change.\n",
+            "payload_sha256": "acb386a28c8304ab153491b158ac97b92e61a056f74a6e5b7fd21a8015c309f0"
+          }
+        ],
+        "binding_sha256": "fe116ace5b82aa8484cf109184415c7525f2f3780662500e77c0abfd00a1a0c5"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "sqlite-schema": -0.009170906618237495,
+            "sqlite-ingest": -0.0315081849694252
+          },
+          "wait": 0.035318221896886826,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "sqlite-schema": -0.009170906618237495,
+              "sqlite-ingest": -0.0315081849694252
+            },
+            "waiting_value": 0.035318221896886826,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "sqlite-schema": -0.0075170742347836494,
+            "sqlite-ingest": -0.013251450844109058
+          },
+          "wait": 0.014940604567527771,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "sqlite-schema": -0.0075170742347836494,
+              "sqlite-ingest": -0.013251450844109058
+            },
+            "waiting_value": 0.014940604567527771,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        },
+        "P1-v2": {
+          "gains": {
+            "sqlite-schema": 0.0,
+            "sqlite-ingest": 0.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "WAIT",
+            "reason": "FUNCTIONAL_WAIT",
+            "gains": {
+              "sqlite-schema": 0.0,
+              "sqlite-ingest": 0.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "NOT_IDENTIFIED_BY_IMMEDIATE_ACTION_PANEL"
+        }
+      },
+      "now_skill": "sqlite-schema",
+      "representation_identifiable": true,
+      "delay_eligible": true,
+      "wait_sensitive": false,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "7abd7e31b6eecaba7339a9a58595c250cc80b6abf460a39c0035fb3666da4053",
+      "common_prediction_seconds": 0.0400420410442166,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "sqlite-utils-fix-c872d27",
+      "state_summary": {
+        "stage": "E1",
+        "completed_turn_index": 2,
+        "remaining_seconds": 510.7861763329711,
+        "total_seconds": 600,
+        "public_test_exit": 1,
+        "repeated_error_count": 1,
+        "public_tests_run": 1,
+        "public_test_failure_seen": true,
+        "observed_pass_count": 0,
+        "observed_fail_count": 1,
+        "text_original_chars": 31329,
+        "text_retained_chars": 9547
+      },
+      "original_state_sha256": "7366a6baa3baf7392dfed88ff7c089ffe1136090412be1bfd84a19fc94fdf236"
+    },
+    {
+      "binding": {
+        "observable_state_sha256": "5e2a8bf4f0155ccd33a4d4398beb06c809e73fe97437897a70d41463eada0aef",
+        "visible_prefix_sha256": "844989c32c619b7fe7d28fb6de1aace41b601ff27fd015395c729bf0b9d8a7b9",
+        "source_sha256": "e213783752816ad267f2e4bd656429dcca6a99696ac3b59f6b320ed6852c93ad",
+        "scratch_sha256": "c92129ad8390d8edaa83ed1116d1b7a5ea2e59a028a298636a1ddc4f3def0197",
+        "initial_remaining": 500.61391037498834,
+        "candidates": [
+          {
+            "id": "sqlite-ingest",
+            "payload": "# sqlite-ingest\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for inserting JSON, CSV or TSV records into SQLite, including primary-key replacement and upsert. Confirm input format and whether mutation is requested; these commands write a database. Compare stored rows to the input; do not use ingestion as a read-only inspection step.\n\n## Versioned reference\n\n.. _cli_inserting_data:\n\nInserting JSON data\n===================\n\nIf you have data as JSON, you can use ``sqlite-utils insert tablename`` to insert it into a database. The table will be created with the correct (automatically detected) columns if it does not already exist.\n\nYou can pass in a single JSON object or a list of JSON objects, either as a filename or piped directly to standard-in (by using ``-`` as the filename).\n\nHere's the simplest possible example::\n\n    $ echo '{\"name\": \"Cleo\", \"age\": 4}' | sqlite-utils insert dogs.db dogs -\n\nTo specify a column as the primary key, use ``--pk=column_name``.\n\nTo create a compound primary key across more than one column, use ``--pk`` multiple times.\n\nIf you feed it a JSON list it will insert multiple records. For example, if ``dogs.json`` looks like this::\n\n    [\n        {\n            \"id\": 1,\n            \"name\": \"Cleo\",\n            \"age\": 4\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Pancakes\",\n            \"age\": 2\n        },\n        {\n            \"id\": 3,\n            \"name\": \"Toby\",\n            \"age\": 6\n        }\n    ]\n\nYou can import all three records into an automatically created ``dogs`` table and set the ``id`` column as the primary key like so::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --pk=id\n\nYou can skip inserting any records that have a primary key that already exists using ``--ignore``::\n\n    $ sqlite-utils insert dogs.db dogs dogs.json --ignore\n\nYou can also import newline-delimited JSON using the ``--nl`` option. Since `Datasette <https://datasette.readthedocs.io/>`__ can export newline-delimited JSON, you can combine the two tools like so::\n\n    $ curl -L \"https://latest.datasette.io/fixtures/facetable.json?_shape=array&_nl=on\" \\\n        | sqlite-utils insert nl-demo.db facetable - --pk=id --nl\n\nThis also means you pipe ``sqlite-utils`` together to easily create a new SQLite database file containing the results of a SQL query against another database::\n\n    $ sqlite-utils json sf-trees.db \\\n        \"select TreeID, qAddress, Latitude, Longitude from Street_Tree_List\" --nl \\\n      | sqlite-utils insert saved.db trees - --nl\n    # This creates saved.db with a single table called trees:\n    $ sqlite-utils csv saved.db \"select * from trees limit 5\"\n    TreeID,qAddress,Latitude,Longitude\n    141565,501X Baker St,37.7759676911831,-122.441396661871\n    232565,940 Elizabeth St,37.7517102172731,-122.441498017841\n    119263,495X Lakeshore Dr,,\n    207368,920 Kirkham St,37.760210314285,-122.47073935813\n    188702,1501 Evans Ave,37.7422086702947,-122.387293152263\n\nInserting CSV or TSV data\n=========================\n\nIf your data is in CSV format, you can insert it using the ``--csv`` option::\n\n    $ sqlite-utils insert dogs.db dogs docs.csv --csv\n\nFor tab-delimited data, use ``--tsv``::\n\n    $ sqlite-utils insert dogs.db dogs docs.tsv --tsv\n\n.. _cli_insert_replace:\n\nInsert-replacing data\n=====================\n\nInsert-replacing works exactly like inserting, with the exception that if your data has a primary key that matches an already existing record that record will be replaced with the new data.\n\nAfter running the above ``dogs.json`` example, try running this::\n\n    $ echo '{\"id\": 2, \"name\": \"Pancakes\", \"age\": 3}' | \\\n        sqlite-utils insert dogs.db dogs - --pk=id --replace\n\nThis will replace the record for id=2 (Pancakes) with a new record with an updated age.\n\n.. _cli_upsert:\n\nUpserting data\n==============\n\nUpserting is update-or-insert. If a row exists with the specified primary key the provided columns will be updated. If no row exists that row will be created.\n\nUnlike ``insert --replace``, an upsert will ignore any column values that exist but are not present in the upsert document.\n\nFor example::\n\n    $ echo '{\"id\": 2, \"age\": 4}' | \\\n        sqlite-utils upsert dogs.db dogs - --pk=id\n\nThis will update the dog with id=2 to have an age of 4, creating a new record (with a null name) if one does not exist. If a row DOES exist the name will be left as-is.\n\nThe command will fail if you reference columns that do not exist on the table. To automatically create missing columns, use the ``--alter`` option.\n\n.. note::\n    ``upsert`` in sqlite-utils 1.x worked like ``insert ... --replace`` does in 2.x. See `issue #66 <https://github.com/simonw/sqlite-utils/issues/66>`__ for details of this change.\n",
+            "payload_sha256": "acb386a28c8304ab153491b158ac97b92e61a056f74a6e5b7fd21a8015c309f0"
+          },
+          {
+            "id": "sqlite-schema",
+            "payload": "# sqlite-schema\n\nAuthor-adapted operational skill, based only on the versioned pre-2020 public documentation below. Not an independently authored external package.\n\nUse for SQLite column, foreign-key or index changes. Inspect the existing schema before mutation, apply only the requested operation in a disposable reproduction, then check schema and preserved rows. These APIs require a writable SQLite database; they do not describe CSV formatting.\n\n## Versioned reference\n\n.. _python_api_add_column:\n\nAdding columns\n==============\n\nYou can add a new column to a table using the ``.add_column(col_name, col_type)`` method:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"instagram\", str)\n    db[\"dogs\"].add_column(\"weight\", float)\n    db[\"dogs\"].add_column(\"dob\", datetime.date)\n    db[\"dogs\"].add_column(\"image\", \"BLOB\")\n    db[\"dogs\"].add_column(\"website\") # str by default\n\nYou can specify the ``col_type`` argument either using a SQLite type as a string, or by directly passing a Python type e.g. ``str`` or ``float``.\n\nThe ``col_type`` is optional - if you omit it the type of ``TEXT`` will be used.\n\nSQLite types you can specify are ``\"TEXT\"``, ``\"INTEGER\"``, ``\"FLOAT\"`` or ``\"BLOB\"``.\n\nIf you pass a Python type, it will be mapped to SQLite types as shown here::\n\n    float: \"FLOAT\"\n    int: \"INTEGER\"\n    bool: \"INTEGER\"\n    str: \"TEXT\"\n    bytes: \"BLOB\"\n    datetime.datetime: \"TEXT\"\n    datetime.date: \"TEXT\"\n    datetime.time: \"TEXT\"\n\n    # If numpy is installed\n    np.int8: \"INTEGER\"\n    np.int16: \"INTEGER\"\n    np.int32: \"INTEGER\"\n    np.int64: \"INTEGER\"\n    np.uint8: \"INTEGER\"\n    np.uint16: \"INTEGER\"\n    np.uint32: \"INTEGER\"\n    np.uint64: \"INTEGER\"\n    np.float16: \"FLOAT\"\n    np.float32: \"FLOAT\"\n    np.float64: \"FLOAT\"\n\nYou can also add a column that is a foreign key reference to another table using the ``fk`` parameter:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\")\n\nThis will automatically detect the name of the primary key on the species table and use that (and its type) for the new column.\n\nYou can explicitly specify the column you wish to reference using ``fk_col``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"species_id\", fk=\"species\", fk_col=\"ref\")\n\nYou can set a ``NOT NULL DEFAULT 'x'`` constraint on the new column using ``not_null_default``:\n\n.. code-block:: python\n\n    db[\"dogs\"].add_column(\"friends_count\", int, not_null_default=0)\n\n.. _python_api_add_foreign_key:\n\nAdding foreign key constraints\n==============================\n\nThe SQLite ``ALTER TABLE`` statement doesn't have the ability to add foreign key references to an existing column.\n\nIt's possible to add these references through very careful manipulation of SQLite's ``sqlite_master`` table, using ``PRAGMA writable_schema``.\n\n``sqlite-utils`` can do this for you, though there is a significant risk of data corruption if something goes wrong so it is advisable to create a fresh copy of your database file before attempting this.\n\nHere's an example of this mechanism in action:\n\n.. code-block:: python\n\n    db[\"authors\"].insert_all([\n        {\"id\": 1, \"name\": \"Sally\"},\n        {\"id\": 2, \"name\": \"Asheesh\"}\n    ], pk=\"id\")\n    db[\"books\"].insert_all([\n        {\"title\": \"Hedgehogs of the world\", \"author_id\": 1},\n        {\"title\": \"How to train your wolf\", \"author_id\": 2},\n    ])\n    db[\"books\"].add_foreign_key(\"author_id\", \"authors\", \"id\")\n\nThe ``table.add_foreign_key(column, other_table, other_column)`` method takes the name of the column, the table that is being referenced and the key column within that other table. If you ommit the ``other_column`` argument the primary key from that table will be used automatically. If you omit the ``other_table`` argument the table will be guessed based on some simple rules:\n\n- If the column is of format ``author_id``, look for tables called ``author`` or ``authors``\n- If the column does not end in ``_id``, try looking for a table with the exact name of the column or that name with an added ``s``\n\n.. _python_api_index_foreign_keys:\n\nAdding indexes for all foreign keys\n-----------------------------------\n\nIf you want to ensure that every foreign key column in your database has a corresponding index, you can do so like this:\n\n.. code-block:: python\n\n    db.index_foreign_keys()\n",
+            "payload_sha256": "3c93c41556d95dd257f67c4648e1ea6fa674e1402ad3205eabd0a63ba3ebd838"
+          }
+        ],
+        "binding_sha256": "d26fd02e3f5eb4ca4d52130d2f641c639dd1386edb65b70af8c8a8c071b3afd5"
+      },
+      "methods": {
+        "H-full-v2": {
+          "gains": {
+            "sqlite-ingest": -0.0055210888385772705,
+            "sqlite-schema": -0.014162510633468628
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "NO_INTERVENTION",
+            "reason": "FUNCTIONAL_NOOP",
+            "gains": {
+              "sqlite-ingest": -0.0055210888385772705,
+              "sqlite-schema": -0.014162510633468628
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "H-task-fixedC-v2": {
+          "gains": {
+            "sqlite-ingest": 0.005787278525531292,
+            "sqlite-schema": 0.004960116930305958
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "sqlite-ingest",
+          "stopping_policy_decision": {
+            "action": "INJECT",
+            "skill_id": "sqlite-ingest",
+            "reason": "FUNCTIONAL_POLICY_DECISION",
+            "gains": {
+              "sqlite-ingest": 0.005787278525531292,
+              "sqlite-schema": 0.004960116930305958
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        },
+        "P1-v2": {
+          "gains": {
+            "sqlite-ingest": 0.0,
+            "sqlite-schema": 0.0
+          },
+          "wait": 0.0,
+          "immediate_gain_action": "NO_INTERVENTION",
+          "stopping_policy_decision": {
+            "action": "NO_INTERVENTION",
+            "reason": "FUNCTIONAL_NOOP",
+            "gains": {
+              "sqlite-ingest": 0.0,
+              "sqlite-schema": 0.0
+            },
+            "waiting_value": 0.0,
+            "wait_sensitive": false
+          },
+          "stopping_action_panel_identification": "DIRECT_ACTION_OBSERVED_AFTER_COLLECTION"
+        }
+      },
+      "now_skill": "sqlite-ingest",
+      "representation_identifiable": true,
+      "delay_eligible": false,
+      "wait_sensitive": false,
+      "action_roster": [
+        {
+          "repeat": 1,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 1,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 1,
+          "action": "GENERIC_REMINDER"
+        },
+        {
+          "repeat": 2,
+          "action": "NO_INTERVENTION"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-ingest"
+        },
+        {
+          "repeat": 2,
+          "action": "sqlite-schema"
+        },
+        {
+          "repeat": 2,
+          "action": "GENERIC_REMINDER"
+        }
+      ],
+      "representation_contrast": "prelocked immediate gain actions on same C; full stopping policy WAIT is not relabeled as never-intervene",
+      "sample_reuse": "NEVER and NOW reference these action/repeat IDs; no additional calls",
+      "lock_sha256": "f3b0a0520bcf108021f227ec1395dfc49806b49040c2ae7ffe9aa34819df5b6e",
+      "common_prediction_seconds": 0.09842458297498524,
+      "policy_freeze_sha256": "2ebccbf72bc16541bfa954bcd6441d6aa11d9954e0b1509cfad3727a60ff68ec",
+      "task_id": "sqlite-utils-fix-e6be626",
+      "state_summary": {
+        "stage": "E2",
+        "completed_turn_index": 2,
+        "remaining_seconds": 500.61391037498834,
+        "total_seconds": 600,
+        "public_test_exit": 0,
+        "repeated_error_count": 1,
+        "public_tests_run": 3,
+        "public_test_failure_seen": true,
+        "observed_pass_count": 2,
+        "observed_fail_count": 1,
+        "text_original_chars": 12658,
+        "text_retained_chars": 7742
+      },
+      "original_state_sha256": "4b7265c81396a47a58dc3180f487f3cccec85db0346621647314beb3d1062a2f"
+    }
+  ]
+}

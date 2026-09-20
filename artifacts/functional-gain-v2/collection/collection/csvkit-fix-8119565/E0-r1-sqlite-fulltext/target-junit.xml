@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="3" time="0.021" timestamp="2026-09-19T22:51:22.302069+00:00" hostname="55a0e519eb1a"><testcase classname="test_behavior" name="test_target_stack[12]" time="0.001" /><testcase classname="test_behavior" name="test_target_stack[140000]" time="0.002" /><testcase classname="test_behavior" name="test_target_csvpy_reader" time="0.000"><failure message="TypeError: 'field_size_limit' is an invalid keyword argument for this function">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target_csvpy_reader0')
+
+    def test_target_csvpy_reader(tmp_path):
+        a=tmp_path/'a.csv';a.write_text('id,text\n1,'+'x'*140000+'\n')
+        utility=CSVPy(['--dict','-z','200000',str(a)],output_file=io.StringIO())
+        try:
+            with a.open() as stream:
+&gt;               rows=list(csv.DictReader(stream,**utility.reader_kwargs))
+
+/trusted/test_behavior.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;csv.DictReader object at 0xffff8645c260&gt;
+f = &lt;_io.TextIOWrapper name='/tmp/pytest-of-root/pytest-0/test_target_csvpy_reader0/a.csv' mode='r' encoding='UTF-8'&gt;
+fieldnames = None, restkey = None, restval = None, dialect = 'excel', args = ()
+kwds = {'doublequote': True, 'field_size_limit': 200000, 'skipinitialspace': False}
+
+    def __init__(self, f, fieldnames=None, restkey=None, restval=None,
+                 dialect="excel", *args, **kwds):
+        if fieldnames is not None and iter(fieldnames) is fieldnames:
+            fieldnames = list(fieldnames)
+        self._fieldnames = fieldnames   # list of keys for the dict
+        self.restkey = restkey          # key to catch long rows
+        self.restval = restval          # default value for short rows
+&gt;       self.reader = reader(f, dialect, *args, **kwds)
+E       TypeError: 'field_size_limit' is an invalid keyword argument for this function
+
+/usr/local/lib/python3.12/csv.py:91: TypeError</failure></testcase></testsuite></testsuites>

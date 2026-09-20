@@ -1,0 +1,134 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..64d966c6bb6f63ac228457f1606ec25cee1493df 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -1,5 +1,4 @@
+ import csv
+-from dictdiffer import diff
+ import json
+ import hashlib
+ 
+@@ -57,14 +56,17 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            d = list(diff(previous[id], current[id], ignore=ignore_columns))
+-            if d:
++            ignored = ignore_columns or set()
++            changed_values = {
++                field: [previous[id][field], current[id][field]]
++                for field in previous[id]
++                if field not in ignored
++                and previous[id][field] != current[id][field]
++            }
++            if changed_values:
+                 changes = {
+                     "key": id,
+-                    "changes": {
+-                        field: [prev_value, current_value]
+-                        for _, field, (prev_value, current_value) in d
+-                    },
++                    "changes": changed_values,
+                 }
+                 if show_unchanged:
+                     changes["unchanged"] = {
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 11b4eef1bba305732e6e39e0e1f73673ef6d5bf0..bc8b8f38559e5c2bd43a310262dc7f04fef2b761 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -86,6 +86,35 @@ def test_human_cli_json(tmpdir):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_cli_json_dotted_column_names(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write("id,first.name,details.age,unchanged.dot\n1,Cleo,4,yes")
++    two = tmpdir / "two.csv"
++    two.write("id,first.name,details.age,unchanged.dot\n1,Clio,5,yes")
++
++    result = CliRunner().invoke(
++        cli.cli, [str(one), str(two), "--key", "id", "--json", "--show-unchanged"]
++    )
++
++    assert result.exit_code == 0
++    assert json.loads(result.output) == {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {
++                    "first.name": ["Cleo", "Clio"],
++                    "details.age": ["4", "5"],
++                },
++                "unchanged": {"unchanged.dot": "yes"},
++            },
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    }
++
++
+ def test_tsv_files(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..4dfc7153be88f03db17506e0e8d21341a85c04a9 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -107,3 +107,55 @@ def test_tsv():
+         "columns_added": [],
+         "columns_removed": [],
+     } == diff
++
++
++def test_dotted_column_names_are_literal():
++    previous = {
++        "1": {
++            "id": "1",
++            "one.dot": "old",
++            "two.dots.here": "before",
++            "same.dot": "same",
++            "old.column": "old",
++        },
++        "2": {
++            "id": "2",
++            "one.dot": "removed",
++            "two.dots.here": "row",
++            "same.dot": "same",
++            "old.column": "old",
++        },
++    }
++    current = {
++        "1": {
++            "id": "1",
++            "one.dot": "new",
++            "two.dots.here": "after",
++            "same.dot": "same",
++            "new.column": "new",
++        },
++        "3": {
++            "id": "3",
++            "one.dot": "added",
++            "two.dots.here": "row",
++            "same.dot": "same",
++            "new.column": "new",
++        },
++    }
++
++    assert compare(previous, current, show_unchanged=True) == {
++        "added": [current["3"]],
++        "removed": [previous["2"]],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {
++                    "one.dot": ["old", "new"],
++                    "two.dots.here": ["before", "after"],
++                },
++                "unchanged": {"same.dot": "same", "old.column": "old"},
++            },
++        ],
++        "columns_added": ["new.column"],
++        "columns_removed": ["old.column"],
++    }

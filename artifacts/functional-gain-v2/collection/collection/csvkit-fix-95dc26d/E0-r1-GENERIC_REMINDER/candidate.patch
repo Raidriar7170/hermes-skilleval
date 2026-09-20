@@ -1,0 +1,106 @@
+diff --git a/csvkit/utilities/csvformat.py b/csvkit/utilities/csvformat.py
+index 655f5c44bf2ed3c1cbbaceedd79c3be921c7988d..74f1c94d9f3b914e5f8975e001c305e21c828b5e 100644
+--- a/csvkit/utilities/csvformat.py
++++ b/csvkit/utilities/csvformat.py
+@@ -7,9 +7,22 @@ import agate
+ from csvkit.cli import CSVKitUtility, make_default_headers
+ 
+ 
++class _NumberString:
++    """A string that the CSV writer recognizes as numeric without changing it."""
++
++    def __init__(self, value):
++        self.value = value
++
++    def __str__(self):
++        return self.value
++
++    def __float__(self):
++        return 0.0
++
++
+ class CSVFormat(CSVKitUtility):
+     description = 'Convert a CSV file to a custom output format.'
+-    override_flags = ['L', 'blanks', 'date-format', 'datetime-format']
++    override_flags = ['blanks', 'date-format', 'datetime-format']
+ 
+     def add_arguments(self):
+         self.argparser.add_argument(
+@@ -81,7 +94,30 @@ class CSVFormat(CSVKitUtility):
+             reader = itertools.chain([headers, _row], reader)
+ 
+         if self.args.skip_header:
+-            next(reader)
++            next(reader, None)
++
++        if self.args.out_quoting == 2:
++            number_type = agate.Number(locale=self.args.locale)
++
++            def infer_number(value):
++                if not value:
++                    return value
++                try:
++                    number_type.cast(value)
++                except agate.CastError:
++                    return value
++                return _NumberString(value)
++
++            def infer_numbers(rows):
++                for row in rows:
++                    yield [infer_number(value) for value in row]
++
++            if not self.args.skip_header:
++                header = next(reader, None)
++                if header is None:
++                    return
++                writer.writerow(header)
++            reader = infer_numbers(reader)
+ 
+         writer.writerows(reader)
+ 
+diff --git a/docs/scripts/csvformat.rst b/docs/scripts/csvformat.rst
+index cbaf956ec7de8182757d23a5cd77477b0ba67d7c..57641e48fe59ea9b57c0fb7105c0b155011c1cbe 100644
+--- a/docs/scripts/csvformat.rst
++++ b/docs/scripts/csvformat.rst
+@@ -10,7 +10,7 @@ Convert a CSV file to a custom output format.:
+ .. code-block:: none
+ 
+    usage: csvformat [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+-                    [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S] [-H]
++                    [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE] [-S] [-H]
+                     [-K SKIP_LINES] [-v] [-l] [--zero] [-V] [-E]
+                     [-D OUT_DELIMITER] [-T] [-A] [-Q OUT_QUOTECHAR]
+                     [-U {0,1,2,3}] [-B] [-P OUT_ESCAPECHAR]
+diff --git a/tests/test_utilities/test_csvformat.py b/tests/test_utilities/test_csvformat.py
+index 7123f2c233683ed787b5de8a0910d4ebddb7698a..4038adcb46abe13e2e5fa1aaf80460f8ee8d60be 100644
+--- a/tests/test_utilities/test_csvformat.py
++++ b/tests/test_utilities/test_csvformat.py
+@@ -95,3 +95,28 @@ class TestCSVFormat(CSVKitTestCase, EmptyFileTests):
+         self.assertLines(['-M', 'XYZ', 'examples/dummy.csv'], [
+             'a,b,cXYZ1,2,3XYZ',
+         ], newline_at_eof=False)
++
++    def test_quote_nonnumeric(self):
++        input_file = io.BytesIO(b'name,amount,code\nAlice,12.50,001\nBob,-3,word\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--out-quoting', '2'], [
++                '"name","amount","code"',
++                '"Alice",12.50,001',
++                '"Bob",-3,"word"',
++            ])
++
++        input_file.close()
++
++    def test_quote_nonnumeric_skip_header_and_locale(self):
++        input_file = io.BytesIO('name;amount;note\nAlice;1.234,56;text\n'.encode())
++
++        with stdin_as_string(input_file):
++            self.assertLines([
++                '--skip-header', '--locale', 'de_DE', '--delimiter', ';',
++                '--out-delimiter', ';', '--out-quoting', '2',
++            ], [
++                '"Alice";1.234,56;"text"',
++            ])
++
++        input_file.close()

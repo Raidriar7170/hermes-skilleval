@@ -1,0 +1,61 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..90f61dd93bd5087991f798cd3d3a4d0b24b7ed80 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -197,8 +197,12 @@ class CSVKitUtility:
+                 '-z', '--maxfieldsize', dest='field_size_limit', type=int,
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
++            encoding = os.environ.get('PYTHONIOENCODING') or 'utf-8-sig'
++            # PYTHONIOENCODING can include a stream error handler (for example,
++            # "latin1:replace"), but TextIOWrapper's encoding argument cannot.
++            encoding = encoding.split(':', 1)[0] or 'utf-8-sig'
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding', default=encoding,
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/tests/test_utilities/test_csvcut.py b/tests/test_utilities/test_csvcut.py
+index 92a2dcf9dc8b587366060690399c6f5687f03b51..df814485514e315d1d56514711c4dd51948fb7ac 100644
+--- a/tests/test_utilities/test_csvcut.py
++++ b/tests/test_utilities/test_csvcut.py
+@@ -1,3 +1,4 @@
++import os
+ import sys
+ from unittest.mock import patch
+ 
+@@ -31,11 +32,28 @@ class TestCSVCut(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+         ])
+ 
+     def test_unicode(self):
+-        self.assertRows(['-c', '1,3', 'examples/test_utf8.csv'], [
+-            ['foo', 'baz'],
+-            ['1', '3'],
+-            ['4', 'ʤ'],
+-        ])
++        with patch.dict(os.environ, {}, clear=True):
++            self.assertRows(['-c', '1,3', 'examples/test_utf8.csv'], [
++                ['foo', 'baz'],
++                ['1', '3'],
++                ['4', 'ʤ'],
++            ])
++
++    def test_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1'}):
++            self.assertRows(['-c', '3', 'examples/test_latin1.csv'], [
++                ['c'],
++                ['3'],
++                ['©'],
++            ])
++
++    def test_encoding_overrides_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'ascii'}):
++            self.assertRows(['--encoding', 'latin1', '-c', '3', 'examples/test_latin1.csv'], [
++                ['c'],
++                ['3'],
++                ['©'],
++            ])
+ 
+     def test_with_gzip(self):
+         self.assertRows(['-c', '1,3', 'examples/dummy.csv.gz'], [

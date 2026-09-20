@@ -1,0 +1,69 @@
+diff --git a/csvkit/utilities/csvjoin.py b/csvkit/utilities/csvjoin.py
+index d8ad737d256ea6f9b250adcb982032b5c0b6c268..6db5f966f6d391a72ee2a7410ff4de04aa7c56e5 100644
+--- a/csvkit/utilities/csvjoin.py
++++ b/csvkit/utilities/csvjoin.py
+@@ -98,7 +98,11 @@ class CSVJoin(CSVKitUtility):
+             remaining_tables.reverse()
+ 
+             for i, table in enumerate(remaining_tables):
+-                jointab = agate.Table.join(jointab, table, join_column_ids[-(i + 2)], join_column_ids[-1])
++                # The column identifiers are in input-file order, whereas a right
++                # join is implemented by joining the files in reverse order. The
++                # accumulated table therefore uses the final input's key, and the
++                # table being attached uses its own corresponding key.
++                jointab = agate.Table.join(jointab, table, join_column_ids[-1], join_column_ids[-(i + 2)])
+         elif self.args.outer_join:
+             # Full outer join
+             for i, table in enumerate(tables[1:]):
+diff --git a/tests/fixtures/csvjoin_left.csv b/tests/fixtures/csvjoin_left.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..a57ff23c557b55b7ce303cc9f042479846fd5dd4
+--- /dev/null
++++ b/tests/fixtures/csvjoin_left.csv
+@@ -0,0 +1,3 @@
++left_id,left_value
++1,left one
++2,left two
+diff --git a/tests/fixtures/csvjoin_right.csv b/tests/fixtures/csvjoin_right.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d3b1295bf8f6594757a6b7527745a1bdf78b240
+--- /dev/null
++++ b/tests/fixtures/csvjoin_right.csv
+@@ -0,0 +1,3 @@
++right_value,right_id
++right two,2
++right three,3
+diff --git a/tests/test_utilities/test_csvjoin.py b/tests/test_utilities/test_csvjoin.py
+index b7cb39ff240048b556ce209fabfe45f48f09fa7c..5b60d9850dd1e4542fadf22906b849813a17f5d3 100644
+--- a/tests/test_utilities/test_csvjoin.py
++++ b/tests/test_utilities/test_csvjoin.py
+@@ -29,6 +29,29 @@ class TestCSVJoin(CSVKitTestCase, EmptyFileTests):
+         output = self.get_output_as_io(['-c', 'a', '--right', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 4)
+ 
++    def test_right_different_key_names_and_positions(self):
++        self.assertRows([
++            '-c', 'left_id,right_id', '--right',
++            'tests/fixtures/csvjoin_left.csv', 'tests/fixtures/csvjoin_right.csv',
++        ], [
++            ['right_value', 'right_id', 'left_value'],
++            ['right two', '2', 'left two'],
++            ['right three', '3', ''],
++        ])
++
++    def test_inner_and_left_different_key_names_and_positions(self):
++        paths = ['tests/fixtures/csvjoin_left.csv', 'tests/fixtures/csvjoin_right.csv']
++
++        self.assertRows(['-c', 'left_id,right_id'] + paths, [
++            ['left_id', 'left_value', 'right_value'],
++            ['2', 'left two', 'right two'],
++        ])
++        self.assertRows(['-c', 'left_id,right_id', '--left'] + paths, [
++            ['left_id', 'left_value', 'right_value'],
++            ['1', 'left one', ''],
++            ['2', 'left two', 'right two'],
++        ])
++
+     def test_outer(self):
+         output = self.get_output_as_io(['-c', 'a', '--outer', 'examples/join_a.csv', 'examples/join_b.csv'])
+         self.assertEqual(len(output.readlines()), 6)

@@ -2,10 +2,16 @@
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 
 def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["functional-v2"]:
+        from .functional_cli import main as functional_main
+
+        return functional_main(argv[1:])
     parser = argparse.ArgumentParser(prog="hermes-intervention")
     subs = parser.add_subparsers(dest="command", required=True)
     for name in ["collect", "evaluate"]:

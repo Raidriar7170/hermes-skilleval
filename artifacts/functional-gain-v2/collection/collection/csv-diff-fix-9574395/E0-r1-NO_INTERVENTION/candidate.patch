@@ -1,0 +1,111 @@
+diff --git a/csv_diff/__init__.py b/csv_diff/__init__.py
+index f446fb7182b391b47fce3e09e679255077832acf..77aaf7f78a95fa6fa0964dd6e7659abf13771d42 100644
+--- a/csv_diff/__init__.py
++++ b/csv_diff/__init__.py
+@@ -1,5 +1,4 @@
+ import csv
+-from dictdiffer import diff
+ import json
+ import hashlib
+ 
+@@ -57,14 +56,19 @@ def compare(previous, current, show_unchanged=False):
+         result["removed"] = [previous[id] for id in removed]
+     if changed:
+         for id in changed:
+-            d = list(diff(previous[id], current[id], ignore=ignore_columns))
+-            if d:
++            # CSV rows are flat mappings. Comparing their shared columns
++            # directly keeps headers containing dots as literal column names.
++            changed_values = {
++                field: [previous[id][field], current[id][field]]
++                for field in previous[id]
++                if field in current[id]
++                and field not in (ignore_columns or ())
++                and previous[id][field] != current[id][field]
++            }
++            if changed_values:
+                 changes = {
+                     "key": id,
+-                    "changes": {
+-                        field: [prev_value, current_value]
+-                        for _, field, (prev_value, current_value) in d
+-                    },
++                    "changes": changed_values,
+                 }
+                 if show_unchanged:
+                     changes["unchanged"] = {
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 11b4eef1bba305732e6e39e0e1f73673ef6d5bf0..86a8c666d33e9f6ad543dbc7da71c22468386122 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -86,6 +86,33 @@ def test_human_cli_json(tmpdir):
+     } == json.loads(result.output.strip())
+ 
+ 
++def test_json_dotted_column_names_preserve_other_diff_results(tmpdir):
++    one = tmpdir / "one.csv"
++    one.write("id,a.b,c.d,removed.column\n1,old,same,x\n2,gone,same,x")
++    two = tmpdir / "two.csv"
++    two.write("id,a.b,c.d,added.column\n1,new,same,y\n3,added,same,y")
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [str(one), str(two), "--key", "id", "--json", "--show-unchanged"],
++    )
++
++    assert result.exit_code == 0
++    assert json.loads(result.output) == {
++        "added": [{"id": "3", "a.b": "added", "c.d": "same", "added.column": "y"}],
++        "removed": [{"id": "2", "a.b": "gone", "c.d": "same", "removed.column": "x"}],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {"a.b": ["old", "new"]},
++                "unchanged": {"c.d": "same", "removed.column": "x"},
++            }
++        ],
++        "columns_added": ["added.column"],
++        "columns_removed": ["removed.column"],
++    }
++
++
+ def test_tsv_files(tsv_files):
+     one, two = tsv_files
+     result = CliRunner().invoke(
+diff --git a/tests/test_csv_diff.py b/tests/test_csv_diff.py
+index b6fe5a417b0f04868f2c18afa84dc7481645877a..b30a91f46dde135db20797c71f64e22b066dec8f 100644
+--- a/tests/test_csv_diff.py
++++ b/tests/test_csv_diff.py
+@@ -57,6 +57,32 @@ def test_row_changed():
+     } == diff
+ 
+ 
++def test_dotted_column_names():
++    previous = load_csv(
++        io.StringIO("id,name.first,name.last,meta.version\n1,Cleo,Smith,1"), key="id"
++    )
++    current = load_csv(
++        io.StringIO("id,name.first,name.last,meta.version\n1,Clio,Jones,1"), key="id"
++    )
++
++    assert compare(previous, current, show_unchanged=True) == {
++        "added": [],
++        "removed": [],
++        "changed": [
++            {
++                "key": "1",
++                "changes": {
++                    "name.first": ["Cleo", "Clio"],
++                    "name.last": ["Smith", "Jones"],
++                },
++                "unchanged": {"meta.version": "1"},
++            }
++        ],
++        "columns_added": [],
++        "columns_removed": [],
++    }
++
++
+ def test_row_added():
+     diff = compare(
+         load_csv(io.StringIO(THREE), key="id"), load_csv(io.StringIO(TWO), key="id")

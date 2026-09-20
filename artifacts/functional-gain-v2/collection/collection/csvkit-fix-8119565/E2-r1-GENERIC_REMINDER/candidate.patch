@@ -1,0 +1,121 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4c3d1bdf25852c19abae995b147d7435b4c36ac1..464fae44d88dc6e936bc84ad1a8656828f332381 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -2,6 +2,7 @@
+ 
+ import argparse
+ import bz2
++import csv
+ import datetime
+ import decimal
+ import gzip
+@@ -269,11 +270,18 @@ class CSVKitUtility:
+         elif self.args.delimiter:
+             kwargs['delimiter'] = self.args.delimiter
+ 
+-        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'field_size_limit', 'skipinitialspace'):
++        for arg in ('quotechar', 'quoting', 'doublequote', 'escapechar', 'skipinitialspace'):
+             value = getattr(self.args, arg)
+             if value is not None:
+                 kwargs[arg] = value
+ 
++        # csv.DictReader passes unknown keyword arguments to the dialect, where
++        # field_size_limit is invalid. The limit is process-wide in Python's
++        # csv module, so set it here instead of passing it to individual
++        # readers. This also covers agate.csv.reader, which uses csv.reader.
++        if self.args.field_size_limit is not None:
++            csv.field_size_limit(self.args.field_size_limit)
++
+         if getattr(self.args, 'no_header_row', None):
+             kwargs['header'] = not self.args.no_header_row
+ 
+diff --git a/tests/test_utilities/test_csvpy.py b/tests/test_utilities/test_csvpy.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e62cc216652b48fae646cf6ad14b118e8f63bef7
+--- /dev/null
++++ b/tests/test_utilities/test_csvpy.py
+@@ -0,0 +1,36 @@
++import csv
++import tempfile
++from unittest.mock import patch
++
++from csvkit.utilities.csvpy import CSVPy
++from tests.utils import CSVKitTestCase
++
++
++class TestCSVPy(CSVKitTestCase):
++    Utility = CSVPy
++
++    def run_csvpy(self, args, expected):
++        def interact(_banner, local):
++            self.assertEqual(list(local['reader']), expected)
++
++        # Force csvpy's standard-library fallback so this test never opens an
++        # IPython shell on environments that provide its legacy import path.
++        with patch.dict('sys.modules', {'IPython.frontend.terminal.embed': None}), \
++                patch('code.interact', side_effect=interact):
++            self.Utility(args).run()
++
++    def test_dict_maxfieldsize(self):
++        previous_limit = csv.field_size_limit()
++        field = 'x' * 140000
++
++        try:
++            with tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', newline='', suffix='.csv') as f:
++                f.write(f'a\n{field}\n')
++                f.flush()
++
++                self.run_csvpy(['--dict', '--maxfieldsize', '150000', f.name], [{'a': field}])
++        finally:
++            csv.field_size_limit(previous_limit)
++
++    def test_dict_ordinary_csv(self):
++        self.run_csvpy(['--dict', 'examples/dummy.csv'], [{'a': '1', 'b': '2', 'c': '3'}])
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 7187971a6eb32374fe6b038f4fd57009a2564ac4..485ade7a3c0de53d9511e2aad8f8cac10b737265 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,4 +1,6 @@
++import csv
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from csvkit.utilities.csvstack import CSVStack, launch_new_instance
+@@ -34,6 +36,35 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_maxfieldsize_with_dict_reader(self):
++        previous_limit = csv.field_size_limit()
++        field = 'x' * 140000
++
++        try:
++            with tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', newline='', suffix='.csv') as f:
++                f.write(f'a\n{field}\n')
++                f.flush()
++
++                self.assertRows(['--maxfieldsize', '150000', f.name], [
++                    ['a'],
++                    [field],
++                ])
++        finally:
++            csv.field_size_limit(previous_limit)
++
++    def test_maxfieldsize_bound_with_dict_reader(self):
++        previous_limit = csv.field_size_limit()
++
++        try:
++            with tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', newline='', suffix='.csv') as f:
++                f.write(f'a\n{"x" * 20}\n')
++                f.flush()
++
++                with self.assertRaisesRegex(csv.Error, 'field larger than field limit'):
++                    self.get_output(['--maxfieldsize', '10', f.name])
++        finally:
++            csv.field_size_limit(previous_limit)
++
+     def test_multiple_file_stack(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy2.csv'], [
+             ['a', 'b', 'c'],

@@ -1,0 +1,103 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index eb59c500669815dcbb81eed1f3be4497d66fe80f..71f9f5d3578250272d28f9f627cf2e50e5f42584 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2919,15 +2919,43 @@ class Table(Queryable):
+             all_columns_are_null = " AND ".join(
+                 "{} IS NULL".format(quote_identifier(c)) for c in columns
+             )
++            source_columns_are_null = " AND ".join(
++                "{}.{} IS NULL".format(
++                    quote_identifier("_extract_source"), quote_identifier(c)
++                )
++                for c in columns
++            )
++            # A unique index does not reject duplicate rows containing NULL,
++            # so explicitly check for existing values using NULL-safe IS.
+             self.db.execute(
+-                "INSERT OR IGNORE INTO {} ({lookup_columns}) SELECT DISTINCT {table_cols} FROM {} WHERE NOT ({all_null})".format(
+-                    quote_identifier(table),
+-                    quote_identifier(self.name),
++                "INSERT OR IGNORE INTO {lookup_table} ({lookup_columns}) "
++                "SELECT DISTINCT {table_cols} FROM {source_table} AS {source} "
++                "WHERE NOT ({all_null}) AND NOT EXISTS ("
++                "SELECT 1 FROM {lookup_table} AS {existing} WHERE {where}"
++                ")".format(
++                    lookup_table=quote_identifier(table),
++                    source_table=quote_identifier(self.name),
+                     lookup_columns=", ".join(
+                         quote_identifier(c) for c in lookup_columns
+                     ),
+-                    table_cols=", ".join(quote_identifier(c) for c in columns),
+-                    all_null=all_columns_are_null,
++                    table_cols=", ".join(
++                        "{}.{}".format(
++                            quote_identifier("_extract_source"), quote_identifier(c)
++                        )
++                        for c in columns
++                    ),
++                    source=quote_identifier("_extract_source"),
++                    existing=quote_identifier("_extract_existing"),
++                    where=" AND ".join(
++                        "{}.{} IS {}.{}".format(
++                            quote_identifier("_extract_existing"),
++                            quote_identifier(rename.get(column) or column),
++                            quote_identifier("_extract_source"),
++                            quote_identifier(column),
++                        )
++                        for column in columns
++                    ),
++                    all_null=source_columns_are_null,
+                 )
+             )
+ 
+diff --git a/tests/test_extract.py b/tests/test_extract.py
+index 1c0fa01eb84cb83057cd815a824624dc23c77fb2..b237d593416ca79e61eea949f9e9e9b34745f448 100644
+--- a/tests/test_extract.py
++++ b/tests/test_extract.py
+@@ -251,6 +251,45 @@ def test_extract_null_values_multiple_columns(fresh_db):
+     ]
+ 
+ 
++def test_reuse_lookup_table_with_null_values(fresh_db):
++    fresh_db["first_works"].insert_all(
++        [
++            {"id": 1, "title": "Shared", "creator": None},
++            {"id": 2, "title": "Complete", "creator": "Someone"},
++            {"id": 3, "title": None, "creator": None},
++        ],
++        pk="id",
++    )
++    fresh_db["second_works"].insert_all(
++        [
++            {"id": 4, "title": "Shared", "creator": None},
++            {"id": 5, "title": "Complete", "creator": "Someone"},
++            {"id": 6, "title": None, "creator": None},
++        ],
++        pk="id",
++    )
++
++    for source_table in ("first_works", "second_works"):
++        fresh_db[source_table].extract(
++            ["title", "creator"], table="works", fk_column="work_id"
++        )
++
++    assert list(fresh_db["works"].rows) == [
++        {"id": 1, "title": "Shared", "creator": None},
++        {"id": 2, "title": "Complete", "creator": "Someone"},
++    ]
++    assert list(fresh_db["first_works"].rows) == [
++        {"id": 1, "work_id": 1},
++        {"id": 2, "work_id": 2},
++        {"id": 3, "work_id": None},
++    ]
++    assert list(fresh_db["second_works"].rows) == [
++        {"id": 4, "work_id": 1},
++        {"id": 5, "work_id": 2},
++        {"id": 6, "work_id": None},
++    ]
++
++
+ def test_extract_null_values_existing_lookup_table_with_null_row(fresh_db):
+     # Even if the lookup table already contains an all-null row, rows where
+     # every extracted column is null should keep a null foreign key

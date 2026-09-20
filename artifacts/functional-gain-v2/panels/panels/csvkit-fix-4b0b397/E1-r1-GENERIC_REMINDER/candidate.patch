@@ -1,0 +1,75 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..eb8e5b16cf25cb2bd3c38b03a4dab9801cb83a9f 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -28,6 +28,11 @@ except ImportError:
+ QUOTING_CHOICES = sorted(getattr(csv, name) for name in dir(csv) if name.startswith('QUOTE_'))
+ 
+ 
++def get_default_encoding():
++    """Return the input encoding requested by Python's I/O environment."""
++    return os.environ.get('PYTHONIOENCODING', 'utf-8-sig').split(':', 1)[0]
++
++
+ class LazyFile:
+     """
+     A proxy for a File object that delays opening it until
+@@ -198,7 +203,7 @@ class CSVKitUtility:
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding', default=get_default_encoding(),
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..4db8f36f15465ef83ebda2a3cbc204546df29630 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,13 @@
+ import unittest
++from tempfile import NamedTemporaryFile
++from unittest.mock import patch
+ 
+-from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.cli import CSVKitUtility, match_column_identifier, parse_column_identifiers
++
++
++class Utility(CSVKitUtility):
++    def add_arguments(self):
++        pass
+ 
+ 
+ class TestCli(unittest.TestCase):
+@@ -8,6 +15,30 @@ class TestCli(unittest.TestCase):
+     def setUp(self):
+         self.headers = ['id', 'name', 'i_work_here', '1', 'more-header-values', 'stuff', 'blueberry']
+ 
++    def test_default_encoding(self):
++        with patch.dict('os.environ', {}, clear=True):
++            self.assertEqual(Utility([]).args.encoding, 'utf-8-sig')
++
++    def test_default_encoding_from_environment(self):
++        content = 'name\nAndr\N{LATIN SMALL LETTER E WITH ACUTE}\n'
++
++        with NamedTemporaryFile() as file:
++            file.write(content.encode('latin-1'))
++            file.flush()
++
++            with patch.dict('os.environ', {'PYTHONIOENCODING': 'latin-1:strict'}):
++                utility = Utility([file.name])
++                input_file = utility._open_input_file(file.name)
++
++                try:
++                    self.assertEqual(input_file.read(), content)
++                finally:
++                    input_file.close()
++
++    def test_explicit_encoding_overrides_environment(self):
++        with patch.dict('os.environ', {'PYTHONIOENCODING': 'latin-1'}):
++            self.assertEqual(Utility(['--encoding', 'utf-16']).args.encoding, 'utf-16')
++
+     def test_match_column_identifier_string(self):
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here'))
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here', column_offset=0))

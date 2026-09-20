@@ -1,0 +1,54 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 83cc50020593d9b31344bdf87c2385226aca9319..26d705c346eb75b1fcb2c95f9acec34cd64d814a 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -367,9 +367,14 @@ class CSVKitUtility:
+                     text_type,
+                 ]
+ 
+-                # In order to parse dates like "20010101".
+-                if self.args.date_format or self.args.datetime_format:
++                # Explicit formats take precedence over numbers, so that values like
++                # "20010101" can be parsed as dates. Keep Number ahead of the
++                # default DateTime parser, which can otherwise interpret decimals
++                # like "5.5" as datetimes.
++                if self.args.datetime_format:
+                     types.insert(-1, number_type)
++                elif self.args.date_format:
++                    types.insert(-2, number_type)
+                 else:
+                     types.insert(1, number_type)
+ 
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index ccfe4c4b5a91b38d462553efe55b0c7dc62890dc..343419b6173ff5623c05097625f4e76338c50e23 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -3,6 +3,8 @@ import os
+ import sys
+ from unittest.mock import patch
+ 
++import agate
++
+ from csvkit.utilities.in2csv import In2CSV, launch_new_instance
+ from tests.utils import CSVKitTestCase, EmptyFileTests, stdin_as_string
+ 
+@@ -104,6 +106,19 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_numeric_date_format_default(self):
+         self.assertConverted('csv', 'examples/test_numeric_date_format.csv', 'examples/test_numeric_date_format.csv')
+ 
++    def test_date_format_keeps_decimal_number(self):
++        utility = self.Utility(['-f', 'csv', '--date-format', '%d/%m/%Y'])
++        types = utility.get_column_types().run([['5.5', '31/12/2020']], ['number', 'date'])
++
++        self.assertIsInstance(types[0], agate.Number)
++        self.assertIsInstance(types[1], agate.Date)
++
++    def test_datetime_format_takes_precedence_over_number(self):
++        utility = self.Utility(['-f', 'csv', '--datetime-format', '%Y%m%d%H%M%S'])
++        types = utility.get_column_types().run([['20010101123456']], ['datetime'])
++
++        self.assertIsInstance(types[0], agate.DateTime)
++
+     def test_date_like_number(self):
+         self.assertConverted('csv', 'examples/date_like_number.csv', 'examples/date_like_number.csv')
+ 

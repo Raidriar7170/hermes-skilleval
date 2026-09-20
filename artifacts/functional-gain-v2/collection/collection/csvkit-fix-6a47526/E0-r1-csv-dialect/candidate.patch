@@ -1,0 +1,65 @@
+diff --git a/csvkit/utilities/csvstack.py b/csvkit/utilities/csvstack.py
+index 01178e2c17350e4e48304cb10a9da0ec6e96cae3..b3714388a24ec6483e259583b53a055120561d03 100644
+--- a/csvkit/utilities/csvstack.py
++++ b/csvkit/utilities/csvstack.py
+@@ -75,13 +75,16 @@ class CSVStack(CSVKitUtility):
+             rows = Reader(f, **self.reader_kwargs)
+ 
+             if use_fieldnames:
+-                for field in rows.fieldnames:
++                # DictReader uses None for fieldnames if the input has no rows.
++                # An empty file has no headers to add, but must not prevent headers
++                # and rows from the other inputs from being stacked.
++                for field in rows.fieldnames or []:
+                     if field not in headers:
+                         headers.append(field)
+ 
+                 # If the file is standard input, store the fieldnames so that the rows can be read correctly later.
+                 if file_is_stdin:
+-                    stdin_fieldnames = rows.fieldnames
++                    stdin_fieldnames = rows.fieldnames or []
+                 else:
+                     f.close()
+             else:
+diff --git a/tests/test_utilities/test_csvstack.py b/tests/test_utilities/test_csvstack.py
+index 3e3898b91a608d0a3cfbd8e562d4eec266b5f178..c8937b988be11d87f10d98ab0798a147d3b2285a 100644
+--- a/tests/test_utilities/test_csvstack.py
++++ b/tests/test_utilities/test_csvstack.py
+@@ -1,5 +1,6 @@
+ import os
+ import sys
++import tempfile
+ import unittest
+ from unittest.mock import patch
+ 
+@@ -62,6 +63,30 @@ class TestCSVStack(CSVKitTestCase, EmptyFileTests):
+             ['1', '2', '3'],
+         ])
+ 
++    def test_multiple_file_stack_empty(self):
++        expected = [
++            ['a', 'b', 'c'],
++            ['1', '2', '3'],
++        ]
++
++        self.assertRows(['examples/empty.csv', 'examples/dummy.csv'], expected)
++        self.assertRows(['examples/dummy.csv', 'examples/empty.csv'], expected)
++
++    def test_multiple_file_stack_header_only(self):
++        with tempfile.TemporaryDirectory() as directory:
++            path = os.path.join(directory, 'header_only.csv')
++            with open(path, 'w') as f:
++                f.write('d,e\n')
++
++            self.assertRows([path, 'examples/dummy.csv'], [
++                ['d', 'e', 'a', 'b', 'c'],
++                ['', '', '1', '2', '3'],
++            ])
++            self.assertRows(['examples/dummy.csv', path], [
++                ['a', 'b', 'c', 'd', 'e'],
++                ['1', '2', '3', '', ''],
++            ])
++
+     def test_multiple_file_stack_col(self):
+         self.assertRows(['examples/dummy.csv', 'examples/dummy_col_shuffled.csv'], [
+             ['a', 'b', 'c'],
