@@ -11,3 +11,9 @@ v2先在独立可信base上应用原冻结测试补丁，从其完整文件清�
 先以v2确认四个开发机制仍为base目标FAIL/reference目标PASS及保护通过，再复验原生8格与尾程48格。冻结计划身份与精确研究格集合必须匹配；当前结果只在所有候选复验完成后更新，v1原记录另存。功能主表采用统一v2，并同时展示v1未知边界。
 
 入口：`scripts/repair_knowledge_composition/revalidate.py --private ../hermes-repair-knowledge-private --plan configs/repair-knowledge-composition-v1/plan.json`。这是既有候选的后验验收，不计作新的研究执行；实际测试调用单独记录。
+
+## 公开合同分类歧义
+
+独立复核发现 `invalid-host-field-errors` 的隐藏测试把标量 `0`、`False` 归为empty并要求“Hosts list cannot be empty”，而公开要求同时给出empty/None与非string/sequence两种消息，没有声明这两个标量的分类或优先级。修复前公开测试没有建立该分类，不能仅凭消息差异声称功能失败。
+
+这一机制所有原生/尾程的目标合同有效性统一标UNKNOWN，再由既有 `functional_outcomes` 得到功能UNKNOWN。原始v2机械检查不删除、不改判通过；空set/dict的保护失败比标量案例有更明确依据，仍逐项保留。此处理通过 `export.py claims` 生成派生 `functional-claims.json`，不修改测试断言，不重新采样，也不覆盖v1/v2原始结果。功能主表采用该保守声明边界，原始检查表另列。确认所需完整可判定证据因此未满足。

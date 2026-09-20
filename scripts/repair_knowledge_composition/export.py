@@ -1,6 +1,7 @@
 """Compact, public evidence export and records-only recomputation; no model calls."""
 
 import argparse
+import copy as copy_module
 import hashlib
 import json
 from pathlib import Path
@@ -19,6 +20,7 @@ from hermes_skilleval.intervention.repair_composer import (
 from hermes_skilleval.intervention.repair_content_report import summarize
 from hermes_skilleval.intervention.repair_knowledge import RepairKnowledgeUnit
 from hermes_skilleval.intervention.session import dump, inventory
+from hermes_skilleval.intervention.usage import reported_usage
 
 
 def sha(p):
@@ -358,6 +360,13 @@ def costs(private, output):
         "timing_status": "NOT_RECORDED",
     }
     report["online_selection_model_calls"] = 0
+    report["executor_request_usage_notifications"] = sum(
+        reported_usage(row["run"])["request_updates"]
+        for rows in groups.values()
+        for row in rows
+    )
+    report["orchestration_model_calls"] = None
+    report["orchestration_model_calls_status"] = "NOT_OBSERVED_BY_RESEARCH_EXECUTOR"
     report["training"] = {"status": "NOT_RUN", "model_calls": 0}
     report["agent_calls_semantics"] = (
         "The zero agent_calls/model_calls fields describe this export operation. "
@@ -407,10 +416,57 @@ def source_support(private, output, plan):
     )
 
 
+def functional_claims(output, plan):
+    """Preserve raw verifier results; withhold claims for a source-contract ambiguity."""
+    affected = [
+        t["instance_id"]
+        for t in plan["tasks"]
+        if t["mechanism"] == "invalid-host-field-errors"
+    ]
+    if len(affected) != 1:
+        raise ValueError("unexpected ambiguity scope")
+    claim = {
+        "status": "PUBLIC_CONTRACT_CLASSIFICATION_AMBIGUITY",
+        "affected_task": affected[0],
+        "reason": "Public requirements do not classify scalar 0/False as empty or establish empty-vs-type precedence; hidden tests impose empty-message priority. Base tests do not establish this scalar classification.",
+        "regression_boundary": "Empty set/dict protection failures remain separately recorded; this does not upgrade any candidate to PASS.",
+        "adjudication": "Uniformly mark target validity UNKNOWN for every arm/repeat of this mechanism. Existing functional_outcomes then preserves functional UNKNOWN. Raw v1/v2 verifier results unchanged.",
+        "new_agent_calls": 0,
+        "new_behavioral_checks": 0,
+        "phases": {},
+    }
+    for phase in ["native", "pilot"]:
+        source = output / (phase + "-results.json")
+        raw = json.loads(source.read_text())
+        rows = copy_module.deepcopy(raw["rows"])
+        for row in rows:
+            if row["task_id"] == affected[0]:
+                checks = copy_module.deepcopy(row["checks"])
+                checks["target"]["valid"] = False
+                checks["target"]["error"] = claim["status"]
+                row["checks"] = checks
+                row.update(
+                    outcomes(
+                        row["execution"],
+                        checks,
+                        integrity=row["verifier_integrity_status"],
+                    )
+                )
+                row["claim_status"] = claim["status"]
+        result = {"rows": rows, "planned": raw["planned"], "source_sha256": sha(source)}
+        if phase == "pilot":
+            result["summary"] = summarize(
+                rows, json.loads((output / "pilot-lock.json").read_text())
+            )
+        claim["phases"][phase] = result
+    dump(output / "functional-claims.json", claim)
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument(
-        "command", choices=["prepare", "phase", "replay", "costs", "source-support"]
+        "command",
+        choices=["prepare", "phase", "replay", "costs", "source-support", "claims"],
     )
     p.add_argument("--private", type=Path)
     p.add_argument("--output", type=Path, required=True)
@@ -427,5 +483,7 @@ if __name__ == "__main__":
             prepare(a.private, a.output, plan)
         elif a.command == "source-support":
             source_support(a.private, a.output, plan)
+        elif a.command == "claims":
+            functional_claims(a.output, plan)
         else:
             export_phase(a.private, a.output, plan, a.phase)

@@ -150,6 +150,15 @@ def preflight(plan, tasks, skills, output):
 def require_confirmation(plan, output):
     from .repair_content_report import summarize
 
+    review = output / "contract-review.json"
+    if review.exists():
+        finding = read(review)
+        if finding["plan_digest"] != plan["plan_digest"]:
+            raise ValueError("contract review plan mismatch")
+        if finding["status"] == "PUBLIC_CONTRACT_CLASSIFICATION_AMBIGUITY":
+            raise ValueError(
+                "confirmation unavailable: unresolved public acceptance contract"
+            )
     lock = read(output / "pilot-lock.json")
     results = read(output / "pilot-results.json")
     if (

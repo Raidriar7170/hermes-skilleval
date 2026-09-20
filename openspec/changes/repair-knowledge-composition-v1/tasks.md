@@ -9,8 +9,10 @@
 ## 3. Real development and conditional confirmation
 - [x] 3.1 Freeze protocol and execute eight native probes.
 - [x] 3.2 Lock same-state packs and execute five-arm paired tails plus two ablations.
-- [ ] 3.3 Apply continuation rule and execute confirmation only if triggered.
+- [x] 3.3 Apply continuation rule and execute confirmation only if triggered.
 ## 4. Delivery
-- [ ] 4.1 Export functional tables, compact evidence and Chinese algorithm retrospective.
-- [ ] 4.2 Independent evidence review, focused compatibility, final verification and same-HEAD CI.
-- [ ] 4.3 Push stacked Draft PR, preserve defaults and report remaining boundaries.
+- [x] 4.1 Export functional tables, compact evidence and Chinese algorithm retrospective.
+- [x] 4.2 Independent evidence review, focused compatibility, final verification and same-HEAD CI.
+- [x] 4.3 Push stacked Draft PR, preserve defaults and report remaining boundaries.
+
+Confirmation was not executed: continuation evidence is UNRESOLVED because one public acceptance contract is ambiguous. This does not establish a negative effect in that mechanism. Execution is complete; functional evidence remains partial and H-over-M benefit is not established.

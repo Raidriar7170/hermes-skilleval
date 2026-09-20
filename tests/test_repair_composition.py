@@ -110,6 +110,18 @@ def test_no_obligations_falls_back_to_mmr():
     assert h.method == "H-fallback-M"
 
 
+def test_unresolved_contract_prevents_confirmation_without_sampling(tmp_path):
+    from hermes_skilleval.intervention.repair_content_study import require_confirmation
+    from hermes_skilleval.intervention.session import dump
+
+    dump(
+        tmp_path / "contract-review.json",
+        {"plan_digest": "frozen", "status": "PUBLIC_CONTRACT_CLASSIFICATION_AMBIGUITY"},
+    )
+    with pytest.raises(ValueError, match="unresolved public acceptance contract"):
+        require_confirmation({"plan_digest": "frozen"}, tmp_path)
+
+
 def test_obligations_are_exact_public_spans():
     s = SimpleNamespace(
         request="When empty, preserve the original value.\nMust report invalid inputs.",

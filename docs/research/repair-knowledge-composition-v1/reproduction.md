@@ -29,3 +29,5 @@ PYTHONPATH=src /opt/anaconda3/bin/python -m hermes_skilleval.intervention.repair
 `export.py costs --private ../hermes-repair-knowledge-private --output artifacts/repair-knowledge-composition-v1` 统计所有已预留尝试（含中断与确认前缀），不会把导出操作的零模型调用误当整个研究零调用。token是服务端通知中的观察值，费用未知；离线知识构建原耗时未采集，不能补造。共享在线计时不包含首次编码器加载与旧技能检索的全部开销，成本不用于功能判定。
 
 `report.py --evidence artifacts/repair-knowledge-composition-v1 --plan configs/repair-knowledge-composition-v1/plan.json --output docs/research/repair-knowledge-composition-v1/results.md` 从公开功能记录生成主表与选择函数分解，不重新执行Agent或隐藏验收。
+
+本轮先完整保留 `acceptance-v1/` 导出，再运行 `revalidate.py` 对56份原补丁进行统一v2后验验收，随后重新运行phase/replay导出v2原始检查。`export.py claims --plan configs/repair-knowledge-composition-v1/plan.json --output artifacts/repair-knowledge-composition-v1` 对公开合同歧义作统一、仅记录层的UNKNOWN标记，报告入口读取此派生声明；原始JUnit和v1/v2结果均不修改。私有 `study-v1/contract-review.json` 同时阻止确认入口继续调用模型，不能删除该记录来绕过冻结继续条件。

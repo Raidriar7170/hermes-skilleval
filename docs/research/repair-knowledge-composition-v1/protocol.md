@@ -42,3 +42,5 @@ M采用lambda=.7 MMR。H使用Goal的逐要求max覆盖及alpha=.1/beta=.1/gamma
 ## 运行中的状态
 
 此页是协议，不是研究结果。实际尾程/确认完成情况以结果页及保存记录为准。未执行或未知不得由算法测试、来源支持或CI替代。
+
+采样后发现的测试安装冲突及 `invalid-host-field-errors` 分类歧义见 [posthoc-acceptance.md](posthoc-acceptance.md)。前述资格记录证明当时base/reference可执行，不抵消后续发现的语义缺口；该机制的功能声明统一UNKNOWN，原v1/v2机械结果继续保留，确认入口因此不放行。

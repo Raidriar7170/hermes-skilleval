@@ -12,18 +12,22 @@ def read(path):
 
 
 def cell(value):
+    if value["unknown"] == value["planned"]:
+        return f"UNKNOWN ({value['unknown']}/{value['planned']})"
     return f"{value['pass']}/{value['planned']} (未知 {value['unknown']})"
 
 
 def generate(evidence, plan, output):
-    pilot = read(evidence / "pilot-summary.json")
+    claims = read(evidence / "functional-claims.json")
+    pilot = claims["phases"]["pilot"]["summary"]
     lock = read(evidence / "pilot-lock.json")
-    native = read(evidence / "native-results.json")["rows"]
+    native = claims["phases"]["native"]["rows"]
     lines = [
         "# 修复知识与缺口组合：实际功能结果",
         "",
         "功能成功仅指目标行为通过且保护回归无新增失败。表中未知不记作失败；覆盖、策略与成本不参与此判定。",
         "本表采用统一v2后验验收，标记 `POSTHOC_ACCEPTANCE_REVALIDATION`；原版测试补丁安装冲突与UNKNOWN完整保留，见 [posthoc-acceptance.md](posthoc-acceptance.md)。没有新增Agent。",
+        "`invalid-host-field-errors` 的0/False错误分类缺乏明确公开合同依据，全部臂统一保留功能UNKNOWN；v2原始检查与空容器保护失败另存，不改判PASS。",
         "",
         "## 开发功能主表",
         "",
@@ -36,12 +40,14 @@ def generate(evidence, plan, output):
             state["mechanism"],
             cell(counts([r for r in native if r["task_id"] == state["task_id"]])),
             *[cell(arms[a]) for a in ["N", "G", "L", "M", "H"]],
-            str(state["contrasts"].get("H-M")),
+            "UNKNOWN"
+            if state["contrasts"].get("H-M") is None
+            else str(state["contrasts"]["H-M"]),
         ]
         lines.append("| " + " | ".join(values) + " |")
     lines += [
         "",
-        f"按机制等权 H−M：`{pilot['mechanism_mean_H_minus_M']}`。小样本条件比较不构成部署收益或因果普遍性证明。",
+        f"四机制等权 H−M：`{pilot['mechanism_mean_H_minus_M'] if pilot['mechanism_mean_H_minus_M'] is not None else 'UNKNOWN'}`；三个可判定机制各自均为0，不以其均值替代缺失机制。小样本条件比较不构成部署收益或因果普遍性证明。",
         f"冻结内容路线改善信号机制：`{pilot['content_route_signal_mechanisms']}`。确认规则结果：`{pilot['confirmation_decision']}`。",
         "",
         "## 消融与实际选择（诊断附表）",
@@ -112,7 +118,7 @@ def generate(evidence, plan, output):
             )
     else:
         lines.append(
-            "新机制确认未执行；以上冻结继续规则决定是否触发，不增加重复以追分。"
+            "继续证据判定 `UNRESOLVED`；确认执行状态 `NOT_TRIGGERED`（未执行），原因是合同歧义使完整可判定证据条件不满足。这不等于已证明所有机制没有改善线索；不以补零或追加样本处理。"
         )
     observed = {s["task_id"] for s in lock["states"]}
     missing = [
@@ -126,6 +132,7 @@ def generate(evidence, plan, output):
         "仅 Ansible 单仓库、4 个开发机制、每格2重复；没有未见仓库泛化证据，也不能排除预训练污染。iterator 保护范围含1个实际PASS与7个既有skip，不等于全仓保护。",
         "",
         "旧六份原补丁只作 `POSTHOC_ACCEPTANCE_ONLY`，目标与保护均通过；不改写历史UNKNOWN，不称技能救回。",
+        "歧义机制的原始v2机械结果为G通过1/2，其他主臂与消融均0/2；保留这些原始检查，不能将它们升格为有效功能差异。",
         "",
         "## 工程与复算",
         "",
