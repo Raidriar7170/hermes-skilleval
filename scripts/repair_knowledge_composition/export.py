@@ -43,8 +43,12 @@ def prepare(private, output, plan):
             copy(
                 private / "knowledge" / base / name, output / "knowledge" / base / name
             )
-        copy(
-            task / "request.txt", output / "tasks" / row["instance_id"] / "request.txt"
+        dump(
+            output / "tasks" / row["instance_id"] / "request.json",
+            {
+                "text": (task / "request.txt").read_text(),
+                "sha256": sha(task / "request.txt"),
+            },
         )
         meta = json.loads((task / "task.json").read_text())
         compact = {
