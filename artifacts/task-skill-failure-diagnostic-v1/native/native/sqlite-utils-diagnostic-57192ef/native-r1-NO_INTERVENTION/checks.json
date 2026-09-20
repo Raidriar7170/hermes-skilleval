@@ -1,0 +1,49 @@
+{
+  "target": {
+    "valid": true,
+    "passed": true,
+    "cases": [
+      {
+        "id": "test_behavior::test_transform_recreates_renamed_index_from_metadata",
+        "outcome": "passed"
+      },
+      {
+        "id": "test_behavior::test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(lower(name))]",
+        "outcome": "passed"
+      },
+      {
+        "id": "test_behavior::test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL]",
+        "outcome": "passed"
+      },
+      {
+        "id": "test_behavior::test_index_name_collision_behavior[name-idx_name]",
+        "outcome": "passed"
+      },
+      {
+        "id": "test_behavior::test_index_name_collision_behavior[t-name]",
+        "outcome": "passed"
+      },
+      {
+        "id": "test_behavior::test_index_drop_rejection_preserves_rows",
+        "outcome": "passed"
+      }
+    ],
+    "returncode": 0
+  },
+  "regression": {
+    "valid": true,
+    "passed": true,
+    "cases": [
+      {
+        "id": "test_behavior::test_regression",
+        "outcome": "passed"
+      }
+    ],
+    "returncode": 0
+  },
+  "policy": {
+    "valid": true,
+    "passed": true,
+    "error": null
+  }
+}

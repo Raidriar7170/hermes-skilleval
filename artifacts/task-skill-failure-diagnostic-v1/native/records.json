@@ -1,0 +1,2043 @@
+{
+  "objective_sha256": "a27f96401b8a21f0c4262f26b5dc00d93303a787045a7b81df7384c4fbd84ead",
+  "source_records_sha256": "ebd113f9975944d9ae98001fd5198435e37498c7562cbd608d450f47c7506163",
+  "private_replay": {
+    "status": "RECORDS_ONLY_RECOMPUTED",
+    "records": 16,
+    "integrity_counts": {
+      "VERIFIED": 16
+    },
+    "agent_calls": 0,
+    "model_calls": 0,
+    "new_verifier_executions": 0,
+    "scope": "saved captured candidate/verdict integrity; not a fresh Agent or source re-execution"
+  },
+  "rows": [
+    {
+      "task_id": "sqlite-utils-diagnostic-548a886",
+      "split": "dev",
+      "family": "interface-error-propagation",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 3,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 96.62384758295957,
+        "preparation_seconds": 0.020307666971348226,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.06500658195000142,
+          "retrieval": 6.671762093901634e-07,
+          "checkpoint": 0.23475141602102667,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "2ba858c8d943f989e3fa581e191e531b25b5770653ec464f95f6410c7ac2f57e",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-548a886/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 404035,
+          "inputTokens": 400794,
+          "cachedInputTokens": 337920,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3241,
+          "reasoningOutputTokens": 574
+        },
+        "request_updates": 14,
+        "started_turns": 3,
+        "completed_turns": 3,
+        "turns_with_usage": 3,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "6eb492e03115921ca66391b01ae16c119c696726fdb1defffdb777b5e16395ff",
+          "turn-001/events.jsonl": "f74bff1926760458bf4111a224145e937a18e86db1a23c539e78a42953707edb",
+          "turn-002/events.jsonl": "4454b575f6e71f221da027cf3d72cfb24faaff379d182760b0bfb29d4b6590b1"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_extract_bad_column_clean_error",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_view_clean_error",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_invalid_pk_clean_error",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_errors_preserve_rows",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "bb154fb706cfb3d33118f3ba9e312e55891bf6a2a306f76e86874e1821c8b2be",
+      "changed_files": [
+        "sqlite_utils/cli.py",
+        "tests/test_cli.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "bb154fb706cfb3d33118f3ba9e312e55891bf6a2a306f76e86874e1821c8b2be",
+        "target-junit.xml": "9d31b2bd9ccd88bef1bdb4218ea2bd51fa686e1430f7dffedc7f54bf37af5661",
+        "checks.json": "caaf338ff0d481f162d02311f6b1c5b744a4b928cdc9ba597505ffea367dbdf8",
+        "regression-junit.xml": "ec3b917c8e88934353d1ebe355c29fa5dcb0639f848e0f8ede95487d2fa0f6fa",
+        "target-collected.json": "15ecc73c04f29367e9b2a441727b2114024a50cdedaf01bc7396432aedf4897d",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-548a886",
+      "split": "dev",
+      "family": "interface-error-propagation",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 5,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 137.86636049998924,
+        "preparation_seconds": 0.022607750026509166,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.13166304002515972,
+          "retrieval": 7.91158527135849e-07,
+          "checkpoint": 0.3432884179055691,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "cb48a15d1027eb4154b6ca8248ac72e2f108898878a362d25234b5a66bf214a0",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-548a886/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 606057,
+          "inputTokens": 601249,
+          "cachedInputTokens": 533504,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 4808,
+          "reasoningOutputTokens": 1092
+        },
+        "request_updates": 21,
+        "started_turns": 5,
+        "completed_turns": 5,
+        "turns_with_usage": 5,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "bec2aeb0c2e5304bdf51d2e14decc188d8e5fe7e3869f9a1771f30a10cf81a06",
+          "turn-001/events.jsonl": "2a33c49ce1cd251e637c0139838accc81f03f9b50b092dd90ceb5adc0da3e3d4",
+          "turn-002/events.jsonl": "78e7e9a6f28bd7ab27047d1217d3ff9c4d0347355e76204037ecb31b1ac59b0e",
+          "turn-003/events.jsonl": "887aedfcc367735ff84e4882746bad7fe8329cee7642ae9a010606400235b0b0",
+          "turn-004/events.jsonl": "50db224fa5d4dcc73ed949f7f0259922ee3100c68c25eb9f67e8d7512cbc103f"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_extract_bad_column_clean_error",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_view_clean_error",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_invalid_pk_clean_error",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_errors_preserve_rows",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "3a2a1020e31cb060201a3f494e1fe42087c75605275d89ae18eb1553b5160456",
+      "changed_files": [
+        "sqlite_utils/cli.py",
+        "tests/test_cli.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "3a2a1020e31cb060201a3f494e1fe42087c75605275d89ae18eb1553b5160456",
+        "target-junit.xml": "7b419999a1c038bf66fb4d07b036bc8d7a28c3ab2da23a5c9332cb58f521403b",
+        "checks.json": "caaf338ff0d481f162d02311f6b1c5b744a4b928cdc9ba597505ffea367dbdf8",
+        "regression-junit.xml": "b1cc35caf6f9dd298c66cf8af044826fb23b518d2aa423312c5a21896ce114d5",
+        "target-collected.json": "15ecc73c04f29367e9b2a441727b2114024a50cdedaf01bc7396432aedf4897d",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-fcfccea",
+      "split": "dev",
+      "family": "type-strict-any",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 0,
+      "y_regression": 1,
+      "y_functional": 0,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 0,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 8,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 272.55278575001284,
+        "preparation_seconds": 0.03353679203428328,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.21162720816209912,
+          "retrieval": 5.421461537480354e-07,
+          "checkpoint": 0.4308314158115536,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "7f203d2ab57c05b47b7a5ffe4a7d0fc7a8e3aada3a1b9c02a82010852abc3556",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-fcfccea/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 1796523,
+          "inputTokens": 1787054,
+          "cachedInputTokens": 1666432,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 9469,
+          "reasoningOutputTokens": 2521
+        },
+        "request_updates": 39,
+        "started_turns": 8,
+        "completed_turns": 8,
+        "turns_with_usage": 8,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "8c9d8965c2a86c2bec94311e7e825adf443b5e19d6eeeae7123d73c524d21f5b",
+          "turn-001/events.jsonl": "b7144ae05ef06a198d2e0d638f2ac57bdf53ec837ec339cc8a517f5f62d40e7f",
+          "turn-002/events.jsonl": "6e35666618f58f00c526b0e0fbb2560d3eedaaf15c34ef98b5a8b1602d9f6630",
+          "turn-003/events.jsonl": "f22b4f02be1e5d3bc5755e817e4f846261969b008e96d46644ef0634a715ef04",
+          "turn-004/events.jsonl": "fa379f8d26be15a7d189d18846d5200581197ee71147bd9bf6092236dbaa0391",
+          "turn-005/events.jsonl": "153dc1e07d78f898cdd536cc53a8b1022554732073b5ac51d65416fab261efb9",
+          "turn-006/events.jsonl": "94f4b1a4a4a0f209044fc4b3d32b9c784835f8bbd72b0befa1fe60c508e92dcf",
+          "turn-007/events.jsonl": "852297043c62afd71a52fde9ab7cc1ddc2f32b34769bc7c463c4e7b4e0adbf3f"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": false,
+          "cases": [
+            {
+              "id": "test_behavior::test_create_strict_with_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_preserves_strict_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_strict_any_rejects_non_strict_lookup",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_transform_preserves_any_column_in_strict_table",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_any_column_from_strict_to_non_strict",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_column_to_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_create_table_strict_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_upsert_strict_any[insert]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_upsert_strict_any[upsert]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 1
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "8cfb2e04988c7ac7aa19cf57a84e313650c87453d3b268a2d243b5c9e365b574",
+      "changed_files": [
+        "sqlite_utils/__init__.py",
+        "sqlite_utils/cli.py",
+        "sqlite_utils/db.py",
+        "sqlite_utils/utils.py",
+        "tests/test_cli.py",
+        "tests/test_create.py",
+        "tests/test_extract.py",
+        "tests/test_transform.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "8cfb2e04988c7ac7aa19cf57a84e313650c87453d3b268a2d243b5c9e365b574",
+        "target-junit.xml": "72ab46b7914a8d02d9abf39965cbd7b92bfaa9e54d28545e3911a36cac556351",
+        "checks.json": "f775a21cac9bcd1ebea3e0cfe11d96abe94ee9eae23cdc646fa62fca421e96c1",
+        "regression-junit.xml": "ba778cc58ec872d4b25cadd8cc10ab0f65eac0a07005772a0981db4e12625689",
+        "target-collected.json": "5d3d299032eec90a7c43e0eaeb34d306f1c3aee746728a58fbc8b3eee2a1bf60",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 0,
+        "interpretable_y_functional": null,
+        "status": "UNKNOWN_ACCEPTANCE_CONTRACT_AMBIGUITY",
+        "failures": [
+          "test_extract_strict_any_rejects_non_strict_lookup"
+        ],
+        "target_junit_sha256": "72ab46b7914a8d02d9abf39965cbd7b92bfaa9e54d28545e3911a36cac556351"
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-fcfccea",
+      "split": "dev",
+      "family": "type-strict-any",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 0,
+      "y_regression": 1,
+      "y_functional": 0,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 0,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 6,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 209.22320841695182,
+        "preparation_seconds": 0.021716249990276992,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.15056304179597646,
+          "retrieval": 5.409820005297661e-07,
+          "checkpoint": 0.49372970790136606,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "ee393182b188554d00b39a73770b10a2ba8acbc32209b65747e882ed45e0ff4c",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-fcfccea/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 1015623,
+          "inputTokens": 1008024,
+          "cachedInputTokens": 911360,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 7599,
+          "reasoningOutputTokens": 1875
+        },
+        "request_updates": 25,
+        "started_turns": 6,
+        "completed_turns": 6,
+        "turns_with_usage": 6,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "9057c7e81f931b96ccfada3013c9ccf8c83c457f4ca0fe74878c15e144b7c6a4",
+          "turn-001/events.jsonl": "6abe0d14636b86995c046ce966bcc792f2f74166ead7ec2d71d73e41ccdcd9fd",
+          "turn-002/events.jsonl": "6a56b3c8926afe0ca48de3be2ed017c45db2ee3e495b052f8b51cbee5f730845",
+          "turn-003/events.jsonl": "e0d1fac6a3268bfb80282c1433fd9c45798fa7b6a1e4851be5a6c9dbddc6ea72",
+          "turn-004/events.jsonl": "58ddd2128b03809da639eec4f06d5ea5729bd010ee1c63b5874cb6d2e531fd8b",
+          "turn-005/events.jsonl": "c81a515ea45691ee0ae3724a885ae84509f7fd464a1685afbd7aec4286812206"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": false,
+          "cases": [
+            {
+              "id": "test_behavior::test_create_strict_with_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_preserves_strict_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_extract_strict_any_rejects_non_strict_lookup",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_transform_preserves_any_column_in_strict_table",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_any_column_from_strict_to_non_strict",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_column_to_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_create_table_strict_any",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_upsert_strict_any[insert]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_upsert_strict_any[upsert]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 1
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "1cd37a3e5e893d3fc31a8a0251ab2cf7150cb4adfcd817a119b417af24d1ff84",
+      "changed_files": [
+        "sqlite_utils/__init__.py",
+        "sqlite_utils/cli.py",
+        "sqlite_utils/db.py",
+        "sqlite_utils/utils.py",
+        "tests/test_any.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "1cd37a3e5e893d3fc31a8a0251ab2cf7150cb4adfcd817a119b417af24d1ff84",
+        "target-junit.xml": "51907afc394822063be29cbc2368c22d3dbcebe4b4d2107b8cbed68846755d25",
+        "checks.json": "f775a21cac9bcd1ebea3e0cfe11d96abe94ee9eae23cdc646fa62fca421e96c1",
+        "regression-junit.xml": "4dd53c75362eecb296b3eec184c21a9dc023eb47aa072edf5f3dd12c1f246b48",
+        "target-collected.json": "5d3d299032eec90a7c43e0eaeb34d306f1c3aee746728a58fbc8b3eee2a1bf60",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 0,
+        "interpretable_y_functional": null,
+        "status": "UNKNOWN_ACCEPTANCE_CONTRACT_AMBIGUITY",
+        "failures": [
+          "test_extract_strict_any_rejects_non_strict_lookup"
+        ],
+        "target_junit_sha256": "51907afc394822063be29cbc2368c22d3dbcebe4b4d2107b8cbed68846755d25"
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "csvkit-diagnostic-80437fd",
+      "split": "dev",
+      "family": "parameter-range-identifier",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 3,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 95.52085612493102,
+        "preparation_seconds": 0.10089370794594288,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.2332152919843793,
+          "retrieval": 3.7602148950099945e-07,
+          "checkpoint": 0.17312104091979563,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "617607a6bbbe25b97dee1f2835ed3beb48024df99f789691fcb31402a23ea77f",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-diagnostic-80437fd/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 265089,
+          "inputTokens": 261540,
+          "cachedInputTokens": 212864,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3549,
+          "reasoningOutputTokens": 1420
+        },
+        "request_updates": 15,
+        "started_turns": 3,
+        "completed_turns": 3,
+        "turns_with_usage": 3,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "0fd1e6fa214c06b15d76e6a3cebadee75111c67eafd1e2798f20ce563d9097df",
+          "turn-001/events.jsonl": "86c70d22bd528e138965ef540a772ebab2260e047faa582deb7df711214722ad",
+          "turn-002/events.jsonl": "e5cc92ef5bff00df54b50508650d643a518c5155a882c448016a1a27dfbe3be9"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_unknown_range_names[no-pe]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_unknown_range_names[no:pe]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_unknown_range_names[2026-09-20]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_excluded_invalid_range_message",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "1d65477f2c09853af94ea1b4e6cd6513323044ad4b7c92350d7666bd2cf71a90",
+      "changed_files": [
+        "csvkit/cli.py",
+        "tests/test_cli.py",
+        "tests/test_utilities/test_csvcut.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "1d65477f2c09853af94ea1b4e6cd6513323044ad4b7c92350d7666bd2cf71a90",
+        "target-junit.xml": "6fa681a0924cb99e1e4f0b6efe85f34827decbef5fea9fc926aeef2bd65cf803",
+        "checks.json": "2683dc208240d6d28cf524da9680fbe2a7a5ac98f3a2f4da4fde546f995889a5",
+        "regression-junit.xml": "4ffe48a942f6d12e6fc92d2ec1b3a41814e01375671c1760694a7ad909dd61be",
+        "target-collected.json": "646ba5e40fc0291300817bb7aed3e2644afaba6a96694bbb16279f643ba8e6ea",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "csvkit-diagnostic-80437fd",
+      "split": "dev",
+      "family": "parameter-range-identifier",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 110.93405999999959,
+        "preparation_seconds": 0.05847870896104723,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.28547691681887954,
+          "retrieval": 1.5419209375977516e-06,
+          "checkpoint": 0.263458751142025,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "920774bcbc237da9dbdb7a264266fe4ad47df4efdc8c60b88cb8bc1937440c5a",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-diagnostic-80437fd/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 295332,
+          "inputTokens": 291553,
+          "cachedInputTokens": 235520,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3779,
+          "reasoningOutputTokens": 1295
+        },
+        "request_updates": 16,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "0c115393b8bbd8465fe94d9e0b809fe6b2867545afebc640bc2bf40149f14869",
+          "turn-001/events.jsonl": "a046ec5a20d40e92384e0966f9dd416487f29c887822388644b4dfac11b9d884",
+          "turn-002/events.jsonl": "56de30ab3cb52f95a9b9de6e3b42febc123c090ce9374a61673fea0ccaef453a",
+          "turn-003/events.jsonl": "e18a500ba2ca1fb779835352668e70b99f9f128b30bf77926e0aa095bc64a5f5"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_unknown_range_names[no-pe]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_unknown_range_names[no:pe]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_unknown_range_names[2026-09-20]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_excluded_invalid_range_message",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "5bc99fafc7601839d6eed8122ded2f853a774affb090a1e8feb275c1f663ca43",
+      "changed_files": [
+        "csvkit/cli.py",
+        "tests/test_cli.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "5bc99fafc7601839d6eed8122ded2f853a774affb090a1e8feb275c1f663ca43",
+        "target-junit.xml": "0045df514d1a3d5289ad64fa6bbafc8329cf44746ad1bd8b0b93aebe2351ac6c",
+        "checks.json": "2683dc208240d6d28cf524da9680fbe2a7a5ac98f3a2f4da4fde546f995889a5",
+        "regression-junit.xml": "c1d7f7cf1c4d25f972eafeaa524fc5fba940f14869e89540a3e7c2239c478daf",
+        "target-collected.json": "646ba5e40fc0291300817bb7aed3e2644afaba6a96694bbb16279f643ba8e6ea",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "csvkit-diagnostic-19810a3",
+      "split": "dev",
+      "family": "export-bom",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 5,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 147.15447091707028,
+        "preparation_seconds": 0.0992291250731796,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.3444622920360416,
+          "retrieval": 5.83939254283905e-07,
+          "checkpoint": 0.2700526670087129,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "f9c7035e9d0019966c8273f9d4b20c05fba02ad2279ec82c1780a5548db5be42",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-diagnostic-19810a3/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 625062,
+          "inputTokens": 619592,
+          "cachedInputTokens": 497536,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 5470,
+          "reasoningOutputTokens": 1541
+        },
+        "request_updates": 20,
+        "started_turns": 5,
+        "completed_turns": 5,
+        "turns_with_usage": 5,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "58fce56e4c02f647d4e4d7873f44e3f557cd577d8c520b6e874c750ef237296a",
+          "turn-001/events.jsonl": "756329130fd6eca6919eb3be3e8ab5d48b8b552b59a2a5d8e09a1c5023f4a3bc",
+          "turn-002/events.jsonl": "536bd7c8b3fc3c342f369dfa3a6a0dcc923efef2140f9d03559afff30458e915",
+          "turn-003/events.jsonl": "01ae217495cb9ed6065308aafadc083919351182c6f5094e8a2f0e35f6773b25",
+          "turn-004/events.jsonl": "40f9bf91c2df8cbb5803bd7c0b3cf47a1a8844da4fe24e8c36db3cb355005b88"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_bom[In2CSV]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_bom[CSVFormat]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_bom_option_excluded[CSVPy]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_bom_option_excluded[SQL2CSV]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "b6e23a79e7bbff494c7f743d40b0334e513f467e373fb41c3dfa3061411ef131",
+      "changed_files": [
+        "csvkit/cli.py",
+        "csvkit/utilities/csvpy.py",
+        "csvkit/utilities/sql2csv.py",
+        "tests/test_utilities/test_in2csv.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "b6e23a79e7bbff494c7f743d40b0334e513f467e373fb41c3dfa3061411ef131",
+        "target-junit.xml": "9fc52e103c797a770b23fed27ce55e4fd900734af63b0d0eaf4ef17e605bc352",
+        "checks.json": "9ba6d9aa3692889d7c8d4d1fde903faa7a0bb52d03744587dc4c021ab82125db",
+        "regression-junit.xml": "bf2f278fe9a39d5548023ba134e7975077074b3d3495b61c01006c5c425c29c5",
+        "target-collected.json": "2d502d49ab82577c9c8e27a5b8d1f1d77f00218648a80f1f3968281c6d6c30ec",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "csvkit-diagnostic-19810a3",
+      "split": "dev",
+      "family": "export-bom",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 163.71872587502003,
+        "preparation_seconds": 0.0619325409643352,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.3251480831531808,
+          "retrieval": 7.080379873514175e-07,
+          "checkpoint": 0.28123733308166265,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "5f79ee79b9e398820c3bce493584789dc5f76a416d3773b583bf4125e2a9da19",
+        "decisions": []
+      },
+      "evidence_path": "native/csvkit-diagnostic-19810a3/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 602297,
+          "inputTokens": 595814,
+          "cachedInputTokens": 520448,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 6483,
+          "reasoningOutputTokens": 2178
+        },
+        "request_updates": 17,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "d8f0933093feb2b2db23aad70d1caa6e01404606c14598bd0c66e5394a2e2f36",
+          "turn-001/events.jsonl": "04d12b1e8cc1dd066c3c868daf96f8934479e42d69b0d779235d909205ceb665",
+          "turn-002/events.jsonl": "fa0533bbed70af2901c6165b7b0ff87f049048170d7abd0587aef3dce18bec35",
+          "turn-003/events.jsonl": "4a2ac38c0c76f8305c6f57b19882fbfed56a7ef76e44035539fd26d8fe739053"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_bom[In2CSV]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_bom[CSVFormat]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_bom_option_excluded[CSVPy]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_bom_option_excluded[SQL2CSV]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "ac5bd947c735b9938634b599337252d389d7c666369624a28d4c8d102df426cd",
+      "changed_files": [
+        "csvkit/cli.py",
+        "csvkit/utilities/csvpy.py",
+        "csvkit/utilities/sql2csv.py",
+        "tests/test_cli.py",
+        "tests/test_utilities/test_csvcut.py",
+        "tests/test_utilities/test_in2csv.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "ac5bd947c735b9938634b599337252d389d7c666369624a28d4c8d102df426cd",
+        "target-junit.xml": "520b7235d2d231bf90886e332880d48e0be67a6e14cc6988b6c8ebbfe82bcb80",
+        "checks.json": "9ba6d9aa3692889d7c8d4d1fde903faa7a0bb52d03744587dc4c021ab82125db",
+        "regression-junit.xml": "0eab89c309b61c48fc42b478e5962f8dc73dbe2c15a5d8713dbbddd87cbb81f0",
+        "target-collected.json": "2d502d49ab82577c9c8e27a5b8d1f1d77f00218648a80f1f3968281c6d6c30ec",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-2b52b5e",
+      "split": "dev",
+      "family": "schema-autoincrement-preservation",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 6,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 218.65622762497514,
+        "preparation_seconds": 0.03514533303678036,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.13469095900654793,
+          "retrieval": 6.670597940683365e-07,
+          "checkpoint": 0.7675410840893164,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "79f955fed7f1cf26219c942c971fa34eda785baae432bf22fd8cf8318f8c80f5",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-2b52b5e/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 1046891,
+          "inputTokens": 1040141,
+          "cachedInputTokens": 953600,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 6750,
+          "reasoningOutputTokens": 2452
+        },
+        "request_updates": 28,
+        "started_turns": 6,
+        "completed_turns": 6,
+        "turns_with_usage": 6,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "e0329092c700c2ca8470176c17d1b1136d549c52708a32db0493cb597ffc7fd7",
+          "turn-001/events.jsonl": "60db0956b697398f955deffc6c8538ec803e6e35b2d6d18655edba8a08bc1912",
+          "turn-002/events.jsonl": "fb016657f4b1aebc9caec70d6832dedeb5f10e3239c957f0d6e498a1d15ad848",
+          "turn-003/events.jsonl": "6931b68f415da6dc4d03fdb562add98346db20ee1d75236186f31eedd5015561",
+          "turn-004/events.jsonl": "417a96e6870922edbd2292d8f12119b349331c297c6b63445a27a5e77456758b",
+          "turn-005/events.jsonl": "ece72067845a989904a19d6f38fea736049bf7ba38cdf134e89133427cf369db"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_sequence_survives_transform[2]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_sequence_survives_transform[41]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "19fe4b911a3ba38da0a8c8c1c6a448717650cec5e355510f3fbe36078968f998",
+      "changed_files": [
+        "sqlite_utils/create_table_parser.py",
+        "sqlite_utils/db.py",
+        "tests/test_transform.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "19fe4b911a3ba38da0a8c8c1c6a448717650cec5e355510f3fbe36078968f998",
+        "target-junit.xml": "c75f3f8e086a0f4e324d32eb525fed227c48ffe2f4cf4d9c8417025e45c03820",
+        "checks.json": "51dbe837e2ca6795eda5dfd1c12d003d417dcffee008298b88aec8047158f5ed",
+        "regression-junit.xml": "e31db11e82979a16e144686b90384f503d32daee27ade4e464c0561dfe277abc",
+        "target-collected.json": "375347d3228b5ec579c9b8a5a080a3dd01ae8e28e8495a8b1f333c65376d85db",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-2b52b5e",
+      "split": "dev",
+      "family": "schema-autoincrement-preservation",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 6,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 218.16613420797512,
+        "preparation_seconds": 0.02288270799908787,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.13729595800396055,
+          "retrieval": 8.749775588512421e-07,
+          "checkpoint": 0.7803419169504195,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "9b80cc0dfcd5387fc588461fdc46afbdfb6af445a4c0d8cb3a5249171154d6db",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-2b52b5e/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 900612,
+          "inputTokens": 892313,
+          "cachedInputTokens": 786816,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 8299,
+          "reasoningOutputTokens": 3451
+        },
+        "request_updates": 24,
+        "started_turns": 6,
+        "completed_turns": 6,
+        "turns_with_usage": 6,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "cb1cef18d94561e20505c06a289c4098b37a1d7e1a35cfcebccb4fa5caa8574f",
+          "turn-001/events.jsonl": "80aa9e36ef7587ce5ca169071745f8202cc69cce55a1221ce9366663681cd8be",
+          "turn-002/events.jsonl": "53dcee785b6a9d1fe86ad48e23ae60a279f2294906b5093381a27107e424740f",
+          "turn-003/events.jsonl": "49595d356735a58cee7febcd1f41a9aba724d19f4b2c0b97c5ecea0c8009b72c",
+          "turn-004/events.jsonl": "74a2ce37ac16024db113630e4c83225db8f1f00634e5cf873f8d54f56abac5d3",
+          "turn-005/events.jsonl": "f151c6b1190b355d04a97809b22b73d548bedb06bdbca548c9c16f78ac861114"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_sequence_survives_transform[2]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_sequence_survives_transform[41]",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "5390affaccf5c22e19b4a9df33b6680d8459a7702b37ff09b69bf7e01017ab8f",
+      "changed_files": [
+        "sqlite_utils/create_table_parser.py",
+        "sqlite_utils/db.py",
+        "tests/test_transform.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "5390affaccf5c22e19b4a9df33b6680d8459a7702b37ff09b69bf7e01017ab8f",
+        "target-junit.xml": "97bf6e35551315aab6bf0b25e99ea60133d42284d4ac5129917b08ed3a8ba9cf",
+        "checks.json": "51dbe837e2ca6795eda5dfd1c12d003d417dcffee008298b88aec8047158f5ed",
+        "regression-junit.xml": "e228b6959ed97117347a39d552eeefaf69612b2d82f1a51d665dcaf69b0c1a19",
+        "target-collected.json": "375347d3228b5ec579c9b8a5a080a3dd01ae8e28e8495a8b1f333c65376d85db",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-57192ef",
+      "split": "dev",
+      "family": "schema-rename-index-preservation",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 168.5539298329968,
+        "preparation_seconds": 0.033641082933172584,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.08814116602297872,
+          "retrieval": 7.920898497104645e-07,
+          "checkpoint": 0.33063558489084244,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "d861bfb54ec510cf2f674485bcbbb26b629a3901f29079f3c7f96de12653454b",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-57192ef/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 610910,
+          "inputTokens": 604547,
+          "cachedInputTokens": 531840,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 6363,
+          "reasoningOutputTokens": 2224
+        },
+        "request_updates": 19,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "ffee8147b16ea86a1ae3cc3487d914076d091c69f981f128e64f43eb97718bce",
+          "turn-001/events.jsonl": "38ec53dbfcf9bea4853a01e1aba29a52f681d055b950a2039b815594cb8c6bcd",
+          "turn-002/events.jsonl": "76e83f629e68758fdc79d7f54c495d0ef1317e120beeaf683fd5527496740ad5",
+          "turn-003/events.jsonl": "cb35d6940cd22bb8fc40bf61ebe4bfa1bbabf126e9f9de99a43ce705537d8000"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_transform_recreates_renamed_index_from_metadata",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(lower(name))]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_index_name_collision_behavior[name-idx_name]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_index_name_collision_behavior[t-name]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_index_drop_rejection_preserves_rows",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "bb36d9952c6ef84fe96bb40ddcd2fc4ba7a33202c9643e435ac4264e5f109f46",
+      "changed_files": [
+        "sqlite_utils/create_table_parser.py",
+        "sqlite_utils/db.py",
+        "tests/test_transform.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "bb36d9952c6ef84fe96bb40ddcd2fc4ba7a33202c9643e435ac4264e5f109f46",
+        "target-junit.xml": "8162ae6de9370471a2925077bb8cb770fea6f6e860a009215839683393df3e4a",
+        "checks.json": "577e4aa2a2e46f584d3285f33c11064bc43324d6a1fab0a082336ba355530121",
+        "regression-junit.xml": "ee02a7165399b7b49490f509d2f7c47375da815d88850dc1cf82b00fc585e8d8",
+        "target-collected.json": "96b22fd51b374a440838fb77502767924850e38ba9e1f75de3513e4905a46997",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-57192ef",
+      "split": "dev",
+      "family": "schema-rename-index-preservation",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 0,
+      "y_regression": 1,
+      "y_functional": 0,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 0,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 6,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 253.04669545800425,
+        "preparation_seconds": 0.02241920807864517,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.1212558327242732,
+          "retrieval": 7.491325959563255e-07,
+          "checkpoint": 0.32949483289849013,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "bf89090cc9bfba3703b218bab75b2bb40f1487aeb47ad997176260922ecaa24b",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-57192ef/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 1069267,
+          "inputTokens": 1059720,
+          "cachedInputTokens": 969728,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 9547,
+          "reasoningOutputTokens": 3495
+        },
+        "request_updates": 30,
+        "started_turns": 6,
+        "completed_turns": 6,
+        "turns_with_usage": 6,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "a0bfe77d45373733d4182340a9f971876e8c859b19774fa620bd5604465d0b9b",
+          "turn-001/events.jsonl": "3d39b2032d09cca2ba9ab16593ef5cacc463d44fac238103bf08d9fd0585e81f",
+          "turn-002/events.jsonl": "f0fcfd13ffe341baa5eb2a05ca57a169a8f5cfbd3f11371cf49f357284fe5581",
+          "turn-003/events.jsonl": "8c644d233ae0b241169f6ff3eb001768aecc6c4a45c57230b2e2e9af3ce50696",
+          "turn-004/events.jsonl": "7ec0a854c4c39fcd404875552ef39a5f092d95b9d9b17346e5c25964cdf4d586",
+          "turn-005/events.jsonl": "bb9c868a6990682205502c7ab88a39ce5c388fc6ffa28dc1ed9c7ba600bb73ee"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": false,
+          "cases": [
+            {
+              "id": "test_behavior::test_transform_recreates_renamed_index_from_metadata",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(lower(name))]",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL]",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_index_name_collision_behavior[name-idx_name]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_index_name_collision_behavior[t-name]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_index_drop_rejection_preserves_rows",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 1
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "240d648b563e2af97321d7bc32247339a7cd1302cc9c73737108e79b20e9dfcf",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_transform.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "240d648b563e2af97321d7bc32247339a7cd1302cc9c73737108e79b20e9dfcf",
+        "target-junit.xml": "5107e413ec8d291aa8f0d7a2402e5f80ba834cb16dc02b73b9ae9b1d5e15b9cc",
+        "checks.json": "c8d5cbc9130f702fb7ec4f6b6c97f678148e620799e0f29310a2ec696a9fb183",
+        "regression-junit.xml": "172aab53d0749da7219f0b0869e0ca80b57b04c0641e5b9a98f0275d020240e0",
+        "target-collected.json": "96b22fd51b374a440838fb77502767924850e38ba9e1f75de3513e4905a46997",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 0,
+        "interpretable_y_functional": null,
+        "status": "UNKNOWN_ACCEPTANCE_CONTRACT_AMBIGUITY",
+        "failures": [
+          "test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(lower(name))]",
+          "test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL]"
+        ],
+        "target_junit_sha256": "5107e413ec8d291aa8f0d7a2402e5f80ba834cb16dc02b73b9ae9b1d5e15b9cc"
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-29ca9d2",
+      "split": "dev",
+      "family": "reserve-mixed-fk-forms",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 120.89516516693402,
+        "preparation_seconds": 0.03276616695802659,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.0988298311131075,
+          "retrieval": 8.328352123498917e-07,
+          "checkpoint": 0.5021442921133712,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "3faf8798f324065f4964526c44bc9a0ab718246d4f62ac76a6ceb5f447571090",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-29ca9d2/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 426186,
+          "inputTokens": 422262,
+          "cachedInputTokens": 370432,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3924,
+          "reasoningOutputTokens": 1291
+        },
+        "request_updates": 17,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "a8bd59a73e89e650fffbad5b574daf663a651b7bb495557c1a642dc7b5eba149",
+          "turn-001/events.jsonl": "cdab630fb8eba84bc6ee4a4b413dc7d4cb6e93dae1a63c9db9987626dae6a0fa",
+          "turn-002/events.jsonl": "8141d151262f356758cc563e6dfdf854cfe3b7ba01e0e3960519db8a4ed72fb5",
+          "turn-003/events.jsonl": "bc8e9be43015f30ddb00246820f222b4d148a36b74a2225d566caebfd2fdb462"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_create_table_mixed_foreign_keys_list",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_create_table_mixed_foreign_keys_with_string",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_mixed_constraints_enforced",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "c101d2d7427aac3bcbef6b9cb5eb9ba1fd71cb882efca028b66bc30bfacfc83e",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_create.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "c101d2d7427aac3bcbef6b9cb5eb9ba1fd71cb882efca028b66bc30bfacfc83e",
+        "target-junit.xml": "a0467f5badd48ed9a1314b321aa5c07df70f0397b1908fb6d3b1f09afbb99281",
+        "checks.json": "2bd8c4bc1d1fc612955abd861f133185912b6b6d8feb3b3fde1c9529b9b28e31",
+        "regression-junit.xml": "a25bed74d984b7b5001eb4d48498da379350c0dc47e31813b41077d96af34fe2",
+        "target-collected.json": "999b311effd1101bb38aaa5909af3c6dea2a0e4e10928455a10048d054b2a6fd",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-29ca9d2",
+      "split": "dev",
+      "family": "reserve-mixed-fk-forms",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 2,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 75.04717879206873,
+        "preparation_seconds": 0.02258237497881055,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.04524258407764137,
+          "retrieval": 2.4889595806598663e-07,
+          "checkpoint": 0.06285120802931488,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "4a58cd53f8975be212fb83c921b1037d680b96dca54d3b77fdf9bbec8acd3084",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-29ca9d2/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 219314,
+          "inputTokens": 216728,
+          "cachedInputTokens": 164864,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 2586,
+          "reasoningOutputTokens": 652
+        },
+        "request_updates": 10,
+        "started_turns": 2,
+        "completed_turns": 2,
+        "turns_with_usage": 2,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "fbda578c5df484aa11de96f57fd97b9266e7fd3e8ac5ea73401a9f886c42dd15",
+          "turn-001/events.jsonl": "187382fa235ef0491678e17d3c5071d29f60a45ae64ec8b212b99cc8fb4dbdbf"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_create_table_mixed_foreign_keys_list",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_create_table_mixed_foreign_keys_with_string",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_mixed_constraints_enforced",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "6d7d0b89823d51aff74be485324e0bb26f9c4d81384d8051129de86f4a88a81c",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_create.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "6d7d0b89823d51aff74be485324e0bb26f9c4d81384d8051129de86f4a88a81c",
+        "target-junit.xml": "bd66464c1a881635c558442e29008a1b4e04c57b7467573d235022f6e48e6a7b",
+        "checks.json": "2bd8c4bc1d1fc612955abd861f133185912b6b6d8feb3b3fde1c9529b9b28e31",
+        "regression-junit.xml": "9ed39360db8760e4ec25fc038d78f0c45222d3b4c38de724ec7714aa672ea443",
+        "target-collected.json": "999b311effd1101bb38aaa5909af3c6dea2a0e4e10928455a10048d054b2a6fd",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-8e015d0",
+      "split": "dev",
+      "family": "reserve-compound-pk-order",
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 5,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 165.9121463749325,
+        "preparation_seconds": 0.0334052499383688,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.1269751659128815,
+          "retrieval": 7.068738341331482e-07,
+          "checkpoint": 0.35140154196415097,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "898c4fd3f85e0de5283bb9b8a6ce352aac53bda333902566a6d3b46ce8eaa4e4",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-8e015d0/native-r1-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 752923,
+          "inputTokens": 747503,
+          "cachedInputTokens": 662016,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 5420,
+          "reasoningOutputTokens": 1089
+        },
+        "request_updates": 23,
+        "started_turns": 5,
+        "completed_turns": 5,
+        "turns_with_usage": 5,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "e19193ec7e991767a125c5e2dce81d70c19f3242a929f89d2318b8c8ea2f2c51",
+          "turn-001/events.jsonl": "46e97a565bed7341054d69b07db5e10bfabcef4c0e88b6eeeaab6bc642856cc4",
+          "turn-002/events.jsonl": "8beac602e8eb37a4849b40aa0e77a553f15991f884dc470bf2b1e4af557512d8",
+          "turn-003/events.jsonl": "e02daef56faaf5161557ffd0281aa3552e74d5b1d99ba0fef9dd438fce7acbab",
+          "turn-004/events.jsonl": "f0f987b3bcb7f265c7ac3c3d68e230d03693bdbd36e30172a55846fca455adb6"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_implicit_compound_foreign_key_resolves_pk_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_implicit_compound_foreign_key_stays_valid",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_create_compound_foreign_key_guesses_pk_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_add_compound_foreign_key_guesses_pk_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pks_use_primary_key_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transformed_pk_order",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "82cfa86af5ca212e5efbeaab15901f157e99099052bda15e3e121904df2e4c6a",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_foreign_keys.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "82cfa86af5ca212e5efbeaab15901f157e99099052bda15e3e121904df2e4c6a",
+        "target-junit.xml": "58379dc7451879618c6ddf654c5e9e58ffee8a2a3910a6baf057a00d9bf557ec",
+        "checks.json": "6ac2bf374ddcc0cf13f7218fd3f6364a286d263292459f0da456f2c0c46231fb",
+        "regression-junit.xml": "c5c1faef79ae573c0de600e5935e283fcc20a0c383bc35039c5fd5fde821bf45",
+        "target-collected.json": "74a34c5ecf42c02ae3a6f8dc28ce58bd3818ef1324bc055006fe07353e9d85b1",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-8e015d0",
+      "split": "dev",
+      "family": "reserve-compound-pk-order",
+      "repeat": 2,
+      "action": "NO_INTERVENTION",
+      "y_target": 1,
+      "y_regression": 1,
+      "y_functional": 1,
+      "file_policy_status": "PASS",
+      "file_policy_reason": null,
+      "qualified_delivery": 1,
+      "execution_status": "COMPLETED",
+      "verifier_integrity_status": "VERIFIED",
+      "execution": {
+        "status": "COMPLETED",
+        "turns": 4,
+        "total_seconds": 600,
+        "initial_remaining": 600,
+        "tail_seconds": 163.60418558400124,
+        "preparation_seconds": 0.021973791997879744,
+        "policy_initialization_seconds": 0.0,
+        "controller_overhead_seconds": {
+          "state": 0.08277637499850243,
+          "retrieval": 5.830079317092896e-07,
+          "checkpoint": 0.2932234170148149,
+          "decision": 0.0
+        },
+        "prefix_seconds": 0,
+        "model_input_observed": false,
+        "injected": false,
+        "payload_tokens": 0,
+        "thread_id": "80d35a8129fdaf037e81a9f8f6e8f9a14e15e193458bec8c1caeeca76db29d3e",
+        "decisions": []
+      },
+      "evidence_path": "native/sqlite-utils-diagnostic-8e015d0/native-r2-NO_INTERVENTION",
+      "reported_usage": {
+        "scope": "public app-server request usage observed during started turns; excludes replayed prefix usage; not a billing statement",
+        "tokens": {
+          "totalTokens": 808542,
+          "inputTokens": 802834,
+          "cachedInputTokens": 711040,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 5708,
+          "reasoningOutputTokens": 1926
+        },
+        "request_updates": 21,
+        "started_turns": 4,
+        "completed_turns": 4,
+        "turns_with_usage": 4,
+        "all_started_turns_completed_with_usage": true,
+        "evidence_sha256": {
+          "turn-000/events.jsonl": "97c7be93528d9e293363c8817517d6f37fcac486e88b678d856c2fc970d76e90",
+          "turn-001/events.jsonl": "aa45ff1acbe701a3443573faea1fc15e94dafc7bd23cab63fb65a53f56fa5e43",
+          "turn-002/events.jsonl": "1eca089a39e42cd8c9bd2db7185770fb62c6c11260981da61f90a7f6b514a03e",
+          "turn-003/events.jsonl": "1e4ed51774292a7cc92c760756c2fa0dd433748199afc60f617ba4ffbab4dfa2"
+        }
+      },
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_implicit_compound_foreign_key_resolves_pk_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transform_implicit_compound_foreign_key_stays_valid",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_create_compound_foreign_key_guesses_pk_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_add_compound_foreign_key_guesses_pk_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pks_use_primary_key_declaration_order",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_transformed_pk_order",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "patch_sha256": "5c5e5c4e8a818985d2ccaf9692023f5403cd8558b3a9bac4bfc0c852026fba34",
+      "changed_files": [
+        "sqlite_utils/db.py",
+        "tests/test_foreign_keys.py"
+      ],
+      "artifact_sha256": {
+        "candidate.patch": "5c5e5c4e8a818985d2ccaf9692023f5403cd8558b3a9bac4bfc0c852026fba34",
+        "target-junit.xml": "3de7110850819cf8f67ed4c1a3f3f817466ca2dab133194d494b3cc047a2a12f",
+        "checks.json": "6ac2bf374ddcc0cf13f7218fd3f6364a286d263292459f0da456f2c0c46231fb",
+        "regression-junit.xml": "e946b786dd8730c7ebf379c369f74180287ba0b87eaa593e03b2d2d0356e62f3",
+        "target-collected.json": "74a34c5ecf42c02ae3a6f8dc28ce58bd3818ef1324bc055006fe07353e9d85b1",
+        "regression-collected.json": "bddbb3b8b7c0ffbbf56b2b1e66bdef1522e623a73944f562edb18341064fa145"
+      },
+      "acceptance_validity": {
+        "raw_y_functional": 1,
+        "interpretable_y_functional": 1,
+        "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+        "failures": []
+      },
+      "arm": "N",
+      "phase": "native"
+    }
+  ],
+  "planned": 16,
+  "scope": "complete original candidate patches and compact verifier outputs; no session transcript/source copy/weights"
+}

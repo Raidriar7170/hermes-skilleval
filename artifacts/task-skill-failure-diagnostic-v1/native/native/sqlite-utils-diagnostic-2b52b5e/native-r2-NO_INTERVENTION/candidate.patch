@@ -1,0 +1,197 @@
+diff --git a/sqlite_utils/create_table_parser.py b/sqlite_utils/create_table_parser.py
+index 2d891ae81f4a4bff14dade466d414f8dbaeacc4e..8d74f81413479d39ce3f007906e8546de9f8e2da 100644
+--- a/sqlite_utils/create_table_parser.py
++++ b/sqlite_utils/create_table_parser.py
+@@ -593,6 +593,24 @@ def parse_column_comments(create_sql: str) -> dict[str, ColumnComments]:
+     return comments
+ 
+ 
++def parse_autoincrement_column(create_sql: str) -> str | None:
++    """Return the AUTOINCREMENT column from a valid CREATE TABLE statement."""
++    body_info = _table_body(create_sql)
++    if body_info is None:
++        return None
++    body, _ = body_info
++    for item, _, _ in _split_spans(body, _lex(body)):
++        tokens = _meaningful(_lex(item))
++        if not tokens:
++            continue
++        # AUTOINCREMENT is only valid on a column-level INTEGER PRIMARY KEY.
++        # Looking at lexer tokens avoids false matches in comments, strings and
++        # quoted identifiers.
++        if any(token.is_keyword("AUTOINCREMENT") for token in tokens[1:]):
++            return _unquote(tokens[0].text)
++    return None
++
++
+ def _is_identifier_token(tokens: list[_Token], index: int) -> bool:
+     token = tokens[index]
+     if index + 1 < len(tokens) and tokens[index + 1].text in ("(", "."):
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 9c0b4029af010e6c4e1fae4f217627c1b751d7a9..a9be148d426030ca4411b1df01afcd1c7f25cc63 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -34,6 +34,7 @@ from .create_table_parser import (
+     ParseError,
+     check_references_identifier,
+     parse_checks,
++    parse_autoincrement_column,
+     parse_column_comments,
+     rewrite_check_expression,
+     sql_ends_in_line_comment,
+@@ -1422,6 +1423,7 @@ class Database:
+         strict: bool = False,
+         _checks: Iterable[Check] | None = None,
+         _column_comments: Mapping[str, ColumnComments] | None = None,
++        _autoincrement: str | None = None,
+     ) -> str:
+         """
+         Returns the SQL ``CREATE TABLE`` statement for creating the specified table.
+@@ -1529,6 +1531,8 @@ class Database:
+             column_extras = []
+             if column_name == single_pk:
+                 column_extras.append("PRIMARY KEY")
++                if column_name == _autoincrement:
++                    column_extras.append("AUTOINCREMENT")
+             if column_name in not_null:
+                 column_extras.append("NOT NULL")
+             if column_name in defaults and defaults[column_name] is not None:
+@@ -2748,6 +2752,7 @@ class Table(Queryable):
+         try:
+             existing_checks = self.checks
+             existing_column_comments = parse_column_comments(self.schema)
++            autoincrement_column = parse_autoincrement_column(self.schema)
+         except ParseError as ex:
+             raise TransformError(
+                 f"Could not parse table schema for table {self.name!r}: {ex}"
+@@ -2880,6 +2885,26 @@ class Table(Queryable):
+             else:
+                 pk = pks_renamed
+ 
++        transformed_autoincrement_column = None
++        if autoincrement_column is not None:
++            renamed_autoincrement_column = (
++                rename.get(autoincrement_column) or autoincrement_column
++            )
++            normalized_pk = (
++                pk[0]
++                if isinstance(pk, (list, tuple)) and len(pk) == 1
++                else pk
++            )
++            transformed_column_types = dict(new_column_pairs)
++            if (
++                normalized_pk == renamed_autoincrement_column
++                and COLUMN_TYPE_MAPPING[
++                    transformed_column_types[renamed_autoincrement_column]
++                ]
++                == "INTEGER"
++            ):
++                transformed_autoincrement_column = renamed_autoincrement_column
++
+         # not_null may be a set or dict, need to convert to a set
+         create_table_not_null = {
+             rename.get(c.name) or c.name
+@@ -2931,6 +2956,7 @@ class Table(Queryable):
+                 strict=self.strict if strict is None else strict,
+                 _checks=create_table_checks,
+                 _column_comments=create_table_column_comments,
++                _autoincrement=transformed_autoincrement_column,
+             ).strip()
+         )
+ 
+@@ -3053,6 +3079,26 @@ class Table(Queryable):
+                 "ON" if legacy_alter_table_was_on else "OFF"
+             )
+         )
++        if transformed_autoincrement_column is not None:
++            sequence_row = self.db.execute(
++                "SELECT seq FROM sqlite_sequence WHERE name = ?", [self.name]
++            ).fetchone()
++            if sequence_row is not None:
++                sequence = int(sequence_row[0])
++                quoted_name = self.db.quote(self.name)
++                sqls.extend(
++                    (
++                        "INSERT INTO sqlite_sequence (name, seq) "
++                        "SELECT {name}, {sequence} WHERE NOT EXISTS "
++                        "(SELECT 1 FROM sqlite_sequence WHERE name = {name});".format(
++                            name=quoted_name, sequence=sequence
++                        ),
++                        "UPDATE sqlite_sequence SET seq = MAX(seq, {sequence}) "
++                        "WHERE name = {name};".format(
++                            sequence=sequence, name=quoted_name
++                        ),
++                    )
++                )
+         # Re-add existing indexes
+         sqls.extend(index_create_sqls)
+         return sqls
+diff --git a/tests/test_transform.py b/tests/test_transform.py
+index 6a8a1438ea357f8618a1ec25652591b68db4645b..51a34024425f0476d8d0d09168c3fae267c88567 100644
+--- a/tests/test_transform.py
++++ b/tests/test_transform.py
+@@ -1189,6 +1189,64 @@ def test_transform_restores_legacy_alter_table_setting(fresh_db):
+     assert fresh_db.execute("PRAGMA legacy_alter_table").fetchone()[0] == 1
+ 
+ 
++@pytest.mark.parametrize("rename", [None, {"id": "item_id"}])
++def test_transform_preserves_autoincrement_high_water_mark(fresh_db, rename):
++    fresh_db.execute(
++        "CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)"
++    )
++    items = fresh_db.table("items")
++    items.insert_all([{"name": "one"}, {"name": "two"}, {"name": "three"}])
++    items.delete(3)
++
++    items.transform(rename=rename)
++
++    pk = "item_id" if rename else "id"
++    assert "AUTOINCREMENT" in items.schema
++    assert list(items.rows) == [
++        {pk: 1, "name": "one"},
++        {pk: 2, "name": "two"},
++    ]
++    items.insert({"name": "four"})
++    assert items.get(4) == {pk: 4, "name": "four"}
++
++
++def test_transform_non_autoincrement_table_still_works(fresh_db):
++    items = fresh_db.table("items")
++    items.insert_all([{"id": 1, "name": "one"}, {"id": 2, "name": "two"}], pk="id")
++    items.transform(rename={"name": "title"})
++    assert list(items.rows) == [
++        {"id": 1, "title": "one"},
++        {"id": 2, "title": "two"},
++    ]
++
++
++def test_transform_preserves_autoincrement_sequence_with_no_surviving_rows(fresh_db):
++    fresh_db.execute(
++        "CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)"
++    )
++    items = fresh_db.table("items")
++    items.insert({"name": "one"})
++    items.delete(1)
++
++    items.transform(rename={"name": "title"})
++    items.insert({"title": "two"})
++
++    assert items.get(2) == {"id": 2, "title": "two"}
++
++
++def test_transform_can_replace_autoincrement_primary_key(fresh_db):
++    fresh_db.execute(
++        "CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)"
++    )
++    items = fresh_db.table("items")
++    items.insert({"name": "one"})
++
++    items.transform(types={"id": str})
++
++    assert "AUTOINCREMENT" not in items.schema
++    assert items.get("1") == {"id": "1", "name": "one"}
++
++
+ def test_transform_preserves_check_constraints(fresh_db):
+     fresh_db.execute("""
+         CREATE TABLE scores (

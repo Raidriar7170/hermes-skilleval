@@ -151,6 +151,8 @@ def execute(
     payload_tokens=0,
     token_counts=None,
     initialization_seconds=0.0,
+    checkpoint_selector=None,
+    public_docs=None,
 ):
     """One trajectory. `predict` receives current State only, never outcomes.
 
@@ -222,7 +224,11 @@ def execute(
             event_stage = (
                 None
                 if from_checkpoint and turns == initial_turns
-                else opportunity(state, seen, candidate_complete=done)
+                else (
+                    checkpoint_selector(state, seen, events, done)
+                    if checkpoint_selector is not None
+                    else opportunity(state, seen, candidate_complete=done)
+                )
             )
             overhead["state"] += time.monotonic() - measured
             guidance = (
@@ -324,6 +330,7 @@ def execute(
                 home,
                 skills,
                 root / f"turn-{turns:03d}",
+                **({"public_docs": public_docs} if public_docs is not None else {}),
             ) as session:
                 if thread_id:
                     session.resume(thread_id)

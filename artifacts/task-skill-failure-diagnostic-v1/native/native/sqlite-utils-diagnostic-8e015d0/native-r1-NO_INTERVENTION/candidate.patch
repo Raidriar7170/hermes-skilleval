@@ -1,0 +1,192 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index f6153cdc27b742ca41e2eefad5b97971f3b9674d..ff25273d9078402457da39a637db573d6344eac1 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -2012,10 +2012,9 @@ class Queryable:
+         :param offset: Integer for SQL offset
+         """
+         column_names = [column.name for column in self.columns]
+-        pks = [column.name for column in self.columns if column.is_pk]
+-        if not pks:
++        pks = self.pks
++        if self.use_rowid:
+             column_names.insert(0, "rowid")
+-            pks = ["rowid"]
+         select = ",".join(quote_identifier(column_name) for column_name in column_names)
+         for row in self.rows_where(
+             select=select,
+@@ -2149,7 +2148,16 @@ class Table(Queryable):
+     @property
+     def pks(self) -> List[str]:
+         "Primary key columns for this table."
+-        names = [column.name for column in self.columns if column.is_pk]
++        # PRAGMA table_info returns columns in physical table order, while its
++        # ``pk`` field is the 1-based position of each column in the PRIMARY
++        # KEY declaration. These can differ for a compound primary key.
++        names = [
++            column.name
++            for column in sorted(
++                (column for column in self.columns if column.is_pk),
++                key=lambda column: column.is_pk,
++            )
++        ]
+         if not names:
+             names = ["rowid"]
+         return names
+@@ -2673,7 +2681,7 @@ class Table(Queryable):
+ 
+         if pk is DEFAULT:
+             pks_renamed = tuple(
+-                rename.get(p.name) or p.name for p in self.columns if p.is_pk
++                rename.get(name) or name for name in self.pks if name != "rowid"
+             )
+             if len(pks_renamed) == 1:
+                 pk = pks_renamed[0]
+@@ -3017,10 +3025,14 @@ class Table(Queryable):
+                     raise AlterError("table '{}' has no column {}".format(fk, fk_col))
+             else:
+                 # automatically set fk_col to first primary_key of fk table
+-                pks = [c for c in self.db[fk].columns if c.is_pk]
+-                if pks:
+-                    fk_col = pks[0].name
+-                    fk_col_type = pks[0].type
++                pks = self.db[fk].pks
++                if pks and pks != ["rowid"]:
++                    fk_col = pks[0]
++                    fk_col_type = next(
++                        column.type
++                        for column in self.db[fk].columns
++                        if column.name == fk_col
++                    )
+                 else:
+                     fk_col = "rowid"
+                     fk_col_type = "INTEGER"
+@@ -3087,13 +3099,15 @@ class Table(Queryable):
+         )
+ 
+     def guess_foreign_column(self, other_table: str) -> str:
+-        pks = [c for c in self.db[other_table].columns if c.is_pk]
++        pks = self.db[other_table].pks
++        if pks == ["rowid"]:
++            pks = []
+         if len(pks) != 1:
+             raise BadPrimaryKey(
+                 "Could not detect single primary key for table '{}'".format(other_table)
+             )
+         else:
+-            return pks[0].name
++            return pks[0]
+ 
+     def add_foreign_key(
+         self,
+@@ -3770,9 +3784,7 @@ class Table(Queryable):
+         # First we execute the function
+         pk_to_values = {}
+         new_column_types: Dict[str, Set[type]] = {}
+-        pks = [column.name for column in self.columns if column.is_pk]
+-        if not pks:
+-            pks = ["rowid"]
++        pks = self.pks
+ 
+         with progressbar(
+             length=self.count, silent=not show_progress, label="1: Evaluating"
+@@ -4234,7 +4246,7 @@ class Table(Queryable):
+             hash_id = "id"
+ 
+         if upsert and not pk and not hash_id and self.exists():
+-            existing_pks = [column.name for column in self.columns if column.is_pk]
++            existing_pks = self.pks if not self.use_rowid else []
+             if existing_pks:
+                 pk = existing_pks[0] if len(existing_pks) == 1 else tuple(existing_pks)
+ 
+diff --git a/tests/test_foreign_keys.py b/tests/test_foreign_keys.py
+index 8950189b0888cc340b6d98d312084d27de78f3ea..2add33f873fdd771592047c08832cad9390386dd 100644
+--- a/tests/test_foreign_keys.py
++++ b/tests/test_foreign_keys.py
+@@ -449,6 +449,86 @@ def test_implicit_compound_primary_key_reference_is_resolved():
+     assert fk.other_columns == ("campus_name", "dept_code")
+ 
+ 
++def test_compound_primary_key_uses_declaration_order():
++    db = Database(memory=True)
++    db.executescript("""
++    CREATE TABLE parents (
++        first TEXT NOT NULL,
++        second TEXT NOT NULL,
++        PRIMARY KEY (second, first)
++    );
++    CREATE TABLE children (
++        id INTEGER PRIMARY KEY,
++        parent_second TEXT,
++        parent_first TEXT,
++        FOREIGN KEY (parent_second, parent_first) REFERENCES parents
++    );
++    """)
++    assert db["parents"].pks == ["second", "first"]
++    assert db["children"].foreign_keys[0].other_columns == ("second", "first")
++
++
++@pytest.mark.parametrize("method", ("create", "add"))
++def test_compound_foreign_key_inference_uses_pk_declaration_order(method):
++    db = Database(memory=True)
++    db.executescript("""
++    CREATE TABLE parents (
++        first TEXT NOT NULL,
++        second TEXT NOT NULL,
++        PRIMARY KEY (second, first)
++    );
++    """)
++    columns = {"id": int, "parent_second": str, "parent_first": str}
++    if method == "create":
++        db.create_table(
++            "children",
++            columns,
++            pk="id",
++            foreign_keys=[(("parent_second", "parent_first"), "parents")],
++        )
++    else:
++        db.create_table("children", columns, pk="id")
++        db["children"].add_foreign_key(
++            ("parent_second", "parent_first"), "parents"
++        )
++    assert db["children"].foreign_keys[0].other_columns == ("second", "first")
++
++
++def test_transform_preserves_reordered_implicit_compound_foreign_key():
++    db = Database(memory=True)
++    db.execute("PRAGMA foreign_keys = ON")
++    db.executescript("""
++    CREATE TABLE parents (
++        first TEXT NOT NULL,
++        second TEXT NOT NULL,
++        PRIMARY KEY (second, first)
++    );
++    CREATE TABLE children (
++        id INTEGER PRIMARY KEY,
++        label TEXT,
++        parent_second TEXT,
++        parent_first TEXT,
++        FOREIGN KEY (parent_second, parent_first) REFERENCES parents
++    );
++    INSERT INTO parents (first, second) VALUES ('one', 'two');
++    INSERT INTO children VALUES (1, 'valid', 'two', 'one');
++    """)
++
++    db["children"].transform(rename={"label": "name"})
++
++    assert db["children"].get(1)["name"] == "valid"
++    assert db["children"].foreign_keys[0].other_columns == ("second", "first")
++    with pytest.raises(sqlite3.IntegrityError):
++        db["children"].insert(
++            {
++                "id": 2,
++                "name": "reversed",
++                "parent_second": "one",
++                "parent_first": "two",
++            }
++        )
++
++
+ def test_foreign_key_normalizes_list_columns_to_tuples():
+     # Compound columns passed as lists are normalized to tuples, so they
+     # compare equal to introspected ForeignKeys

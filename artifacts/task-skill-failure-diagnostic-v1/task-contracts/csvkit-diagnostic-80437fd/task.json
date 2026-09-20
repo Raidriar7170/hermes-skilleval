@@ -1,0 +1,55 @@
+{
+  "order": 4,
+  "task_id": "csvkit-diagnostic-80437fd",
+  "repository": "wireservice/csvkit",
+  "base_commit": "eb45f9e6cc6d79d808f913d577fe4e41980e0903",
+  "fix_commit": "80437fdf9c4137523c7fc722294d8c9d2a3ebd9f",
+  "mechanism": "parameter-range-identifier",
+  "category": 2,
+  "role": "primary",
+  "source": "https://github.com/wireservice/csvkit/commit/80437fdf9c4137523c7fc722294d8c9d2a3ebd9f",
+  "source_title": "Ignore unknown range-like identifiers and fix Invalid range message",
+  "qualification": "PENDING",
+  "profile": {
+    "repository": "wireservice/csvkit",
+    "packages": {
+      "csvkit": "."
+    },
+    "cli_module": "csvkit.utilities.in2csv",
+    "cli_callable": "launch_new_instance",
+    "cli_name": "in2csv",
+    "image": "hermes-asi-executor:v1",
+    "writable_roots": [
+      "csvkit",
+      "tests"
+    ],
+    "file_policy": {
+      "version": "operations-v1",
+      "rules": [
+        {
+          "path": "csvkit",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        },
+        {
+          "path": "tests",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        }
+      ]
+    }
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "not test_regression",
+  "regression_selector": "test_regression",
+  "reference_commit": "80437fdf9c4137523c7fc722294d8c9d2a3ebd9f",
+  "request_ref": "https://github.com/wireservice/csvkit/commit/80437fdf9c4137523c7fc722294d8c9d2a3ebd9f"
+}

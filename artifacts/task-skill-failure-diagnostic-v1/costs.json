@@ -1,0 +1,104 @@
+{
+  "operation": "RECORDS_ONLY_SECONDARY_COST_LEDGER",
+  "scope": "provided saved records only; active/unreleased attempts and unsupplied sources excluded",
+  "metric_role": "SECONDARY_ONLY",
+  "deduplication": "one resolved execution directory counted once globally; first listed category owns reused cost",
+  "timing_semantics": "active time excludes inherited prefix_seconds; decision charges are components, not additive totals, and may include amortized shared prediction charges",
+  "token_semantics": "input includes cached input; output includes reasoning output; subset fields must not be added again",
+  "groups": {
+    "native": {
+      "record_references": 16,
+      "unique_executions_charged": 16,
+      "reused_execution_references_excluded": 0,
+      "tokens": {
+        "inputTokens": {
+          "observed_sum": 11351668,
+          "known": 16,
+          "unknown": 0
+        },
+        "cachedInputTokens": {
+          "observed_sum": 10065920,
+          "known": 16,
+          "unknown": 0
+        },
+        "cacheWriteInputTokens": {
+          "observed_sum": 0,
+          "known": 16,
+          "unknown": 0
+        },
+        "outputTokens": {
+          "observed_sum": 92995,
+          "known": 16,
+          "unknown": 0
+        },
+        "reasoningOutputTokens": {
+          "observed_sum": 29076,
+          "known": 16,
+          "unknown": 0
+        },
+        "totalTokens": {
+          "observed_sum": 11444663,
+          "known": 16,
+          "unknown": 0
+        }
+      },
+      "active_seconds": {
+        "observed_sum": 2617.475978208822,
+        "known": 16,
+        "unknown": 0
+      },
+      "preparation_seconds": {
+        "observed_sum": 0.6435184578876942,
+        "known": 16,
+        "unknown": 0
+      },
+      "online_decision_budget_charges": {
+        "policy_initialization_seconds": {
+          "observed_sum": 0.0,
+          "known": 16,
+          "unknown": 0
+        },
+        "controller_overhead_seconds": {
+          "state": {
+            "observed_sum": 2.582370327785611,
+            "known": 16,
+            "unknown": 0
+          },
+          "retrieval": {
+            "observed_sum": 1.1206255294382572e-05,
+            "known": 16,
+            "unknown": 0
+          },
+          "checkpoint": {
+            "observed_sum": 5.908104627742432,
+            "known": 16,
+            "unknown": 0
+          },
+          "decision": {
+            "observed_sum": 0.0,
+            "known": 16,
+            "unknown": 0
+          }
+        }
+      },
+      "executions_with_complete_usage_notifications": 16
+    }
+  },
+  "unique_executions": 16,
+  "billing_usd": null,
+  "billing_status": "UNKNOWN_NOT_INFERRED",
+  "agent_calls": 0,
+  "model_calls": 0,
+  "host_orchestration_usage": "UNAVAILABLE; not included in research Agent totals",
+  "source_preparation_and_qualification": "Preparation/qualification scripts make zero repair-Agent model calls. Host authoring and review assistance are separate and unavailable, not zero.",
+  "skill_selection_assistance": {
+    "status": "NOT_TRIGGERED",
+    "contexts": 0,
+    "tokens": 0
+  },
+  "independent_readonly_review": {
+    "status": "PERFORMED",
+    "tokens": null,
+    "scope": "Separate reviewer and follow-ups; unavailable usage is not included in research-Agent totals and is not zero."
+  }
+}

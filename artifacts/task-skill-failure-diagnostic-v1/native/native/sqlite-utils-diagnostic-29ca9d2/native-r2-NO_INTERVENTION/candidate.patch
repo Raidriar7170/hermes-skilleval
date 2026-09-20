@@ -1,0 +1,84 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index e94434a9149f53498a3a45afd320a4d3a9e324bb..4c18cc80f27c18e1596652103fdc4620fdaf542b 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1238,21 +1238,22 @@ class Database:
+             (("campus_name", "dept_code"), "departments", ("campus_name", "dept_code"))
+         """
+         table = self.table(name)
+-        if all(isinstance(fk, ForeignKey) for fk in foreign_keys):
+-            return cast(List[ForeignKey], foreign_keys)
+-        if all(isinstance(fk, str) for fk in foreign_keys):
+-            # It's a list of columns
+-            fks = []
+-            for column in foreign_keys:
+-                column = cast(str, column)
+-                other_table = table.guess_foreign_table(column)
+-                other_column = table.guess_foreign_column(other_table)
+-                fks.append(ForeignKey(name, column, other_table, other_column))
+-            return fks
+-        if not all(isinstance(fk, (tuple, list)) for fk in foreign_keys):
+-            raise ValueError("foreign_keys= should be a list of tuples")
+         fks = []
+-        for tuple_or_list in cast(Iterable[Sequence[Any]], foreign_keys):
++        for foreign_key in foreign_keys:
++            if isinstance(foreign_key, ForeignKey):
++                fks.append(foreign_key)
++                continue
++            if isinstance(foreign_key, str):
++                other_table = table.guess_foreign_table(foreign_key)
++                other_column = table.guess_foreign_column(other_table)
++                fks.append(ForeignKey(name, foreign_key, other_table, other_column))
++                continue
++            if not isinstance(foreign_key, (tuple, list)):
++                raise ValueError(
++                    "foreign_keys= entries should be strings, ForeignKey objects, "
++                    "or tuple pairs or triples"
++                )
++            tuple_or_list = cast(Sequence[Any], foreign_key)
+             if len(tuple_or_list) == 4:
+                 if tuple_or_list[0] != name:
+                     raise ValueError(
+diff --git a/tests/test_create.py b/tests/test_create.py
+index 2788920454949977af44daef2bd0d68791f11b3a..7c3021194a2092dc1b74232e7a67bd4b318328cb 100644
+--- a/tests/test_create.py
++++ b/tests/test_create.py
+@@ -299,6 +299,38 @@ def test_create_table_works_for_m2m_with_only_foreign_keys(
+     )
+ 
+ 
++def test_create_table_with_mixed_foreign_key_forms(fresh_db):
++    for table_name in ("one", "two", "three"):
++        fresh_db[table_name].insert({"id": 1}, pk="id")
++
++    fresh_db["m2m"].insert(
++        {"one_id": 1, "two_id": 1, "three_id": 1},
++        foreign_keys=[
++            ForeignKey("m2m", "one_id", "one", "id"),
++            ("two_id", "two", "id"),
++            "three_id",
++        ],
++    )
++
++    assert {
++        (fk.column, fk.other_table, fk.other_column)
++        for fk in fresh_db["m2m"].foreign_keys
++    } == {
++        ("one_id", "one", "id"),
++        ("two_id", "two", "id"),
++        ("three_id", "three", "id"),
++    }
++
++
++def test_create_table_with_mixed_foreign_key_forms_rejects_invalid_entry(fresh_db):
++    fresh_db["one"].insert({"id": 1}, pk="id")
++    with pytest.raises(ValueError):
++        fresh_db["m2m"].insert(
++            {"one_id": 1, "two_id": 1},
++            foreign_keys=[("one_id", "one", "id"), {"two_id": "two"}],
++        )
++
++
+ def test_self_referential_foreign_key(fresh_db):
+     assert [] == fresh_db.table_names()
+     table = fresh_db.create_table(

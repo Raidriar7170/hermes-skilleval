@@ -1,0 +1,3 @@
+Support SQLite ANY types consistently across Python and CLI strict-table operations. Expose sqlite_utils.ANY and recognize ANY/any type names for create/add-column/transform and CLI create-table/insert/upsert --type. Strict ANY must preserve integer, real, text including leading zeroes, blobs and NULL without coercion. Introspection, transform and extract must preserve the type and strictness. Extracting strict ANY into an existing non-strict lookup must reject before data loss. Explicitly converting to non-strict follows SQLite ordinary ANY numeric affinity. Preserve existing non-ANY operations.
+
+The checked-out base documentation is also available read-only at /workspace/public-docs. Use the same normal tools and native skills as usual.

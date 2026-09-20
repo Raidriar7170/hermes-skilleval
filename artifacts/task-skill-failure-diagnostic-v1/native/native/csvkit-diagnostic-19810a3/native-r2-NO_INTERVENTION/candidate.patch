@@ -1,0 +1,116 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 48a17d01445fd93c25838c195cc82d0edb17d4f1..9b885ea1d07e08694ae6ee0580d7da9330121893 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -139,6 +139,9 @@ class CSVKitUtility:
+                 if getattr(self.args, 'no_header_row', None):
+                     warnings.filterwarnings(action='ignore', message='Column names not specified', module='agate')
+ 
++                if getattr(self.args, 'add_bom', False):
++                    self.output_file.write('\ufeff')
++
+                 self.main()
+         finally:
+             if 'f' not in self.override_flags:
+@@ -244,6 +247,10 @@ class CSVKitUtility:
+                 '-l', '--linenumbers', dest='line_numbers', action='store_true',
+                 help='Insert a column of line numbers at the front of the output. Useful when piping to grep or as a '
+                      'simple primary key.')
++        if 'B' not in self.override_flags:
++            self.argparser.add_argument(
++                '--add-bom', dest='add_bom', action='store_true',
++                help='Prefix CSV output with a UTF-8 byte order mark (BOM).')
+ 
+         # Input/Output
+         if 'zero' not in self.override_flags:
+diff --git a/csvkit/utilities/csvpy.py b/csvkit/utilities/csvpy.py
+index f06059988575c298201b242f8124e084612d3dec..a9a29a5df3b57cce17e0ffc153e5cb049a7043c5 100644
+--- a/csvkit/utilities/csvpy.py
++++ b/csvkit/utilities/csvpy.py
+@@ -10,7 +10,7 @@ from csvkit.cli import CSVKitUtility
+ 
+ class CSVPy(CSVKitUtility):
+     description = 'Load a CSV file into a CSV reader and then drop into a Python shell.'
+-    override_flags = ['l', 'zero']
++    override_flags = ['B', 'l', 'zero']
+ 
+     def add_arguments(self):
+         self.argparser.add_argument(
+diff --git a/csvkit/utilities/sql2csv.py b/csvkit/utilities/sql2csv.py
+index e40a5d1da282a2f3fed4f136cd31ecf60d5e7f66..5280ea2c0f4f9d108ec040aa9aaddd087240c496 100644
+--- a/csvkit/utilities/sql2csv.py
++++ b/csvkit/utilities/sql2csv.py
+@@ -8,7 +8,7 @@ from csvkit.cli import CSVKitUtility, parse_list
+ class SQL2CSV(CSVKitUtility):
+     description = 'Execute a SQL query on a database and output the result to a CSV file.'
+     # Overrides all flags except --linenumbers, --verbose, --version.
+-    override_flags = ['f', 'b', 'd', 'e', 'H', 'I', 'K', 'L', 'p', 'q', 'S', 't', 'u', 'z', 'zero']
++    override_flags = ['B', 'f', 'b', 'd', 'e', 'H', 'I', 'K', 'L', 'p', 'q', 'S', 't', 'u', 'z', 'zero']
+ 
+     def add_arguments(self):
+         self.argparser.add_argument(
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..4339e58a73966fa584d0b9b5bc995b19361b4714 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,8 @@
+ import unittest
+ 
+ from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.utilities.csvpy import CSVPy
++from csvkit.utilities.sql2csv import SQL2CSV
+ 
+ 
+ class TestCli(unittest.TestCase):
+@@ -8,6 +10,10 @@ class TestCli(unittest.TestCase):
+     def setUp(self):
+         self.headers = ['id', 'name', 'i_work_here', '1', 'more-header-values', 'stuff', 'blueberry']
+ 
++    def test_add_bom_not_advertised_by_overriding_utilities(self):
++        self.assertNotIn('--add-bom', CSVPy(['examples/dummy.csv']).argparser.format_help())
++        self.assertNotIn('--add-bom', SQL2CSV(['--query', 'select 1']).argparser.format_help())
++
+     def test_match_column_identifier_string(self):
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here'))
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here', column_offset=0))
+diff --git a/tests/test_utilities/test_csvcut.py b/tests/test_utilities/test_csvcut.py
+index 92a2dcf9dc8b587366060690399c6f5687f03b51..0c458c69fe091c8079c80a65f2c9f7c3c8ddbc95 100644
+--- a/tests/test_utilities/test_csvcut.py
++++ b/tests/test_utilities/test_csvcut.py
+@@ -37,6 +37,18 @@ class TestCSVCut(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['4', 'ʤ'],
+         ])
+ 
++    def test_add_bom(self):
++        args = ['-c', '1,3', 'examples/test_utf8.csv']
++        output = self.get_output(['--add-bom'] + args)
++
++        self.assertEqual(output, '\ufeff' + self.get_output(args))
++        self.assertIn('ʤ', output)
++
++    def test_add_bom_preserves_quoting(self):
++        args = ['examples/test_locale.csv']
++
++        self.assertEqual(self.get_output(['--add-bom'] + args), '\ufeff' + self.get_output(args))
++
+     def test_with_gzip(self):
+         self.assertRows(['-c', '1,3', 'examples/dummy.csv.gz'], [
+             ['a', 'c'],
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index ccfe4c4b5a91b38d462553efe55b0c7dc62890dc..f446121b17cfa72ea72eb9d309a5a3f189d6c4b9 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -121,6 +121,13 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+         self.assertConverted('csv', 'examples/dummy.tsv', 'examples/dummy.csv',
+                              ['--no-inference', '--snifflimit', '0', '--tabs'])
+ 
++    def test_add_bom_streaming(self):
++        output = self.get_output([
++            '--add-bom', '--format', 'csv', '--no-inference', '--snifflimit', '0', 'examples/test_utf8.csv'
++        ])
++
++        self.assertEqual(output, '\ufefffoo,bar,baz\n1,2,3\n4,5,ʤ\n')
++
+     def test_convert_dbf(self):
+         self.assertConverted('dbf', 'examples/testdbf.dbf', 'examples/testdbf_converted.csv')
+ 

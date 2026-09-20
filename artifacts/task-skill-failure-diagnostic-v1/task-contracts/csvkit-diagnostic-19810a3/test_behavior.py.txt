@@ -1,0 +1,33 @@
+
+import io
+import csv
+import pytest
+from csvkit.utilities.in2csv import In2CSV
+from csvkit.utilities.csvformat import CSVFormat
+from csvkit.utilities.csvpy import CSVPy
+from csvkit.utilities.sql2csv import SQL2CSV
+
+def convert(tmp_path,utility,flags):
+    source=tmp_path/'data.csv';source.write_text('name,value\n"Café,茶",001\n',encoding='utf8')
+    buffer=io.BytesIO();output=io.TextIOWrapper(buffer,encoding='utf8',newline='')
+    args=[str(source),*flags]
+    if utility is In2CSV:args+=['-f','csv','-I']
+    u=utility(args,output_file=output);u.run();output.flush();result=buffer.getvalue();output.detach();return result
+
+@pytest.mark.parametrize('utility',[In2CSV,CSVFormat])
+def test_bom(tmp_path,utility):
+    result=convert(tmp_path,utility,['--add-bom'])
+    assert result.startswith(b'\xef\xbb\xbf')
+    assert list(csv.reader(io.StringIO(result.decode('utf-8-sig'))))==[['name','value'],['Café,茶','001']]
+
+@pytest.mark.parametrize('utility',[CSVPy,SQL2CSV])
+def test_bom_option_excluded(utility):
+    with pytest.raises(SystemExit) as error:
+        utility(['--add-bom'],output_file=io.StringIO())
+    assert error.value.code==2
+
+def test_regression(tmp_path):
+    result=convert(tmp_path,In2CSV,[])
+    assert not result.startswith(b'\xef\xbb\xbf')
+    assert list(csv.reader(io.StringIO(result.decode('utf8'))))==[['name','value'],['Café,茶','001']]
+

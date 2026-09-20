@@ -1,0 +1,108 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index 188eff63c3b3035b88d2b25e1ce91469e699d296..4b86ae62804ee8c96c4e6f7a17d9d886a2d078ff 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -13,6 +13,7 @@ from sqlite_utils.db import (
+     BadMultiValues,
+     DEFAULT,
+     DescIndex,
++    InvalidColumns,
+     NoTable,
+     NoView,
+     quote_identifier,
+@@ -1172,7 +1173,7 @@ def insert_upsert_implementation(
+             db.table(table).insert_all(
+                 docs, pk=pk, batch_size=batch_size, alter=alter, **extra_kwargs
+             )
+-        except NoTable as e:
++        except (InvalidColumns, NoTable) as e:
+             raise click.ClickException(str(e))
+         except Exception as e:
+             if (
+@@ -2734,7 +2735,10 @@ def extract(
+         fk_column=fk_column,
+         rename=dict(rename),
+     )
+-    db.table(table).extract(**kwargs)
++    try:
++        db.table(table).extract(**kwargs)
++    except (InvalidColumns, NoTable) as ex:
++        raise click.ClickException(str(ex))
+ 
+ 
+ @cli.command(name="insert-files")
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 9e1796953577aafcb269db52d799e484356d46cf..f4699f7143b2be68289c9bcf87f2007ca4d95821 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1232,6 +1232,26 @@ def test_upsert_pk_required(db_path, tmpdir):
+     assert "Error: Missing option '--pk'" in result.output
+ 
+ 
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++def test_insert_upsert_invalid_pk_existing_table(db_path, command):
++    db = Database(db_path)
++    db["items"].insert({"id": 1, "name": "One"}, pk="id")
++
++    result = CliRunner().invoke(
++        cli.cli,
++        [command, db_path, "items", "-", "--pk", "missing"],
++        input=json.dumps({"id": 2, "name": "Two"}),
++        catch_exceptions=False,
++    )
++
++    assert result.exit_code == 1
++    assert result.output == (
++        "Error: Invalid primary key column ['missing'] for table items "
++        "with columns ['id', 'name']\n"
++    )
++    assert list(db["items"].rows) == [{"id": 1, "name": "One"}]
++
++
+ def test_upsert_analyze(db_path, tmpdir):
+     db = Database(db_path)
+     db["rows"].insert({"id": 1, "foo": "x", "n": 3}, pk="id")
+@@ -2029,6 +2049,43 @@ def test_extract(db_path, args, expected_table_schema, expected_other_schema):
+     assert other_schema == expected_other_schema
+ 
+ 
++def test_extract_invalid_column(db_path):
++    db = Database(db_path)
++    db["trees"].insert({"id": 1, "species": "Palm"}, pk="id")
++    table_names_before = db.table_names()
++
++    result = CliRunner().invoke(
++        cli.cli,
++        ["extract", db_path, "trees", "missing"],
++        catch_exceptions=False,
++    )
++
++    assert result.exit_code == 1
++    assert result.output == (
++        "Error: Invalid columns ['missing'] for table with columns ['id', 'species']\n"
++    )
++    assert list(db["trees"].rows) == [{"id": 1, "species": "Palm"}]
++    assert db.table_names() == table_names_before
++
++
++def test_extract_view(db_path):
++    db = Database(db_path)
++    db["trees"].insert({"id": 1, "species": "Palm"}, pk="id")
++    db.create_view("tree_view", "select * from trees")
++    table_names_before = db.table_names()
++
++    result = CliRunner().invoke(
++        cli.cli,
++        ["extract", db_path, "tree_view", "species"],
++        catch_exceptions=False,
++    )
++
++    assert result.exit_code == 1
++    assert result.output == "Error: Table tree_view is actually a view\n"
++    assert list(db["trees"].rows) == [{"id": 1, "species": "Palm"}]
++    assert db.table_names() == table_names_before
++
++
+ def test_insert_encoding(tmpdir):
+     db_path = str(tmpdir / "test.db")
+     latin1_csv = (
