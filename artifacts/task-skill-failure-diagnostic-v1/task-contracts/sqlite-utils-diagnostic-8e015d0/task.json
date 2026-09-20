@@ -1,0 +1,55 @@
+{
+  "order": 10,
+  "task_id": "sqlite-utils-diagnostic-8e015d0",
+  "repository": "simonw/sqlite-utils",
+  "base_commit": "66934918c689238b19a74b2f09794002cc985094",
+  "fix_commit": "8e015d024c34f2a5e5059e0f10fcdf41410613fe",
+  "mechanism": "reserve-compound-pk-order",
+  "category": "reserve",
+  "role": "mechanical_reserve",
+  "source": "https://github.com/simonw/sqlite-utils/commit/8e015d024c34f2a5e5059e0f10fcdf41410613fe",
+  "source_title": "Compound primary keys now resolve in PRIMARY KEY declaration order",
+  "qualification": "PENDING",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-asi-executor:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests"
+    ],
+    "file_policy": {
+      "version": "operations-v1",
+      "rules": [
+        {
+          "path": "sqlite_utils",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        },
+        {
+          "path": "tests",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        }
+      ]
+    }
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "not test_regression",
+  "regression_selector": "test_regression",
+  "reference_commit": "8e015d024c34f2a5e5059e0f10fcdf41410613fe",
+  "request_ref": "https://github.com/simonw/sqlite-utils/commit/8e015d024c34f2a5e5059e0f10fcdf41410613fe"
+}

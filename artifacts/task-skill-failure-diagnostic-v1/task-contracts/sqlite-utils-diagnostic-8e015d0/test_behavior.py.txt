@@ -1,0 +1,97 @@
+import io
+import json
+import sqlite3
+import pytest
+import sqlite_utils
+from sqlite_utils import Database, cli
+from sqlite_utils.db import ForeignKey, InvalidColumns, TransformError
+from click.testing import CliRunner
+# Base may lack the new public constant; tests must fail behaviorally, not
+# fail collection. A distinct unsupported type yields a valid failed test.
+ANY = getattr(sqlite_utils, 'ANY', object())
+@pytest.fixture
+def fresh_db():
+    db=Database(memory=True)
+    yield db
+    db.close()
+@pytest.fixture
+def db_path(tmp_path):
+    return str(tmp_path/'test.db')
+
+def test_implicit_compound_foreign_key_resolves_pk_declaration_order(fresh_db):
+    # The other table's PRIMARY KEY declares its columns in a different
+    # order to the table's column order. SQLite resolves the implicit
+    # "REFERENCES other" using PRIMARY KEY declaration order, so the
+    # introspected other_columns must too
+    fresh_db.execute("create table other (b text, a text, primary key (a, b))")
+    fresh_db.execute(
+        "create table child (x text, y text, foreign key (x, y) references other)"
+    )
+    fk = fresh_db["child"].foreign_keys[0]
+    assert fk.other_columns == ("a", "b")
+
+
+def test_transform_implicit_compound_foreign_key_stays_valid(fresh_db):
+    # transform() rewrites the implicit FK with explicit columns - they
+    # must be in PRIMARY KEY declaration order or valid data fails the
+    # foreign key check with an IntegrityError
+    fresh_db.execute("create table other (b text, a text, primary key (a, b))")
+    fresh_db.execute(
+        "create table child (x text, y text, foreign key (x, y) references other)"
+    )
+    fresh_db.execute("PRAGMA foreign_keys = ON")
+    fresh_db["other"].insert({"a": "A", "b": "B"})
+    fresh_db["child"].insert({"x": "A", "y": "B"})
+    fresh_db["child"].transform(types={"x": str})
+    assert fresh_db["child"].foreign_keys[0].other_columns == ("a", "b")
+    # The constraint still points the right way around
+    fresh_db["child"].insert({"x": "A", "y": "B"})
+    with pytest.raises(sqlite3.IntegrityError):
+        fresh_db["child"].insert({"x": "B", "y": "A"})
+
+
+def test_create_compound_foreign_key_guesses_pk_declaration_order(fresh_db):
+    fresh_db.execute("create table other (b text, a text, primary key (a, b))")
+    fresh_db["other"].insert({"a": "A", "b": "B"})
+    fresh_db["child"].create(
+        {"id": int, "x": str, "y": str},
+        pk="id",
+        foreign_keys=[(("x", "y"), "other")],
+    )
+    assert fresh_db["child"].foreign_keys[0].other_columns == ("a", "b")
+    fresh_db.execute("PRAGMA foreign_keys = ON")
+    fresh_db["child"].insert({"id": 1, "x": "A", "y": "B"})
+    with pytest.raises(sqlite3.IntegrityError):
+        fresh_db["child"].insert({"id": 2, "x": "B", "y": "A"})
+
+
+def test_add_compound_foreign_key_guesses_pk_declaration_order(fresh_db):
+    fresh_db.execute("create table other (b text, a text, primary key (a, b))")
+    fresh_db["child"].insert({"id": 1, "x": "A", "y": "B"}, pk="id")
+    fresh_db["child"].add_foreign_key(("x", "y"), "other")
+    assert fresh_db["child"].foreign_keys[0].other_columns == ("a", "b")
+
+def test_pks_use_primary_key_declaration_order(fresh_db):
+    # PRIMARY KEY (a, b) declared against columns stored in order (b, a) -
+    # pks must follow the declaration order, which is what SQLite uses to
+    # resolve implicit foreign key references and compound pk lookups
+    fresh_db.execute("create table t (b text, a text, primary key (a, b))")
+    assert fresh_db["t"].pks == ["a", "b"]
+
+
+def test_transformed_pk_order(fresh_db):
+    fresh_db.execute('create table t (a text, b text, c text, primary key (b,a))')
+    fresh_db['t'].insert({'a':'A','b':'B','c':'drop'})
+    fresh_db['t'].transform(drop={'c'})
+    assert fresh_db['t'].pks==['b','a']
+    assert fresh_db['t'].get(('B','A'))=={'a':'A','b':'B'}
+
+
+def test_regression(fresh_db):
+    t=fresh_db['ordinary'];t.insert({'id':1,'value':'keep'},pk='id')
+    assert t.get(1)=={'id':1,'value':'keep'}
+    t.transform(rename={'value':'label'})
+    assert t.get(1)=={'id':1,'label':'keep'}
+    with pytest.raises(sqlite3.IntegrityError):t.insert({'id':1,'label':'bad'})
+    assert t.get(1)['label']=='keep'
+

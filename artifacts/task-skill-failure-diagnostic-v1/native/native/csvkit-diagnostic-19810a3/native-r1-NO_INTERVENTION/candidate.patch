@@ -1,0 +1,89 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 48a17d01445fd93c25838c195cc82d0edb17d4f1..ea2238c1727caa00695a717597e61e57f8fb61fd 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -139,6 +139,9 @@ class CSVKitUtility:
+                 if getattr(self.args, 'no_header_row', None):
+                     warnings.filterwarnings(action='ignore', message='Column names not specified', module='agate')
+ 
++                if getattr(self.args, 'add_bom', False):
++                    self.output_file.write('\ufeff')
++
+                 self.main()
+         finally:
+             if 'f' not in self.override_flags:
+@@ -239,6 +242,10 @@ class CSVKitUtility:
+                 help='Print detailed tracebacks when errors occur.')
+ 
+         # Output
++        if 'B' not in self.override_flags:
++            self.argparser.add_argument(
++                '--add-bom', dest='add_bom', action='store_true',
++                help='Prefix the output with a UTF-8 byte order mark (BOM).')
+         if 'l' not in self.override_flags:
+             self.argparser.add_argument(
+                 '-l', '--linenumbers', dest='line_numbers', action='store_true',
+diff --git a/csvkit/utilities/csvpy.py b/csvkit/utilities/csvpy.py
+index f06059988575c298201b242f8124e084612d3dec..a9a29a5df3b57cce17e0ffc153e5cb049a7043c5 100644
+--- a/csvkit/utilities/csvpy.py
++++ b/csvkit/utilities/csvpy.py
+@@ -10,7 +10,7 @@ from csvkit.cli import CSVKitUtility
+ 
+ class CSVPy(CSVKitUtility):
+     description = 'Load a CSV file into a CSV reader and then drop into a Python shell.'
+-    override_flags = ['l', 'zero']
++    override_flags = ['B', 'l', 'zero']
+ 
+     def add_arguments(self):
+         self.argparser.add_argument(
+diff --git a/csvkit/utilities/sql2csv.py b/csvkit/utilities/sql2csv.py
+index e40a5d1da282a2f3fed4f136cd31ecf60d5e7f66..5280ea2c0f4f9d108ec040aa9aaddd087240c496 100644
+--- a/csvkit/utilities/sql2csv.py
++++ b/csvkit/utilities/sql2csv.py
+@@ -8,7 +8,7 @@ from csvkit.cli import CSVKitUtility, parse_list
+ class SQL2CSV(CSVKitUtility):
+     description = 'Execute a SQL query on a database and output the result to a CSV file.'
+     # Overrides all flags except --linenumbers, --verbose, --version.
+-    override_flags = ['f', 'b', 'd', 'e', 'H', 'I', 'K', 'L', 'p', 'q', 'S', 't', 'u', 'z', 'zero']
++    override_flags = ['B', 'f', 'b', 'd', 'e', 'H', 'I', 'K', 'L', 'p', 'q', 'S', 't', 'u', 'z', 'zero']
+ 
+     def add_arguments(self):
+         self.argparser.add_argument(
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index ccfe4c4b5a91b38d462553efe55b0c7dc62890dc..9e2b28e3eb29369475ebeb72ff93c3aad89a16f9 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -3,7 +3,9 @@ import os
+ import sys
+ from unittest.mock import patch
+ 
++from csvkit.utilities.csvpy import CSVPy
+ from csvkit.utilities.in2csv import In2CSV, launch_new_instance
++from csvkit.utilities.sql2csv import SQL2CSV
+ from tests.utils import CSVKitTestCase, EmptyFileTests, stdin_as_string
+ 
+ 
+@@ -27,6 +29,23 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+ 
+         self.assertEqual(e.exception.code, 0)
+ 
++    def test_add_bom(self):
++        args = ['-f', 'csv', '--no-inference', '--snifflimit', '0']
++        content = b'name,note\nJos\xc3\xa9,"hello, world"\n'
++
++        with stdin_as_string(io.BytesIO(content)):
++            output = self.get_output(args)
++        with stdin_as_string(io.BytesIO(content)):
++            output_with_bom = self.get_output(['--add-bom'] + args)
++
++        self.assertFalse(output.startswith('\ufeff'))
++        self.assertEqual(output, 'name,note\nJos\xe9,"hello, world"\n')
++        self.assertEqual(output_with_bom, '\ufeff' + output)
++
++    def test_add_bom_is_not_advertised_by_overriding_utilities(self):
++        self.assertNotIn('--add-bom', CSVPy(['examples/dummy.csv']).argparser.format_help())
++        self.assertNotIn('--add-bom', SQL2CSV(['--query', 'select 1']).argparser.format_help())
++
+     def test_args(self):
+         for args in ([], ['-']):
+             with self.subTest(args=args):

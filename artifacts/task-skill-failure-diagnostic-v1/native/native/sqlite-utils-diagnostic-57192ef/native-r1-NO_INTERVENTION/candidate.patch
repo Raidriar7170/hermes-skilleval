@@ -1,0 +1,211 @@
+diff --git a/sqlite_utils/create_table_parser.py b/sqlite_utils/create_table_parser.py
+index 2d891ae81f4a4bff14dade466d414f8dbaeacc4e..2255c53db9b4d6e01d5dd05f0c968ed370890733 100644
+--- a/sqlite_utils/create_table_parser.py
++++ b/sqlite_utils/create_table_parser.py
+@@ -618,6 +618,38 @@ def check_references_identifier(expression: str, identifier: str) -> bool:
+     )
+ 
+ 
++def index_references_identifier(create_sql: str, identifier: str) -> bool:
++    """Return ``True`` if an index body or WHERE clause uses an identifier.
++
++    The index and table names in the CREATE INDEX prefix are deliberately
++    ignored. This matters when either of those names is also a column name.
++    """
++    tokens = _meaningful(_lex(create_sql))
++    on_index = next(
++        (index for index, token in enumerate(tokens) if token.is_keyword("ON")),
++        None,
++    )
++    if on_index is None:
++        raise ParseError("CREATE INDEX statement does not contain ON")
++    open_index = next(
++        (
++            index
++            for index in range(on_index + 1, len(tokens))
++            if tokens[index].text == "("
++        ),
++        None,
++    )
++    if open_index is None:
++        raise ParseError("CREATE INDEX statement does not contain a column list")
++    folded = _ascii_fold(identifier)
++    relevant = tokens[open_index + 1 :]
++    return any(
++        _is_identifier_token(relevant, index)
++        and _ascii_fold(_unquote(token.text)) == folded
++        for index, token in enumerate(relevant)
++    )
++
++
+ def sql_ends_in_line_comment(sql: str) -> bool:
+     """Return True if appended SQL would be swallowed by a ``--`` comment."""
+     tokens = _lex(sql)
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 2478189d9641482a3ce883b185b4637b2e8f0f13..25862c0136970bff39bedbc80f5082c8733b7da4 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -33,6 +33,7 @@ from .create_table_parser import (
+     ColumnComments,
+     ParseError,
+     check_references_identifier,
++    index_references_identifier,
+     parse_checks,
+     parse_column_comments,
+     rewrite_check_expression,
+@@ -2975,7 +2976,10 @@ class Table(Queryable):
+                 "ON" if legacy_alter_table_was_on else "OFF"
+             )
+         )
+-        # Re-add existing indexes
++        # Re-add existing indexes. Plain column indexes are reconstructed from
++        # index_xinfo so renamed columns can be carried across without fragile
++        # textual substitutions (which break swaps and shared names).
++        xindexes = {index.name: index for index in self.xindexes}
+         for index in self.indexes:
+             if index.origin != "pk":
+                 index_sql = self.db.execute(
+@@ -2991,14 +2995,48 @@ class Table(Queryable):
+                 if keep_table:
+                     sqls.append(f"DROP INDEX IF EXISTS {quote_identifier(index.name)};")
+                 for col in index.columns:
+-                    if col in rename or col in drop:
++                    if col in drop:
+                         raise TransformError(
+                             f"Index '{index.name}' column '{col}' is not in updated table '{self.name}'. "
+                             f"You must manually drop this index prior to running this transformation "
+                             f"and manually recreate the new index after running this transformation. "
+                             f"The original index sql statement is: `{index_sql}`. No changes have been applied to this table."
+                         )
+-                sqls.append(index_sql)
++                xindex = xindexes[index.name]
++                key_columns = [column for column in xindex.columns if column.key]
++                is_expression = any(column.cid == -2 for column in key_columns)
++                is_complex = bool(index.partial) or is_expression
++                if is_complex and any(
++                    index_references_identifier(index_sql, old_name)
++                    for old_name in rename
++                ):
++                    raise TransformError(
++                        f"Index '{index.name}' is a partial or expression index affected by "
++                        "the column rename. You must manually drop this index prior to "
++                        "running this transformation and manually recreate the new index "
++                        f"after running this transformation. The original index sql "
++                        f"statement is: `{index_sql}`. No changes have been applied to this table."
++                    )
++                if is_complex:
++                    sqls.append(index_sql)
++                else:
++                    column_sql = []
++                    for column in key_columns:
++                        name = rename.get(column.name) or column.name
++                        definition = quote_identifier(name)
++                        if column.coll:
++                            definition += f" COLLATE {quote_identifier(column.coll)}"
++                        if column.desc:
++                            definition += " DESC"
++                        column_sql.append(definition)
++                    sqls.append(
++                        "CREATE {unique}INDEX {index} ON {table} ({columns});".format(
++                            unique="UNIQUE " if index.unique else "",
++                            index=quote_identifier(index.name),
++                            table=quote_identifier(self.name),
++                            columns=", ".join(column_sql),
++                        )
++                    )
+         return sqls
+ 
+     def extract(
+diff --git a/tests/test_transform.py b/tests/test_transform.py
+index 28fa4d75eed823fd6bfac99437c5cfd9a0596c89..da9fa1e572f706fe715a39f41092337eff4dcf81 100644
+--- a/tests/test_transform.py
++++ b/tests/test_transform.py
+@@ -896,7 +896,6 @@ def test_transform_retains_indexes_with_foreign_keys(fresh_db):
+ @pytest.mark.parametrize(
+     "transform_params",
+     [
+-        {"rename": {"age": "dog_age"}},
+         {"drop": ["age"]},
+     ],
+ )
+@@ -917,6 +916,80 @@ def test_transform_with_indexes_errors(fresh_db, transform_params):
+     )
+ 
+ 
++def test_transform_rename_preserves_index_details_and_swapped_names(fresh_db):
++    fresh_db.execute(
++        'CREATE TABLE "inventory" ("inventory" TEXT, "first" TEXT, "second" TEXT)'
++    )
++    fresh_db.execute(
++        'CREATE UNIQUE INDEX "first" ON "inventory" '
++        '("first" COLLATE NOCASE DESC, "second" COLLATE RTRIM)'
++    )
++    table = fresh_db.table("inventory")
++    table.insert({"inventory": "row", "first": "A ", "second": "B "})
++
++    table.transform(
++        rename={"inventory": "item", "first": "second", "second": "first"}
++    )
++
++    index = next(index for index in table.indexes if index.name == "first")
++    assert index.unique == 1
++    assert index.columns == ["second", "first"]
++    assert [
++        (column.name, column.desc, column.coll)
++        for column in next(index for index in table.xindexes if index.name == "first").columns
++        if column.key
++    ] == [("second", 1, "NOCASE"), ("first", 0, "RTRIM")]
++    assert table.get(1) == {"item": "row", "second": "A ", "first": "B "}
++
++
++@pytest.mark.parametrize(
++    "index_sql",
++    [
++        "CREATE INDEX affected ON items(lower(name))",
++        "CREATE INDEX affected ON items(category) WHERE name IS NOT NULL",
++    ],
++)
++def test_transform_rename_refuses_affected_complex_index_atomically(
++    fresh_db, index_sql
++):
++    fresh_db.execute("CREATE TABLE items(name TEXT, category TEXT)")
++    fresh_db.execute(index_sql)
++    table = fresh_db.table("items")
++    table.insert({"name": "one", "category": "a"})
++    schema_before = table.schema
++
++    with pytest.raises(TransformError, match="partial or expression index affected"):
++        table.transform(rename={"name": "title"})
++
++    assert table.schema == schema_before
++    assert list(table.rows) == [{"name": "one", "category": "a"}]
++    assert fresh_db.execute(
++        "SELECT sql FROM sqlite_master WHERE name = 'affected'"
++    ).fetchone()[0] == index_sql
++
++
++def test_transform_rename_preserves_unaffected_complex_indexes(fresh_db):
++    fresh_db.execute("CREATE TABLE items(name TEXT, category TEXT, note TEXT)")
++    fresh_db.execute("CREATE INDEX expression_idx ON items(lower(name))")
++    fresh_db.execute(
++        "CREATE INDEX partial_idx ON items(category) WHERE name IS NOT NULL"
++    )
++
++    fresh_db.table("items").transform(rename={"note": "description"})
++
++    assert {
++        row[0]: row[1]
++        for row in fresh_db.execute(
++            "SELECT name, sql FROM sqlite_master WHERE type = 'index'"
++        ).fetchall()
++    } == {
++        "expression_idx": "CREATE INDEX expression_idx ON items(lower(name))",
++        "partial_idx": (
++            "CREATE INDEX partial_idx ON items(category) WHERE name IS NOT NULL"
++        ),
++    }
++
++
+ def test_transform_with_unique_constraint_implicit_index(fresh_db):
+     dogs = fresh_db.table("dogs")
+     # Create a table with a UNIQUE constraint on 'name', which creates an implicit index

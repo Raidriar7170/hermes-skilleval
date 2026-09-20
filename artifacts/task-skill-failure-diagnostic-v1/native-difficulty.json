@@ -1,0 +1,1023 @@
+{
+  "tasks": [
+    {
+      "task_id": "sqlite-utils-diagnostic-548a886",
+      "mechanism": "interface-error-propagation",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "native": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9423594999826,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "4409c1898ad01ed3c779dc0ba89e6b9af8f5e7afedc866c0ca393e4286ffc44c",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E1",
+          "completed_turn_index": 1,
+          "remaining_seconds": 576.776100832969,
+          "legal_main_tail": true,
+          "prefix_sha256": "9a857e2d0949843bcd9c840ee1f69461627bcd6e82c130a4b048b99cea0ac31f",
+          "checkpoint_sha256": "c3ab186b766a76e4b0cd768f164121cca9b45878d549399f2e4cd8abc42d3564",
+          "public_test_command": null,
+          "failure_text": "h):\n    Database(db_path)[\"Gosh\"].enable_fts([\"c2\"], fts_version=\"FTS4\")\n    result = CliRunner().invoke(cli.cli, [\"tables\", \"--fts4\", db_path])\n    assert '[{\"table\": \"Gosh_fts\"}]' == result.output.strip()\n\n\ndef test_tables_fts5(db_path):\n    Database(db_path)[\"Gosh\"].enable_fts([\"c2\"], fts_version=\"FTS5\")\n    result = CliRunner().invoke(cli.cli, [\"tables\", \"--fts5\", db_path])\n    assert '[{\"table\": \"Gosh_fts\"}]' == result.output.strip()\n\n\ndef test_tables_counts_and_columns(db_path):\n    db = Database(db_path)\n    with db.conn:\n        db[\"lots\"].insert_all([{\"id\": i, \"age\": i + 1} for i in range(30)])\n    result = CliRunner().invoke(cli.cli, [\"tables\", \"--counts\", \"--columns\", db_path])\n    assert (\n        '[{\"table\": \"Gosh\", \"count\": 0, \"columns\": [\"c1\", \"c2\", \"c3\"]},\\n'\n        ' {\"table\": \"Gosh2\", \"count\": 0, \"columns\": [\"c1\", \"c2\", \"c3\"]},\\n'\n        ' {\"table\": \"lots\", \"count\": 30, \"columns\": [\"id\", \"age\"]}]'\n    ) == result.output.strip()\n\n\n@pytest.mark.parametrize(\n    \"format,expected\",\n    [\n        (\n            \"--csv\",\n            (\n                \"table,count,columns\\n\"\n                'Gosh,0,\"c1\\n'\n                \"c2\\n\"\n                'c3\"\\n'\n                'Gosh2,0,\"c1\\n'\n                \"c2\\n\"\n                'c3\"\\n'\n                'lots,30,\"id\\n'\n                'age\"'\n            ),\n        ),\n        (\n            \"--tsv\",\n            \"table\\tcount\\tcolumns\\nGosh\\t0\\t['c1', 'c2', 'c3']\\nGosh2\\t0\\t['c1', 'c2', 'c3']\\nlots\\t30\\t['id', 'age']\",\n        ),\n    ],\n)\ndef test_tables_counts_and_columns_csv(db_path, format, expected):\n    db = Database(db_path)\n    with db.conn:\n        db[\"lots\"].insert_all([{\"id\": i, \"age\": i + 1} for i in range(30)])\n    result = CliRunner().invoke(\n        cli.cli, [\"tables\", \"--counts\", \"--columns\", format, db_path]\n    )\n    assert result.output.strip().replace(\"\\r\", \"\") == expected\n\n\ndef test_tables_schema(db_path):\n    db = Database(db_path)\n    with db.conn:\n/usr/bin/bash: line 1: git: command not found\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 2,
+          "remaining_seconds": 528.2783960419474,
+          "legal_main_tail": true,
+          "prefix_sha256": "fc8f41cdd06f75ed4b2130377fc3dd24901aa06e13fd52752fcf179fa0cb8b65",
+          "checkpoint_sha256": "b53b052bc733d2da33e65d60f30c3da4027ed24926cb03559e36776f75a38e4d",
+          "public_test_command": "/usr/bin/bash -lc 'pytest -q tests/test_cli.py tests/test_cli_insert.py tests/test_extract.py'",
+          "failure_text": "h):\n    Database(db_path)[\"Gosh\"].enable_fts([\"c2\"], fts_version=\"FTS4\")\n    result = CliRunner().invoke(cli.cli, [\"tables\", \"--fts4\", db_path])\n    assert '[{\"table\": \"Gosh_fts\"}]' == result.output.strip()\n\n\ndef test_tables_fts5(db_path):\n    Database(db_path)[\"Gosh\"].enable_fts([\"c2\"], fts_version=\"FTS5\")\n    result = CliRunner().invoke(cli.cli, [\"tables\", \"--fts5\", db_path])\n    assert '[{\"table\": \"Gosh_fts\"}]' == result.output.strip()\n\n\ndef test_tables_counts_and_columns(db_path):\n    db = Database(db_path)\n    with db.conn:\n        db[\"lots\"].insert_all([{\"id\": i, \"age\": i + 1} for i in range(30)])\n    result = CliRunner().invoke(cli.cli, [\"tables\", \"--counts\", \"--columns\", db_path])\n    assert (\n        '[{\"table\": \"Gosh\", \"count\": 0, \"columns\": [\"c1\", \"c2\", \"c3\"]},\\n'\n        ' {\"table\": \"Gosh2\", \"count\": 0, \"columns\": [\"c1\", \"c2\", \"c3\"]},\\n'\n        ' {\"table\": \"lots\", \"count\": 30, \"columns\": [\"id\", \"age\"]}]'\n    ) == result.output.strip()\n\n\n@pytest.mark.parametrize(\n    \"format,expected\",\n    [\n        (\n            \"--csv\",\n            (\n                \"table,count,columns\\n\"\n                'Gosh,0,\"c1\\n'\n                \"c2\\n\"\n                'c3\"\\n'\n                'Gosh2,0,\"c1\\n'\n                \"c2\\n\"\n                'c3\"\\n'\n                'lots,30,\"id\\n'\n                'age\"'\n            ),\n        ),\n        (\n            \"--tsv\",\n            \"table\\tcount\\tcolumns\\nGosh\\t0\\t['c1', 'c2', 'c3']\\nGosh2\\t0\\t['c1', 'c2', 'c3']\\nlots\\t30\\t['id', 'age']\",\n        ),\n    ],\n)\ndef test_tables_counts_and_columns_csv(db_path, format, expected):\n    db = Database(db_path)\n    with db.conn:\n        db[\"lots\"].insert_all([{\"id\": i, \"age\": i + 1} for i in range(30)])\n    result = CliRunner().invoke(\n        cli.cli, [\"tables\", \"--counts\", \"--columns\", format, db_path]\n    )\n    assert result.output.strip().replace(\"\\r\", \"\") == expected\n\n\ndef test_tables_schema(db_path):\n    db = Database(db_path)\n    with db.conn:\n/usr/bin/bash: line 1: git: command not found\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9258238750044,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "e3fba730e5ab25c26c5115169b9e680507332eb3f698affaadef5735f084a1d6",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E1",
+          "completed_turn_index": 3,
+          "remaining_seconds": 499.8413466250058,
+          "legal_main_tail": true,
+          "prefix_sha256": "9e80a097d3663941660021585005df5ae11774519b9ffe4be8a2dcb1ae950000",
+          "checkpoint_sha256": "94a213fb6646373e6de8e5eaa1272155597e4b6fbd3f06110ef9a65eb258ced7",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q'",
+          "failure_text": "\n==================================== ERRORS ====================================\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    from hypothesis import given\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.45s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 4,
+          "remaining_seconds": 468.35296487493906,
+          "legal_main_tail": true,
+          "prefix_sha256": "ad616a2a1d8f0c0f2104f4bb8c8f75e27afbbd6b531c7da533dcbe5298261b21",
+          "checkpoint_sha256": "e23a366acff6fe552a8825e8928253a00a4ed78d1bbc599556547c0930a7b363",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q --ignore=tests/test_hypothesis.py'",
+          "failure_text": "t_cli.py::test_disable_wal\n  /workspace/repo/tests/test_cli.py:1676: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_cli.py::test_create_table_strict[False]\ntests/test_cli.py::test_create_table_strict[True]\n  /workspace/repo/tests/test_cli.py:2792: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_insert_files.py::test_insert_files[pk_args0-expected_pks0-False]\ntests/test_insert_files.py::test_insert_files[pk_args0-expected_pks0-True]\ntests/test_insert_files.py::test_insert_files[pk_args1-expected_pks1-False]\ntests/test_insert_files.py::test_insert_files[pk_args1-expected_pks1-True]\n  /workspace/repo/tests/test_insert_files.py:19: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_insert_files.py::test_insert_files_stdin[False-None-hello world-hello world]\ntests/test_insert_files.py::test_insert_files_stdin[True-None-hello world-hello world]\ntests/test_insert_files.py::test_insert_files_stdin[False-None-S\\xe3o Paulo-S\\xe3o Paulo]\ntests/test_insert_files.py::test_insert_files_stdin[True-latin-1-S\\xe3o Paulo-S\\xe3o Paulo]\n  /workspace/repo/tests/test_insert_files.py:129: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_insert_files.py::test_insert_files_bad_text_encoding_error\n  /workspace/repo/tests/test_insert_files.py:158: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_rows.py::test_pks_and_rows_where_view - Failed: DID NOT RAI...\n1 failed, 1301 passed, 16 skipped, 32 warnings in 7.24s\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-fcfccea",
+      "mechanism": "type-strict-any",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 0,
+        "failed": 2,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          0.0,
+          0.0
+        ]
+      },
+      "native": {
+        "passed": 0,
+        "failed": 0,
+        "unknown": 2,
+        "planned": 2,
+        "rate_bounds": [
+          0.0,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 0,
+          "y_regression": 1,
+          "y_functional": 0,
+          "acceptance_validity": {
+            "raw_y_functional": 0,
+            "interpretable_y_functional": null,
+            "status": "UNKNOWN_ACCEPTANCE_CONTRACT_AMBIGUITY",
+            "failures": [
+              "test_extract_strict_any_rejects_non_strict_lookup"
+            ],
+            "target_junit_sha256": "72ab46b7914a8d02d9abf39965cbd7b92bfaa9e54d28545e3911a36cac556351"
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 0,
+          "y_regression": 1,
+          "y_functional": 0,
+          "acceptance_validity": {
+            "raw_y_functional": 0,
+            "interpretable_y_functional": null,
+            "status": "UNKNOWN_ACCEPTANCE_CONTRACT_AMBIGUITY",
+            "failures": [
+              "test_extract_strict_any_rejects_non_strict_lookup"
+            ],
+            "target_junit_sha256": "51907afc394822063be29cbc2368c22d3dbcebe4b4d2107b8cbed68846755d25"
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9267064169981,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "7c437dbb708b161562eb6186c27f4d35a1d22a00bcb28ced6a1615554b079e2f",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E1",
+          "completed_turn_index": 3,
+          "remaining_seconds": 510.6664827920031,
+          "legal_main_tail": true,
+          "prefix_sha256": "d089b241d9cb4632df00cff92869620def6e0c4721d376752be0f91494e39f46",
+          "checkpoint_sha256": "422336066b8dd8dbde22aa01a569d9195e9799a9ea345c8912779eda33e072cd",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest tests/test_create.py::test_create_strict_any_preserves_storage_classes -q'",
+          "failure_text": "FF                                                                       [100%]\n=================================== FAILURES ===================================\n____________ test_create_strict_any_preserves_storage_classes[ANY] _____________\n\nfresh_db = <Database <sqlite3.Connection object at 0xffffab6353f0>>\nany_type = 'ANY'\n\n    @pytest.mark.parametrize(\"any_type\", [\"ANY\", \"any\"])\n    def test_create_strict_any_preserves_storage_classes(fresh_db, any_type):\n        if not fresh_db.supports_strict:\n            pytest.skip(\"SQLite version does not support strict tables\")\n        table = fresh_db.create_table(\"values\", {\"value\": any_type}, strict=True)\n        values = [1, 1.5, \"001\", b\"bytes\", None]\n        table.insert_all({\"value\": value} for value in values)\n>       assert table.columns_dict == {\"value\": \"ANY\"}\nE       AssertionError: assert {'value': <class 'float'>} == {'value': 'ANY'}\nE         \nE         Differing items:\nE         {'value': <class 'float'>} != {'value': 'ANY'}\nE         Use -v to get more diff\n\ntests/test_create.py:1599: AssertionError\n____________ test_create_strict_any_preserves_storage_classes[any] _____________\n\nfresh_db = <Database <sqlite3.Connection object at 0xffffab6357b0>>\nany_type = 'any'\n\n    @pytest.mark.parametrize(\"any_type\", [\"ANY\", \"any\"])\n    def test_create_strict_any_preserves_storage_classes(fresh_db, any_type):\n        if not fresh_db.supports_strict:\n            pytest.skip(\"SQLite version does not support strict tables\")\n        table = fresh_db.create_table(\"values\", {\"value\": any_type}, strict=True)\n        values = [1, 1.5, \"001\", b\"bytes\", None]\n        table.insert_all({\"value\": value} for value in values)\n>       assert table.columns_dict == {\"value\": \"ANY\"}\nE       AssertionError: assert {'value': <class 'float'>} == {'value': 'ANY'}\nE         \nE         Differing items:\nE         {'value': <class 'float'>} != {'value': 'ANY'}\nE         Use -v to get more diff\n\ntests/test_create.py:1599: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_create.py::test_create_strict_any_preserves_storage_classes[ANY]\nFAILED tests/test_create.py::test_create_strict_any_preserves_storage_classes[any]\n2 failed in 0.08s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 7,
+          "remaining_seconds": 362.23853487498127,
+          "legal_main_tail": true,
+          "prefix_sha256": "b76f7e61cebd893f2d64db772c05c2442f37afee84f4e433edc4a310e38b21cc",
+          "checkpoint_sha256": "fc0ed3d415572deeef22306c27cbf079ffd6835ca21d1b402d437f07e0e30676",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q --ignore=tests/test_create_table_parser.py --ignore=tests/test_hypothesis.py'",
+          "failure_text": "57b0>>\nany_type = 'any'\n\n    @pytest.mark.parametrize(\"any_type\", [\"ANY\", \"any\"])\n    def test_create_strict_any_preserves_storage_classes(fresh_db, any_type):\n        if not fresh_db.supports_strict:\n            pytest.skip(\"SQLite version does not support strict tables\")\n        table = fresh_db.create_table(\"values\", {\"value\": any_type}, strict=True)\n        values = [1, 1.5, \"001\", b\"bytes\", None]\n        table.insert_all({\"value\": value} for value in values)\n>       assert table.columns_dict == {\"value\": \"ANY\"}\nE       AssertionError: assert {'value': <class 'float'>} == {'value': 'ANY'}\nE         \nE         Differing items:\nE         {'value': <class 'float'>} != {'value': 'ANY'}\nE         Use -v to get more diff\n\ntests/test_create.py:1599: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_create.py::test_create_strict_any_preserves_storage_classes[ANY]\nFAILED tests/test_create.py::test_create_strict_any_preserves_storage_classes[any]\n2 failed in 0.08s\n\n\n==================================== ERRORS ====================================\n______________ ERROR collecting tests/test_create_table_parser.py ______________\nImportError while importing test module '/workspace/repo/tests/test_create_table_parser.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_create_table_parser.py:3: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_create_table_parser.py\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!\n2 errors in 0.53s\n\n/usr/local/bin/python: No module named black\n\n/usr/local/bin/python: No module named mypy\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.937807957991,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "ebd6a2cad853e54abeead555d2ecec5f7f15c3625c730abc30494f5f9d35175c",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 5,
+          "remaining_seconds": 397.9352441660594,
+          "legal_main_tail": true,
+          "prefix_sha256": "083adc41055803b53801ecc714251b24800d4ae736af9c4a4a274c01b1054c4e",
+          "checkpoint_sha256": "7a395110f09f704e05619e72834880213d8656b15a1e327d68760961313fb38d",
+          "public_test_command": "/usr/bin/bash -lc 'pytest -q tests/test_any.py tests/test_extract.py tests/test_create.py tests/test_cli.py && python -m compileall -q sqlite_utils tests/test_any.py'",
+          "failure_text": "/usr/bin/bash: line 1: git: command not found\n\n\n==================================== ERRORS ====================================\n______________ ERROR collecting tests/test_create_table_parser.py ______________\nImportError while importing test module '/workspace/repo/tests/test_create_table_parser.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_create_table_parser.py:3: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_create_table_parser.py\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!\n2 errors in 0.53s\n\n/usr/local/bin/python: No module named ruff\n\n/usr/local/bin/python: No module named black\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    },
+    {
+      "task_id": "csvkit-diagnostic-80437fd",
+      "mechanism": "parameter-range-identifier",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "native": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.7679887090344,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "87f173c79462bd51bb8cd17afb5577ce8ffdca40ddcff29e25393efb7f6e3a3c",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 2,
+          "remaining_seconds": 529.6201127920067,
+          "legal_main_tail": true,
+          "prefix_sha256": "a3da39dd4a07e75d887ef3452c37eec66b70a8dc8ce9e72e2f5b4b465f5a1249",
+          "checkpoint_sha256": "32c3b3522782758ad4861e8feb0e1b0acd0c007dcb81460fb756ddef366a8624",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q'",
+          "failure_text": "_format>\n\n    def test_decimal_format(self):\n        output = self.get_output(['-c', 'TOTAL', '--mean', 'examples/realdata/FY09_EDU_Recipients_by_State.csv'])\n    \n>       self.assertEqual(output, '9,748.346\\n')\nE       AssertionError: '9748.346\\n' != '9,748.346\\n'\nE       - 9748.346\nE       + 9,748.346\nE       ?  +\n\ntests/test_utilities/test_csvstat.py:159: AssertionError\n=============================== warnings summary ===============================\ntests/test_utilities/test_csvjoin.py: 2 warnings\ntests/test_utilities/test_csvjson.py: 1 warning\ntests/test_utilities/test_csvlook.py: 4 warnings\ntests/test_utilities/test_csvsort.py: 1 warning\ntests/test_utilities/test_csvsql.py: 2 warnings\ntests/test_utilities/test_csvstat.py: 1 warning\ntests/test_utilities/test_in2csv.py: 7 warnings\n  /usr/local/lib/python3.12/site-packages/agate/table/from_csv.py:83: RuntimeWarning: Error sniffing CSV dialect: Could not determine delimiter\n    kwargs['dialect'] = csv.Sniffer().sniff(sample)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"b2\" already exists in Table. Column will be renamed to \"b2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"c2\" already exists in Table. Column will be renamed to \"c2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 9 has no name. Using \"j\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py: 10 warnings\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 7 has no name. Using \"h\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py::TestIn2CSV::test_convert_xlsx\n  /usr/local/lib/python3.12/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed\n    warn(msg)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n1 failed, 349 passed, 4 skipped, 32 warnings in 3.29s\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.8098494160222,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "be1dfc984134d797d83c6fe6f13347d221d8d2ad18f0f3e12f4be74b180e533f",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E1",
+          "completed_turn_index": 2,
+          "remaining_seconds": 533.9366657499922,
+          "legal_main_tail": true,
+          "prefix_sha256": "b52093e099af48626b2cd4437b43b96aed545c04153559ce048ca5ce1df60979",
+          "checkpoint_sha256": "0d971818eafe1118f2204d2598369f060aa4eb59f6f07ba1ef88fe2fd9e1949d",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest'",
+          "failure_text": "mal_format(self):\n        output = self.get_output(['-c', 'TOTAL', '--mean', 'examples/realdata/FY09_EDU_Recipients_by_State.csv'])\n    \n>       self.assertEqual(output, '9,748.346\\n')\nE       AssertionError: '9748.346\\n' != '9,748.346\\n'\nE       - 9748.346\nE       + 9,748.346\nE       ?  +\n\ntests/test_utilities/test_csvstat.py:159: AssertionError\n=============================== warnings summary ===============================\ntests/test_utilities/test_csvjoin.py: 2 warnings\ntests/test_utilities/test_csvjson.py: 1 warning\ntests/test_utilities/test_csvlook.py: 4 warnings\ntests/test_utilities/test_csvsort.py: 1 warning\ntests/test_utilities/test_csvsql.py: 2 warnings\ntests/test_utilities/test_csvstat.py: 1 warning\ntests/test_utilities/test_in2csv.py: 7 warnings\n  /usr/local/lib/python3.12/site-packages/agate/table/from_csv.py:83: RuntimeWarning: Error sniffing CSV dialect: Could not determine delimiter\n    kwargs['dialect'] = csv.Sniffer().sniff(sample)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"b2\" already exists in Table. Column will be renamed to \"b2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"c2\" already exists in Table. Column will be renamed to \"c2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 9 has no name. Using \"j\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py: 10 warnings\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 7 has no name. Using \"h\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py::TestIn2CSV::test_convert_xlsx\n  /usr/local/lib/python3.12/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed\n    warn(msg)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n============ 1 failed, 348 passed, 4 skipped, 32 warnings in 3.18s =============\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 3,
+          "remaining_seconds": 495.1293082080083,
+          "legal_main_tail": true,
+          "prefix_sha256": "52eaba484bd55b9fcdc2930924a5a90fea10da13dfb0804a95db20e1a1ce41af",
+          "checkpoint_sha256": "4a7131ad1370792a2312de1838edcbd60f1cffd3cd0bb63c371d4c16a81e2e7e",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest tests/test_cli.py tests/test_utilities/test_csvcut.py'",
+          "failure_text": "est(kwargs=kwargs):\n>               with self.assertRaisesRegex(ColumnIdentifierError, 'unknown:name'):\nE               AssertionError: ColumnIdentifierError not raised\n\ntests/test_cli.py:69: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_cli.py::TestCli::test_invalid_ranges_include_identifier_in_error\n========================= 1 failed, 28 passed in 0.11s =========================\n\ntest_csvjson.py: 1 warning\ntests/test_utilities/test_csvlook.py: 4 warnings\ntests/test_utilities/test_csvsort.py: 1 warning\ntests/test_utilities/test_csvsql.py: 2 warnings\ntests/test_utilities/test_csvstat.py: 1 warning\ntests/test_utilities/test_in2csv.py: 7 warnings\n  /usr/local/lib/python3.12/site-packages/agate/table/from_csv.py:83: RuntimeWarning: Error sniffing CSV dialect: Could not determine delimiter\n    kwargs['dialect'] = csv.Sniffer().sniff(sample)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"b2\" already exists in Table. Column will be renamed to \"b2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"c2\" already exists in Table. Column will be renamed to \"c2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 9 has no name. Using \"j\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py: 10 warnings\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 7 has no name. Using \"h\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py::TestIn2CSV::test_convert_xlsx\n  /usr/local/lib/python3.12/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed\n    warn(msg)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n============ 1 failed, 348 passed, 4 skipped, 32 warnings in 3.18s =============\n\n/usr/local/bin/python: No module named flake8\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    },
+    {
+      "task_id": "csvkit-diagnostic-19810a3",
+      "mechanism": "export-bom",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "native": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.7716067079455,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "4687c9e09f791484fe5e9f20c87c528b390b111b71cf50f746c3a279b09823cf",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E1",
+          "completed_turn_index": 3,
+          "remaining_seconds": 492.2764704580186,
+          "legal_main_tail": true,
+          "prefix_sha256": "9f0922de3f7e9e14fbd4cec6e027d3bbca23fc2f3ae9d154667deece90a5ee14",
+          "checkpoint_sha256": "17a39f12863360acbcc771a5670692dc60f846edade7abbfbed064659d6b24cf",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q'",
+          "failure_text": "_format>\n\n    def test_decimal_format(self):\n        output = self.get_output(['-c', 'TOTAL', '--mean', 'examples/realdata/FY09_EDU_Recipients_by_State.csv'])\n    \n>       self.assertEqual(output, '9,748.346\\n')\nE       AssertionError: '9748.346\\n' != '9,748.346\\n'\nE       - 9748.346\nE       + 9,748.346\nE       ?  +\n\ntests/test_utilities/test_csvstat.py:159: AssertionError\n=============================== warnings summary ===============================\ntests/test_utilities/test_csvjoin.py: 2 warnings\ntests/test_utilities/test_csvjson.py: 1 warning\ntests/test_utilities/test_csvlook.py: 4 warnings\ntests/test_utilities/test_csvsort.py: 1 warning\ntests/test_utilities/test_csvsql.py: 2 warnings\ntests/test_utilities/test_csvstat.py: 1 warning\ntests/test_utilities/test_in2csv.py: 7 warnings\n  /usr/local/lib/python3.12/site-packages/agate/table/from_csv.py:83: RuntimeWarning: Error sniffing CSV dialect: Could not determine delimiter\n    kwargs['dialect'] = csv.Sniffer().sniff(sample)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"b2\" already exists in Table. Column will be renamed to \"b2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"c2\" already exists in Table. Column will be renamed to \"c2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 9 has no name. Using \"j\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py: 10 warnings\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 7 has no name. Using \"h\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py::TestIn2CSV::test_convert_xlsx\n  /usr/local/lib/python3.12/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed\n    warn(msg)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n1 failed, 341 passed, 4 skipped, 32 warnings in 3.29s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 4,
+          "remaining_seconds": 457.7313836669782,
+          "legal_main_tail": true,
+          "prefix_sha256": "2181d33d19f4b1768dc4b038abcb830118aa35ab2399b8f15903b955ec9d09d9",
+          "checkpoint_sha256": "4bc2b3fb124bb8004fca26121287e77ad475514e9e53cfecf1d042ed4a5bf86e",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q --ignore=tests/test_utilities/test_in2csv.py --deselect=tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format'",
+          "failure_text": "              'Chicago Reader', 'This row has blanks', 'Unicode! Σ']\nexamples/sheetsxlsx_converted.csv:6:Unicode! Σ,,,,,,,,\nexamples/testjson_converted.csv:6:Unicode! Σ,,,,,,\nexamples/sheetsxls_converted.csv:6:Unicode! Σ,,,,,,,,\nexamples/testjson.json:39:        \"text\": \"Unicode! Σ\", \nexamples/testxls_converted.csv:6:Unicode! Σ,,,,,,,\nexamples/testxlsx_converted.csv:6:Unicode! Σ,,,,,,,\nexamples/testxlsx_noinference_converted.csv:6:Unicode! Σ,,,,,,,\n/usr/bin/bash: line 1: git: command not found\n\nnings\ntests/test_utilities/test_csvjson.py: 1 warning\ntests/test_utilities/test_csvlook.py: 4 warnings\ntests/test_utilities/test_csvsort.py: 1 warning\ntests/test_utilities/test_csvsql.py: 2 warnings\ntests/test_utilities/test_csvstat.py: 1 warning\ntests/test_utilities/test_in2csv.py: 7 warnings\n  /usr/local/lib/python3.12/site-packages/agate/table/from_csv.py:83: RuntimeWarning: Error sniffing CSV dialect: Could not determine delimiter\n    kwargs['dialect'] = csv.Sniffer().sniff(sample)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"b2\" already exists in Table. Column will be renamed to \"b2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"c2\" already exists in Table. Column will be renamed to \"c2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 9 has no name. Using \"j\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py: 10 warnings\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 7 has no name. Using \"h\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py::TestIn2CSV::test_convert_xlsx\n  /usr/local/lib/python3.12/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed\n    warn(msg)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n1 failed, 341 passed, 4 skipped, 32 warnings in 3.29s\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.7990224589594,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "cee89ded9e4003d062824707d7f099e278a9433a535c294742b8123ddade4d2f",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E1",
+          "completed_turn_index": 2,
+          "remaining_seconds": 483.7199925839668,
+          "legal_main_tail": true,
+          "prefix_sha256": "c200c62a68d2867a0b3df31df446e673e091e8163e21f5ec1566204c89b7c2a9",
+          "checkpoint_sha256": "78192c109899112b040a8861d0ba1712d21bc047816559c568d938e6fd12fcf6",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q tests/test_utilities/test_csvcut.py tests/test_utilities/test_in2csv.py tests/test_utilities/test_sql2csv.py'",
+          "failure_text": "/usr/bin/bash: line 1: git: command not found\n\nnings\ntests/test_utilities/test_csvjson.py: 1 warning\ntests/test_utilities/test_csvlook.py: 4 warnings\ntests/test_utilities/test_csvsort.py: 1 warning\ntests/test_utilities/test_csvsql.py: 2 warnings\ntests/test_utilities/test_csvstat.py: 1 warning\ntests/test_utilities/test_in2csv.py: 7 warnings\n  /usr/local/lib/python3.12/site-packages/agate/table/from_csv.py:83: RuntimeWarning: Error sniffing CSV dialect: Could not determine delimiter\n    kwargs['dialect'] = csv.Sniffer().sniff(sample)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"b2\" already exists in Table. Column will be renamed to \"b2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"c2\" already exists in Table. Column will be renamed to \"c2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 9 has no name. Using \"j\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py: 10 warnings\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 7 has no name. Using \"h\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py::TestIn2CSV::test_convert_xlsx\n  /usr/local/lib/python3.12/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed\n    warn(msg)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n1 failed, 341 passed, 4 skipped, 32 warnings in 3.20s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 3,
+          "remaining_seconds": 445.5238674170105,
+          "legal_main_tail": true,
+          "prefix_sha256": "88768be87a61696ce0af5cf10f5e2d6d5c3adf872bf6ef1d8a434294b1147735",
+          "checkpoint_sha256": "dcd0288cc66003286168bd0514caa06712cf847904b5c858441d27e0fad8a992",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q tests/test_cli.py tests/test_utilities/test_csvcut.py tests/test_utilities/test_in2csv.py tests/test_utilities/test_sql2csv.py'",
+          "failure_text": "/usr/bin/bash: line 1: git: command not found\n\nnings\ntests/test_utilities/test_csvjson.py: 1 warning\ntests/test_utilities/test_csvlook.py: 4 warnings\ntests/test_utilities/test_csvsort.py: 1 warning\ntests/test_utilities/test_csvsql.py: 2 warnings\ntests/test_utilities/test_csvstat.py: 1 warning\ntests/test_utilities/test_in2csv.py: 7 warnings\n  /usr/local/lib/python3.12/site-packages/agate/table/from_csv.py:83: RuntimeWarning: Error sniffing CSV dialect: Could not determine delimiter\n    kwargs['dialect'] = csv.Sniffer().sniff(sample)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"b2\" already exists in Table. Column will be renamed to \"b2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvjoin.py::TestCSVJoin::test_no_inference\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:288: DuplicateColumnWarning: Column name \"c2\" already exists in Table. Column will be renamed to \"c2_2\".\n    warn_duplicate_column(new_value, final_value)\n\ntests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 9 has no name. Using \"j\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py: 10 warnings\n  /usr/local/lib/python3.12/site-packages/agate/utils.py:272: UnnamedColumnWarning: Column 7 has no name. Using \"h\".\n    warn_unnamed_column(i, new_value)\n\ntests/test_utilities/test_in2csv.py::TestIn2CSV::test_convert_xlsx\n  /usr/local/lib/python3.12/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed\n    warn(msg)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_utilities/test_csvstat.py::TestCSVStat::test_decimal_format\n1 failed, 341 passed, 4 skipped, 32 warnings in 3.20s\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-2b52b5e",
+      "mechanism": "schema-autoincrement-preservation",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "native": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9261493750382,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "13410f649f5a876986444699c304e2312a326c610367996875136a7f31b565a3",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E1",
+          "completed_turn_index": 4,
+          "remaining_seconds": 430.01985154207796,
+          "legal_main_tail": true,
+          "prefix_sha256": "99f25b3af49be924e152d7cd53ae91ef71bb675e3832dbddeac8bfb89461673e",
+          "checkpoint_sha256": "0c700fbdfc226a450735e95cfa4a5b3be572412bbf6ddce3cc99ee29358c6cc2",
+          "public_test_command": "/usr/bin/bash -lc 'pytest -q tests/test_transform.py'",
+          "failure_text": "........................................................................ [ 67%]\n..................................F                                      [100%]\n=================================== FAILURES ===================================\n___ test_transform_can_replace_autoincrement_primary_key[transform_kwargs1] ____\n\nfresh_db = <Database <sqlite3.Connection object at 0xffffb0f408b0>>\ntransform_kwargs = {'types': {'id': <class 'str'>}}\n\n    @pytest.mark.parametrize(\n        \"transform_kwargs\", ({\"pk\": \"name\"}, {\"types\": {\"id\": str}})\n    )\n    def test_transform_can_replace_autoincrement_primary_key(fresh_db, transform_kwargs):\n        fresh_db.execute(\n            \"CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)\"\n        )\n        events = fresh_db.table(\"events\")\n        events.insert({\"name\": \"one\"})\n        events.transform(**transform_kwargs)\n        assert \"AUTOINCREMENT\" not in events.schema\n>       assert list(events.rows) == [{\"id\": 1, \"name\": \"one\"}]\nE       AssertionError: assert [{'id': '1', 'name': 'one'}] == [{'id': 1, 'name': 'one'}]\nE         \nE         At index 0 diff: {'id': '1', 'name': 'one'} != {'id': 1, 'name': 'one'}\nE         Use -v to get more diff\n\ntests/test_transform.py:1417: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_transform.py::test_transform_can_replace_autoincrement_primary_key[transform_kwargs1]\n1 failed, 106 passed in 0.17s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 5,
+          "remaining_seconds": 389.5615272090072,
+          "legal_main_tail": true,
+          "prefix_sha256": "1f9387324fdeb9f22eb6a41f4e1fdf9930dc827f7a91ef3a505235b5faca7d8b",
+          "checkpoint_sha256": "6b2f244873bdd297a0050a150ff6f9b866a2d63fb53b820ffd11463abb47a14f",
+          "public_test_command": "/usr/bin/bash -lc 'pytest -q --ignore=tests/test_create_table_parser.py --ignore=tests/test_hypothesis.py'",
+          "failure_text": "dule\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_create_table_parser.py:3: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_create_table_parser.py\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!\n2 errors in 0.53s\n\n/usr/bin/bash: line 1: black: command not found\n\n........................................................................ [ 67%]\n..................................F                                      [100%]\n=================================== FAILURES ===================================\n___ test_transform_can_replace_autoincrement_primary_key[transform_kwargs1] ____\n\nfresh_db = <Database <sqlite3.Connection object at 0xffffb0f408b0>>\ntransform_kwargs = {'types': {'id': <class 'str'>}}\n\n    @pytest.mark.parametrize(\n        \"transform_kwargs\", ({\"pk\": \"name\"}, {\"types\": {\"id\": str}})\n    )\n    def test_transform_can_replace_autoincrement_primary_key(fresh_db, transform_kwargs):\n        fresh_db.execute(\n            \"CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)\"\n        )\n        events = fresh_db.table(\"events\")\n        events.insert({\"name\": \"one\"})\n        events.transform(**transform_kwargs)\n        assert \"AUTOINCREMENT\" not in events.schema\n>       assert list(events.rows) == [{\"id\": 1, \"name\": \"one\"}]\nE       AssertionError: assert [{'id': '1', 'name': 'one'}] == [{'id': 1, 'name': 'one'}]\nE         \nE         At index 0 diff: {'id': '1', 'name': 'one'} != {'id': 1, 'name': 'one'}\nE         Use -v to get more diff\n\ntests/test_transform.py:1417: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_transform.py::test_transform_can_replace_autoincrement_primary_key[transform_kwargs1]\n1 failed, 106 passed in 0.17s\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9370029999409,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "57a245d739c1fbfe643ee8bc1df956b7fdc40b307989c395af555b1f0d251ddb",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E1",
+          "completed_turn_index": 4,
+          "remaining_seconds": 436.4895182499895,
+          "legal_main_tail": true,
+          "prefix_sha256": "de5a64187cbf540fa087d691c99564943c02fc95c2d817594eec0eef8b2d0895",
+          "checkpoint_sha256": "7f98bb86fe16a7cc40550c2e6dc2d648ce6e30f087881d1222f2c3fbfd108083",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q tests/test_transform.py -x && python -m compileall -q sqlite_utils tests/test_transform.py'",
+          "failure_text": "ows) == [\n        {\"id\": 1, \"title\": \"one\"},\n        {\"id\": 2, \"title\": \"two\"},\n    ]\n\n\ndef test_transform_preserves_autoincrement_sequence_with_no_surviving_rows(fresh_db):\n    fresh_db.execute(\n        \"CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)\"\n    )\n    items = fresh_db.table(\"items\")\n    items.insert({\"name\": \"one\"})\n    items.delete(1)\n\n    items.transform(rename={\"name\": \"title\"})\n    items.insert({\"title\": \"two\"})\n\n/usr/local/bin/python: No module named black\n\n= \">=3.10\"\nclassifiers = [\n    \"Development Status :: 5 - Production/Stable\",\n    \"Intended Audience :: Developers\",\n    \"Intended Audience :: End Users/Desktop\",\n    \"Intended Audience :: Science/Research\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Programming Language :: Python :: 3.14\",\n    \"Topic :: Database\",\n]\n\ndependencies = [\n    \"click>=8.3.1\",\n    \"click-default-group>=1.2.3\",\n    \"pluggy\",\n    \"python-dateutil\",\n    \"sqlite-fts4\",\n    \"tabulate\",\n    \"pip\",\n]\n\n[dependency-groups]\ndev = [\n    \"black>=26.3.1\",\n    \"click>=8.4.2\",\n    \"cogapp\",\n    \"hypothesis\",\n    \"pytest\",\n    # mypy\n    \"data-science-types\",\n    \"mypy\",\n    \"types-click\",\n    \"types-pluggy\",\n    \"types-python-dateutil\",\n    \"types-tabulate\",\n    # flake8\n    \"flake8\",\n    \"flake8-pyproject\",\n    \"pyright>=1.1.411\",\n    \"ty>=0.0.37\",\n    # For stable cog:\n    \"tabulate>=0.10.0\",\n]\ndocs = [\n    \"codespell\",\n    \"furo\",\n    \"pygments-csv-lexer\",\n    \"sphinx-autobuild\",\n    \"sphinx-copybutton\",\n]\n\n[project.urls]\nHomepage = \"https://github.com/simonw/sqlite-utils\"\nDocumentation = \"https://sqlite-utils.datasette.io/en/stable/\"\nChangelog = \"https://sqlite-utils.datasette.io/en/stable/changelog.html\"\nIssues = \"https://github.com/simonw/sqlite-utils/issues\"\nCI = \"https://github.com/simonw/sqlite-utils/actions\"\n\n[project.scripts]\nsqlite-utils = \"sqlite_utils.cli:cli\"\n\n[build-system]\n# setuptools 77+ is needed for the PEP 639 license = \"Apache-2.0\" expression\nrequires = [\"setuptools>=77\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[tool.flake8]\nmax-line-length = 160\n# Black compatibility, E203 whitespace before ':':\nextend-ignore = [\"E203\"]\nextend-exclude = [\n    \".venv\",\n    \".claude\",\n    \"build\",\n    \"dist\",\n    \"docs\",\n    \"sqlite_utils.egg-info\",\n]\n\n[tool.setuptools.package-data]\nsqlite_utils = [\"py.typed\"]\n/usr/local/bin/python: No module named mypy\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 5,
+          "remaining_seconds": 399.1270341669442,
+          "legal_main_tail": true,
+          "prefix_sha256": "64db2c9863e1a624b01c14d3ef30cd34e7e30fcbdc6e368d9778ef6dc3c31b0b",
+          "checkpoint_sha256": "f355e9f1e42d066dd99f23b601dd7a1c1b627bd730573c657062f248fa355935",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q --ignore=tests/test_create_table_parser.py --ignore=tests/test_hypothesis.py'",
+          "failure_text": "ows) == [\n        {\"id\": 1, \"title\": \"one\"},\n        {\"id\": 2, \"title\": \"two\"},\n    ]\n\n\ndef test_transform_preserves_autoincrement_sequence_with_no_surviving_rows(fresh_db):\n    fresh_db.execute(\n        \"CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)\"\n    )\n    items = fresh_db.table(\"items\")\n    items.insert({\"name\": \"one\"})\n    items.delete(1)\n\n    items.transform(rename={\"name\": \"title\"})\n    items.insert({\"title\": \"two\"})\n\n/usr/local/bin/python: No module named black\n\n= \">=3.10\"\nclassifiers = [\n    \"Development Status :: 5 - Production/Stable\",\n    \"Intended Audience :: Developers\",\n    \"Intended Audience :: End Users/Desktop\",\n    \"Intended Audience :: Science/Research\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Programming Language :: Python :: 3.14\",\n    \"Topic :: Database\",\n]\n\ndependencies = [\n    \"click>=8.3.1\",\n    \"click-default-group>=1.2.3\",\n    \"pluggy\",\n    \"python-dateutil\",\n    \"sqlite-fts4\",\n    \"tabulate\",\n    \"pip\",\n]\n\n[dependency-groups]\ndev = [\n    \"black>=26.3.1\",\n    \"click>=8.4.2\",\n    \"cogapp\",\n    \"hypothesis\",\n    \"pytest\",\n    # mypy\n    \"data-science-types\",\n    \"mypy\",\n    \"types-click\",\n    \"types-pluggy\",\n    \"types-python-dateutil\",\n    \"types-tabulate\",\n    # flake8\n    \"flake8\",\n    \"flake8-pyproject\",\n    \"pyright>=1.1.411\",\n    \"ty>=0.0.37\",\n    # For stable cog:\n    \"tabulate>=0.10.0\",\n]\ndocs = [\n    \"codespell\",\n    \"furo\",\n    \"pygments-csv-lexer\",\n    \"sphinx-autobuild\",\n    \"sphinx-copybutton\",\n]\n\n[project.urls]\nHomepage = \"https://github.com/simonw/sqlite-utils\"\nDocumentation = \"https://sqlite-utils.datasette.io/en/stable/\"\nChangelog = \"https://sqlite-utils.datasette.io/en/stable/changelog.html\"\nIssues = \"https://github.com/simonw/sqlite-utils/issues\"\nCI = \"https://github.com/simonw/sqlite-utils/actions\"\n\n[project.scripts]\nsqlite-utils = \"sqlite_utils.cli:cli\"\n\n[build-system]\n# setuptools 77+ is needed for the PEP 639 license = \"Apache-2.0\" expression\nrequires = [\"setuptools>=77\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[tool.flake8]\nmax-line-length = 160\n# Black compatibility, E203 whitespace before ':':\nextend-ignore = [\"E203\"]\nextend-exclude = [\n    \".venv\",\n    \".claude\",\n    \"build\",\n    \"dist\",\n    \"docs\",\n    \"sqlite_utils.egg-info\",\n]\n\n[tool.setuptools.package-data]\nsqlite_utils = [\"py.typed\"]\n/usr/local/bin/python: No module named mypy\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-57192ef",
+      "mechanism": "schema-rename-index-preservation",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 1,
+        "failed": 1,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          0.5,
+          0.5
+        ]
+      },
+      "native": {
+        "passed": 1,
+        "failed": 0,
+        "unknown": 1,
+        "planned": 2,
+        "rate_bounds": [
+          0.5,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 0,
+          "y_regression": 1,
+          "y_functional": 0,
+          "acceptance_validity": {
+            "raw_y_functional": 0,
+            "interpretable_y_functional": null,
+            "status": "UNKNOWN_ACCEPTANCE_CONTRACT_AMBIGUITY",
+            "failures": [
+              "test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(lower(name))]",
+              "test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL]"
+            ],
+            "target_junit_sha256": "5107e413ec8d291aa8f0d7a2402e5f80ba834cb16dc02b73b9ae9b1d5e15b9cc"
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9253505420638,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "b4607deddf6f8f3a79018259fdcb7ade039633bdbf61ce1d44c52c56f526da39",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E1",
+          "completed_turn_index": 2,
+          "remaining_seconds": 495.24239512498025,
+          "legal_main_tail": true,
+          "prefix_sha256": "676d95a96899d781c97d7b48e549a4bb60940c27c7ef30a7fa3735e5fedc8a1a",
+          "checkpoint_sha256": "17d1c9d37a01aa36b5fd4e67df504316c4a2ab2d5d49caf046d1536a9484635d",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q'",
+          "failure_text": "\n==================================== ERRORS ====================================\n______________ ERROR collecting tests/test_create_table_parser.py ______________\nImportError while importing test module '/workspace/repo/tests/test_create_table_parser.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_create_table_parser.py:3: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_create_table_parser.py\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!\n2 errors in 0.52s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 3,
+          "remaining_seconds": 456.81545687501784,
+          "legal_main_tail": true,
+          "prefix_sha256": "75f76a52f2b5d6c913c963551e26b2f1f1545d087c9143fad474560f33ae3c5b",
+          "checkpoint_sha256": "3f33f141e8068a4598f835ffab9536ba8a74f81750a054c8a3f9017e4d271dbe",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q --ignore=tests/test_create_table_parser.py --ignore=tests/test_hypothesis.py'",
+          "failure_text": "nsform_params0] _____________\n\nfresh_db = <Database <sqlite3.Connection object at 0xffff812d0400>>\ntransform_params = {'rename': {'age': 'dog_age'}}\n\n    @pytest.mark.parametrize(\n        \"transform_params\",\n        [\n            {\"rename\": {\"age\": \"dog_age\"}},\n            {\"drop\": [\"age\"]},\n        ],\n    )\n    def test_transform_with_indexes_errors(fresh_db, transform_params):\n        # Should error with a compound (name, age) index if age is renamed or dropped\n        dogs = fresh_db.table(\"dogs\")\n        dogs.insert({\"id\": 1, \"name\": \"Cleo\", \"age\": 5}, pk=\"id\")\n    \n        dogs.create_index([\"name\", \"age\"])\n    \n>       with pytest.raises(TransformError) as excinfo:\nE       Failed: DID NOT RAISE <class 'sqlite_utils.db.TransformError'>\n\ntests/test_transform.py:910: Failed\n=========================== short test summary info ============================\nFAILED tests/test_transform.py::test_transform_with_indexes_errors[transform_params0]\n1 failed, 96 passed in 0.15s\n\n\n==================================== ERRORS ====================================\n______________ ERROR collecting tests/test_create_table_parser.py ______________\nImportError while importing test module '/workspace/repo/tests/test_create_table_parser.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_create_table_parser.py:3: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_create_table_parser.py\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!\n2 errors in 0.52s\n\npyproject.toml:36:    \"black>=26.3.1\",\npyproject.toml:41:    # mypy\npyproject.toml:43:    \"mypy\",\n/usr/local/bin/python: No module named black\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.937428999925,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "b8f4952d909cc965c833c2443ee486140364ed2c694c49203595ce696445fa00",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E1",
+          "completed_turn_index": 2,
+          "remaining_seconds": 504.1441783749033,
+          "legal_main_tail": true,
+          "prefix_sha256": "ac752bf097abc07c4357664ada55b59b58bc6c275fdc296c1eb0f91ad8e2df04",
+          "checkpoint_sha256": "3cd9767c5f5b2298909fdb428b9b276a227744867bb3f7b24b576bbac9e10a92",
+          "public_test_command": "/usr/bin/bash -lc \"python -m pytest -q tests/test_transform.py -k 'transform_indexes or transform_with_indexes_errors or renames_indexed or expression_or_partial or unique_constraint_implicit'\"",
+          "failure_text": "        ],\n    )\n    def test_transform_refuses_rename_used_by_expression_or_partial_index(\n        fresh_db, index_sql\n    ):\n        fresh_db.execute(\"CREATE TABLE items(id INTEGER, name TEXT, untouched TEXT)\")\n        fresh_db.execute(index_sql)\n        items = fresh_db.table(\"items\")\n        items.insert({\"id\": 1, \"name\": \"one\", \"untouched\": \"yes\"})\n        schema_before = items.schema\n    \n        with pytest.raises(TransformError, match=\"Cannot rename column 'name'\"):\n            items.transform(rename={\"name\": \"title\"})\n    \n        assert items.schema == schema_before\n>       assert items.get(rowid=1)[\"name\"] == \"one\"\nE       TypeError: Table.get() got an unexpected keyword argument 'rowid'\n\ntests/test_transform.py:961: TypeError\n_ test_transform_refuses_rename_used_by_expression_or_partial_index[CREATE INDEX idx_items_name ON items(name) WHERE name != ''] _\n\nfresh_db = <Database <sqlite3.Connection object at 0xffff8bf65b70>>\nindex_sql = \"CREATE INDEX idx_items_name ON items(name) WHERE name != ''\"\n\n    @pytest.mark.parametrize(\n        \"index_sql\",\n        [\n            \"CREATE INDEX idx_items_name ON items(lower(name))\",\n            \"CREATE INDEX idx_items_name ON items(name) WHERE name != ''\",\n        ],\n    )\n    def test_transform_refuses_rename_used_by_expression_or_partial_index(\n        fresh_db, index_sql\n    ):\n        fresh_db.execute(\"CREATE TABLE items(id INTEGER, name TEXT, untouched TEXT)\")\n        fresh_db.execute(index_sql)\n        items = fresh_db.table(\"items\")\n        items.insert({\"id\": 1, \"name\": \"one\", \"untouched\": \"yes\"})\n        schema_before = items.schema\n    \n        with pytest.raises(TransformError, match=\"Cannot rename column 'name'\"):\n            items.transform(rename={\"name\": \"title\"})\n    \n        assert items.schema == schema_before\n>       assert items.get(rowid=1)[\"name\"] == \"one\"\nE       TypeError: Table.get() got an unexpected keyword argument 'rowid'\n\ntests/test_transform.py:961: TypeError\n=========================== short test summary info ============================\nFAILED tests/test_transform.py::test_transform_renames_indexed_columns_preserving_index_details\nFAILED tests/test_transform.py::test_transform_refuses_rename_used_by_expression_or_partial_index[CREATE INDEX idx_items_name ON items(lower(name))]\nFAILED tests/test_transform.py::test_transform_refuses_rename_used_by_expression_or_partial_index[CREATE INDEX idx_items_name ON items(name) WHERE name != '']\n3 failed, 6 passed, 90 deselected in 0.09s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 5,
+          "remaining_seconds": 384.91046374989673,
+          "legal_main_tail": true,
+          "prefix_sha256": "fbff43afc174998490582793bb4df75c862e512bbe8ff0473f4e4b82fac865f3",
+          "checkpoint_sha256": "6b598283e7a139b733bf544186a91878c7f05c217b38627900d90162ad2bb10b",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q --ignore=tests/test_create_table_parser.py --ignore=tests/test_hypothesis.py'",
+          "failure_text": "right\": \"left\"})\n    \n        assert list(items.rows) == [{\"right\": \"a\", \"left\": \"b\", \"items\": \"c\"}]\n>       assert fresh_db.execute(\n            'SELECT sql FROM sqlite_master WHERE type = \"index\" AND name = \"left\"'\n        ).fetchone()[0] == (\n            'CREATE UNIQUE INDEX \"left\" ON \"items\" '\n            '(\"right\" COLLATE \"NOCASE\" DESC, \"left\" COLLATE \"RTRIM\");'\n        )\nE       assert 'CREATE UNIQU...LATE \"RTRIM\")' == 'CREATE UNIQU...ATE \"RTRIM\");'\nE         \nE         Skipping 82 identical leading characters in diff, use -v to show\nE         - TE \"RTRIM\");\nE         ?            -\nE         + TE \"RTRIM\")\n\ntests/test_transform.py:933: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_transform.py::test_transform_renames_indexed_columns_preserving_index_details\n1 failed, 8 passed, 90 deselected in 0.06s\n\n\n==================================== ERRORS ====================================\n______________ ERROR collecting tests/test_create_table_parser.py ______________\nImportError while importing test module '/workspace/repo/tests/test_create_table_parser.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_create_table_parser.py:3: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    import hypothesis.strategies as st\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_create_table_parser.py\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!\n2 errors in 0.53s\n\nJustfile:1:# Run tests and linters\nJustfile:2:@default: test lint\nJustfile:11:# Run linters: black, flake8, mypy, pyright, ty, cog\nJustfile:12:@lint:\n/usr/local/bin/python: No module named black\n\n/usr/local/bin/python: No module named flake8\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-29ca9d2",
+      "mechanism": "reserve-mixed-fk-forms",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "native": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9292154581053,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "c182d98d40892fbde8881ec4232ce094973947680cd87d842e3dcd3d2c56cf23",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E1",
+          "completed_turn_index": 1,
+          "remaining_seconds": 559.8660353330197,
+          "legal_main_tail": true,
+          "prefix_sha256": "05f1fa33a479be934d70940040c6b887dca200f863333a88f507ddb10f620e75",
+          "checkpoint_sha256": "ad5110586874b20c0503f7e3e98c467dd58575a39b49f06851737c1e49dba625",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest tests/test_create.py -q'",
+          "failure_text": "rror(\n                        \"No such column: {}.{}\".format(fk.other_table, other_column)\n                    )\n\n        column_defs = []\n        # ensure pk is a tuple\n        single_pk = None\n        if isinstance(pk, (list, tuple)) and len(pk) == 1 and isinstance(pk[0], str):\n            pk = pk[0]\n        if isinstance(pk, str):\n            single_pk = pk = resolve_casing(pk, [c[0] for c in column_items])\n            if pk not in [c[0] for c in column_items]:\n                column_items.insert(0, (pk, int))\n        elif pk:\n            pk = [resolve_casing(p, [c[0] for c in column_items]) for p in pk]\n        for column_name, column_type in column_items:\n            column_extras = []\n            if column_name == single_pk:\n                column_extras.append(\"PRIMARY KEY\")\n            if column_name in not_null:\n                column_extras.append(\"NOT NULL\")\n            if column_name in defaults and defaults[column_name] is not None:\n                column_extras.append(\n                    \"DEFAULT {}\".format(self.quote_default_value(defaults[column_name]))\n                )\n            if column_name in foreign_keys_by_column:\n                fk = foreign_keys_by_column[column_name]\n                column_extras.append(\n                    \"REFERENCES {}({}){}\".format(\n                        quote_identifier(fk.other_table),\n                        quote_identifier(cast(str, fk.other_column)),\n                        _fk_actions_sql(fk),\n                    )\n                )\n            column_type_str = COLUMN_TYPE_MAPPING[column_type]\n            # Special case for strict tables to map FLOAT to REAL\n            # Refs https://github.com/simonw/sqlite-utils/issues/644\n            if strict and column_type_str == \"FLOAT\":\n                column_type_str = \"REAL\"\n            column_defs.append(\n                \"   {} {column_type}{column_extras}\".format(\n                    quote_identifier(column_name),\n/usr/bin/bash: line 1: git: command not found\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 3,
+          "remaining_seconds": 484.03142637503333,
+          "legal_main_tail": true,
+          "prefix_sha256": "05b7bdfa31b5030430ff5d07363081347b98abff144b241a01b3c84b824e7de6",
+          "checkpoint_sha256": "a69ffc250f0d54dd19862e093b9d73fe7c4e63c9fb3096038387e0086933dc24",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q --ignore=tests/test_hypothesis.py'",
+          "failure_text": "0] for c in column_items])\n            if pk not in [c[0] for c in column_items]:\n                column_items.insert(0, (pk, int))\n        elif pk:\n            pk = [resolve_casing(p, [c[0] for c in column_items]) for p in pk]\n        for column_name, column_type in column_items:\n            column_extras = []\n            if column_name == single_pk:\n                column_extras.append(\"PRIMARY KEY\")\n            if column_name in not_null:\n                column_extras.append(\"NOT NULL\")\n            if column_name in defaults and defaults[column_name] is not None:\n                column_extras.append(\n                    \"DEFAULT {}\".format(self.quote_default_value(defaults[column_name]))\n                )\n            if column_name in foreign_keys_by_column:\n                fk = foreign_keys_by_column[column_name]\n                column_extras.append(\n                    \"REFERENCES {}({}){}\".format(\n                        quote_identifier(fk.other_table),\n                        quote_identifier(cast(str, fk.other_column)),\n                        _fk_actions_sql(fk),\n                    )\n                )\n            column_type_str = COLUMN_TYPE_MAPPING[column_type]\n            # Special case for strict tables to map FLOAT to REAL\n            # Refs https://github.com/simonw/sqlite-utils/issues/644\n            if strict and column_type_str == \"FLOAT\":\n                column_type_str = \"REAL\"\n            column_defs.append(\n                \"   {} {column_type}{column_extras}\".format(\n                    quote_identifier(column_name),\n/usr/bin/bash: line 1: git: command not found\n\n\n==================================== ERRORS ====================================\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    from hypothesis import given\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.45s\n\n/usr/local/bin/python: No module named black\n/usr/local/bin/python: No module named mypy\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9369612910086,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "6f7fc296627e30ef3efb37c03eb67e52d1077e45de405da66f9e2401270833fb",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 1,
+          "remaining_seconds": 560.7248642499326,
+          "legal_main_tail": true,
+          "prefix_sha256": "4000759226cd8beb9c816f941c3b218f38cd6a11bbb5dce2cb12818902900030",
+          "checkpoint_sha256": "53dce0c98d04aabfaed84381ce784c9a331693e7fbe470af457d8c3ee77b7b92",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q tests/test_create.py tests/test_foreign_keys.py'",
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    },
+    {
+      "task_id": "sqlite-utils-diagnostic-8e015d0",
+      "mechanism": "reserve-compound-pk-order",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "native_raw": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "native": {
+        "passed": 2,
+        "failed": 0,
+        "unknown": 0,
+        "planned": 2,
+        "rate_bounds": [
+          1.0,
+          1.0
+        ]
+      },
+      "repeats": [
+        {
+          "repeat": 1,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        },
+        {
+          "repeat": 2,
+          "y_target": 1,
+          "y_regression": 1,
+          "y_functional": 1,
+          "acceptance_validity": {
+            "raw_y_functional": 1,
+            "interpretable_y_functional": 1,
+            "status": "NO_KNOWN_ACCEPTANCE_AMBIGUITY",
+            "failures": []
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "repeat": 1,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9284426249797,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "e888186a740c5bc9ffc26b872f2f601aeefd95506890b887a5f4929288d5bc93",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 1,
+          "stage": "E1",
+          "completed_turn_index": 3,
+          "remaining_seconds": 494.86976345803123,
+          "legal_main_tail": true,
+          "prefix_sha256": "d7f335b56a0fa43fcccf58291cd0bf685cd87c92ebb321a6a42e408aa31672fd",
+          "checkpoint_sha256": "df98447d1faa205aea5edcfc8e241a0059360849d8686ab85887f926c383e299",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q tests/test_rows.py tests/test_upsert.py tests/test_create.py tests/test_get.py tests/test_convert.py tests/test_update.py tests/test_cli_insert.py'",
+          "failure_text": "========================\n_________________________ test_add_column_foreign_key __________________________\n\nfresh_db = <Database <sqlite3.Connection object at 0xffff7e232d40>>\n\n    def test_add_column_foreign_key(fresh_db):\n        fresh_db.create_table(\"dogs\", {\"name\": str})\n        fresh_db.create_table(\"breeds\", {\"name\": str})\n        fresh_db[\"dogs\"].add_column(\"breed_id\", fk=\"breeds\")\n        assert fresh_db[\"dogs\"].schema == (\n            'CREATE TABLE \"dogs\" (\\n'\n            '   \"name\" TEXT,\\n'\n            '   \"breed_id\" INTEGER REFERENCES \"breeds\"(\"rowid\")\\n'\n            \")\"\n        )\n        # And again with an explicit primary key column\n        fresh_db.create_table(\"subbreeds\", {\"name\": str, \"primkey\": str}, pk=\"primkey\")\n>       fresh_db[\"dogs\"].add_column(\"subbreed_id\", fk=\"subbreeds\")\n\ntests/test_create.py:509: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nsqlite_utils/db.py:3048: in add_column\n    self.db.execute(sql)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <Database <sqlite3.Connection object at 0xffff7e232d40>>\nsql = 'ALTER TABLE \"dogs\" ADD COLUMN \"subbreed_id\" <class \\'str\\'>;'\nparameters = None\n\n    def execute(\n        self, sql: str, parameters: Optional[Union[Sequence, Dict[str, Any]]] = None\n    ) -> sqlite3.Cursor:\n        \"\"\"\n        Execute SQL query and return a ``sqlite3.Cursor``.\n    \n        A write statement - ``INSERT``, ``UPDATE``, ``CREATE TABLE`` and so on -\n        is committed automatically, unless a transaction is already open, in\n        which case it becomes part of that transaction. See\n        :ref:`python_api_transactions`.\n    \n        :param sql: SQL query to execute\n        :param parameters: Parameters to use in that query - an iterable for ``where id = ?``\n          parameters, or a dictionary for ``where id = :id``\n        \"\"\"\n        if self._tracer:\n            self._tracer(sql, parameters)\n        was_in_transaction = self.conn.in_transaction\n        try:\n            if parameters is not None:\n                cursor = self.conn.execute(sql, parameters)\n            else:\n>               cursor = self.conn.execute(sql)\nE               sqlite3.OperationalError: near \"<\": syntax error\n\nsqlite_utils/db.py:881: OperationalError\n=========================== short test summary info ============================\nFAILED tests/test_create.py::test_add_column_foreign_key - sqlite3.Operationa...\n1 failed, 294 passed, 1 skipped in 0.87s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 1,
+          "stage": "E2",
+          "completed_turn_index": 4,
+          "remaining_seconds": 459.9150915420614,
+          "legal_main_tail": true,
+          "prefix_sha256": "b5b2448dc2b2c3bb4f43b770f0d1b9e096400221d478fc8de35993d81559c2be",
+          "checkpoint_sha256": "444e865943da61168a5505760480c8349401ea889087186cf7babe05742d0e13",
+          "public_test_command": "/usr/bin/bash -lc 'python -m pytest -q $(rg --files tests -g '\"'test_*.py' | rg -v 'tests/test_hypothesis.py')\"",
+          "failure_text": "\"subbreeds\")\n\ntests/test_create.py:509: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nsqlite_utils/db.py:3048: in add_column\n    self.db.execute(sql)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <Database <sqlite3.Connection object at 0xffff7e232d40>>\nsql = 'ALTER TABLE \"dogs\" ADD COLUMN \"subbreed_id\" <class \\'str\\'>;'\nparameters = None\n\n    def execute(\n        self, sql: str, parameters: Optional[Union[Sequence, Dict[str, Any]]] = None\n    ) -> sqlite3.Cursor:\n        \"\"\"\n        Execute SQL query and return a ``sqlite3.Cursor``.\n    \n        A write statement - ``INSERT``, ``UPDATE``, ``CREATE TABLE`` and so on -\n        is committed automatically, unless a transaction is already open, in\n        which case it becomes part of that transaction. See\n        :ref:`python_api_transactions`.\n    \n        :param sql: SQL query to execute\n        :param parameters: Parameters to use in that query - an iterable for ``where id = ?``\n          parameters, or a dictionary for ``where id = :id``\n        \"\"\"\n        if self._tracer:\n            self._tracer(sql, parameters)\n        was_in_transaction = self.conn.in_transaction\n        try:\n            if parameters is not None:\n                cursor = self.conn.execute(sql, parameters)\n            else:\n>               cursor = self.conn.execute(sql)\nE               sqlite3.OperationalError: near \"<\": syntax error\n\nsqlite_utils/db.py:881: OperationalError\n=========================== short test summary info ============================\nFAILED tests/test_create.py::test_add_column_foreign_key - sqlite3.Operationa...\n1 failed, 294 passed, 1 skipped in 0.87s\n\n\n==================================== ERRORS ====================================\n__________________ ERROR collecting tests/test_hypothesis.py ___________________\nImportError while importing test module '/workspace/repo/tests/test_hypothesis.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\ntests/test_hypothesis.py:1: in <module>\n    from hypothesis import given\nE   ModuleNotFoundError: No module named 'hypothesis'\n=========================== short test summary info ============================\nERROR tests/test_hypothesis.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.45s\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E0",
+          "completed_turn_index": 0,
+          "remaining_seconds": 599.9384777499363,
+          "legal_main_tail": false,
+          "prefix_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "checkpoint_sha256": "5211dcaa338d582d64f4b3f990e2e487170232f9bbae6e903a68b43a977e1844",
+          "public_test_command": null,
+          "failure_text": null,
+          "observed_skill_reads": [],
+          "state_role": "task_origin_control"
+        },
+        {
+          "repeat": 2,
+          "stage": "E1",
+          "completed_turn_index": 2,
+          "remaining_seconds": 514.2490744160023,
+          "legal_main_tail": true,
+          "prefix_sha256": "35d3eca26b705fa34d8ded78f361c0899c651e62c0da3fc96cc1d2071d1d6dc2",
+          "checkpoint_sha256": "e41ee8c13602b730258227703abe4248cae18862c1cb17cd7123a9e7a5d5ea28",
+          "public_test_command": "/usr/bin/bash -lc 'pytest -q tests/test_foreign_keys.py tests/test_introspect.py tests/test_transform.py tests/test_rows.py tests/test_upsert.py'",
+          "failure_text": "ys = (('country', 'country', 'id'), ('continent', 'continent', 'id'))\n\n    @pytest.mark.parametrize(\n        \"foreign_keys\",\n        (\n            (\"country\", \"continent\"),\n            # Fully specified\n            (\n                (\"country\", \"country\", \"id\"),\n                (\"continent\", \"continent\", \"id\"),\n            ),\n        ),\n    )\n    def test_transform_replace_foreign_keys(fresh_db, foreign_keys):\n        _add_country_city_continent(fresh_db)\n        fresh_db[\"places\"].insert(\n            _CAVEAU,\n            foreign_keys=(\"city\",),\n        )\n        assert len(fresh_db[\"places\"].foreign_keys) == 1\n        # Replace with two different ones\n        fresh_db[\"places\"].transform(foreign_keys=foreign_keys)\n>       assert fresh_db[\"places\"].schema == (\n            'CREATE TABLE \"places\" (\\n'\n            '   \"id\" INTEGER,\\n'\n            '   \"name\" TEXT,\\n'\n            '   \"country\" INTEGER REFERENCES \"country\"(\"id\"),\\n'\n            '   \"continent\" INTEGER REFERENCES \"continent\"(\"id\"),\\n'\n            '   \"city\" INTEGER\\n'\n            \")\"\n        )\nE       assert 'CREATE TABLE...y\" INTEGER\\n)' == 'CREATE TABLE...y\" INTEGER\\n)'\nE         \nE           CREATE TABLE \"places\" (\nE         +    \"rowid\" INTEGER PRIMARY KEY,\nE              \"id\" INTEGER,\nE              \"name\" TEXT,\nE              \"country\" INTEGER REFERENCES \"country\"(\"id\"),\nE              \"continent\" INTEGER REFERENCES \"continent\"(\"id\"),\nE              \"city\" INTEGER\nE           )\n\ntests/test_transform.py:526: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_transform.py::test_transform_sql_table_with_no_primary_key[False-params0-expected_sql0]\nFAILED tests/test_transform.py::test_transform_sql_table_with_no_primary_key[False-params1-expected_sql1]\nFAILED tests/test_transform.py::test_transform_sql_table_with_no_primary_key[False-params2-expected_sql2]\nFAILED tests/test_transform.py::test_transform_sql_table_with_no_primary_key[True-params0-expected_sql0]\nFAILED tests/test_transform.py::test_transform_sql_table_with_no_primary_key[True-params1-expected_sql1]\nFAILED tests/test_transform.py::test_transform_sql_table_with_no_primary_key[True-params2-expected_sql2]\nFAILED tests/test_transform.py::test_transform_add_foreign_keys_from_scratch\nFAILED tests/test_transform.py::test_transform_replace_foreign_keys[foreign_keys0]\nFAILED tests/test_transform.py::test_transform_replace_foreign_keys[foreign_keys1]\n9 failed, 164 passed in 0.25s\n",
+          "observed_skill_reads": [],
+          "state_role": "public_failure_boundary"
+        },
+        {
+          "repeat": 2,
+          "stage": "E2",
+          "completed_turn_index": 3,
+          "remaining_seconds": 477.55878283292986,
+          "legal_main_tail": true,
+          "prefix_sha256": "700ed4ccd15eae81c7adc690cc120391ef90f28fa483f809739f4353f95ebe47",
+          "checkpoint_sha256": "981acdb2eace425ec7ef249658d3bba3814bc65c869a59566027ced2be4ddfe3",
+          "public_test_command": "/usr/bin/bash -lc 'pytest -q --ignore=tests/test_hypothesis.py && git diff --check && git diff --stat && git diff -- sqlite_utils/db.py tests/test_foreign_keys.py'",
+          "failure_text": "poraryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_cli.py::test_disable_wal\n  /workspace/repo/tests/test_cli.py:1656: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_cli.py::test_create_table_strict[False]\ntests/test_cli.py::test_create_table_strict[True]\n  /workspace/repo/tests/test_cli.py:2735: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_insert_files.py::test_insert_files[pk_args0-expected_pks0-False]\ntests/test_insert_files.py::test_insert_files[pk_args0-expected_pks0-True]\ntests/test_insert_files.py::test_insert_files[pk_args1-expected_pks1-False]\ntests/test_insert_files.py::test_insert_files[pk_args1-expected_pks1-True]\n  /workspace/repo/tests/test_insert_files.py:19: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_insert_files.py::test_insert_files_stdin[False-None-hello world-hello world]\ntests/test_insert_files.py::test_insert_files_stdin[True-None-hello world-hello world]\ntests/test_insert_files.py::test_insert_files_stdin[False-None-S\\xe3o Paulo-S\\xe3o Paulo]\ntests/test_insert_files.py::test_insert_files_stdin[True-latin-1-S\\xe3o Paulo-S\\xe3o Paulo]\n  /workspace/repo/tests/test_insert_files.py:129: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\ntests/test_insert_files.py::test_insert_files_bad_text_encoding_error\n  /workspace/repo/tests/test_insert_files.py:158: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1269 passed, 16 skipped, 32 warnings in 6.98s\n/usr/bin/bash: line 1: git: command not found\n",
+          "observed_skill_reads": [],
+          "state_role": "first_delivery_boundary"
+        }
+      ]
+    }
+  ]
+}

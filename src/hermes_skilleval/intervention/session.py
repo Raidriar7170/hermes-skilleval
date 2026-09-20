@@ -112,10 +112,22 @@ class Session:
     """
 
     def __init__(
-        self, source, scratch, home, skills, output, *, image=IMAGE, model="gpt-5.6-sol"
+        self,
+        source,
+        scratch,
+        home,
+        skills,
+        output,
+        *,
+        image=IMAGE,
+        model="gpt-5.6-sol",
+        public_docs=None,
     ):
         self.source, self.scratch, self.home, self.skills, self.output = map(
             lambda p: Path(p).resolve(), (source, scratch, home, skills, output)
+        )
+        self.public_docs = (
+            Path(public_docs).resolve() if public_docs is not None else None
         )
         self.image, self.model = image, model
         self.name = "hermes-asi-" + uuid.uuid4().hex[:16]
@@ -144,6 +156,8 @@ class Session:
             "/bin": "read",
             "/etc": "read",
         }
+        if self.public_docs is not None:
+            roots["/workspace/public-docs"] = "read"
         mapping = ", ".join(
             json.dumps(k) + "=" + json.dumps(v) for k, v in roots.items()
         )
@@ -198,6 +212,13 @@ class Session:
             self.image,
             "codex",
         ]
+        if self.public_docs is not None:
+            # Insert the read-only documentation mount before the image argument.
+            image_index = command.index(self.image)
+            command[image_index:image_index] = [
+                "-v",
+                f"{self.public_docs}:/workspace/public-docs:ro",
+            ]
         for setting in overrides:
             command += ["-c", setting]
         command += ["app-server"]

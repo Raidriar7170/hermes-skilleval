@@ -1,0 +1,534 @@
+{
+  "scope": "legacy_train_dev_only",
+  "selection": "two tied task IDs in lexical order, first recorded tied pair; overlap with degradation task is retained",
+  "native": [
+    {
+      "task_id": "sqlite-utils-fix-60811e7",
+      "split": "train",
+      "stage": null,
+      "repeat": 1,
+      "action": "NO_INTERVENTION",
+      "y_target": 0,
+      "y_regression": 1,
+      "y_functional": 0,
+      "patch_sha256": "a443114c25a3aed5c0671ca086aa14113100f818448588e812063767d68e829f",
+      "checks": {
+        "target": {
+          "valid": true,
+          "passed": false,
+          "cases": [
+            {
+              "id": "test_behavior::test_insert_ignore_reports_existing_row",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-rowid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-_rowid_]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[upsert-oid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-rowid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-_rowid_]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_replace-oid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-rowid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-_rowid_]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_pk_rowid_alias_on_rowid_table[insert_ignore-oid]",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_reports_existing_row_compound_pk",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_reports_existing_row_list_mode",
+              "outcome": "passed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_hash_id_reports_pk",
+              "outcome": "failed"
+            },
+            {
+              "id": "test_behavior::test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+              "outcome": "failed"
+            }
+          ],
+          "returncode": 1
+        },
+        "regression": {
+          "valid": true,
+          "passed": true,
+          "cases": [
+            {
+              "id": "test_behavior::test_regression",
+              "outcome": "passed"
+            }
+          ],
+          "returncode": 0
+        },
+        "policy": {
+          "valid": true,
+          "passed": true,
+          "error": null
+        }
+      },
+      "evidence_path": "artifacts/functional-gain-v2/native/native/sqlite-utils-fix-60811e7/native-r1-NO_INTERVENTION",
+      "failures": [
+        {
+          "kind": "target",
+          "case": "test_insert_ignore_reports_existing_row",
+          "detail": "fresh_db = <Database <sqlite3.Connection object at 0xffffaf70e020>>\n\n    def test_insert_ignore_reports_existing_row(fresh_db):\n        fresh_db['docs'].insert({'id': 1, 'title': 'Exists'}, pk='id')\n        table = fresh_db['docs'].insert({'id': 1, 'title': 'One'}, ignore=True)\n>       assert table.last_rowid == 1\nE       assert None == 1\nE        +  where None = <Table docs (id, title)>.last_rowid\n\n/trusted/test_behavior.py:15: AssertionError"
+        },
+        {
+          "kind": "target",
+          "case": "test_insert_ignore_hash_id_reports_pk",
+          "detail": "fresh_db = <Database <sqlite3.Connection object at 0xffffaf70c5e0>>\n\n    def test_insert_ignore_hash_id_reports_pk(fresh_db):\n        first = fresh_db['dogs'].insert({'name': 'Cleo'}, hash_id='id')\n        table = fresh_db['dogs'].insert({'name': 'Cleo'}, hash_id='id', ignore=True)\n        assert table.last_pk == first.last_pk\n>       assert table.last_rowid is None\nE       assert 1 is None\nE        +  where 1 = <Table dogs (id, name)>.last_rowid\n\n/trusted/test_behavior.py:52: AssertionError"
+        },
+        {
+          "kind": "target",
+          "case": "test_insert_ignore_unresolvable_conflict_leaves_pk_unset",
+          "detail": "fresh_db = <Database <sqlite3.Connection object at 0xffffaf70e200>>\n\n    def test_insert_ignore_unresolvable_conflict_leaves_pk_unset(fresh_db):\n        fresh_db['u'].db.execute('create table u (title text unique)')\n        fresh_db['u'].insert({'title': 'x'})\n        table = fresh_db['u'].insert({'title': 'x'}, ignore=True)\n>       assert table.last_pk is None\nE       assert 1 is None\nE        +  where 1 = <Table u (title)>.last_pk\n\n/trusted/test_behavior.py:59: AssertionError"
+        }
+      ]
+    }
+  ],
+  "degradations": [
+    {
+      "skill": {
+        "task_id": "csvkit-fix-8119565",
+        "split": "train",
+        "stage": "E1",
+        "repeat": 1,
+        "action": "csv-dialect",
+        "y_target": 0,
+        "y_regression": 1,
+        "y_functional": 0,
+        "patch_sha256": "9bffc22de5cd85c6731c40370042501fc20542cf8f7c3568c8bb4b2dc12f3043",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": false,
+            "cases": [
+              {
+                "id": "test_behavior::test_target_stack[12]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_target_stack[140000]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_target_csvpy_reader",
+                "outcome": "failed"
+              }
+            ],
+            "returncode": 1
+          },
+          "regression": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "policy": {
+            "valid": true,
+            "passed": true,
+            "error": null
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csvkit-fix-8119565/E1-r1-csv-dialect",
+        "failures": [
+          {
+            "kind": "target",
+            "case": "test_target_csvpy_reader",
+            "detail": "tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_target_csvpy_reader0')\n\n    def test_target_csvpy_reader(tmp_path):\n        a=tmp_path/'a.csv';a.write_text('id,text\\n1,'+'x'*140000+'\\n')\n        utility=CSVPy(['--dict','-z','200000',str(a)],output_file=io.StringIO())\n        try:\n            with a.open() as stream:\n>               rows=list(csv.DictReader(stream,**utility.reader_kwargs))\n\n/trusted/test_behavior.py:25: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <csv.DictReader object at 0xffffa8a7c260>\nf = <_io.TextIOWrapper name='/tmp/pytest-of-root/pytest-0/test_target_csvpy_reader0/a.csv' mode='r' encoding='UTF-8'>\nfieldnames = None, restkey = None, restval = None, dialect = 'excel', args = ()\nkwds = {'doublequote': True, 'field_size_limit': 200000, 'skipinitialspace': False}\n\n    def __init__(self, f, fieldnames=None, restkey=None, restval=None,\n                 dialect=\"excel\", *args, **kwds):\n        if fieldnames is not None and iter(fieldnames) is fieldnames:\n            fieldnames = list(fieldnames)\n        self._fieldnames = fieldnames   # list of keys for the dict\n        self.restkey = restkey          # key to catch long rows\n        self.restval = restval          # default value for short rows\n>       self.reader = reader(f, dialect, *args, **kwds)\nE       TypeError: 'field_size_limit' is an invalid keyword argument for this function\n\n/usr/local/lib/python3.12/csv.py:91: TypeError"
+          }
+        ]
+      },
+      "noop": {
+        "task_id": "csvkit-fix-8119565",
+        "split": "train",
+        "stage": "E1",
+        "repeat": 1,
+        "action": "NO_INTERVENTION",
+        "y_target": 1,
+        "y_regression": 1,
+        "y_functional": 1,
+        "patch_sha256": "3b50e21ffa1f38b780f535b3430b4706a8332475a164302c6e1e182b2aefd401",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_target_stack[12]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_target_stack[140000]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_target_csvpy_reader",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "regression": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "policy": {
+            "valid": true,
+            "passed": true,
+            "error": null
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csvkit-fix-8119565/E1-r1-NO_INTERVENTION",
+        "failures": []
+      }
+    },
+    {
+      "skill": {
+        "task_id": "csv-diff-fix-33e0a59",
+        "split": "train",
+        "stage": "E0",
+        "repeat": 1,
+        "action": "keyed-csv-diff",
+        "y_target": 1,
+        "y_regression": 0,
+        "y_functional": 0,
+        "patch_sha256": "17456aa3b41213126f61ecbc26571d7be9cf7eacb01002bf9dcbbbec8a313a4a",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_target",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "regression": {
+            "valid": true,
+            "passed": false,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression",
+                "outcome": "failed"
+              }
+            ],
+            "returncode": 1
+          },
+          "policy": {
+            "valid": true,
+            "passed": true,
+            "error": null
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csv-diff-fix-33e0a59/E0-r1-keyed-csv-diff",
+        "failures": [
+          {
+            "kind": "regression",
+            "case": "test_regression",
+            "detail": "def test_regression():\n        a=load_json(io.StringIO('[{\"id\":1,\"nested\":{\"x\":3}}]'),key='id')\n        b=load_json(io.StringIO('[{\"id\":1,\"nested\":{\"x\":4}}]'),key='id')\n>       assert compare(a,b)['changed']==[{'key':1,'changes':{'nested':['{\"x\": 3}','{\"x\": 4}']}}]\nE       assert [{'changes': ...]}, 'key': 1}] == [{'changes': ...]}, 'key': 1}]\nE         \nE         At index 0 diff: {'key': 1, 'changes': {'nested': [{'x': 3}, {'x': 4}]}} != {'key': 1, 'changes': {'nested': ['{\"x\": 3}', '{\"x\": 4}']}}\nE         Use -v to get more diff\n\n/trusted/test_behavior.py:24: AssertionError"
+          }
+        ]
+      },
+      "noop": {
+        "task_id": "csv-diff-fix-33e0a59",
+        "split": "train",
+        "stage": "E0",
+        "repeat": 1,
+        "action": "NO_INTERVENTION",
+        "y_target": 1,
+        "y_regression": 1,
+        "y_functional": 1,
+        "patch_sha256": "46a23267cefd28c58e06d694d0c8b72532e8ba170f50af5dc8abf554fc758e94",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_target",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "regression": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "policy": {
+            "valid": true,
+            "passed": false,
+            "error": "policy rejected modify: README.md"
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csv-diff-fix-33e0a59/E0-r1-NO_INTERVENTION",
+        "failures": []
+      }
+    }
+  ],
+  "tied_controls": [
+    {
+      "skill": {
+        "task_id": "csv-diff-fix-0cf7d3c",
+        "split": "dev",
+        "stage": "E0",
+        "repeat": 1,
+        "action": "keyed-csv-diff",
+        "y_target": 1,
+        "y_regression": 1,
+        "y_functional": 1,
+        "patch_sha256": "28c5834cd95d2b59ec320ecee5bdbb3d151825437a8d230c637a4aacf163bfc6",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_target[True]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_target[False]",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "regression": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression[,]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_regression[\\t]",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "policy": {
+            "valid": true,
+            "passed": true,
+            "error": null
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csv-diff-fix-0cf7d3c/E0-r1-keyed-csv-diff",
+        "failures": []
+      },
+      "noop": {
+        "task_id": "csv-diff-fix-0cf7d3c",
+        "split": "dev",
+        "stage": "E0",
+        "repeat": 1,
+        "action": "NO_INTERVENTION",
+        "y_target": 1,
+        "y_regression": 1,
+        "y_functional": 1,
+        "patch_sha256": "e477484bf7f69f381f95878e91737f34d50bb4dcec91d868002f4e3134bfb430",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_target[True]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_target[False]",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "regression": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression[,]",
+                "outcome": "passed"
+              },
+              {
+                "id": "test_behavior::test_regression[\\t]",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "policy": {
+            "valid": true,
+            "passed": false,
+            "error": "policy rejected modify: README.md"
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csv-diff-fix-0cf7d3c/E0-r1-NO_INTERVENTION",
+        "failures": []
+      }
+    },
+    {
+      "skill": {
+        "task_id": "csv-diff-fix-33e0a59",
+        "split": "train",
+        "stage": "E0",
+        "repeat": 1,
+        "action": "sqlite-fulltext",
+        "y_target": 1,
+        "y_regression": 1,
+        "y_functional": 1,
+        "patch_sha256": "786c065967a4649910252b36f98a10127927de677f4195c9229f9ca890393cfc",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_target",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "regression": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "policy": {
+            "valid": true,
+            "passed": true,
+            "error": null
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csv-diff-fix-33e0a59/E0-r1-sqlite-fulltext",
+        "failures": []
+      },
+      "noop": {
+        "task_id": "csv-diff-fix-33e0a59",
+        "split": "train",
+        "stage": "E0",
+        "repeat": 1,
+        "action": "NO_INTERVENTION",
+        "y_target": 1,
+        "y_regression": 1,
+        "y_functional": 1,
+        "patch_sha256": "46a23267cefd28c58e06d694d0c8b72532e8ba170f50af5dc8abf554fc758e94",
+        "checks": {
+          "target": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_target",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "regression": {
+            "valid": true,
+            "passed": true,
+            "cases": [
+              {
+                "id": "test_behavior::test_regression",
+                "outcome": "passed"
+              }
+            ],
+            "returncode": 0
+          },
+          "policy": {
+            "valid": true,
+            "passed": false,
+            "error": "policy rejected modify: README.md"
+          }
+        },
+        "evidence_path": "artifacts/functional-gain-v2/collection/collection/csv-diff-fix-33e0a59/E0-r1-NO_INTERVENTION",
+        "failures": []
+      }
+    }
+  ],
+  "native_recovery_controls": [
+    {
+      "task_id": "sqlite-utils-fix-60811e7",
+      "stage": "E0",
+      "repeat": 1,
+      "y_functional": 0
+    },
+    {
+      "task_id": "sqlite-utils-fix-60811e7",
+      "stage": "E0",
+      "repeat": 2,
+      "y_functional": 0
+    },
+    {
+      "task_id": "sqlite-utils-fix-60811e7",
+      "stage": "E1",
+      "repeat": 1,
+      "y_functional": null
+    },
+    {
+      "task_id": "sqlite-utils-fix-60811e7",
+      "stage": "E2",
+      "repeat": 1,
+      "y_functional": 0
+    }
+  ]
+}

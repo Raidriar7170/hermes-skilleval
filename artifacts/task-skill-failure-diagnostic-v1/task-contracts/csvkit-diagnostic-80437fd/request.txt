@@ -1,0 +1,3 @@
+Fix csvkit column selection with --ignore-unknown-columns: unknown names containing a hyphen or colon should be skipped like other unknown names, rather than treated as invalid ranges. Real existing names containing these characters and valid numeric ranges must still resolve normally. Without the flag invalid ranges must raise ColumnIdentifierError with the offending identifier in the message (including excluded-column ranges). Keep ordinary column selection and exclusions compatible.
+
+The checked-out base documentation is also available read-only at /workspace/public-docs. Use the same normal tools and native skills as usual.

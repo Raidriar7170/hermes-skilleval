@@ -1,0 +1,55 @@
+{
+  "order": 1,
+  "task_id": "sqlite-utils-diagnostic-548a886",
+  "repository": "simonw/sqlite-utils",
+  "base_commit": "8572d1e39c3c807bc0643249411fb33bd0881eb6",
+  "fix_commit": "548a886ca1d2ba6c259676da2c8e00f022bacc2c",
+  "mechanism": "interface-error-propagation",
+  "category": 1,
+  "role": "primary",
+  "source": "https://github.com/simonw/sqlite-utils/commit/548a886ca1d2ba6c259676da2c8e00f022bacc2c",
+  "source_title": "Clean CLI errors for InvalidColumns from insert --pk and extract",
+  "qualification": "PENDING",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-asi-executor:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests"
+    ],
+    "file_policy": {
+      "version": "operations-v1",
+      "rules": [
+        {
+          "path": "sqlite_utils",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        },
+        {
+          "path": "tests",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        }
+      ]
+    }
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "not test_regression",
+  "regression_selector": "test_regression",
+  "reference_commit": "548a886ca1d2ba6c259676da2c8e00f022bacc2c",
+  "request_ref": "https://github.com/simonw/sqlite-utils/commit/548a886ca1d2ba6c259676da2c8e00f022bacc2c"
+}

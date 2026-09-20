@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="9" time="0.049" timestamp="2026-09-20T19:18:19.783561+00:00" hostname="6ccc05f7db72"><testcase classname="test_behavior" name="test_create_strict_with_any" time="0.001" /><testcase classname="test_behavior" name="test_extract_preserves_strict_any" time="0.001" /><testcase classname="test_behavior" name="test_extract_strict_any_rejects_non_strict_lookup" time="0.000"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: 'is not STRICT, so it cannot preserve ANY column values'&#10; Input: 'Lookup table data_values already exists but is not STRICT; extracting STRICT ANY columns data could coerce values'">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffad980040&gt;&gt;
+
+    def test_extract_strict_any_rejects_non_strict_lookup(fresh_db):
+        if not fresh_db.supports_strict:
+            pytest.skip("SQLite version does not support strict tables")
+        fresh_db.execute("create table items (data any) strict")
+        fresh_db.execute("insert into items values (?)", ("000123",))
+        fresh_db.execute("create table data_values (id integer primary key, data any)")
+    
+        with pytest.raises(
+            InvalidColumns,
+            match="is not STRICT, so it cannot preserve ANY column values",
+        ):
+&gt;           fresh_db["items"].extract("data", table="data_values")
+
+/trusted/test_behavior.py:74: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table items (data)&gt;, columns = ['data'], table = 'data_values'
+fk_column = 'data_values_id', rename = {}
+
+    def extract(
+        self,
+        columns: str | Iterable[str],
+        table: str | None = None,
+        fk_column: str | None = None,
+        rename: dict[str, str] | None = None,
+    ) -&gt; "Table":
+        """
+        Extract specified columns into a separate table.
+    
+        See :ref:`python_api_extract` for details.
+    
+        :param columns: Single column or list of columns that should be extracted
+        :param table: Name of table in which the new records should be created
+        :param fk_column: Name of the foreign key column to populate in the original table
+        :param rename: Dictionary of columns that should be renamed when populating the new table
+        """
+        rename = rename or {}
+        if isinstance(columns, str):
+            columns = [columns]
+        columns = [resolve_casing(c, self.columns_dict) for c in columns]
+        rename = {resolve_casing(k, self.columns_dict): v for k, v in rename.items()}
+        if not set(columns).issubset(self.columns_dict.keys()):
+            raise InvalidColumns(
+                f"Invalid columns {columns} for table with columns {list(self.columns_dict.keys())}"
+            )
+        with self.db.atomic():
+            table = table or "_".join(columns)
+            lookup_table = self.db.table(table)
+            fk_column = fk_column or f"{table}_id"
+            magic_lookup_column = f"{fk_column}_{os.urandom(6).hex()}"
+    
+            # Populate the lookup table with all of the extracted unique values
+            lookup_columns_definition = {
+                (rename.get(col) or col): typ
+                for col, typ in self.columns_dict.items()
+                if col in columns
+            }
+            if lookup_table.exists():
+                # In a STRICT table an ANY column preserves values exactly (for
+                # example, text "000123" remains text).  Ordinary, non-STRICT
+                # ANY has numeric affinity, so copying into an existing
+                # non-STRICT lookup could silently coerce those values.
+                strict_any_columns = {
+                    rename.get(col) or col
+                    for col in columns
+                    if self.strict and self.columns_dict[col] == ANY
+                }
+                if strict_any_columns and not lookup_table.strict:
+&gt;                   raise InvalidColumns(
+                        "Lookup table {} already exists but is not STRICT; "
+                        "extracting STRICT ANY columns {} could coerce values".format(
+                            table, ", ".join(sorted(strict_any_columns))
+                        )
+                    )
+E                   sqlite_utils.db.InvalidColumns: Lookup table data_values already exists but is not STRICT; extracting STRICT ANY columns data could coerce values
+
+/input/sqlite_utils/db.py:3111: InvalidColumns
+
+During handling of the above exception, another exception occurred:
+
+fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffad980040&gt;&gt;
+
+    def test_extract_strict_any_rejects_non_strict_lookup(fresh_db):
+        if not fresh_db.supports_strict:
+            pytest.skip("SQLite version does not support strict tables")
+        fresh_db.execute("create table items (data any) strict")
+        fresh_db.execute("insert into items values (?)", ("000123",))
+        fresh_db.execute("create table data_values (id integer primary key, data any)")
+    
+&gt;       with pytest.raises(
+            InvalidColumns,
+            match="is not STRICT, so it cannot preserve ANY column values",
+        ):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'is not STRICT, so it cannot preserve ANY column values'
+E        Input: 'Lookup table data_values already exists but is not STRICT; extracting STRICT ANY columns data could coerce values'
+
+/trusted/test_behavior.py:70: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_transform_preserves_any_column_in_strict_table" time="0.001" /><testcase classname="test_behavior" name="test_transform_any_column_from_strict_to_non_strict" time="0.000" /><testcase classname="test_behavior" name="test_transform_column_to_any" time="0.002" /><testcase classname="test_behavior" name="test_create_table_strict_any" time="0.001" /><testcase classname="test_behavior" name="test_insert_upsert_strict_any[insert]" time="0.001" /><testcase classname="test_behavior" name="test_insert_upsert_strict_any[upsert]" time="0.001" /></testsuite></testsuites>

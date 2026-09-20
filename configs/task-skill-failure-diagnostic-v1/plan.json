@@ -1,0 +1,256 @@
+{
+  "study": "task-skill-failure-diagnostic-v1",
+  "status": "FROZEN",
+  "scope": "exploratory_development_diagnostic",
+  "primary_outcome": "target_pass_and_no_new_protected_regression",
+  "primary_contrasts": [
+    "K_minus_N",
+    "K_minus_G"
+  ],
+  "secondary_only": [
+    "file_policy",
+    "time",
+    "tokens"
+  ],
+  "skill_catalog": "existing_frozen_ten_skills",
+  "skill_content_editing": false,
+  "learned_controller_used": false,
+  "new_parameter_training": false,
+  "main_arms": [
+    "N",
+    "G",
+    "K"
+  ],
+  "max_selected_checkpoints": 4,
+  "paired_repeats": 2,
+  "max_tasks": 8,
+  "native_repeats": 2,
+  "min_remaining_seconds": 90,
+  "total_seconds": 600,
+  "model": "gpt-5.6-sol",
+  "effort": "medium",
+  "codex_version": "0.154.0",
+  "order_seed": 20260920,
+  "preserve_existing_results": true,
+  "baseline": "442e16ce4ab4b091321a26fc835fc27c92c2c00c",
+  "read_scope": [
+    "src",
+    "scripts",
+    "tests",
+    "configs",
+    "docs",
+    "openspec",
+    "artifacts/functional-gain-v2/native",
+    "artifacts/functional-gain-v2/collection",
+    "private legacy train/dev assets",
+    "public upstreams"
+  ],
+  "write_scope": [
+    "scripts/task_skill_failure_diagnostic",
+    "src/hermes_skilleval/intervention/diagnostic.py",
+    "tests/test_task_skill_diagnostic.py",
+    "configs/task-skill-failure-diagnostic-v1",
+    "artifacts/task-skill-failure-diagnostic-v1",
+    "docs/research/task-skill-failure-diagnostic-v1",
+    "docs/goals/Hermes_Task_Skill_Failure_Diagnostic_Codex_Goal.md",
+    "openspec/changes/task-skill-failure-diagnostic-v1",
+    "src/hermes_skilleval/intervention/rollouts.py",
+    "src/hermes_skilleval/intervention/session.py"
+  ],
+  "frozen_asset_scope": [
+    "configs/conditional-applicability-v1/skills",
+    "configs/conditional-applicability-v1/registry.json",
+    "configs/adaptive-skill-intervention-v1/payloads",
+    "configs/functional-gain-v2/objective-lock.json"
+  ],
+  "final_repository_scope": [
+    "."
+  ],
+  "default_policy": "UNCHANGED",
+  "tasks": [
+    {
+      "order": 1,
+      "task_id": "sqlite-utils-diagnostic-548a886",
+      "repository": "simonw/sqlite-utils",
+      "base_commit": "8572d1e39c3c807bc0643249411fb33bd0881eb6",
+      "fix_commit": "548a886ca1d2ba6c259676da2c8e00f022bacc2c",
+      "mechanism": "interface-error-propagation",
+      "category": 1,
+      "role": "primary",
+      "source": "https://github.com/simonw/sqlite-utils/commit/548a886ca1d2ba6c259676da2c8e00f022bacc2c",
+      "source_title": "Clean CLI errors for InvalidColumns from insert --pk and extract",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "536537da7edd9b88e6f67db885034e83f5d21b2af566689889eae5c70cc58b8a",
+        "trusted": "cca92b269b4a89e0b21802cb87d8f299e5b3a901fb990a4f8d2e850f4b970f12",
+        "reference": "d2a8e0a8ff03ee1e0c594e00237fe12e2e1db362b8fa7765ceabf01cd125f600",
+        "public-docs": "d55e2a79d7a050ec0a9f335e7e6dfe504e125303459a49472c6faaff0b8d2453"
+      },
+      "request_sha256": "6651bd648e9ce614fb87ca644165e2d6870482e187455e038dfd87fbd886bb17",
+      "task_sha256": "af5f0b5009cb422e2842d2e90f880bcc9b9b3b70d4ce46ddc409a7684140e3aa"
+    },
+    {
+      "order": 3,
+      "task_id": "sqlite-utils-diagnostic-fcfccea",
+      "repository": "simonw/sqlite-utils",
+      "base_commit": "57192ef4e36c334bc2946a10547bf64d63621127",
+      "fix_commit": "fcfccea8132e4aa6167a14f9afec5a690de7485c",
+      "mechanism": "type-strict-any",
+      "category": 2,
+      "role": "primary",
+      "source": "https://github.com/simonw/sqlite-utils/commit/fcfccea8132e4aa6167a14f9afec5a690de7485c",
+      "source_title": "Support ANY column types for strict tables",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "b132519d25100829a94955cca5bcf34749ae04c092659ac21ec34cc0e3da7d57",
+        "trusted": "709a71a7f4b902c323b9db51c7ca79a3dee7710b5e0daba17d3cef0c6a193541",
+        "reference": "7373102a1421198d02155568b5538bf28ccad025324e60f81ce7d5e7e0ff9e03",
+        "public-docs": "3ef8a1837c3eebf95a5ad6ec76bc35417a5c8be4f23b71a4c193363417534bc5"
+      },
+      "request_sha256": "9f150eb17ec000a58e76ba84328719b75ebf92b2d286dde2437749c293937cc0",
+      "task_sha256": "e496f1ea1806c0c68771e7ef09be6cb8aa1f10581deeeda3c94f7e79573f4bd7"
+    },
+    {
+      "order": 4,
+      "task_id": "csvkit-diagnostic-80437fd",
+      "repository": "wireservice/csvkit",
+      "base_commit": "eb45f9e6cc6d79d808f913d577fe4e41980e0903",
+      "fix_commit": "80437fdf9c4137523c7fc722294d8c9d2a3ebd9f",
+      "mechanism": "parameter-range-identifier",
+      "category": 2,
+      "role": "primary",
+      "source": "https://github.com/wireservice/csvkit/commit/80437fdf9c4137523c7fc722294d8c9d2a3ebd9f",
+      "source_title": "Ignore unknown range-like identifiers and fix Invalid range message",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "00cb9ffedd6b466ddda893c379be3f370517b828529fe3b04fbd6296bb6f9d5b",
+        "trusted": "1134dacf253086b17c6f691e43fe3139ab4a881845ed3e057621ec4243a7d100",
+        "reference": "a7ad473191e7b2b27f59bf0a21103605b4180a157e3e3446cf80852d35d9697c",
+        "public-docs": "d527ef4a77f522fd326f0d1ab3eb64974ad270dfab960ea4dc9c2467a0ac7bf8"
+      },
+      "request_sha256": "5cf581b3505f92747017a18c4f8cbe8fc56709f2e12b623c26f0b149daa9f668",
+      "task_sha256": "de9969c4b92b4ea4ddb74cef4e09d6dba81978c9ea9273e71b709aeb5bacadf1"
+    },
+    {
+      "order": 5,
+      "task_id": "csvkit-diagnostic-19810a3",
+      "repository": "wireservice/csvkit",
+      "base_commit": "bd6095d39bcd27ec227a8e802ff5329535df9a07",
+      "fix_commit": "19810a3dfd90ca4e92b4feaf2737612d78cdf3a1",
+      "mechanism": "export-bom",
+      "category": 3,
+      "role": "primary",
+      "source": "https://github.com/wireservice/csvkit/commit/19810a3dfd90ca4e92b4feaf2737612d78cdf3a1",
+      "source_title": "feat: Add --add-bom option",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "241d22d8f2d104e9a31f7e919734eb31cd28c942506cbc383dd75982a202e086",
+        "trusted": "6c14c3e156c58c315abe7ca7d9a7e0037dd8e1d36ea816bcca68077a1162b3ff",
+        "reference": "3f93afe75513c11106675dfadc9d2e8e1c568bfaf18466389861a78c31622158",
+        "public-docs": "42523dafda2f16123d8f1dfec35455678fde9757b84b5edc20f5158ae54de348"
+      },
+      "request_sha256": "cdd5170719a80eaf78b5d555afba35e4f7171b9ad5c17b4042d906914e2e4947",
+      "task_sha256": "3d321012339540ff088e88018ce1447435f7ea5b2c7ec9c71083993fa633088b"
+    },
+    {
+      "order": 7,
+      "task_id": "sqlite-utils-diagnostic-2b52b5e",
+      "repository": "simonw/sqlite-utils",
+      "base_commit": "fcfccea8132e4aa6167a14f9afec5a690de7485c",
+      "fix_commit": "2b52b5ed6f4a6e553e3620d8424374fc7cbf95fd",
+      "mechanism": "schema-autoincrement-preservation",
+      "category": 4,
+      "role": "primary",
+      "source": "https://github.com/simonw/sqlite-utils/commit/2b52b5ed6f4a6e553e3620d8424374fc7cbf95fd",
+      "source_title": "Preserve AUTOINCREMENT through transforms",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "7373102a1421198d02155568b5538bf28ccad025324e60f81ce7d5e7e0ff9e03",
+        "trusted": "4f50f5353622833bfcc807da0af9097793466fb913e8320b80c7f7777b48a6a2",
+        "reference": "4f58429ca27ca5440c66783d8fbdffdc4942fbd6198d322edd236dc4ee5a0a7b",
+        "public-docs": "474dc7a5a7ff34637a1f3a9250008f8aa9960af9393a5ef926f16b33b6c449e1"
+      },
+      "request_sha256": "026ddba724645bd21d1539e262624b3f0fe0efe2a7ee84bb3db101ad528aac66",
+      "task_sha256": "f838f44e815356d61c31f0771a3c34a68bac3295b61469a281b15e7c6b2e1e47"
+    },
+    {
+      "order": 8,
+      "task_id": "sqlite-utils-diagnostic-57192ef",
+      "repository": "simonw/sqlite-utils",
+      "base_commit": "e4784ec1200b7408a037c50009dc07d88a5ac577",
+      "fix_commit": "57192ef4e36c334bc2946a10547bf64d63621127",
+      "mechanism": "schema-rename-index-preservation",
+      "category": 4,
+      "role": "primary",
+      "source": "https://github.com/simonw/sqlite-utils/commit/57192ef4e36c334bc2946a10547bf64d63621127",
+      "source_title": "table.transform(rename=...) now preserves indexes, closes #822",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "d23ae8bbad97a76501aa25c4a3dfd78bf64fe8ecdd58416344f0425b43406887",
+        "trusted": "1eebaa613403a85bf2146b7e547409d7c833b217f3740dad5a1367290a75247e",
+        "reference": "b132519d25100829a94955cca5bcf34749ae04c092659ac21ec34cc0e3da7d57",
+        "public-docs": "8bc035fd4d677270b5be5999fc2d47f109162897f0885fa5a2adf622a673b7ac"
+      },
+      "request_sha256": "4e6a2deb1c788b11d30cf6c3ab5f89ee37ad22d9ab5417c76487173f9d218177",
+      "task_sha256": "05a7b6a044f091a0592fc3496d92e8969599774c56ce1f037afe487679326414"
+    },
+    {
+      "order": 9,
+      "task_id": "sqlite-utils-diagnostic-29ca9d2",
+      "repository": "simonw/sqlite-utils",
+      "base_commit": "404e935b6348c57e507fba36eb06daf462257af8",
+      "fix_commit": "29ca9d27e24be818a26fff41450664ef771a03a0",
+      "mechanism": "reserve-mixed-fk-forms",
+      "category": "reserve",
+      "role": "mechanical_reserve",
+      "source": "https://github.com/simonw/sqlite-utils/commit/29ca9d27e24be818a26fff41450664ef771a03a0",
+      "source_title": "foreign_keys= accepts mixed ForeignKey objects, tuples and strings again",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "1cace77dab1a98e485ca81c951b84c3deb47f6d1c2a75de07e0a28732c7d43a9",
+        "trusted": "6436437c2e67f1752a2e4efad3897f02279ebd74be88cec12eac87dcc6e082e2",
+        "reference": "de72e4d789c0a92e0df0ee64fde0d3d136b45955787c232b9fe38934d44f4646",
+        "public-docs": "b2c998e895a6921311d7a4803f6e3ec4b7564802ce4277dd4ff94cfedf3df8a8"
+      },
+      "request_sha256": "56db93ed4d25ce8b84f8ffa63b6ab8d95a011a5ae6aab96bf6c1728d5a5e0863",
+      "task_sha256": "b1f31d773f00d9503f3cefaae58de60e43554c0718f7f4fe6d766e553ebc7d49"
+    },
+    {
+      "order": 10,
+      "task_id": "sqlite-utils-diagnostic-8e015d0",
+      "repository": "simonw/sqlite-utils",
+      "base_commit": "66934918c689238b19a74b2f09794002cc985094",
+      "fix_commit": "8e015d024c34f2a5e5059e0f10fcdf41410613fe",
+      "mechanism": "reserve-compound-pk-order",
+      "category": "reserve",
+      "role": "mechanical_reserve",
+      "source": "https://github.com/simonw/sqlite-utils/commit/8e015d024c34f2a5e5059e0f10fcdf41410613fe",
+      "source_title": "Compound primary keys now resolve in PRIMARY KEY declaration order",
+      "qualification": "BASE_RED_REFERENCE_GREEN",
+      "files": {
+        "base": "885f6e5027df868a2fc38ca0d0406763d8c8cf0ba88580c11049f8648d8f0a1b",
+        "trusted": "973739e31d451f9446c6c4c76b533abd28181014ebd70d07baf1069a7ee056db",
+        "reference": "12e6c4aa109cd1c8e7428dd82d37f5ac96a0372b400ccc516a9367339bf8ba12",
+        "public-docs": "50fe19526e56d7ddcf31d340d5b51ee8d1f77eca226e25604d344d4dd07e4b3e"
+      },
+      "request_sha256": "f1a555e234eb951c67663a73ea0fff5d126135a6d110439faf9aaeded20633ed",
+      "task_sha256": "fe86e1f42617d716f8eb02f24ba6be24ddeab16c72c70f4feb0ca94ff2007309"
+    }
+  ],
+  "assets": {
+    "skills": "18c93a29aa7198848c988843c58ce117b49965d0c6621d4fa5d97390ba71b2f9",
+    "payloads": "2b960a3b4dacdbb057c585806c10b254baac354002b3c43521591b634a536439"
+  },
+  "image": "hermes-asi-executor:v1",
+  "image_id": "sha256:a04dd4f37b1cbeeb02c39d5f16796132a37b16247a415f68ba049d6bbb93e7ca",
+  "checkpoint_rule": "First completed boundary with task-mechanism-matched public functional failure; else first delivery E2. No budget-threshold E2. E0 recorded as origin only, not included in main panel.",
+  "source_preparation_model_calls": 0,
+  "inventory_identity": "SHA256 of sorted JSON path-to-content-SHA256 maps; manifests recomputed from local assets",
+  "pre_sampling_amendments": [
+    {
+      "previous_plan_sha256": "01c1a46b1b38449758f3c588b51eea498ecd2f7a48bd3fe8212158d4a7c39481",
+      "reason": "Independent review found missing csvpy/sql2csv BOM negative acceptance. Added and qualified before any research sampling. Task order/model/budget unchanged.",
+      "research_executions_before_amendment": 0
+    }
+  ]
+}

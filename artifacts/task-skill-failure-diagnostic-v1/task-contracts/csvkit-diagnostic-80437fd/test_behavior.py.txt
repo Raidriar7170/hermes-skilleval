@@ -1,0 +1,19 @@
+
+import pytest
+from csvkit.cli import parse_column_identifiers, ColumnIdentifierError
+@pytest.mark.parametrize('unknown',['no-pe','no:pe','2026-09-20'])
+def test_unknown_range_names(unknown):
+    names=['id','known-name','value']
+    assert parse_column_identifiers('id,'+unknown+',value',names,ignore_unknown_columns=True)==[0,2]
+    with pytest.raises(ColumnIdentifierError,match=unknown):parse_column_identifiers(unknown,names)
+
+def test_excluded_invalid_range_message():
+    with pytest.raises(ColumnIdentifierError,match='no-pe'):
+        parse_column_identifiers('1-3',['id','name','value'],excluded_columns='no-pe')
+
+def test_regression():
+    names=['id','known-name','value']
+    assert parse_column_identifiers('known-name',names,ignore_unknown_columns=True)==[1]
+    assert parse_column_identifiers('1-3',names)==[0,1,2]
+    assert parse_column_identifiers('1-3',names,excluded_columns='2')==[0,2]
+

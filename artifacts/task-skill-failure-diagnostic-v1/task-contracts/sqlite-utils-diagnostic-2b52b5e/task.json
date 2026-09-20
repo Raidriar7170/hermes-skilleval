@@ -1,0 +1,55 @@
+{
+  "order": 7,
+  "task_id": "sqlite-utils-diagnostic-2b52b5e",
+  "repository": "simonw/sqlite-utils",
+  "base_commit": "fcfccea8132e4aa6167a14f9afec5a690de7485c",
+  "fix_commit": "2b52b5ed6f4a6e553e3620d8424374fc7cbf95fd",
+  "mechanism": "schema-autoincrement-preservation",
+  "category": 4,
+  "role": "primary",
+  "source": "https://github.com/simonw/sqlite-utils/commit/2b52b5ed6f4a6e553e3620d8424374fc7cbf95fd",
+  "source_title": "Preserve AUTOINCREMENT through transforms",
+  "qualification": "PENDING",
+  "profile": {
+    "repository": "simonw/sqlite-utils",
+    "packages": {
+      "sqlite_utils": "."
+    },
+    "cli_module": "sqlite_utils.cli",
+    "cli_callable": "cli",
+    "cli_name": "sqlite-utils",
+    "image": "hermes-asi-executor:v1",
+    "writable_roots": [
+      "sqlite_utils",
+      "tests"
+    ],
+    "file_policy": {
+      "version": "operations-v1",
+      "rules": [
+        {
+          "path": "sqlite_utils",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        },
+        {
+          "path": "tests",
+          "operations": [
+            "add",
+            "modify",
+            "delete"
+          ],
+          "max_bytes": 1000000
+        }
+      ]
+    }
+  },
+  "trusted_test_file": "test_behavior.py",
+  "target_selector": "not test_regression",
+  "regression_selector": "test_regression",
+  "reference_commit": "2b52b5ed6f4a6e553e3620d8424374fc7cbf95fd",
+  "request_ref": "https://github.com/simonw/sqlite-utils/commit/2b52b5ed6f4a6e553e3620d8424374fc7cbf95fd"
+}

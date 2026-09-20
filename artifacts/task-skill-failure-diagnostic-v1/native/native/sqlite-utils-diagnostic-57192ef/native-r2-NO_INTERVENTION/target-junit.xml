@@ -1,0 +1,797 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="6" time="0.085" timestamp="2026-09-20T19:41:47.176743+00:00" hostname="8b9ec8aa1488"><testcase classname="test_behavior" name="test_transform_recreates_renamed_index_from_metadata" time="0.001" /><testcase classname="test_behavior" name="test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(lower(name))]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: 'partial or expression index'&#10; Input: &quot;Cannot rename column 'name': expression index 'idx_t_name' depends on it. You must manually drop this index prior to running this transformation and manually recreate it after running the transformation. No changes have been applied to this table.&quot;">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffb32688b0&gt;&gt;
+index_sql = 'CREATE INDEX idx_t_name ON t(lower(name))'
+
+    @pytest.mark.parametrize(
+        "index_sql",
+        (
+            "CREATE INDEX idx_t_name ON t(lower(name))",
+            "CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL",
+        ),
+    )
+    def test_transform_rename_complex_index_errors(fresh_db, index_sql):
+        table = fresh_db.table("t")
+        table.insert({"id": 1, "name": "Cleo"}, pk="id")
+        fresh_db.execute(index_sql)
+    
+        with pytest.raises(TransformError, match="partial or expression index"):
+&gt;           table.transform(rename={"name": "full_name"})
+
+/trusted/test_behavior.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:2602: in transform
+    sqls = self.transform_sql(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (id, name)&gt;
+
+    def transform_sql(
+        self,
+        *,
+        types: dict | None = None,
+        rename: dict | None = None,
+        drop: Iterable | None = None,
+        pk: Any | None = DEFAULT,
+        not_null: Iterable[str] | None = None,
+        defaults: dict[str, Any] | None = None,
+        drop_foreign_keys: Iterable | None = None,
+        add_foreign_keys: ForeignKeysType | None = None,
+        foreign_keys: ForeignKeysType | None = None,
+        column_order: list[str] | None = None,
+        tmp_suffix: str | None = None,
+        keep_table: str | None = None,
+        strict: bool | None = None,
+    ) -&gt; list[str]:
+        """
+        Return a list of SQL statements that should be executed in order to apply this transformation.
+    
+        :param types: Columns that should have their type changed, for example ``{"weight": float}``
+        :param rename: Columns to rename, for example ``{"headline": "title"}``
+        :param drop: Columns to drop
+        :param pk: New primary key for the table
+        :param not_null: Columns to set as ``NOT NULL``
+        :param defaults: Default values for columns
+        :param drop_foreign_keys: Foreign key constraints to remove - a column name
+          drops any foreign key that column participates in, a tuple of column names
+          drops the compound foreign key with exactly those columns
+        :param add_foreign_keys: List of foreign keys to add to the table
+        :param foreign_keys: List of foreign keys to set for the table, replacing any existing foreign keys
+        :param column_order: List of strings specifying a full or partial column order
+          to use when creating the table
+        :param tmp_suffix: Suffix to use for the temporary table name
+        :param keep_table: If specified, the existing table will be renamed to this and will not be
+          dropped
+        :param strict: Set to ``True`` to make the table strict or ``False`` to make it
+          non-strict. Defaults to ``None``, which preserves the existing strict mode.
+        """
+        if strict is True and not self.db.supports_strict:
+            raise TransformError("SQLite does not support STRICT tables")
+        types = types or {}
+        rename = rename or {}
+        drop = drop or set()
+    
+        # Resolve column references against the existing schema, matching
+        # case-insensitively the way SQLite does
+        existing_columns = self.columns_dict
+        types = {resolve_casing(c, existing_columns): t for c, t in types.items()}
+        rename = {resolve_casing(c, existing_columns): v for c, v in rename.items()}
+        drop = {resolve_casing(c, existing_columns) for c in drop}
+        if pk is not DEFAULT and pk is not None:
+            if isinstance(pk, str):
+                pk = resolve_casing(pk, existing_columns)
+            else:
+                pk = [resolve_casing(p, existing_columns) for p in pk]
+        if isinstance(not_null, dict):
+            not_null = {
+                resolve_casing(c, existing_columns): v
+                for c, v in cast(dict[str, Any], not_null).items()
+            }
+        elif isinstance(not_null, set):
+            not_null = {resolve_casing(c, existing_columns) for c in not_null}
+        if defaults is not None:
+            defaults = {
+                resolve_casing(c, existing_columns): v for c, v in defaults.items()
+            }
+        if column_order is not None:
+            column_order = [resolve_casing(c, existing_columns) for c in column_order]
+    
+        try:
+            existing_checks = self.checks
+            existing_column_comments = parse_column_comments(self.schema)
+        except ParseError as ex:
+            raise TransformError(
+                f"Could not parse table schema for table {self.name!r}: {ex}"
+            ) from ex
+        create_table_checks: list[Check] = []
+        for check in existing_checks:
+            owner = (
+                resolve_casing(check.column, existing_columns) if check.column else ""
+            )
+            # A column-level constraint disappears with the column that owns it.
+            if owner and owner in drop:
+                continue
+            for dropped_column in drop:
+                if check_references_identifier(check.check, dropped_column):
+                    raise TransformError(
+                        f"Cannot drop column {dropped_column!r}: it is used by "
+                        f"CHECK constraint {check.name or check.check!r}"
+                    )
+            create_table_checks.append(
+                Check(
+                    rewrite_check_expression(check.check, rename),
+                    name=check.name,
+                    column=rename.get(owner) or owner,
+                )
+            )
+    
+        create_table_column_comments: dict[str, ColumnComments] = {}
+        for column, comments in existing_column_comments.items():
+            owner = resolve_casing(column, existing_columns)
+            if owner not in drop:
+                create_table_column_comments[rename.get(owner) or owner] = comments
+    
+        create_table_foreign_keys: list[ForeignKeyIndicator] = []
+    
+        if foreign_keys is not None:
+            if add_foreign_keys is not None:
+                raise ValueError(
+                    "Cannot specify both foreign_keys and add_foreign_keys"
+                )
+            if drop_foreign_keys is not None:
+                raise ValueError(
+                    "Cannot specify both foreign_keys and drop_foreign_keys"
+                )
+            create_table_foreign_keys.extend(foreign_keys)
+        else:
+            # Construct foreign_keys from current, plus add_foreign_keys, minus drop_foreign_keys
+            # The casing of columns in a foreign key definition can differ
+            # from the casing of the columns themselves, so these comparisons
+            # are all case-folded
+            dropped_columns_folded = {fold_identifier_case(c) for c in drop}
+            renamed_columns_folded = {
+                fold_identifier_case(k): v for k, v in rename.items()
+            }
+    
+            def fk_should_be_dropped(fk: ForeignKey) -&gt; bool:
+                fk_columns_folded = tuple(fold_identifier_case(c) for c in fk.columns)
+                if drop_foreign_keys is not None:
+                    for spec in drop_foreign_keys:
+                        if isinstance(spec, str):
+                            # A column name matches any foreign key it participates in
+                            if fold_identifier_case(spec) in fk_columns_folded:
+                                return True
+                        elif (
+                            tuple(fold_identifier_case(s) for s in spec)
+                            == fk_columns_folded
+                        ):
+                            # A tuple/list must match a compound key's columns exactly
+                            return True
+                # Dropping any of a foreign key's columns drops the whole key
+                return any(
+                    column in dropped_columns_folded for column in fk_columns_folded
+                )
+    
+            def fk_with_renamed_columns(fk: ForeignKey) -&gt; ForeignKey:
+                columns = tuple(
+                    renamed_columns_folded.get(fold_identifier_case(column)) or column
+                    for column in fk.columns
+                )
+                if fk.is_compound:
+                    return ForeignKey(
+                        self.name,
+                        None,
+                        fk.other_table,
+                        None,
+                        columns=columns,
+                        other_columns=fk.other_columns,
+                        is_compound=True,
+                        on_delete=fk.on_delete,
+                        on_update=fk.on_update,
+                    )
+                return ForeignKey(
+                    self.name,
+                    columns[0],
+                    fk.other_table,
+                    fk.other_columns[0],
+                    on_delete=fk.on_delete,
+                    on_update=fk.on_update,
+                )
+    
+            create_table_foreign_keys = []
+            # Copy over old foreign keys, unless we are dropping them
+            for fk in self.foreign_keys:
+                if not fk_should_be_dropped(fk):
+                    create_table_foreign_keys.append(fk_with_renamed_columns(fk))
+            # Add new foreign keys
+            if add_foreign_keys is not None:
+                for fk in self.db.resolve_foreign_keys(self.name, add_foreign_keys):
+                    create_table_foreign_keys.append(fk_with_renamed_columns(fk))
+    
+        new_table_name = f"{self.name}_new_{tmp_suffix or os.urandom(6).hex()}"
+        current_column_pairs = list(self.columns_dict.items())
+        new_column_pairs = []
+        copy_from_to = {column: column for column, _ in current_column_pairs}
+        for name, type_ in current_column_pairs:
+            type_ = types.get(name) or type_
+            if name in drop:
+                del copy_from_to[name]
+                continue
+            new_name = rename.get(name) or name
+            new_column_pairs.append((new_name, type_))
+            copy_from_to[name] = new_name
+    
+        if pk is DEFAULT:
+            pks_renamed = tuple(
+                rename.get(pk_name) or pk_name
+                for pk_name in (self.pks if not self.use_rowid else [])
+            )
+            if len(pks_renamed) == 1:
+                pk = pks_renamed[0]
+            else:
+                pk = pks_renamed
+    
+        # not_null may be a set or dict, need to convert to a set
+        create_table_not_null = {
+            rename.get(c.name) or c.name
+            for c in self.columns
+            if c.notnull
+            if c.name not in drop
+        }
+        if isinstance(not_null, dict):
+            # Remove any columns with a value of False
+            for key, value in not_null.items():
+                # Column may have been renamed
+                key = rename.get(key) or key
+                if value is False and key in create_table_not_null:
+                    create_table_not_null.remove(key)
+                else:
+                    create_table_not_null.add(key)
+        elif isinstance(not_null, set):
+            create_table_not_null.update((rename.get(k) or k) for k in not_null)
+        elif not not_null:
+            pass
+        else:
+            raise ValueError(
+                f"not_null must be a dict or a set or None, it was {not_null!r}"
+            )
+        # defaults=
+        create_table_defaults = {
+            (rename.get(c.name) or c.name): c.default_value
+            for c in self.columns
+            if c.default_value is not None and c.name not in drop
+        }
+        if defaults is not None:
+            create_table_defaults.update(
+                {rename.get(c) or c: v for c, v in defaults.items()}
+            )
+    
+        if column_order is not None:
+            column_order = [rename.get(col) or col for col in column_order]
+    
+        sqls = []
+        sqls.append(
+            self.db.create_table_sql(
+                new_table_name,
+                dict(new_column_pairs),
+                pk=pk,
+                not_null=create_table_not_null,
+                defaults=create_table_defaults,
+                foreign_keys=create_table_foreign_keys,
+                column_order=column_order,
+                strict=self.strict if strict is None else strict,
+                _checks=create_table_checks,
+                _column_comments=create_table_column_comments,
+            ).strip()
+        )
+    
+        # Copy across data, respecting any renamed columns
+        new_cols = []
+        old_cols = []
+        for from_, to_ in copy_from_to.items():
+            old_cols.append(from_)
+            new_cols.append(to_)
+        # Ensure rowid is copied too
+        if "rowid" not in new_cols:
+            new_cols.insert(0, "rowid")
+            old_cols.insert(0, "rowid")
+        copy_sql = "INSERT INTO {} ({new_cols})\n   SELECT {old_cols} FROM {};".format(
+            quote_identifier(new_table_name),
+            quote_identifier(self.name),
+            old_cols=", ".join(quote_identifier(col) for col in old_cols),
+            new_cols=", ".join(quote_identifier(col) for col in new_cols),
+        )
+        sqls.append(copy_sql)
+        # Drop (or keep) the old table, then rename the new one into place.
+        # Since SQLite 3.25 ALTER TABLE ... RENAME TO rewrites references to
+        # the renamed table in every view definition, which fails if a view
+        # references the table that was just dropped - and with keep_table=
+        # would silently repoint views at the backup table. These renames are
+        # an implementation detail of transform(), so use legacy_alter_table
+        # to leave view definitions untouched, restoring the connection's
+        # current value afterwards.
+        legacy_alter_table_row = self.db.execute("PRAGMA legacy_alter_table").fetchone()
+        legacy_alter_table_was_on = bool(
+            legacy_alter_table_row and legacy_alter_table_row[0]
+        )
+        if keep_table:
+            sqls.append("PRAGMA legacy_alter_table=ON;")
+            sqls.append(
+                f"ALTER TABLE {quote_identifier(self.name)} RENAME TO {quote_identifier(keep_table)};"
+            )
+        else:
+            sqls.append(f"DROP TABLE {quote_identifier(self.name)};")
+            sqls.append("PRAGMA legacy_alter_table=ON;")
+        sqls.append(
+            f"ALTER TABLE {quote_identifier(new_table_name)} RENAME TO {quote_identifier(self.name)};"
+        )
+        sqls.append(
+            "PRAGMA legacy_alter_table={};".format(
+                "ON" if legacy_alter_table_was_on else "OFF"
+            )
+        )
+        # Re-add existing indexes
+        xindexes = {index.name: index for index in self.xindexes}
+        for index in self.indexes:
+            if index.origin != "pk":
+                index_sql = self.db.execute(
+                    """SELECT sql FROM sqlite_master WHERE type = 'index' AND name = :index_name;""",
+                    {"index_name": index.name},
+                ).fetchall()[0][0]
+                if index_sql is None:
+                    raise TransformError(
+                        f"Index '{index.name}' on table '{self.name}' does not have a "
+                        "CREATE INDEX statement. You must manually drop this index prior to running this "
+                        "transformation and manually recreate the new index after running this transformation."
+                    )
+                key_columns = [
+                    column
+                    for column in xindexes[index.name].columns
+                    if column.key
+                ]
+                is_expression_index = any(column.cid &lt; 0 for column in key_columns)
+                if rename and (index.partial or is_expression_index):
+                    # Only inspect indexed expressions and the WHERE clause:
+                    # index and table names can also match a renamed column.
+                    body_match = _index_body_re.match(index_sql)
+                    index_body = body_match.group("body") if body_match else index_sql
+                    affected_column = next(
+                        (
+                            column
+                            for column in rename
+                            if check_references_identifier(index_body, column)
+                        ),
+                        None,
+                    )
+                    if affected_column is not None:
+                        kind = "partial" if index.partial else "expression"
+&gt;                       raise TransformError(
+                            f"Cannot rename column {affected_column!r}: {kind} index "
+                            f"{index.name!r} depends on it. You must manually drop this "
+                            "index prior to running this transformation and manually "
+                            "recreate it after running the transformation. No changes "
+                            "have been applied to this table."
+                        )
+E                       sqlite_utils.db.TransformError: Cannot rename column 'name': expression index 'idx_t_name' depends on it. You must manually drop this index prior to running this transformation and manually recreate it after running the transformation. No changes have been applied to this table.
+
+/input/sqlite_utils/db.py:3024: TransformError
+
+During handling of the above exception, another exception occurred:
+
+fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffb32688b0&gt;&gt;
+index_sql = 'CREATE INDEX idx_t_name ON t(lower(name))'
+
+    @pytest.mark.parametrize(
+        "index_sql",
+        (
+            "CREATE INDEX idx_t_name ON t(lower(name))",
+            "CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL",
+        ),
+    )
+    def test_transform_rename_complex_index_errors(fresh_db, index_sql):
+        table = fresh_db.table("t")
+        table.insert({"id": 1, "name": "Cleo"}, pk="id")
+        fresh_db.execute(index_sql)
+    
+&gt;       with pytest.raises(TransformError, match="partial or expression index"):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'partial or expression index'
+E        Input: "Cannot rename column 'name': expression index 'idx_t_name' depends on it. You must manually drop this index prior to running this transformation and manually recreate it after running the transformation. No changes have been applied to this table."
+
+/trusted/test_behavior.py:56: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_transform_rename_complex_index_errors[CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10; Regex: 'partial or expression index'&#10; Input: &quot;Cannot rename column 'name': partial index 'idx_t_name' depends on it. You must manually drop this index prior to running this transformation and manually recreate it after running the transformation. No changes have been applied to this table.&quot;">fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffb32a15d0&gt;&gt;
+index_sql = 'CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL'
+
+    @pytest.mark.parametrize(
+        "index_sql",
+        (
+            "CREATE INDEX idx_t_name ON t(lower(name))",
+            "CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL",
+        ),
+    )
+    def test_transform_rename_complex_index_errors(fresh_db, index_sql):
+        table = fresh_db.table("t")
+        table.insert({"id": 1, "name": "Cleo"}, pk="id")
+        fresh_db.execute(index_sql)
+    
+        with pytest.raises(TransformError, match="partial or expression index"):
+&gt;           table.transform(rename={"name": "full_name"})
+
+/trusted/test_behavior.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/input/sqlite_utils/db.py:2602: in transform
+    sqls = self.transform_sql(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Table t (id, name)&gt;
+
+    def transform_sql(
+        self,
+        *,
+        types: dict | None = None,
+        rename: dict | None = None,
+        drop: Iterable | None = None,
+        pk: Any | None = DEFAULT,
+        not_null: Iterable[str] | None = None,
+        defaults: dict[str, Any] | None = None,
+        drop_foreign_keys: Iterable | None = None,
+        add_foreign_keys: ForeignKeysType | None = None,
+        foreign_keys: ForeignKeysType | None = None,
+        column_order: list[str] | None = None,
+        tmp_suffix: str | None = None,
+        keep_table: str | None = None,
+        strict: bool | None = None,
+    ) -&gt; list[str]:
+        """
+        Return a list of SQL statements that should be executed in order to apply this transformation.
+    
+        :param types: Columns that should have their type changed, for example ``{"weight": float}``
+        :param rename: Columns to rename, for example ``{"headline": "title"}``
+        :param drop: Columns to drop
+        :param pk: New primary key for the table
+        :param not_null: Columns to set as ``NOT NULL``
+        :param defaults: Default values for columns
+        :param drop_foreign_keys: Foreign key constraints to remove - a column name
+          drops any foreign key that column participates in, a tuple of column names
+          drops the compound foreign key with exactly those columns
+        :param add_foreign_keys: List of foreign keys to add to the table
+        :param foreign_keys: List of foreign keys to set for the table, replacing any existing foreign keys
+        :param column_order: List of strings specifying a full or partial column order
+          to use when creating the table
+        :param tmp_suffix: Suffix to use for the temporary table name
+        :param keep_table: If specified, the existing table will be renamed to this and will not be
+          dropped
+        :param strict: Set to ``True`` to make the table strict or ``False`` to make it
+          non-strict. Defaults to ``None``, which preserves the existing strict mode.
+        """
+        if strict is True and not self.db.supports_strict:
+            raise TransformError("SQLite does not support STRICT tables")
+        types = types or {}
+        rename = rename or {}
+        drop = drop or set()
+    
+        # Resolve column references against the existing schema, matching
+        # case-insensitively the way SQLite does
+        existing_columns = self.columns_dict
+        types = {resolve_casing(c, existing_columns): t for c, t in types.items()}
+        rename = {resolve_casing(c, existing_columns): v for c, v in rename.items()}
+        drop = {resolve_casing(c, existing_columns) for c in drop}
+        if pk is not DEFAULT and pk is not None:
+            if isinstance(pk, str):
+                pk = resolve_casing(pk, existing_columns)
+            else:
+                pk = [resolve_casing(p, existing_columns) for p in pk]
+        if isinstance(not_null, dict):
+            not_null = {
+                resolve_casing(c, existing_columns): v
+                for c, v in cast(dict[str, Any], not_null).items()
+            }
+        elif isinstance(not_null, set):
+            not_null = {resolve_casing(c, existing_columns) for c in not_null}
+        if defaults is not None:
+            defaults = {
+                resolve_casing(c, existing_columns): v for c, v in defaults.items()
+            }
+        if column_order is not None:
+            column_order = [resolve_casing(c, existing_columns) for c in column_order]
+    
+        try:
+            existing_checks = self.checks
+            existing_column_comments = parse_column_comments(self.schema)
+        except ParseError as ex:
+            raise TransformError(
+                f"Could not parse table schema for table {self.name!r}: {ex}"
+            ) from ex
+        create_table_checks: list[Check] = []
+        for check in existing_checks:
+            owner = (
+                resolve_casing(check.column, existing_columns) if check.column else ""
+            )
+            # A column-level constraint disappears with the column that owns it.
+            if owner and owner in drop:
+                continue
+            for dropped_column in drop:
+                if check_references_identifier(check.check, dropped_column):
+                    raise TransformError(
+                        f"Cannot drop column {dropped_column!r}: it is used by "
+                        f"CHECK constraint {check.name or check.check!r}"
+                    )
+            create_table_checks.append(
+                Check(
+                    rewrite_check_expression(check.check, rename),
+                    name=check.name,
+                    column=rename.get(owner) or owner,
+                )
+            )
+    
+        create_table_column_comments: dict[str, ColumnComments] = {}
+        for column, comments in existing_column_comments.items():
+            owner = resolve_casing(column, existing_columns)
+            if owner not in drop:
+                create_table_column_comments[rename.get(owner) or owner] = comments
+    
+        create_table_foreign_keys: list[ForeignKeyIndicator] = []
+    
+        if foreign_keys is not None:
+            if add_foreign_keys is not None:
+                raise ValueError(
+                    "Cannot specify both foreign_keys and add_foreign_keys"
+                )
+            if drop_foreign_keys is not None:
+                raise ValueError(
+                    "Cannot specify both foreign_keys and drop_foreign_keys"
+                )
+            create_table_foreign_keys.extend(foreign_keys)
+        else:
+            # Construct foreign_keys from current, plus add_foreign_keys, minus drop_foreign_keys
+            # The casing of columns in a foreign key definition can differ
+            # from the casing of the columns themselves, so these comparisons
+            # are all case-folded
+            dropped_columns_folded = {fold_identifier_case(c) for c in drop}
+            renamed_columns_folded = {
+                fold_identifier_case(k): v for k, v in rename.items()
+            }
+    
+            def fk_should_be_dropped(fk: ForeignKey) -&gt; bool:
+                fk_columns_folded = tuple(fold_identifier_case(c) for c in fk.columns)
+                if drop_foreign_keys is not None:
+                    for spec in drop_foreign_keys:
+                        if isinstance(spec, str):
+                            # A column name matches any foreign key it participates in
+                            if fold_identifier_case(spec) in fk_columns_folded:
+                                return True
+                        elif (
+                            tuple(fold_identifier_case(s) for s in spec)
+                            == fk_columns_folded
+                        ):
+                            # A tuple/list must match a compound key's columns exactly
+                            return True
+                # Dropping any of a foreign key's columns drops the whole key
+                return any(
+                    column in dropped_columns_folded for column in fk_columns_folded
+                )
+    
+            def fk_with_renamed_columns(fk: ForeignKey) -&gt; ForeignKey:
+                columns = tuple(
+                    renamed_columns_folded.get(fold_identifier_case(column)) or column
+                    for column in fk.columns
+                )
+                if fk.is_compound:
+                    return ForeignKey(
+                        self.name,
+                        None,
+                        fk.other_table,
+                        None,
+                        columns=columns,
+                        other_columns=fk.other_columns,
+                        is_compound=True,
+                        on_delete=fk.on_delete,
+                        on_update=fk.on_update,
+                    )
+                return ForeignKey(
+                    self.name,
+                    columns[0],
+                    fk.other_table,
+                    fk.other_columns[0],
+                    on_delete=fk.on_delete,
+                    on_update=fk.on_update,
+                )
+    
+            create_table_foreign_keys = []
+            # Copy over old foreign keys, unless we are dropping them
+            for fk in self.foreign_keys:
+                if not fk_should_be_dropped(fk):
+                    create_table_foreign_keys.append(fk_with_renamed_columns(fk))
+            # Add new foreign keys
+            if add_foreign_keys is not None:
+                for fk in self.db.resolve_foreign_keys(self.name, add_foreign_keys):
+                    create_table_foreign_keys.append(fk_with_renamed_columns(fk))
+    
+        new_table_name = f"{self.name}_new_{tmp_suffix or os.urandom(6).hex()}"
+        current_column_pairs = list(self.columns_dict.items())
+        new_column_pairs = []
+        copy_from_to = {column: column for column, _ in current_column_pairs}
+        for name, type_ in current_column_pairs:
+            type_ = types.get(name) or type_
+            if name in drop:
+                del copy_from_to[name]
+                continue
+            new_name = rename.get(name) or name
+            new_column_pairs.append((new_name, type_))
+            copy_from_to[name] = new_name
+    
+        if pk is DEFAULT:
+            pks_renamed = tuple(
+                rename.get(pk_name) or pk_name
+                for pk_name in (self.pks if not self.use_rowid else [])
+            )
+            if len(pks_renamed) == 1:
+                pk = pks_renamed[0]
+            else:
+                pk = pks_renamed
+    
+        # not_null may be a set or dict, need to convert to a set
+        create_table_not_null = {
+            rename.get(c.name) or c.name
+            for c in self.columns
+            if c.notnull
+            if c.name not in drop
+        }
+        if isinstance(not_null, dict):
+            # Remove any columns with a value of False
+            for key, value in not_null.items():
+                # Column may have been renamed
+                key = rename.get(key) or key
+                if value is False and key in create_table_not_null:
+                    create_table_not_null.remove(key)
+                else:
+                    create_table_not_null.add(key)
+        elif isinstance(not_null, set):
+            create_table_not_null.update((rename.get(k) or k) for k in not_null)
+        elif not not_null:
+            pass
+        else:
+            raise ValueError(
+                f"not_null must be a dict or a set or None, it was {not_null!r}"
+            )
+        # defaults=
+        create_table_defaults = {
+            (rename.get(c.name) or c.name): c.default_value
+            for c in self.columns
+            if c.default_value is not None and c.name not in drop
+        }
+        if defaults is not None:
+            create_table_defaults.update(
+                {rename.get(c) or c: v for c, v in defaults.items()}
+            )
+    
+        if column_order is not None:
+            column_order = [rename.get(col) or col for col in column_order]
+    
+        sqls = []
+        sqls.append(
+            self.db.create_table_sql(
+                new_table_name,
+                dict(new_column_pairs),
+                pk=pk,
+                not_null=create_table_not_null,
+                defaults=create_table_defaults,
+                foreign_keys=create_table_foreign_keys,
+                column_order=column_order,
+                strict=self.strict if strict is None else strict,
+                _checks=create_table_checks,
+                _column_comments=create_table_column_comments,
+            ).strip()
+        )
+    
+        # Copy across data, respecting any renamed columns
+        new_cols = []
+        old_cols = []
+        for from_, to_ in copy_from_to.items():
+            old_cols.append(from_)
+            new_cols.append(to_)
+        # Ensure rowid is copied too
+        if "rowid" not in new_cols:
+            new_cols.insert(0, "rowid")
+            old_cols.insert(0, "rowid")
+        copy_sql = "INSERT INTO {} ({new_cols})\n   SELECT {old_cols} FROM {};".format(
+            quote_identifier(new_table_name),
+            quote_identifier(self.name),
+            old_cols=", ".join(quote_identifier(col) for col in old_cols),
+            new_cols=", ".join(quote_identifier(col) for col in new_cols),
+        )
+        sqls.append(copy_sql)
+        # Drop (or keep) the old table, then rename the new one into place.
+        # Since SQLite 3.25 ALTER TABLE ... RENAME TO rewrites references to
+        # the renamed table in every view definition, which fails if a view
+        # references the table that was just dropped - and with keep_table=
+        # would silently repoint views at the backup table. These renames are
+        # an implementation detail of transform(), so use legacy_alter_table
+        # to leave view definitions untouched, restoring the connection's
+        # current value afterwards.
+        legacy_alter_table_row = self.db.execute("PRAGMA legacy_alter_table").fetchone()
+        legacy_alter_table_was_on = bool(
+            legacy_alter_table_row and legacy_alter_table_row[0]
+        )
+        if keep_table:
+            sqls.append("PRAGMA legacy_alter_table=ON;")
+            sqls.append(
+                f"ALTER TABLE {quote_identifier(self.name)} RENAME TO {quote_identifier(keep_table)};"
+            )
+        else:
+            sqls.append(f"DROP TABLE {quote_identifier(self.name)};")
+            sqls.append("PRAGMA legacy_alter_table=ON;")
+        sqls.append(
+            f"ALTER TABLE {quote_identifier(new_table_name)} RENAME TO {quote_identifier(self.name)};"
+        )
+        sqls.append(
+            "PRAGMA legacy_alter_table={};".format(
+                "ON" if legacy_alter_table_was_on else "OFF"
+            )
+        )
+        # Re-add existing indexes
+        xindexes = {index.name: index for index in self.xindexes}
+        for index in self.indexes:
+            if index.origin != "pk":
+                index_sql = self.db.execute(
+                    """SELECT sql FROM sqlite_master WHERE type = 'index' AND name = :index_name;""",
+                    {"index_name": index.name},
+                ).fetchall()[0][0]
+                if index_sql is None:
+                    raise TransformError(
+                        f"Index '{index.name}' on table '{self.name}' does not have a "
+                        "CREATE INDEX statement. You must manually drop this index prior to running this "
+                        "transformation and manually recreate the new index after running this transformation."
+                    )
+                key_columns = [
+                    column
+                    for column in xindexes[index.name].columns
+                    if column.key
+                ]
+                is_expression_index = any(column.cid &lt; 0 for column in key_columns)
+                if rename and (index.partial or is_expression_index):
+                    # Only inspect indexed expressions and the WHERE clause:
+                    # index and table names can also match a renamed column.
+                    body_match = _index_body_re.match(index_sql)
+                    index_body = body_match.group("body") if body_match else index_sql
+                    affected_column = next(
+                        (
+                            column
+                            for column in rename
+                            if check_references_identifier(index_body, column)
+                        ),
+                        None,
+                    )
+                    if affected_column is not None:
+                        kind = "partial" if index.partial else "expression"
+&gt;                       raise TransformError(
+                            f"Cannot rename column {affected_column!r}: {kind} index "
+                            f"{index.name!r} depends on it. You must manually drop this "
+                            "index prior to running this transformation and manually "
+                            "recreate it after running the transformation. No changes "
+                            "have been applied to this table."
+                        )
+E                       sqlite_utils.db.TransformError: Cannot rename column 'name': partial index 'idx_t_name' depends on it. You must manually drop this index prior to running this transformation and manually recreate it after running the transformation. No changes have been applied to this table.
+
+/input/sqlite_utils/db.py:3024: TransformError
+
+During handling of the above exception, another exception occurred:
+
+fresh_db = &lt;Database &lt;sqlite3.Connection object at 0xffffb32a15d0&gt;&gt;
+index_sql = 'CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL'
+
+    @pytest.mark.parametrize(
+        "index_sql",
+        (
+            "CREATE INDEX idx_t_name ON t(lower(name))",
+            "CREATE INDEX idx_t_name ON t(name) WHERE name IS NOT NULL",
+        ),
+    )
+    def test_transform_rename_complex_index_errors(fresh_db, index_sql):
+        table = fresh_db.table("t")
+        table.insert({"id": 1, "name": "Cleo"}, pk="id")
+        fresh_db.execute(index_sql)
+    
+&gt;       with pytest.raises(TransformError, match="partial or expression index"):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'partial or expression index'
+E        Input: "Cannot rename column 'name': partial index 'idx_t_name' depends on it. You must manually drop this index prior to running this transformation and manually recreate it after running the transformation. No changes have been applied to this table."
+
+/trusted/test_behavior.py:56: AssertionError</failure></testcase><testcase classname="test_behavior" name="test_index_name_collision_behavior[name-idx_name]" time="0.001" /><testcase classname="test_behavior" name="test_index_name_collision_behavior[t-name]" time="0.001" /><testcase classname="test_behavior" name="test_index_drop_rejection_preserves_rows" time="0.000" /></testsuite></testsuites>

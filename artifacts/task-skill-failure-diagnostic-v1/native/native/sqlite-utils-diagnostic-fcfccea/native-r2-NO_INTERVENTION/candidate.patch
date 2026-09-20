@@ -1,0 +1,291 @@
+diff --git a/sqlite_utils/__init__.py b/sqlite_utils/__init__.py
+index 0d257164ba303ba532312a509beb71e80625711e..aae0f1d21bc9448e4c85003f81d57affb6380884 100644
+--- a/sqlite_utils/__init__.py
++++ b/sqlite_utils/__init__.py
+@@ -1,6 +1,13 @@
+-from .db import Database
++from .db import ANY, Database
+ from .hookspecs import hookimpl, hookspec
+ from .migrations import Migrations
+ from .utils import suggest_column_types
+ 
+-__all__ = ["Database", "Migrations", "hookimpl", "hookspec", "suggest_column_types"]
++__all__ = [
++    "ANY",
++    "Database",
++    "Migrations",
++    "hookimpl",
++    "hookspec",
++    "suggest_column_types",
++]
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index a8baff8dc3b4cb6ba21a55d1f55597e893021d6c..8391c55a1ba31187fd7564a8bdedee51dcac466c 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -76,7 +76,7 @@ def _close_databases(ctx):
+             pass
+ 
+ 
+-VALID_COLUMN_TYPES = ("INTEGER", "TEXT", "FLOAT", "REAL", "BLOB")
++VALID_COLUMN_TYPES = ("INTEGER", "TEXT", "FLOAT", "REAL", "BLOB", "ANY")
+ 
+ UNICODE_ERROR = """
+ {}
+@@ -1758,7 +1758,7 @@ def create_table(
+             height real \\
+             photo blob --pk id
+ 
+-    Valid column types are text, integer, real, float and blob.
++    Valid column types are text, integer, real, float, blob and any.
+     """
+     db = sqlite_utils.Database(path)
+     _register_db_for_cleanup(db)
+@@ -2669,11 +2669,11 @@ def schema(
+     type=(
+         str,
+         click.Choice(
+-            ["INTEGER", "TEXT", "FLOAT", "REAL", "BLOB"], case_sensitive=False
++            list(VALID_COLUMN_TYPES), case_sensitive=False
+         ),
+     ),
+     multiple=True,
+-    help="Change column type to INTEGER, TEXT, FLOAT, REAL or BLOB",
++    help="Change column type to INTEGER, TEXT, FLOAT, REAL, BLOB or ANY",
+ )
+ @click.option("--drop", type=str, multiple=True, help="Drop this column")
+ @click.option(
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index edefbab0baa61c178e9db77650890a59747b9fed..ef2e91764d6b9790150bd0304a6360e16cc1f546 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -59,6 +59,10 @@ except ImportError:
+ 
+ SQLITE_MAX_VARS = 999
+ 
++# Public column type marker for SQLite's ANY type.  ANY has special semantics
++# in STRICT tables: values retain their original SQLite storage class.
++ANY = "ANY"
++
+ # Names that refer to a rowid table's implicit integer primary key. These are
+ # valid primary key targets even though they are not listed among a table's
+ # columns. See https://www.sqlite.org/lang_createtable.html#rowid
+@@ -372,6 +376,7 @@ COLUMN_TYPE_MAPPING: dict[Any, str] = {
+     "FLOAT": "FLOAT",
+     "REAL": "REAL",
+     "BLOB": "BLOB",
++    "ANY": "ANY",
+     "text": "TEXT",
+     "str": "TEXT",
+     "integer": "INTEGER",
+@@ -380,6 +385,7 @@ COLUMN_TYPE_MAPPING: dict[Any, str] = {
+     "real": "REAL",
+     "blob": "BLOB",
+     "bytes": "BLOB",
++    "any": "ANY",
+ }
+ # If numpy is available, add more types
+ if np:
+@@ -3092,6 +3098,22 @@ class Table(Queryable):
+                 if col in columns
+             }
+             if lookup_table.exists():
++                # In a STRICT table an ANY column preserves values exactly (for
++                # example, text "000123" remains text).  Ordinary, non-STRICT
++                # ANY has numeric affinity, so copying into an existing
++                # non-STRICT lookup could silently coerce those values.
++                strict_any_columns = {
++                    rename.get(col) or col
++                    for col in columns
++                    if self.strict and self.columns_dict[col] == ANY
++                }
++                if strict_any_columns and not lookup_table.strict:
++                    raise InvalidColumns(
++                        "Lookup table {} already exists but is not STRICT; "
++                        "extracting STRICT ANY columns {} could coerce values".format(
++                            table, ", ".join(sorted(strict_any_columns))
++                        )
++                    )
+                 if not set(lookup_columns_definition.items()).issubset(
+                     lookup_table.columns_dict.items()
+                 ):
+@@ -3105,6 +3127,7 @@ class Table(Queryable):
+                         **lookup_columns_definition,
+                     },
+                     pk="id",
++                    strict=self.strict,
+                 )
+             lookup_columns = [(rename.get(col) or col) for col in columns]
+             lookup_table.create_index(lookup_columns, unique=True, if_not_exists=True)
+diff --git a/sqlite_utils/utils.py b/sqlite_utils/utils.py
+index 06404ebdbb044549c2b64417ab380e20ef6273ab..372464d45396bd9d326064ce0bd03fb8e0b5ba7c 100644
+--- a/sqlite_utils/utils.py
++++ b/sqlite_utils/utils.py
+@@ -163,11 +163,17 @@ def types_for_column_types(
+     return column_types
+ 
+ 
+-def column_affinity(column_type: str) -> type:
++def column_affinity(column_type: str) -> type | str:
+     # Implementation of SQLite affinity rules from
+     # https://www.sqlite.org/datatype3.html#determination_of_column_affinity
+     assert isinstance(column_type, str)
+     column_type = column_type.upper().strip()
++    # Preserve SQLite's ANY declaration so schema round-trips (including
++    # transform() and extract()) do not replace it with REAL.  The runtime
++    # affinity difference between STRICT and ordinary ANY remains SQLite's
++    # responsibility.
++    if column_type == "ANY":
++        return "ANY"
+     if column_type == "":
+         return str  # We differ from spec, which says it should be BLOB
+     if "INT" in column_type:
+diff --git a/tests/test_any.py b/tests/test_any.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..199c89bda2027bc0f39ef5d99c26418fd7959eeb
+--- /dev/null
++++ b/tests/test_any.py
+@@ -0,0 +1,144 @@
++import sqlite3
++
++import pytest
++from click.testing import CliRunner
++
++import sqlite_utils
++from sqlite_utils import ANY, Database
++from sqlite_utils import cli
++from sqlite_utils.db import InvalidColumns
++
++
++def storage_classes(db, table, column):
++    return db.execute(
++        'select typeof("{column}"), "{column}" from "{table}" order by id'.format(
++            column=column, table=table
++        )
++    ).fetchall()
++
++
++def test_any_is_public_and_accepts_both_string_casings(fresh_db):
++    assert sqlite_utils.ANY is ANY
++    fresh_db["items"].create(
++        {"upper": ANY, "lower": "any"},
++        strict=True,
++    )
++    assert fresh_db["items"].columns_dict == {"upper": ANY, "lower": ANY}
++    fresh_db["items"].add_column("added", ANY)
++    assert fresh_db["items"].columns[-1].type == "ANY"
++
++
++def test_strict_any_preserves_storage_classes(fresh_db):
++    table = fresh_db["items"].create(
++        {"id": int, "value": ANY}, pk="id", strict=True
++    )
++    values = [1, 1.5, "text", "000123", sqlite3.Binary(b"blob"), None]
++    table.insert_all({"id": i, "value": value} for i, value in enumerate(values))
++    assert storage_classes(fresh_db, "items", "value") == [
++        ("integer", 1),
++        ("real", 1.5),
++        ("text", "text"),
++        ("text", "000123"),
++        ("blob", b"blob"),
++        ("null", None),
++    ]
++
++
++def test_any_transform_preserves_type_and_strictness(fresh_db):
++    table = fresh_db["items"].create(
++        {"id": int, "value": ANY}, pk="id", strict=True
++    )
++    table.insert({"id": 1, "value": "000123"})
++    table.transform(rename={"value": "renamed"})
++    assert table.strict is True
++    assert table.columns_dict["renamed"] == ANY
++    assert storage_classes(fresh_db, "items", "renamed") == [("text", "000123")]
++
++    # Explicit conversion to an ordinary table applies ordinary ANY numeric affinity.
++    table.transform(strict=False)
++    assert table.strict is False
++    assert table.columns_dict["renamed"] == ANY
++    assert storage_classes(fresh_db, "items", "renamed") == [("integer", 123)]
++
++
++def test_extract_strict_any_preserves_type_strictness_and_values(fresh_db):
++    table = fresh_db["items"].create(
++        {"id": int, "value": ANY}, pk="id", strict=True
++    )
++    table.insert_all(
++        [
++            {"id": 1, "value": "000123"},
++            {"id": 2, "value": 123},
++            {"id": 3, "value": sqlite3.Binary(b"123")},
++            {"id": 4, "value": None},
++        ]
++    )
++    table.extract("value")
++    lookup = fresh_db["value"]
++    assert table.strict is True
++    assert lookup.strict is True
++    assert lookup.columns_dict["value"] == ANY
++    assert storage_classes(fresh_db, "value", "value") == [
++        ("text", "000123"),
++        ("integer", 123),
++        ("blob", b"123"),
++    ]
++
++
++def test_extract_strict_any_rejects_existing_non_strict_lookup(fresh_db):
++    source = fresh_db["source"].create(
++        {"id": int, "value": ANY}, pk="id", strict=True
++    )
++    source.insert({"id": 1, "value": "000123"})
++    lookup = fresh_db["lookup"].create({"id": int, "value": ANY}, pk="id")
++
++    with pytest.raises(InvalidColumns, match="is not STRICT"):
++        source.extract("value", table="lookup")
++
++    assert lookup.count == 0
++    assert source.columns_dict == {"id": int, "value": ANY}
++
++
++@pytest.mark.parametrize("command", ("insert", "upsert"))
++def test_cli_insert_upsert_any_type(tmpdir, command):
++    path = str(tmpdir / "data.db")
++    result = CliRunner().invoke(
++        cli.cli,
++        [
++            command,
++            path,
++            "items",
++            "-",
++            "--nl",
++            "--pk",
++            "id",
++            "--type",
++            "value",
++            "any",
++            "--strict",
++        ],
++        input='{"id": 1, "value": "000123"}\n',
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(path)
++    assert db["items"].columns_dict["value"] == ANY
++    assert storage_classes(db, "items", "value") == [("text", "000123")]
++
++
++def test_cli_create_table_and_transform_any(tmpdir):
++    path = str(tmpdir / "data.db")
++    runner = CliRunner()
++    result = runner.invoke(
++        cli.cli,
++        ["create-table", path, "items", "id", "integer", "value", "any", "--strict"],
++    )
++    assert result.exit_code == 0, result.output
++    db = Database(path)
++    db["items"].insert({"id": 1, "value": "000123"})
++    result = runner.invoke(
++        cli.cli, ["transform", path, "items", "--type", "value", "ANY"]
++    )
++    assert result.exit_code == 0, result.output
++    assert db["items"].strict is True
++    assert db["items"].columns_dict["value"] == ANY
++    assert storage_classes(db, "items", "value") == [("text", "000123")]
