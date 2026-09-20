@@ -1,0 +1,33 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..ab4f5525103b14566a7e555a42f94fb30905cf7f 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -50,6 +50,7 @@ class CSVLook(CSVKitUtility):
+             self.input_file,
+             skip_lines=self.args.skip_lines,
+             sniff_limit=sniff_limit,
++            row_limit=self.args.max_rows or None,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
+             **self.reader_kwargs,
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..98749fab01d54fd973a27250cbaf79d41eb3e313 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,16 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_rows(self):
++        input_file = io.StringIO('a,b\nfoo,bar\n' + 'x' * 1024 + ',baz\n')
++
++        with patch.object(self.Utility, '_open_input_file', return_value=input_file):
++            self.assertLines(['--max-rows', '1', '--maxfieldsize', '100', '--snifflimit', '0', 'unused.csv'], [
++                '| a   | b   |',
++                '| --- | --- |',
++                '| foo | bar |',
++            ])
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

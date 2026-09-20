@@ -1,0 +1,83 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..698c46079530191ba3a824f1419fa4aa1554839b 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -28,6 +28,12 @@ except ImportError:
+ QUOTING_CHOICES = sorted(getattr(csv, name) for name in dir(csv) if name.startswith('QUOTE_'))
+ 
+ 
++def get_default_encoding():
++    """Return the input encoding requested by Python's I/O environment."""
++    encoding = os.environ.get('PYTHONIOENCODING', '').split(':', 1)[0]
++    return encoding or 'utf-8-sig'
++
++
+ class LazyFile:
+     """
+     A proxy for a File object that delays opening it until
+@@ -198,7 +204,7 @@ class CSVKitUtility:
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding', default=get_default_encoding(),
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..beb77136bd34caa4b7ffb531f7f38e4a8b8195d8 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,12 @@
+ import unittest
++from unittest.mock import patch
+ 
+-from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.cli import CSVKitUtility, match_column_identifier, parse_column_identifiers
++
++
++class Utility(CSVKitUtility):
++    def add_arguments(self):
++        pass
+ 
+ 
+ class TestCli(unittest.TestCase):
+@@ -8,6 +14,19 @@ class TestCli(unittest.TestCase):
+     def setUp(self):
+         self.headers = ['id', 'name', 'i_work_here', '1', 'more-header-values', 'stuff', 'blueberry']
+ 
++    def test_default_encoding(self):
++        for environment in ({}, {'PYTHONIOENCODING': ''}, {'PYTHONIOENCODING': ':strict'}):
++            with self.subTest(environment=environment), patch.dict('os.environ', environment, clear=True):
++                self.assertEqual(Utility([]).args.encoding, 'utf-8-sig')
++
++    def test_default_encoding_from_environment(self):
++        with patch.dict('os.environ', {'PYTHONIOENCODING': 'latin-1:strict'}):
++            self.assertEqual(Utility([]).args.encoding, 'latin-1')
++
++    def test_explicit_encoding_overrides_environment(self):
++        with patch.dict('os.environ', {'PYTHONIOENCODING': 'latin-1'}):
++            self.assertEqual(Utility(['--encoding', 'utf-16']).args.encoding, 'utf-16')
++
+     def test_match_column_identifier_string(self):
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here'))
+         self.assertEqual(2, match_column_identifier(self.headers, 'i_work_here', column_offset=0))
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index ccfe4c4b5a91b38d462553efe55b0c7dc62890dc..aa633e3259756db67c467a227ac9dcf7088ec56d 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -110,6 +110,14 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_convert_csv(self):
+         self.assertConverted('csv', 'examples/testfixed_converted.csv', 'examples/testfixed_converted.csv')
+ 
++    def test_convert_csv_with_environment_encoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1'}):
++            self.assertLines(['-f', 'csv', '--no-inference', 'examples/test_latin1.csv'], [
++                'a,b,c',
++                '1,2,3',
++                '4,5,©',
++            ])
++
+     def test_convert_csv_with_skip_lines(self):
+         self.assertConverted('csv', 'examples/test_skip_lines.csv', 'examples/dummy.csv',
+                              ['--skip-lines', '3', '--no-inference'])

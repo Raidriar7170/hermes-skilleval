@@ -1,0 +1,88 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..1d8d9592b2a67ad0a9ea16c524a0f8d766cc711e 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -52,9 +52,19 @@ class CSVLook(CSVKitUtility):
+             sniff_limit=sniff_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
++            row_limit=self.args.max_rows,
+             **self.reader_kwargs,
+         )
+ 
++        # print_table only adds its truncation row when the table contains more
++        # rows than max_rows. With a bounded read, add an undisplayed sentinel
++        # when the limit was reached (including a limit of zero) to preserve
++        # that output without reading the next CSV record.
++        if self.args.max_rows is not None and len(table.rows) == self.args.max_rows:
++            rows = list(table.rows)
++            rows.append([None] * len(table.columns))
++            table = agate.Table(rows, table.column_names, table.column_types)
++
+         table.print_table(
+             output=self.output_file,
+             max_rows=self.args.max_rows,
+diff --git a/docs/scripts/csvlook.rst b/docs/scripts/csvlook.rst
+index 38ab7b1ff8a58e708192fc8ab3a3af6b1e378993..a8456453be70901da58340d7615ee1214b0b80bb 100644
+--- a/docs/scripts/csvlook.rst
++++ b/docs/scripts/csvlook.rst
+@@ -51,6 +51,9 @@ If a table is too wide to display properly try piping the output to ``less -S``
+ 
+ If the table is too long, try filtering it down with grep or piping the output to ``less``.
+ 
++Use ``--max-rows`` for a bounded preview. In addition to limiting the displayed rows,
++it stops parsing CSV records after the requested number of data rows.
++
+ See also: :doc:`../common_arguments`.
+ 
+ .. note::
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..f8f2963d3fe421ab4cd2020f06a00cac0aadd094 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,45 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++        self.assertLines(['--max-rows', '10', 'examples/dummy.csv'], [
++            '|    a | b | c |',
++            '| ---- | - | - |',
++            '| True | 2 | 3 |',
++        ])
++
++    def test_max_rows_does_not_read_later_records(self):
++        class BoundedInput(io.StringIO):
++            def __init__(self, content, line_limit):
++                super().__init__(content)
++                self.line_limit = line_limit
++                self.lines_read = 0
++
++            def __next__(self):
++                self.lines_read += 1
++                if self.lines_read > self.line_limit:
++                    raise AssertionError('read beyond --max-rows')
++                return super().__next__()
++
++        later_record = 'x' * 1000 + ',3\n'
++        for max_rows, content, line_limit, displayed, expected in (
++            (0, 'a,b\n' + later_record, 1, None, '| ... | ... |'),
++            (1, 'a,b\n1,2\n' + later_record, 2, '| True | 2 |', '|  ... | ... |'),
++            (1, 'a,b\n"first\nsecond",2\n' + later_record, 3, 'first↵second', '| ...          | ... |'),
++        ):
++            with self.subTest(max_rows=max_rows):
++                output_file = io.StringIO()
++                utility = self.Utility(
++                    ['--max-rows', str(max_rows), '--snifflimit', '0', '-'], output_file)
++                utility.input_file = BoundedInput(content, line_limit)
++
++                with patch.object(utility, 'additional_input_expected', return_value=False):
++                    utility.main()
++
++                output = output_file.getvalue()
++                if displayed is not None:
++                    self.assertIn(displayed, output)
++                self.assertEqual(output.splitlines()[-1], expected)
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

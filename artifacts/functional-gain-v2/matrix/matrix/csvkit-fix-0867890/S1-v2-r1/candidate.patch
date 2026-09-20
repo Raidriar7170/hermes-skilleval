@@ -1,0 +1,45 @@
+diff --git a/csvkit/cleanup.py b/csvkit/cleanup.py
+index 32532ee151164004964399555df68fb503ee1b4c..67b161a6fabc68c69225c4e9062f5dc56988eb51 100644
+--- a/csvkit/cleanup.py
++++ b/csvkit/cleanup.py
+@@ -134,8 +134,8 @@ class RowChecker:
+ 
+             # Increment the number of empty cells for each column.
+             if self.empty_columns:
+-                for i, value in enumerate(row):
+-                    if value == '':
++                for i in range(len_column_names):
++                    if i >= len(row) or row[i] == '':
+                         empty_counts[i] += 1
+ 
+             # Standard output
+diff --git a/tests/test_utilities/test_csvclean.py b/tests/test_utilities/test_csvclean.py
+index 07fda389b8ad2b79ee7ed592d3ef54d963006a8b..4e8d57cbd5aaab6f8267c3e43a2c8cc8eb1fce68 100644
+--- a/tests/test_utilities/test_csvclean.py
++++ b/tests/test_utilities/test_csvclean.py
+@@ -136,6 +136,16 @@ class TestCSVClean(CSVKitTestCase, EmptyFileTests):
+             ['1', "Empty columns named 'b', '', ''! Try: csvcut -C 1,3,4", '', '', '', '', ''],
+         ])
+ 
++    def test_empty_columns_with_short_and_long_rows(self):
++        self.assertCleaned(['--empty-columns', 'tests/test_utilities/test_empty_columns_irregular.csv'], [
++            ['a', 'b', 'c'],
++            ['1'],
++            ['2', '', '3', 'extra'],
++        ], [
++            ['line_number', 'msg', 'a', 'b', 'c'],
++            ['1', "Empty columns named 'b'! Try: csvcut -C 2", '', '', ''],
++        ])
++
+     def test_removes_optional_quote_characters(self):
+         self.assertCleaned(['--length-mismatch', 'examples/optional_quote_characters.csv'], [
+             ['a', 'b', 'c'],
+diff --git a/tests/test_utilities/test_empty_columns_irregular.csv b/tests/test_utilities/test_empty_columns_irregular.csv
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c666ea44ee0a044f032b2ec05a93da4b072b020
+--- /dev/null
++++ b/tests/test_utilities/test_empty_columns_irregular.csv
+@@ -0,0 +1,3 @@
++a,b,c
++1
++2,,3,extra

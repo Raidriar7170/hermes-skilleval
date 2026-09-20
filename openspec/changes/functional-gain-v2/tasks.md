@@ -10,8 +10,8 @@
 - [x] 4.1 Fit pure-functional full/task-only gains and cheap priors; cross-fit functional wait, independently reload weights.
 ## 5. G4 freeze and G5 evaluation
 - [x] 5.1 Freeze all policies, task/action roster and matched-panel order without final feedback.
-- [ ] 5.2 Execute complete final matrix, common-state action tables and actual forward delayed continuations.
+- [x] 5.2 Process all registered matrix cells, common-state action tables and actual forward delayed continuations; retain one interrupted matrix UNKNOWN without replacement (functional evidence PARTIAL).
 ## 6. G6 evidence and delivery
-- [ ] 6.1 Aggregate full denominators, functional/representation/wait claims, secondary policy/cost and Chinese retrospective.
+- [x] 6.1 Aggregate full denominators, functional/representation/wait claims, secondary policy/cost and Chinese retrospective.
 - [ ] 6.2 Obtain necessary independent evidence review, scoped tests/compatibility and final verification.
 - [ ] 6.3 Commit, push new stacked Draft PR and verify same-HEAD CI; preserve defaults and legacy assets.

@@ -1,0 +1,59 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..759d7d1f06f5bc2dd0a82bdaa4699fa60db6b05c 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -52,9 +52,20 @@ class CSVLook(CSVKitUtility):
+             sniff_limit=sniff_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
++            row_limit=self.args.max_rows,
+             **self.reader_kwargs,
+         )
+ 
++        # Preserve the traditional ellipsis for ``--max-rows 0`` without
++        # reading a data record merely to make agate consider the table
++        # truncated.
++        if self.args.max_rows == 0:
++            table = agate.Table(
++                [[None] * len(table.column_names)],
++                table.column_names,
++                table.column_types,
++            )
++
+         table.print_table(
+             output=self.output_file,
+             max_rows=self.args.max_rows,
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..6bdc3107933ee252a0624c824bcb459d510cc35a 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -1,5 +1,7 @@
++import csv
+ import io
+ import sys
++import tempfile
+ from unittest.mock import patch
+ 
+ from agate import config
+@@ -117,6 +119,21 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_records(self):
++        field_size_limit = csv.field_size_limit()
++        try:
++            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as f:
++                f.write('a,b\n1,2\n' + 'x' * 100 + ',3\n')
++                f.flush()
++
++                self.assertLines(['--max-rows', '1', '--maxfieldsize', '10', '--snifflimit', '0', f.name], [
++                    '|    a | b |',
++                    '| ---- | - |',
++                    '| True | 2 |',
++                ])
++        finally:
++            csv.field_size_limit(field_size_limit)
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

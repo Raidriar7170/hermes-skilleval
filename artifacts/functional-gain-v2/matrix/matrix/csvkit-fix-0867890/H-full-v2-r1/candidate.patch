@@ -1,0 +1,50 @@
+diff --git a/csvkit/cleanup.py b/csvkit/cleanup.py
+index 32532ee151164004964399555df68fb503ee1b4c..67b161a6fabc68c69225c4e9062f5dc56988eb51 100644
+--- a/csvkit/cleanup.py
++++ b/csvkit/cleanup.py
+@@ -134,8 +134,8 @@ class RowChecker:
+ 
+             # Increment the number of empty cells for each column.
+             if self.empty_columns:
+-                for i, value in enumerate(row):
+-                    if value == '':
++                for i in range(len_column_names):
++                    if i >= len(row) or row[i] == '':
+                         empty_counts[i] += 1
+ 
+             # Standard output
+diff --git a/tests/test_cleanup.py b/tests/test_cleanup.py
+index 4fe3332495a7e8d63da336d5b829107bfaa9b090..b0441b02418cc94f3a8faab49f6f5d43c2829452 100644
+--- a/tests/test_cleanup.py
++++ b/tests/test_cleanup.py
+@@ -1,6 +1,29 @@
+ import unittest
+ 
+-from csvkit.cleanup import join_rows
++from csvkit.cleanup import RowChecker, join_rows
++
++
++class Reader:
++    def __init__(self, rows):
++        self.rows = iter(rows)
++        self.line_num = 0
++
++    def __iter__(self):
++        return self
++
++    def __next__(self):
++        self.line_num += 1
++        return next(self.rows)
++
++
++class TestRowChecker:
++    def test_empty_columns_with_short_and_long_rows(self):
++        rows = [['a', 'b', 'c'], ['1'], ['2', '', '', 'extra']]
++        checker = RowChecker(Reader(rows), empty_columns=True)
++
++        assert list(checker.checked_rows()) == rows[1:]
++        assert len(checker.errors) == 1
++        assert checker.errors[0].msg == "Empty columns named 'b', 'c'! Try: csvcut -C 2,3"
+ 
+ 
+ class TestCleanup(unittest.TestCase):

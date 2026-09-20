@@ -1,0 +1,44 @@
+diff --git a/csvkit/cleanup.py b/csvkit/cleanup.py
+index 32532ee151164004964399555df68fb503ee1b4c..67b161a6fabc68c69225c4e9062f5dc56988eb51 100644
+--- a/csvkit/cleanup.py
++++ b/csvkit/cleanup.py
+@@ -134,8 +134,8 @@ class RowChecker:
+ 
+             # Increment the number of empty cells for each column.
+             if self.empty_columns:
+-                for i, value in enumerate(row):
+-                    if value == '':
++                for i in range(len_column_names):
++                    if i >= len(row) or row[i] == '':
+                         empty_counts[i] += 1
+ 
+             # Standard output
+diff --git a/tests/test_cleanup.py b/tests/test_cleanup.py
+index 4fe3332495a7e8d63da336d5b829107bfaa9b090..5cf7b19ed2f260f660ad82cc1fd1cfbd255e279a 100644
+--- a/tests/test_cleanup.py
++++ b/tests/test_cleanup.py
+@@ -1,6 +1,23 @@
++import io
+ import unittest
+ 
+-from csvkit.cleanup import join_rows
++import agate
++
++from csvkit.cleanup import RowChecker, join_rows
++
++
++def test_empty_columns_with_short_and_long_rows():
++    reader = agate.csv.reader(io.StringIO('a,b,c\n1\n2,,\n3,x,,\n'))
++    checker = RowChecker(reader, empty_columns=True)
++
++    assert list(checker.checked_rows()) == [
++        ['1'],
++        ['2', '', ''],
++        ['3', 'x', '', ''],
++    ]
++    assert [error.msg for error in checker.errors] == [
++        "Empty columns named 'c'! Try: csvcut -C 3",
++    ]
+ 
+ 
+ class TestCleanup(unittest.TestCase):

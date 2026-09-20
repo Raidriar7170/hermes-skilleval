@@ -1,0 +1,71 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..4c51041cfd31ff1070761e06a2a0eb1fa5642e4d 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -46,15 +46,27 @@ class CSVLook(CSVKitUtility):
+             config.set_option('number_truncation_chars', '')
+ 
+         sniff_limit = self.args.sniff_limit if self.args.sniff_limit != -1 else None
++        row_limit = self.args.max_rows if self.args.max_rows is not None and self.args.max_rows >= 0 else None
+         table = agate.Table.from_csv(
+             self.input_file,
+             skip_lines=self.args.skip_lines,
+             sniff_limit=sniff_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
++            row_limit=row_limit,
+             **self.reader_kwargs,
+         )
+ 
++        # A bounded preview must not read an additional record merely to learn
++        # whether to print the truncation row. Add an in-memory sentinel so
++        # agate preserves that row without consuming any more input.
++        if row_limit is not None and len(table.rows) == row_limit:
++            table = agate.Table(
++                list(table.rows) + [[None] * len(table.column_names)],
++                table.column_names,
++                table.column_types,
++            )
++
+         table.print_table(
+             output=self.output_file,
+             max_rows=self.args.max_rows,
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..a6cc206787932d8aaf652e503cf9dbc3b12856ea 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -1,3 +1,4 @@
++import csv
+ import io
+ import sys
+ from unittest.mock import patch
+@@ -117,6 +118,29 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_rows(self):
++        input_file = io.BytesIO(b'a,b\n1,2\n' + b'x' * 100 + b',3\n')
++        field_size_limit = csv.field_size_limit()
++
++        try:
++            with stdin_as_string(input_file):
++                self.assertLines(['--max-rows', '1', '--snifflimit', '0', '-z', '10', '--no-inference'], [
++                    '| a | b |',
++                    '| - | - |',
++                    '| 1 | 2 |',
++                    '| ... | ... |',
++                ])
++        finally:
++            csv.field_size_limit(field_size_limit)
++            input_file.close()
++
++    def test_max_rows_larger_than_input(self):
++        self.assertLines(['--max-rows', '2', 'examples/dummy.csv'], [
++            '|    a | b | c |',
++            '| ---- | - | - |',
++            '| True | 2 | 3 |',
++        ])
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

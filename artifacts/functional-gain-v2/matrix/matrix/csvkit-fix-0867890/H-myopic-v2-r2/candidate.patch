@@ -1,0 +1,46 @@
+diff --git a/csvkit/cleanup.py b/csvkit/cleanup.py
+index 32532ee151164004964399555df68fb503ee1b4c..67b161a6fabc68c69225c4e9062f5dc56988eb51 100644
+--- a/csvkit/cleanup.py
++++ b/csvkit/cleanup.py
+@@ -134,8 +134,8 @@ class RowChecker:
+ 
+             # Increment the number of empty cells for each column.
+             if self.empty_columns:
+-                for i, value in enumerate(row):
+-                    if value == '':
++                for i in range(len_column_names):
++                    if i >= len(row) or row[i] == '':
+                         empty_counts[i] += 1
+ 
+             # Standard output
+diff --git a/tests/test_cleanup.py b/tests/test_cleanup.py
+index 4fe3332495a7e8d63da336d5b829107bfaa9b090..f724fac3a5d3696d0013bc981a0cc3e2c19be7a5 100644
+--- a/tests/test_cleanup.py
++++ b/tests/test_cleanup.py
+@@ -1,10 +1,25 @@
++import io
+ import unittest
+ 
+-from csvkit.cleanup import join_rows
++import agate
++
++from csvkit.cleanup import RowChecker, join_rows
+ 
+ 
+ class TestCleanup(unittest.TestCase):
+ 
++    def test_empty_columns_with_short_and_long_rows(self):
++        reader = agate.csv.reader(io.StringIO('a,b,c,d\nshort,\nlong,,value,,\n'))
++        checker = RowChecker(reader, empty_columns=True)
++
++        self.assertEqual(list(checker.checked_rows()), [
++            ['short', ''],
++            ['long', '', 'value', '', ''],
++        ])
++        self.assertEqual(len(checker.errors), 1)
++        self.assertEqual(checker.errors[0].row, ['', '', '', ''])
++        self.assertEqual(checker.errors[0].msg, "Empty columns named 'b', 'd'! Try: csvcut -C 2,4")
++
+     def test_fix_rows(self):
+         """Test to ensure that row merging yields correct results."""
+         start = [['1', '2', '3'],

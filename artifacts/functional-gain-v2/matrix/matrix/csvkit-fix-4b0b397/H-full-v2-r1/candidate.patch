@@ -1,0 +1,109 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..567da7a2c0ed2ee6e527e2cad645deb87ce75823 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -28,6 +28,19 @@ except ImportError:
+ QUOTING_CHOICES = sorted(getattr(csv, name) for name in dir(csv) if name.startswith('QUOTE_'))
+ 
+ 
++def _get_default_input_encoding():
++    """Return the input encoding configured for Python's standard streams."""
++    python_io_encoding = os.environ.get('PYTHONIOENCODING')
++    if python_io_encoding:
++        # PYTHONIOENCODING accepts ``encoding:error_handler``. File-opening
++        # APIs expect the encoding name alone.
++        encoding = python_io_encoding.partition(':')[0]
++        if encoding:
++            return encoding
++
++    return 'utf-8-sig'
++
++
+ class LazyFile:
+     """
+     A proxy for a File object that delays opening it until
+@@ -198,7 +211,7 @@ class CSVKitUtility:
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding', default=_get_default_input_encoding(),
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/docs/common_arguments.rst b/docs/common_arguments.rst
+index e279b67852df3bf2981d711e23a34357b053400e..e2b3c0da986d7ac04a8a0a81abc7a4e5ab64e48a 100644
+--- a/docs/common_arguments.rst
++++ b/docs/common_arguments.rst
+@@ -70,4 +70,4 @@ See the documentation of :doc:`/scripts/csvclean` for a description of the defau
+ 
+ .. seealso::
+ 
+-   For a list of possible values for the ``--encoding`` option, see the `Python documentation <https://docs.python.org/3/library/codecs.html#standard-encodings>`__.
++   If ``--encoding`` is omitted, the input encoding defaults to ``PYTHONIOENCODING`` when that environment variable is set, and UTF-8 otherwise. An explicit ``--encoding`` value takes precedence. For a list of possible values for the ``--encoding`` option, see the `Python documentation <https://docs.python.org/3/library/codecs.html#standard-encodings>`__.
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 22c51e31908b6a3b9fb5a7a682f6ef206a468920..6c89b9744ac6ae1ef48cb25817fab2573ad1d4c6 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,10 +1,16 @@
++import os
+ import unittest
++from unittest.mock import patch
+ 
+-from csvkit.cli import match_column_identifier, parse_column_identifiers
++from csvkit.cli import _get_default_input_encoding, match_column_identifier, parse_column_identifiers
+ 
+ 
+ class TestCli(unittest.TestCase):
+ 
++    def test_default_input_encoding(self):
++        with patch.dict(os.environ, {}, clear=True):
++            self.assertEqual(_get_default_input_encoding(), 'utf-8-sig')
++
+     def setUp(self):
+         self.headers = ['id', 'name', 'i_work_here', '1', 'more-header-values', 'stuff', 'blueberry']
+ 
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 33b5c2582f3e28e292c771de21c985fff19dfba8..66d2e608ffcfbbed199b110d15aa3661470fbaaf 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -1,4 +1,5 @@
+ import io
++import os
+ import sys
+ from unittest.mock import patch
+ 
+@@ -34,6 +35,33 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| 4 | 5 | © |',
+         ])
+ 
++    def test_encoding_from_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1'}):
++            self.assertLines(['examples/test_latin1.csv'], [
++                '| a | b | c |',
++                '| - | - | - |',
++                '| 1 | 2 | 3 |',
++                '| 4 | 5 | © |',
++            ])
++
++    def test_encoding_from_pythonioencoding_with_error_handler(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1:strict'}):
++            self.assertLines(['examples/test_latin1.csv'], [
++                '| a | b | c |',
++                '| - | - | - |',
++                '| 1 | 2 | 3 |',
++                '| 4 | 5 | © |',
++            ])
++
++    def test_encoding_option_overrides_pythonioencoding(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'ascii'}):
++            self.assertLines(['-e', 'utf-8', 'examples/test_utf8.csv'], [
++                '| foo | bar | baz |',
++                '| --- | --- | --- |',
++                '|   1 |   2 | 3   |',
++                '|   4 |   5 | ʤ   |',
++            ])
++
+     def test_simple(self):
+         self.assertLines(['examples/dummy3.csv'], [
+             '|    a | b | c |',

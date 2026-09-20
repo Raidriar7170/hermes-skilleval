@@ -1,0 +1,101 @@
+diff --git a/CHANGELOG.rst b/CHANGELOG.rst
+index 613fcc708968b9e6d2d2642407613f4c73ae3a81..65af6cdac150d649ee8c5f2877b09def112b7e09 100644
+--- a/CHANGELOG.rst
++++ b/CHANGELOG.rst
+@@ -1,6 +1,7 @@
+ Unreleased
+ ----------
+ 
++* fix: :doc:`/scripts/csvlook` no longer reads records beyond the ``--max-rows`` limit.
+ * feat: :doc:`/scripts/in2csv` adds a :code:`--reset-dimensions` option to `recalculate <https://openpyxl.readthedocs.io/en/stable/optimized.html#worksheet-dimensions>`_ the dimensions of an XLSX file, instead of trusting the file's metadata. csvkit's dependency `agate-excel <https://agate-excel.readthedocs.io/en/latest/>`_ 0.4.0 automatically recalculates the dimensions if the file's metadata expresses dimensions of "A1:A1" (a single cell).
+ * fix: :doc:`/scripts/in2csv`: :code:`--write-sheets` no longer errors when standard input is an XLS or XLSX file.
+ 
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..b965ca2873058322f108921e12b2f181f0c75f6b 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -1,5 +1,7 @@
+ #!/usr/bin/env python
+ 
++import itertools
++
+ import agate
+ from agate import config
+ 
+@@ -46,15 +48,26 @@ class CSVLook(CSVKitUtility):
+             config.set_option('number_truncation_chars', '')
+ 
+         sniff_limit = self.args.sniff_limit if self.args.sniff_limit != -1 else None
++        row_limit = None if self.args.max_rows is None else max(self.args.max_rows, 0)
+         table = agate.Table.from_csv(
+             self.input_file,
+             skip_lines=self.args.skip_lines,
+             sniff_limit=sniff_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
++            row_limit=row_limit,
+             **self.reader_kwargs,
+         )
+ 
++        if self.args.max_rows is not None:
++            # Let print_table render its truncation row without reading one more
++            # CSV record merely to determine whether more input exists.
++            table = agate.Table(
++                itertools.chain(table.rows, ([None] * len(table.column_names),)),
++                table.column_names,
++                table.column_types,
++            )
++
+         table.print_table(
+             output=self.output_file,
+             max_rows=self.args.max_rows,
+diff --git a/docs/scripts/csvlook.rst b/docs/scripts/csvlook.rst
+index 38ab7b1ff8a58e708192fc8ab3a3af6b1e378993..3910d8a3e0a2aaa6d160949e69865b399a4467d0 100644
+--- a/docs/scripts/csvlook.rst
++++ b/docs/scripts/csvlook.rst
+@@ -49,6 +49,9 @@ Renders a CSV to the command line in a Markdown-compatible, fixed-width format:
+ 
+ If a table is too wide to display properly try piping the output to ``less -S`` or truncating it using :doc:`csvcut`.
+ 
++When ``--max-rows`` is set, csvlook reads only that many data rows. The ellipsis
++row indicates a bounded preview without inspecting later records.
++
+ If the table is too long, try filtering it down with grep or piping the output to ``less``.
+ 
+ See also: :doc:`../common_arguments`.
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..265984f434b7085f6ecc408905afb346dcf6e849 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,31 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_does_not_parse_later_rows(self):
++        input_file = io.BytesIO(('a,b\n1,2\n{},3\n'.format('x' * 131073)).encode())
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--max-rows', '1', '--snifflimit', '0'], [
++                '|    a | b |',
++                '| ---- | - |',
++                '| True | 2 |',
++                '|  ... | ... |',
++            ])
++
++        input_file.close()
++
++    def test_max_rows_zero_does_not_parse_rows(self):
++        input_file = io.BytesIO(('a,b\n{},2\n'.format('x' * 131073)).encode())
++
++        with stdin_as_string(input_file):
++            self.assertLines(['--max-rows', '0', '--snifflimit', '0'], [
++                '| a | b |',
++                '| - | - |',
++                '| ... | ... |',
++            ])
++
++        input_file.close()
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

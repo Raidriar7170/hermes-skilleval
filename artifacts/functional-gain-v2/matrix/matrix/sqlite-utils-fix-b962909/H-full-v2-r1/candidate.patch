@@ -1,0 +1,71 @@
+diff --git a/sqlite_utils/db.py b/sqlite_utils/db.py
+index 53fae1062c64e0bf786f278cc1d8f6c59d3e9c2b..31d4cee54fb58232995c8324836f0c7b90031ebf 100644
+--- a/sqlite_utils/db.py
++++ b/sqlite_utils/db.py
+@@ -1732,20 +1732,22 @@ class Table(Queryable):
+                 queries_and_params.append((sql, [record[col] for col in pks]))
+                 # UPDATE [book] SET [name] = 'Programming' WHERE [id] = 1001;
+                 set_cols = [col for col in all_columns if col not in pks]
+-                sql2 = "UPDATE [{table}] SET {pairs} WHERE {wheres}".format(
+-                    table=self.name,
+-                    pairs=", ".join(
+-                        "[{}] = {}".format(col, conversions.get(col, "?"))
+-                        for col in set_cols
+-                    ),
+-                    wheres=" AND ".join("[{}] = ?".format(pk) for pk in pks),
+-                )
+-                queries_and_params.append(
+-                    (
+-                        sql2,
+-                        [record[col] for col in set_cols] + [record[pk] for pk in pks],
++                if set_cols:
++                    sql2 = "UPDATE [{table}] SET {pairs} WHERE {wheres}".format(
++                        table=self.name,
++                        pairs=", ".join(
++                            "[{}] = {}".format(col, conversions.get(col, "?"))
++                            for col in set_cols
++                        ),
++                        wheres=" AND ".join("[{}] = ?".format(pk) for pk in pks),
++                    )
++                    queries_and_params.append(
++                        (
++                            sql2,
++                            [record[col] for col in set_cols]
++                            + [record[pk] for pk in pks],
++                        )
+                     )
+-                )
+                 # We can populate .last_pk right here
+                 if num_records_processed == 1:
+                     self.last_pk = tuple(record[pk] for pk in pks)
+diff --git a/tests/test_upsert.py b/tests/test_upsert.py
+index 100c6c1658567ec403a798e7076671d0b0534b78..85969256ac5074bd47b2667bac12a4bf5d4ec9c6 100644
+--- a/tests/test_upsert.py
++++ b/tests/test_upsert.py
+@@ -21,6 +21,26 @@ def test_upsert_all(fresh_db):
+     assert table.last_pk is None
+ 
+ 
++def test_upsert_all_primary_key_only(fresh_db):
++    table = fresh_db["table"]
++    table.upsert_all([{"id": 1}, {"id": 2}], pk="id")
++    table.upsert_all([{"id": 2}, {"id": 3}], pk="id")
++    assert [{"id": 1}, {"id": 2}, {"id": 3}] == list(table.rows)
++
++
++def test_insert_all_single_column(fresh_db):
++    table = fresh_db["table"]
++    table.insert_all([{"name": "Cleo"}, {"name": "Nixie"}])
++    assert [{"name": "Cleo"}, {"name": "Nixie"}] == list(table.rows)
++
++
++def test_upsert_all_still_updates_non_primary_key_columns(fresh_db):
++    table = fresh_db["table"]
++    table.upsert_all([{"id": 1, "name": "Cleo"}], pk="id")
++    table.upsert_all([{"id": 1, "name": "Nixie"}], pk="id")
++    assert [{"id": 1, "name": "Nixie"}] == list(table.rows)
++
++
+ def test_upsert_error_if_no_pk(fresh_db):
+     table = fresh_db["table"]
+     with pytest.raises(PrimaryKeyRequired):

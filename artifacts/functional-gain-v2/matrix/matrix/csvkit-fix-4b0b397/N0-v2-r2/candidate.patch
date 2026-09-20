@@ -1,0 +1,52 @@
+diff --git a/csvkit/cli.py b/csvkit/cli.py
+index 4d789d5608ece6989e96c088f6a15203a869ffa5..d1cbadea517c564cca8e4e624690f5e1152b2a52 100644
+--- a/csvkit/cli.py
++++ b/csvkit/cli.py
+@@ -197,8 +197,9 @@ class CSVKitUtility:
+                 '-z', '--maxfieldsize', dest='field_size_limit', type=int,
+                 help='Maximum length of a single field in the input CSV file.')
+         if 'e' not in self.override_flags:
++            encoding = (os.environ.get('PYTHONIOENCODING') or 'utf-8-sig').split(':', 1)[0]
+             self.argparser.add_argument(
+-                '-e', '--encoding', dest='encoding', default='utf-8-sig',
++                '-e', '--encoding', dest='encoding', default=encoding,
+                 help='Specify the encoding of the input CSV file.')
+         if 'L' not in self.override_flags:
+             self.argparser.add_argument(
+diff --git a/tests/test_utilities/test_csvsort.py b/tests/test_utilities/test_csvsort.py
+index 1d82d4fcaf01171ba8f330b7e0ff1d84f204ad89..b32f9759ebd2bc2d421f2a621276fa0862bf12de 100644
+--- a/tests/test_utilities/test_csvsort.py
++++ b/tests/test_utilities/test_csvsort.py
+@@ -1,4 +1,5 @@
+ import io
++import os
+ import sys
+ from unittest.mock import patch
+ 
+@@ -27,6 +28,26 @@ class TestCSVSort(CSVKitTestCase, ColumnsTests, EmptyFileTests, NamesTests):
+             ['4', '5', '©'],
+         ])
+ 
++    def test_encoding_from_environment(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1:strict'}):
++            self.assertRows(['examples/test_latin1.csv'], [
++                ['a', 'b', 'c'],
++                ['1', '2', '3'],
++                ['4', '5', '©'],
++            ])
++
++    def test_encoding_option_overrides_environment(self):
++        with patch.dict(os.environ, {'PYTHONIOENCODING': 'latin1'}):
++            self.assertRows(['--encoding', 'utf-8', 'examples/test_utf8.csv'], [
++                ['foo', 'bar', 'baz'],
++                ['1', '2', '3'],
++                ['4', '5', 'ʤ'],
++            ])
++
++    def test_default_encoding_without_environment(self):
++        with patch.dict(os.environ, {}, clear=True):
++            self.assertEqual(self.Utility(['examples/test_utf8.csv']).args.encoding, 'utf-8-sig')
++
+     def test_sort_string_reverse(self):
+         reader = self.get_output_as_reader(['-c', '1', '-r', 'examples/testxls_converted.csv'])
+         test_order = ['text', 'Unicode! Σ', 'This row has blanks',

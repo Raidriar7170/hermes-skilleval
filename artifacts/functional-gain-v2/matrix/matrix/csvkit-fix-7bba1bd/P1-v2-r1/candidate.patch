@@ -1,0 +1,70 @@
+diff --git a/csvkit/utilities/csvlook.py b/csvkit/utilities/csvlook.py
+index b12ef34c7a502cf6f1f7950e01730dbc92c8f3a0..43273578fd543a569cb37695830f952fb6475e54 100644
+--- a/csvkit/utilities/csvlook.py
++++ b/csvkit/utilities/csvlook.py
+@@ -46,15 +46,33 @@ class CSVLook(CSVKitUtility):
+             config.set_option('number_truncation_chars', '')
+ 
+         sniff_limit = self.args.sniff_limit if self.args.sniff_limit != -1 else None
++        row_limit = self.args.max_rows
++        if row_limit is not None and row_limit < 0:
++            row_limit = None
++        elif row_limit == 0 and self.args.no_header_row:
++            # A headerless input needs one record to determine its columns.
++            row_limit = 1
++
+         table = agate.Table.from_csv(
+             self.input_file,
+             skip_lines=self.args.skip_lines,
+             sniff_limit=sniff_limit,
+             column_types=self.get_column_types(),
+             line_numbers=self.args.line_numbers,
++            row_limit=row_limit,
+             **self.reader_kwargs,
+         )
+ 
++        # print_table only emits its truncation row if the table contains more
++        # rows than max_rows. Keep the established --max-rows 0 output without
++        # reading a data row solely to discover that the input continues.
++        if self.args.max_rows == 0:
++            table = agate.Table(
++                [[None] * len(table.column_names)],
++                table.column_names,
++                table.column_types,
++            )
++
+         table.print_table(
+             output=self.output_file,
+             max_rows=self.args.max_rows,
+diff --git a/tests/test_utilities/test_csvlook.py b/tests/test_utilities/test_csvlook.py
+index 47f395e3f6f93ae7e1649030f4d4130a1112f2ae..efd87600c44ba4b14c9280a700417cb42df02b62 100644
+--- a/tests/test_utilities/test_csvlook.py
++++ b/tests/test_utilities/test_csvlook.py
+@@ -117,6 +117,27 @@ class TestCSVLook(CSVKitTestCase, EmptyFileTests):
+             '| ... | ... | ... |',
+         ])
+ 
++    def test_max_rows_zero_no_header_row(self):
++        self.assertLines(['--max-rows', '0', '--no-header-row', 'examples/no_header_row3.csv'], [
++            '| a | b | c |',
++            '| - | - | - |',
++            '| ... | ... | ... |',
++        ])
++
++    def test_max_rows_does_not_parse_later_rows(self):
++        input_file = io.BytesIO(b'a,b\n1,2\n' + b'x' * 200000 + b',3\n')
++
++        with stdin_as_string(input_file):
++            self.assertLines([
++                '--max-rows', '1', '--snifflimit', '0', '--no-inference',
++            ], [
++                '| a | b |',
++                '| - | - |',
++                '| 1 | 2 |',
++            ])
++
++        input_file.close()
++
+     def test_max_columns(self):
+         self.assertLines(['--max-columns', '1', 'examples/dummy.csv'], [
+             '|    a | ... |',

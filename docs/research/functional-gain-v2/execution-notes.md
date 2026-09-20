@@ -541,3 +541,80 @@ The delays phase started using the unchanged protocol, assets, models and
 evaluation-v1 output, with log evaluation-delays-v1.log. It executes the 16
 registered DEFER_SAME/WAIT_THEN_FULL continuations from their common starting
 states. Final hidden acceptance and all final benefit claims remain withheld.
+
+## G5 forward continuations complete; unified acceptance started
+
+The delayed phase exited 0. Exact multiset comparison against the frozen
+`delay-roster.json` confirmed all 16 task/action/repeat records, each with
+execution status COMPLETED. The task-local auth file was removed, and no
+`release.json` existed before unified acceptance began. All three raw categories
+are now present: matrix 96 (95 COMPLETED and one retained interrupted UNKNOWN),
+panels 64, delays 16. These are execution counts, not functional pass counts.
+
+The unchanged `evaluate --phase release` entry point is now checking the saved
+complete candidates only after its all-category roster/freeze preflight. It
+starts no new Agent samples and does not replace the interrupted matrix cell.
+
+Fresh local compatibility checks on the unchanged implementation passed:
+`PYTHONPATH=src /opt/anaconda3/bin/python -m pytest -q`: 1507 passed in 46.28s;
+`OPENSPEC_TELEMETRY=0 openspec validate --all --strict`: 39 passed, zero failed.
+A new isolated Python 3.12 venv installed the package normally; both the legacy
+entry point help and the v2 module help worked, with the latter invoked from
+`/tmp` to avoid relying on the source checkout. These checks do not establish
+functional gain, final repository closure, or same-HEAD GitHub CI.
+
+## G5 unified results and G6 records-only exports
+
+`evaluate --phase release` exited 0 after all raw categories were complete.
+The release receipt binds 96 matrix, 64 panel and 16 delay rows to their original
+execution-bundle SHA-256 values and the unchanged policy freeze. Matrix outcomes
+are 95 functional passes plus the retained interrupted task-only UNKNOWN; panel
+and delay outcomes are 64/64 and 16/16. No Agent sample was added or replaced.
+
+The records-only `summarize` command used collection-protocol-v1, the locked
+objective, collection-v1, realized-collection-roster-v1, evaluation-v1 and
+models-v1, writing private final-report-v1.json. It recomputed saved evidence and
+verified release/freeze bindings. Public final-report.json preserves all values,
+replacing only private path keys and recording the original report hash. The
+strict terminal remains PARTIAL / PARTIAL_METHOD because one final cell has no
+functional verdict. All three benefit claims are NOT_ESTABLISHED.
+
+The existing `functional_cli export` ran for matrix-records, panel-records and
+delay-records with groups matrix, panels and delays, respectively. Each export
+performed private and portable records-only replay, with zero Agent/model calls
+and zero new verifier executions. The resulting 96/64/16 rows, original patches
+and compact checker outputs are public. Panel decision summaries retain original
+lock identities and predictions; they explicitly omit raw checkpoint/source
+state and do not pretend their redacted digest equals the original lock digest.
+
+The cost ledger used, in order, pilot-runs-v1/records, collection-v1/native-records,
+collection-v1/records, then matrix/panel/delay records, plus models-v1/training.
+Four pilot/native references reused execution directories; 392 references reduce
+to 388 unique attempts. Saved usage for the interrupted directory is observed
+partial execution cost, not a completed-run estimate. No billing USD is inferred.
+
+The result homepage and Chinese retrospective report the functional primary
+outcome first, then fixed-candidate representation, waiting, cheap controls,
+limitations and secondary policy/cost. Six of eight immediate-action choices
+differ by representation; two of four delayed states are wait-sensitive. All
+corresponding observed functional contrasts are zero. No threshold, candidate,
+weight or sample count changed after outcome release.
+
+## G6 independent final evidence review
+
+The existing read-only reviewer independently recomputed public/private 96/64/16
+replays and the main/mechanism tables; original patch identities, frozen rosters,
+release bindings and interruption preservation matched. All cost-ledger values
+were independently reproduced from saved usage: 392 references, four reuse
+exclusions, 388 unique attempts. The reviewer confirmed six representation
+disagreements, two genuine wait-sensitive states, actual forward E1-to-E2 tails,
+fixed DEFER_SAME content, and adaptive WAIT_THEN_FULL behavior. All measured
+functional contrasts remained zero. No consequential finding required repair.
+Public privacy checks found no credential/local-machine-path matches, private
+transcripts or weights. This was records-only evidence review, with no new Agent,
+training, model or verifier execution; it does not certify unperformed GitHub CI.
+
+An additional secondary setup receipt preserves both original and resumed matrix
+coordinator loads (8.893562625 seconds total). Shared initialization without a
+standalone receipt in other phases remains UNKNOWN, not zero; it is not silently
+added to already charged per-state work.

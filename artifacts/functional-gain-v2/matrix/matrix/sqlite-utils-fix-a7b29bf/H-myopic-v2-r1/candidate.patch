@@ -1,0 +1,58 @@
+diff --git a/sqlite_utils/cli.py b/sqlite_utils/cli.py
+index ab2776135ca6d22ab34863535d27e5b255fee21a..624f47e7b50e79f6a7e3e76b048e940fa8293641 100644
+--- a/sqlite_utils/cli.py
++++ b/sqlite_utils/cli.py
+@@ -1045,6 +1045,7 @@ def upsert(
+             not_null=not_null,
+             default=default,
+             encoding=encoding,
++            detect_types=detect_types,
+             load_extension=load_extension,
+             silent=silent,
+         )
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index c4c50a963bbd18121df06e0464b1d089fa149e0a..72fd956813b3409e2dfe2447b61d9f006f21b3aa 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1974,6 +1974,41 @@ def test_insert_detect_types(tmpdir, option_or_env_var):
+         _test()
+ 
+ 
++@pytest.mark.parametrize("option", ("-d", "--detect-types"))
++def test_upsert_csv_detect_types(tmpdir, option):
++    db_path = str(tmpdir / "test.db")
++    runner = CliRunner()
++
++    result = runner.invoke(
++        cli.cli,
++        ["upsert", db_path, "creatures", "-", "--csv", option, "--pk", "id"],
++        input="id,name,age,weight\n1,Cleo,6,45.5\n2,Dori,1,3.5",
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++
++    # A second upsert should update values without losing their detected types
++    result = runner.invoke(
++        cli.cli,
++        ["upsert", db_path, "creatures", "-", "--csv", option, "--pk", "id"],
++        input="id,name,age,weight\n1,Cleo,7,46.25\n2,Dori,2,4.75",
++        catch_exceptions=False,
++    )
++    assert result.exit_code == 0
++
++    db = Database(db_path)
++    assert {column.name: column.type for column in db["creatures"].columns} == {
++        "id": "INTEGER",
++        "name": "TEXT",
++        "age": "INTEGER",
++        "weight": "FLOAT",
++    }
++    assert list(db["creatures"].rows) == [
++        {"id": 1, "name": "Cleo", "age": 7, "weight": 46.25},
++        {"id": 2, "name": "Dori", "age": 2, "weight": 4.75},
++    ]
++
++
+ @pytest.mark.parametrize(
+     "input,expected",
+     (

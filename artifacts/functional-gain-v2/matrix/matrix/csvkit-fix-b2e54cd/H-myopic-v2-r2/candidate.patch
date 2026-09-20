@@ -1,0 +1,69 @@
+diff --git a/csvkit/utilities/in2csv.py b/csvkit/utilities/in2csv.py
+index 03e9b5f055f40a60543b059715037efd92650a3e..3b5fcaf25b1314f8be00683046ade9a824316b58 100644
+--- a/csvkit/utilities/in2csv.py
++++ b/csvkit/utilities/in2csv.py
+@@ -123,6 +123,12 @@ class In2CSV(CSVKitUtility):
+         if filetype in ('xls', 'xlsx'):
+             kwargs['header'] = not self.args.no_header_row
+ 
++        if filetype == 'xlsx':
++            # Some producers write worksheet dimensions that do not cover all
++            # populated cells. Recalculate them so openpyxl does not truncate
++            # the rows and columns it yields in read-only mode.
++            kwargs['reset_dimensions'] = True
++
+         if filetype not in ('dbf', 'geojson', 'json', 'ndjson'):  # csv, fixed, xls, xlsx
+             kwargs['skip_lines'] = self.args.skip_lines
+ 
+diff --git a/tests/test_utilities/test_in2csv.py b/tests/test_utilities/test_in2csv.py
+index 95b691572f0fbe2f11fe62c46c9e88720d49e2b4..8d0896ca5a970a6518628f3523dd6d0f454ec5cd 100644
+--- a/tests/test_utilities/test_in2csv.py
++++ b/tests/test_utilities/test_in2csv.py
+@@ -1,7 +1,11 @@
+ import io
+ import os
++import re
+ import sys
+ from unittest.mock import patch
++from zipfile import ZIP_DEFLATED, ZipFile
++
++import openpyxl
+ 
+ from csvkit.utilities.in2csv import In2CSV, launch_new_instance
+ from tests.utils import CSVKitTestCase, EmptyFileTests, stdin_as_string
+@@ -127,6 +131,35 @@ class TestIn2CSV(CSVKitTestCase, EmptyFileTests):
+     def test_convert_xlsx_with_sheet(self):
+         self.assertConverted('xlsx', 'examples/sheets.xlsx', 'examples/testxlsx_converted.csv', ['--sheet', 'data'])
+ 
++    def test_convert_xlsx_with_understated_dimension(self):
++        source = io.BytesIO()
++        workbook = openpyxl.Workbook()
++        workbook.active.title = 'other'
++        workbook.active.append(['not', 'this', 'sheet'])
++        sheet = workbook.create_sheet('data')
++        sheet.append(['name', 'sequence', 'value'])
++        sheet.append(['alpha', 1, 10])
++        sheet.append(['beta', 2, 20])
++        workbook.save(source)
++
++        source.seek(0)
++        input_file = io.BytesIO()
++        with ZipFile(source) as source_zip, ZipFile(input_file, 'w', ZIP_DEFLATED) as target_zip:
++            for item in source_zip.infolist():
++                content = source_zip.read(item.filename)
++                if item.filename == 'xl/worksheets/sheet2.xml':
++                    content = re.sub(
++                        br'<dimension ref="[^"]+"', br'<dimension ref="A1:B2"', content, count=1)
++                target_zip.writestr(item, content)
++
++        input_file.seek(0)
++        with stdin_as_string(input_file):
++            self.assertLines(['-f', 'xlsx', '--sheet', 'data', '--no-inference'], [
++                'name,sequence,value',
++                'alpha,1,10',
++                'beta,2,20',
++            ])
++
+     def test_convert_xlsx_with_unicode_sheet(self):
+         self.assertLines(['--sheet', 'ʤ', '--no-inference', 'examples/sheets.xlsx'], [
+             'a,b,c',
