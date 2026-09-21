@@ -1,0 +1,368 @@
+{
+  "M-local": {
+    "method": "M-local",
+    "indices": [
+      4,
+      19,
+      3
+    ],
+    "units": [
+      {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load.branch_106"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 112,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+      },
+      {
+        "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.playbook.attribute.Attribute.__init__.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/attribute.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 47,
+            "line_end": 78,
+            "exact_excerpt": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "copy.copy",
+          "copy.deepcopy"
+        ],
+        "serialized_payload": "[local-9ccda5d5cd517b3eb3bacb64] Role: documented_contract\nApplies to: lib.ansible.playbook.attribute.Attribute.__init__.__doc__\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/attribute.py:47-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+      },
+      {
+        "unit_id": "local-fd909121c5ffade5c7df2675",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.base.FieldAttributeBase.validate"
+        ],
+        "preconditions": [],
+        "statement": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/base.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 280,
+            "line_end": 305,
+            "exact_excerpt": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.with_metaclass",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.utils.display.Display",
+          "ansible.utils.sentinel.Sentinel",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.get_unique_id",
+          "ansible.utils.vars.isidentifier",
+          "copy.copy",
+          "functools.partial",
+          "itertools",
+          "jinja2.exceptions.UndefinedError",
+          "operator"
+        ],
+        "serialized_payload": "[local-fd909121c5ffade5c7df2675] Role: existing_behavior\nApplies to: lib.ansible.playbook.base.FieldAttributeBase.validate\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/base.py:280-305\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n"
+      }
+    ],
+    "tokens": 1145,
+    "scores": {
+      "coverage": 0.5275084083524064,
+      "relevance": 0.19134807800226283,
+      "redundancy_penalty": 0.111571106876757,
+      "exposure_penalty": 0.06686217008797654,
+      "total": 0.5404232093899357
+    },
+    "decisions": [
+      {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "mmr": 0.5553141158683246
+      },
+      {
+        "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+        "mmr": 0.29636827763633433
+      },
+      {
+        "unit_id": "local-fd909121c5ffade5c7df2675",
+        "mmr": 0.27297859502582345
+      }
+    ]
+  },
+  "H-sim": {
+    "method": "H-sim",
+    "indices": [
+      4
+    ],
+    "units": [
+      {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load.branch_106"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 112,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+      }
+    ],
+    "tokens": 250,
+    "scores": {
+      "coverage": 0.5275084083524064,
+      "relevance": 0.07933058798118925,
+      "redundancy_penalty": 0.0,
+      "exposure_penalty": 0.05,
+      "total": 0.5568389963335956
+    },
+    "decisions": [
+      {
+        "unit_id": "local-fbeeda7664cd746766fdcdeb",
+        "marginal": 0.400290928043354
+      },
+      {
+        "unit_id": "local-bde3c614b500035aa82b13d7",
+        "marginal": 0.12992287326640106
+      },
+      {
+        "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+        "marginal": 0.013221020052691657
+      },
+      {
+        "best_singleton": "local-d81d35e5b8f1fbbbe0236b75-12c576c4"
+      }
+    ]
+  },
+  "H-link": {
+    "method": "H-link",
+    "indices": [
+      4,
+      3
+    ],
+    "units": [
+      {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load.branch_106"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 112,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+      },
+      {
+        "unit_id": "local-fd909121c5ffade5c7df2675",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.base.FieldAttributeBase.validate"
+        ],
+        "preconditions": [],
+        "statement": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/base.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 280,
+            "line_end": 305,
+            "exact_excerpt": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.with_metaclass",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.utils.display.Display",
+          "ansible.utils.sentinel.Sentinel",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.get_unique_id",
+          "ansible.utils.vars.isidentifier",
+          "copy.copy",
+          "functools.partial",
+          "itertools",
+          "jinja2.exceptions.UndefinedError",
+          "operator"
+        ],
+        "serialized_payload": "[local-fd909121c5ffade5c7df2675] Role: existing_behavior\nApplies to: lib.ansible.playbook.base.FieldAttributeBase.validate\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/base.py:280-305\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n"
+      }
+    ],
+    "tokens": 584,
+    "scores": {
+      "coverage": 0.6,
+      "relevance": 0.1375860119602607,
+      "redundancy_penalty": 0.039979254381637866,
+      "exposure_penalty": 0.06363636363636364,
+      "total": 0.6339703939422592
+    },
+    "decisions": [
+      {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "marginal": 0.5993305879811892
+      },
+      {
+        "unit_id": "local-fd909121c5ffade5c7df2675",
+        "marginal": 0.03463980596106997
+      }
+    ]
+  }
+}

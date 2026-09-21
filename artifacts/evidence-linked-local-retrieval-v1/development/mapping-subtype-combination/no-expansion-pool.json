@@ -1,0 +1,2459 @@
+{
+  "candidates": [
+    {
+      "unit": {
+        "unit_id": "local-9049ebc37f2942346e9d357a",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.vars.clean.strip_internal_keys"
+        ],
+        "preconditions": [],
+        "statement": "def strip_internal_keys(dirty, exceptions=None):\n    # All keys starting with _ansible_ are internal, so change the 'dirty' mapping and remove them.\n\n    if exceptions is None:\n        exceptions = tuple()\n\n    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n\n    return dirty\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/clean.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 69,
+            "line_end": 95,
+            "exact_excerpt": "def strip_internal_keys(dirty, exceptions=None):\n    # All keys starting with _ansible_ are internal, so change the 'dirty' mapping and remove them.\n\n    if exceptions is None:\n        exceptions = tuple()\n\n    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n\n    return dirty\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleError",
+          "ansible.module_utils.six",
+          "ansible.plugins.loader.connection_loader",
+          "ansible.utils.display.Display",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "os",
+          "re"
+        ],
+        "serialized_payload": "[local-9049ebc37f2942346e9d357a] Role: existing_behavior\nApplies to: lib.ansible.vars.clean.strip_internal_keys\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/clean.py:69-95\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef strip_internal_keys(dirty, exceptions=None):\n    # All keys starting with _ansible_ are internal, so change the 'dirty' mapping and remove them.\n\n    if exceptions is None:\n        exceptions = tuple()\n\n    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n\n    return dirty\n"
+      },
+      "relevance": 0.6589328282478694,
+      "coverage": [
+        0.42307183628267797,
+        0.32192294290886253,
+        0.3817331505002465,
+        0.34847792258677174,
+        0.23005193281266437,
+        0.17197096675320447,
+        0.44070294778756874,
+        0.48768630835418025
+      ],
+      "exposure": 0.05,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7976731988210863,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "9049ebc37f2942346e9d357a",
+        "bm25": 0.8987040591413477
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-3db64ef1302fd827e187ea6c",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "class",
+        "applies_to": [
+          "lib.ansible.vars.manager.VarsWithSources"
+        ],
+        "preconditions": [],
+        "statement": "class VarsWithSources(MutableMapping):\n    '''\n    Dict-like class for vars that also provides source information for each var\n\n    This class can only store the source for top-level vars. It does no tracking\n    on its own, just shows a debug message with the information that it is provided\n    when a particular var is accessed.\n    '''\n    def __init__(self, *args, **kwargs):\n        ''' Dict-compatible constructor '''\n        self.data = dict(*args, **kwargs)\n        self.sources = {}\n\n    @classmethod\n    def new_vars_with_sources(cls, data, sources):\n        ''' Alternate constructor method to instantiate class with sources '''\n        v = cls(data)\n        v.sources = sources\n        return v\n\n    def get_source(self, key):\n        return self.sources.get(key, None)\n\n    def __getitem__(self, key):\n        val = self.data[key]\n        # See notes in the VarsWithSources docstring for caveats and limitations of the source tracking\n        display.debug(\"variable '%s' from source: %s\" % (key, self.sources.get(key, \"unknown\")))\n        return val\n\n    def __setitem__(self, key, value):\n        self.data[key] = value\n\n    def __delitem__(self, key):\n        del self.data[key]\n\n    def __iter__(self):\n        return iter(self.data)\n\n    def __len__(self):\n        return len(self.data)\n\n    # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict\n    def __contains__(self, key):\n        return self.data.__contains__(key)\n\n    def copy(self):\n        return VarsWithSources.new_vars_with_sources(self.data.copy(), self.sources.copy())\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 742,
+            "line_end": 788,
+            "exact_excerpt": "class VarsWithSources(MutableMapping):\n    '''\n    Dict-like class for vars that also provides source information for each var\n\n    This class can only store the source for top-level vars. It does no tracking\n    on its own, just shows a debug message with the information that it is provided\n    when a particular var is accessed.\n    '''\n    def __init__(self, *args, **kwargs):\n        ''' Dict-compatible constructor '''\n        self.data = dict(*args, **kwargs)\n        self.sources = {}\n\n    @classmethod\n    def new_vars_with_sources(cls, data, sources):\n        ''' Alternate constructor method to instantiate class with sources '''\n        v = cls(data)\n        v.sources = sources\n        return v\n\n    def get_source(self, key):\n        return self.sources.get(key, None)\n\n    def __getitem__(self, key):\n        val = self.data[key]\n        # See notes in the VarsWithSources docstring for caveats and limitations of the source tracking\n        display.debug(\"variable '%s' from source: %s\" % (key, self.sources.get(key, \"unknown\")))\n        return val\n\n    def __setitem__(self, key, value):\n        self.data[key] = value\n\n    def __delitem__(self, key):\n        del self.data[key]\n\n    def __iter__(self):\n        return iter(self.data)\n\n    def __len__(self):\n        return len(self.data)\n\n    # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict\n    def __contains__(self, key):\n        return self.data.__contains__(key)\n\n    def copy(self):\n        return VarsWithSources.new_vars_with_sources(self.data.copy(), self.sources.copy())\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-3db64ef1302fd827e187ea6c] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.VarsWithSources\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:742-788\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nclass VarsWithSources(MutableMapping):\n    '''\n    Dict-like class for vars that also provides source information for each var\n\n    This class can only store the source for top-level vars. It does no tracking\n    on its own, just shows a debug message with the information that it is provided\n    when a particular var is accessed.\n    '''\n    def __init__(self, *args, **kwargs):\n        ''' Dict-compatible constructor '''\n        self.data = dict(*args, **kwargs)\n        self.sources = {}\n\n    @classmethod\n    def new_vars_with_sources(cls, data, sources):\n        ''' Alternate constructor method to instantiate class with sources '''\n        v = cls(data)\n        v.sources = sources\n        return v\n\n    def get_source(self, key):\n        return self.sources.get(key, None)\n\n    def __getitem__(self, key):\n        val = self.data[key]\n        # See notes in the VarsWithSources docstring for caveats and limitations of the source tracking\n        display.debug(\"variable '%s' from source: %s\" % (key, self.sources.get(key, \"unknown\")))\n        return val\n\n    def __setitem__(self, key, value):\n        self.data[key] = value\n\n    def __delitem__(self, key):\n        del self.data[key]\n\n    def __iter__(self):\n        return iter(self.data)\n\n    def __len__(self):\n        return len(self.data)\n\n    # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict\n    def __contains__(self, key):\n        return self.data.__contains__(key)\n\n    def copy(self):\n        return VarsWithSources.new_vars_with_sources(self.data.copy(), self.sources.copy())\n"
+      },
+      "relevance": 0.5321603059657878,
+      "coverage": [
+        0.38375388774226576,
+        0.2169217525396805,
+        0.3412741887737577,
+        0.35353253305431587,
+        0.18076265226897884,
+        0.14295186274248547,
+        0.2598550892589972,
+        0.3636954556911764
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7466886583146534,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7908139306565632,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7325017833911549,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9663344460426941,
+            "symbol_match": 1.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.VarsWithSources"
+          }
+        ],
+        "index_node": "3db64ef1302fd827e187ea6c",
+        "bm25": 0.8430653502445781
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-85996f593ceaef0bb32b2a47",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "class",
+        "applies_to": [
+          "lib.ansible.module_utils.common.collections.ImmutableDict"
+        ],
+        "preconditions": [],
+        "statement": "class ImmutableDict(Hashable, Mapping):\n    \"\"\"Dictionary that cannot be updated\"\"\"\n    def __init__(self, *args, **kwargs):\n        self._store = dict(*args, **kwargs)\n\n    def __getitem__(self, key):\n        return self._store[key]\n\n    def __iter__(self):\n        return self._store.__iter__()\n\n    def __len__(self):\n        return self._store.__len__()\n\n    def __hash__(self):\n        return hash(frozenset(self.items()))\n\n    def __eq__(self, other):\n        try:\n            if self.__hash__() == hash(other):\n                return True\n        except TypeError:\n            pass\n\n        return False\n\n    def __repr__(self):\n        return 'ImmutableDict({0})'.format(repr(self._store))\n\n    def union(self, overriding_mapping):\n        \"\"\"\n        Create an ImmutableDict as a combination of the original and overriding_mapping\n\n        :arg overriding_mapping: A Mapping of replacement and additional items\n        :return: A copy of the ImmutableDict with key-value pairs from the overriding_mapping added\n\n        If any of the keys in overriding_mapping are already present in the original ImmutableDict,\n        the overriding_mapping item replaces the one in the original ImmutableDict.\n        \"\"\"\n        return ImmutableDict(self._store, **overriding_mapping)\n\n    def difference(self, subtractive_iterable):\n        \"\"\"\n        Create an ImmutableDict as a combination of the original minus keys in subtractive_iterable\n\n        :arg subtractive_iterable: Any iterable containing keys that should not be present in the\n            new ImmutableDict\n        :return: A copy of the ImmutableDict with keys from the subtractive_iterable removed\n        \"\"\"\n        remove_keys = frozenset(subtractive_iterable)\n        keys = (k for k in self._store.keys() if k not in remove_keys)\n        return ImmutableDict((k, self._store[k]) for k in keys)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/module_utils/common/collections.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 14,
+            "line_end": 65,
+            "exact_excerpt": "class ImmutableDict(Hashable, Mapping):\n    \"\"\"Dictionary that cannot be updated\"\"\"\n    def __init__(self, *args, **kwargs):\n        self._store = dict(*args, **kwargs)\n\n    def __getitem__(self, key):\n        return self._store[key]\n\n    def __iter__(self):\n        return self._store.__iter__()\n\n    def __len__(self):\n        return self._store.__len__()\n\n    def __hash__(self):\n        return hash(frozenset(self.items()))\n\n    def __eq__(self, other):\n        try:\n            if self.__hash__() == hash(other):\n                return True\n        except TypeError:\n            pass\n\n        return False\n\n    def __repr__(self):\n        return 'ImmutableDict({0})'.format(repr(self._store))\n\n    def union(self, overriding_mapping):\n        \"\"\"\n        Create an ImmutableDict as a combination of the original and overriding_mapping\n\n        :arg overriding_mapping: A Mapping of replacement and additional items\n        :return: A copy of the ImmutableDict with key-value pairs from the overriding_mapping added\n\n        If any of the keys in overriding_mapping are already present in the original ImmutableDict,\n        the overriding_mapping item replaces the one in the original ImmutableDict.\n        \"\"\"\n        return ImmutableDict(self._store, **overriding_mapping)\n\n    def difference(self, subtractive_iterable):\n        \"\"\"\n        Create an ImmutableDict as a combination of the original minus keys in subtractive_iterable\n\n        :arg subtractive_iterable: Any iterable containing keys that should not be present in the\n            new ImmutableDict\n        :return: A copy of the ImmutableDict with keys from the subtractive_iterable removed\n        \"\"\"\n        remove_keys = frozenset(subtractive_iterable)\n        keys = (k for k in self._store.keys() if k not in remove_keys)\n        return ImmutableDict((k, self._store[k]) for k in keys)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.moves.collections_abc.Hashable",
+          "ansible.module_utils.six.moves.collections_abc.Mapping",
+          "ansible.module_utils.six.moves.collections_abc.MutableMapping",
+          "ansible.module_utils.six.moves.collections_abc.Sequence",
+          "ansible.module_utils.six.text_type"
+        ],
+        "serialized_payload": "[local-85996f593ceaef0bb32b2a47] Role: existing_behavior\nApplies to: lib.ansible.module_utils.common.collections.ImmutableDict\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/module_utils/common/collections.py:14-65\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nclass ImmutableDict(Hashable, Mapping):\n    \"\"\"Dictionary that cannot be updated\"\"\"\n    def __init__(self, *args, **kwargs):\n        self._store = dict(*args, **kwargs)\n\n    def __getitem__(self, key):\n        return self._store[key]\n\n    def __iter__(self):\n        return self._store.__iter__()\n\n    def __len__(self):\n        return self._store.__len__()\n\n    def __hash__(self):\n        return hash(frozenset(self.items()))\n\n    def __eq__(self, other):\n        try:\n            if self.__hash__() == hash(other):\n                return True\n        except TypeError:\n            pass\n\n        return False\n\n    def __repr__(self):\n        return 'ImmutableDict({0})'.format(repr(self._store))\n\n    def union(self, overriding_mapping):\n        \"\"\"\n        Create an ImmutableDict as a combination of the original and overriding_mapping\n\n        :arg overriding_mapping: A Mapping of replacement and additional items\n        :return: A copy of the ImmutableDict with key-value pairs from the overriding_mapping added\n\n        If any of the keys in overriding_mapping are already present in the original ImmutableDict,\n        the overriding_mapping item replaces the one in the original ImmutableDict.\n        \"\"\"\n        return ImmutableDict(self._store, **overriding_mapping)\n\n    def difference(self, subtractive_iterable):\n        \"\"\"\n        Create an ImmutableDict as a combination of the original minus keys in subtractive_iterable\n\n        :arg subtractive_iterable: Any iterable containing keys that should not be present in the\n            new ImmutableDict\n        :return: A copy of the ImmutableDict with keys from the subtractive_iterable removed\n        \"\"\"\n        remove_keys = frozenset(subtractive_iterable)\n        keys = (k for k in self._store.keys() if k not in remove_keys)\n        return ImmutableDict((k, self._store[k]) for k in keys)\n"
+      },
+      "relevance": 0.5705658134890704,
+      "coverage": [
+        0.42234869904180217,
+        0.21714635052179032,
+        0.4157760755543805,
+        0.3894716960513459,
+        0.23965906925845723,
+        0.24942017581207784,
+        0.357273457805721,
+        0.42912908341935574
+      ],
+      "exposure": 0.25,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9602518431840529,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "85996f593ceaef0bb32b2a47",
+        "bm25": 0.7995430478984354
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-f2167cb07d1e41712b4146b7",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_diff"
+        ],
+        "preconditions": [],
+        "statement": "def dict_diff(base, comparable):\n    \"\"\" Generate a dict object of differences\n\n    This function will compare two dict objects and return the difference\n    between them as a dict object.  For scalar values, the key will reflect\n    the updated value.  If the key does not exist in `comparable`, then then no\n    key will be returned.  For lists, the value in comparable will wholly replace\n    the value in base for the key.  For dicts, the returned value will only\n    return keys that are different.\n\n    :param base: dict object to base the diff on\n    :param comparable: dict object to compare against base\n\n    :returns: new dict object with differences\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(comparable, dict):\n        if comparable is None:\n            comparable = dict()\n        else:\n            raise AssertionError(\"`comparable` must be of type <dict>\")\n\n    updates = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            item = comparable.get(key)\n            if item is not None:\n                sub_diff = dict_diff(value, comparable[key])\n                if sub_diff:\n                    updates[key] = sub_diff\n        else:\n            comparable_value = comparable.get(key)\n            if comparable_value is not None:\n                if sort_list(base[key]) != sort_list(comparable_value):\n                    updates[key] = comparable_value\n\n    for key in set(comparable.keys()).difference(base.keys()):\n        updates[key] = comparable.get(key)\n\n    return updates\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 266,
+            "line_end": 307,
+            "exact_excerpt": "def dict_diff(base, comparable):\n    \"\"\" Generate a dict object of differences\n\n    This function will compare two dict objects and return the difference\n    between them as a dict object.  For scalar values, the key will reflect\n    the updated value.  If the key does not exist in `comparable`, then then no\n    key will be returned.  For lists, the value in comparable will wholly replace\n    the value in base for the key.  For dicts, the returned value will only\n    return keys that are different.\n\n    :param base: dict object to base the diff on\n    :param comparable: dict object to compare against base\n\n    :returns: new dict object with differences\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(comparable, dict):\n        if comparable is None:\n            comparable = dict()\n        else:\n            raise AssertionError(\"`comparable` must be of type <dict>\")\n\n    updates = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            item = comparable.get(key)\n            if item is not None:\n                sub_diff = dict_diff(value, comparable[key])\n                if sub_diff:\n                    updates[key] = sub_diff\n        else:\n            comparable_value = comparable.get(key)\n            if comparable_value is not None:\n                if sort_list(base[key]) != sort_list(comparable_value):\n                    updates[key] = comparable_value\n\n    for key in set(comparable.keys()).difference(base.keys()):\n        updates[key] = comparable.get(key)\n\n    return updates\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "ansible.module_utils.basic",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.moves.collections_abc.Mapping",
+          "ansible.module_utils.six.string_types",
+          "ast",
+          "itertools.chain",
+          "json",
+          "operator",
+          "re",
+          "socket"
+        ],
+        "serialized_payload": "[local-f2167cb07d1e41712b4146b7] Role: existing_behavior\nApplies to: test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_diff\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py:266-307\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef dict_diff(base, comparable):\n    \"\"\" Generate a dict object of differences\n\n    This function will compare two dict objects and return the difference\n    between them as a dict object.  For scalar values, the key will reflect\n    the updated value.  If the key does not exist in `comparable`, then then no\n    key will be returned.  For lists, the value in comparable will wholly replace\n    the value in base for the key.  For dicts, the returned value will only\n    return keys that are different.\n\n    :param base: dict object to base the diff on\n    :param comparable: dict object to compare against base\n\n    :returns: new dict object with differences\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(comparable, dict):\n        if comparable is None:\n            comparable = dict()\n        else:\n            raise AssertionError(\"`comparable` must be of type <dict>\")\n\n    updates = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            item = comparable.get(key)\n            if item is not None:\n                sub_diff = dict_diff(value, comparable[key])\n                if sub_diff:\n                    updates[key] = sub_diff\n        else:\n            comparable_value = comparable.get(key)\n            if comparable_value is not None:\n                if sort_list(base[key]) != sort_list(comparable_value):\n                    updates[key] = comparable_value\n\n    for key in set(comparable.keys()).difference(base.keys()):\n        updates[key] = comparable.get(key)\n\n    return updates\n"
+      },
+      "relevance": 0.5247122895298937,
+      "coverage": [
+        0.35055983675433994,
+        0.1814300935119545,
+        0.3603415661102033,
+        0.3513343332899078,
+        0.18319516973971378,
+        0.17998655137015546,
+        0.28636691859685076,
+        0.3282429547849509
+      ],
+      "exposure": 0.08571428571428572,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7986888791014527,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "f2167cb07d1e41712b4146b7",
+        "bm25": 0.8965588265762515
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-daca44362aa52da38e31b9bb",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.plugins.test.core.version_compare"
+        ],
+        "preconditions": [],
+        "statement": "def version_compare(value, version, operator='eq', strict=None, version_type=None):\n    ''' Perform a version comparison on a value '''\n    op_map = {\n        '==': 'eq', '=': 'eq', 'eq': 'eq',\n        '<': 'lt', 'lt': 'lt',\n        '<=': 'le', 'le': 'le',\n        '>': 'gt', 'gt': 'gt',\n        '>=': 'ge', 'ge': 'ge',\n        '!=': 'ne', '<>': 'ne', 'ne': 'ne'\n    }\n\n    type_map = {\n        'loose': LooseVersion,\n        'strict': StrictVersion,\n        'semver': SemanticVersion,\n        'semantic': SemanticVersion,\n        'pep440': PEP440Version,\n    }\n\n    if strict is not None and version_type is not None:\n        raise errors.AnsibleFilterError(\"Cannot specify both 'strict' and 'version_type'\")\n\n    if not value:\n        raise errors.AnsibleFilterError(\"Input version value cannot be empty\")\n\n    if not version:\n        raise errors.AnsibleFilterError(\"Version parameter to compare against cannot be empty\")\n\n    if version_type == 'pep440' and not HAS_PACKAGING:\n        raise errors.AnsibleFilterError(\"The pep440 version_type requires the Python 'packaging' library\")\n\n    Version = LooseVersion\n    if strict:\n        Version = StrictVersion\n    elif version_type:\n        try:\n            Version = type_map[version_type]\n        except KeyError:\n            raise errors.AnsibleFilterError(\n                \"Invalid version type (%s). Must be one of %s\" % (version_type, ', '.join(map(repr, type_map)))\n            )\n\n    if operator in op_map:\n        operator = op_map[operator]\n    else:\n        raise errors.AnsibleFilterError(\n            'Invalid operator type (%s). Must be one of %s' % (operator, ', '.join(map(repr, op_map)))\n        )\n\n    try:\n        method = getattr(py_operator, operator)\n        return method(Version(to_text(value)), Version(to_text(version)))\n    except Exception as e:\n        raise errors.AnsibleFilterError('Version comparison failed: %s' % to_native(e))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/test/core.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 158,
+            "line_end": 211,
+            "exact_excerpt": "def version_compare(value, version, operator='eq', strict=None, version_type=None):\n    ''' Perform a version comparison on a value '''\n    op_map = {\n        '==': 'eq', '=': 'eq', 'eq': 'eq',\n        '<': 'lt', 'lt': 'lt',\n        '<=': 'le', 'le': 'le',\n        '>': 'gt', 'gt': 'gt',\n        '>=': 'ge', 'ge': 'ge',\n        '!=': 'ne', '<>': 'ne', 'ne': 'ne'\n    }\n\n    type_map = {\n        'loose': LooseVersion,\n        'strict': StrictVersion,\n        'semver': SemanticVersion,\n        'semantic': SemanticVersion,\n        'pep440': PEP440Version,\n    }\n\n    if strict is not None and version_type is not None:\n        raise errors.AnsibleFilterError(\"Cannot specify both 'strict' and 'version_type'\")\n\n    if not value:\n        raise errors.AnsibleFilterError(\"Input version value cannot be empty\")\n\n    if not version:\n        raise errors.AnsibleFilterError(\"Version parameter to compare against cannot be empty\")\n\n    if version_type == 'pep440' and not HAS_PACKAGING:\n        raise errors.AnsibleFilterError(\"The pep440 version_type requires the Python 'packaging' library\")\n\n    Version = LooseVersion\n    if strict:\n        Version = StrictVersion\n    elif version_type:\n        try:\n            Version = type_map[version_type]\n        except KeyError:\n            raise errors.AnsibleFilterError(\n                \"Invalid version type (%s). Must be one of %s\" % (version_type, ', '.join(map(repr, type_map)))\n            )\n\n    if operator in op_map:\n        operator = op_map[operator]\n    else:\n        raise errors.AnsibleFilterError(\n            'Invalid operator type (%s). Must be one of %s' % (operator, ', '.join(map(repr, op_map)))\n        )\n\n    try:\n        method = getattr(py_operator, operator)\n        return method(Version(to_text(value)), Version(to_text(version)))\n    except Exception as e:\n        raise errors.AnsibleFilterError('Version comparison failed: %s' % to_native(e))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.compat.version.LooseVersion",
+          "ansible.module_utils.compat.version.StrictVersion",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.utils.display.Display",
+          "ansible.utils.version.SemanticVersion",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "operator",
+          "re"
+        ],
+        "serialized_payload": "[local-daca44362aa52da38e31b9bb] Role: existing_behavior\nApplies to: lib.ansible.plugins.test.core.version_compare\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/plugins/test/core.py:158-211\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef version_compare(value, version, operator='eq', strict=None, version_type=None):\n    ''' Perform a version comparison on a value '''\n    op_map = {\n        '==': 'eq', '=': 'eq', 'eq': 'eq',\n        '<': 'lt', 'lt': 'lt',\n        '<=': 'le', 'le': 'le',\n        '>': 'gt', 'gt': 'gt',\n        '>=': 'ge', 'ge': 'ge',\n        '!=': 'ne', '<>': 'ne', 'ne': 'ne'\n    }\n\n    type_map = {\n        'loose': LooseVersion,\n        'strict': StrictVersion,\n        'semver': SemanticVersion,\n        'semantic': SemanticVersion,\n        'pep440': PEP440Version,\n    }\n\n    if strict is not None and version_type is not None:\n        raise errors.AnsibleFilterError(\"Cannot specify both 'strict' and 'version_type'\")\n\n    if not value:\n        raise errors.AnsibleFilterError(\"Input version value cannot be empty\")\n\n    if not version:\n        raise errors.AnsibleFilterError(\"Version parameter to compare against cannot be empty\")\n\n    if version_type == 'pep440' and not HAS_PACKAGING:\n        raise errors.AnsibleFilterError(\"The pep440 version_type requires the Python 'packaging' library\")\n\n    Version = LooseVersion\n    if strict:\n        Version = StrictVersion\n    elif version_type:\n        try:\n            Version = type_map[version_type]\n        except KeyError:\n            raise errors.AnsibleFilterError(\n                \"Invalid version type (%s). Must be one of %s\" % (version_type, ', '.join(map(repr, type_map)))\n            )\n\n    if operator in op_map:\n        operator = op_map[operator]\n    else:\n        raise errors.AnsibleFilterError(\n            'Invalid operator type (%s). Must be one of %s' % (operator, ', '.join(map(repr, op_map)))\n        )\n\n    try:\n        method = getattr(py_operator, operator)\n        return method(Version(to_text(value)), Version(to_text(version)))\n    except Exception as e:\n        raise errors.AnsibleFilterError('Version comparison failed: %s' % to_native(e))\n"
+      },
+      "relevance": 0.5761781087985823,
+      "coverage": [
+        0.31439396162614114,
+        0.38672194221155687,
+        0.304750100167665,
+        0.3047869357367007,
+        0.25874729663925333,
+        0.21953492938078528,
+        0.4471258137544723,
+        0.4515609116302408
+      ],
+      "exposure": 0.15217391304347827,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "daca44362aa52da38e31b9bb",
+        "bm25": 0.7175349935323985
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-0a095c4b7ef13932f8ef5609",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.vars.manager.VariableManager.set_host_facts"
+        ],
+        "preconditions": [],
+        "statement": "    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n\n        # Save the facts back to the backing store\n        self._fact_cache[host] = host_cache\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 694,
+            "line_end": 715,
+            "exact_excerpt": "    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n\n        # Save the facts back to the backing store\n        self._fact_cache[host] = host_cache\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-0a095c4b7ef13932f8ef5609] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.VariableManager.set_host_facts\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:694-715\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n\n        # Save the facts back to the backing store\n        self._fact_cache[host] = host_cache\n"
+      },
+      "relevance": 0.6048347813391456,
+      "coverage": [
+        0.2825369741474317,
+        0.30885061436484207,
+        0.28684278518939904,
+        0.3905163577814251,
+        0.20966184725639622,
+        0.2273828439993102,
+        0.3876151706392471,
+        0.4494134084095606
+      ],
+      "exposure": 0.21052631578947367,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8841379599892887,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.VariableManager.set_host_facts"
+          }
+        ],
+        "index_node": "0a095c4b7ef13932f8ef5609",
+        "bm25": 0.881263562778627
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-7be61e5313126f9d64d13429",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.vars.combine_vars"
+        ],
+        "preconditions": [],
+        "statement": "def combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 81,
+            "line_end": 92,
+            "exact_excerpt": "def combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-7be61e5313126f9d64d13429] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.combine_vars\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:81-92\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n"
+      },
+      "relevance": 0.6091721047499796,
+      "coverage": [
+        0.5766284840160341,
+        0.31193907494882916,
+        0.4651414817828625,
+        0.41849032445213946,
+        0.32472957421967674,
+        0.15062548518180846,
+        0.5008066368616998,
+        0.3929645752997143
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7303567736564929,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 1.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars.combine_vars"
+          }
+        ],
+        "index_node": "7be61e5313126f9d64d13429",
+        "bm25": 0.7037555233044631
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-054cd339e190cd55a90d344c",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge"
+        ],
+        "preconditions": [],
+        "statement": "def dict_merge(base, other):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(other, dict):\n        raise AssertionError(\"`other` must be of type <dict>\")\n\n    combined = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    if isinstance(other[key], Mapping):\n                        combined[key] = dict_merge(value, other[key])\n                    else:\n                        combined[key] = other[key]\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        elif isinstance(value, list):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    try:\n                        combined[key] = list(set(chain(value, item)))\n                    except TypeError:\n                        value.extend([i for i in item if i not in value])\n                        combined[key] = value\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        else:\n            if key in other:\n                other_value = other.get(key)\n                if other_value is not None:\n                    if sort_list(base[key]) != sort_list(other_value):\n                        combined[key] = other_value\n                    else:\n                        combined[key] = value\n                else:\n                    combined[key] = other_value\n            else:\n                combined[key] = value\n\n    for key in set(other.keys()).difference(base.keys()):\n        combined[key] = other.get(key)\n\n    return combined\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 310,
+            "line_end": 372,
+            "exact_excerpt": "def dict_merge(base, other):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(other, dict):\n        raise AssertionError(\"`other` must be of type <dict>\")\n\n    combined = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    if isinstance(other[key], Mapping):\n                        combined[key] = dict_merge(value, other[key])\n                    else:\n                        combined[key] = other[key]\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        elif isinstance(value, list):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    try:\n                        combined[key] = list(set(chain(value, item)))\n                    except TypeError:\n                        value.extend([i for i in item if i not in value])\n                        combined[key] = value\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        else:\n            if key in other:\n                other_value = other.get(key)\n                if other_value is not None:\n                    if sort_list(base[key]) != sort_list(other_value):\n                        combined[key] = other_value\n                    else:\n                        combined[key] = value\n                else:\n                    combined[key] = other_value\n            else:\n                combined[key] = value\n\n    for key in set(other.keys()).difference(base.keys()):\n        combined[key] = other.get(key)\n\n    return combined\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "ansible.module_utils.basic",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.moves.collections_abc.Mapping",
+          "ansible.module_utils.six.string_types",
+          "ast",
+          "itertools.chain",
+          "json",
+          "operator",
+          "re",
+          "socket"
+        ],
+        "serialized_payload": "[local-054cd339e190cd55a90d344c] Role: existing_behavior\nApplies to: test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py:310-372\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef dict_merge(base, other):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(other, dict):\n        raise AssertionError(\"`other` must be of type <dict>\")\n\n    combined = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    if isinstance(other[key], Mapping):\n                        combined[key] = dict_merge(value, other[key])\n                    else:\n                        combined[key] = other[key]\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        elif isinstance(value, list):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    try:\n                        combined[key] = list(set(chain(value, item)))\n                    except TypeError:\n                        value.extend([i for i in item if i not in value])\n                        combined[key] = value\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        else:\n            if key in other:\n                other_value = other.get(key)\n                if other_value is not None:\n                    if sort_list(base[key]) != sort_list(other_value):\n                        combined[key] = other_value\n                    else:\n                        combined[key] = value\n                else:\n                    combined[key] = other_value\n            else:\n                combined[key] = value\n\n    for key in set(other.keys()).difference(base.keys()):\n        combined[key] = other.get(key)\n\n    return combined\n"
+      },
+      "relevance": 0.6714623801771875,
+      "coverage": [
+        0.4932478219152924,
+        0.30061410421441526,
+        0.49008647488049595,
+        0.37961969440367305,
+        0.3293591173067626,
+        0.2508120655791975,
+        0.3867253501838684,
+        0.46094118458961486
+      ],
+      "exposure": 0.19642857142857142,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "054cd339e190cd55a90d344c",
+        "bm25": 0.9957033983592435
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-4a55386989d23d75ba19e21e",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.vars.merge_hash"
+        ],
+        "preconditions": [],
+        "statement": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n\n    return x\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 95,
+            "line_end": 180,
+            "exact_excerpt": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n\n    return x\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-4a55386989d23d75ba19e21e] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.merge_hash\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:95-180\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n\n    return x\n"
+      },
+      "relevance": 0.6833750587052261,
+      "coverage": [
+        0.47452747258360783,
+        0.2571520615739214,
+        0.4304047182479172,
+        0.4140030713292427,
+        0.2919517359784955,
+        0.17983534441132812,
+        0.42965561899330906,
+        0.4557740570843515
+      ],
+      "exposure": 0.27631578947368424,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars.merge_hash"
+          }
+        ],
+        "index_node": "4a55386989d23d75ba19e21e",
+        "bm25": 0.9896067708769469
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.utils.vars.merge_hash.block_130"
+        ],
+        "preconditions": [],
+        "statement": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 95,
+            "line_end": 178,
+            "exact_excerpt": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-baa4de7102d4dd717b7bcede-d70c40e5] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.merge_hash.block_130\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:95-178\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n"
+      },
+      "relevance": 0.636591861185209,
+      "coverage": [
+        0.47346503171141546,
+        0.2569134254378664,
+        0.429113341895607,
+        0.413201567670948,
+        0.29088902390516935,
+        0.17878313616652755,
+        0.42936063560631565,
+        0.45500922816398714
+      ],
+      "exposure": 0.28,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars.merge_hash.block_130"
+          }
+        ],
+        "index_node": "baa4de7102d4dd717b7bcede",
+        "bm25": 0.8401096923761824
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-8db23cf2afaaf3177dccbe52",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.vars._validate_mutable_mappings"
+        ],
+        "preconditions": [],
+        "statement": "def _validate_mutable_mappings(a, b):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n\n    # If this becomes generally needed, change the signature to operate on\n    # a variable number of arguments instead.\n\n    if not (isinstance(a, MutableMapping) and isinstance(b, MutableMapping)):\n        myvars = []\n        for x in [a, b]:\n            try:\n                myvars.append(dumps(x))\n            except Exception:\n                myvars.append(to_native(x))\n        raise AnsibleError(\"failed to combine variables, expected dicts but got a '{0}' and a '{1}': \\n{2}\\n{3}\".format(\n            a.__class__.__name__, b.__class__.__name__, myvars[0], myvars[1])\n        )\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 57,
+            "line_end": 78,
+            "exact_excerpt": "def _validate_mutable_mappings(a, b):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n\n    # If this becomes generally needed, change the signature to operate on\n    # a variable number of arguments instead.\n\n    if not (isinstance(a, MutableMapping) and isinstance(b, MutableMapping)):\n        myvars = []\n        for x in [a, b]:\n            try:\n                myvars.append(dumps(x))\n            except Exception:\n                myvars.append(to_native(x))\n        raise AnsibleError(\"failed to combine variables, expected dicts but got a '{0}' and a '{1}': \\n{2}\\n{3}\".format(\n            a.__class__.__name__, b.__class__.__name__, myvars[0], myvars[1])\n        )\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-8db23cf2afaaf3177dccbe52] Role: existing_behavior\nApplies to: lib.ansible.utils.vars._validate_mutable_mappings\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:57-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef _validate_mutable_mappings(a, b):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n\n    # If this becomes generally needed, change the signature to operate on\n    # a variable number of arguments instead.\n\n    if not (isinstance(a, MutableMapping) and isinstance(b, MutableMapping)):\n        myvars = []\n        for x in [a, b]:\n            try:\n                myvars.append(dumps(x))\n            except Exception:\n                myvars.append(to_native(x))\n        raise AnsibleError(\"failed to combine variables, expected dicts but got a '{0}' and a '{1}': \\n{2}\\n{3}\".format(\n            a.__class__.__name__, b.__class__.__name__, myvars[0], myvars[1])\n        )\n"
+      },
+      "relevance": 0.6152553110239154,
+      "coverage": [
+        0.4089759790022347,
+        0.36983176293601594,
+        0.3545281878144757,
+        0.33951042610775534,
+        0.28009487173951503,
+        0.20348479163188055,
+        0.45228868633818786,
+        0.4727890586708718
+      ],
+      "exposure": 0.8888888888888888,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars._validate_mutable_mappings"
+          }
+        ],
+        "index_node": "8db23cf2afaaf3177dccbe52",
+        "bm25": 0.6862719147015939
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-87a87f97143ed4f1c6602cc8",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 311,
+            "line_end": 322,
+            "exact_excerpt": "    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "ansible.module_utils.basic",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.moves.collections_abc.Mapping",
+          "ansible.module_utils.six.string_types",
+          "ast",
+          "itertools.chain",
+          "json",
+          "operator",
+          "re",
+          "socket"
+        ],
+        "serialized_payload": "[local-87a87f97143ed4f1c6602cc8] Role: documented_contract\nApplies to: test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py:311-322\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n"
+      },
+      "relevance": 0.6025946609673136,
+      "coverage": [
+        0.484337330296475,
+        0.243261979400682,
+        0.48726308477793095,
+        0.37178551986475117,
+        0.25454428759723646,
+        0.1332712865307943,
+        0.3787560133765058,
+        0.3807902278264681
+      ],
+      "exposure": 0.1111111111111111,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9691165495377524,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "87a87f97143ed4f1c6602cc8",
+        "bm25": 0.9916982944884932
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-75fbf0bbee5da5a239439789",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.vars.manager.preprocess_vars"
+        ],
+        "preconditions": [],
+        "statement": "def preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n\n    return data\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 50,
+            "line_end": 68,
+            "exact_excerpt": "def preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n\n    return data\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-75fbf0bbee5da5a239439789] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.preprocess_vars\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:50-68\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n\n    return data\n"
+      },
+      "relevance": 0.6003577557426902,
+      "coverage": [
+        0.42857810857527157,
+        0.38607593281942987,
+        0.3828387451225016,
+        0.37066401601437454,
+        0.23621250004729313,
+        0.16618413608394447,
+        0.4582036417775843,
+        0.4403615617752075
+      ],
+      "exposure": 0.1875,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.preprocess_vars"
+          }
+        ],
+        "index_node": "75fbf0bbee5da5a239439789",
+        "bm25": 0.7801240963696657
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.utils.vars.combine_vars.branch_86"
+        ],
+        "preconditions": [],
+        "statement": "def combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 81,
+            "line_end": 92,
+            "exact_excerpt": "def combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-bad13e539d4165008a788ddf-5f680563] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.combine_vars.branch_86\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:81-92\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n"
+      },
+      "relevance": 0.593933823552671,
+      "coverage": [
+        0.5766284840160341,
+        0.31193907494882916,
+        0.4651414817828625,
+        0.41849032445213946,
+        0.32472957421967674,
+        0.15062548518180846,
+        0.5008066368616998,
+        0.3929645752997143
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9705417894199174,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars.combine_vars.branch_86"
+          }
+        ],
+        "index_node": "bad13e539d4165008a788ddf",
+        "bm25": 0.6584303703952825
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.vars.manager.VariableManager.set_host_facts.block_702"
+        ],
+        "preconditions": [],
+        "statement": "    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 694,
+            "line_end": 712,
+            "exact_excerpt": "    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-45d36f96d8a51ad69df16656-d5f664ae] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.VariableManager.set_host_facts.block_702\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:694-712\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n"
+      },
+      "relevance": 0.5886421718879036,
+      "coverage": [
+        0.277353077619823,
+        0.35179113313612725,
+        0.2910512311485111,
+        0.36495264319382614,
+        0.21745276436393157,
+        0.215383496927234,
+        0.4344031105867177,
+        0.4796605457746168
+      ],
+      "exposure": 0.23529411764705882,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.VariableManager.set_host_facts.block_702"
+          }
+        ],
+        "index_node": "45d36f96d8a51ad69df16656",
+        "bm25": 0.754199702903835
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-3619fe013c2ee9d483b42d91",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "test.units.utils.test_vars.TestVariableUtils.test_combine_vars_improper_args"
+        ],
+        "preconditions": [],
+        "statement": "    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'merge'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n",
+        "verification_pattern": "    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'merge'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/utils/test_vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 74,
+            "line_end": 85,
+            "exact_excerpt": "    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'merge'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.merge_hash",
+          "collections.defaultdict",
+          "units.compat.unittest",
+          "unittest.mock"
+        ],
+        "serialized_payload": "[local-3619fe013c2ee9d483b42d91] Role: public_test_example\nApplies to: test.units.utils.test_vars.TestVariableUtils.test_combine_vars_improper_args\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:test/units/utils/test_vars.py:74-85\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'merge'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n"
+      },
+      "relevance": 0.5760548392972397,
+      "coverage": [
+        0.5245813028094742,
+        0.41483395124502853,
+        0.3636151039196627,
+        0.34269749991018145,
+        0.22982324659824369,
+        0.15485108898145977,
+        0.6051391850690773,
+        0.42426195041935616
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9516381631605403,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "test.units.utils.test_vars.TestVariableUtils.test_combine_vars_improper_args"
+          }
+        ],
+        "index_node": "3619fe013c2ee9d483b42d91",
+        "bm25": 0.5841191232105432
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-7ce549fba3a019806910b95b",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "assignment",
+        "applies_to": [
+          "lib.ansible.plugins.doc_fragments.files.ModuleDocFragment.DOCUMENTATION"
+        ],
+        "preconditions": [],
+        "statement": "    DOCUMENTATION = r'''\noptions:\n  mode:\n    description:\n    - The permissions the resulting filesystem object should have.\n    - For those used to I(/usr/bin/chmod) remember that modes are actually octal numbers.\n      You must give Ansible enough information to parse them correctly.\n      For consistent results, quote octal numbers (for example, V('644') or V('1777')) so Ansible receives\n      a string and can do its own conversion from string into number.\n      Adding a leading zero (for example, V(0755)) works sometimes, but can fail in loops and some other circumstances.\n    - Giving Ansible a number without following either of these rules will end up with a decimal\n      number which will have unexpected results.\n    - As of Ansible 1.8, the mode may be specified as a symbolic mode (for example, V(u+rwx) or\n      V(u=rw,g=r,o=r)).\n    - If O(mode) is not specified and the destination filesystem object B(does not) exist, the default C(umask) on the system will be used\n      when setting the mode for the newly created filesystem object.\n    - If O(mode) is not specified and the destination filesystem object B(does) exist, the mode of the existing filesystem object will be used.\n    - Specifying O(mode) is the best way to ensure filesystem objects are created with the correct permissions.\n      See CVE-2020-1736 for further details.\n    type: raw\n  owner:\n    description:\n    - Name of the user that should own the filesystem object, as would be fed to I(chown).\n    - When left unspecified, it uses the current user unless you are root, in which\n      case it can preserve the previous ownership.\n    - Specifying a numeric username will be assumed to be a user ID and not a username. Avoid numeric usernames to avoid this confusion.\n\n    type: str\n  group:\n    description:\n    - Name of the group that should own the filesystem object, as would be fed to I(chown).\n    - When left unspecified, it uses the current group of the current user unless you are root,\n      in which case it can preserve the previous ownership.\n    type: str\n  seuser:\n    description:\n    - The user part of the SELinux filesystem object context.\n    - By default it uses the V(system) policy, where applicable.\n    - When set to V(_default), it will use the C(user) portion of the policy if available.\n    type: str\n  serole:\n    description:\n    - The role part of the SELinux filesystem object context.\n    - When set to V(_default), it will use the C(role) portion of the policy if available.\n    type: str\n  setype:\n    description:\n    - The type part of the SELinux filesystem object context.\n    - When set to V(_default), it will use the C(type) portion of the policy if available.\n    type: str\n  selevel:\n    description:\n    - The level part of the SELinux filesystem object context.\n    - This is the MLS/MCS attribute, sometimes known as the C(range).\n    - When set to V(_default), it will use the C(level) portion of the policy if available.\n    type: str\n  unsafe_writes:\n    description:\n    - Influence when to use atomic operation to prevent data corruption or inconsistent reads from the target filesystem object.\n    - By default this module uses atomic operations to prevent data corruption or inconsistent reads from the target filesystem objects,\n      but sometimes systems are configured or just broken in ways that prevent this. One example is docker mounted filesystem objects,\n      which cannot be updated atomically from inside the container and can only be written in an unsafe manner.\n    - This option allows Ansible to fall back to unsafe methods of updating filesystem objects when atomic operations fail\n      (however, it doesn't force Ansible to perform unsafe writes).\n    - IMPORTANT! Unsafe writes are subject to race conditions and can lead to data corruption.\n    type: bool\n    default: no\n    version_added: '2.2'\n  attributes:\n    description:\n    - The attributes the resulting filesystem object should have.\n    - To get supported flags look at the man page for I(chattr) on the target system.\n    - This string should contain the attributes in the same order as the one displayed by I(lsattr).\n    - The C(=) operator is assumed as default, otherwise C(+) or C(-) operators need to be included in the string.\n    type: str\n    aliases: [ attr ]\n    version_added: '2.3'\n'''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/doc_fragments/files.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 15,
+            "line_end": 92,
+            "exact_excerpt": "    DOCUMENTATION = r'''\noptions:\n  mode:\n    description:\n    - The permissions the resulting filesystem object should have.\n    - For those used to I(/usr/bin/chmod) remember that modes are actually octal numbers.\n      You must give Ansible enough information to parse them correctly.\n      For consistent results, quote octal numbers (for example, V('644') or V('1777')) so Ansible receives\n      a string and can do its own conversion from string into number.\n      Adding a leading zero (for example, V(0755)) works sometimes, but can fail in loops and some other circumstances.\n    - Giving Ansible a number without following either of these rules will end up with a decimal\n      number which will have unexpected results.\n    - As of Ansible 1.8, the mode may be specified as a symbolic mode (for example, V(u+rwx) or\n      V(u=rw,g=r,o=r)).\n    - If O(mode) is not specified and the destination filesystem object B(does not) exist, the default C(umask) on the system will be used\n      when setting the mode for the newly created filesystem object.\n    - If O(mode) is not specified and the destination filesystem object B(does) exist, the mode of the existing filesystem object will be used.\n    - Specifying O(mode) is the best way to ensure filesystem objects are created with the correct permissions.\n      See CVE-2020-1736 for further details.\n    type: raw\n  owner:\n    description:\n    - Name of the user that should own the filesystem object, as would be fed to I(chown).\n    - When left unspecified, it uses the current user unless you are root, in which\n      case it can preserve the previous ownership.\n    - Specifying a numeric username will be assumed to be a user ID and not a username. Avoid numeric usernames to avoid this confusion.\n\n    type: str\n  group:\n    description:\n    - Name of the group that should own the filesystem object, as would be fed to I(chown).\n    - When left unspecified, it uses the current group of the current user unless you are root,\n      in which case it can preserve the previous ownership.\n    type: str\n  seuser:\n    description:\n    - The user part of the SELinux filesystem object context.\n    - By default it uses the V(system) policy, where applicable.\n    - When set to V(_default), it will use the C(user) portion of the policy if available.\n    type: str\n  serole:\n    description:\n    - The role part of the SELinux filesystem object context.\n    - When set to V(_default), it will use the C(role) portion of the policy if available.\n    type: str\n  setype:\n    description:\n    - The type part of the SELinux filesystem object context.\n    - When set to V(_default), it will use the C(type) portion of the policy if available.\n    type: str\n  selevel:\n    description:\n    - The level part of the SELinux filesystem object context.\n    - This is the MLS/MCS attribute, sometimes known as the C(range).\n    - When set to V(_default), it will use the C(level) portion of the policy if available.\n    type: str\n  unsafe_writes:\n    description:\n    - Influence when to use atomic operation to prevent data corruption or inconsistent reads from the target filesystem object.\n    - By default this module uses atomic operations to prevent data corruption or inconsistent reads from the target filesystem objects,\n      but sometimes systems are configured or just broken in ways that prevent this. One example is docker mounted filesystem objects,\n      which cannot be updated atomically from inside the container and can only be written in an unsafe manner.\n    - This option allows Ansible to fall back to unsafe methods of updating filesystem objects when atomic operations fail\n      (however, it doesn't force Ansible to perform unsafe writes).\n    - IMPORTANT! Unsafe writes are subject to race conditions and can lead to data corruption.\n    type: bool\n    default: no\n    version_added: '2.2'\n  attributes:\n    description:\n    - The attributes the resulting filesystem object should have.\n    - To get supported flags look at the man page for I(chattr) on the target system.\n    - This string should contain the attributes in the same order as the one displayed by I(lsattr).\n    - The C(=) operator is assumed as default, otherwise C(+) or C(-) operators need to be included in the string.\n    type: str\n    aliases: [ attr ]\n    version_added: '2.3'\n'''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function"
+        ],
+        "serialized_payload": "[local-7ce549fba3a019806910b95b] Role: documented_contract\nApplies to: lib.ansible.plugins.doc_fragments.files.ModuleDocFragment.DOCUMENTATION\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/plugins/doc_fragments/files.py:15-92\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    DOCUMENTATION = r'''\noptions:\n  mode:\n    description:\n    - The permissions the resulting filesystem object should have.\n    - For those used to I(/usr/bin/chmod) remember that modes are actually octal numbers.\n      You must give Ansible enough information to parse them correctly.\n      For consistent results, quote octal numbers (for example, V('644') or V('1777')) so Ansible receives\n      a string and can do its own conversion from string into number.\n      Adding a leading zero (for example, V(0755)) works sometimes, but can fail in loops and some other circumstances.\n    - Giving Ansible a number without following either of these rules will end up with a decimal\n      number which will have unexpected results.\n    - As of Ansible 1.8, the mode may be specified as a symbolic mode (for example, V(u+rwx) or\n      V(u=rw,g=r,o=r)).\n    - If O(mode) is not specified and the destination filesystem object B(does not) exist, the default C(umask) on the system will be used\n      when setting the mode for the newly created filesystem object.\n    - If O(mode) is not specified and the destination filesystem object B(does) exist, the mode of the existing filesystem object will be used.\n    - Specifying O(mode) is the best way to ensure filesystem objects are created with the correct permissions.\n      See CVE-2020-1736 for further details.\n    type: raw\n  owner:\n    description:\n    - Name of the user that should own the filesystem object, as would be fed to I(chown).\n    - When left unspecified, it uses the current user unless you are root, in which\n      case it can preserve the previous ownership.\n    - Specifying a numeric username will be assumed to be a user ID and not a username. Avoid numeric usernames to avoid this confusion.\n\n    type: str\n  group:\n    description:\n    - Name of the group that should own the filesystem object, as would be fed to I(chown).\n    - When left unspecified, it uses the current group of the current user unless you are root,\n      in which case it can preserve the previous ownership.\n    type: str\n  seuser:\n    description:\n    - The user part of the SELinux filesystem object context.\n    - By default it uses the V(system) policy, where applicable.\n    - When set to V(_default), it will use the C(user) portion of the policy if available.\n    type: str\n  serole:\n    description:\n    - The role part of the SELinux filesystem object context.\n    - When set to V(_default), it will use the C(role) portion of the policy if available.\n    type: str\n  setype:\n    description:\n    - The type part of the SELinux filesystem object context.\n    - When set to V(_default), it will use the C(type) portion of the policy if available.\n    type: str\n  selevel:\n    description:\n    - The level part of the SELinux filesystem object context.\n    - This is the MLS/MCS attribute, sometimes known as the C(range).\n    - When set to V(_default), it will use the C(level) portion of the policy if available.\n    type: str\n  unsafe_writes:\n    description:\n    - Influence when to use atomic operation to prevent data corruption or inconsistent reads from the target filesystem object.\n    - By default this module uses atomic operations to prevent data corruption or inconsistent reads from the target filesystem objects,\n      but sometimes systems are configured or just broken in ways that prevent this. One example is docker mounted filesystem objects,\n      which cannot be updated atomically from inside the container and can only be written in an unsafe manner.\n    - This option allows Ansible to fall back to unsafe methods of updating filesystem objects when atomic operations fail\n      (however, it doesn't force Ansible to perform unsafe writes).\n    - IMPORTANT! Unsafe writes are subject to race conditions and can lead to data corruption.\n    type: bool\n    default: no\n    version_added: '2.2'\n  attributes:\n    description:\n    - The attributes the resulting filesystem object should have.\n    - To get supported flags look at the man page for I(chattr) on the target system.\n    - This string should contain the attributes in the same order as the one displayed by I(lsattr).\n    - The C(=) operator is assumed as default, otherwise C(+) or C(-) operators need to be included in the string.\n    type: str\n    aliases: [ attr ]\n    version_added: '2.3'\n'''\n"
+      },
+      "relevance": 0.5662715559545533,
+      "coverage": [
+        0.20788545455227206,
+        0.3140003870936898,
+        0.18960896065629101,
+        0.2256322528625945,
+        0.14793520990995865,
+        0.14414887659218825,
+        0.3366210169806694,
+        0.36152475302047254
+      ],
+      "exposure": 0.012987012987012988,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9147679913095786,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "7ce549fba3a019806910b95b",
+        "bm25": 0.9921016842290569
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.utils.vars.merge_hash.branch_101"
+        ],
+        "preconditions": [],
+        "statement": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 95,
+            "line_end": 102,
+            "exact_excerpt": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-3082f909104aae21118b75ae-bbae13fd] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.merge_hash.branch_101\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:95-102\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n"
+      },
+      "relevance": 0.5630654511201187,
+      "coverage": [
+        0.4923516187871332,
+        0.34109151919175373,
+        0.44064956664628346,
+        0.3852658858014799,
+        0.2921654267485427,
+        0.15226604704409996,
+        0.5742090641091184,
+        0.48468566436074173
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars.merge_hash.branch_101"
+          }
+        ],
+        "index_node": "3082f909104aae21118b75ae",
+        "bm25": 0.4451522168397972
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.utils.vars._validate_mutable_mappings.branch_69"
+        ],
+        "preconditions": [],
+        "statement": "def _validate_mutable_mappings(a, b):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n\n    # If this becomes generally needed, change the signature to operate on\n    # a variable number of arguments instead.\n\n    if not (isinstance(a, MutableMapping) and isinstance(b, MutableMapping)):\n        myvars = []\n        for x in [a, b]:\n            try:\n                myvars.append(dumps(x))\n            except Exception:\n                myvars.append(to_native(x))\n        raise AnsibleError(\"failed to combine variables, expected dicts but got a '{0}' and a '{1}': \\n{2}\\n{3}\".format(\n            a.__class__.__name__, b.__class__.__name__, myvars[0], myvars[1])\n        )\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 57,
+            "line_end": 78,
+            "exact_excerpt": "def _validate_mutable_mappings(a, b):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n\n    # If this becomes generally needed, change the signature to operate on\n    # a variable number of arguments instead.\n\n    if not (isinstance(a, MutableMapping) and isinstance(b, MutableMapping)):\n        myvars = []\n        for x in [a, b]:\n            try:\n                myvars.append(dumps(x))\n            except Exception:\n                myvars.append(to_native(x))\n        raise AnsibleError(\"failed to combine variables, expected dicts but got a '{0}' and a '{1}': \\n{2}\\n{3}\".format(\n            a.__class__.__name__, b.__class__.__name__, myvars[0], myvars[1])\n        )\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-c814bf2ce46f01391259d422-744cb3bb] Role: existing_behavior\nApplies to: lib.ansible.utils.vars._validate_mutable_mappings.branch_69\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:57-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef _validate_mutable_mappings(a, b):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n\n    # If this becomes generally needed, change the signature to operate on\n    # a variable number of arguments instead.\n\n    if not (isinstance(a, MutableMapping) and isinstance(b, MutableMapping)):\n        myvars = []\n        for x in [a, b]:\n            try:\n                myvars.append(dumps(x))\n            except Exception:\n                myvars.append(to_native(x))\n        raise AnsibleError(\"failed to combine variables, expected dicts but got a '{0}' and a '{1}': \\n{2}\\n{3}\".format(\n            a.__class__.__name__, b.__class__.__name__, myvars[0], myvars[1])\n        )\n"
+      },
+      "relevance": 0.5606930691176506,
+      "coverage": [
+        0.4089759790022347,
+        0.36983176293601594,
+        0.3545281878144757,
+        0.33951042610775534,
+        0.28009487173951503,
+        0.20348479163188055,
+        0.45228868633818786,
+        0.4727890586708718
+      ],
+      "exposure": 0.8888888888888888,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars._validate_mutable_mappings.branch_69"
+          }
+        ],
+        "index_node": "c814bf2ce46f01391259d422",
+        "bm25": 0.5087730692128567
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-70388d6aa1c101857cf34f84",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.utils.vars._validate_mutable_mappings.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 58,
+            "line_end": 64,
+            "exact_excerpt": "    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-70388d6aa1c101857cf34f84] Role: documented_contract\nApplies to: lib.ansible.utils.vars._validate_mutable_mappings.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:58-64\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n"
+      },
+      "relevance": 0.5558633489234234,
+      "coverage": [
+        0.26871207318367807,
+        0.37995289784381514,
+        0.29364910861458665,
+        0.2968442482759823,
+        0.26488623178074766,
+        0.2439328578475266,
+        0.40809922059979326,
+        0.5084016257650907
+      ],
+      "exposure": 0.8,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars._validate_mutable_mappings.__doc__"
+          }
+        ],
+        "index_node": "70388d6aa1c101857cf34f84",
+        "bm25": 0.6041568605566031
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.utils.vars.merge_hash.branch_120"
+        ],
+        "preconditions": [],
+        "statement": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 95,
+            "line_end": 122,
+            "exact_excerpt": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-06bee73a222407accecbfeb5-5dd5af2b] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.merge_hash.branch_120\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:95-122\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n"
+      },
+      "relevance": 0.5532458010704164,
+      "coverage": [
+        0.5088382402619998,
+        0.3061135972927275,
+        0.4303367135326976,
+        0.42175642085292253,
+        0.30927032705203533,
+        0.16676490822498724,
+        0.5347083017886503,
+        0.4817373398957574
+      ],
+      "exposure": 0.8333333333333334,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.utils.vars.merge_hash.branch_120"
+          }
+        ],
+        "index_node": "06bee73a222407accecbfeb5",
+        "bm25": 0.4346316016737161
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.vars.manager.preprocess_vars.block_64"
+        ],
+        "preconditions": [],
+        "statement": "def preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 50,
+            "line_end": 66,
+            "exact_excerpt": "def preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-bf039801cf804768a364f375-cee58d6a] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.preprocess_vars.block_64\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:50-66\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef preprocess_vars(a):\n    '''\n    Ensures that vars contained in the parameter passed in are\n    returned as a list of dictionaries, to ensure for instance\n    that vars loaded from a file conform to an expected state.\n    '''\n\n    if a is None:\n        return None\n    elif not isinstance(a, list):\n        data = [a]\n    else:\n        data = a\n\n    for item in data:\n        if not isinstance(item, MutableMapping):\n            raise AnsibleError(\"variable files must contain either a dictionary of variables, or a list of dictionaries. Got: %s (%s)\" % (a, type(a)))\n"
+      },
+      "relevance": 0.5521706472190064,
+      "coverage": [
+        0.43028133514158623,
+        0.3910576055832543,
+        0.38209338009888866,
+        0.3720355218708885,
+        0.23809403092822115,
+        0.16734786014877143,
+        0.46567898810441233,
+        0.43905896186828614
+      ],
+      "exposure": 0.2,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.preprocess_vars.block_64"
+          }
+        ],
+        "index_node": "bf039801cf804768a364f375",
+        "bm25": 0.6194234669433895
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.vars.manager.VariableManager.set_nonpersistent_facts.branch_722"
+        ],
+        "preconditions": [],
+        "statement": "    def set_nonpersistent_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for nonpersistent_facts should be a Mapping but is a %s\" % type(facts))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 717,
+            "line_end": 723,
+            "exact_excerpt": "    def set_nonpersistent_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for nonpersistent_facts should be a Mapping but is a %s\" % type(facts))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-7474adaae8c45ea12443c7c0-235962d3] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.VariableManager.set_nonpersistent_facts.branch_722\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:717-723\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def set_nonpersistent_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for nonpersistent_facts should be a Mapping but is a %s\" % type(facts))\n"
+      },
+      "relevance": 0.5519176948191853,
+      "coverage": [
+        0.27868543593928996,
+        0.36664074834600524,
+        0.30116669791527084,
+        0.3633511437475206,
+        0.21901839530938308,
+        0.21961031861533808,
+        0.43442942968988774,
+        0.4659800096645759
+      ],
+      "exposure": 0.3333333333333333,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.vars.manager.VariableManager.set_nonpersistent_facts.branch_722"
+          }
+        ],
+        "index_node": "7474adaae8c45ea12443c7c0",
+        "bm25": 0.6480670993640236
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "block",
+        "applies_to": [
+          "test.units.utils.test_vars.TestVariableUtils.test_combine_vars_improper_args.block_75"
+        ],
+        "preconditions": [],
+        "statement": "    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n",
+        "verification_pattern": "    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/utils/test_vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 74,
+            "line_end": 79,
+            "exact_excerpt": "    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.merge_hash",
+          "collections.defaultdict",
+          "units.compat.unittest",
+          "unittest.mock"
+        ],
+        "serialized_payload": "[local-900804ea8ab4983c3d138beb-a4632c3c] Role: public_test_example\nApplies to: test.units.utils.test_vars.TestVariableUtils.test_combine_vars_improper_args.block_75\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:test/units/utils/test_vars.py:74-79\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_combine_vars_improper_args(self):\n        with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace'):\n            with self.assertRaises(AnsibleError):\n                combine_vars([1, 2, 3], dict(a=1))\n            with self.assertRaises(AnsibleError):\n                combine_vars(dict(a=1), [1, 2, 3])\n"
+      },
+      "relevance": 0.5509415626760197,
+      "coverage": [
+        0.5113785665102304,
+        0.43299611021269535,
+        0.34328934111401566,
+        0.31733930359555707,
+        0.21707218289375305,
+        0.147670966199891,
+        0.6085214721621611,
+        0.414237342494735
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9129334498309156,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "test.units.utils.test_vars.TestVariableUtils.test_combine_vars_improper_args.block_75"
+          }
+        ],
+        "index_node": "900804ea8ab4983c3d138beb",
+        "bm25": 0.5548408694031851
+      }
+    }
+  ],
+  "overlap": [
+    [
+      1.0,
+      0.3848574698922791,
+      0.4812301030610861,
+      0.43412528290991476,
+      0.4938368453104698,
+      0.42865200506676737,
+      0.3429806450071344,
+      0.4858731958465802,
+      0.5256312756437465,
+      0.52538777874891,
+      0.4958215298491062,
+      0.3356278327393354,
+      0.4904603621226846,
+      0.3429806450071344,
+      0.4402222424834128,
+      0.4442792974763071,
+      0.2964553568072821,
+      0.5191461212890571,
+      0.4958215298491062,
+      0.4472058137257893,
+      0.5422948443446847,
+      0.49525023310008637,
+      0.4252151462528754,
+      0.4171100280231659
+    ],
+    [
+      0.3848574698922791,
+      1.0,
+      0.42475180821641734,
+      0.3470787303469958,
+      0.2854399896854814,
+      0.3727014359382688,
+      0.31214009984134167,
+      0.3424892745206965,
+      0.3489122241947587,
+      0.3478829950306352,
+      0.4108821816534884,
+      0.3283722564895734,
+      0.44447206232803804,
+      0.31214009984134167,
+      0.33864762783208757,
+      0.34951300726409207,
+      0.24413060119898122,
+      0.2843226183687159,
+      0.4108821816534884,
+      0.2737821591566434,
+      0.3500731252325008,
+      0.4374140319611404,
+      0.33732085093259045,
+      0.32591395179439997
+    ],
+    [
+      0.4812301030610861,
+      0.42475180821641734,
+      1.0,
+      0.45898957515064304,
+      0.33204013185772985,
+      0.39890153515097787,
+      0.36343620940437527,
+      0.5025126217382782,
+      0.48483785129715207,
+      0.48361711240936517,
+      0.3749065921363732,
+      0.3954419691849936,
+      0.33300607025396795,
+      0.36343620940437527,
+      0.3639318237850459,
+      0.34874968255587296,
+      0.22265249955927763,
+      0.44720649268397605,
+      0.3749065921363732,
+      0.27263359712400925,
+      0.4966806317005765,
+      0.33425040364038916,
+      0.3384839988776534,
+      0.3099370103000519
+    ],
+    [
+      0.43412528290991476,
+      0.3470787303469958,
+      0.45898957515064304,
+      1.0,
+      0.428218591845717,
+      0.3302584477588565,
+      0.33604121109613094,
+      0.6393335059885239,
+      0.5056671862954919,
+      0.5056609695310418,
+      0.2861364153527439,
+      0.4705447647528205,
+      0.34007409458314986,
+      0.33604121109613094,
+      0.33027060898776783,
+      0.3298068721261326,
+      0.18048284113313942,
+      0.42459211896618865,
+      0.2861364153527439,
+      0.20663026015940672,
+      0.48674496654860855,
+      0.34217427616273965,
+      0.307679864123697,
+      0.2823185309181161
+    ],
+    [
+      0.4938368453104698,
+      0.2854399896854814,
+      0.33204013185772985,
+      0.428218591845717,
+      0.9999999582767487,
+      0.43153652701518685,
+      0.3229540758129674,
+      0.4082912397138247,
+      0.36228330219321747,
+      0.3620200702004959,
+      0.4627521793622874,
+      0.25046395469815075,
+      0.4321169329349574,
+      0.3229540758129674,
+      0.45304652365383175,
+      0.39993255782443604,
+      0.3722513241015608,
+      0.41618797887474834,
+      0.4627521793622874,
+      0.4289170508704691,
+      0.4118396011117387,
+      0.4400441003505763,
+      0.439124327136712,
+      0.3836416080812715
+    ],
+    [
+      0.42865200506676737,
+      0.3727014359382688,
+      0.39890153515097787,
+      0.3302584477588565,
+      0.43153652701518685,
+      1.0,
+      0.2632195905715006,
+      0.3421990009057745,
+      0.34245052315073105,
+      0.34249573029356095,
+      0.45669668856240925,
+      0.23209835897206377,
+      0.4003053347153924,
+      0.2632195905715006,
+      0.9690058879627486,
+      0.34504163977803803,
+      0.30017074308759506,
+      0.351299341731777,
+      0.45669668856240925,
+      0.3950028121506163,
+      0.3986266240849272,
+      0.39736065366699913,
+      0.8104308508203331,
+      0.3290177813367809
+    ],
+    [
+      0.3429806450071344,
+      0.31214009984134167,
+      0.36343620940437527,
+      0.33604121109613094,
+      0.3229540758129674,
+      0.2632195905715006,
+      1.0,
+      0.5026964733094896,
+      0.5235107911836221,
+      0.5230770362626627,
+      0.5013240366333492,
+      0.4225495207918473,
+      0.47370216753266886,
+      1.0,
+      0.2641536296265466,
+      0.5737431802317197,
+      0.14407192489886633,
+      0.5727456275128343,
+      0.5013240366333492,
+      0.3125237387471888,
+      0.5758411105734036,
+      0.4789929261424406,
+      0.26104837296228606,
+      0.5451340139006566
+    ],
+    [
+      0.4858731958465802,
+      0.3424892745206965,
+      0.5025126217382782,
+      0.6393335059885239,
+      0.4082912397138247,
+      0.3421990009057745,
+      0.5026964733094896,
+      0.9999999165534972,
+      0.592297717768335,
+      0.5921916155401703,
+      0.408010219575672,
+      0.7446552962609359,
+      0.3917668579009598,
+      0.5026964733094896,
+      0.34266513691836464,
+      0.42966465212362026,
+      0.15902351769986636,
+      0.5472597674098039,
+      0.408010219575672,
+      0.2770914093037642,
+      0.5565980339898817,
+      0.3926993308452194,
+      0.30514346471630405,
+      0.3951525490673365
+    ],
+    [
+      0.5256312756437465,
+      0.3489122241947587,
+      0.48483785129715207,
+      0.5056671862954919,
+      0.36228330219321747,
+      0.34245052315073105,
+      0.5235107911836221,
+      0.592297717768335,
+      1.0,
+      0.9999712944030761,
+      0.44278884180061734,
+      0.47011326834885836,
+      0.4199395887140945,
+      0.5235107911836221,
+      0.3428725920529807,
+      0.45884313206633304,
+      0.23259302301963766,
+      0.7307536460776566,
+      0.44278884180061734,
+      0.33629038845735815,
+      0.8496660704513063,
+      0.42265174608275446,
+      0.3025042508765784,
+      0.40985222994119025
+    ],
+    [
+      0.52538777874891,
+      0.3478829950306352,
+      0.48361711240936517,
+      0.5056609695310418,
+      0.3620200702004959,
+      0.34249573029356095,
+      0.5230770362626627,
+      0.5921916155401703,
+      0.9999712944030761,
+      1.0,
+      0.44255368955604946,
+      0.4691107420655942,
+      0.4196125201468185,
+      0.5230770362626627,
+      0.34310484453158024,
+      0.45826947908362126,
+      0.23149743302425346,
+      0.7303330757041214,
+      0.44255368955604946,
+      0.33568043624597815,
+      0.8491880888839235,
+      0.422492300677748,
+      0.3025200639888373,
+      0.4093042784813056
+    ],
+    [
+      0.4958215298491062,
+      0.4108821816534884,
+      0.3749065921363732,
+      0.2861364153527439,
+      0.4627521793622874,
+      0.45669668856240925,
+      0.5013240366333492,
+      0.408010219575672,
+      0.44278884180061734,
+      0.44255368955604946,
+      1.0,
+      0.28816244080828596,
+      0.6077060417652745,
+      0.5013240366333492,
+      0.4707999883881308,
+      0.46395077323072514,
+      0.28466680743192796,
+      0.4510019985362011,
+      1.0,
+      0.6974871303552757,
+      0.5004122484708549,
+      0.611534150075974,
+      0.41514434525025845,
+      0.44623954390318327
+    ],
+    [
+      0.3356278327393354,
+      0.3283722564895734,
+      0.3954419691849936,
+      0.4705447647528205,
+      0.25046395469815075,
+      0.23209835897206377,
+      0.4225495207918473,
+      0.7446552962609359,
+      0.47011326834885836,
+      0.4691107420655942,
+      0.28816244080828596,
+      1.0,
+      0.3390411728441953,
+      0.4225495207918473,
+      0.22541943733362754,
+      0.3564434490737161,
+      0.16989346790259577,
+      0.43891419099598394,
+      0.28816244080828596,
+      0.23443364854583337,
+      0.45217160469272705,
+      0.335883953553462,
+      0.21607119489946713,
+      0.34017919180260686
+    ],
+    [
+      0.4904603621226846,
+      0.44447206232803804,
+      0.33300607025396795,
+      0.34007409458314986,
+      0.4321169329349574,
+      0.4003053347153924,
+      0.47370216753266886,
+      0.3917668579009598,
+      0.4199395887140945,
+      0.4196125201468185,
+      0.6077060417652745,
+      0.3390411728441953,
+      0.9999999582767487,
+      0.47370216753266886,
+      0.42182927955126825,
+      0.43426626242479466,
+      0.3335239514676735,
+      0.4509472486722802,
+      0.6077060417652745,
+      0.4925007095278046,
+      0.45325336364338226,
+      0.9975430011749267,
+      0.4322165776071613,
+      0.433853834643371
+    ],
+    [
+      0.3429806450071344,
+      0.31214009984134167,
+      0.36343620940437527,
+      0.33604121109613094,
+      0.3229540758129674,
+      0.2632195905715006,
+      1.0,
+      0.5026964733094896,
+      0.5235107911836221,
+      0.5230770362626627,
+      0.5013240366333492,
+      0.4225495207918473,
+      0.47370216753266886,
+      1.0,
+      0.2641536296265466,
+      0.5737431802317197,
+      0.14407192489886633,
+      0.5727456275128343,
+      0.5013240366333492,
+      0.3125237387471888,
+      0.5758411105734036,
+      0.4789929261424406,
+      0.26104837296228606,
+      0.5451340139006566
+    ],
+    [
+      0.4402222424834128,
+      0.33864762783208757,
+      0.3639318237850459,
+      0.33027060898776783,
+      0.45304652365383175,
+      0.9690058879627486,
+      0.2641536296265466,
+      0.34266513691836464,
+      0.3428725920529807,
+      0.34310484453158024,
+      0.4707999883881308,
+      0.22541943733362754,
+      0.42182927955126825,
+      0.2641536296265466,
+      0.9999999582767487,
+      0.3675402737221461,
+      0.30163545116649093,
+      0.37098267241234817,
+      0.4707999883881308,
+      0.4253298160306301,
+      0.40944103213485744,
+      0.4207693837974078,
+      0.8384301089405545,
+      0.3549764126572932
+    ],
+    [
+      0.4442792974763071,
+      0.34951300726409207,
+      0.34874968255587296,
+      0.3298068721261326,
+      0.39993255782443604,
+      0.34504163977803803,
+      0.5737431802317197,
+      0.42966465212362026,
+      0.45884313206633304,
+      0.45826947908362126,
+      0.46395077323072514,
+      0.3564434490737161,
+      0.43426626242479466,
+      0.5737431802317197,
+      0.3675402737221461,
+      1.0,
+      0.2169726890498905,
+      0.5263008821214499,
+      0.46395077323072514,
+      0.34945466380018575,
+      0.519533987773193,
+      0.44239607967218536,
+      0.35356572344217324,
+      0.9734386417963473
+    ],
+    [
+      0.2964553568072821,
+      0.24413060119898122,
+      0.22265249955927763,
+      0.18048284113313942,
+      0.3722513241015608,
+      0.30017074308759506,
+      0.14407192489886633,
+      0.15902351769986636,
+      0.23259302301963766,
+      0.23149743302425346,
+      0.28466680743192796,
+      0.16989346790259577,
+      0.3335239514676735,
+      0.14407192489886633,
+      0.30163545116649093,
+      0.2169726890498905,
+      0.9999999582767487,
+      0.24626499105854505,
+      0.28466680743192796,
+      0.3090126624786205,
+      0.2621034150235274,
+      0.33246030062119214,
+      0.33034266091128933,
+      0.20769769310230346
+    ],
+    [
+      0.5191461212890571,
+      0.2843226183687159,
+      0.44720649268397605,
+      0.42459211896618865,
+      0.41618797887474834,
+      0.351299341731777,
+      0.5727456275128343,
+      0.5472597674098039,
+      0.7307536460776566,
+      0.7303330757041214,
+      0.4510019985362011,
+      0.43891419099598394,
+      0.4509472486722802,
+      0.5727456275128343,
+      0.37098267241234817,
+      0.5263008821214499,
+      0.24626499105854505,
+      1.0,
+      0.4510019985362011,
+      0.36586869465089067,
+      0.8768660721214723,
+      0.454037022327218,
+      0.38344929895862523,
+      0.502899230680862
+    ],
+    [
+      0.4958215298491062,
+      0.4108821816534884,
+      0.3749065921363732,
+      0.2861364153527439,
+      0.4627521793622874,
+      0.45669668856240925,
+      0.5013240366333492,
+      0.408010219575672,
+      0.44278884180061734,
+      0.44255368955604946,
+      1.0,
+      0.28816244080828596,
+      0.6077060417652745,
+      0.5013240366333492,
+      0.4707999883881308,
+      0.46395077323072514,
+      0.28466680743192796,
+      0.4510019985362011,
+      1.0,
+      0.6974871303552757,
+      0.5004122484708549,
+      0.611534150075974,
+      0.41514434525025845,
+      0.44623954390318327
+    ],
+    [
+      0.4472058137257893,
+      0.2737821591566434,
+      0.27263359712400925,
+      0.20663026015940672,
+      0.4289170508704691,
+      0.3950028121506163,
+      0.3125237387471888,
+      0.2770914093037642,
+      0.33629038845735815,
+      0.33568043624597815,
+      0.6974871303552757,
+      0.23443364854583337,
+      0.4925007095278046,
+      0.3125237387471888,
+      0.4253298160306301,
+      0.34945466380018575,
+      0.3090126624786205,
+      0.36586869465089067,
+      0.6974871303552757,
+      1.0,
+      0.3796460151880313,
+      0.49584574603445747,
+      0.4083632430888159,
+      0.3539617270807334
+    ],
+    [
+      0.5422948443446847,
+      0.3500731252325008,
+      0.4966806317005765,
+      0.48674496654860855,
+      0.4118396011117387,
+      0.3986266240849272,
+      0.5758411105734036,
+      0.5565980339898817,
+      0.8496660704513063,
+      0.8491880888839235,
+      0.5004122484708549,
+      0.45217160469272705,
+      0.45325336364338226,
+      0.5758411105734036,
+      0.40944103213485744,
+      0.519533987773193,
+      0.2621034150235274,
+      0.8768660721214723,
+      0.5004122484708549,
+      0.3796460151880313,
+      1.0,
+      0.45599458125660247,
+      0.3733091752460185,
+      0.4815782130639166
+    ],
+    [
+      0.49525023310008637,
+      0.4374140319611404,
+      0.33425040364038916,
+      0.34217427616273965,
+      0.4400441003505763,
+      0.39736065366699913,
+      0.4789929261424406,
+      0.3926993308452194,
+      0.42265174608275446,
+      0.422492300677748,
+      0.611534150075974,
+      0.335883953553462,
+      0.9975430011749267,
+      0.4789929261424406,
+      0.4207693837974078,
+      0.44239607967218536,
+      0.33246030062119214,
+      0.454037022327218,
+      0.611534150075974,
+      0.49584574603445747,
+      0.45599458125660247,
+      0.9999999165534972,
+      0.43282490261173895,
+      0.44213907100201355
+    ],
+    [
+      0.4252151462528754,
+      0.33732085093259045,
+      0.3384839988776534,
+      0.307679864123697,
+      0.439124327136712,
+      0.8104308508203331,
+      0.26104837296228606,
+      0.30514346471630405,
+      0.3025042508765784,
+      0.3025200639888373,
+      0.41514434525025845,
+      0.21607119489946713,
+      0.4322165776071613,
+      0.26104837296228606,
+      0.8384301089405545,
+      0.35356572344217324,
+      0.33034266091128933,
+      0.38344929895862523,
+      0.41514434525025845,
+      0.4083632430888159,
+      0.3733091752460185,
+      0.43282490261173895,
+      1.0,
+      0.3503590196228571
+    ],
+    [
+      0.4171100280231659,
+      0.32591395179439997,
+      0.3099370103000519,
+      0.2823185309181161,
+      0.3836416080812715,
+      0.3290177813367809,
+      0.5451340139006566,
+      0.3951525490673365,
+      0.40985222994119025,
+      0.4093042784813056,
+      0.44623954390318327,
+      0.34017919180260686,
+      0.433853834643371,
+      0.5451340139006566,
+      0.3549764126572932,
+      0.9734386417963473,
+      0.20769769310230346,
+      0.502899230680862,
+      0.44623954390318327,
+      0.3539617270807334,
+      0.4815782130639166,
+      0.44213907100201355,
+      0.3503590196228571,
+      1.0
+    ]
+  ],
+  "obligations": [
+    {
+      "id": "req-aa47f0dbd0839c23",
+      "statement": "`combine_vars` should correctly combine a `dict` with a `VarsWithSources` and return a resulting mapping (dict-like) without throwing exceptions; the keys of the second operand should prevail in case of a conflict in replace mode.\n",
+      "source_ref": "request:624:855",
+      "status": "unverified",
+      "related_symbols": [
+        "VarsWithSources",
+        "combine_vars",
+        "dict"
+      ]
+    },
+    {
+      "id": "req-735d77ff1dc1f8e6",
+      "statement": "- `ansible.vars.manager.VarsWithSources` must interoperate with standard mappings for union (`|`) and augmented union (`|=`) without errors when both operands are mappings.\n",
+      "source_ref": "request:1290:1463",
+      "status": "unverified",
+      "related_symbols": [
+        "ansible.vars.manager.VarsWithSources"
+      ]
+    },
+    {
+      "id": "req-824b3c2e63262631",
+      "statement": "- A non-in-place join (`A | B`) between `VarsWithSources` and a mapping must return a new dict-like mapping containing the keys from both sides, with the right operand taking precedence in case of conflicts.\n",
+      "source_ref": "request:1464:1672",
+      "status": "unverified",
+      "related_symbols": [
+        "VarsWithSources"
+      ]
+    },
+    {
+      "id": "req-47e4311a878f0bfd",
+      "statement": "- An in-place join (`A |= B`) on `VarsWithSources` must update its internal store in-place and return a dict-like object representing the updated state. Requiring the concrete underlying mapping is avoided to avoid over-restricting the solution.\n",
+      "source_ref": "request:1673:1919",
+      "status": "unverified",
+      "related_symbols": [
+        "VarsWithSources"
+      ]
+    },
+    {
+      "id": "req-7b51cb4817418f65",
+      "statement": "- When a standard mapping is left-handed (`Mapping | VarsWithSources`), normal Python operator resolution is respected, and the join must succeed.\n",
+      "source_ref": "request:1920:2067",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-3d9ba007d2e598f9",
+      "statement": "- Unions with non-mapping operands must raise the corresponding TypeError by normal dispatch.\n",
+      "source_ref": "request:2068:2162",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-cfb3a7352c582f59",
+      "statement": "- In the \"replace\" path of `ansible.utils.vars.combine_vars` with `DEFAULT_HASH_BEHAVIOUR='replace'`, both operands must be validated as mutable mappings, and the result must be the union `a | b`, a dict mapping with the precedence of the right operand.\n",
+      "source_ref": "request:2163:2417",
+      "status": "unverified",
+      "related_symbols": [
+        "ansible.utils.vars.combine_vars"
+      ]
+    },
+    {
+      "id": "req-58cbf915ad559f5a",
+      "statement": "The patch will introduce the following new public interfaces: 1. Type: Special Method Name: `__or__` Location: `lib/ansible/vars/manager.py` Description: Will implement the union operator (`|`) with another mapping. It will produce a new mapping representing the union, where keys from `other` will override keys from the current data. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 2. Type: Special Method Name: `__ror__` Location: `lib/ansible/vars/manager.py` Description: Will implement the reflected union operator (`|`) when the left-hand operand is another mapping. It will produce a new merged mapping where keys from the current data will override keys from `other` in case of conflicts. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 3. Type: Special Method Name: `__ior__` Location: `lib/ansible/vars/manager.py` Description: Will implement the in-place union operator (`|=`) with another mapping. It will update the current data in place by adding/overwriting keys from `other`. Inputs: `other: collections.abc.MutableMapping` Outputs: The updated object after applying the in-place union.\n",
+      "source_ref": "request:2438:3874",
+      "status": "unverified",
+      "related_symbols": [
+        "MutableMapping",
+        "NotImplemented",
+        "__ior__",
+        "__or__",
+        "__ror__",
+        "other"
+      ]
+    }
+  ],
+  "query": "`combine_vars` should correctly combine a `dict` with a `VarsWithSources` and return a resulting mapping (dict-like) without throwing exceptions; the keys of the second operand should prevail in case of a conflict in replace mode.\n\n\n- `ansible.vars.manager.VarsWithSources` must interoperate with standard mappings for union (`|`) and augmented union (`|=`) without errors when both operands are mappings.\n\n\n- A non-in-place join (`A | B`) between `VarsWithSources` and a mapping must return a new dict-like mapping containing the keys from both sides, with the right operand taking precedence in case of conflicts.\n\n\n- An in-place join (`A |= B`) on `VarsWithSources` must update its internal store in-place and return a dict-like object representing the updated state. Requiring the concrete underlying mapping is avoided to avoid over-restricting the solution.\n\n\n- When a standard mapping is left-handed (`Mapping | VarsWithSources`), normal Python operator resolution is respected, and the join must succeed.\n\n\n- Unions with non-mapping operands must raise the corresponding TypeError by normal dispatch.\n\n\n- In the \"replace\" path of `ansible.utils.vars.combine_vars` with `DEFAULT_HASH_BEHAVIOUR='replace'`, both operands must be validated as mutable mappings, and the result must be the union `a | b`, a dict mapping with the precedence of the right operand.\n\n\nThe patch will introduce the following new public interfaces: 1. Type: Special Method Name: `__or__` Location: `lib/ansible/vars/manager.py` Description: Will implement the union operator (`|`) with another mapping. It will produce a new mapping representing the union, where keys from `other` will override keys from the current data. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 2. Type: Special Method Name: `__ror__` Location: `lib/ansible/vars/manager.py` Description: Will implement the reflected union operator (`|`) when the left-hand operand is another mapping. It will produce a new merged mapping where keys from the current data will override keys from `other` in case of conflicts. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 3. Type: Special Method Name: `__ior__` Location: `lib/ansible/vars/manager.py` Description: Will implement the in-place union operator (`|=`) with another mapping. It will update the current data in place by adding/overwriting keys from `other`. Inputs: `other: collections.abc.MutableMapping` Outputs: The updated object after applying the in-place union.\n\n"
+}

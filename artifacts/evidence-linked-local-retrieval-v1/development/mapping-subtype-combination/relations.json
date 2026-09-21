@@ -1,0 +1,5570 @@
+[
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mapping (dict-like)",
+    "unit_quote": "elif isinstance(dirty, MutableMapping):",
+    "applicable": false,
+    "condition_basis": "Key-cleaning operation only.",
+    "rationale": "No union or combine_vars behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "combine a `dict` with a `VarsWithSources`",
+    "unit_quote": "class VarsWithSources(MutableMapping):",
+    "applicable": true,
+    "condition_basis": "VarsWithSources is the required operand type.",
+    "rationale": "Defines the mapping implementation needing union interoperability.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "resulting mapping",
+    "unit_quote": "class ImmutableDict(Hashable, Mapping):",
+    "applicable": false,
+    "condition_basis": "Different mapping type and API.",
+    "rationale": "No combine_vars or VarsWithSources correspondence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "keys of the second operand should prevail",
+    "unit_quote": "comparable.get(key)",
+    "applicable": false,
+    "condition_basis": "dict_diff computes differences between concrete dicts.",
+    "rationale": "It neither combines operands nor specifies replace-mode union precedence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "resulting mapping",
+    "unit_quote": "Perform a version comparison",
+    "applicable": false,
+    "condition_basis": "No relevant condition.",
+    "rationale": "The unit is unrelated to variable combination.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "combine_vars",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "Different function and operands.",
+    "rationale": "Only augmented-union syntax overlaps.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "keys of the second operand should prevail",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "replace branch",
+    "rationale": "This is the exact union operation used by combine_vars.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "`combine_vars` should correctly combine a `dict` with a `VarsWithSources`",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The expression is the replace path after both operands pass mutable-mapping validation.",
+    "rationale": "This is the exact combine_vars operation whose interoperability and right-side precedence are required.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "replace mode",
+    "unit_quote": "def merge_hash",
+    "applicable": false,
+    "condition_basis": "Merge path is distinct from replace path.",
+    "rationale": "No direct target behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "keys of the second operand should prevail",
+    "unit_quote": "x[key] = y_value",
+    "applicable": false,
+    "condition_basis": "This behavior occurs within merge_hash.",
+    "rationale": "The precedence is similar, but the unit does not concern combine_vars' replace path or union interoperability.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "PRECONDITION",
+    "requirement_quote": "combine_vars",
+    "unit_quote": "isinstance(a, MutableMapping) and isinstance(b, MutableMapping)",
+    "applicable": true,
+    "condition_basis": "Both combine_vars operands must satisfy this predicate.",
+    "rationale": "The replace path invokes this operand validation.",
+    "weight": 0.6,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "resulting mapping",
+    "unit_quote": "returns: new combined dict object",
+    "applicable": false,
+    "condition_basis": "Contract belongs to dict_merge.",
+    "rationale": "Does not govern combine_vars.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "dict-like",
+    "unit_quote": "def preprocess_vars(a):",
+    "applicable": false,
+    "condition_basis": "Variable-file preprocessing only.",
+    "rationale": "No union correspondence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "`combine_vars` should correctly combine",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The HASH_BEHAVIOUR replace branch validates and unions a and b.",
+    "rationale": "This is the exact combine_vars execution path whose operator call must accept VarsWithSources.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "`combine_vars` should correctly combine",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "This occurs in set_host_facts.",
+    "rationale": "A separate in-place cache update does not establish combine_vars output.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "combine_vars",
+    "unit_quote": "test_combine_vars_improper_args",
+    "applicable": false,
+    "condition_basis": "Only improper list operands are tested.",
+    "rationale": "Does not test dict plus VarsWithSources success.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "replace mode",
+    "unit_quote": "options:",
+    "applicable": false,
+    "condition_basis": "Filesystem documentation is unrelated.",
+    "rationale": "No target correspondence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "combine_vars",
+    "unit_quote": "merge_hash",
+    "applicable": false,
+    "condition_basis": "The unit only validates merge_hash list_merge values.",
+    "rationale": "It does not address dict with VarsWithSources in combine_vars.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "PRECONDITION",
+    "requirement_quote": "a `dict` with a `VarsWithSources`",
+    "unit_quote": "isinstance(a, MutableMapping) and isinstance(b, MutableMapping)",
+    "applicable": true,
+    "condition_basis": "Both dict and VarsWithSources are MutableMapping operands under the supplied class declaration.",
+    "rationale": "The helper's actual admission condition applies before combine_vars performs replacement union.",
+    "weight": 0.6,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "combine a `dict` with a `VarsWithSources`",
+    "unit_quote": "all arguments are MutableMappings",
+    "applicable": false,
+    "condition_basis": "Documents validation only.",
+    "rationale": "Does not support successful union behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "in replace mode",
+    "unit_quote": "list_merge == 'replace'",
+    "applicable": false,
+    "condition_basis": "This is merge_hash list handling, not combine_vars hash-behaviour replacement.",
+    "rationale": "The shared word replace denotes a different condition.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "`combine_vars`",
+    "unit_quote": "variable files must contain either a dictionary",
+    "applicable": false,
+    "condition_basis": "The validation belongs to preprocess_vars.",
+    "rationale": "It does not govern combine_vars or operator interoperability.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "a `dict` with a `VarsWithSources`",
+    "unit_quote": "facts, Mapping",
+    "applicable": false,
+    "condition_basis": "The facts setter checks a single mapping argument.",
+    "rationale": "It has no combine_vars or heterogeneous union behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-aa47f0dbd0839c23",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "without throwing exceptions",
+    "unit_quote": "with self.assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "The test deliberately supplies a list in replace mode.",
+    "rationale": "Invalid-operand failure does not verify successful dict and VarsWithSources combination.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 624,
+      "end": 855
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mappings",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Key stripping only.",
+    "rationale": "No operator correspondence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "VarsWithSources` must interoperate",
+    "unit_quote": "class VarsWithSources(MutableMapping):",
+    "applicable": true,
+    "condition_basis": "Both operands are mappings.",
+    "rationale": "Defines the class whose operators are required.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union (`|`)",
+    "unit_quote": "def union(self, overriding_mapping):",
+    "applicable": false,
+    "condition_basis": "Different type and non-operator API.",
+    "rationale": "Does not govern VarsWithSources.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mappings",
+    "unit_quote": "if not isinstance(base, dict)",
+    "applicable": false,
+    "condition_basis": "dict_diff requires concrete dict values.",
+    "rationale": "No VarsWithSources or union operation is present.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union (`|`)",
+    "unit_quote": "py_operator",
+    "applicable": false,
+    "condition_basis": "The unit performs version comparisons.",
+    "rationale": "It does not address mapping union operators.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "augmented union (`|=`)",
+    "unit_quote": "host_cache |= facts",
+    "applicable": true,
+    "condition_basis": "host_cache is checked as MutableMapping; facts as Mapping.",
+    "rationale": "Shows an existing mapping augmented-union call site.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union (`|`)",
+    "unit_quote": "result = a | b",
+    "applicable": false,
+    "condition_basis": "Operand classes are not fixed by this excerpt.",
+    "rationale": "Union syntax alone does not verify VarsWithSources operators.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "interoperate with standard mappings for union (`|`)",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "Both operands are validated as MutableMapping before the replace-path union.",
+    "rationale": "combine_vars is a direct consumer of mapping union and can receive VarsWithSources and dict operands.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union (`|`)",
+    "unit_quote": "def merge_hash",
+    "applicable": false,
+    "condition_basis": "Uses procedural merging.",
+    "rationale": "No operator interface.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union (`|`) and augmented union (`|=`)",
+    "unit_quote": "x[key] = y_value",
+    "applicable": false,
+    "condition_basis": "The assignment occurs within merge_hash.",
+    "rationale": "Manual merge assignments are not union operator use.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "both operands are mappings",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validation helper only.",
+    "rationale": "Does not specify union operators.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union",
+    "unit_quote": "new dict object",
+    "applicable": false,
+    "condition_basis": "Different helper contract.",
+    "rationale": "No VarsWithSources symbol.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mappings",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Preprocessing only.",
+    "rationale": "No union semantics.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "interoperate with standard mappings for union (`|`)",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The replace branch unions two validated mutable mappings.",
+    "rationale": "It is a specific call site requiring mapping union interoperability, though it does not cover |=.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "augmented union (`|=`)",
+    "unit_quote": "host_cache |= facts",
+    "applicable": true,
+    "condition_basis": "host_cache is a MutableMapping and facts a Mapping at the operation.",
+    "rationale": "This direct augmented-union consumer is relevant to VarsWithSources interoperability when used as the cache mapping.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "without errors",
+    "unit_quote": "assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "Tests invalid combine_vars operands.",
+    "rationale": "Does not exercise VarsWithSources operators.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union",
+    "unit_quote": "unsafe_writes",
+    "applicable": false,
+    "condition_basis": "Filesystem documentation.",
+    "rationale": "Unrelated.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "VarsWithSources",
+    "unit_quote": "merge_hash",
+    "applicable": false,
+    "condition_basis": "The unit concerns merge_hash option validation.",
+    "rationale": "No VarsWithSources or union correspondence exists.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "both operands are mappings",
+    "unit_quote": "isinstance(a, MutableMapping) and isinstance(b, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The helper validates combine inputs only.",
+    "rationale": "The shared operand category does not establish union or augmented-union behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "both operands are mappings",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validator documentation only.",
+    "rationale": "No operator contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union (`|`) and augmented union (`|=`)",
+    "unit_quote": "x.update(y)",
+    "applicable": false,
+    "condition_basis": "The unit uses update inside merge_hash.",
+    "rationale": "It does not exercise either union operator on VarsWithSources.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "both operands are mappings",
+    "unit_quote": "not isinstance(item, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The condition validates each preprocessed item.",
+    "rationale": "Mapping validation without a union operation is only topical.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "when both operands are mappings",
+    "unit_quote": "if not isinstance(facts, Mapping)",
+    "applicable": false,
+    "condition_basis": "Only one facts argument is checked in another API.",
+    "rationale": "This does not specify binary operator interoperability.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-735d77ff1dc1f8e6",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "without errors when both operands are mappings",
+    "unit_quote": "combine_vars([1, 2, 3], dict(a=1))",
+    "applicable": false,
+    "condition_basis": "One tested operand is a list, not a mapping.",
+    "rationale": "This invalid-input test does not verify successful mapping interoperability.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1290,
+      "end": 1463
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "dict-like mapping",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Key stripping only.",
+    "rationale": "No join behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "between `VarsWithSources` and a mapping",
+    "unit_quote": "class VarsWithSources(MutableMapping):",
+    "applicable": true,
+    "condition_basis": "VarsWithSources is one union operand.",
+    "rationale": "Defines the required custom mapping.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "new dict-like mapping",
+    "unit_quote": "Create an ImmutableDict as a combination",
+    "applicable": false,
+    "condition_basis": "Different immutable type and named API.",
+    "rationale": "No VarsWithSources union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "new dict-like mapping",
+    "unit_quote": "updates = dict()",
+    "applicable": false,
+    "condition_basis": "No relevant condition.",
+    "rationale": "A newly allocated difference dict is not a union result or precedence pattern.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "A non-in-place join",
+    "unit_quote": "Perform a version comparison",
+    "applicable": false,
+    "condition_basis": "No relevant condition.",
+    "rationale": "Version comparison is unrelated to mapping union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-in-place join",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "Operation is in-place.",
+    "rationale": "Does not match required operator form.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "right operand taking precedence",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "replace branch",
+    "rationale": "Uses a non-in-place union with the required precedence direction.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "A non-in-place join (`A | B`)",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The expression executes in replace mode after validating mutable mappings.",
+    "rationale": "This is the exact non-in-place mapping union operation and returns its result.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "right operand taking precedence",
+    "unit_quote": "keys from y take precedence",
+    "applicable": false,
+    "condition_basis": "Different merge_hash API.",
+    "rationale": "Shared semantics without target symbol.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "right operand taking precedence",
+    "unit_quote": "x[key] = y_value",
+    "applicable": false,
+    "condition_basis": "This assignment occurs in merge_hash after copying x.",
+    "rationale": "Although y overrides x, the unit does not use or define VarsWithSources union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "between `VarsWithSources` and a mapping",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validation only.",
+    "rationale": "No result semantics.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "right operand taking precedence",
+    "unit_quote": "value will be selected from other",
+    "applicable": false,
+    "condition_basis": "Contract belongs to dict_merge, not VarsWithSources union.",
+    "rationale": "Matching merge semantics but different public interface.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mapping",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Preprocessing only.",
+    "rationale": "No union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "A | B",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The replace branch performs a non-in-place union.",
+    "rationale": "This is a concrete consuming context for the required new mapping and right-side precedence.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-in-place join (`A | B`)",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "The operation is explicitly in-place.",
+    "rationale": "It is a different operator and does not establish creation of a new mapping.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "join",
+    "unit_quote": "test_combine_vars_improper_args",
+    "applicable": false,
+    "condition_basis": "Only invalid operands tested.",
+    "rationale": "No successful join assertion.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mapping",
+    "unit_quote": "permissions",
+    "applicable": false,
+    "condition_basis": "Filesystem documentation.",
+    "rationale": "Unrelated.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "right operand taking precedence",
+    "unit_quote": "list_merge",
+    "applicable": false,
+    "condition_basis": "The excerpt only checks permitted strategy names.",
+    "rationale": "It contains no key-precedence behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "between `VarsWithSources` and a mapping",
+    "unit_quote": "expected dicts",
+    "applicable": false,
+    "condition_basis": "The helper only rejects non-mutable mappings.",
+    "rationale": "It does not specify result creation or conflict precedence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mapping",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validator contract only.",
+    "rationale": "No join result contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "A | B",
+    "unit_quote": "x = x.copy()",
+    "applicable": false,
+    "condition_basis": "The unit creates a merge_hash copy, not a union result.",
+    "rationale": "Similar non-mutation is insufficient to define VarsWithSources union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "between `VarsWithSources` and a mapping",
+    "unit_quote": "not isinstance(item, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "This is preprocessing validation.",
+    "rationale": "It does not specify union result or precedence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "return a new dict-like mapping",
+    "unit_quote": "set_nonpersistent_facts",
+    "applicable": false,
+    "condition_basis": "The unit validates facts in a setter.",
+    "rationale": "It neither returns nor constructs a union mapping.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-824b3c2e63262631",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "containing the keys from both sides",
+    "unit_quote": "combine_vars(dict(a=1), [1, 2, 3])",
+    "applicable": false,
+    "condition_basis": "The test uses an invalid list operand and expects failure.",
+    "rationale": "It does not verify a successful union result.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1464,
+      "end": 1672
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "internal store",
+    "unit_quote": "change the 'dirty' mapping",
+    "applicable": false,
+    "condition_basis": "Different object and operation.",
+    "rationale": "No VarsWithSources union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "on `VarsWithSources`",
+    "unit_quote": "self.data = dict(*args, **kwargs)",
+    "applicable": true,
+    "condition_basis": "A is VarsWithSources.",
+    "rationale": "Identifies the internal store that must be updated.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "update its internal store in-place",
+    "unit_quote": "Dictionary that cannot be updated",
+    "applicable": false,
+    "condition_basis": "ImmutableDict is a different type.",
+    "rationale": "Its immutability does not govern VarsWithSources.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "update its internal store in-place",
+    "unit_quote": "Generate a dict object of differences",
+    "applicable": false,
+    "condition_basis": "No relevant condition.",
+    "rationale": "Computing a dict difference does not implement or verify augmented union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "An in-place join",
+    "unit_quote": "Perform a version comparison",
+    "applicable": false,
+    "condition_basis": "No relevant condition.",
+    "rationale": "Version comparison is unrelated to mapping union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "An in-place join (`A |= B`)",
+    "unit_quote": "host_cache |= facts",
+    "applicable": true,
+    "condition_basis": "host_cache is a MutableMapping.",
+    "rationale": "Existing caller relies on in-place mapping union.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "in-place join",
+    "unit_quote": "result = a | b",
+    "applicable": false,
+    "condition_basis": "Operation is non-in-place.",
+    "rationale": "Wrong operator form.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "An in-place join (`A |= B`)",
+    "unit_quote": "result = a | b",
+    "applicable": false,
+    "condition_basis": "This is the non-in-place replace path.",
+    "rationale": "It uses | and provides no evidence about mutation or the return of |=.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "update its internal store in-place",
+    "unit_quote": "x = x.copy()",
+    "applicable": false,
+    "condition_basis": "merge_hash avoids modifying its input.",
+    "rationale": "Different operation and mutation contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "update its internal store in-place",
+    "unit_quote": "x = x.copy()",
+    "applicable": false,
+    "condition_basis": "merge_hash copies x before applying changes.",
+    "rationale": "This is merge implementation behavior, not VarsWithSources.__ior__.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "dict-like object",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validation only.",
+    "rationale": "No in-place semantics.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "in-place",
+    "unit_quote": "new combined dict object",
+    "applicable": false,
+    "condition_basis": "Different helper returns a new object.",
+    "rationale": "No target correspondence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "dict-like object",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Preprocessing only.",
+    "rationale": "No update operation.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "A |= B",
+    "unit_quote": "result = a | b",
+    "applicable": false,
+    "condition_basis": "The unit uses non-in-place union.",
+    "rationale": "It does not establish mutation or the return of __ior__.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "An in-place join (`A |= B`)",
+    "unit_quote": "host_cache |= facts",
+    "applicable": true,
+    "condition_basis": "The operation occurs after host_cache is confirmed as MutableMapping; facts is also a Mapping.",
+    "rationale": "This is a concrete consumer of augmented mapping union whose success depends on the left mapping's __ior__ behavior.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "in-place join",
+    "unit_quote": "combine_vars",
+    "applicable": false,
+    "condition_basis": "No |= behavior tested.",
+    "rationale": "Different operation.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "updated state",
+    "unit_quote": "filesystem object",
+    "applicable": false,
+    "condition_basis": "Filesystem documentation.",
+    "rationale": "Unrelated.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "An in-place join",
+    "unit_quote": "list_merge",
+    "applicable": false,
+    "condition_basis": "The unit only validates merge strategy names.",
+    "rationale": "There is no augmented-union behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "updated state",
+    "unit_quote": "isinstance(a, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The helper only validates argument types.",
+    "rationale": "It provides no in-place update semantics.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "dict-like object",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validation contract only.",
+    "rationale": "No |= contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "update its internal store in-place",
+    "unit_quote": "x = x.copy()",
+    "applicable": false,
+    "condition_basis": "merge_hash copies its operand before updating it.",
+    "rationale": "It does not describe VarsWithSources augmented union or in-place identity.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "on `VarsWithSources`",
+    "unit_quote": "isinstance(item, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "This validation applies to preprocessed variable-file items.",
+    "rationale": "Mapping validation alone does not correspond to in-place union semantics.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "on VarsWithSources",
+    "unit_quote": "set_nonpersistent_facts",
+    "applicable": false,
+    "condition_basis": "The unit covers a different method and only checks facts type.",
+    "rationale": "It contains no in-place join.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-47e4311a878f0bfd",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "return a dict-like object representing the updated state",
+    "unit_quote": "combine_vars([1, 2, 3], dict(a=1))",
+    "applicable": false,
+    "condition_basis": "The test covers invalid combine_vars arguments in replace mode.",
+    "rationale": "It does not test |=, mutation, or an updated result.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1673,
+      "end": 1919
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Key stripping only.",
+    "rationale": "No reflected dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Mapping | VarsWithSources",
+    "unit_quote": "class VarsWithSources(MutableMapping):",
+    "applicable": true,
+    "condition_basis": "VarsWithSources is the reflected operand.",
+    "rationale": "Defines the right-hand custom mapping.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "left-handed",
+    "unit_quote": "union(self, overriding_mapping)",
+    "applicable": false,
+    "condition_basis": "Different class and named API.",
+    "rationale": "No VarsWithSources reflected operator.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Mapping | VarsWithSources",
+    "unit_quote": "dict_diff(base, comparable)",
+    "applicable": false,
+    "condition_basis": "No relevant condition.",
+    "rationale": "The dict-difference operation has no union or reflected-dispatch behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "normal Python operator resolution",
+    "unit_quote": "method = getattr(py_operator, operator)",
+    "applicable": false,
+    "condition_basis": "This resolves a named version-comparison function.",
+    "rationale": "It is not Python binary union dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Mapping | VarsWithSources",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "Augmented union, unknown concrete types.",
+    "rationale": "Does not demonstrate reflected union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "standard mapping is left-handed",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "a may be the standard mapping and b VarsWithSources.",
+    "rationale": "This call exercises normal reflected operator resolution.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "standard mapping is left-handed (`Mapping | VarsWithSources`)",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The replace path permits any two validated MutableMapping operands.",
+    "rationale": "The generic left-to-right union call is a consumer context in which a may be a standard mapping and b VarsWithSources.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "join",
+    "unit_quote": "merge_hash(x, y)",
+    "applicable": false,
+    "condition_basis": "Function call rather than operator.",
+    "rationale": "No reflected union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "normal Python operator resolution",
+    "unit_quote": "for key, y_value in y.items()",
+    "applicable": false,
+    "condition_basis": "The merge is implemented by iteration and assignment.",
+    "rationale": "Manual merging does not exercise reflected operator dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validation only.",
+    "rationale": "No operator resolution.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "join",
+    "unit_quote": "new combined dict object",
+    "applicable": false,
+    "condition_basis": "Different helper contract.",
+    "rationale": "No reflected operator.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Preprocessing only.",
+    "rationale": "No union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Mapping | VarsWithSources",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The replace branch preserves operand order in a direct union expression.",
+    "rationale": "When a is a standard mapping and b is VarsWithSources, this call site depends on reflected dispatch.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping is left-handed",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "The unit uses augmented union, not reflected non-in-place union.",
+    "rationale": "It does not exercise Mapping | VarsWithSources operator resolution.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "join must succeed",
+    "unit_quote": "assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "Invalid combine operands only.",
+    "rationale": "No successful reflected union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping",
+    "unit_quote": "filesystem object",
+    "applicable": false,
+    "condition_basis": "Filesystem documentation.",
+    "rationale": "Unrelated.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "normal Python operator resolution",
+    "unit_quote": "list_merge",
+    "applicable": false,
+    "condition_basis": "The condition concerns a merge option.",
+    "rationale": "It is unrelated to reflected union dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "normal Python operator resolution",
+    "unit_quote": "for x in [a, b]",
+    "applicable": false,
+    "condition_basis": "Validation treats both arguments as values to inspect.",
+    "rationale": "It says nothing about left-hand or reflected operator resolution.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validation documentation.",
+    "rationale": "No operator resolution.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Mapping | VarsWithSources",
+    "unit_quote": "x.update(y)",
+    "applicable": false,
+    "condition_basis": "merge_hash uses update rather than left-handed union.",
+    "rationale": "It provides no reflected operator-resolution context.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping is left-handed",
+    "unit_quote": "isinstance(item, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The check validates variable-file items.",
+    "rationale": "It gives no operand-order or union-dispatch evidence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "standard mapping is left-handed",
+    "unit_quote": "facts, Mapping",
+    "applicable": false,
+    "condition_basis": "The unit has no binary union expression.",
+    "rationale": "A mapping type check alone does not address operand order.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-7b51cb4817418f65",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "the join must succeed",
+    "unit_quote": "with self.assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "The test supplies a list and expects combine failure.",
+    "rationale": "It does not verify successful reflected union between mappings.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 1920,
+      "end": 2067
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-mapping operands",
+    "unit_quote": "Cannot strip invalid keys",
+    "applicable": false,
+    "condition_basis": "Different operation and error.",
+    "rationale": "No union dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "normal dispatch",
+    "unit_quote": "class VarsWithSources(MutableMapping):",
+    "applicable": true,
+    "condition_basis": "The class must implement unsupported-operand dispatch.",
+    "rationale": "Defines the operator-bearing type; no error contract is shown.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Unions with non-mapping operands",
+    "unit_quote": "union(self, overriding_mapping)",
+    "applicable": false,
+    "condition_basis": "Different class; unsupported behavior unspecified.",
+    "rationale": "No VarsWithSources dispatch contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-mapping operands",
+    "unit_quote": "if not isinstance(base, dict)",
+    "applicable": false,
+    "condition_basis": "dict_diff independently requires concrete dict inputs.",
+    "rationale": "Concrete-dict assertions do not describe union operator dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "TypeError by normal dispatch",
+    "unit_quote": "method = getattr(py_operator, operator)",
+    "applicable": false,
+    "condition_basis": "The code dispatches version-comparison operators selected by strings.",
+    "rationale": "It does not concern mapping union or VarsWithSources.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-mapping operands",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "Operands are prevalidated mappings.",
+    "rationale": "Does not exercise unsupported operands.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "TypeError by normal dispatch",
+    "unit_quote": "_validate_mutable_mappings(a, b)",
+    "applicable": false,
+    "condition_basis": "combine_vars validation precedes union.",
+    "rationale": "This path has a different error contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Unions with non-mapping operands must raise the corresponding TypeError",
+    "unit_quote": "result = a | b",
+    "applicable": false,
+    "condition_basis": "The unit's replace path first validates both operands as mutable mappings.",
+    "rationale": "It concerns combine_vars and does not establish normal operator dispatch for VarsWithSources with a non-mapping.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "TypeError",
+    "unit_quote": "_validate_mutable_mappings(x, y)",
+    "applicable": false,
+    "condition_basis": "merge_hash validation only.",
+    "rationale": "No union dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Unions with non-mapping operands",
+    "unit_quote": "for key, y_value in y.items()",
+    "applicable": false,
+    "condition_basis": "merge_hash has already validated its inputs as mutable mappings.",
+    "rationale": "No union operator or unsupported operand behavior appears.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "TypeError by normal dispatch",
+    "unit_quote": "raise AnsibleError",
+    "applicable": false,
+    "condition_basis": "Explicit helper validation.",
+    "rationale": "Different exception and mechanism.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-mapping operands",
+    "unit_quote": "dict object",
+    "applicable": false,
+    "condition_basis": "No invalid-operand behavior documented.",
+    "rationale": "No dispatch contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-mapping operands",
+    "unit_quote": "raise AnsibleError",
+    "applicable": false,
+    "condition_basis": "Variable-file validation.",
+    "rationale": "Different operation and exception.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Unions with non-mapping operands",
+    "unit_quote": "_validate_mutable_mappings(a, b)",
+    "applicable": false,
+    "condition_basis": "combine_vars performs explicit validation before its union expression.",
+    "rationale": "This does not describe normal operator dispatch on VarsWithSources.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-mapping operands",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "host_cache is required to be a MutableMapping and facts was previously required to be a Mapping.",
+    "rationale": "The unit covers augmented union only after mapping checks, not unsupported operands.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "must raise the corresponding TypeError",
+    "unit_quote": "with self.assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "The test targets combine_vars validation, not operator dispatch.",
+    "rationale": "Different exception contract and operation.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "TypeError",
+    "unit_quote": "type: raw",
+    "applicable": false,
+    "condition_basis": "Filesystem option documentation.",
+    "rationale": "Unrelated.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "non-mapping operands",
+    "unit_quote": "if list_merge not in",
+    "applicable": false,
+    "condition_basis": "The condition validates a list_merge option.",
+    "rationale": "Option validation is unrelated to operand-type dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "raise the corresponding TypeError by normal dispatch",
+    "unit_quote": "raise AnsibleError",
+    "applicable": false,
+    "condition_basis": "The helper belongs to combine/merge validation, not special-method dispatch.",
+    "rationale": "Its explicit AnsibleError path is outside the required union operation.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "TypeError by normal dispatch",
+    "unit_quote": "raises an error",
+    "applicable": false,
+    "condition_basis": "Generic validator contract.",
+    "rationale": "Does not specify TypeError or union dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Unions with non-mapping operands must raise the corresponding TypeError by normal dispatch.",
+    "unit_quote": "_validate_mutable_mappings(x, y)",
+    "applicable": false,
+    "condition_basis": "The unit concerns merge_hash validation, not union dispatch.",
+    "rationale": "It does not establish TypeError behavior for VarsWithSources operators.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "raise the corresponding TypeError",
+    "unit_quote": "if not isinstance(item, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The condition validates variable-file entries.",
+    "rationale": "It raises a domain error in preprocessing and has no union behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "TypeError by normal dispatch",
+    "unit_quote": "if not isinstance(facts, Mapping)",
+    "applicable": false,
+    "condition_basis": "The unit validates facts in a different API.",
+    "rationale": "A generic mapping check does not specify union dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-3d9ba007d2e598f9",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "corresponding TypeError",
+    "unit_quote": "with self.assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "The test runs combine_vars in replace mode with list operands.",
+    "rationale": "The expected AnsibleError for combine_vars is not a verification pattern for normal union TypeError dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2068,
+      "end": 2162
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mutable mappings",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Key stripping only.",
+    "rationale": "No combine_vars replace path.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "both operands must be validated as mutable mappings",
+    "unit_quote": "class VarsWithSources(MutableMapping):",
+    "applicable": true,
+    "condition_basis": "VarsWithSources satisfies MutableMapping.",
+    "rationale": "Establishes applicability of validation to this custom operand.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union `a | b`",
+    "unit_quote": "def union(self, overriding_mapping):",
+    "applicable": false,
+    "condition_basis": "Different class and method.",
+    "rationale": "No combine_vars contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "a dict mapping",
+    "unit_quote": "if not isinstance(base, dict)",
+    "applicable": false,
+    "condition_basis": "dict_diff requires concrete dict inputs.",
+    "rationale": "This separate function neither validates combine_vars operands nor performs a | b.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union `a | b`",
+    "unit_quote": "method = getattr(py_operator, operator)",
+    "applicable": false,
+    "condition_basis": "The method is selected for version comparison.",
+    "rationale": "It is unrelated to mapping union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union `a | b`",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "Different caller and augmented operator.",
+    "rationale": "No combine_vars behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "result must be the union `a | b`",
+    "unit_quote": "_validate_mutable_mappings(a, b)",
+    "applicable": true,
+    "condition_basis": "HASH_BEHAVIOUR == 'replace'",
+    "rationale": "Contains both mandated validation and union steps.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "result must be the union `a | b`",
+    "unit_quote": "_validate_mutable_mappings(a, b)\n        result = a | b",
+    "applicable": true,
+    "condition_basis": "The statements occur in the HASH_BEHAVIOUR replace branch.",
+    "rationale": "The unit directly shows the required validation followed by the ordered union operation.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "replace path",
+    "unit_quote": "list_merge='replace'",
+    "applicable": false,
+    "condition_basis": "This is merge_hash list behavior, not hash-behaviour replace.",
+    "rationale": "The shared word replace denotes a different operation.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "right operand",
+    "unit_quote": "x[key] = y_value",
+    "applicable": false,
+    "condition_basis": "The assignment belongs to merge_hash.",
+    "rationale": "Right-side override in recursive merging is not the specified replace-path union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "PRECONDITION",
+    "requirement_quote": "both operands must be validated as mutable mappings",
+    "unit_quote": "isinstance(a, MutableMapping) and isinstance(b, MutableMapping)",
+    "applicable": true,
+    "condition_basis": "The actual predicate requires both operands to be MutableMapping instances.",
+    "rationale": "States the concrete replace-path precondition.",
+    "weight": 0.6,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "dict mapping",
+    "unit_quote": "new dict object",
+    "applicable": false,
+    "condition_basis": "Contract belongs to dict_merge.",
+    "rationale": "No combine_vars correspondence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mutable mappings",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Variable-file validation.",
+    "rationale": "No combine_vars path.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "the result must be the union `a | b`",
+    "unit_quote": "_validate_mutable_mappings(a, b)\n        result = a | b",
+    "applicable": true,
+    "condition_basis": "The else branch is labeled HASH_BEHAVIOUR == 'replace'.",
+    "rationale": "The unit is the exact existing replace-path structure named by the requirement.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "union `a | b`",
+    "unit_quote": "host_cache |= facts",
+    "applicable": false,
+    "condition_basis": "This is an in-place operation in set_host_facts.",
+    "rationale": "It is neither combine_vars nor the required non-in-place union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "VERIFICATION_PATTERN",
+    "requirement_quote": "DEFAULT_HASH_BEHAVIOUR='replace'",
+    "unit_quote": "mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace')",
+    "applicable": true,
+    "condition_basis": "Invalid left and right operands are each exercised.",
+    "rationale": "Public test verifies replace-mode rejection of improper operands.",
+    "weight": 0.7,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "replace",
+    "unit_quote": "default",
+    "applicable": false,
+    "condition_basis": "Filesystem options.",
+    "rationale": "Unrelated.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "both operands must be validated",
+    "unit_quote": "list_merge not in",
+    "applicable": false,
+    "condition_basis": "The condition validates an option, not the two operands.",
+    "rationale": "It does not support the required mapping validation or union.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "PRECONDITION",
+    "requirement_quote": "both operands must be validated as mutable mappings",
+    "unit_quote": "if not (isinstance(a, MutableMapping) and isinstance(b, MutableMapping))",
+    "applicable": true,
+    "condition_basis": "The helper's condition directly tests both replace-path operands.",
+    "rationale": "It supplies the actual prerequisite check required before the union expression.",
+    "weight": 0.6,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "CONTRACT_SUPPORT",
+    "requirement_quote": "both operands must be validated as mutable mappings",
+    "unit_quote": "all arguments are MutableMappings or raises an error",
+    "applicable": true,
+    "condition_basis": "Applies to both validator arguments.",
+    "rationale": "Documented contract directly supports mandatory validation.",
+    "weight": 1.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "DEFAULT_HASH_BEHAVIOUR='replace'",
+    "unit_quote": "list_merge == 'replace'",
+    "applicable": false,
+    "condition_basis": "The unit's replace condition is a merge_hash list strategy.",
+    "rationale": "It is not the DEFAULT_HASH_BEHAVIOUR replace path.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "validated as mutable mappings",
+    "unit_quote": "not isinstance(item, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The condition validates items for preprocess_vars.",
+    "rationale": "It is not combine_vars' two-operand validation.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "mutable mappings",
+    "unit_quote": "isinstance(facts, Mapping)",
+    "applicable": false,
+    "condition_basis": "The unit checks one Mapping in an unrelated facts setter.",
+    "rationale": "It does not validate both combine_vars operands as MutableMapping.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-cfb3a7352c582f59",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "VERIFICATION_PATTERN",
+    "requirement_quote": "both operands must be validated as mutable mappings",
+    "unit_quote": "with mock.patch('ansible.constants.DEFAULT_HASH_BEHAVIOUR', 'replace')",
+    "applicable": true,
+    "condition_basis": "The test sets replace behavior and supplies a non-mapping on each side in separate cases.",
+    "rationale": "It publicly verifies that replace-mode combine_vars rejects either invalid operand through its mapping validation.",
+    "weight": 0.7,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2163,
+      "end": 2417
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-9049ebc37f2942346e9d357a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "MutableMapping",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Key stripping only.",
+    "rationale": "Shared type name alone.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/clean.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 69,
+        "end": 95
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-3db64ef1302fd827e187ea6c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Location: `lib/ansible/vars/manager.py`",
+    "unit_quote": "class VarsWithSources(MutableMapping):",
+    "applicable": true,
+    "condition_basis": "All three methods belong on this class.",
+    "rationale": "Exact target type for the new public methods.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 742,
+        "end": 788
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-85996f593ceaef0bb32b2a47",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "new public interfaces",
+    "unit_quote": "def union(self, overriding_mapping):",
+    "applicable": false,
+    "condition_basis": "Different class and named method.",
+    "rationale": "Does not specify VarsWithSources special methods.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/module_utils/common/collections.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 14,
+        "end": 65
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-f2167cb07d1e41712b4146b7",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "new mapping",
+    "unit_quote": "updates = dict()",
+    "applicable": false,
+    "condition_basis": "No relevant condition.",
+    "rationale": "Creating a difference dict does not implement the listed special methods.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 266,
+        "end": 307
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-daca44362aa52da38e31b9bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Special Method Name",
+    "unit_quote": "getattr(py_operator, operator)",
+    "applicable": false,
+    "condition_basis": "The lookup selects a version-comparison operation.",
+    "rationale": "Generic operator terminology does not connect this unit to mapping union methods.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/test/core.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 158,
+        "end": 211
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-0a095c4b7ef13932f8ef5609",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Special Method Name: `__ior__`",
+    "unit_quote": "host_cache |= facts",
+    "applicable": true,
+    "condition_basis": "Both values are mapping-compatible at this call site.",
+    "rationale": "Shows a consumer of the required augmented-union interface.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 715
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-7be61e5313126f9d64d13429",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Special Method Name: `__ror__`",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "A VarsWithSources right operand invokes reflected dispatch when needed.",
+    "rationale": "Shows a caller requiring the new union interfaces.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-054cd339e190cd55a90d344c",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Special Method Name: `__or__`",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The expression is reached in combine_vars' replace path after mutable-mapping validation.",
+    "rationale": "This direct mapping union is a consumer context for __or__ and reflected operator resolution.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 310,
+        "end": 372
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-4a55386989d23d75ba19e21e",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "other will override",
+    "unit_quote": "keys from y take precedence",
+    "applicable": false,
+    "condition_basis": "merge_hash function only.",
+    "rationale": "Shared merge semantics lack interface correspondence.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": false,
+    "basis_valid": true,
+    "validation_status": "REJECTED_ZERO_COVERAGE",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 180
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-baa4de7102d4dd717b7bcede-d70c40e5",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "new mapping with the merged key–value pairs",
+    "unit_quote": "x = x.copy()",
+    "applicable": false,
+    "condition_basis": "This occurs within merge_hash after input validation.",
+    "rationale": "Similar merge effects do not specifically correspond to the declared union interfaces.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 178
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-8db23cf2afaaf3177dccbe52",
+    "relation": "PRECONDITION",
+    "requirement_quote": "If `other` is not a `MutableMapping`",
+    "unit_quote": "isinstance(a, MutableMapping) and isinstance(b, MutableMapping)",
+    "applicable": true,
+    "condition_basis": "The shared accepted-operand condition is MutableMapping membership.",
+    "rationale": "Supplies the concrete mapping-type predicate.",
+    "weight": 0.6,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-87a87f97143ed4f1c6602cc8",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "new mapping representing the union",
+    "unit_quote": "new combined dict object",
+    "applicable": false,
+    "condition_basis": "Different documented helper.",
+    "rationale": "No special-method contract.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 311,
+        "end": 322
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-75fbf0bbee5da5a239439789",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "MutableMapping",
+    "unit_quote": "MutableMapping",
+    "applicable": false,
+    "condition_basis": "Preprocessing only.",
+    "rationale": "No interfaces.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 68
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Will implement the union operator (`|`)",
+    "unit_quote": "result = a | b",
+    "applicable": true,
+    "condition_basis": "The replace branch invokes mapping union after validation.",
+    "rationale": "This is a concrete consumer of the requested VarsWithSources union interoperability, without defining its contract.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 81,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-45d36f96d8a51ad69df16656-d5f664ae",
+    "relation": "IMPLEMENTATION_CONTEXT",
+    "requirement_quote": "Special Method Name: `__ior__`",
+    "unit_quote": "host_cache |= facts",
+    "applicable": true,
+    "condition_basis": "Both participating values have been checked as mappings, with host_cache mutable.",
+    "rationale": "This is a direct consumer of augmented union and therefore relevant implementation context for __ior__.",
+    "weight": 0.3,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 694,
+        "end": 712
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-3619fe013c2ee9d483b42d91",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "NotImplemented",
+    "unit_quote": "assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "Tests combine_vars validation.",
+    "rationale": "No special-method dispatch.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 85
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-7ce549fba3a019806910b95b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "public interfaces",
+    "unit_quote": "DOCUMENTATION",
+    "applicable": false,
+    "condition_basis": "Filesystem options.",
+    "rationale": "Unrelated.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/plugins/doc_fragments/files.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 15,
+        "end": 92
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-3082f909104aae21118b75ae-bbae13fd",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Special Method Name: `__ror__`",
+    "unit_quote": "list_merge not in",
+    "applicable": false,
+    "condition_basis": "The unit validates merge_hash configuration.",
+    "rationale": "It has no reflected-union interface.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 102
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-c814bf2ce46f01391259d422-744cb3bb",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "If `other` is not a `MutableMapping`",
+    "unit_quote": "isinstance(b, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The helper validates two combine arguments and raises AnsibleError.",
+    "rationale": "It does not govern NotImplemented handling in the special methods.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 57,
+        "end": 78
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-70388d6aa1c101857cf34f84",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "MutableMapping",
+    "unit_quote": "MutableMappings",
+    "applicable": false,
+    "condition_basis": "Validator documentation.",
+    "rationale": "No special-method behavior.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 58,
+        "end": 64
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-06bee73a222407accecbfeb5-5dd5af2b",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Special Method Name: `__or__`",
+    "unit_quote": "x.update(y)",
+    "applicable": false,
+    "condition_basis": "The unit implements merge_hash rather than a VarsWithSources special method.",
+    "rationale": "Ordinary update behavior does not define the requested public interfaces.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/utils/vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 95,
+        "end": 122
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-bf039801cf804768a364f375-cee58d6a",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "MutableMapping",
+    "unit_quote": "not isinstance(item, MutableMapping)",
+    "applicable": false,
+    "condition_basis": "The condition checks variable-file contents.",
+    "rationale": "The shared type is insufficient; no union interface is involved.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 50,
+        "end": 66
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-7474adaae8c45ea12443c7c0-235962d3",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "Special Method Name: `__ior__`",
+    "unit_quote": "isinstance(facts, Mapping)",
+    "applicable": false,
+    "condition_basis": "The unit is a facts setter type check.",
+    "rationale": "It does not define any requested special method.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "lib/ansible/vars/manager.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 717,
+        "end": 723
+      }
+    ]
+  },
+  {
+    "requirement_id": "req-58cbf915ad559f5a",
+    "unit_id": "local-900804ea8ab4983c3d138beb-a4632c3c",
+    "relation": "TOPICAL_ONLY",
+    "requirement_quote": "return `NotImplemented`",
+    "unit_quote": "with self.assertRaises(AnsibleError)",
+    "applicable": false,
+    "condition_basis": "The test targets combine_vars validation of list operands.",
+    "rationale": "It does not verify special-method return values or normal operator fallback.",
+    "weight": 0.0,
+    "role_valid": true,
+    "provenance_valid": true,
+    "basis_valid": true,
+    "validation_status": "VALID_PROPOSAL",
+    "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+    "requirement_span": {
+      "field": "request",
+      "start": 2438,
+      "end": 3874
+    },
+    "unit_spans": [
+      {
+        "path": "test/units/utils/test_vars.py",
+        "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "start": 74,
+        "end": 79
+      }
+    ]
+  }
+]

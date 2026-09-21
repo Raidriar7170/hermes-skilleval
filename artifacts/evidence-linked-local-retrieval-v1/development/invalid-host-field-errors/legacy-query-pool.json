@@ -1,0 +1,2384 @@
+{
+  "candidates": [
+    {
+      "unit": {
+        "unit_id": "local-4087c711846e9eca2dcde6e0",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_basic_play"
+        ],
+        "preconditions": [],
+        "statement": "    def test_basic_play(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            connection='local',\n            remote_user=\"root\",\n            become=True,\n            become_user=\"testing\",\n        ))\n",
+        "verification_pattern": "    def test_basic_play(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            connection='local',\n            remote_user=\"root\",\n            become=True,\n            become_user=\"testing\",\n        ))\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 38,
+            "line_end": 47,
+            "exact_excerpt": "    def test_basic_play(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            connection='local',\n            remote_user=\"root\",\n            become=True,\n            become_user=\"testing\",\n        ))\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-4087c711846e9eca2dcde6e0] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_basic_play\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:38-47\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_basic_play(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            connection='local',\n            remote_user=\"root\",\n            become=True,\n            become_user=\"testing\",\n        ))\n"
+      },
+      "relevance": 0.6812749646427123,
+      "coverage": [
+        0.5226705083355097,
+        0.0,
+        0.49931738848068696,
+        0.2977006190745949,
+        0.30997383166687137,
+        0.3862947312230089
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8542043970698292,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "4087c711846e9eca2dcde6e0",
+        "bm25": 0.7467788455016504
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-ee2f0a8185fc7d66a939bab6-cacac060",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "test.support.network-integration.collections.ansible_collections.vyos.vyos.plugins.action.vyos.ActionModule.run.branch_124"
+        ],
+        "preconditions": [],
+        "statement": "    def run(self, tmp=None, task_vars=None):\n        del tmp  # tmp no longer has any effect\n\n        module_name = self._task.action.split(\".\")[-1]\n        self._config_module = True if module_name == \"vyos_config\" else False\n        persistent_connection = self._play_context.connection.split(\".\")[-1]\n        warnings = []\n\n        if persistent_connection == \"network_cli\":\n            provider = self._task.args.get(\"provider\", {})\n            if any(provider.values()):\n                display.warning(\n                    \"provider is unnecessary when using network_cli and will be ignored\"\n                )\n                del self._task.args[\"provider\"]\n        elif self._play_context.connection == \"local\":\n            provider = load_provider(vyos_provider_spec, self._task.args)\n            pc = copy.deepcopy(self._play_context)\n            pc.connection = \"ansible.netcommon.network_cli\"\n            pc.network_os = \"vyos.vyos.vyos\"\n            pc.remote_addr = provider[\"host\"] or self._play_context.remote_addr\n            pc.port = int(provider[\"port\"] or self._play_context.port or 22)\n            pc.remote_user = (\n                provider[\"username\"] or self._play_context.connection_user\n            )\n            pc.password = provider[\"password\"] or self._play_context.password\n            pc.private_key_file = (\n                provider[\"ssh_keyfile\"] or self._play_context.private_key_file\n            )\n\n            connection = self._shared_loader_obj.connection_loader.get(\n                \"ansible.netcommon.persistent\",\n                pc,\n                sys.stdin,\n                task_uuid=self._task._uuid,\n            )\n\n            # TODO: Remove below code after ansible minimal is cut out\n            if connection is None:\n                pc.connection = \"network_cli\"\n                pc.network_os = \"vyos\"\n                connection = self._shared_loader_obj.connection_loader.get(\n                    \"persistent\", pc, sys.stdin, task_uuid=self._task._uuid\n                )\n\n            display.vvv(\n                \"using connection plugin %s (was local)\" % pc.connection,\n                pc.remote_addr,\n            )\n\n            command_timeout = (\n                int(provider[\"timeout\"])\n                if provider[\"timeout\"]\n                else connection.get_option(\"persistent_command_timeout\")\n            )\n            connection.set_options(\n                direct={\"persistent_command_timeout\": command_timeout}\n            )\n\n            socket_path = connection.run()\n            display.vvvv(\"socket_path: %s\" % socket_path, pc.remote_addr)\n            if not socket_path:\n                return {\n                    \"failed\": True,\n                    \"msg\": \"unable to open shell. Please see: \"\n                    + \"https://docs.ansible.com/ansible/latest/network/user_guide/network_debug_troubleshooting.html#category-unable-to-open-shell\",\n                }\n\n            task_vars[\"ansible_socket\"] = socket_path\n            warnings.append(\n                [\n                    \"connection local support for this module is deprecated and will be removed in version 2.14, use connection %s\"\n                    % pc.connection\n                ]\n            )\n        else:\n            return {\n                \"failed\": True,\n                \"msg\": \"Connection type %s is not valid for this module\"\n                % self._play_context.connection,\n            }\n\n        result = super(ActionModule, self).run(task_vars=task_vars)\n        if warnings:\n            if \"warnings\" in result:\n                result[\"warnings\"].extend(warnings)\n            else:\n                result[\"warnings\"] = warnings\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/support/network-integration/collections/ansible_collections/vyos/vyos/plugins/action/vyos.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 41,
+            "line_end": 128,
+            "exact_excerpt": "    def run(self, tmp=None, task_vars=None):\n        del tmp  # tmp no longer has any effect\n\n        module_name = self._task.action.split(\".\")[-1]\n        self._config_module = True if module_name == \"vyos_config\" else False\n        persistent_connection = self._play_context.connection.split(\".\")[-1]\n        warnings = []\n\n        if persistent_connection == \"network_cli\":\n            provider = self._task.args.get(\"provider\", {})\n            if any(provider.values()):\n                display.warning(\n                    \"provider is unnecessary when using network_cli and will be ignored\"\n                )\n                del self._task.args[\"provider\"]\n        elif self._play_context.connection == \"local\":\n            provider = load_provider(vyos_provider_spec, self._task.args)\n            pc = copy.deepcopy(self._play_context)\n            pc.connection = \"ansible.netcommon.network_cli\"\n            pc.network_os = \"vyos.vyos.vyos\"\n            pc.remote_addr = provider[\"host\"] or self._play_context.remote_addr\n            pc.port = int(provider[\"port\"] or self._play_context.port or 22)\n            pc.remote_user = (\n                provider[\"username\"] or self._play_context.connection_user\n            )\n            pc.password = provider[\"password\"] or self._play_context.password\n            pc.private_key_file = (\n                provider[\"ssh_keyfile\"] or self._play_context.private_key_file\n            )\n\n            connection = self._shared_loader_obj.connection_loader.get(\n                \"ansible.netcommon.persistent\",\n                pc,\n                sys.stdin,\n                task_uuid=self._task._uuid,\n            )\n\n            # TODO: Remove below code after ansible minimal is cut out\n            if connection is None:\n                pc.connection = \"network_cli\"\n                pc.network_os = \"vyos\"\n                connection = self._shared_loader_obj.connection_loader.get(\n                    \"persistent\", pc, sys.stdin, task_uuid=self._task._uuid\n                )\n\n            display.vvv(\n                \"using connection plugin %s (was local)\" % pc.connection,\n                pc.remote_addr,\n            )\n\n            command_timeout = (\n                int(provider[\"timeout\"])\n                if provider[\"timeout\"]\n                else connection.get_option(\"persistent_command_timeout\")\n            )\n            connection.set_options(\n                direct={\"persistent_command_timeout\": command_timeout}\n            )\n\n            socket_path = connection.run()\n            display.vvvv(\"socket_path: %s\" % socket_path, pc.remote_addr)\n            if not socket_path:\n                return {\n                    \"failed\": True,\n                    \"msg\": \"unable to open shell. Please see: \"\n                    + \"https://docs.ansible.com/ansible/latest/network/user_guide/network_debug_troubleshooting.html#category-unable-to-open-shell\",\n                }\n\n            task_vars[\"ansible_socket\"] = socket_path\n            warnings.append(\n                [\n                    \"connection local support for this module is deprecated and will be removed in version 2.14, use connection %s\"\n                    % pc.connection\n                ]\n            )\n        else:\n            return {\n                \"failed\": True,\n                \"msg\": \"Connection type %s is not valid for this module\"\n                % self._play_context.connection,\n            }\n\n        result = super(ActionModule, self).run(task_vars=task_vars)\n        if warnings:\n            if \"warnings\" in result:\n                result[\"warnings\"].extend(warnings)\n            else:\n                result[\"warnings\"] = warnings\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.utils.display.Display",
+          "ansible_collections.ansible.netcommon.plugins.action.network.ActionModule",
+          "ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.load_provider",
+          "ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.vyos.vyos_provider_spec",
+          "copy",
+          "sys"
+        ],
+        "serialized_payload": "[local-ee2f0a8185fc7d66a939bab6-cacac060] Role: existing_behavior\nApplies to: test.support.network-integration.collections.ansible_collections.vyos.vyos.plugins.action.vyos.ActionModule.run.branch_124\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/support/network-integration/collections/ansible_collections/vyos/vyos/plugins/action/vyos.py:41-128\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def run(self, tmp=None, task_vars=None):\n        del tmp  # tmp no longer has any effect\n\n        module_name = self._task.action.split(\".\")[-1]\n        self._config_module = True if module_name == \"vyos_config\" else False\n        persistent_connection = self._play_context.connection.split(\".\")[-1]\n        warnings = []\n\n        if persistent_connection == \"network_cli\":\n            provider = self._task.args.get(\"provider\", {})\n            if any(provider.values()):\n                display.warning(\n                    \"provider is unnecessary when using network_cli and will be ignored\"\n                )\n                del self._task.args[\"provider\"]\n        elif self._play_context.connection == \"local\":\n            provider = load_provider(vyos_provider_spec, self._task.args)\n            pc = copy.deepcopy(self._play_context)\n            pc.connection = \"ansible.netcommon.network_cli\"\n            pc.network_os = \"vyos.vyos.vyos\"\n            pc.remote_addr = provider[\"host\"] or self._play_context.remote_addr\n            pc.port = int(provider[\"port\"] or self._play_context.port or 22)\n            pc.remote_user = (\n                provider[\"username\"] or self._play_context.connection_user\n            )\n            pc.password = provider[\"password\"] or self._play_context.password\n            pc.private_key_file = (\n                provider[\"ssh_keyfile\"] or self._play_context.private_key_file\n            )\n\n            connection = self._shared_loader_obj.connection_loader.get(\n                \"ansible.netcommon.persistent\",\n                pc,\n                sys.stdin,\n                task_uuid=self._task._uuid,\n            )\n\n            # TODO: Remove below code after ansible minimal is cut out\n            if connection is None:\n                pc.connection = \"network_cli\"\n                pc.network_os = \"vyos\"\n                connection = self._shared_loader_obj.connection_loader.get(\n                    \"persistent\", pc, sys.stdin, task_uuid=self._task._uuid\n                )\n\n            display.vvv(\n                \"using connection plugin %s (was local)\" % pc.connection,\n                pc.remote_addr,\n            )\n\n            command_timeout = (\n                int(provider[\"timeout\"])\n                if provider[\"timeout\"]\n                else connection.get_option(\"persistent_command_timeout\")\n            )\n            connection.set_options(\n                direct={\"persistent_command_timeout\": command_timeout}\n            )\n\n            socket_path = connection.run()\n            display.vvvv(\"socket_path: %s\" % socket_path, pc.remote_addr)\n            if not socket_path:\n                return {\n                    \"failed\": True,\n                    \"msg\": \"unable to open shell. Please see: \"\n                    + \"https://docs.ansible.com/ansible/latest/network/user_guide/network_debug_troubleshooting.html#category-unable-to-open-shell\",\n                }\n\n            task_vars[\"ansible_socket\"] = socket_path\n            warnings.append(\n                [\n                    \"connection local support for this module is deprecated and will be removed in version 2.14, use connection %s\"\n                    % pc.connection\n                ]\n            )\n        else:\n            return {\n                \"failed\": True,\n                \"msg\": \"Connection type %s is not valid for this module\"\n                % self._play_context.connection,\n            }\n\n        result = super(ActionModule, self).run(task_vars=task_vars)\n        if warnings:\n            if \"warnings\" in result:\n                result[\"warnings\"].extend(warnings)\n            else:\n                result[\"warnings\"] = warnings\n"
+      },
+      "relevance": 0.405702029875879,
+      "coverage": [
+        0.4076529053491269,
+        0.15658613402161287,
+        0.3197462661050891,
+        0.2189073228566765,
+        0.27010788061889895,
+        0.2968317290823721
+      ],
+      "exposure": 0.13924050632911392,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g2",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7709074391740256,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "ee2f0a8185fc7d66a939bab6",
+        "bm25": 0.24288249854382862
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-ffa2a9d753d9b007b1d846f4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n        return p.load_data(data, variable_manager=variable_manager, loader=loader)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 116,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n        return p.load_data(data, variable_manager=variable_manager, loader=loader)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-ffa2a9d753d9b007b1d846f4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-116\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n        return p.load_data(data, variable_manager=variable_manager, loader=loader)\n"
+      },
+      "relevance": 0.6894818758864373,
+      "coverage": [
+        0.43613551140283263,
+        0.024999999999999998,
+        0.51994492243656,
+        0.4098061504284179,
+        0.4650273236273258,
+        0.4168173289299011
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g3",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.995559542517736,
+            "symbol_match": 1.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.playbook.play.Play.load"
+          },
+          {
+            "channel": "one_hop",
+            "seed": "00917870e42d9ccc95f50c45",
+            "edge": {
+              "source": "00917870e42d9ccc95f50c45",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          },
+          {
+            "channel": "one_hop",
+            "seed": "44795a2e6fccc895d892e07c",
+            "edge": {
+              "source": "44795a2e6fccc895d892e07c",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          },
+          {
+            "channel": "one_hop",
+            "seed": "07ce70b15de554065b9f6bc4",
+            "edge": {
+              "source": "07ce70b15de554065b9f6bc4",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          },
+          {
+            "channel": "one_hop",
+            "seed": "0cae7e352a5abf540d3a07bf",
+            "edge": {
+              "source": "0cae7e352a5abf540d3a07bf",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          },
+          {
+            "channel": "one_hop",
+            "seed": "7f667e45c80b5e5dd6c7c758",
+            "edge": {
+              "source": "7f667e45c80b5e5dd6c7c758",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          },
+          {
+            "channel": "one_hop",
+            "seed": "7f8240afda48a55ce002f469",
+            "edge": {
+              "source": "7f8240afda48a55ce002f469",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          },
+          {
+            "channel": "one_hop",
+            "seed": "4087c711846e9eca2dcde6e0",
+            "edge": {
+              "source": "4087c711846e9eca2dcde6e0",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          }
+        ],
+        "index_node": "ffa2a9d753d9b007b1d846f4",
+        "bm25": 0.8483673433728942
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-a5a8a81a4253d1917aa258bc",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.get_name"
+        ],
+        "preconditions": [],
+        "statement": "    def get_name(self):\n        ''' return the name of the Play '''\n        return self.name\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 100,
+            "line_end": 102,
+            "exact_excerpt": "    def get_name(self):\n        ''' return the name of the Play '''\n        return self.name\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-a5a8a81a4253d1917aa258bc] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.get_name\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:100-102\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def get_name(self):\n        ''' return the name of the Play '''\n        return self.name\n"
+      },
+      "relevance": 0.5569637152301371,
+      "coverage": [
+        0.3579280018806457,
+        0.0,
+        0.5033959018649199,
+        0.40824261810344,
+        0.36330267730953075,
+        0.2871416382952231
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g3",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7194253324993174,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "g4",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5748752752686399,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "g5",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5200489624308933,
+            "symbol_match": 1.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.playbook.play.Play.get_name"
+          }
+        ],
+        "index_node": "a5a8a81a4253d1917aa258bc",
+        "bm25": 0.5484370877108006
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-e8efdafad6ae5f962a4ee459",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.role_include.IncludeRole.get_name"
+        ],
+        "preconditions": [],
+        "statement": "    def get_name(self):\n        ''' return the name of the task '''\n        return self.name or \"%s : %s\" % (self.action, self._role_name)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/role_include.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 67,
+            "line_end": 69,
+            "exact_excerpt": "    def get_name(self):\n        ''' return the name of the task '''\n        return self.name or \"%s : %s\" % (self.action, self._role_name)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.role.include.RoleInclude",
+          "ansible.playbook.task_include.TaskInclude",
+          "ansible.utils.display.Display",
+          "os.path.basename"
+        ],
+        "serialized_payload": "[local-e8efdafad6ae5f962a4ee459] Role: existing_behavior\nApplies to: lib.ansible.playbook.role_include.IncludeRole.get_name\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/role_include.py:67-69\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def get_name(self):\n        ''' return the name of the task '''\n        return self.name or \"%s : %s\" % (self.action, self._role_name)\n"
+      },
+      "relevance": 0.3838902112039786,
+      "coverage": [
+        0.19972202777862547,
+        0.0,
+        0.2767334714215242,
+        0.34552561005065163,
+        0.27105918559508574,
+        0.12272238370965648
+      ],
+      "exposure": 0.3333333333333333,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g3",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5531944025116358,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "g4",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5551549283640311,
+            "symbol_match": 1.0
+          },
+          {
+            "requirement_id": "g5",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5022093607160227,
+            "symbol_match": 1.0
+          }
+        ],
+        "index_node": "e8efdafad6ae5f962a4ee459",
+        "bm25": 0.4574394262232242
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-fd909121c5ffade5c7df2675",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.base.FieldAttributeBase.validate"
+        ],
+        "preconditions": [],
+        "statement": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/base.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 280,
+            "line_end": 305,
+            "exact_excerpt": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.with_metaclass",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.utils.display.Display",
+          "ansible.utils.sentinel.Sentinel",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.get_unique_id",
+          "ansible.utils.vars.isidentifier",
+          "copy.copy",
+          "functools.partial",
+          "itertools",
+          "jinja2.exceptions.UndefinedError",
+          "operator"
+        ],
+        "serialized_payload": "[local-fd909121c5ffade5c7df2675] Role: existing_behavior\nApplies to: lib.ansible.playbook.base.FieldAttributeBase.validate\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/base.py:280-305\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n\n        self._validated = True\n"
+      },
+      "relevance": 0.5602860895277182,
+      "coverage": [
+        0.16451636552810667,
+        0.09520773993135086,
+        0.2630649741941094,
+        0.2823198236659765,
+        0.24871963383574153,
+        0.4093376665783258
+      ],
+      "exposure": 0.2727272727272727,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9466503300790085,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "fd909121c5ffade5c7df2675",
+        "bm25": 0.8496122872976356
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load.branch_106"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 112,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+      },
+      "relevance": 0.6767684009344691,
+      "coverage": [
+        0.424278724193573,
+        0.02651650429449553,
+        0.5030319769212451,
+        0.4486906399921729,
+        0.4917371458351877,
+        0.41205874921246516
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.playbook.play.Play.load.branch_106"
+          }
+        ],
+        "index_node": "d81d35e5b8f1fbbbe0236b75",
+        "bm25": 0.8457175058659774
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-8732910b238abea4c40ca460",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_play_with_user_conflict"
+        ],
+        "preconditions": [],
+        "statement": "    def test_play_with_user_conflict(self):\n        play_data = dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            remote_user=\"testing\",\n        )\n        self.assertRaises(AnsibleParserError, Play.load, play_data)\n",
+        "verification_pattern": "    def test_play_with_user_conflict(self):\n        play_data = dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            remote_user=\"testing\",\n        )\n        self.assertRaises(AnsibleParserError, Play.load, play_data)\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 58,
+            "line_end": 65,
+            "exact_excerpt": "    def test_play_with_user_conflict(self):\n        play_data = dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            remote_user=\"testing\",\n        )\n        self.assertRaises(AnsibleParserError, Play.load, play_data)\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-8732910b238abea4c40ca460] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_play_with_user_conflict\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:58-65\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_play_with_user_conflict(self):\n        play_data = dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            remote_user=\"testing\",\n        )\n        self.assertRaises(AnsibleParserError, Play.load, play_data)\n"
+      },
+      "relevance": 0.665718598867249,
+      "coverage": [
+        0.5111267280646371,
+        0.053851658105850214,
+        0.44916277550852657,
+        0.24746671628552855,
+        0.2590810637950584,
+        0.4273833858966827
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8608536941660241,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "8732910b238abea4c40ca460",
+        "bm25": 0.7529316524214728
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-44795a2e6fccc895d892e07c",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_play_with_user_conflict"
+        ],
+        "preconditions": [],
+        "statement": "    def test_play_with_user_conflict(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            gather_facts=False,\n        ))\n        self.assertEqual(p.remote_user, \"testing\")\n",
+        "verification_pattern": "    def test_play_with_user_conflict(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            gather_facts=False,\n        ))\n        self.assertEqual(p.remote_user, \"testing\")\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 49,
+            "line_end": 56,
+            "exact_excerpt": "    def test_play_with_user_conflict(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            gather_facts=False,\n        ))\n        self.assertEqual(p.remote_user, \"testing\")\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-44795a2e6fccc895d892e07c] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_play_with_user_conflict\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:49-56\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_play_with_user_conflict(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            user=\"testing\",\n            gather_facts=False,\n        ))\n        self.assertEqual(p.remote_user, \"testing\")\n"
+      },
+      "relevance": 0.6516898557962015,
+      "coverage": [
+        0.48087795496664515,
+        0.04032422117888927,
+        0.42616433524287106,
+        0.2527129144628662,
+        0.2597847890138313,
+        0.40485646009445186
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.867612490971676,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "44795a2e6fccc895d892e07c",
+        "bm25": 0.7591916793708252
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-07ce70b15de554065b9f6bc4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_play_with_tasks"
+        ],
+        "preconditions": [],
+        "statement": "    def test_play_with_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "verification_pattern": "    def test_play_with_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 75,
+            "line_end": 81,
+            "exact_excerpt": "    def test_play_with_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-07ce70b15de554065b9f6bc4] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_play_with_tasks\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:75-81\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_play_with_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+      },
+      "relevance": 0.6389168219812628,
+      "coverage": [
+        0.4476171493530273,
+        0.0,
+        0.43805409388155,
+        0.2963572339038563,
+        0.28692709685564627,
+        0.31856907773740634
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8608536941660241,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "one_hop",
+            "seed": "ffa2a9d753d9b007b1d846f4",
+            "edge": {
+              "source": "07ce70b15de554065b9f6bc4",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          }
+        ],
+        "index_node": "07ce70b15de554065b9f6bc4",
+        "bm25": 0.7529316524214728
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-7f667e45c80b5e5dd6c7c758",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_play_with_handlers"
+        ],
+        "preconditions": [],
+        "statement": "    def test_play_with_handlers(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            handlers=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "verification_pattern": "    def test_play_with_handlers(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            handlers=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 83,
+            "line_end": 89,
+            "exact_excerpt": "    def test_play_with_handlers(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            handlers=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-7f667e45c80b5e5dd6c7c758] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_play_with_handlers\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:83-89\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_play_with_handlers(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            handlers=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+      },
+      "relevance": 0.6383659320123907,
+      "coverage": [
+        0.4430989384651184,
+        0.0,
+        0.45046438293069857,
+        0.27384203233525284,
+        0.2793721008420049,
+        0.3413032846523081
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8608536941660241,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "7f667e45c80b5e5dd6c7c758",
+        "bm25": 0.7529316524214728
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-7f8240afda48a55ce002f469",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_play_with_post_tasks"
+        ],
+        "preconditions": [],
+        "statement": "    def test_play_with_post_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            post_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "verification_pattern": "    def test_play_with_post_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            post_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 99,
+            "line_end": 105,
+            "exact_excerpt": "    def test_play_with_post_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            post_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-7f8240afda48a55ce002f469] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_play_with_post_tasks\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:99-105\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_play_with_post_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            post_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+      },
+      "relevance": 0.62786036303122,
+      "coverage": [
+        0.44635226726531985,
+        0.0,
+        0.43281686620325105,
+        0.27579370000168807,
+        0.2777498799681722,
+        0.3230233686042582
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8608536941660241,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "7f8240afda48a55ce002f469",
+        "bm25": 0.7529316524214728
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-0cae7e352a5abf540d3a07bf",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_play_with_pre_tasks"
+        ],
+        "preconditions": [],
+        "statement": "    def test_play_with_pre_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            pre_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "verification_pattern": "    def test_play_with_pre_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            pre_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 91,
+            "line_end": 97,
+            "exact_excerpt": "    def test_play_with_pre_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            pre_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-0cae7e352a5abf540d3a07bf] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_play_with_pre_tasks\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:91-97\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_play_with_pre_tasks(self):\n        p = Play.load(dict(\n            name=\"test play\",\n            hosts=['foo'],\n            gather_facts=False,\n            pre_tasks=[dict(action='shell echo \"hello world\"')],\n        ))\n"
+      },
+      "relevance": 0.6217436390169377,
+      "coverage": [
+        0.4214105248451233,
+        0.0,
+        0.42930835799783723,
+        0.28441220083043106,
+        0.27231770039797415,
+        0.3103859173131739
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8608536941660241,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "one_hop",
+            "seed": "ffa2a9d753d9b007b1d846f4",
+            "edge": {
+              "source": "0cae7e352a5abf540d3a07bf",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          }
+        ],
+        "index_node": "0cae7e352a5abf540d3a07bf",
+        "bm25": 0.7529316524214728
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-00917870e42d9ccc95f50c45",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "test.units.playbook.test_play.TestPlay.test_empty_play"
+        ],
+        "preconditions": [],
+        "statement": "    def test_empty_play(self):\n        p = Play.load(dict())\n        self.assertEqual(str(p), '')\n",
+        "verification_pattern": "    def test_empty_play(self):\n        p = Play.load(dict())\n        self.assertEqual(str(p), '')\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/playbook/test_play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 34,
+            "line_end": 36,
+            "exact_excerpt": "    def test_empty_play(self):\n        p = Play.load(dict())\n        self.assertEqual(str(p), '')\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.playbook.play.Play",
+          "units.compat.mock.MagicMock",
+          "units.compat.mock.patch",
+          "units.compat.unittest",
+          "units.mock.loader.DictDataLoader",
+          "units.mock.path.mock_unfrackpath_noop"
+        ],
+        "serialized_payload": "[local-00917870e42d9ccc95f50c45] Role: public_test_example\nApplies to: test.units.playbook.test_play.TestPlay.test_empty_play\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/units/playbook/test_play.py:34-36\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def test_empty_play(self):\n        p = Play.load(dict())\n        self.assertEqual(str(p), '')\n"
+      },
+      "relevance": 0.5973597811415375,
+      "coverage": [
+        0.39124431014060973,
+        0.024540844559669494,
+        0.3496400290460159,
+        0.1625930905342102,
+        0.22936963140964506,
+        0.29032686031406774
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g1",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9390402314043134,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "one_hop",
+            "seed": "ffa2a9d753d9b007b1d846f4",
+            "edge": {
+              "source": "00917870e42d9ccc95f50c45",
+              "target": "ffa2a9d753d9b007b1d846f4",
+              "kind": "direct_call",
+              "evidence": "Play.load"
+            }
+          }
+        ],
+        "index_node": "00917870e42d9ccc95f50c45",
+        "bm25": 0.6917286394605437
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.playbook.attribute.Attribute.__init__.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/attribute.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 47,
+            "line_end": 78,
+            "exact_excerpt": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "copy.copy",
+          "copy.deepcopy"
+        ],
+        "serialized_payload": "[local-9ccda5d5cd517b3eb3bacb64] Role: documented_contract\nApplies to: lib.ansible.playbook.attribute.Attribute.__init__.__doc__\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/attribute.py:47-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+      },
+      "relevance": 0.5536416165666533,
+      "coverage": [
+        0.1852039982221749,
+        0.06002307446071448,
+        0.24441934862994244,
+        0.18919622360984262,
+        0.16873342853865989,
+        0.37355268633915023
+      ],
+      "exposure": 0.06451612903225806,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g6",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "9ccda5d5cd517b3eb3bacb64",
+        "bm25": 1.0
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-1da3689b1968593bf4b40c8f-c8734ec1",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.base.FieldAttributeBase.validate.branch_284"
+        ],
+        "preconditions": [],
+        "statement": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/base.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 280,
+            "line_end": 303,
+            "exact_excerpt": "    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.with_metaclass",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.utils.display.Display",
+          "ansible.utils.sentinel.Sentinel",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.get_unique_id",
+          "ansible.utils.vars.isidentifier",
+          "copy.copy",
+          "functools.partial",
+          "itertools",
+          "jinja2.exceptions.UndefinedError",
+          "operator"
+        ],
+        "serialized_payload": "[local-1da3689b1968593bf4b40c8f-c8734ec1] Role: existing_behavior\nApplies to: lib.ansible.playbook.base.FieldAttributeBase.validate.branch_284\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/base.py:280-303\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def validate(self, all_vars=None):\n        ''' validation that is done at parse time, not load time '''\n        all_vars = {} if all_vars is None else all_vars\n\n        if not self._validated:\n            # walk all fields in the object\n            for (name, attribute) in iteritems(self._valid_attrs):\n\n                if name in self._alias_attrs:\n                    name = self._alias_attrs[name]\n\n                # run validator only if present\n                method = getattr(self, '_validate_%s' % name, None)\n                if method:\n                    method(attribute, name, getattr(self, name))\n                else:\n                    # and make sure the attribute is of the type it should be\n                    value = self._attributes[name]\n                    if value is not None:\n                        if attribute.isa == 'string' and isinstance(value, (list, dict)):\n                            raise AnsibleParserError(\n                                \"The field '%s' is supposed to be a string type,\"\n                                \" however the incoming data structure is a %s\" % (name, type(value)), obj=self.get_ds()\n                            )\n"
+      },
+      "relevance": 0.5499905947559397,
+      "coverage": [
+        0.16800902932882308,
+        0.08750101830997731,
+        0.27012805599833317,
+        0.29467894109662895,
+        0.2538282999341932,
+        0.3940594311163478
+      ],
+      "exposure": 0.2857142857142857,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "g6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9450955405506962,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "1da3689b1968593bf4b40c8f",
+        "bm25": 0.8104275666528867
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-4e07ed7385b985b20f39abe6-c4b024c1",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load.branch_114"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 115,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-4e07ed7385b985b20f39abe6-c4b024c1] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_114\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-115\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n"
+      },
+      "relevance": 0.5443418317996089,
+      "coverage": [
+        0.45018745915113195,
+        0.025724787771376323,
+        0.5361271481930762,
+        0.4295876354887746,
+        0.4694372881791943,
+        0.4414670151702698
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.playbook.play.Play.load.branch_114"
+          }
+        ],
+        "index_node": "4e07ed7385b985b20f39abe6",
+        "bm25": 0.34208576416054337
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-e7bcdc9834bf2bdf90cb25fb",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"\n    A play is a language feature that represents a list of roles and/or\n    task/handler blocks to execute on a given set of hosts.\n\n    Usage:\n\n       Play.load(datastructure) -> Play\n       Play.something(...)\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 45,
+            "line_end": 53,
+            "exact_excerpt": "    \"\"\"\n    A play is a language feature that represents a list of roles and/or\n    task/handler blocks to execute on a given set of hosts.\n\n    Usage:\n\n       Play.load(datastructure) -> Play\n       Play.something(...)\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-e7bcdc9834bf2bdf90cb25fb] Role: documented_contract\nApplies to: lib.ansible.playbook.play.Play.__doc__\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:45-53\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"\n    A play is a language feature that represents a list of roles and/or\n    task/handler blocks to execute on a given set of hosts.\n\n    Usage:\n\n       Play.load(datastructure) -> Play\n       Play.something(...)\n    \"\"\"\n"
+      },
+      "relevance": 0.5258906473160087,
+      "coverage": [
+        0.3769562244415283,
+        0.005997319705784321,
+        0.5113555893419921,
+        0.2507169435500264,
+        0.2197748483379501,
+        0.420757890053614
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.playbook.play.Play.__doc__"
+          }
+        ],
+        "index_node": "e7bcdc9834bf2bdf90cb25fb",
+        "bm25": 0.5899720144143051
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-ee0592d50f1c9c3b36a9469a",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.role.Role.load"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(role_include, play, parent_role=None, from_files=None, from_include=False, validate=True):\n\n        if from_files is None:\n            from_files = {}\n        try:\n            # The ROLE_CACHE is a dictionary of role names, with each entry\n            # containing another dictionary corresponding to a set of parameters\n            # specified for a role as the key and the Role() object itself.\n            # We use frozenset to make the dictionary hashable.\n\n            params = role_include.get_role_params()\n            if role_include.when is not None:\n                params['when'] = role_include.when\n            if role_include.tags is not None:\n                params['tags'] = role_include.tags\n            if from_files is not None:\n                params['from_files'] = from_files\n            if role_include.vars:\n                params['vars'] = role_include.vars\n\n            params['from_include'] = from_include\n\n            hashed_params = hash_params(params)\n            if role_include.get_name() in play.ROLE_CACHE:\n                for (entry, role_obj) in iteritems(play.ROLE_CACHE[role_include.get_name()]):\n                    if hashed_params == entry:\n                        if parent_role:\n                            role_obj.add_parent(parent_role)\n                        return role_obj\n\n            # TODO: need to fix cycle detection in role load (maybe use an empty dict\n            #  for the in-flight in role cache as a sentinel that we're already trying to load\n            #  that role?)\n            # see https://github.com/ansible/ansible/issues/61527\n            r = Role(play=play, from_files=from_files, from_include=from_include, validate=validate)\n            r._load_role_data(role_include, parent_role=parent_role)\n\n            if role_include.get_name() not in play.ROLE_CACHE:\n                play.ROLE_CACHE[role_include.get_name()] = dict()\n\n            # FIXME: how to handle cache keys for collection-based roles, since they're technically adjustable per task?\n            play.ROLE_CACHE[role_include.get_name()][hashed_params] = r\n            return r\n\n        except RuntimeError:\n            raise AnsibleError(\"A recursion loop was detected with the roles specified. Make sure child roles do not have dependencies on parent roles\",\n                               obj=role_include._ds)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/role/__init__.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 139,
+            "line_end": 186,
+            "exact_excerpt": "    @staticmethod\n    def load(role_include, play, parent_role=None, from_files=None, from_include=False, validate=True):\n\n        if from_files is None:\n            from_files = {}\n        try:\n            # The ROLE_CACHE is a dictionary of role names, with each entry\n            # containing another dictionary corresponding to a set of parameters\n            # specified for a role as the key and the Role() object itself.\n            # We use frozenset to make the dictionary hashable.\n\n            params = role_include.get_role_params()\n            if role_include.when is not None:\n                params['when'] = role_include.when\n            if role_include.tags is not None:\n                params['tags'] = role_include.tags\n            if from_files is not None:\n                params['from_files'] = from_files\n            if role_include.vars:\n                params['vars'] = role_include.vars\n\n            params['from_include'] = from_include\n\n            hashed_params = hash_params(params)\n            if role_include.get_name() in play.ROLE_CACHE:\n                for (entry, role_obj) in iteritems(play.ROLE_CACHE[role_include.get_name()]):\n                    if hashed_params == entry:\n                        if parent_role:\n                            role_obj.add_parent(parent_role)\n                        return role_obj\n\n            # TODO: need to fix cycle detection in role load (maybe use an empty dict\n            #  for the in-flight in role cache as a sentinel that we're already trying to load\n            #  that role?)\n            # see https://github.com/ansible/ansible/issues/61527\n            r = Role(play=play, from_files=from_files, from_include=from_include, validate=validate)\n            r._load_role_data(role_include, parent_role=parent_role)\n\n            if role_include.get_name() not in play.ROLE_CACHE:\n                play.ROLE_CACHE[role_include.get_name()] = dict()\n\n            # FIXME: how to handle cache keys for collection-based roles, since they're technically adjustable per task?\n            play.ROLE_CACHE[role_include.get_name()][hashed_params] = r\n            return r\n\n        except RuntimeError:\n            raise AnsibleError(\"A recursion loop was detected with the roles specified. Make sure child roles do not have dependencies on parent roles\",\n                               obj=role_include._ds)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Mapping",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common._collections_compat.Set",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.text_type",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.conditional.Conditional",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.role.metadata.RoleMetadata",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.plugins.loader.add_all_plugin_dirs",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.vars.combine_vars",
+          "os"
+        ],
+        "serialized_payload": "[local-ee0592d50f1c9c3b36a9469a] Role: existing_behavior\nApplies to: lib.ansible.playbook.role.Role.load\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/role/__init__.py:139-186\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(role_include, play, parent_role=None, from_files=None, from_include=False, validate=True):\n\n        if from_files is None:\n            from_files = {}\n        try:\n            # The ROLE_CACHE is a dictionary of role names, with each entry\n            # containing another dictionary corresponding to a set of parameters\n            # specified for a role as the key and the Role() object itself.\n            # We use frozenset to make the dictionary hashable.\n\n            params = role_include.get_role_params()\n            if role_include.when is not None:\n                params['when'] = role_include.when\n            if role_include.tags is not None:\n                params['tags'] = role_include.tags\n            if from_files is not None:\n                params['from_files'] = from_files\n            if role_include.vars:\n                params['vars'] = role_include.vars\n\n            params['from_include'] = from_include\n\n            hashed_params = hash_params(params)\n            if role_include.get_name() in play.ROLE_CACHE:\n                for (entry, role_obj) in iteritems(play.ROLE_CACHE[role_include.get_name()]):\n                    if hashed_params == entry:\n                        if parent_role:\n                            role_obj.add_parent(parent_role)\n                        return role_obj\n\n            # TODO: need to fix cycle detection in role load (maybe use an empty dict\n            #  for the in-flight in role cache as a sentinel that we're already trying to load\n            #  that role?)\n            # see https://github.com/ansible/ansible/issues/61527\n            r = Role(play=play, from_files=from_files, from_include=from_include, validate=validate)\n            r._load_role_data(role_include, parent_role=parent_role)\n\n            if role_include.get_name() not in play.ROLE_CACHE:\n                play.ROLE_CACHE[role_include.get_name()] = dict()\n\n            # FIXME: how to handle cache keys for collection-based roles, since they're technically adjustable per task?\n            play.ROLE_CACHE[role_include.get_name()][hashed_params] = r\n            return r\n\n        except RuntimeError:\n            raise AnsibleError(\"A recursion loop was detected with the roles specified. Make sure child roles do not have dependencies on parent roles\",\n                               obj=role_include._ds)\n"
+      },
+      "relevance": 0.5231936016420337,
+      "coverage": [
+        0.23465590476989745,
+        0.02656957818058091,
+        0.2835891672169217,
+        0.26694301908854196,
+        0.24537439990621704,
+        0.25386294476139376
+      ],
+      "exposure": 0.05,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "one_hop",
+            "seed": "5f0c163b76a52d53d2715d38",
+            "edge": {
+              "source": "5f0c163b76a52d53d2715d38",
+              "target": "ee0592d50f1c9c3b36a9469a",
+              "kind": "direct_call",
+              "evidence": "Role.load"
+            }
+          }
+        ],
+        "index_node": "ee0592d50f1c9c3b36a9469a",
+        "bm25": 0.8093029376071749
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-3c7a61e574a894e0fe2f65bc",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "examples.scripts.uptime.main"
+        ],
+        "preconditions": [],
+        "statement": "def main():\n    host_list = ['localhost', 'www.example.com', 'www.google.com']\n    # since the API is constructed for CLI it expects certain options to always be set in the context object\n    context.CLIARGS = ImmutableDict(connection='smart', module_path=['/to/mymodules', '/usr/share/ansible'], forks=10, become=None,\n                                    become_method=None, become_user=None, check=False, diff=False, verbosity=0)\n    # required for\n    # https://github.com/ansible/ansible/blob/devel/lib/ansible/inventory/manager.py#L204\n    sources = ','.join(host_list)\n    if len(host_list) == 1:\n        sources += ','\n\n    # initialize needed objects\n    loader = DataLoader()  # Takes care of finding and reading yaml, json and ini files\n    passwords = dict(vault_pass='secret')\n\n    # Instantiate our ResultsCollectorJSONCallback for handling results as they come in. Ansible expects this to be one of its main display outlets\n    results_callback = ResultsCollectorJSONCallback()\n\n    # create inventory, use path to host config file as source or hosts in a comma separated string\n    inventory = InventoryManager(loader=loader, sources=sources)\n\n    # variable manager takes care of merging all the different sources to give you a unified view of variables available in each context\n    variable_manager = VariableManager(loader=loader, inventory=inventory)\n\n    # instantiate task queue manager, which takes care of forking and setting up all objects to iterate over host list and tasks\n    # IMPORTANT: This also adds library dirs paths to the module loader\n    # IMPORTANT: and so it must be initialized before calling `Play.load()`.\n    tqm = TaskQueueManager(\n        inventory=inventory,\n        variable_manager=variable_manager,\n        loader=loader,\n        passwords=passwords,\n        stdout_callback=results_callback,  # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout\n    )\n\n    # create data structure that represents our play, including tasks, this is basically what our YAML loader does internally.\n    play_source = dict(\n        name=\"Ansible Play\",\n        hosts=host_list,\n        gather_facts='no',\n        tasks=[\n            dict(action=dict(module='shell', args='ls'), register='shell_out'),\n            dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}'))),\n            dict(action=dict(module='command', args=dict(cmd='/usr/bin/uptime'))),\n        ]\n    )\n\n    # Create play object, playbook objects use .load instead of init or new methods,\n    # this will also automatically create the task objects from the info provided in play_source\n    play = Play().load(play_source, variable_manager=variable_manager, loader=loader)\n\n    # Actually run it\n    try:\n        result = tqm.run(play)  # most interesting data for a play is actually sent to the callback's methods\n    finally:\n        # we always need to cleanup child procs and the structures we use to communicate with them\n        tqm.cleanup()\n        if loader:\n            loader.cleanup_all_tmp_files()\n\n    # Remove ansible tmpdir\n    shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)\n\n    print(\"UP ***********\")\n    for host, result in results_callback.host_ok.items():\n        print('{0} >>> {1}'.format(host, result._result['stdout']))\n\n    print(\"FAILED *******\")\n    for host, result in results_callback.host_failed.items():\n        print('{0} >>> {1}'.format(host, result._result['msg']))\n\n    print(\"DOWN *********\")\n    for host, result in results_callback.host_unreachable.items():\n        print('{0} >>> {1}'.format(host, result._result['msg']))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "examples/scripts/uptime.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 53,
+            "line_end": 126,
+            "exact_excerpt": "def main():\n    host_list = ['localhost', 'www.example.com', 'www.google.com']\n    # since the API is constructed for CLI it expects certain options to always be set in the context object\n    context.CLIARGS = ImmutableDict(connection='smart', module_path=['/to/mymodules', '/usr/share/ansible'], forks=10, become=None,\n                                    become_method=None, become_user=None, check=False, diff=False, verbosity=0)\n    # required for\n    # https://github.com/ansible/ansible/blob/devel/lib/ansible/inventory/manager.py#L204\n    sources = ','.join(host_list)\n    if len(host_list) == 1:\n        sources += ','\n\n    # initialize needed objects\n    loader = DataLoader()  # Takes care of finding and reading yaml, json and ini files\n    passwords = dict(vault_pass='secret')\n\n    # Instantiate our ResultsCollectorJSONCallback for handling results as they come in. Ansible expects this to be one of its main display outlets\n    results_callback = ResultsCollectorJSONCallback()\n\n    # create inventory, use path to host config file as source or hosts in a comma separated string\n    inventory = InventoryManager(loader=loader, sources=sources)\n\n    # variable manager takes care of merging all the different sources to give you a unified view of variables available in each context\n    variable_manager = VariableManager(loader=loader, inventory=inventory)\n\n    # instantiate task queue manager, which takes care of forking and setting up all objects to iterate over host list and tasks\n    # IMPORTANT: This also adds library dirs paths to the module loader\n    # IMPORTANT: and so it must be initialized before calling `Play.load()`.\n    tqm = TaskQueueManager(\n        inventory=inventory,\n        variable_manager=variable_manager,\n        loader=loader,\n        passwords=passwords,\n        stdout_callback=results_callback,  # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout\n    )\n\n    # create data structure that represents our play, including tasks, this is basically what our YAML loader does internally.\n    play_source = dict(\n        name=\"Ansible Play\",\n        hosts=host_list,\n        gather_facts='no',\n        tasks=[\n            dict(action=dict(module='shell', args='ls'), register='shell_out'),\n            dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}'))),\n            dict(action=dict(module='command', args=dict(cmd='/usr/bin/uptime'))),\n        ]\n    )\n\n    # Create play object, playbook objects use .load instead of init or new methods,\n    # this will also automatically create the task objects from the info provided in play_source\n    play = Play().load(play_source, variable_manager=variable_manager, loader=loader)\n\n    # Actually run it\n    try:\n        result = tqm.run(play)  # most interesting data for a play is actually sent to the callback's methods\n    finally:\n        # we always need to cleanup child procs and the structures we use to communicate with them\n        tqm.cleanup()\n        if loader:\n            loader.cleanup_all_tmp_files()\n\n    # Remove ansible tmpdir\n    shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)\n\n    print(\"UP ***********\")\n    for host, result in results_callback.host_ok.items():\n        print('{0} >>> {1}'.format(host, result._result['stdout']))\n\n    print(\"FAILED *******\")\n    for host, result in results_callback.host_failed.items():\n        print('{0} >>> {1}'.format(host, result._result['msg']))\n\n    print(\"DOWN *********\")\n    for host, result in results_callback.host_unreachable.items():\n        print('{0} >>> {1}'.format(host, result._result['msg']))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.executor.task_queue_manager.TaskQueueManager",
+          "ansible.inventory.manager.InventoryManager",
+          "ansible.module_utils.common.collections.ImmutableDict",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.play.Play",
+          "ansible.plugins.callback.CallbackBase",
+          "ansible.vars.manager.VariableManager",
+          "json",
+          "shutil"
+        ],
+        "serialized_payload": "[local-3c7a61e574a894e0fe2f65bc] Role: existing_behavior\nApplies to: examples.scripts.uptime.main\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:examples/scripts/uptime.py:53-126\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef main():\n    host_list = ['localhost', 'www.example.com', 'www.google.com']\n    # since the API is constructed for CLI it expects certain options to always be set in the context object\n    context.CLIARGS = ImmutableDict(connection='smart', module_path=['/to/mymodules', '/usr/share/ansible'], forks=10, become=None,\n                                    become_method=None, become_user=None, check=False, diff=False, verbosity=0)\n    # required for\n    # https://github.com/ansible/ansible/blob/devel/lib/ansible/inventory/manager.py#L204\n    sources = ','.join(host_list)\n    if len(host_list) == 1:\n        sources += ','\n\n    # initialize needed objects\n    loader = DataLoader()  # Takes care of finding and reading yaml, json and ini files\n    passwords = dict(vault_pass='secret')\n\n    # Instantiate our ResultsCollectorJSONCallback for handling results as they come in. Ansible expects this to be one of its main display outlets\n    results_callback = ResultsCollectorJSONCallback()\n\n    # create inventory, use path to host config file as source or hosts in a comma separated string\n    inventory = InventoryManager(loader=loader, sources=sources)\n\n    # variable manager takes care of merging all the different sources to give you a unified view of variables available in each context\n    variable_manager = VariableManager(loader=loader, inventory=inventory)\n\n    # instantiate task queue manager, which takes care of forking and setting up all objects to iterate over host list and tasks\n    # IMPORTANT: This also adds library dirs paths to the module loader\n    # IMPORTANT: and so it must be initialized before calling `Play.load()`.\n    tqm = TaskQueueManager(\n        inventory=inventory,\n        variable_manager=variable_manager,\n        loader=loader,\n        passwords=passwords,\n        stdout_callback=results_callback,  # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout\n    )\n\n    # create data structure that represents our play, including tasks, this is basically what our YAML loader does internally.\n    play_source = dict(\n        name=\"Ansible Play\",\n        hosts=host_list,\n        gather_facts='no',\n        tasks=[\n            dict(action=dict(module='shell', args='ls'), register='shell_out'),\n            dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}'))),\n            dict(action=dict(module='command', args=dict(cmd='/usr/bin/uptime'))),\n        ]\n    )\n\n    # Create play object, playbook objects use .load instead of init or new methods,\n    # this will also automatically create the task objects from the info provided in play_source\n    play = Play().load(play_source, variable_manager=variable_manager, loader=loader)\n\n    # Actually run it\n    try:\n        result = tqm.run(play)  # most interesting data for a play is actually sent to the callback's methods\n    finally:\n        # we always need to cleanup child procs and the structures we use to communicate with them\n        tqm.cleanup()\n        if loader:\n            loader.cleanup_all_tmp_files()\n\n    # Remove ansible tmpdir\n    shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)\n\n    print(\"UP ***********\")\n    for host, result in results_callback.host_ok.items():\n        print('{0} >>> {1}'.format(host, result._result['stdout']))\n\n    print(\"FAILED *******\")\n    for host, result in results_callback.host_failed.items():\n        print('{0} >>> {1}'.format(host, result._result['msg']))\n\n    print(\"DOWN *********\")\n    for host, result in results_callback.host_unreachable.items():\n        print('{0} >>> {1}'.format(host, result._result['msg']))\n"
+      },
+      "relevance": 0.5140082905584409,
+      "coverage": [
+        0.3956046292630875,
+        0.06285824794629709,
+        0.36509289770299247,
+        0.3169640705989766,
+        0.326945358501873,
+        0.26579368446698676
+      ],
+      "exposure": 0.04838709677419355,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "one_hop",
+            "seed": "d25322118fd1cbbdbbb16c1d",
+            "edge": {
+              "source": "3c7a61e574a894e0fe2f65bc",
+              "target": "d25322118fd1cbbdbbb16c1d",
+              "kind": "direct_call",
+              "evidence": "Play"
+            }
+          }
+        ],
+        "index_node": "3c7a61e574a894e0fe2f65bc",
+        "bm25": 0.5578205022195425
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-1a366ae15000d12769daca5d",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "class",
+        "applies_to": [
+          "lib.ansible.module_utils.errors.AnsibleValidationErrorMultiple"
+        ],
+        "preconditions": [],
+        "statement": "class AnsibleValidationErrorMultiple(AnsibleValidationError):\n    \"\"\"Multiple argument spec validation errors\"\"\"\n\n    def __init__(self, errors=None):\n        self.errors = errors[:] if errors else []\n        \"\"\":class:`list` of :class:`AnsibleValidationError` objects\"\"\"\n\n    def __getitem__(self, key):\n        return self.errors[key]\n\n    def __setitem__(self, key, value):\n        self.errors[key] = value\n\n    def __delitem__(self, key):\n        del self.errors[key]\n\n    @property\n    def msg(self):\n        \"\"\"The first message from the first error in ``errors``.\"\"\"\n        return self.errors[0].args[0]\n\n    @property\n    def messages(self):\n        \"\"\":class:`list` of each error message in ``errors``.\"\"\"\n        return [err.msg for err in self.errors]\n\n    def append(self, error):\n        \"\"\"Append a new error to ``self.errors``.\n\n        Only :class:`AnsibleValidationError` should be added.\n        \"\"\"\n\n        self.errors.append(error)\n\n    def extend(self, errors):\n        \"\"\"Append each item in ``errors`` to ``self.errors``. Only :class:`AnsibleValidationError` should be added.\"\"\"\n        self.errors.extend(errors)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/module_utils/errors.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 27,
+            "line_end": 63,
+            "exact_excerpt": "class AnsibleValidationErrorMultiple(AnsibleValidationError):\n    \"\"\"Multiple argument spec validation errors\"\"\"\n\n    def __init__(self, errors=None):\n        self.errors = errors[:] if errors else []\n        \"\"\":class:`list` of :class:`AnsibleValidationError` objects\"\"\"\n\n    def __getitem__(self, key):\n        return self.errors[key]\n\n    def __setitem__(self, key, value):\n        self.errors[key] = value\n\n    def __delitem__(self, key):\n        del self.errors[key]\n\n    @property\n    def msg(self):\n        \"\"\"The first message from the first error in ``errors``.\"\"\"\n        return self.errors[0].args[0]\n\n    @property\n    def messages(self):\n        \"\"\":class:`list` of each error message in ``errors``.\"\"\"\n        return [err.msg for err in self.errors]\n\n    def append(self, error):\n        \"\"\"Append a new error to ``self.errors``.\n\n        Only :class:`AnsibleValidationError` should be added.\n        \"\"\"\n\n        self.errors.append(error)\n\n    def extend(self, errors):\n        \"\"\"Append each item in ``errors`` to ``self.errors``. Only :class:`AnsibleValidationError` should be added.\"\"\"\n        self.errors.extend(errors)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function"
+        ],
+        "serialized_payload": "[local-1a366ae15000d12769daca5d] Role: existing_behavior\nApplies to: lib.ansible.module_utils.errors.AnsibleValidationErrorMultiple\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/module_utils/errors.py:27-63\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nclass AnsibleValidationErrorMultiple(AnsibleValidationError):\n    \"\"\"Multiple argument spec validation errors\"\"\"\n\n    def __init__(self, errors=None):\n        self.errors = errors[:] if errors else []\n        \"\"\":class:`list` of :class:`AnsibleValidationError` objects\"\"\"\n\n    def __getitem__(self, key):\n        return self.errors[key]\n\n    def __setitem__(self, key, value):\n        self.errors[key] = value\n\n    def __delitem__(self, key):\n        del self.errors[key]\n\n    @property\n    def msg(self):\n        \"\"\"The first message from the first error in ``errors``.\"\"\"\n        return self.errors[0].args[0]\n\n    @property\n    def messages(self):\n        \"\"\":class:`list` of each error message in ``errors``.\"\"\"\n        return [err.msg for err in self.errors]\n\n    def append(self, error):\n        \"\"\"Append a new error to ``self.errors``.\n\n        Only :class:`AnsibleValidationError` should be added.\n        \"\"\"\n\n        self.errors.append(error)\n\n    def extend(self, errors):\n        \"\"\"Append each item in ``errors`` to ``self.errors``. Only :class:`AnsibleValidationError` should be added.\"\"\"\n        self.errors.extend(errors)\n"
+      },
+      "relevance": 0.5093153912272215,
+      "coverage": [
+        0.2908239126205444,
+        0.218126996271669,
+        0.22120808004467987,
+        0.2119183223791677,
+        0.22314086622233795,
+        0.3774541175530158
+      ],
+      "exposure": 0.037037037037037035,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "one_hop",
+            "seed": "7d3c77ba3913d45012b5d22a",
+            "edge": {
+              "source": "7d3c77ba3913d45012b5d22a",
+              "target": "1a366ae15000d12769daca5d",
+              "kind": "import_binding",
+              "evidence": "AnsibleValidationErrorMultiple=ansible.module_utils.errors.AnsibleValidationErrorMultiple"
+            }
+          }
+        ],
+        "index_node": "1a366ae15000d12769daca5d",
+        "bm25": 0.5917702378319897
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-2d3206171330af008477cde4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.utils.addresses.parse_address"
+        ],
+        "preconditions": [],
+        "statement": "def parse_address(address, allow_ranges=False):\n    \"\"\"\n    Takes a string and returns a (host, port) tuple. If the host is None, then\n    the string could not be parsed as a host identifier with an optional port\n    specification. If the port is None, then no port was specified.\n\n    The host identifier may be a hostname (qualified or not), an IPv4 address,\n    or an IPv6 address. If allow_ranges is True, then any of those may contain\n    [x:y] range specifications, e.g. foo[1:3] or foo[0:5]-bar[x-z].\n\n    The port number is an optional :NN suffix on an IPv4 address or host name,\n    or a mandatory :NN suffix on any square-bracketed expression: IPv6 address,\n    IPv4 address, or host name. (This means the only way to specify a port for\n    an IPv6 address is to enclose it in square brackets.)\n    \"\"\"\n\n    # First, we extract the port number if one is specified.\n\n    port = None\n    for matching in ['bracketed_hostport', 'hostport']:\n        m = patterns[matching].match(address)\n        if m:\n            (address, port) = m.groups()\n            port = int(port)\n            continue\n\n    # What we're left with now must be an IPv4 or IPv6 address, possibly with\n    # numeric ranges, or a hostname with alphanumeric ranges.\n\n    host = None\n    for matching in ['ipv4', 'ipv6', 'hostname']:\n        m = patterns[matching].match(address)\n        if m:\n            host = address\n            continue\n\n    # If it isn't any of the above, we don't understand it.\n    if not host:\n        raise AnsibleError(\"Not a valid network hostname: %s\" % address)\n\n    # If we get to this point, we know that any included ranges are valid.\n    # If the caller is prepared to handle them, all is well.\n    # Otherwise we treat it as a parse failure.\n    if not allow_ranges and '[' in host:\n        raise AnsibleParserError(\"Detected range in host but was asked to ignore ranges\")\n\n    return (host, port)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/utils/addresses.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 170,
+            "line_end": 216,
+            "exact_excerpt": "def parse_address(address, allow_ranges=False):\n    \"\"\"\n    Takes a string and returns a (host, port) tuple. If the host is None, then\n    the string could not be parsed as a host identifier with an optional port\n    specification. If the port is None, then no port was specified.\n\n    The host identifier may be a hostname (qualified or not), an IPv4 address,\n    or an IPv6 address. If allow_ranges is True, then any of those may contain\n    [x:y] range specifications, e.g. foo[1:3] or foo[0:5]-bar[x-z].\n\n    The port number is an optional :NN suffix on an IPv4 address or host name,\n    or a mandatory :NN suffix on any square-bracketed expression: IPv6 address,\n    IPv4 address, or host name. (This means the only way to specify a port for\n    an IPv6 address is to enclose it in square brackets.)\n    \"\"\"\n\n    # First, we extract the port number if one is specified.\n\n    port = None\n    for matching in ['bracketed_hostport', 'hostport']:\n        m = patterns[matching].match(address)\n        if m:\n            (address, port) = m.groups()\n            port = int(port)\n            continue\n\n    # What we're left with now must be an IPv4 or IPv6 address, possibly with\n    # numeric ranges, or a hostname with alphanumeric ranges.\n\n    host = None\n    for matching in ['ipv4', 'ipv6', 'hostname']:\n        m = patterns[matching].match(address)\n        if m:\n            host = address\n            continue\n\n    # If it isn't any of the above, we don't understand it.\n    if not host:\n        raise AnsibleError(\"Not a valid network hostname: %s\" % address)\n\n    # If we get to this point, we know that any included ranges are valid.\n    # If the caller is prepared to handle them, all is well.\n    # Otherwise we treat it as a parse failure.\n    if not allow_ranges and '[' in host:\n        raise AnsibleParserError(\"Detected range in host but was asked to ignore ranges\")\n\n    return (host, port)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "re"
+        ],
+        "serialized_payload": "[local-2d3206171330af008477cde4] Role: existing_behavior\nApplies to: lib.ansible.parsing.utils.addresses.parse_address\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/parsing/utils/addresses.py:170-216\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef parse_address(address, allow_ranges=False):\n    \"\"\"\n    Takes a string and returns a (host, port) tuple. If the host is None, then\n    the string could not be parsed as a host identifier with an optional port\n    specification. If the port is None, then no port was specified.\n\n    The host identifier may be a hostname (qualified or not), an IPv4 address,\n    or an IPv6 address. If allow_ranges is True, then any of those may contain\n    [x:y] range specifications, e.g. foo[1:3] or foo[0:5]-bar[x-z].\n\n    The port number is an optional :NN suffix on an IPv4 address or host name,\n    or a mandatory :NN suffix on any square-bracketed expression: IPv6 address,\n    IPv4 address, or host name. (This means the only way to specify a port for\n    an IPv6 address is to enclose it in square brackets.)\n    \"\"\"\n\n    # First, we extract the port number if one is specified.\n\n    port = None\n    for matching in ['bracketed_hostport', 'hostport']:\n        m = patterns[matching].match(address)\n        if m:\n            (address, port) = m.groups()\n            port = int(port)\n            continue\n\n    # What we're left with now must be an IPv4 or IPv6 address, possibly with\n    # numeric ranges, or a hostname with alphanumeric ranges.\n\n    host = None\n    for matching in ['ipv4', 'ipv6', 'hostname']:\n        m = patterns[matching].match(address)\n        if m:\n            host = address\n            continue\n\n    # If it isn't any of the above, we don't understand it.\n    if not host:\n        raise AnsibleError(\"Not a valid network hostname: %s\" % address)\n\n    # If we get to this point, we know that any included ranges are valid.\n    # If the caller is prepared to handle them, all is well.\n    # Otherwise we treat it as a parse failure.\n    if not allow_ranges and '[' in host:\n        raise AnsibleParserError(\"Detected range in host but was asked to ignore ranges\")\n\n    return (host, port)\n"
+      },
+      "relevance": 0.49871404919422124,
+      "coverage": [
+        0.29908465743064877,
+        0.07126373260672142,
+        0.2094652799090769,
+        0.3055885467212297,
+        0.41405160647404515,
+        0.3645568752072354
+      ],
+      "exposure": 0.10526315789473684,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "one_hop",
+            "seed": "fbeeda7664cd746766fdcdeb",
+            "edge": {
+              "source": "fbeeda7664cd746766fdcdeb",
+              "target": "2d3206171330af008477cde4",
+              "kind": "import_binding",
+              "evidence": "parse_address=ansible.parsing.utils.addresses.parse_address"
+            }
+          }
+        ],
+        "index_node": "2d3206171330af008477cde4",
+        "bm25": 0.6229532411825808
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-bf369d0b82946f2b0422e39a",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.preprocess_data"
+        ],
+        "preconditions": [],
+        "statement": "    def preprocess_data(self, ds):\n        '''\n        Adjusts play datastructure to cleanup old/legacy items\n        '''\n\n        if not isinstance(ds, dict):\n            raise AnsibleAssertionError('while preprocessing data (%s), ds should be a dict but was a %s' % (ds, type(ds)))\n\n        # The use of 'user' in the Play datastructure was deprecated to\n        # line up with the same change for Tasks, due to the fact that\n        # 'user' conflicted with the user module.\n        if 'user' in ds:\n            # this should never happen, but error out with a helpful message\n            # to the user if it does...\n            if 'remote_user' in ds:\n                raise AnsibleParserError(\"both 'user' and 'remote_user' are set for this play. \"\n                                         \"The use of 'user' is deprecated, and should be removed\", obj=ds)\n\n            ds['remote_user'] = ds['user']\n            del ds['user']\n\n        return super(Play, self).preprocess_data(ds)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 118,
+            "line_end": 139,
+            "exact_excerpt": "    def preprocess_data(self, ds):\n        '''\n        Adjusts play datastructure to cleanup old/legacy items\n        '''\n\n        if not isinstance(ds, dict):\n            raise AnsibleAssertionError('while preprocessing data (%s), ds should be a dict but was a %s' % (ds, type(ds)))\n\n        # The use of 'user' in the Play datastructure was deprecated to\n        # line up with the same change for Tasks, due to the fact that\n        # 'user' conflicted with the user module.\n        if 'user' in ds:\n            # this should never happen, but error out with a helpful message\n            # to the user if it does...\n            if 'remote_user' in ds:\n                raise AnsibleParserError(\"both 'user' and 'remote_user' are set for this play. \"\n                                         \"The use of 'user' is deprecated, and should be removed\", obj=ds)\n\n            ds['remote_user'] = ds['user']\n            del ds['user']\n\n        return super(Play, self).preprocess_data(ds)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-bf369d0b82946f2b0422e39a] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.preprocess_data\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:118-139\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def preprocess_data(self, ds):\n        '''\n        Adjusts play datastructure to cleanup old/legacy items\n        '''\n\n        if not isinstance(ds, dict):\n            raise AnsibleAssertionError('while preprocessing data (%s), ds should be a dict but was a %s' % (ds, type(ds)))\n\n        # The use of 'user' in the Play datastructure was deprecated to\n        # line up with the same change for Tasks, due to the fact that\n        # 'user' conflicted with the user module.\n        if 'user' in ds:\n            # this should never happen, but error out with a helpful message\n            # to the user if it does...\n            if 'remote_user' in ds:\n                raise AnsibleParserError(\"both 'user' and 'remote_user' are set for this play. \"\n                                         \"The use of 'user' is deprecated, and should be removed\", obj=ds)\n\n            ds['remote_user'] = ds['user']\n            del ds['user']\n\n        return super(Play, self).preprocess_data(ds)\n"
+      },
+      "relevance": 0.4877996507310353,
+      "coverage": [
+        0.2842780768871307,
+        0.06705583513116081,
+        0.3358983212961166,
+        0.192520853306195,
+        0.2074249077251804,
+        0.32563789309403257
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.playbook.play.Play.preprocess_data"
+          }
+        ],
+        "index_node": "bf369d0b82946f2b0422e39a",
+        "bm25": 0.6288916465786719
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-58d39c3ecab8339c91ef4dbd",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "class",
+        "applies_to": [
+          "lib.ansible.playbook.role.include.RoleInclude"
+        ],
+        "preconditions": [],
+        "statement": "class RoleInclude(RoleDefinition):\n\n    \"\"\"\n    A derivative of RoleDefinition, used by playbook code when a role\n    is included for execution in a play.\n    \"\"\"\n\n    _delegate_to = FieldAttribute(isa='string')\n    _delegate_facts = FieldAttribute(isa='bool', default=False)\n\n    def __init__(self, play=None, role_basedir=None, variable_manager=None, loader=None, collection_list=None):\n        super(RoleInclude, self).__init__(play=play, role_basedir=role_basedir, variable_manager=variable_manager,\n                                          loader=loader, collection_list=collection_list)\n\n    @staticmethod\n    def load(data, play, current_role_path=None, parent_role=None, variable_manager=None, loader=None, collection_list=None):\n\n        if not (isinstance(data, string_types) or isinstance(data, dict) or isinstance(data, AnsibleBaseYAMLObject)):\n            raise AnsibleParserError(\"Invalid role definition: %s\" % to_native(data))\n\n        if isinstance(data, string_types) and ',' in data:\n            raise AnsibleError(\"Invalid old style role requirement: %s\" % data)\n\n        ri = RoleInclude(play=play, role_basedir=current_role_path, variable_manager=variable_manager, loader=loader, collection_list=collection_list)\n        return ri.load_data(data, variable_manager=variable_manager, loader=loader)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/role/include.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 36,
+            "line_end": 60,
+            "exact_excerpt": "class RoleInclude(RoleDefinition):\n\n    \"\"\"\n    A derivative of RoleDefinition, used by playbook code when a role\n    is included for execution in a play.\n    \"\"\"\n\n    _delegate_to = FieldAttribute(isa='string')\n    _delegate_facts = FieldAttribute(isa='bool', default=False)\n\n    def __init__(self, play=None, role_basedir=None, variable_manager=None, loader=None, collection_list=None):\n        super(RoleInclude, self).__init__(play=play, role_basedir=role_basedir, variable_manager=variable_manager,\n                                          loader=loader, collection_list=collection_list)\n\n    @staticmethod\n    def load(data, play, current_role_path=None, parent_role=None, variable_manager=None, loader=None, collection_list=None):\n\n        if not (isinstance(data, string_types) or isinstance(data, dict) or isinstance(data, AnsibleBaseYAMLObject)):\n            raise AnsibleParserError(\"Invalid role definition: %s\" % to_native(data))\n\n        if isinstance(data, string_types) and ',' in data:\n            raise AnsibleError(\"Invalid old style role requirement: %s\" % data)\n\n        ri = RoleInclude(play=play, role_basedir=current_role_path, variable_manager=variable_manager, loader=loader, collection_list=collection_list)\n        return ri.load_data(data, variable_manager=variable_manager, loader=loader)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.yaml.objects.AnsibleBaseYAMLObject",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.role.definition.RoleDefinition",
+          "ansible.playbook.role.requirement.RoleRequirement",
+          "os"
+        ],
+        "serialized_payload": "[local-58d39c3ecab8339c91ef4dbd] Role: existing_behavior\nApplies to: lib.ansible.playbook.role.include.RoleInclude\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/role/include.py:36-60\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nclass RoleInclude(RoleDefinition):\n\n    \"\"\"\n    A derivative of RoleDefinition, used by playbook code when a role\n    is included for execution in a play.\n    \"\"\"\n\n    _delegate_to = FieldAttribute(isa='string')\n    _delegate_facts = FieldAttribute(isa='bool', default=False)\n\n    def __init__(self, play=None, role_basedir=None, variable_manager=None, loader=None, collection_list=None):\n        super(RoleInclude, self).__init__(play=play, role_basedir=role_basedir, variable_manager=variable_manager,\n                                          loader=loader, collection_list=collection_list)\n\n    @staticmethod\n    def load(data, play, current_role_path=None, parent_role=None, variable_manager=None, loader=None, collection_list=None):\n\n        if not (isinstance(data, string_types) or isinstance(data, dict) or isinstance(data, AnsibleBaseYAMLObject)):\n            raise AnsibleParserError(\"Invalid role definition: %s\" % to_native(data))\n\n        if isinstance(data, string_types) and ',' in data:\n            raise AnsibleError(\"Invalid old style role requirement: %s\" % data)\n\n        ri = RoleInclude(play=play, role_basedir=current_role_path, variable_manager=variable_manager, loader=loader, collection_list=collection_list)\n        return ri.load_data(data, variable_manager=variable_manager, loader=loader)\n"
+      },
+      "relevance": 0.484254627706578,
+      "coverage": [
+        0.3102442466097453,
+        0.04186803457436014,
+        0.3442181418389996,
+        0.14017987500140278,
+        0.15114369731052824,
+        0.30783821593157185
+      ],
+      "exposure": 0.16666666666666666,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "one_hop",
+            "seed": "e8efdafad6ae5f962a4ee459",
+            "edge": {
+              "source": "e8efdafad6ae5f962a4ee459",
+              "target": "58d39c3ecab8339c91ef4dbd",
+              "kind": "import_binding",
+              "evidence": "RoleInclude=ansible.playbook.role.include.RoleInclude"
+            }
+          }
+        ],
+        "index_node": "58d39c3ecab8339c91ef4dbd",
+        "bm25": 0.6395741900414076
+      }
+    }
+  ],
+  "overlap": [
+    [
+      0.9999999165534972,
+      0.45289637875556943,
+      0.4897686056035714,
+      0.5439929700314154,
+      0.35936909048404986,
+      0.29659491056763887,
+      0.4499339479416187,
+      0.7275913431977488,
+      0.8036294970689247,
+      0.7532065954574388,
+      0.7578874018558306,
+      0.7213445928462786,
+      0.7347580340274614,
+      0.6458828613682527,
+      0.2082074424346108,
+      0.2970395015459621,
+      0.4932448802098479,
+      0.49191461051405927,
+      0.3621341036058349,
+      0.4608594176880341,
+      0.2887521480828703,
+      0.32007139816872426,
+      0.4184055313794898,
+      0.44057776048998093
+    ],
+    [
+      0.45289637875556943,
+      0.9999999165534972,
+      0.4425209560081907,
+      0.2862235330468163,
+      0.29949280042546783,
+      0.31185779744946723,
+      0.41424349543178557,
+      0.41918439620988207,
+      0.39984686049165513,
+      0.4311217399577018,
+      0.37865637860096657,
+      0.4108610542754051,
+      0.40684665164746014,
+      0.3272339756572078,
+      0.19531316971190546,
+      0.3148128714159258,
+      0.42434960196707927,
+      0.3283485344775595,
+      0.3732923549144643,
+      0.5227287568210836,
+      0.39030245998805185,
+      0.34298026003822607,
+      0.4764478624442412,
+      0.39566017702440476
+    ],
+    [
+      0.4897686056035714,
+      0.4425209560081907,
+      1.0,
+      0.3866267872037378,
+      0.2770934039882608,
+      0.4093802828312273,
+      0.95583053715304,
+      0.5401719868183136,
+      0.4546169936656952,
+      0.49180246195709426,
+      0.46100803217804154,
+      0.4678776403418752,
+      0.47319985828315936,
+      0.39459723473950375,
+      0.2700302911843942,
+      0.4244129363559881,
+      0.9836885196728375,
+      0.42892897763133164,
+      0.46293846284284973,
+      0.5755842145024221,
+      0.4309903619076584,
+      0.3778433692166673,
+      0.48124080142939535,
+      0.5330445441214178
+    ],
+    [
+      0.5439929700314154,
+      0.2862235330468163,
+      0.3866267872037378,
+      1.0,
+      0.7141843493661552,
+      0.33699530935277033,
+      0.32521240115165706,
+      0.4635558414730261,
+      0.45730131748048763,
+      0.5207847058773041,
+      0.5324597477912902,
+      0.503058123588562,
+      0.5122605621814728,
+      0.5342321991920471,
+      0.22577283660835817,
+      0.3503373119275668,
+      0.3720516638761253,
+      0.39801603931420665,
+      0.32987957020281244,
+      0.3357330496854324,
+      0.3614341802242915,
+      0.2536988642724692,
+      0.36103409320713026,
+      0.38657564763097896
+    ],
+    [
+      0.35936909048404986,
+      0.29949280042546783,
+      0.2770934039882608,
+      0.7141843493661552,
+      1.0,
+      0.33493268211924615,
+      0.24080914590787184,
+      0.3121074923722209,
+      0.3134233602730693,
+      0.471460103265114,
+      0.39617727624542254,
+      0.4503384165681078,
+      0.44983435796863575,
+      0.30389473682021156,
+      0.17192554932191145,
+      0.34771029981785423,
+      0.24600006746881442,
+      0.3315095567324783,
+      0.4243158507471906,
+      0.33442668418851373,
+      0.31980332953678914,
+      0.2100104053841821,
+      0.3122806075808587,
+      0.4167173624841383
+    ],
+    [
+      0.29659491056763887,
+      0.31185779744946723,
+      0.4093802828312273,
+      0.33699530935277033,
+      0.33493268211924615,
+      1.0,
+      0.39979254381637863,
+      0.34513142946960307,
+      0.3205645025074629,
+      0.2719572065670589,
+      0.2867750941116909,
+      0.25479084237409627,
+      0.2657759486038784,
+      0.32900737028113597,
+      0.4493645760922561,
+      0.995165709379489,
+      0.39243333630365196,
+      0.18499575681347624,
+      0.3740575015274339,
+      0.32620563814888964,
+      0.5375676340529499,
+      0.40019089527640883,
+      0.4154329978632775,
+      0.3913667108203393
+    ],
+    [
+      0.4499339479416187,
+      0.41424349543178557,
+      0.95583053715304,
+      0.32521240115165706,
+      0.24080914590787184,
+      0.39979254381637863,
+      0.9999999165534972,
+      0.5072890877893089,
+      0.4104075515405749,
+      0.4542525768280029,
+      0.42009291648864744,
+      0.4288427412509918,
+      0.4342016339302063,
+      0.3459864288568496,
+      0.26655394885893524,
+      0.4143583619071661,
+      0.9694052387902425,
+      0.38974181977262534,
+      0.42955708723583186,
+      0.5413817408748619,
+      0.3979956632330831,
+      0.38554219408517165,
+      0.44436130911708815,
+      0.4808496947980333
+    ],
+    [
+      0.7275913431977488,
+      0.41918439620988207,
+      0.5401719868183136,
+      0.4635558414730261,
+      0.3121074923722209,
+      0.34513142946960307,
+      0.5072890877893089,
+      1.0,
+      0.8807787656784057,
+      0.6463361454416559,
+      0.6384769034792229,
+      0.627638371031408,
+      0.6298626792837425,
+      0.6112141371112105,
+      0.21846844951006011,
+      0.34810750503655263,
+      0.538513235031582,
+      0.4325380412911525,
+      0.3961721869903198,
+      0.45109903822182856,
+      0.37922898124939114,
+      0.31482098220696547,
+      0.5621920290705893,
+      0.47540041602543137
+    ],
+    [
+      0.8036294970689247,
+      0.39984686049165513,
+      0.4546169936656952,
+      0.45730131748048763,
+      0.3134233602730693,
+      0.3205645025074629,
+      0.4104075515405749,
+      0.8807787656784057,
+      0.9999998331069946,
+      0.6990063000222234,
+      0.705331795265296,
+      0.6706366587182073,
+      0.6873899627228764,
+      0.6891160381246849,
+      0.1893404443997589,
+      0.3209679401526517,
+      0.450265062003514,
+      0.4088499574040522,
+      0.3542591537780304,
+      0.3792294483693341,
+      0.3021772552657715,
+      0.3134977292906294,
+      0.4549401694636118,
+      0.4236014167158916
+    ],
+    [
+      0.7532065954574388,
+      0.4311217399577018,
+      0.49180246195709426,
+      0.5207847058773041,
+      0.471460103265114,
+      0.2719572065670589,
+      0.4542525768280029,
+      0.6463361454416559,
+      0.6990063000222234,
+      1.0,
+      0.887242285410563,
+      0.9357554952303568,
+      0.9399370412031809,
+      0.609022969007492,
+      0.15803417620953275,
+      0.28379070083571134,
+      0.4912125195403332,
+      0.48578365224831915,
+      0.38274974072243595,
+      0.5328715095680837,
+      0.3054877124056159,
+      0.2596774266514428,
+      0.4233768577410167,
+      0.4297665806124126
+    ],
+    [
+      0.7578874018558306,
+      0.37865637860096657,
+      0.46100803217804154,
+      0.5324597477912902,
+      0.39617727624542254,
+      0.2867750941116909,
+      0.42009291648864744,
+      0.6384769034792229,
+      0.705331795265296,
+      0.887242285410563,
+      1.0,
+      0.8511392811934153,
+      0.8745611290136972,
+      0.6301084399223328,
+      0.18015394566353513,
+      0.2972081265873975,
+      0.45774717582657287,
+      0.5008080698870979,
+      0.35047845387722876,
+      0.4767671182085063,
+      0.2964520833715736,
+      0.310530935362304,
+      0.36844166954623747,
+      0.41940369322990523
+    ],
+    [
+      0.7213445928462786,
+      0.4108610542754051,
+      0.4678776403418752,
+      0.503058123588562,
+      0.4503384165681078,
+      0.25479084237409627,
+      0.4288427412509918,
+      0.627638371031408,
+      0.6706366587182073,
+      0.9357554952303568,
+      0.8511392811934153,
+      1.0,
+      0.9138815800348916,
+      0.5956549227237702,
+      0.16460754928883267,
+      0.2650072894520825,
+      0.47109089745476196,
+      0.47616815346711494,
+      0.3468795105245295,
+      0.5072774126459147,
+      0.2871232650503455,
+      0.2415820942673333,
+      0.39757155021297025,
+      0.40690828874801743
+    ],
+    [
+      0.7347580340274614,
+      0.40684665164746014,
+      0.47319985828315936,
+      0.5122605621814728,
+      0.44983435796863575,
+      0.2657759486038784,
+      0.4342016339302063,
+      0.6298626792837425,
+      0.6873899627228764,
+      0.9399370412031809,
+      0.8745611290136972,
+      0.9138815800348916,
+      1.0,
+      0.6111217737197876,
+      0.16558384207781507,
+      0.2768171391911572,
+      0.47168966783478206,
+      0.46429121273988105,
+      0.36795286083485507,
+      0.5021376504827525,
+      0.2846681646332084,
+      0.24619647724958732,
+      0.4157151981221347,
+      0.418913486749879
+    ],
+    [
+      0.6458828613682527,
+      0.3272339756572078,
+      0.39459723473950375,
+      0.5342321991920471,
+      0.30389473682021156,
+      0.32900737028113597,
+      0.3459864288568496,
+      0.6112141371112105,
+      0.6891160381246849,
+      0.609022969007492,
+      0.6301084399223328,
+      0.5956549227237702,
+      0.6111217737197876,
+      1.0,
+      0.22270031571388244,
+      0.3332371791633685,
+      0.3857716040616722,
+      0.3800577052258811,
+      0.30267120414097104,
+      0.3217704924541107,
+      0.3041945191956965,
+      0.24588707560126657,
+      0.3525973027984364,
+      0.4129400694754614
+    ],
+    [
+      0.2082074424346108,
+      0.19531316971190546,
+      0.2700302911843942,
+      0.22577283660835817,
+      0.17192554932191145,
+      0.4493645760922561,
+      0.26655394885893524,
+      0.21846844951006011,
+      0.1893404443997589,
+      0.15803417620953275,
+      0.18015394566353513,
+      0.16460754928883267,
+      0.16558384207781507,
+      0.22270031571388244,
+      1.0,
+      0.4442022844396928,
+      0.2667489094012297,
+      0.23554533820425344,
+      0.2876673829783054,
+      0.2793574169761134,
+      0.3642383870565795,
+      0.3045452943358085,
+      0.3379204339810766,
+      0.34962751536463954
+    ],
+    [
+      0.2970395015459621,
+      0.3148128714159258,
+      0.4244129363559881,
+      0.3503373119275668,
+      0.34771029981785423,
+      0.995165709379489,
+      0.4143583619071661,
+      0.34810750503655263,
+      0.3209679401526517,
+      0.28379070083571134,
+      0.2972081265873975,
+      0.2650072894520825,
+      0.2768171391911572,
+      0.3332371791633685,
+      0.4442022844396928,
+      1.0,
+      0.40627674584513546,
+      0.19551055339652695,
+      0.38234925928894925,
+      0.3410099430798363,
+      0.5402393117376032,
+      0.40325659742317665,
+      0.425816217006054,
+      0.4018512539829068
+    ],
+    [
+      0.4932448802098479,
+      0.42434960196707927,
+      0.9836885196728375,
+      0.3720516638761253,
+      0.24600006746881442,
+      0.39243333630365196,
+      0.9694052387902425,
+      0.538513235031582,
+      0.450265062003514,
+      0.4912125195403332,
+      0.45774717582657287,
+      0.47109089745476196,
+      0.47168966783478206,
+      0.3857716040616722,
+      0.2667489094012297,
+      0.40627674584513546,
+      0.9999999165534972,
+      0.43221254200264175,
+      0.44031002824948373,
+      0.5579360508196187,
+      0.4139915906762646,
+      0.37060703391822275,
+      0.464058373201582,
+      0.4972383742001917
+    ],
+    [
+      0.49191461051405927,
+      0.3283485344775595,
+      0.42892897763133164,
+      0.39801603931420665,
+      0.3315095567324783,
+      0.18499575681347624,
+      0.38974181977262534,
+      0.4325380412911525,
+      0.4088499574040522,
+      0.48578365224831915,
+      0.5008080698870979,
+      0.47616815346711494,
+      0.46429121273988105,
+      0.3800577052258811,
+      0.23554533820425344,
+      0.19551055339652695,
+      0.43221254200264175,
+      1.0,
+      0.3535473733724497,
+      0.3882457232871683,
+      0.21353016964357785,
+      0.2604543756175509,
+      0.3782418803451036,
+      0.4600901408718117
+    ],
+    [
+      0.3621341036058349,
+      0.3732923549144643,
+      0.46293846284284973,
+      0.32987957020281244,
+      0.4243158507471906,
+      0.3740575015274339,
+      0.42955708723583186,
+      0.3961721869903198,
+      0.3542591537780304,
+      0.38274974072243595,
+      0.35047845387722876,
+      0.3468795105245295,
+      0.36795286083485507,
+      0.30267120414097104,
+      0.2876673829783054,
+      0.38234925928894925,
+      0.44031002824948373,
+      0.3535473733724497,
+      0.9999998748302459,
+      0.46579122899322944,
+      0.384215108789533,
+      0.26418164488580664,
+      0.44270938006207045,
+      0.6122090698612971
+    ],
+    [
+      0.4608594176880341,
+      0.5227287568210836,
+      0.5755842145024221,
+      0.3357330496854324,
+      0.33442668418851373,
+      0.32620563814888964,
+      0.5413817408748619,
+      0.45109903822182856,
+      0.3792294483693341,
+      0.5328715095680837,
+      0.4767671182085063,
+      0.5072774126459147,
+      0.5021376504827525,
+      0.3217704924541107,
+      0.2793574169761134,
+      0.3410099430798363,
+      0.5579360508196187,
+      0.3882457232871683,
+      0.46579122899322944,
+      1.0,
+      0.45670051581708315,
+      0.34759077068492095,
+      0.506670386353134,
+      0.43795623920141424
+    ],
+    [
+      0.2887521480828703,
+      0.39030245998805185,
+      0.4309903619076584,
+      0.3614341802242915,
+      0.31980332953678914,
+      0.5375676340529499,
+      0.3979956632330831,
+      0.37922898124939114,
+      0.3021772552657715,
+      0.3054877124056159,
+      0.2964520833715736,
+      0.2871232650503455,
+      0.2846681646332084,
+      0.3041945191956965,
+      0.3642383870565795,
+      0.5402393117376032,
+      0.4139915906762646,
+      0.21353016964357785,
+      0.384215108789533,
+      0.45670051581708315,
+      1.0,
+      0.3307156794154724,
+      0.4588308744232892,
+      0.37510758463406957
+    ],
+    [
+      0.32007139816872426,
+      0.34298026003822607,
+      0.3778433692166673,
+      0.2536988642724692,
+      0.2100104053841821,
+      0.40019089527640883,
+      0.38554219408517165,
+      0.31482098220696547,
+      0.3134977292906294,
+      0.2596774266514428,
+      0.310530935362304,
+      0.2415820942673333,
+      0.24619647724958732,
+      0.24588707560126657,
+      0.3045452943358085,
+      0.40325659742317665,
+      0.37060703391822275,
+      0.2604543756175509,
+      0.26418164488580664,
+      0.34759077068492095,
+      0.3307156794154724,
+      1.0,
+      0.3079525802018521,
+      0.27245293403311227
+    ],
+    [
+      0.4184055313794898,
+      0.4764478624442412,
+      0.48124080142939535,
+      0.36103409320713026,
+      0.3122806075808587,
+      0.4154329978632775,
+      0.44436130911708815,
+      0.5621920290705893,
+      0.4549401694636118,
+      0.4233768577410167,
+      0.36844166954623747,
+      0.39757155021297025,
+      0.4157151981221347,
+      0.3525973027984364,
+      0.3379204339810766,
+      0.425816217006054,
+      0.464058373201582,
+      0.3782418803451036,
+      0.44270938006207045,
+      0.506670386353134,
+      0.4588308744232892,
+      0.3079525802018521,
+      1.0,
+      0.508535660123629
+    ],
+    [
+      0.44057776048998093,
+      0.39566017702440476,
+      0.5330445441214178,
+      0.38657564763097896,
+      0.4167173624841383,
+      0.3913667108203393,
+      0.4808496947980333,
+      0.47540041602543137,
+      0.4236014167158916,
+      0.4297665806124126,
+      0.41940369322990523,
+      0.40690828874801743,
+      0.418913486749879,
+      0.4129400694754614,
+      0.34962751536463954,
+      0.4018512539829068,
+      0.4972383742001917,
+      0.4600901408718117,
+      0.6122090698612971,
+      0.43795623920141424,
+      0.37510758463406957,
+      0.27245293403311227,
+      0.508535660123629,
+      1.0
+    ]
+  ],
+  "obligations": [
+    {
+      "id": "g1",
+      "statement": "FAILED test/units/playbook/test_play.py::TestPlay::test_play_name_from_string_hosts",
+      "source_ref": "request:0:83",
+      "status": "contradicted",
+      "related_symbols": []
+    },
+    {
+      "id": "g2",
+      "statement": "2 failed, 15 passed, 7 warnings in 0.20s",
+      "source_ref": "request:0:40",
+      "status": "contradicted",
+      "related_symbols": []
+    },
+    {
+      "id": "g3",
+      "statement": "- The `Play.load` method should not mutate or derive the `name` field from the `hosts` field; it should only load data and leave name derivation to `get_name`.",
+      "source_ref": "request:0:159",
+      "status": "unverified",
+      "related_symbols": [
+        "Play.load",
+        "get_name",
+        "hosts",
+        "name"
+      ]
+    },
+    {
+      "id": "g4",
+      "statement": "- The `get_name` method should compute the `name` dynamically by joining elements in `hosts` with a comma when `name` is not already set and `hosts` is a sequence.",
+      "source_ref": "request:0:163",
+      "status": "unverified",
+      "related_symbols": [
+        "get_name",
+        "hosts",
+        "name"
+      ]
+    },
+    {
+      "id": "g5",
+      "statement": "- If `hosts` is not a sequence, `get_name` should return it as is; if `hosts` is `None`, it should return an empty string.",
+      "source_ref": "request:0:122",
+      "status": "unverified",
+      "related_symbols": [
+        "None",
+        "get_name",
+        "hosts"
+      ]
+    },
+    {
+      "id": "g6",
+      "statement": "- A new `_validate_hosts` method should be introduced in the `Play` class to handle validation of the `hosts` field, and it should perform validation only when the `hosts` key is present in the play’s dataset.",
+      "source_ref": "request:0:209",
+      "status": "unverified",
+      "related_symbols": [
+        "Play",
+        "_validate_hosts",
+        "hosts"
+      ]
+    }
+  ],
+  "query": "FAILED test/units/playbook/test_play.py::TestPlay::test_play_name_from_string_hosts\n\n2 failed, 15 passed, 7 warnings in 0.20s\n\n- The `Play.load` method should not mutate or derive the `name` field from the `hosts` field; it should only load data and leave name derivation to `get_name`.\n\n- The `get_name` method should compute the `name` dynamically by joining elements in `hosts` with a comma when `name` is not already set and `hosts` is a sequence.\n\n- If `hosts` is not a sequence, `get_name` should return it as is; if `hosts` is `None`, it should return an empty string.\n\n- A new `_validate_hosts` method should be introduced in the `Play` class to handle validation of the `hosts` field, and it should perform validation only when the `hosts` key is present in the play’s dataset.\n"
+}

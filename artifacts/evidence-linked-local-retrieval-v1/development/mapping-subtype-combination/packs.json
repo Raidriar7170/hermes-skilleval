@@ -1,0 +1,364 @@
+{
+  "M-local": {
+    "method": "M-local",
+    "indices": [
+      8,
+      19
+    ],
+    "units": [
+      {
+        "unit_id": "local-4a55386989d23d75ba19e21e",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.vars.merge_hash"
+        ],
+        "preconditions": [],
+        "statement": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n\n    return x\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 95,
+            "line_end": 180,
+            "exact_excerpt": "def merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n\n    return x\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-4a55386989d23d75ba19e21e] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.merge_hash\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:95-180\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef merge_hash(x, y, recursive=True, list_merge='replace'):\n    \"\"\"\n    Return a new dictionary result of the merges of y into x,\n    so that keys from y take precedence over keys from x.\n    (x and y aren't modified)\n    \"\"\"\n    if list_merge not in ('replace', 'keep', 'append', 'prepend', 'append_rp', 'prepend_rp'):\n        raise AnsibleError(\"merge_hash: 'list_merge' argument can only be equal to 'replace', 'keep', 'append', 'prepend', 'append_rp' or 'prepend_rp'\")\n\n    # verify x & y are dicts\n    _validate_mutable_mappings(x, y)\n\n    # to speed things up: if x is empty or equal to y, return y\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if x == {} or x == y:\n        return y.copy()\n\n    # in the following we will copy elements from y to x, but\n    # we don't want to modify x, so we create a copy of it\n    x = x.copy()\n\n    # to speed things up: use dict.update if possible\n    # (this `if` can be remove without impact on the function\n    #  except performance)\n    if not recursive and list_merge == 'replace':\n        x.update(y)\n        return x\n\n    # insert each element of y in x, overriding the one in x\n    # (as y has higher priority)\n    # we copy elements from y to x instead of x to y because\n    # there is a high probability x will be the \"default\" dict the user\n    # want to \"patch\" with y\n    # therefore x will have much more elements than y\n    for key, y_value in y.items():\n        # if `key` isn't in x\n        # update x and move on to the next element of y\n        if key not in x:\n            x[key] = y_value\n            continue\n        # from this point we know `key` is in x\n\n        x_value = x[key]\n\n        # if both x's element and y's element are dicts\n        # recursively \"combine\" them or override x's with y's element\n        # depending on the `recursive` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableMapping) and isinstance(y_value, MutableMapping):\n            if recursive:\n                x[key] = merge_hash(x_value, y_value, recursive, list_merge)\n            else:\n                x[key] = y_value\n            continue\n\n        # if both x's element and y's element are lists\n        # \"merge\" them depending on the `list_merge` argument\n        # and move on to the next element of y\n        if isinstance(x_value, MutableSequence) and isinstance(y_value, MutableSequence):\n            if list_merge == 'replace':\n                # replace x value by y's one as it has higher priority\n                x[key] = y_value\n            elif list_merge == 'append':\n                x[key] = x_value + y_value\n            elif list_merge == 'prepend':\n                x[key] = y_value + x_value\n            elif list_merge == 'append_rp':\n                # append all elements from y_value (high prio) to x_value (low prio)\n                # and remove x_value elements that are also in y_value\n                # we don't remove elements from x_value nor y_value that were already in double\n                # (we assume that there is a reason if there where such double elements)\n                # _rp stands for \"remove present\"\n                x[key] = [z for z in x_value if z not in y_value] + y_value\n            elif list_merge == 'prepend_rp':\n                # same as 'append_rp' but y_value elements are prepend\n                x[key] = y_value + [z for z in x_value if z not in y_value]\n            # else 'keep'\n            #   keep x value even if y it's of higher priority\n            #   it's done by not changing x[key]\n            continue\n\n        # else just override x's element with y's one\n        x[key] = y_value\n\n    return x\n"
+      },
+      {
+        "unit_id": "local-70388d6aa1c101857cf34f84",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.utils.vars._validate_mutable_mappings.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 58,
+            "line_end": 64,
+            "exact_excerpt": "    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-70388d6aa1c101857cf34f84] Role: documented_contract\nApplies to: lib.ansible.utils.vars._validate_mutable_mappings.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:58-64\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n"
+      }
+    ],
+    "tokens": 1174,
+    "scores": {
+      "coverage": 0.3966037498236256,
+      "relevance": 0.12392384076286495,
+      "redundancy_penalty": 0.033629038845735815,
+      "exposure_penalty": 0.05381578947368422,
+      "total": 0.43308276226707054
+    },
+    "decisions": [
+      {
+        "unit_id": "local-4a55386989d23d75ba19e21e",
+        "mmr": 0.4783625410936582
+      },
+      {
+        "unit_id": "local-70388d6aa1c101857cf34f84",
+        "mmr": 0.2882172277091889
+      }
+    ]
+  },
+  "H-sim": {
+    "method": "H-sim",
+    "indices": [
+      7
+    ],
+    "units": [
+      {
+        "unit_id": "local-054cd339e190cd55a90d344c",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge"
+        ],
+        "preconditions": [],
+        "statement": "def dict_merge(base, other):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(other, dict):\n        raise AssertionError(\"`other` must be of type <dict>\")\n\n    combined = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    if isinstance(other[key], Mapping):\n                        combined[key] = dict_merge(value, other[key])\n                    else:\n                        combined[key] = other[key]\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        elif isinstance(value, list):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    try:\n                        combined[key] = list(set(chain(value, item)))\n                    except TypeError:\n                        value.extend([i for i in item if i not in value])\n                        combined[key] = value\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        else:\n            if key in other:\n                other_value = other.get(key)\n                if other_value is not None:\n                    if sort_list(base[key]) != sort_list(other_value):\n                        combined[key] = other_value\n                    else:\n                        combined[key] = value\n                else:\n                    combined[key] = other_value\n            else:\n                combined[key] = value\n\n    for key in set(other.keys()).difference(base.keys()):\n        combined[key] = other.get(key)\n\n    return combined\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 310,
+            "line_end": 372,
+            "exact_excerpt": "def dict_merge(base, other):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(other, dict):\n        raise AssertionError(\"`other` must be of type <dict>\")\n\n    combined = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    if isinstance(other[key], Mapping):\n                        combined[key] = dict_merge(value, other[key])\n                    else:\n                        combined[key] = other[key]\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        elif isinstance(value, list):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    try:\n                        combined[key] = list(set(chain(value, item)))\n                    except TypeError:\n                        value.extend([i for i in item if i not in value])\n                        combined[key] = value\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        else:\n            if key in other:\n                other_value = other.get(key)\n                if other_value is not None:\n                    if sort_list(base[key]) != sort_list(other_value):\n                        combined[key] = other_value\n                    else:\n                        combined[key] = value\n                else:\n                    combined[key] = other_value\n            else:\n                combined[key] = value\n\n    for key in set(other.keys()).difference(base.keys()):\n        combined[key] = other.get(key)\n\n    return combined\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "ansible.module_utils.basic",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.moves.collections_abc.Mapping",
+          "ansible.module_utils.six.string_types",
+          "ast",
+          "itertools.chain",
+          "json",
+          "operator",
+          "re",
+          "socket"
+        ],
+        "serialized_payload": "[local-054cd339e190cd55a90d344c] Role: existing_behavior\nApplies to: test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py:310-372\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef dict_merge(base, other):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n    if not isinstance(base, dict):\n        raise AssertionError(\"`base` must be of type <dict>\")\n    if not isinstance(other, dict):\n        raise AssertionError(\"`other` must be of type <dict>\")\n\n    combined = dict()\n\n    for key, value in iteritems(base):\n        if isinstance(value, dict):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    if isinstance(other[key], Mapping):\n                        combined[key] = dict_merge(value, other[key])\n                    else:\n                        combined[key] = other[key]\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        elif isinstance(value, list):\n            if key in other:\n                item = other.get(key)\n                if item is not None:\n                    try:\n                        combined[key] = list(set(chain(value, item)))\n                    except TypeError:\n                        value.extend([i for i in item if i not in value])\n                        combined[key] = value\n                else:\n                    combined[key] = item\n            else:\n                combined[key] = value\n        else:\n            if key in other:\n                other_value = other.get(key)\n                if other_value is not None:\n                    if sort_list(base[key]) != sort_list(other_value):\n                        combined[key] = other_value\n                    else:\n                        combined[key] = value\n                else:\n                    combined[key] = other_value\n            else:\n                combined[key] = value\n\n    for key in set(other.keys()).difference(base.keys()):\n        combined[key] = other.get(key)\n\n    return combined\n"
+      }
+    ],
+    "tokens": 597,
+    "scores": {
+      "coverage": 0.38642572663416497,
+      "relevance": 0.06714623801771875,
+      "redundancy_penalty": 0.0,
+      "exposure_penalty": 0.009821428571428571,
+      "total": 0.4437505360804551
+    },
+    "decisions": [
+      {
+        "unit_id": "local-70388d6aa1c101857cf34f84",
+        "marginal": 0.3486461178812449
+      },
+      {
+        "unit_id": "local-7be61e5313126f9d64d13429",
+        "marginal": 0.0738655389599821
+      },
+      {
+        "best_singleton": "local-054cd339e190cd55a90d344c"
+      }
+    ]
+  },
+  "H-link": {
+    "method": "H-link",
+    "indices": [
+      13,
+      19,
+      5
+    ],
+    "units": [
+      {
+        "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.utils.vars.combine_vars.branch_86"
+        ],
+        "preconditions": [],
+        "statement": "def combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 81,
+            "line_end": 92,
+            "exact_excerpt": "def combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-bad13e539d4165008a788ddf-5f680563] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.combine_vars.branch_86\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:81-92\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef combine_vars(a, b, merge=None):\n    \"\"\"\n    Return a copy of dictionaries of variables based on configured hash behavior\n    \"\"\"\n\n    if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == \"merge\":\n        return merge_hash(a, b)\n    else:\n        # HASH_BEHAVIOUR == 'replace'\n        _validate_mutable_mappings(a, b)\n        result = a | b\n        return result\n"
+      },
+      {
+        "unit_id": "local-70388d6aa1c101857cf34f84",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.utils.vars._validate_mutable_mappings.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 58,
+            "line_end": 64,
+            "exact_excerpt": "    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "json.dumps",
+          "keyword",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-70388d6aa1c101857cf34f84] Role: documented_contract\nApplies to: lib.ansible.utils.vars._validate_mutable_mappings.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/vars.py:58-64\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"\n    Internal convenience function to ensure arguments are MutableMappings\n\n    This checks that all arguments are MutableMappings or raises an error\n\n    :raises AnsibleError: if one of the arguments is not a MutableMapping\n    \"\"\"\n"
+      },
+      {
+        "unit_id": "local-0a095c4b7ef13932f8ef5609",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.vars.manager.VariableManager.set_host_facts"
+        ],
+        "preconditions": [],
+        "statement": "    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n\n        # Save the facts back to the backing store\n        self._fact_cache[host] = host_cache\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 694,
+            "line_end": 715,
+            "exact_excerpt": "    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n\n        # Save the facts back to the backing store\n        self._fact_cache[host] = host_cache\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-0a095c4b7ef13932f8ef5609] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.VariableManager.set_host_facts\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:694-715\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def set_host_facts(self, host, facts):\n        '''\n        Sets or updates the given facts for a host in the fact cache.\n        '''\n\n        if not isinstance(facts, Mapping):\n            raise AnsibleAssertionError(\"the type of 'facts' to set for host_facts should be a Mapping but is a %s\" % type(facts))\n\n        try:\n            host_cache = self._fact_cache[host]\n        except KeyError:\n            # We get to set this as new\n            host_cache = facts\n        else:\n            if not isinstance(host_cache, MutableMapping):\n                raise TypeError('The object retrieved for {0} must be a MutableMapping but was'\n                                ' a {1}'.format(host, type(host_cache)))\n            # Update the existing facts\n            host_cache |= facts\n\n        # Save the facts back to the backing store\n        self._fact_cache[host] = host_cache\n"
+      }
+    ],
+    "tokens": 665,
+    "scores": {
+      "coverage": 0.35,
+      "relevance": 0.175463195381524,
+      "redundancy_penalty": 0.09707461414693058,
+      "exposure_penalty": 0.10052631578947369,
+      "total": 0.3278622654451197
+    },
+    "decisions": [
+      {
+        "unit_id": "local-bad13e539d4165008a788ddf-5f680563",
+        "marginal": 0.23439338235526708
+      },
+      {
+        "unit_id": "local-70388d6aa1c101857cf34f84",
+        "marginal": 0.07183396101762346
+      },
+      {
+        "unit_id": "local-0a095c4b7ef13932f8ef5609",
+        "marginal": 0.021634922072229168
+      }
+    ]
+  }
+}
