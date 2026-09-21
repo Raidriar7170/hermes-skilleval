@@ -72,7 +72,9 @@ for directory in sorted(a.root.iterdir()):
             ),
             "coverage": coverage,
             "candidate_counts": {v: len(x) for v, x in ids.items()},
-            "same_full_pool_unit_id_overlap": {v: len(ids["full"] & x) for v, x in ids.items()},
+            "same_full_pool_unit_id_overlap": {
+                v: len(ids["full"] & x) for v, x in ids.items()
+            },
             "relation_proposals": len(relations),
             "positive_proposals": sum(r["weight"] > 0 for r in relations),
             "rejected_proposals": sum(

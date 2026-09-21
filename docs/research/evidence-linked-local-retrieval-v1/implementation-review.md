@@ -11,3 +11,5 @@
 预处理失败后的窄协调器修复保持原缺失关系/原成本，并为全部8不可用格保留UNKNOWN；没有合成标签或再次调用修复Agent。独立审阅聚焦30项通过。随后预标签索引范围修复在隔离工作树通过31项聚焦检查、单模块mypy和ruff；全仓1560 passed（41.35秒），全OpenSpec严格验证42/42。该代码测试不提供功能实验收益证据，最终PR HEAD另由CI核对。
 
 原始candidate.patch及版本修复.diff使用gzip无损保存，避免diff上下文空格被发布CI当作文本格式错误。compressed-evidence.json绑定压缩文件及解压原文SHA-256；没有修剪或重写任何原补丁。完整git diff --check通过。
+
+首次公开CI的测试/OpenSpec/复现检查均通过，唯一阻断为export_development.py格式；按固定Ruff 0.15.13格式化并验证AST相同。该导出脚本格式变化不改变历史执行提交或实验输出，冻结旧代码仍从3212908核对。
