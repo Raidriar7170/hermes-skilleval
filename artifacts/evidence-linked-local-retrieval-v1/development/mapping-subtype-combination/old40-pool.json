@@ -1,0 +1,2825 @@
+{
+  "candidates": [
+    {
+      "unit": {
+        "unit_id": "local-9b11c741a118d4ad5fe5ea1f-8d291008",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.vars.clean.strip_internal_keys.branch_75"
+        ],
+        "preconditions": [],
+        "statement": "def strip_internal_keys(dirty, exceptions=None):\n    # All keys starting with _ansible_ are internal, so change the 'dirty' mapping and remove them.\n\n    if exceptions is None:\n        exceptions = tuple()\n\n    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/clean.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 69,
+            "line_end": 93,
+            "exact_excerpt": "def strip_internal_keys(dirty, exceptions=None):\n    # All keys starting with _ansible_ are internal, so change the 'dirty' mapping and remove them.\n\n    if exceptions is None:\n        exceptions = tuple()\n\n    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleError",
+          "ansible.module_utils.six",
+          "ansible.plugins.loader.connection_loader",
+          "ansible.utils.display.Display",
+          "collections.abc.MutableMapping",
+          "collections.abc.MutableSequence",
+          "os",
+          "re"
+        ],
+        "serialized_payload": "[local-9b11c741a118d4ad5fe5ea1f-8d291008] Role: existing_behavior\nApplies to: lib.ansible.vars.clean.strip_internal_keys.branch_75\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/clean.py:69-93\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef strip_internal_keys(dirty, exceptions=None):\n    # All keys starting with _ansible_ are internal, so change the 'dirty' mapping and remove them.\n\n    if exceptions is None:\n        exceptions = tuple()\n\n    if isinstance(dirty, MutableSequence):\n\n        for element in dirty:\n            if isinstance(element, (MutableMapping, MutableSequence)):\n                strip_internal_keys(element, exceptions=exceptions)\n\n    elif isinstance(dirty, MutableMapping):\n\n        # listify to avoid updating dict while iterating over it\n        for k in list(dirty.keys()):\n            if isinstance(k, six.string_types):\n                if k.startswith('_ansible_') and k not in exceptions:\n                    del dirty[k]\n                    continue\n\n            if isinstance(dirty[k], (MutableMapping, MutableSequence)):\n                strip_internal_keys(dirty[k], exceptions=exceptions)\n    else:\n        raise AnsibleError(\"Cannot strip invalid keys from %s\" % type(dirty))\n"
+      },
+      "relevance": 0.6862675768348413,
+      "coverage": [
+        0.41368865842894337,
+        0.32000920998235444,
+        0.3723615777622977,
+        0.3389912523185048,
+        0.2292031719314794,
+        0.170729045914208,
+        0.4386481204726784,
+        0.48076312319224146
+      ],
+      "exposure": 0.05263157894736842,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6053922212109948,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9047208240867756,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5759954086694322,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.971796308205889,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "9b11c741a118d4ad5fe5ea1f",
+        "bm25": 1.0
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-9621145b9819ce4020d71079",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.config.manager.ensure_type.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    ''' return a configuration variable with casting\n    :arg value: The value to ensure correct typing of\n    :kwarg value_type: The type of the value.  This can be any of the following strings:\n        :boolean: sets the value to a True or False value\n        :bool: Same as 'boolean'\n        :integer: Sets the value to an integer or raises a ValueType error\n        :int: Same as 'integer'\n        :float: Sets the value to a float or raises a ValueType error\n        :list: Treats the value as a comma separated list.  Split the value\n            and return it as a python list.\n        :none: Sets the value to None\n        :path: Expands any environment variables and tilde's in the value.\n        :tmppath: Create a unique temporary directory inside of the directory\n            specified by value and return its path.\n        :temppath: Same as 'tmppath'\n        :tmp: Same as 'tmppath'\n        :pathlist: Treat the value as a typical PATH string.  (On POSIX, this\n            means comma separated strings.)  Split the value and then expand\n            each part for environment variables and tildes.\n        :pathspec: Treat the value as a PATH string. Expands any environment variables\n            tildes's in the value.\n        :str: Sets the value to string types.\n        :string: Same as 'str'\n    '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/config/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 49,
+            "line_end": 72,
+            "exact_excerpt": "    ''' return a configuration variable with casting\n    :arg value: The value to ensure correct typing of\n    :kwarg value_type: The type of the value.  This can be any of the following strings:\n        :boolean: sets the value to a True or False value\n        :bool: Same as 'boolean'\n        :integer: Sets the value to an integer or raises a ValueType error\n        :int: Same as 'integer'\n        :float: Sets the value to a float or raises a ValueType error\n        :list: Treats the value as a comma separated list.  Split the value\n            and return it as a python list.\n        :none: Sets the value to None\n        :path: Expands any environment variables and tilde's in the value.\n        :tmppath: Create a unique temporary directory inside of the directory\n            specified by value and return its path.\n        :temppath: Same as 'tmppath'\n        :tmp: Same as 'tmppath'\n        :pathlist: Treat the value as a typical PATH string.  (On POSIX, this\n            means comma separated strings.)  Split the value and then expand\n            each part for environment variables and tildes.\n        :pathspec: Treat the value as a PATH string. Expands any environment variables\n            tildes's in the value.\n        :str: Sets the value to string types.\n        :string: Same as 'str'\n    '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.common.yaml.yaml_load",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.yaml.objects.AnsibleVaultEncryptedUnicode",
+          "ansible.utils.path.cleanup_tmp_file",
+          "ansible.utils.path.makedirs_safe",
+          "ansible.utils.path.unfrackpath",
+          "ansible.utils.py3compat",
+          "atexit",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "collections.namedtuple",
+          "configparser",
+          "jinja2.nativetypes.NativeEnvironment",
+          "os",
+          "stat",
+          "sys",
+          "tempfile"
+        ],
+        "serialized_payload": "[local-9621145b9819ce4020d71079] Role: documented_contract\nApplies to: lib.ansible.config.manager.ensure_type.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/config/manager.py:49-72\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    ''' return a configuration variable with casting\n    :arg value: The value to ensure correct typing of\n    :kwarg value_type: The type of the value.  This can be any of the following strings:\n        :boolean: sets the value to a True or False value\n        :bool: Same as 'boolean'\n        :integer: Sets the value to an integer or raises a ValueType error\n        :int: Same as 'integer'\n        :float: Sets the value to a float or raises a ValueType error\n        :list: Treats the value as a comma separated list.  Split the value\n            and return it as a python list.\n        :none: Sets the value to None\n        :path: Expands any environment variables and tilde's in the value.\n        :tmppath: Create a unique temporary directory inside of the directory\n            specified by value and return its path.\n        :temppath: Same as 'tmppath'\n        :tmp: Same as 'tmppath'\n        :pathlist: Treat the value as a typical PATH string.  (On POSIX, this\n            means comma separated strings.)  Split the value and then expand\n            each part for environment variables and tildes.\n        :pathspec: Treat the value as a PATH string. Expands any environment variables\n            tildes's in the value.\n        :str: Sets the value to string types.\n        :string: Same as 'str'\n    '''\n"
+      },
+      "relevance": 0.4867402736403503,
+      "coverage": [
+        0.28812584390418045,
+        0.22689812053250197,
+        0.26199873524776496,
+        0.25994018580968603,
+        0.21985868146278478,
+        0.18696234017918073,
+        0.2824940997742467,
+        0.25501257192101645
+      ],
+      "exposure": 0.041666666666666664,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.500160446659618,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6616168899864692,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6538975032792143,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8571347223768121,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.4322461813824788,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7880285735366853,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9200759006086394,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9795052323383489,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "9621145b9819ce4020d71079",
+        "bm25": 0.912097361963696
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-0b84ef8cc701677b33249305-7bbd846f",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.base.FieldAttributeBase._post_validate_debugger.branch_196"
+        ],
+        "preconditions": [],
+        "statement": "    def _post_validate_debugger(self, attr, value, templar):\n        value = templar.template(value)\n        valid_values = frozenset(('always', 'on_failed', 'on_unreachable', 'on_skipped', 'never'))\n        if value and isinstance(value, string_types) and value not in valid_values:\n            raise AnsibleParserError(\"'%s' is not a valid value for debugger. Must be one of %s\" % (value, ', '.join(valid_values)), obj=self.get_ds())\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/base.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 193,
+            "line_end": 197,
+            "exact_excerpt": "    def _post_validate_debugger(self, attr, value, templar):\n        value = templar.template(value)\n        valid_values = frozenset(('always', 'on_failed', 'on_unreachable', 'on_skipped', 'never'))\n        if value and isinstance(value, string_types) and value not in valid_values:\n            raise AnsibleParserError(\"'%s' is not a valid value for debugger. Must be one of %s\" % (value, ', '.join(valid_values)), obj=self.get_ds())\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.ConnectionFieldAttribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.attribute.NonInheritableFieldAttribute",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.module_loader",
+          "ansible.utils.collection_loader._collection_finder.AnsibleCollectionRef",
+          "ansible.utils.collection_loader._collection_finder._get_collection_metadata",
+          "ansible.utils.display.Display",
+          "ansible.utils.sentinel.Sentinel",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.get_unique_id",
+          "ansible.utils.vars.isidentifier",
+          "copy.copy",
+          "functools.cache",
+          "itertools",
+          "jinja2.exceptions.UndefinedError",
+          "operator",
+          "os"
+        ],
+        "serialized_payload": "[local-0b84ef8cc701677b33249305-7bbd846f] Role: existing_behavior\nApplies to: lib.ansible.playbook.base.FieldAttributeBase._post_validate_debugger.branch_196\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/playbook/base.py:193-197\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _post_validate_debugger(self, attr, value, templar):\n        value = templar.template(value)\n        valid_values = frozenset(('always', 'on_failed', 'on_unreachable', 'on_skipped', 'never'))\n        if value and isinstance(value, string_types) and value not in valid_values:\n            raise AnsibleParserError(\"'%s' is not a valid value for debugger. Must be one of %s\" % (value, ', '.join(valid_values)), obj=self.get_ds())\n"
+      },
+      "relevance": 0.43849505224881274,
+      "coverage": [
+        0.23541957672296676,
+        0.3507059795542511,
+        0.2227872148596403,
+        0.2216652352499412,
+        0.17665257082316077,
+        0.1463011487037232,
+        0.3677291587435361,
+        0.32216528413156836
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7676116077841644,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9419494960556751,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8579981470977571,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7765716232491162,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6410458531749657,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "0b84ef8cc701677b33249305",
+        "bm25": 0.5794378663473116
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-9523cf690e1ad32bde279984-5106533f",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.executor.module_common._get_ansible_module_fqn.branch_1024"
+        ],
+        "preconditions": [],
+        "statement": "def _get_ansible_module_fqn(module_path):\n    \"\"\"\n    Get the fully qualified name for an ansible module based on its pathname\n\n    remote_module_fqn is the fully qualified name.  Like ansible.modules.system.ping\n    Or ansible_collections.Namespace.Collection_name.plugins.modules.ping\n    .. warning:: This function is for ansible modules only.  It won't work for other things\n        (non-module plugins, etc)\n    \"\"\"\n    remote_module_fqn = None\n\n    # Is this a core module?\n    match = CORE_LIBRARY_PATH_RE.search(module_path)\n    if not match:\n        # Is this a module in a collection?\n        match = COLLECTION_PATH_RE.search(module_path)\n\n    # We can tell the FQN for core modules and collection modules\n    if match:\n        path = match.group('path')\n        if '.' in path:\n            # FQNs must be valid as python identifiers.  This sanity check has failed.\n            # we could check other things as well\n            raise ValueError('Module name (or path) was not a valid python identifier')\n\n        remote_module_fqn = '.'.join(path.split('/'))\n    else:\n        # Currently we do not handle modules in roles so we can end up here for that reason\n        raise ValueError(\"Unable to determine module's fully qualified name\")\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/executor/module_common.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 1006,
+            "line_end": 1034,
+            "exact_excerpt": "def _get_ansible_module_fqn(module_path):\n    \"\"\"\n    Get the fully qualified name for an ansible module based on its pathname\n\n    remote_module_fqn is the fully qualified name.  Like ansible.modules.system.ping\n    Or ansible_collections.Namespace.Collection_name.plugins.modules.ping\n    .. warning:: This function is for ansible modules only.  It won't work for other things\n        (non-module plugins, etc)\n    \"\"\"\n    remote_module_fqn = None\n\n    # Is this a core module?\n    match = CORE_LIBRARY_PATH_RE.search(module_path)\n    if not match:\n        # Is this a module in a collection?\n        match = COLLECTION_PATH_RE.search(module_path)\n\n    # We can tell the FQN for core modules and collection modules\n    if match:\n        path = match.group('path')\n        if '.' in path:\n            # FQNs must be valid as python identifiers.  This sanity check has failed.\n            # we could check other things as well\n            raise ValueError('Module name (or path) was not a valid python identifier')\n\n        remote_module_fqn = '.'.join(path.split('/'))\n    else:\n        # Currently we do not handle modules in roles so we can end up here for that reason\n        raise ValueError(\"Unable to determine module's fully qualified name\")\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleError",
+          "ansible.executor.action_write_locks",
+          "ansible.executor.interpreter_discovery.InterpreterDiscoveryRequiredError",
+          "ansible.executor.powershell.module_manifest",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.plugins.loader.module_utils_loader",
+          "ansible.release.__author__",
+          "ansible.release.__version__",
+          "ansible.utils.collection_loader._collection_finder._get_collection_metadata",
+          "ansible.utils.collection_loader._collection_finder._nested_dict_get",
+          "ansible.utils.display.Display",
+          "ast",
+          "ast.AST",
+          "ast.Import",
+          "ast.ImportFrom",
+          "base64",
+          "collections.namedtuple",
+          "datetime",
+          "importlib",
+          "io.BytesIO",
+          "json",
+          "os",
+          "pkgutil",
+          "re",
+          "shlex",
+          "time",
+          "zipfile"
+        ],
+        "serialized_payload": "[local-9523cf690e1ad32bde279984-5106533f] Role: existing_behavior\nApplies to: lib.ansible.executor.module_common._get_ansible_module_fqn.branch_1024\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/executor/module_common.py:1006-1034\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef _get_ansible_module_fqn(module_path):\n    \"\"\"\n    Get the fully qualified name for an ansible module based on its pathname\n\n    remote_module_fqn is the fully qualified name.  Like ansible.modules.system.ping\n    Or ansible_collections.Namespace.Collection_name.plugins.modules.ping\n    .. warning:: This function is for ansible modules only.  It won't work for other things\n        (non-module plugins, etc)\n    \"\"\"\n    remote_module_fqn = None\n\n    # Is this a core module?\n    match = CORE_LIBRARY_PATH_RE.search(module_path)\n    if not match:\n        # Is this a module in a collection?\n        match = COLLECTION_PATH_RE.search(module_path)\n\n    # We can tell the FQN for core modules and collection modules\n    if match:\n        path = match.group('path')\n        if '.' in path:\n            # FQNs must be valid as python identifiers.  This sanity check has failed.\n            # we could check other things as well\n            raise ValueError('Module name (or path) was not a valid python identifier')\n\n        remote_module_fqn = '.'.join(path.split('/'))\n    else:\n        # Currently we do not handle modules in roles so we can end up here for that reason\n        raise ValueError(\"Unable to determine module's fully qualified name\")\n"
+      },
+      "relevance": 0.4976770979528455,
+      "coverage": [
+        0.1856878986898001,
+        0.33166771381071675,
+        0.22338195956783358,
+        0.21411352014635748,
+        0.24721141862504914,
+        0.13368549331779372,
+        0.3688633419733599,
+        0.33541095669889126
+      ],
+      "exposure": 0.12,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5558070300460918,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7581346965420629,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7621435128175125,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "9523cf690e1ad32bde279984",
+        "bm25": 0.7284004006859117
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-2ab8a7bbe1c107a1537e5ae0",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader._get_file_contents.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 143,
+            "line_end": 154,
+            "exact_excerpt": "        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-2ab8a7bbe1c107a1537e5ae0] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader._get_file_contents.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/parsing/dataloader.py:143-154\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        '''\n        Reads the file contents from the given file name\n\n        If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data\n\n        :arg file_name: The name of the file to read.  If this is a relative\n            path, it will be expanded relative to the basedir\n        :raises AnsibleFileNotFound: if the file_name does not refer to a file\n        :raises AnsibleParserError: if we were unable to read the file\n        :return: Returns a byte string of the file contents\n        '''\n"
+      },
+      "relevance": 0.40008180929056364,
+      "coverage": [
+        0.1600751698209432,
+        0.2616958465116732,
+        0.18930177996403202,
+        0.15499642876481262,
+        0.061543994734122746,
+        0.012688648033134407,
+        0.33465991328007205,
+        0.272834900042546
+      ],
+      "exposure": 0.2,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5486270386256666,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.3585062356683265,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9594998931190856,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "2ab8a7bbe1c107a1537e5ae0",
+        "bm25": 0.6830308871604548
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-e648ed73084a93d23da2967f-9281c960",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.config.manager.ConfigManager._parse_config_file.branch_326"
+        ],
+        "preconditions": [],
+        "statement": "    def _parse_config_file(self, cfile=None):\n        ''' return flat configuration settings from file(s) '''\n        # TODO: take list of files with merge/nomerge\n\n        if cfile is None:\n            cfile = self._config_file\n\n        ftype = get_config_type(cfile)\n        if cfile is not None:\n            if ftype == 'ini':\n                self._parsers[cfile] = configparser.ConfigParser(inline_comment_prefixes=(';',))\n                with open(to_bytes(cfile), 'rb') as f:\n                    try:\n                        cfg_text = to_text(f.read(), errors='surrogate_or_strict')\n                    except UnicodeError as e:\n                        raise AnsibleOptionsError(\"Error reading config file(%s) because the config file was not utf8 encoded: %s\" % (cfile, to_native(e)))\n                try:\n                    self._parsers[cfile].read_string(cfg_text)\n                except configparser.Error as e:\n                    raise AnsibleOptionsError(\"Error reading config file (%s): %s\" % (cfile, to_native(e)))\n            # FIXME: this should eventually handle yaml config files\n            # elif ftype == 'yaml':\n            #     with open(cfile, 'rb') as config_stream:\n            #         self._parsers[cfile] = yaml_load(config_stream)\n            else:\n                raise AnsibleOptionsError(\"Unsupported configuration file type: %s\" % to_native(ftype))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/config/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 318,
+            "line_end": 343,
+            "exact_excerpt": "    def _parse_config_file(self, cfile=None):\n        ''' return flat configuration settings from file(s) '''\n        # TODO: take list of files with merge/nomerge\n\n        if cfile is None:\n            cfile = self._config_file\n\n        ftype = get_config_type(cfile)\n        if cfile is not None:\n            if ftype == 'ini':\n                self._parsers[cfile] = configparser.ConfigParser(inline_comment_prefixes=(';',))\n                with open(to_bytes(cfile), 'rb') as f:\n                    try:\n                        cfg_text = to_text(f.read(), errors='surrogate_or_strict')\n                    except UnicodeError as e:\n                        raise AnsibleOptionsError(\"Error reading config file(%s) because the config file was not utf8 encoded: %s\" % (cfile, to_native(e)))\n                try:\n                    self._parsers[cfile].read_string(cfg_text)\n                except configparser.Error as e:\n                    raise AnsibleOptionsError(\"Error reading config file (%s): %s\" % (cfile, to_native(e)))\n            # FIXME: this should eventually handle yaml config files\n            # elif ftype == 'yaml':\n            #     with open(cfile, 'rb') as config_stream:\n            #         self._parsers[cfile] = yaml_load(config_stream)\n            else:\n                raise AnsibleOptionsError(\"Unsupported configuration file type: %s\" % to_native(ftype))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.common.yaml.yaml_load",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.yaml.objects.AnsibleVaultEncryptedUnicode",
+          "ansible.utils.path.cleanup_tmp_file",
+          "ansible.utils.path.makedirs_safe",
+          "ansible.utils.path.unfrackpath",
+          "ansible.utils.py3compat",
+          "atexit",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "collections.namedtuple",
+          "configparser",
+          "jinja2.nativetypes.NativeEnvironment",
+          "os",
+          "stat",
+          "sys",
+          "tempfile"
+        ],
+        "serialized_payload": "[local-e648ed73084a93d23da2967f-9281c960] Role: existing_behavior\nApplies to: lib.ansible.config.manager.ConfigManager._parse_config_file.branch_326\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/config/manager.py:318-343\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _parse_config_file(self, cfile=None):\n        ''' return flat configuration settings from file(s) '''\n        # TODO: take list of files with merge/nomerge\n\n        if cfile is None:\n            cfile = self._config_file\n\n        ftype = get_config_type(cfile)\n        if cfile is not None:\n            if ftype == 'ini':\n                self._parsers[cfile] = configparser.ConfigParser(inline_comment_prefixes=(';',))\n                with open(to_bytes(cfile), 'rb') as f:\n                    try:\n                        cfg_text = to_text(f.read(), errors='surrogate_or_strict')\n                    except UnicodeError as e:\n                        raise AnsibleOptionsError(\"Error reading config file(%s) because the config file was not utf8 encoded: %s\" % (cfile, to_native(e)))\n                try:\n                    self._parsers[cfile].read_string(cfg_text)\n                except configparser.Error as e:\n                    raise AnsibleOptionsError(\"Error reading config file (%s): %s\" % (cfile, to_native(e)))\n            # FIXME: this should eventually handle yaml config files\n            # elif ftype == 'yaml':\n            #     with open(cfile, 'rb') as config_stream:\n            #         self._parsers[cfile] = yaml_load(config_stream)\n            else:\n                raise AnsibleOptionsError(\"Unsupported configuration file type: %s\" % to_native(ftype))\n"
+      },
+      "relevance": 0.4070427131213067,
+      "coverage": [
+        0.27057758112821634,
+        0.27183381556565506,
+        0.20261327899268972,
+        0.17737725560137713,
+        0.1662961513797548,
+        0.14928570380969908,
+        0.3425777022184666,
+        0.294500305755276
+      ],
+      "exposure": 0.125,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8419972623447316,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "e648ed73084a93d23da2967f",
+        "bm25": 0.5499292450204217
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-8647bb25fc3c5def2650ce80-1cdd6fb4",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.attribute.Attribute.__init__.branch_84"
+        ],
+        "preconditions": [],
+        "statement": "    def __init__(\n        self,\n        isa=None,\n        private=False,\n        default=None,\n        required=False,\n        listof=None,\n        priority=0,\n        class_type=None,\n        always_post_validate=False,\n        alias=None,\n        static=False,\n    ):\n\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n\n        self.isa = isa\n        self.private = private\n        self.default = default\n        self.required = required\n        self.listof = listof\n        self.priority = priority\n        self.class_type = class_type\n        self.always_post_validate = always_post_validate\n        self.alias = alias\n        self.static = static\n\n        if default is not None and self.isa in _CONTAINERS and not callable(default):\n            raise TypeError('defaults for FieldAttribute may not be mutable, please provide a callable instead')\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/attribute.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 29,
+            "line_end": 85,
+            "exact_excerpt": "    def __init__(\n        self,\n        isa=None,\n        private=False,\n        default=None,\n        required=False,\n        listof=None,\n        priority=0,\n        class_type=None,\n        always_post_validate=False,\n        alias=None,\n        static=False,\n    ):\n\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n\n        self.isa = isa\n        self.private = private\n        self.default = default\n        self.required = required\n        self.listof = listof\n        self.priority = priority\n        self.class_type = class_type\n        self.always_post_validate = always_post_validate\n        self.alias = alias\n        self.static = static\n\n        if default is not None and self.isa in _CONTAINERS and not callable(default):\n            raise TypeError('defaults for FieldAttribute may not be mutable, please provide a callable instead')\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.utils.sentinel.Sentinel"
+        ],
+        "serialized_payload": "[local-8647bb25fc3c5def2650ce80-1cdd6fb4] Role: existing_behavior\nApplies to: lib.ansible.playbook.attribute.Attribute.__init__.branch_84\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/playbook/attribute.py:29-85\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def __init__(\n        self,\n        isa=None,\n        private=False,\n        default=None,\n        required=False,\n        listof=None,\n        priority=0,\n        class_type=None,\n        always_post_validate=False,\n        alias=None,\n        static=False,\n    ):\n\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n\n        self.isa = isa\n        self.private = private\n        self.default = default\n        self.required = required\n        self.listof = listof\n        self.priority = priority\n        self.class_type = class_type\n        self.always_post_validate = always_post_validate\n        self.alias = alias\n        self.static = static\n\n        if default is not None and self.isa in _CONTAINERS and not callable(default):\n            raise TypeError('defaults for FieldAttribute may not be mutable, please provide a callable instead')\n"
+      },
+      "relevance": 0.3478330740052727,
+      "coverage": [
+        0.18100079789372098,
+        0.20729852549898545,
+        0.18016546107033124,
+        0.18520655816523737,
+        0.11184062890908736,
+        0.18668588664712782,
+        0.2399578802173937,
+        0.31923991717318057
+      ],
+      "exposure": 0.03773584905660377,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6295272218026086,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "8647bb25fc3c5def2650ce80",
+        "bm25": 0.496181110731885
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-a1c929e0c60f4f10edf3bf42-67fa2692",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.template._create_overlay.branch_171"
+        ],
+        "preconditions": [],
+        "statement": "def _create_overlay(data, overrides, jinja_env):\n    if overrides is None:\n        overrides = {}\n\n    try:\n        has_override_header = data.startswith(JINJA2_OVERRIDE)\n    except (TypeError, AttributeError):\n        has_override_header = False\n\n    if overrides or has_override_header:\n        overlay = jinja_env.overlay(**overrides)\n    else:\n        overlay = jinja_env\n\n    # Get jinja env overrides from template\n    if has_override_header:\n        eol = data.find('\\n')\n        line = data[len(JINJA2_OVERRIDE):eol]\n        data = data[eol + 1:]\n        for pair in line.split(','):\n            if ':' not in pair:\n                raise AnsibleError(\"failed to parse jinja2 override '%s'.\"\n                                   \" Did you use something different from colon as key-value separator?\" % pair.strip())\n            (key, val) = pair.split(':', 1)\n            key = key.strip()\n            if hasattr(overlay, key):\n                setattr(overlay, key, ast.literal_eval(val.strip()))\n            else:\n                display.warning(f\"Could not find Jinja2 environment setting to override: '{key}'\")\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/template/__init__.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 156,
+            "line_end": 184,
+            "exact_excerpt": "def _create_overlay(data, overrides, jinja_env):\n    if overrides is None:\n        overrides = {}\n\n    try:\n        has_override_header = data.startswith(JINJA2_OVERRIDE)\n    except (TypeError, AttributeError):\n        has_override_header = False\n\n    if overrides or has_override_header:\n        overlay = jinja_env.overlay(**overrides)\n    else:\n        overlay = jinja_env\n\n    # Get jinja env overrides from template\n    if has_override_header:\n        eol = data.find('\\n')\n        line = data[len(JINJA2_OVERRIDE):eol]\n        data = data[eol + 1:]\n        for pair in line.split(','):\n            if ':' not in pair:\n                raise AnsibleError(\"failed to parse jinja2 override '%s'.\"\n                                   \" Did you use something different from colon as key-value separator?\" % pair.strip())\n            (key, val) = pair.split(':', 1)\n            key = key.strip()\n            if hasattr(overlay, key):\n                setattr(overlay, key, ast.literal_eval(val.strip()))\n            else:\n                display.warning(f\"Could not find Jinja2 environment setting to override: '{key}'\")\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleLookupError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.common.collections.is_sequence",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.plugins.loader.filter_loader",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.plugins.loader.test_loader",
+          "ansible.template.native_helpers.ansible_concat",
+          "ansible.template.native_helpers.ansible_eval_concat",
+          "ansible.template.native_helpers.ansible_native_concat",
+          "ansible.template.template.AnsibleJ2Template",
+          "ansible.template.vars.AnsibleJ2Vars",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.native_jinja.NativeJinjaText",
+          "ansible.utils.unsafe_proxy.to_unsafe_text",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ast",
+          "collections.abc.Iterator",
+          "collections.abc.Mapping",
+          "collections.abc.MappingView",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "contextlib.contextmanager",
+          "datetime",
+          "jinja2.exceptions.TemplateSyntaxError",
+          "jinja2.exceptions.UndefinedError",
+          "jinja2.loaders.FileSystemLoader",
+          "jinja2.nativetypes.NativeEnvironment",
+          "jinja2.runtime.Context",
+          "jinja2.runtime.StrictUndefined",
+          "numbers.Number",
+          "os",
+          "pwd",
+          "re",
+          "time",
+          "traceback.format_exc"
+        ],
+        "serialized_payload": "[local-a1c929e0c60f4f10edf3bf42-67fa2692] Role: existing_behavior\nApplies to: lib.ansible.template._create_overlay.branch_171\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/template/__init__.py:156-184\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef _create_overlay(data, overrides, jinja_env):\n    if overrides is None:\n        overrides = {}\n\n    try:\n        has_override_header = data.startswith(JINJA2_OVERRIDE)\n    except (TypeError, AttributeError):\n        has_override_header = False\n\n    if overrides or has_override_header:\n        overlay = jinja_env.overlay(**overrides)\n    else:\n        overlay = jinja_env\n\n    # Get jinja env overrides from template\n    if has_override_header:\n        eol = data.find('\\n')\n        line = data[len(JINJA2_OVERRIDE):eol]\n        data = data[eol + 1:]\n        for pair in line.split(','):\n            if ':' not in pair:\n                raise AnsibleError(\"failed to parse jinja2 override '%s'.\"\n                                   \" Did you use something different from colon as key-value separator?\" % pair.strip())\n            (key, val) = pair.split(':', 1)\n            key = key.strip()\n            if hasattr(overlay, key):\n                setattr(overlay, key, ast.literal_eval(val.strip()))\n            else:\n                display.warning(f\"Could not find Jinja2 environment setting to override: '{key}'\")\n"
+      },
+      "relevance": 0.4475660484875928,
+      "coverage": [
+        0.29746170709238556,
+        0.22635079299870728,
+        0.22747282974076197,
+        0.20427692060371502,
+        0.19418005387686982,
+        0.13391256900270906,
+        0.30618545405220915,
+        0.3477677454673194
+      ],
+      "exposure": 0.11538461538461539,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "a1c929e0c60f4f10edf3bf42",
+        "bm25": 0.6238410607571294
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-593e70354a18cdc6b2bb3cfc",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 37,
+            "line_end": 52,
+            "exact_excerpt": "    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-593e70354a18cdc6b2bb3cfc] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/parsing/dataloader.py:37-52\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n"
+      },
+      "relevance": 0.3912644033452814,
+      "coverage": [
+        0.1804214395995008,
+        0.23577420477588396,
+        0.1398782944356992,
+        0.14425035849421253,
+        0.043991292731247494,
+        0.011020775375559675,
+        0.34849325205022014,
+        0.2677589132292312
+      ],
+      "exposure": 0.15384615384615385,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9103613721397991,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "593e70354a18cdc6b2bb3cfc",
+        "bm25": 0.6291050327002081
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-315d59a2eb53ae37c2577055-79bb2c41",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.config.manager.get_config_type.branch_177"
+        ],
+        "preconditions": [],
+        "statement": "def get_config_type(cfile):\n\n    ftype = None\n    if cfile is not None:\n        ext = os.path.splitext(cfile)[-1]\n        if ext in ('.ini', '.cfg'):\n            ftype = 'ini'\n        elif ext in ('.yaml', '.yml'):\n            ftype = 'yaml'\n        else:\n            raise AnsibleOptionsError(\"Unsupported configuration file extension for %s: %s\" % (cfile, to_native(ext)))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/config/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 174,
+            "line_end": 184,
+            "exact_excerpt": "def get_config_type(cfile):\n\n    ftype = None\n    if cfile is not None:\n        ext = os.path.splitext(cfile)[-1]\n        if ext in ('.ini', '.cfg'):\n            ftype = 'ini'\n        elif ext in ('.yaml', '.yml'):\n            ftype = 'yaml'\n        else:\n            raise AnsibleOptionsError(\"Unsupported configuration file extension for %s: %s\" % (cfile, to_native(ext)))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.common.yaml.yaml_load",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.yaml.objects.AnsibleVaultEncryptedUnicode",
+          "ansible.utils.path.cleanup_tmp_file",
+          "ansible.utils.path.makedirs_safe",
+          "ansible.utils.path.unfrackpath",
+          "ansible.utils.py3compat",
+          "atexit",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "collections.namedtuple",
+          "configparser",
+          "jinja2.nativetypes.NativeEnvironment",
+          "os",
+          "stat",
+          "sys",
+          "tempfile"
+        ],
+        "serialized_payload": "[local-315d59a2eb53ae37c2577055-79bb2c41] Role: existing_behavior\nApplies to: lib.ansible.config.manager.get_config_type.branch_177\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/config/manager.py:174-184\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef get_config_type(cfile):\n\n    ftype = None\n    if cfile is not None:\n        ext = os.path.splitext(cfile)[-1]\n        if ext in ('.ini', '.cfg'):\n            ftype = 'ini'\n        elif ext in ('.yaml', '.yml'):\n            ftype = 'yaml'\n        else:\n            raise AnsibleOptionsError(\"Unsupported configuration file extension for %s: %s\" % (cfile, to_native(ext)))\n"
+      },
+      "relevance": 0.3814410856918004,
+      "coverage": [
+        0.21515015743594362,
+        0.29683895138112865,
+        0.15381586468882028,
+        0.15716371841914464,
+        0.1406957873286224,
+        0.0995058134142707,
+        0.35429109169377215,
+        0.30881782646349554
+      ],
+      "exposure": 0.1,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5934313256769518,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "315d59a2eb53ae37c2577055",
+        "bm25": 0.41971779178999163
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-d16c1a90d8266e2a1341e471",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.template.is_possibly_template.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"Determines if a string looks like a template, by seeing if it\n    contains a jinja2 start delimiter. Does not guarantee that the string\n    is actually a template.\n\n    This is different than ``is_template`` which is more strict.\n    This method may return ``True`` on a string that is not templatable.\n\n    Useful when guarding passing a string for templating, but when\n    you want to allow the templating engine to make the final\n    assessment which may result in ``TemplateSyntaxError``.\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/template/__init__.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 190,
+            "line_end": 200,
+            "exact_excerpt": "    \"\"\"Determines if a string looks like a template, by seeing if it\n    contains a jinja2 start delimiter. Does not guarantee that the string\n    is actually a template.\n\n    This is different than ``is_template`` which is more strict.\n    This method may return ``True`` on a string that is not templatable.\n\n    Useful when guarding passing a string for templating, but when\n    you want to allow the templating engine to make the final\n    assessment which may result in ``TemplateSyntaxError``.\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleLookupError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.common.collections.is_sequence",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.plugins.loader.filter_loader",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.plugins.loader.test_loader",
+          "ansible.template.native_helpers.ansible_concat",
+          "ansible.template.native_helpers.ansible_eval_concat",
+          "ansible.template.native_helpers.ansible_native_concat",
+          "ansible.template.template.AnsibleJ2Template",
+          "ansible.template.vars.AnsibleJ2Vars",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.native_jinja.NativeJinjaText",
+          "ansible.utils.unsafe_proxy.to_unsafe_text",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ast",
+          "collections.abc.Iterator",
+          "collections.abc.Mapping",
+          "collections.abc.MappingView",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "contextlib.contextmanager",
+          "datetime",
+          "jinja2.exceptions.TemplateSyntaxError",
+          "jinja2.exceptions.UndefinedError",
+          "jinja2.loaders.FileSystemLoader",
+          "jinja2.nativetypes.NativeEnvironment",
+          "jinja2.runtime.Context",
+          "jinja2.runtime.StrictUndefined",
+          "numbers.Number",
+          "os",
+          "pwd",
+          "re",
+          "time",
+          "traceback.format_exc"
+        ],
+        "serialized_payload": "[local-d16c1a90d8266e2a1341e471] Role: documented_contract\nApplies to: lib.ansible.template.is_possibly_template.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/template/__init__.py:190-200\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"Determines if a string looks like a template, by seeing if it\n    contains a jinja2 start delimiter. Does not guarantee that the string\n    is actually a template.\n\n    This is different than ``is_template`` which is more strict.\n    This method may return ``True`` on a string that is not templatable.\n\n    Useful when guarding passing a string for templating, but when\n    you want to allow the templating engine to make the final\n    assessment which may result in ``TemplateSyntaxError``.\n    \"\"\"\n"
+      },
+      "relevance": 0.34054945152473065,
+      "coverage": [
+        0.17955328317928337,
+        0.2166463879852044,
+        0.11205720285717301,
+        0.12550717033325706,
+        0.11149811760105541,
+        0.11125346254688315,
+        0.23211917620259265,
+        0.180492058993545
+      ],
+      "exposure": 0.1111111111111111,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.39355993143134815,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.677558320049501,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8999285517323026,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7733244957739468,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9355747179527193,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "d16c1a90d8266e2a1341e471",
+        "bm25": 0.7361137181454029
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-8f36ccce0a63f8ed5ec5cca6-2a9df6e1",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.Playbook._load_playbook_data.branch_76"
+        ],
+        "preconditions": [],
+        "statement": "    def _load_playbook_data(self, file_name, variable_manager, vars=None):\n\n        if os.path.isabs(file_name):\n            self._basedir = os.path.dirname(file_name)\n        else:\n            self._basedir = os.path.normpath(os.path.join(self._basedir, os.path.dirname(file_name)))\n\n        # set the loaders basedir\n        cur_basedir = self._loader.get_basedir()\n        self._loader.set_basedir(self._basedir)\n\n        add_all_plugin_dirs(self._basedir)\n\n        self._file_name = file_name\n\n        try:\n            ds = self._loader.load_from_file(os.path.basename(file_name))\n        except UnicodeDecodeError as e:\n            raise AnsibleParserError(\"Could not read playbook (%s) due to encoding issues: %s\" % (file_name, to_native(e)))\n\n        # check for errors and restore the basedir in case this error is caught and handled\n        if ds is None:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"Empty playbook, nothing to do: %s\" % unfrackpath(file_name), obj=ds)\n        elif not isinstance(ds, list):\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must be a list of plays, got a %s instead: %s\" % (type(ds), unfrackpath(file_name)), obj=ds)\n        elif not ds:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must contain at least one play: %s\" % unfrackpath(file_name))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/__init__.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 55,
+            "line_end": 84,
+            "exact_excerpt": "    def _load_playbook_data(self, file_name, variable_manager, vars=None):\n\n        if os.path.isabs(file_name):\n            self._basedir = os.path.dirname(file_name)\n        else:\n            self._basedir = os.path.normpath(os.path.join(self._basedir, os.path.dirname(file_name)))\n\n        # set the loaders basedir\n        cur_basedir = self._loader.get_basedir()\n        self._loader.set_basedir(self._basedir)\n\n        add_all_plugin_dirs(self._basedir)\n\n        self._file_name = file_name\n\n        try:\n            ds = self._loader.load_from_file(os.path.basename(file_name))\n        except UnicodeDecodeError as e:\n            raise AnsibleParserError(\"Could not read playbook (%s) due to encoding issues: %s\" % (file_name, to_native(e)))\n\n        # check for errors and restore the basedir in case this error is caught and handled\n        if ds is None:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"Empty playbook, nothing to do: %s\" % unfrackpath(file_name), obj=ds)\n        elif not isinstance(ds, list):\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must be a list of plays, got a %s instead: %s\" % (type(ds), unfrackpath(file_name)), obj=ds)\n        elif not ds:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must contain at least one play: %s\" % unfrackpath(file_name))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.playbook.play.Play",
+          "ansible.playbook.playbook_include.PlaybookInclude",
+          "ansible.plugins.loader.add_all_plugin_dirs",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "os"
+        ],
+        "serialized_payload": "[local-8f36ccce0a63f8ed5ec5cca6-2a9df6e1] Role: existing_behavior\nApplies to: lib.ansible.playbook.Playbook._load_playbook_data.branch_76\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/playbook/__init__.py:55-84\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _load_playbook_data(self, file_name, variable_manager, vars=None):\n\n        if os.path.isabs(file_name):\n            self._basedir = os.path.dirname(file_name)\n        else:\n            self._basedir = os.path.normpath(os.path.join(self._basedir, os.path.dirname(file_name)))\n\n        # set the loaders basedir\n        cur_basedir = self._loader.get_basedir()\n        self._loader.set_basedir(self._basedir)\n\n        add_all_plugin_dirs(self._basedir)\n\n        self._file_name = file_name\n\n        try:\n            ds = self._loader.load_from_file(os.path.basename(file_name))\n        except UnicodeDecodeError as e:\n            raise AnsibleParserError(\"Could not read playbook (%s) due to encoding issues: %s\" % (file_name, to_native(e)))\n\n        # check for errors and restore the basedir in case this error is caught and handled\n        if ds is None:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"Empty playbook, nothing to do: %s\" % unfrackpath(file_name), obj=ds)\n        elif not isinstance(ds, list):\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must be a list of plays, got a %s instead: %s\" % (type(ds), unfrackpath(file_name)), obj=ds)\n        elif not ds:\n            self._loader.set_basedir(cur_basedir)\n            raise AnsibleParserError(\"A playbook must contain at least one play: %s\" % unfrackpath(file_name))\n"
+      },
+      "relevance": 0.3289325845796017,
+      "coverage": [
+        0.16832164976427877,
+        0.3028094426581734,
+        0.15531072562166617,
+        0.1836355119480076,
+        0.10263311205388076,
+        0.12061939899730109,
+        0.3688188937548471,
+        0.2970736241329311
+      ],
+      "exposure": 0.08333333333333333,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.45679291858798055,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9119954499804951,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "8f36ccce0a63f8ed5ec5cca6",
+        "bm25": 0.31497252364652845
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-211038fbd495f363d11f713f",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.playbook.base.FieldAttributeBase._validate_attributes.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        '''\n        Ensures that there are no keys in the datastructure which do\n        not map to attributes for this object.\n        '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/base.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 201,
+            "line_end": 204,
+            "exact_excerpt": "        '''\n        Ensures that there are no keys in the datastructure which do\n        not map to attributes for this object.\n        '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.ConnectionFieldAttribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.attribute.NonInheritableFieldAttribute",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.module_loader",
+          "ansible.utils.collection_loader._collection_finder.AnsibleCollectionRef",
+          "ansible.utils.collection_loader._collection_finder._get_collection_metadata",
+          "ansible.utils.display.Display",
+          "ansible.utils.sentinel.Sentinel",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.get_unique_id",
+          "ansible.utils.vars.isidentifier",
+          "copy.copy",
+          "functools.cache",
+          "itertools",
+          "jinja2.exceptions.UndefinedError",
+          "operator",
+          "os"
+        ],
+        "serialized_payload": "[local-211038fbd495f363d11f713f] Role: documented_contract\nApplies to: lib.ansible.playbook.base.FieldAttributeBase._validate_attributes.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/playbook/base.py:201-204\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        '''\n        Ensures that there are no keys in the datastructure which do\n        not map to attributes for this object.\n        '''\n"
+      },
+      "relevance": 0.31966805534744924,
+      "coverage": [
+        0.22015856656721106,
+        0.1869605251805516,
+        0.2814637437507091,
+        0.25315206200384205,
+        0.17570288662094033,
+        0.24210210299669802,
+        0.15470194717543512,
+        0.28491714398066204
+      ],
+      "exposure": 0.5,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.38805312875026926,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6507830769907398,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "211038fbd495f363d11f713f",
+        "bm25": 0.4596953350386795
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-e24cdc3e0eccb6681c183137",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.utils._junit_xml._attributes.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"Return the given kwargs as a dictionary with values converted to strings. Items with a value of None will be omitted.\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 272,
+            "line_end": 272,
+            "exact_excerpt": "    \"\"\"Return the given kwargs as a dictionary with values converted to strings. Items with a value of None will be omitted.\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "abc",
+          "dataclasses",
+          "datetime",
+          "decimal",
+          "xml.dom.minidom",
+          "xml.etree.ElementTree"
+        ],
+        "serialized_payload": "[local-e24cdc3e0eccb6681c183137] Role: documented_contract\nApplies to: lib.ansible.utils._junit_xml._attributes.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/_junit_xml.py:272-272\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"Return the given kwargs as a dictionary with values converted to strings. Items with a value of None will be omitted.\"\"\"\n"
+      },
+      "relevance": 0.31868830269250575,
+      "coverage": [
+        0.28734219078608186,
+        0.12606234593473534,
+        0.25488134722505384,
+        0.16962052993851234,
+        0.13319853428977885,
+        0.13403432977555396,
+        0.25314998677117595,
+        0.1802022248506546
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.49294409754684854,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6444630254048723,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9732873292161682,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "e24cdc3e0eccb6681c183137",
+        "bm25": 0.6131174605271856
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-f6a9f8b4d34f84b3d20b923f-2a97e1f9",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.plugins.filter.core.regex_escape.branch_197"
+        ],
+        "preconditions": [],
+        "statement": "def regex_escape(string, re_type='python'):\n    \"\"\"Escape all regular expressions special characters from STRING.\"\"\"\n    string = to_text(string, errors='surrogate_or_strict', nonstring='simplerepr')\n    if re_type == 'python':\n        return re.escape(string)\n    elif re_type == 'posix_basic':\n        # list of BRE special chars:\n        # https://en.wikibooks.org/wiki/Regular_Expressions/POSIX_Basic_Regular_Expressions\n        return regex_replace(string, r'([].[^$*\\\\])', r'\\\\\\1')\n    # TODO: implement posix_extended\n    # It's similar to, but different from python regex, which is similar to,\n    # but different from PCRE.  It's possible that re.escape would work here.\n    # https://remram44.github.io/regex-cheatsheet/regex.html#programs\n    elif re_type == 'posix_extended':\n        raise AnsibleFilterError('Regex type (%s) not yet implemented' % re_type)\n    else:\n        raise AnsibleFilterError('Invalid regex type (%s)' % re_type)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/filter/core.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 194,
+            "line_end": 210,
+            "exact_excerpt": "def regex_escape(string, re_type='python'):\n    \"\"\"Escape all regular expressions special characters from STRING.\"\"\"\n    string = to_text(string, errors='surrogate_or_strict', nonstring='simplerepr')\n    if re_type == 'python':\n        return re.escape(string)\n    elif re_type == 'posix_basic':\n        # list of BRE special chars:\n        # https://en.wikibooks.org/wiki/Regular_Expressions/POSIX_Basic_Regular_Expressions\n        return regex_replace(string, r'([].[^$*\\\\])', r'\\\\\\1')\n    # TODO: implement posix_extended\n    # It's similar to, but different from python regex, which is similar to,\n    # but different from PCRE.  It's possible that re.escape would work here.\n    # https://remram44.github.io/regex-cheatsheet/regex.html#programs\n    elif re_type == 'posix_extended':\n        raise AnsibleFilterError('Regex type (%s) not yet implemented' % re_type)\n    else:\n        raise AnsibleFilterError('Invalid regex type (%s)' % re_type)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleFilterTypeError",
+          "ansible.module_utils.common.collections.is_sequence",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.common.yaml.yaml_load",
+          "ansible.module_utils.common.yaml.yaml_load_all",
+          "ansible.module_utils.six.integer_types",
+          "ansible.module_utils.six.reraise",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.ajson.AnsibleJSONEncoder",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.template.recursive_check_defined",
+          "ansible.utils.display.Display",
+          "ansible.utils.encrypt.PASSLIB_AVAILABLE",
+          "ansible.utils.encrypt.do_encrypt",
+          "ansible.utils.hashing.checksum_s",
+          "ansible.utils.hashing.md5s",
+          "ansible.utils.unicode.unicode_wrap",
+          "ansible.utils.vars.merge_hash",
+          "base64",
+          "collections.abc.Mapping",
+          "datetime",
+          "functools.partial",
+          "glob",
+          "hashlib",
+          "jinja2.filters.pass_environment",
+          "json",
+          "ntpath",
+          "os",
+          "random.Random",
+          "random.SystemRandom",
+          "random.shuffle",
+          "re",
+          "shlex",
+          "sys",
+          "time",
+          "uuid",
+          "yaml"
+        ],
+        "serialized_payload": "[local-f6a9f8b4d34f84b3d20b923f-2a97e1f9] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.core.regex_escape.branch_197\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/plugins/filter/core.py:194-210\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef regex_escape(string, re_type='python'):\n    \"\"\"Escape all regular expressions special characters from STRING.\"\"\"\n    string = to_text(string, errors='surrogate_or_strict', nonstring='simplerepr')\n    if re_type == 'python':\n        return re.escape(string)\n    elif re_type == 'posix_basic':\n        # list of BRE special chars:\n        # https://en.wikibooks.org/wiki/Regular_Expressions/POSIX_Basic_Regular_Expressions\n        return regex_replace(string, r'([].[^$*\\\\])', r'\\\\\\1')\n    # TODO: implement posix_extended\n    # It's similar to, but different from python regex, which is similar to,\n    # but different from PCRE.  It's possible that re.escape would work here.\n    # https://remram44.github.io/regex-cheatsheet/regex.html#programs\n    elif re_type == 'posix_extended':\n        raise AnsibleFilterError('Regex type (%s) not yet implemented' % re_type)\n    else:\n        raise AnsibleFilterError('Invalid regex type (%s)' % re_type)\n"
+      },
+      "relevance": 0.3022023979697392,
+      "coverage": [
+        0.21375760491718315,
+        0.12304336547402014,
+        0.13938664750320737,
+        0.08329343606302225,
+        0.17317321757476595,
+        0.0940985319222479,
+        0.21935292120133182,
+        0.1604221994711345
+      ],
+      "exposure": 0.058823529411764705,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.832170424334841,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "f6a9f8b4d34f84b3d20b923f",
+        "bm25": 0.5371122107174103
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-4bcec7c3bcd3d99f1ecdb30f-e0c283a4",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.plugins.filter.core.strftime.branch_104"
+        ],
+        "preconditions": [],
+        "statement": "def strftime(string_format, second=None, utc=False):\n    ''' return a date string using string. See https://docs.python.org/3/library/time.html#time.strftime for format '''\n    if utc:\n        timefn = time.gmtime\n    else:\n        timefn = time.localtime\n    if second is not None:\n        try:\n            second = float(second)\n        except Exception:\n            raise AnsibleFilterError('Invalid value for epoch value (%s)' % second)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/filter/core.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 98,
+            "line_end": 108,
+            "exact_excerpt": "def strftime(string_format, second=None, utc=False):\n    ''' return a date string using string. See https://docs.python.org/3/library/time.html#time.strftime for format '''\n    if utc:\n        timefn = time.gmtime\n    else:\n        timefn = time.localtime\n    if second is not None:\n        try:\n            second = float(second)\n        except Exception:\n            raise AnsibleFilterError('Invalid value for epoch value (%s)' % second)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleFilterTypeError",
+          "ansible.module_utils.common.collections.is_sequence",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.common.yaml.yaml_load",
+          "ansible.module_utils.common.yaml.yaml_load_all",
+          "ansible.module_utils.six.integer_types",
+          "ansible.module_utils.six.reraise",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.ajson.AnsibleJSONEncoder",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.template.recursive_check_defined",
+          "ansible.utils.display.Display",
+          "ansible.utils.encrypt.PASSLIB_AVAILABLE",
+          "ansible.utils.encrypt.do_encrypt",
+          "ansible.utils.hashing.checksum_s",
+          "ansible.utils.hashing.md5s",
+          "ansible.utils.unicode.unicode_wrap",
+          "ansible.utils.vars.merge_hash",
+          "base64",
+          "collections.abc.Mapping",
+          "datetime",
+          "functools.partial",
+          "glob",
+          "hashlib",
+          "jinja2.filters.pass_environment",
+          "json",
+          "ntpath",
+          "os",
+          "random.Random",
+          "random.SystemRandom",
+          "random.shuffle",
+          "re",
+          "shlex",
+          "sys",
+          "time",
+          "uuid",
+          "yaml"
+        ],
+        "serialized_payload": "[local-4bcec7c3bcd3d99f1ecdb30f-e0c283a4] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.core.strftime.branch_104\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/plugins/filter/core.py:98-108\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef strftime(string_format, second=None, utc=False):\n    ''' return a date string using string. See https://docs.python.org/3/library/time.html#time.strftime for format '''\n    if utc:\n        timefn = time.gmtime\n    else:\n        timefn = time.localtime\n    if second is not None:\n        try:\n            second = float(second)\n        except Exception:\n            raise AnsibleFilterError('Invalid value for epoch value (%s)' % second)\n"
+      },
+      "relevance": 0.29690109678940924,
+      "coverage": [
+        0.1558994288590437,
+        0.21004251871844926,
+        0.10122373623422787,
+        0.08398909909245238,
+        0.1372221690870772,
+        0.05143472990456331,
+        0.2462188571691513,
+        0.21710082210145926
+      ],
+      "exposure": 0.2727272727272727,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.4439587240185425,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "4bcec7c3bcd3d99f1ecdb30f",
+        "bm25": 0.40754224809996326
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-8807d1721f76f5df00a4e49b",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.vars.fact_cache.FactCache.copy.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\" Return a primitive copy of the keys and values from the cache. \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/fact_cache.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 51,
+            "line_end": 51,
+            "exact_excerpt": "        \"\"\" Return a primitive copy of the keys and values from the cache. \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleError",
+          "ansible.plugins.loader.cache_loader",
+          "ansible.utils.display.Display",
+          "collections.abc.MutableMapping"
+        ],
+        "serialized_payload": "[local-8807d1721f76f5df00a4e49b] Role: documented_contract\nApplies to: lib.ansible.vars.fact_cache.FactCache.copy.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/fact_cache.py:51-51\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\" Return a primitive copy of the keys and values from the cache. \"\"\"\n"
+      },
+      "relevance": 0.2409436440777989,
+      "coverage": [
+        0.2969369888472179,
+        0.08042597934776369,
+        0.32212424761458147,
+        0.25725262484328315,
+        0.12004378211139413,
+        0.08781322121819174,
+        0.1429267683943307,
+        0.15732270397126244
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.615363592610429,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6493405570532846,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5526906046513212,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "8807d1721f76f5df00a4e49b",
+        "bm25": 0.4101869185339448
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-0bd6d11b8afa2a022982fe62",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.template._unroll_iterator.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"Wrapper function, that intercepts the result of a templating\n    and auto unrolls a generator, so that users are not required to\n    explicitly use ``|list`` to unroll.\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/template/__init__.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 290,
+            "line_end": 293,
+            "exact_excerpt": "    \"\"\"Wrapper function, that intercepts the result of a templating\n    and auto unrolls a generator, so that users are not required to\n    explicitly use ``|list`` to unroll.\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleLookupError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.common.collections.is_sequence",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.plugins.loader.filter_loader",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.plugins.loader.test_loader",
+          "ansible.template.native_helpers.ansible_concat",
+          "ansible.template.native_helpers.ansible_eval_concat",
+          "ansible.template.native_helpers.ansible_native_concat",
+          "ansible.template.template.AnsibleJ2Template",
+          "ansible.template.vars.AnsibleJ2Vars",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.native_jinja.NativeJinjaText",
+          "ansible.utils.unsafe_proxy.to_unsafe_text",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ast",
+          "collections.abc.Iterator",
+          "collections.abc.Mapping",
+          "collections.abc.MappingView",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "contextlib.contextmanager",
+          "datetime",
+          "jinja2.exceptions.TemplateSyntaxError",
+          "jinja2.exceptions.UndefinedError",
+          "jinja2.loaders.FileSystemLoader",
+          "jinja2.nativetypes.NativeEnvironment",
+          "jinja2.runtime.Context",
+          "jinja2.runtime.StrictUndefined",
+          "numbers.Number",
+          "os",
+          "pwd",
+          "re",
+          "time",
+          "traceback.format_exc"
+        ],
+        "serialized_payload": "[local-0bd6d11b8afa2a022982fe62] Role: documented_contract\nApplies to: lib.ansible.template._unroll_iterator.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/template/__init__.py:290-293\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"Wrapper function, that intercepts the result of a templating\n    and auto unrolls a generator, so that users are not required to\n    explicitly use ``|list`` to unroll.\n    \"\"\"\n"
+      },
+      "relevance": 0.2324537772672871,
+      "coverage": [
+        0.17358666821463944,
+        0.14280670731237996,
+        0.1606584375844416,
+        0.15518447150476816,
+        0.13375258964057257,
+        0.11632005564746803,
+        0.16062002854162016,
+        0.19256971905126377
+      ],
+      "exposure": 0.25,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-735d77ff1dc1f8e6",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.6019183274141728,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "0bd6d11b8afa2a022982fe62",
+        "bm25": 0.3395191191203977
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-bfb913c4fcec1a8406b89f8f",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.executor.module_common._find_module_utils.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"\n    Given the source of the module, convert it to a Jinja2 template to insert\n    module code and return whether it's a new or old style module.\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/executor/module_common.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 1075,
+            "line_end": 1078,
+            "exact_excerpt": "    \"\"\"\n    Given the source of the module, convert it to a Jinja2 template to insert\n    module code and return whether it's a new or old style module.\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleError",
+          "ansible.executor.action_write_locks",
+          "ansible.executor.interpreter_discovery.InterpreterDiscoveryRequiredError",
+          "ansible.executor.powershell.module_manifest",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.plugins.loader.module_utils_loader",
+          "ansible.release.__author__",
+          "ansible.release.__version__",
+          "ansible.utils.collection_loader._collection_finder._get_collection_metadata",
+          "ansible.utils.collection_loader._collection_finder._nested_dict_get",
+          "ansible.utils.display.Display",
+          "ast",
+          "ast.AST",
+          "ast.Import",
+          "ast.ImportFrom",
+          "base64",
+          "collections.namedtuple",
+          "datetime",
+          "importlib",
+          "io.BytesIO",
+          "json",
+          "os",
+          "pkgutil",
+          "re",
+          "shlex",
+          "time",
+          "zipfile"
+        ],
+        "serialized_payload": "[local-bfb913c4fcec1a8406b89f8f] Role: documented_contract\nApplies to: lib.ansible.executor.module_common._find_module_utils.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/executor/module_common.py:1075-1078\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"\n    Given the source of the module, convert it to a Jinja2 template to insert\n    module code and return whether it's a new or old style module.\n    \"\"\"\n"
+      },
+      "relevance": 0.23146001569356175,
+      "coverage": [
+        0.15617181723801174,
+        0.13444069984712098,
+        0.09639665917596033,
+        0.06772229440002303,
+        0.03628364983166033,
+        0.019088542889273332,
+        0.2248756178381491,
+        0.18256149271972955
+      ],
+      "exposure": 0.5,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.810075482454373,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "bfb913c4fcec1a8406b89f8f",
+        "bm25": 0.430382791178317
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-a52d25766d5c3790e3b34226",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.executor.module_common._extract_interpreter.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"\n    Used to extract shebang expression from binary module data and return a text\n    string with the shebang, or None if no shebang is detected.\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/executor/module_common.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 1320,
+            "line_end": 1323,
+            "exact_excerpt": "    \"\"\"\n    Used to extract shebang expression from binary module data and return a text\n    string with the shebang, or None if no shebang is detected.\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleError",
+          "ansible.executor.action_write_locks",
+          "ansible.executor.interpreter_discovery.InterpreterDiscoveryRequiredError",
+          "ansible.executor.powershell.module_manifest",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.plugins.loader.module_utils_loader",
+          "ansible.release.__author__",
+          "ansible.release.__version__",
+          "ansible.utils.collection_loader._collection_finder._get_collection_metadata",
+          "ansible.utils.collection_loader._collection_finder._nested_dict_get",
+          "ansible.utils.display.Display",
+          "ast",
+          "ast.AST",
+          "ast.Import",
+          "ast.ImportFrom",
+          "base64",
+          "collections.namedtuple",
+          "datetime",
+          "importlib",
+          "io.BytesIO",
+          "json",
+          "os",
+          "pkgutil",
+          "re",
+          "shlex",
+          "time",
+          "zipfile"
+        ],
+        "serialized_payload": "[local-a52d25766d5c3790e3b34226] Role: documented_contract\nApplies to: lib.ansible.executor.module_common._extract_interpreter.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/executor/module_common.py:1320-1323\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"\n    Used to extract shebang expression from binary module data and return a text\n    string with the shebang, or None if no shebang is detected.\n    \"\"\"\n"
+      },
+      "relevance": 0.17172061160591529,
+      "coverage": [
+        0.14376453159324146,
+        0.07753095970815349,
+        0.12815774484477416,
+        0.07816875283760004,
+        0.10889725167084119,
+        0.09184923962854702,
+        0.13360273303986772,
+        0.09990355463236827
+      ],
+      "exposure": 0.5,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-aa47f0dbd0839c23",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.41752681285194465,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-824b3c2e63262631",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7206226443727355,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.39048953786849094,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7639529322532164,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-58cbf915ad559f5a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7467942717998998,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "a52d25766d5c3790e3b34226",
+        "bm25": 0.44654649823799286
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-32e0f83f3ed92cae5f64775f",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.utils._junit_xml.TestResult.tag.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"Tag name for the XML element created by this result type.\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 33,
+            "line_end": 33,
+            "exact_excerpt": "        \"\"\"Tag name for the XML element created by this result type.\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "abc",
+          "dataclasses",
+          "datetime",
+          "decimal",
+          "xml.dom.minidom",
+          "xml.etree.ElementTree"
+        ],
+        "serialized_payload": "[local-32e0f83f3ed92cae5f64775f] Role: documented_contract\nApplies to: lib.ansible.utils._junit_xml.TestResult.tag.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/_junit_xml.py:33-33\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"Tag name for the XML element created by this result type.\"\"\"\n"
+      },
+      "relevance": 0.1638319286253776,
+      "coverage": [
+        0.017739371879672478,
+        0.020751433915982238,
+        0.03942334687556284,
+        0.016245910832216468,
+        0.03837454430358019,
+        0.06315020403622314,
+        0.04035071243038689,
+        0.05166590475622188
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-3d9ba007d2e598f9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9273125428385559,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-cfb3a7352c582f59",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5779795577413455,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "32e0f83f3ed92cae5f64775f",
+        "bm25": 0.5142760780472971
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-d79f995daac13b4f0c11453f",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader._decrypt_if_vault_data.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        '''Decrypt b_vault_data if encrypted and return b_data and the show_content flag'''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 130,
+            "line_end": 130,
+            "exact_excerpt": "        '''Decrypt b_vault_data if encrypted and return b_data and the show_content flag'''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-d79f995daac13b4f0c11453f] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader._decrypt_if_vault_data.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/parsing/dataloader.py:130-130\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        '''Decrypt b_vault_data if encrypted and return b_data and the show_content flag'''\n"
+      },
+      "relevance": 0.11894656748707631,
+      "coverage": [
+        0.15727829576537725,
+        0.07163781613284174,
+        0.1727019721587693,
+        0.15841508230940868,
+        0.07635767605541917,
+        0.026311740579210877,
+        0.1577802023503645,
+        0.09883278126942853
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-7b51cb4817418f65",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.33234427526174043,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "d79f995daac13b4f0c11453f",
+        "bm25": 0.14171227646260198
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-f3da06f0e7a9337744792229",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.utils._junit_xml.TestResult.get_xml_element.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"Return an XML element representing this instance.\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 43,
+            "line_end": 43,
+            "exact_excerpt": "        \"\"\"Return an XML element representing this instance.\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "abc",
+          "dataclasses",
+          "datetime",
+          "decimal",
+          "xml.dom.minidom",
+          "xml.etree.ElementTree"
+        ],
+        "serialized_payload": "[local-f3da06f0e7a9337744792229] Role: documented_contract\nApplies to: lib.ansible.utils._junit_xml.TestResult.get_xml_element.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/_junit_xml.py:43-43\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"Return an XML element representing this instance.\"\"\"\n"
+      },
+      "relevance": 0.11632221136164562,
+      "coverage": [
+        0.05206098314310734,
+        0.0,
+        0.06917181718083343,
+        0.07556761119048486,
+        0.0,
+        0.0,
+        0.0,
+        0.02672612419124244
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7337409663152271,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "f3da06f0e7a9337744792229",
+        "bm25": 0.35591035383485725
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-06a14278d7f895b04fc574e5",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.utils._junit_xml._pretty_xml.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\"Return a pretty formatted XML string representing the given element.\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/_junit_xml.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 277,
+            "line_end": 277,
+            "exact_excerpt": "    \"\"\"Return a pretty formatted XML string representing the given element.\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "abc",
+          "dataclasses",
+          "datetime",
+          "decimal",
+          "xml.dom.minidom",
+          "xml.etree.ElementTree"
+        ],
+        "serialized_payload": "[local-06a14278d7f895b04fc574e5] Role: documented_contract\nApplies to: lib.ansible.utils._junit_xml._pretty_xml.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/utils/_junit_xml.py:277-277\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\"Return a pretty formatted XML string representing the given element.\"\"\"\n"
+      },
+      "relevance": 0.09507705646972622,
+      "coverage": [
+        0.06716527541337612,
+        0.0,
+        0.06472977332314847,
+        0.053881590608032465,
+        0.043140516654727255,
+        0.027735009811261455,
+        0.01924500897298752,
+        0.035355339059327376
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-47e4311a878f0bfd",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.5215743504708359,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "06a14278d7f895b04fc574e5",
+        "bm25": 0.28254281335712766
+      }
+    }
+  ],
+  "overlap": [
+    [
+      1.0,
+      0.28056875293470496,
+      0.4034071307951286,
+      0.35979058899702104,
+      0.24865870522388286,
+      0.3524839104112451,
+      0.32512123152373273,
+      0.41254992689657155,
+      0.29557665040580844,
+      0.3835509613319386,
+      0.1931653719404954,
+      0.3822814628914973,
+      0.2039065891346923,
+      0.28855395367268105,
+      0.33312081704193586,
+      0.2698202414153974,
+      0.19664662676744782,
+      0.24336698808492688,
+      0.15690993296285374,
+      0.17399028948874018,
+      0.049698921993754926,
+      0.1477732673115516,
+      0.021517506123317535,
+      0.04340703347324096
+    ],
+    [
+      0.28056875293470496,
+      1.0,
+      0.276159986393527,
+      0.29911209714189,
+      0.24847744113256132,
+      0.3687114982223142,
+      0.37450428414861503,
+      0.2964379908373586,
+      0.261365706967938,
+      0.376599162468243,
+      0.2874252140155157,
+      0.30838170741348947,
+      0.1667932879835057,
+      0.37197102842920776,
+      0.31558711138029016,
+      0.26164372641770184,
+      0.20327813741506784,
+      0.23306196206021548,
+      0.17224407885819165,
+      0.26595996490835544,
+      0.06380043824683179,
+      0.13411070419059432,
+      0.11370622757676052,
+      0.12629654002098292
+    ],
+    [
+      0.4034071307951286,
+      0.276159986393527,
+      1.0,
+      0.3978876737103535,
+      0.3103660741680414,
+      0.39084558726446655,
+      0.36931807792942506,
+      0.3313610135348448,
+      0.3424911349135796,
+      0.4043822798749228,
+      0.30140848307999785,
+      0.43552773858155136,
+      0.08078080100278229,
+      0.1554282402739939,
+      0.2290204034626214,
+      0.38852456678282377,
+      0.08494224440282264,
+      0.15644912259507543,
+      0.22977042624194943,
+      0.19278748256113282,
+      0.01574591643244434,
+      0.21495793502753655,
+      0.0021961431019008157,
+      0.02324620857834816
+    ],
+    [
+      0.35979058899702104,
+      0.29911209714189,
+      0.3978876737103535,
+      1.0,
+      0.32744450083416204,
+      0.35239700951606234,
+      0.264537324298503,
+      0.2947789501921532,
+      0.32942374733326385,
+      0.428691665289471,
+      0.2696068809594368,
+      0.4281890822306286,
+      0.06030226891555272,
+      0.14751432057046568,
+      0.30682591476470433,
+      0.31007313473581555,
+      0.03766166279265184,
+      0.10085907436229966,
+      0.3086694367076675,
+      0.22768759429136964,
+      0.062366405857253435,
+      0.10271425261421349,
+      0.07381715939977294,
+      0.0389249308993006
+    ],
+    [
+      0.24865870522388286,
+      0.24847744113256132,
+      0.3103660741680414,
+      0.32744450083416204,
+      1.0,
+      0.3895267156624199,
+      0.21026134474417627,
+      0.18978119661153925,
+      0.6188013351222068,
+      0.36321422169453127,
+      0.2501715713361282,
+      0.3588073597134447,
+      0.1232693278167575,
+      0.17758433726663403,
+      0.20600032250852002,
+      0.2328657044246854,
+      0.20533756904604367,
+      0.11440949169297863,
+      0.2014843643487787,
+      0.29976993987742384,
+      0.12812474621495623,
+      0.4625684415436069,
+      0.15127749695117773,
+      0.18118282596257448
+    ],
+    [
+      0.3524839104112451,
+      0.3687114982223142,
+      0.39084558726446655,
+      0.35239700951606234,
+      0.3895267156624199,
+      1.0,
+      0.3386225144009932,
+      0.3191342665333871,
+      0.36581236665828176,
+      0.6934847775735273,
+      0.264001373066195,
+      0.48373448605585545,
+      0.07453704431852018,
+      0.2197094252745373,
+      0.37707463943041286,
+      0.31312172314525083,
+      0.07158235050568823,
+      0.1494725906413807,
+      0.18302904127679678,
+      0.2709962303411695,
+      0.033658091640304456,
+      0.1827712042244512,
+      0.03962513755554087,
+      0.07441917847044255
+    ],
+    [
+      0.32512123152373273,
+      0.37450428414861503,
+      0.36931807792942506,
+      0.264537324298503,
+      0.21026134474417627,
+      0.3386225144009932,
+      0.9999999165534972,
+      0.34101381232691164,
+      0.3034952416867702,
+      0.31936759016385113,
+      0.26239939293981296,
+      0.38693177877976326,
+      0.3584959567105898,
+      0.2997301966464648,
+      0.20642490872657407,
+      0.2834471847329554,
+      0.16053115522164815,
+      0.20978857333318834,
+      0.22047286590162807,
+      0.19790810604394832,
+      0.06869537271657301,
+      0.11719246652900404,
+      0.10242030365103279,
+      0.06037129378312546
+    ],
+    [
+      0.41254992689657155,
+      0.2964379908373586,
+      0.3313610135348448,
+      0.2947789501921532,
+      0.18978119661153925,
+      0.3191342665333871,
+      0.34101381232691164,
+      1.0,
+      0.27161908958877035,
+      0.3225146200724808,
+      0.37323187284488385,
+      0.31856442817295794,
+      0.19127132486287302,
+      0.26981270651999656,
+      0.2508136711537289,
+      0.29402025565591094,
+      0.1240408427146962,
+      0.19748941788870436,
+      0.3766719033504963,
+      0.19205407086277776,
+      0.012104388149033663,
+      0.1267491198209813,
+      0.06356848180294036,
+      0.06842368617653846
+    ],
+    [
+      0.29557665040580844,
+      0.261365706967938,
+      0.3424911349135796,
+      0.32942374733326385,
+      0.6188013351222068,
+      0.36581236665828176,
+      0.3034952416867702,
+      0.27161908958877035,
+      1.0,
+      0.36471916656638115,
+      0.20157325659148922,
+      0.39592003684539145,
+      0.12535303375349374,
+      0.16999251086545403,
+      0.1686429940498319,
+      0.2683745424144924,
+      0.19384482647579054,
+      0.10832128036179509,
+      0.19047661434907268,
+      0.2365921013296462,
+      0.024475654571185685,
+      0.382153291956595,
+      0.03489647209644317,
+      0.07083359553540236
+    ],
+    [
+      0.3835509613319386,
+      0.376599162468243,
+      0.4043822798749228,
+      0.428691665289471,
+      0.36321422169453127,
+      0.6934847775735273,
+      0.31936759016385113,
+      0.3225146200724808,
+      0.36471916656638115,
+      1.0,
+      0.2797124184065021,
+      0.4454149934336846,
+      0.0646765880330978,
+      0.12632161627360775,
+      0.2873389109718838,
+      0.33732134086068516,
+      0.007670548558235168,
+      0.12999037225200125,
+      0.23582895398139953,
+      0.16986995997430068,
+      0.029406298308029346,
+      0.11242624403106488,
+      0.021559555269777774,
+      0.030423778668045996
+    ],
+    [
+      0.1931653719404954,
+      0.2874252140155157,
+      0.30140848307999785,
+      0.2696068809594368,
+      0.2501715713361282,
+      0.264001373066195,
+      0.26239939293981296,
+      0.37323187284488385,
+      0.20157325659148922,
+      0.2797124184065021,
+      0.9999998331069946,
+      0.20729463360876793,
+      0.19158722675032114,
+      0.1961337820298474,
+      0.30879986397931464,
+      0.2575750826321482,
+      0.11944584350738785,
+      0.3283382610644554,
+      0.4930430704678737,
+      0.3515867186481392,
+      0.12986660880263645,
+      0.14286234976282508,
+      0.17109985552581403,
+      0.19041115450305235
+    ],
+    [
+      0.3822814628914973,
+      0.30838170741348947,
+      0.43552773858155136,
+      0.4281890822306286,
+      0.3588073597134447,
+      0.48373448605585545,
+      0.38693177877976326,
+      0.31856442817295794,
+      0.39592003684539145,
+      0.4454149934336846,
+      0.20729463360876793,
+      1.0,
+      0.08429600001860968,
+      0.19892664531715692,
+      0.25715949949905104,
+      0.2984089421401817,
+      0.03375320568939781,
+      0.11597549243228836,
+      0.164900298181333,
+      0.18978467652597916,
+      0.041502867831964475,
+      0.08414470501503085,
+      0.0130066495428618,
+      0.011470786693528088
+    ],
+    [
+      0.2039065891346923,
+      0.1667932879835057,
+      0.08078080100278229,
+      0.06030226891555272,
+      0.1232693278167575,
+      0.07453704431852018,
+      0.3584959567105898,
+      0.19127132486287302,
+      0.12535303375349374,
+      0.0646765880330978,
+      0.19158722675032114,
+      0.08429600001860968,
+      0.9999999165534972,
+      0.1869228069980939,
+      0.03508232077228116,
+      0.030206258624881802,
+      0.29073689931535374,
+      0.2526372127895291,
+      0.03862847585544309,
+      0.12379332122512354,
+      0.2098795050916578,
+      0.11714903292012041,
+      0.16130740245576497,
+      0.0749309382399548
+    ],
+    [
+      0.28855395367268105,
+      0.37197102842920776,
+      0.1554282402739939,
+      0.14751432057046568,
+      0.17758433726663403,
+      0.2197094252745373,
+      0.2997301966464648,
+      0.26981270651999656,
+      0.16999251086545403,
+      0.12632161627360775,
+      0.1961337820298474,
+      0.19892664531715692,
+      0.1869228069980939,
+      0.9999999165534972,
+      0.2392580363174311,
+      0.2022233529930417,
+      0.2743271659593513,
+      0.22608529288558574,
+      0.1863293654363682,
+      0.2718276927422764,
+      0.10260125231535916,
+      0.1633182724704708,
+      0.18792484452720282,
+      0.2877424311818566
+    ],
+    [
+      0.33312081704193586,
+      0.31558711138029016,
+      0.2290204034626214,
+      0.30682591476470433,
+      0.20600032250852002,
+      0.37707463943041286,
+      0.20642490872657407,
+      0.2508136711537289,
+      0.1686429940498319,
+      0.2873389109718838,
+      0.30879986397931464,
+      0.25715949949905104,
+      0.03508232077228116,
+      0.2392580363174311,
+      1.0,
+      0.3073962156117023,
+      0.0823192430647451,
+      0.15857750954255628,
+      0.18880599616159882,
+      0.285595458317802,
+      0.045236575823966306,
+      0.11687844581817511,
+      0.1394649091526574,
+      0.21557762663013721
+    ],
+    [
+      0.2698202414153974,
+      0.26164372641770184,
+      0.38852456678282377,
+      0.31007313473581555,
+      0.2328657044246854,
+      0.31312172314525083,
+      0.2834471847329554,
+      0.29402025565591094,
+      0.2683745424144924,
+      0.33732134086068516,
+      0.2575750826321482,
+      0.2984089421401817,
+      0.030206258624881802,
+      0.2022233529930417,
+      0.3073962156117023,
+      1.0,
+      0.02212313703416332,
+      0.059749771502413764,
+      0.18113476221105257,
+      0.23324433607045192,
+      0.01663213494763933,
+      0.1053618576594898,
+      0.04987365862143919,
+      0.13774139517787976
+    ],
+    [
+      0.19664662676744782,
+      0.20327813741506784,
+      0.08494224440282264,
+      0.03766166279265184,
+      0.20533756904604367,
+      0.07158235050568823,
+      0.16053115522164815,
+      0.1240408427146962,
+      0.19384482647579054,
+      0.007670548558235168,
+      0.11944584350738785,
+      0.03375320568939781,
+      0.29073689931535374,
+      0.2743271659593513,
+      0.0823192430647451,
+      0.02212313703416332,
+      1.0,
+      0.239921930716899,
+      0.1955248570511271,
+      0.25252354432283036,
+      0.20399269665663106,
+      0.26724650502204894,
+      0.27714696862968696,
+      0.2563177500446075
+    ],
+    [
+      0.24336698808492688,
+      0.23306196206021548,
+      0.15644912259507543,
+      0.10085907436229966,
+      0.11440949169297863,
+      0.1494725906413807,
+      0.20978857333318834,
+      0.19748941788870436,
+      0.10832128036179509,
+      0.12999037225200125,
+      0.3283382610644554,
+      0.11597549243228836,
+      0.2526372127895291,
+      0.22608529288558574,
+      0.15857750954255628,
+      0.059749771502413764,
+      0.239921930716899,
+      0.9999999582767487,
+      0.2205808117781375,
+      0.2621426019793752,
+      0.15228388754789865,
+      0.11960708592432535,
+      0.13665293157100677,
+      0.16339858007224087
+    ],
+    [
+      0.15690993296285374,
+      0.17224407885819165,
+      0.22977042624194943,
+      0.3086694367076675,
+      0.2014843643487787,
+      0.18302904127679678,
+      0.22047286590162807,
+      0.3766719033504963,
+      0.19047661434907268,
+      0.23582895398139953,
+      0.4930430704678737,
+      0.164900298181333,
+      0.03862847585544309,
+      0.1863293654363682,
+      0.18880599616159882,
+      0.18113476221105257,
+      0.1955248570511271,
+      0.2205808117781375,
+      0.9999999165534972,
+      0.33815235037404084,
+      0.09944200748909472,
+      0.1282182847015209,
+      0.1561880283137433,
+      0.17650908358594652
+    ],
+    [
+      0.17399028948874018,
+      0.26595996490835544,
+      0.19278748256113282,
+      0.22768759429136964,
+      0.29976993987742384,
+      0.2709962303411695,
+      0.19790810604394832,
+      0.19205407086277776,
+      0.2365921013296462,
+      0.16986995997430068,
+      0.3515867186481392,
+      0.18978467652597916,
+      0.12379332122512354,
+      0.2718276927422764,
+      0.285595458317802,
+      0.23324433607045192,
+      0.25252354432283036,
+      0.2621426019793752,
+      0.33815235037404084,
+      1.0,
+      0.17150971478922272,
+      0.29232914287982575,
+      0.22084586835040151,
+      0.29054993712103727
+    ],
+    [
+      0.049698921993754926,
+      0.06380043824683179,
+      0.01574591643244434,
+      0.062366405857253435,
+      0.12812474621495623,
+      0.033658091640304456,
+      0.06869537271657301,
+      0.012104388149033663,
+      0.024475654571185685,
+      0.029406298308029346,
+      0.12986660880263645,
+      0.041502867831964475,
+      0.2098795050916578,
+      0.10260125231535916,
+      0.045236575823966306,
+      0.01663213494763933,
+      0.20399269665663106,
+      0.15228388754789865,
+      0.09944200748909472,
+      0.17150971478922272,
+      1.0,
+      0.06813486161713465,
+      0.6228369823737785,
+      0.5661583832698744
+    ],
+    [
+      0.1477732673115516,
+      0.13411070419059432,
+      0.21495793502753655,
+      0.10271425261421349,
+      0.4625684415436069,
+      0.1827712042244512,
+      0.11719246652900404,
+      0.1267491198209813,
+      0.382153291956595,
+      0.11242624403106488,
+      0.14286234976282508,
+      0.08414470501503085,
+      0.11714903292012041,
+      0.1633182724704708,
+      0.11687844581817511,
+      0.1053618576594898,
+      0.26724650502204894,
+      0.11960708592432535,
+      0.1282182847015209,
+      0.29232914287982575,
+      0.06813486161713465,
+      1.0,
+      0.11711355262669813,
+      0.14940648195936618
+    ],
+    [
+      0.021517506123317535,
+      0.11370622757676052,
+      0.0021961431019008157,
+      0.07381715939977294,
+      0.15127749695117773,
+      0.03962513755554087,
+      0.10242030365103279,
+      0.06356848180294036,
+      0.03489647209644317,
+      0.021559555269777774,
+      0.17109985552581403,
+      0.0130066495428618,
+      0.16130740245576497,
+      0.18792484452720282,
+      0.1394649091526574,
+      0.04987365862143919,
+      0.27714696862968696,
+      0.13665293157100677,
+      0.1561880283137433,
+      0.22084586835040151,
+      0.6228369823737785,
+      0.11711355262669813,
+      0.9999999165534972,
+      0.7409997309208386
+    ],
+    [
+      0.04340703347324096,
+      0.12629654002098292,
+      0.02324620857834816,
+      0.0389249308993006,
+      0.18118282596257448,
+      0.07441917847044255,
+      0.06037129378312546,
+      0.06842368617653846,
+      0.07083359553540236,
+      0.030423778668045996,
+      0.19041115450305235,
+      0.011470786693528088,
+      0.0749309382399548,
+      0.2877424311818566,
+      0.21557762663013721,
+      0.13774139517787976,
+      0.2563177500446075,
+      0.16339858007224087,
+      0.17650908358594652,
+      0.29054993712103727,
+      0.5661583832698744,
+      0.14940648195936618,
+      0.7409997309208386,
+      0.9999999165534972
+    ]
+  ],
+  "obligations": [
+    {
+      "id": "req-aa47f0dbd0839c23",
+      "statement": "`combine_vars` should correctly combine a `dict` with a `VarsWithSources` and return a resulting mapping (dict-like) without throwing exceptions; the keys of the second operand should prevail in case of a conflict in replace mode.\n",
+      "source_ref": "request:624:855",
+      "status": "unverified",
+      "related_symbols": [
+        "VarsWithSources",
+        "combine_vars",
+        "dict"
+      ]
+    },
+    {
+      "id": "req-735d77ff1dc1f8e6",
+      "statement": "- `ansible.vars.manager.VarsWithSources` must interoperate with standard mappings for union (`|`) and augmented union (`|=`) without errors when both operands are mappings.\n",
+      "source_ref": "request:1290:1463",
+      "status": "unverified",
+      "related_symbols": [
+        "ansible.vars.manager.VarsWithSources"
+      ]
+    },
+    {
+      "id": "req-824b3c2e63262631",
+      "statement": "- A non-in-place join (`A | B`) between `VarsWithSources` and a mapping must return a new dict-like mapping containing the keys from both sides, with the right operand taking precedence in case of conflicts.\n",
+      "source_ref": "request:1464:1672",
+      "status": "unverified",
+      "related_symbols": [
+        "VarsWithSources"
+      ]
+    },
+    {
+      "id": "req-47e4311a878f0bfd",
+      "statement": "- An in-place join (`A |= B`) on `VarsWithSources` must update its internal store in-place and return a dict-like object representing the updated state. Requiring the concrete underlying mapping is avoided to avoid over-restricting the solution.\n",
+      "source_ref": "request:1673:1919",
+      "status": "unverified",
+      "related_symbols": [
+        "VarsWithSources"
+      ]
+    },
+    {
+      "id": "req-7b51cb4817418f65",
+      "statement": "- When a standard mapping is left-handed (`Mapping | VarsWithSources`), normal Python operator resolution is respected, and the join must succeed.\n",
+      "source_ref": "request:1920:2067",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-3d9ba007d2e598f9",
+      "statement": "- Unions with non-mapping operands must raise the corresponding TypeError by normal dispatch.\n",
+      "source_ref": "request:2068:2162",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-cfb3a7352c582f59",
+      "statement": "- In the \"replace\" path of `ansible.utils.vars.combine_vars` with `DEFAULT_HASH_BEHAVIOUR='replace'`, both operands must be validated as mutable mappings, and the result must be the union `a | b`, a dict mapping with the precedence of the right operand.\n",
+      "source_ref": "request:2163:2417",
+      "status": "unverified",
+      "related_symbols": [
+        "ansible.utils.vars.combine_vars"
+      ]
+    },
+    {
+      "id": "req-58cbf915ad559f5a",
+      "statement": "The patch will introduce the following new public interfaces: 1. Type: Special Method Name: `__or__` Location: `lib/ansible/vars/manager.py` Description: Will implement the union operator (`|`) with another mapping. It will produce a new mapping representing the union, where keys from `other` will override keys from the current data. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 2. Type: Special Method Name: `__ror__` Location: `lib/ansible/vars/manager.py` Description: Will implement the reflected union operator (`|`) when the left-hand operand is another mapping. It will produce a new merged mapping where keys from the current data will override keys from `other` in case of conflicts. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 3. Type: Special Method Name: `__ior__` Location: `lib/ansible/vars/manager.py` Description: Will implement the in-place union operator (`|=`) with another mapping. It will update the current data in place by adding/overwriting keys from `other`. Inputs: `other: collections.abc.MutableMapping` Outputs: The updated object after applying the in-place union.\n",
+      "source_ref": "request:2438:3874",
+      "status": "unverified",
+      "related_symbols": [
+        "MutableMapping",
+        "NotImplemented",
+        "__ior__",
+        "__or__",
+        "__ror__",
+        "other"
+      ]
+    }
+  ],
+  "query": "`combine_vars` should correctly combine a `dict` with a `VarsWithSources` and return a resulting mapping (dict-like) without throwing exceptions; the keys of the second operand should prevail in case of a conflict in replace mode.\n\n\n- `ansible.vars.manager.VarsWithSources` must interoperate with standard mappings for union (`|`) and augmented union (`|=`) without errors when both operands are mappings.\n\n\n- A non-in-place join (`A | B`) between `VarsWithSources` and a mapping must return a new dict-like mapping containing the keys from both sides, with the right operand taking precedence in case of conflicts.\n\n\n- An in-place join (`A |= B`) on `VarsWithSources` must update its internal store in-place and return a dict-like object representing the updated state. Requiring the concrete underlying mapping is avoided to avoid over-restricting the solution.\n\n\n- When a standard mapping is left-handed (`Mapping | VarsWithSources`), normal Python operator resolution is respected, and the join must succeed.\n\n\n- Unions with non-mapping operands must raise the corresponding TypeError by normal dispatch.\n\n\n- In the \"replace\" path of `ansible.utils.vars.combine_vars` with `DEFAULT_HASH_BEHAVIOUR='replace'`, both operands must be validated as mutable mappings, and the result must be the union `a | b`, a dict mapping with the precedence of the right operand.\n\n\nThe patch will introduce the following new public interfaces: 1. Type: Special Method Name: `__or__` Location: `lib/ansible/vars/manager.py` Description: Will implement the union operator (`|`) with another mapping. It will produce a new mapping representing the union, where keys from `other` will override keys from the current data. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 2. Type: Special Method Name: `__ror__` Location: `lib/ansible/vars/manager.py` Description: Will implement the reflected union operator (`|`) when the left-hand operand is another mapping. It will produce a new merged mapping where keys from the current data will override keys from `other` in case of conflicts. If `other` is not a `MutableMapping`, it will return `NotImplemented`. Inputs: `other: collections.abc.MutableMapping` Outputs: A new mapping with the merged key–value pairs (or `NotImplemented` when unsupported). 3. Type: Special Method Name: `__ior__` Location: `lib/ansible/vars/manager.py` Description: Will implement the in-place union operator (`|=`) with another mapping. It will update the current data in place by adding/overwriting keys from `other`. Inputs: `other: collections.abc.MutableMapping` Outputs: The updated object after applying the in-place union.\n\n"
+}

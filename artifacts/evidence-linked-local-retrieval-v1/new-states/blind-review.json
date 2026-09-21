@@ -1,0 +1,609 @@
+{
+  "review_type": "POST_PREDICTION_FINITE_SOURCE_REVIEW",
+  "selection_lock_sha256": "134bc4a96406f3b909ec9ff2b271a34822b2b604687ea2c1e611ef21b26136bb",
+  "not_human_gold": true,
+  "no_feedback_to_predictions_or_packs": true,
+  "scope": "Only two blind-new-states JSON inputs and existing independent legal-base anchors. No private mapping, selector scores, hidden tests or tails. Prior authorized plan exposed method-name metadata; not absolute method-name blindness.",
+  "states": [
+    {
+      "state": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "kind": "variable-file-cache",
+      "requirements": [
+        "req-d5b2b8105de9fa82",
+        "req-0421f4c81270bd0f",
+        "req-ac12c2ea0f060247",
+        "req-ea10c024870ea3ae",
+        "req-9527987a765a7d30",
+        "req-c521065d30fc0272"
+      ],
+      "requirement_retention": "Five explicit requirements and overview retained. Last occupancy requirement repeats parts of none/vaulted requirements. Shared environment absent from weighted requirements.",
+      "units": [
+        {
+          "blind_id": "Q01",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "lineinfile repeated-line idempotency is not variable-file caching"
+        },
+        {
+          "blind_id": "Q02",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "ansible-test zero-argument memoization decorator, not DataLoader file cache"
+        },
+        {
+          "blind_id": "Q03",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "vault CLI rekey changes encryption secret, not parsed-result cache"
+        },
+        {
+          "blind_id": "Q04",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "get_real_file creates decrypted temporary paths, not load_from_file parsed cache"
+        },
+        {
+          "blind_id": "Q05",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "unvault lookup content docs, no target caching policy"
+        },
+        {
+          "blind_id": "Q06",
+          "relations": [
+            {
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_ids": [
+                "req-d5b2b8105de9fa82",
+                "req-ea10c024870ea3ae",
+                "req-9527987a765a7d30"
+              ],
+              "condition": "Old truthy-cache hit returns parsed_data without _get_file_contents; cache key is path_dwim result. Does not prove selective vaulted mode."
+            },
+            {
+              "relation": "CONTRADICTION_CONTEXT",
+              "requirement_ids": [
+                "req-0421f4c81270bd0f",
+                "req-ac12c2ea0f060247",
+                "req-c521065d30fc0272"
+              ],
+              "condition": "cache annotated bool; none string is truthy and miss always writes. New no-write invariant not implemented."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_IMPLEMENTATION_AND_CONTRADICTION",
+          "reason": "Actual old load_from_file path; no explicit string cache modes.",
+          "missing_prerequisites": "Vault detection helper/show_content semantics absent; unsafe=False returns deepcopy, so cached value is not necessarily object identity."
+        },
+        {
+          "blind_id": "Q07",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "same get_real_file temporary-file path as Q04"
+        },
+        {
+          "blind_id": "Q08",
+          "relations": [
+            {
+              "relation": "PRECONDITION",
+              "requirement_ids": [
+                "req-ac12c2ea0f060247",
+                "req-ea10c024870ea3ae"
+              ],
+              "condition": "Valid text/binary filename and existing normalized path before read/parse."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_PRECONDITION",
+          "reason": "Truncated before actual read/decrypt; no cache decisions."
+        },
+        {
+          "blind_id": "Q09",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "import_playbook filename parsing, not DataLoader cache"
+        },
+        {
+          "blind_id": "Q10",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "lineinfile idempotency, not file cache"
+        },
+        {
+          "blind_id": "Q11",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "Linux distro information caching is a different class"
+        },
+        {
+          "blind_id": "Q12",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "cleanup of get_real_file temporary files is not _FILE_CACHE"
+        },
+        {
+          "blind_id": "Q13",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "VaultEditor edit/re-encrypt path is not parsed-result cache"
+        },
+        {
+          "blind_id": "Q14",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "temporary-file API doc, not cache"
+        },
+        {
+          "blind_id": "Q15",
+          "relations": [
+            {
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_ids": [
+                "req-d5b2b8105de9fa82",
+                "req-ac12c2ea0f060247",
+                "req-ea10c024870ea3ae",
+                "req-9527987a765a7d30"
+              ],
+              "condition": "Cache miss invokes this read/decrypt path; helper returns contents for parsing. No actual cache mode or hit check in this unit."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_IMPLEMENTATION",
+          "reason": "Complete _get_file_contents validates path then calls _decrypt_if_vault_data; helper body absent."
+        },
+        {
+          "blind_id": "Q16",
+          "relations": [
+            {
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_ids": [
+                "req-c521065d30fc0272"
+              ],
+              "condition": "Fresh DataLoader starts with empty _FILE_CACHE; this alone does not prove none-only empty invariant."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_IMPLEMENTATION",
+          "reason": "Initial storage and fork limitation, not mode policy."
+        },
+        {
+          "blind_id": "Q17",
+          "relations": [
+            {
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_ids": [
+                "req-d5b2b8105de9fa82",
+                "req-ac12c2ea0f060247",
+                "req-ea10c024870ea3ae",
+                "req-9527987a765a7d30"
+              ],
+              "condition": "Cache miss invokes this read/decrypt path; helper returns contents for parsing. No actual cache mode or hit check in this unit."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_IMPLEMENTATION",
+          "reason": "Complete _get_file_contents validates path then calls _decrypt_if_vault_data; helper body absent."
+        },
+        {
+          "blind_id": "Q18",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "variable precedence doc lists vars/fact caches but not file-cache semantics"
+        },
+        {
+          "blind_id": "Q19",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "first_found lookup locates paths, no target cache modes"
+        },
+        {
+          "blind_id": "Q20",
+          "relations": [],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TOPICAL_ONLY",
+          "reason": "vars structure normalization, not cache"
+        },
+        {
+          "blind_id": "Q21",
+          "relations": [
+            {
+              "relation": "CONTRACT_SUPPORT",
+              "requirement_ids": [
+                "req-ea10c024870ea3ae"
+              ],
+              "condition": "Only vaulted-file decryption portion; no cache storage guarantee."
+            },
+            {
+              "relation": "PRECONDITION",
+              "requirement_ids": [
+                "req-ac12c2ea0f060247",
+                "req-ea10c024870ea3ae"
+              ],
+              "condition": "Relative filenames resolve to basedir; error behavior documented."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_DOCUMENTED_PRECONDITION",
+          "reason": "Read/decrypt helper documentation, not cache mode specification."
+        },
+        {
+          "blind_id": "Q22",
+          "relations": [
+            {
+              "relation": "CONTRACT_SUPPORT",
+              "requirement_ids": [
+                "req-d5b2b8105de9fa82",
+                "req-9527987a765a7d30"
+              ],
+              "condition": "Generic loader caching/repeated-read intent; old documentation, not proof of new vaulted mode. Qualified by explicit new none-mode request."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_DOCUMENTED_CONTRACT",
+          "reason": "Direct DataLoader class documentation promises caching avoids repeat disk reads."
+        },
+        {
+          "blind_id": "Q23",
+          "relations": [
+            {
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_ids": [
+                "req-d5b2b8105de9fa82",
+                "req-ea10c024870ea3ae",
+                "req-9527987a765a7d30"
+              ],
+              "condition": "Old truthy-cache hit returns parsed_data without _get_file_contents; cache key is path_dwim result. Does not prove selective vaulted mode."
+            },
+            {
+              "relation": "CONTRADICTION_CONTEXT",
+              "requirement_ids": [
+                "req-0421f4c81270bd0f",
+                "req-ac12c2ea0f060247",
+                "req-c521065d30fc0272"
+              ],
+              "condition": "cache annotated bool; none string is truthy and miss always writes. New no-write invariant not implemented."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_IMPLEMENTATION_AND_CONTRADICTION",
+          "reason": "Actual old load_from_file path; no explicit string cache modes.",
+          "missing_prerequisites": "Vault detection helper/show_content semantics absent; unsafe=False returns deepcopy, so cached value is not necessarily object identity."
+        },
+        {
+          "blind_id": "Q24",
+          "relations": [
+            {
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_ids": [
+                "req-d5b2b8105de9fa82",
+                "req-ea10c024870ea3ae",
+                "req-9527987a765a7d30"
+              ],
+              "condition": "Old truthy-cache hit returns parsed_data without _get_file_contents; cache key is path_dwim result. Does not prove selective vaulted mode."
+            },
+            {
+              "relation": "CONTRADICTION_CONTEXT",
+              "requirement_ids": [
+                "req-0421f4c81270bd0f",
+                "req-ac12c2ea0f060247",
+                "req-c521065d30fc0272"
+              ],
+              "condition": "cache annotated bool; none string is truthy and miss always writes. New no-write invariant not implemented."
+            }
+          ],
+          "default_other_pairs": "UNKNOWN",
+          "scope": "TARGET_IMPLEMENTATION_AND_CONTRADICTION",
+          "reason": "Actual old load_from_file path; no explicit string cache modes.",
+          "missing_prerequisites": "Vault detection helper and show_content flag semantics absent. Q24 omits unsafe/deepcopy return branch; Q06/Q23 include it."
+        }
+      ],
+      "anchor_containment_hits": {
+        "V1": [
+          "Q06",
+          "Q23"
+        ],
+        "V2": [],
+        "V3": [
+          "Q15",
+          "Q17"
+        ],
+        "V4": [],
+        "V5": [],
+        "V6": [
+          "Q16"
+        ],
+        "V7": [],
+        "V8": []
+      },
+      "missing_anchors": [
+        "V2",
+        "V4",
+        "V5",
+        "V7",
+        "V8"
+      ],
+      "packs": [
+        {
+          "blind_pack_id": "P1",
+          "units": [
+            "Q22",
+            "Q23"
+          ],
+          "topical_only_units": [],
+          "topical_only_fraction_by_unit": 0.0,
+          "positive_context_units": [
+            "Q22",
+            "Q23"
+          ],
+          "mechanical_blocker": false,
+          "duplicate_unit_ids": false,
+          "conclusion": "Q22 documented cache intent plus Q23 exact old bug/hit path. Targeted but no selective-vault helper or public cache-mode tests; do not treat generic always-cache docs as overriding none mode."
+        },
+        {
+          "blind_pack_id": "P2",
+          "units": [
+            "Q23",
+            "Q19",
+            "Q03"
+          ],
+          "topical_only_units": [
+            "Q19",
+            "Q03"
+          ],
+          "topical_only_fraction_by_unit": 0.6666666666666666,
+          "positive_context_units": [
+            "Q23"
+          ],
+          "mechanical_blocker": false,
+          "duplicate_unit_ids": false,
+          "conclusion": "Q23 target implementation; Q19 first_found and Q03 rekey are topical distractions. New mode behavior remains unproven."
+        },
+        {
+          "blind_pack_id": "P3",
+          "units": [
+            "Q03",
+            "Q12",
+            "Q02"
+          ],
+          "topical_only_units": [
+            "Q03",
+            "Q12",
+            "Q02"
+          ],
+          "topical_only_fraction_by_unit": 1.0,
+          "positive_context_units": [],
+          "mechanical_blocker": false,
+          "duplicate_unit_ids": false,
+          "conclusion": "All three units topical-only: rekey, temporary-file cleanup, test-runner memoization. No positive target source relation; poor selection is not a mechanical input blocker."
+        }
+      ],
+      "no_direct_new_mode_tests_found": true
+    },
+    {
+      "state": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "kind": "documentation-macro-boundaries",
+      "units": [
+        {
+          "blind_id": "Q01",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q02",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q03",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q04",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q05",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q06",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "get_man_text description/deprecation prefix invokes tty_ify before text wrapping; consumer only",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q07",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q08",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "add_fields invokes tty_ify on descriptions and option text; no macro transformation definition",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q09",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q10",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q11",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q12",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q13",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "get_snippet_text includes original D5 tty_ify short-description consumer anchor",
+          "anchor_ids": [
+            "D5"
+          ],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q14",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "longer get_man_text prefix; no macro transformation definition",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q15",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "get_snippet_text prefix includes D5 but omits final return",
+          "anchor_ids": [
+            "D5"
+          ],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q16",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q17",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "same text as Q08 add_fields",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q18",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q19",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q20",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q21",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q22",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "get_man_text through notes; consumer plus wrapping, not macro rules",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q23",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        },
+        {
+          "blind_id": "Q24",
+          "audit_mode": "ANCHOR_AND_SCOPE_ONLY_NO_REPLACEMENT_RELATION_LABEL",
+          "semantic_scope": "Different formatter/parser/CLI or documentation topic; does not contain reviewed macro transformation anchors.",
+          "anchor_ids": [],
+          "requirements_relation_labels_generated": false
+        }
+      ],
+      "packs": [],
+      "preserved_status": "RELATION_MATRIX_REJECTED_NO_METHOD_PACK",
+      "planned_cells": 8,
+      "planned_cell_outcome": "UNKNOWN",
+      "rejection_counts_parent_reported": {
+        "rejected": 322,
+        "total": 336
+      },
+      "anchor_audit": {
+        "contained": [
+          "D5 in Q13/Q15"
+        ],
+        "absent": [
+          "D1 macro syntax docs",
+          "D2 CLI.tty_ify transformation",
+          "D3 old regex definitions",
+          "D4 DocCLI class inheritance"
+        ]
+      },
+      "requirement_retention": "Seven explicit behavior obligations retained alongside five repeated expected-results bullets and interface block. req-8177b699e0468168 is an interface introductory sentence, not standalone behavior; record limitation only, no frozen parser change. Exact L/R spaces, 13 dashes, IBM preservation, mixed macros, old macro compatibility and DocCLI entrypoint remain in text.",
+      "remaining_limits": [
+        "No recovered labels supplied for rejected pairs.",
+        "Consumer callsites cannot prove macro syntax or output.",
+        "Q08/Q17 identical; Q06/Q14/Q22 and Q13/Q15 overlap.",
+        "Overview/interface duplication affects row weighting, not permission to claim unique-obligation coverage."
+      ]
+    }
+  ],
+  "mechanical_blocker_newly_observed": false,
+  "limits": [
+    "Not proof of task success or complete requirement coverage.",
+    "Unlisted unit/requirement pairs remain UNKNOWN.",
+    "Contradiction context describes baseline bugs, not reasons to override the public request.",
+    "Topical-only packs and anchor omissions are quality findings, not mechanical blockers for otherwise authorized tails.",
+    "Macro relation-matrix rejection and eight UNKNOWN planned cells are preserved; no replacement labels are generated."
+  ]
+}

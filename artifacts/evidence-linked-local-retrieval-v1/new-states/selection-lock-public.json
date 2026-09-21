@@ -1,0 +1,604 @@
+{
+  "private_selection_lock_sha256": "134bc4a96406f3b909ec9ff2b271a34822b2b604687ea2c1e611ef21b26136bb",
+  "public_export": "whitelisted predictions; private checkpoint paths replaced with study-relative identities",
+  "plan_digest": "8b578902e69f78f6faebd8ccebe01242834b2aab5aa93d34a1082970c6a733f6",
+  "states": [
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "status": "UNAVAILABLE_PREPROCESS_FAILURE",
+      "checkpoint_sha256": "1ac614db88b66b9933ecebaee2fe07e06687d11b034b43c4633242ebcc3641b6",
+      "messages": {
+        "N": null,
+        "M-local": null,
+        "H-sim": null,
+        "H-link": null
+      },
+      "packs": {},
+      "failure_reason": "Incomplete relation matrix; missing pairs stay explicit",
+      "method_available": false,
+      "common_charge_seconds": null,
+      "remaining_after_common_charge": null,
+      "cost_status": "known_helper_costs_retained; whole interrupted preprocessing duration unconfirmed",
+      "validation_status": "REPAIRED_AFTER_FREEZE; no semantic or repair resampling",
+      "checkpoint_relative": "prefixes/instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5/checkpoints/E1"
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "status": "SELECTION_FROZEN",
+      "checkpoint_sha256": "ecbf305da0c365c9099f9b16b00d2788c34712e2177496ebc8f61a4094fd12e6",
+      "packs": {
+        "M-local": {
+          "method": "M-local",
+          "indices": [
+            1,
+            5,
+            20
+          ],
+          "units": [
+            {
+              "unit_id": "local-af001a9639376b614f883a11",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "function",
+              "applies_to": [
+                "lib.ansible.parsing.dataloader.DataLoader.load_from_file"
+              ],
+              "preconditions": [],
+              "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 80,
+                  "line_end": 104,
+                  "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+                }
+              ],
+              "claim_role": "existing_behavior",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "ansible.constants",
+                "ansible.errors.AnsibleFileNotFound",
+                "ansible.errors.AnsibleParserError",
+                "ansible.module_utils.basic.is_executable",
+                "ansible.module_utils.common.text.converters.to_bytes",
+                "ansible.module_utils.common.text.converters.to_native",
+                "ansible.module_utils.common.text.converters.to_text",
+                "ansible.module_utils.six.binary_type",
+                "ansible.module_utils.six.text_type",
+                "ansible.parsing.quoting.unquote",
+                "ansible.parsing.utils.yaml.from_yaml",
+                "ansible.parsing.vault.PromptVaultSecret",
+                "ansible.parsing.vault.VaultLib",
+                "ansible.parsing.vault.b_HEADER",
+                "ansible.parsing.vault.is_encrypted",
+                "ansible.parsing.vault.is_encrypted_file",
+                "ansible.parsing.vault.parse_vaulttext_envelope",
+                "ansible.utils.display.Display",
+                "ansible.utils.path.unfrackpath",
+                "copy",
+                "os",
+                "re",
+                "tempfile",
+                "typing"
+              ],
+              "serialized_payload": "[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+            },
+            {
+              "unit_id": "local-c836e0046a19fde732f53558",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "assignment",
+              "applies_to": [
+                "lib.ansible.plugins.lookup.first_found.DOCUMENTATION"
+              ],
+              "preconditions": [],
+              "statement": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "lib/ansible/plugins/lookup/first_found.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 6,
+                  "line_end": 50,
+                  "exact_excerpt": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+                }
+              ],
+              "claim_role": "documented_contract",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "ansible.errors.AnsibleLookupError",
+                "ansible.errors.AnsibleUndefinedVariable",
+                "ansible.module_utils.six.string_types",
+                "ansible.plugins.lookup.LookupBase",
+                "collections.abc.Mapping",
+                "collections.abc.Sequence",
+                "jinja2.exceptions.UndefinedError",
+                "os",
+                "re"
+              ],
+              "serialized_payload": "[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+            },
+            {
+              "unit_id": "local-25e600d5456fe4da2612fe7e",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "docstring",
+              "applies_to": [
+                "lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__"
+              ],
+              "preconditions": [],
+              "statement": "        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "lib/ansible/cli/vault.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 475,
+                  "line_end": 475,
+                  "exact_excerpt": "        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n"
+                }
+              ],
+              "claim_role": "documented_contract",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "ansible.cli.CLI",
+                "ansible.cli.arguments.option_helpers",
+                "ansible.constants",
+                "ansible.context",
+                "ansible.errors.AnsibleOptionsError",
+                "ansible.module_utils.common.text.converters.to_bytes",
+                "ansible.module_utils.common.text.converters.to_text",
+                "ansible.parsing.dataloader.DataLoader",
+                "ansible.parsing.vault.VaultEditor",
+                "ansible.parsing.vault.VaultLib",
+                "ansible.parsing.vault.match_encrypt_secret",
+                "ansible.utils.display.Display",
+                "os",
+                "sys"
+              ],
+              "serialized_payload": "[local-25e600d5456fe4da2612fe7e] Role: documented_contract\nApplies to: lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/cli/vault.py:475-475\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n"
+            }
+          ],
+          "tokens": 1175,
+          "scores": {
+            "coverage": 0.4655850169007082,
+            "relevance": 0.1612214639735079,
+            "redundancy_penalty": 0.06933527164128465,
+            "exposure_penalty": 0.05555555555555556,
+            "total": 0.5019156536773759
+          },
+          "decisions": [
+            {
+              "unit_id": "local-af001a9639376b614f883a11",
+              "mmr": 0.47577589768793194
+            },
+            {
+              "unit_id": "local-c836e0046a19fde732f53558",
+              "mmr": 0.2795263895373799
+            },
+            {
+              "unit_id": "local-25e600d5456fe4da2612fe7e",
+              "mmr": 0.21240706379778676
+            }
+          ]
+        },
+        "H-sim": {
+          "method": "H-sim",
+          "indices": [
+            20,
+            19,
+            3
+          ],
+          "units": [
+            {
+              "unit_id": "local-25e600d5456fe4da2612fe7e",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "docstring",
+              "applies_to": [
+                "lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__"
+              ],
+              "preconditions": [],
+              "statement": "        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "lib/ansible/cli/vault.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 475,
+                  "line_end": 475,
+                  "exact_excerpt": "        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n"
+                }
+              ],
+              "claim_role": "documented_contract",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "ansible.cli.CLI",
+                "ansible.cli.arguments.option_helpers",
+                "ansible.constants",
+                "ansible.context",
+                "ansible.errors.AnsibleOptionsError",
+                "ansible.module_utils.common.text.converters.to_bytes",
+                "ansible.module_utils.common.text.converters.to_text",
+                "ansible.parsing.dataloader.DataLoader",
+                "ansible.parsing.vault.VaultEditor",
+                "ansible.parsing.vault.VaultLib",
+                "ansible.parsing.vault.match_encrypt_secret",
+                "ansible.utils.display.Display",
+                "os",
+                "sys"
+              ],
+              "serialized_payload": "[local-25e600d5456fe4da2612fe7e] Role: documented_contract\nApplies to: lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/cli/vault.py:475-475\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n"
+            },
+            {
+              "unit_id": "local-f1d8115182fa82a011a4cc29",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "docstring",
+              "applies_to": [
+                "lib.ansible.parsing.dataloader.DataLoader.cleanup_tmp_file.__doc__"
+              ],
+              "preconditions": [],
+              "statement": "        \"\"\"\n        Removes any temporary files created from a previous call to\n        get_real_file. file_path must be the path returned from a\n        previous call to get_real_file.\n        \"\"\"\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 398,
+                  "line_end": 402,
+                  "exact_excerpt": "        \"\"\"\n        Removes any temporary files created from a previous call to\n        get_real_file. file_path must be the path returned from a\n        previous call to get_real_file.\n        \"\"\"\n"
+                }
+              ],
+              "claim_role": "documented_contract",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "ansible.constants",
+                "ansible.errors.AnsibleFileNotFound",
+                "ansible.errors.AnsibleParserError",
+                "ansible.module_utils.basic.is_executable",
+                "ansible.module_utils.common.text.converters.to_bytes",
+                "ansible.module_utils.common.text.converters.to_native",
+                "ansible.module_utils.common.text.converters.to_text",
+                "ansible.module_utils.six.binary_type",
+                "ansible.module_utils.six.text_type",
+                "ansible.parsing.quoting.unquote",
+                "ansible.parsing.utils.yaml.from_yaml",
+                "ansible.parsing.vault.PromptVaultSecret",
+                "ansible.parsing.vault.VaultLib",
+                "ansible.parsing.vault.b_HEADER",
+                "ansible.parsing.vault.is_encrypted",
+                "ansible.parsing.vault.is_encrypted_file",
+                "ansible.parsing.vault.parse_vaulttext_envelope",
+                "ansible.utils.display.Display",
+                "ansible.utils.path.unfrackpath",
+                "copy",
+                "os",
+                "re",
+                "tempfile",
+                "typing"
+              ],
+              "serialized_payload": "[local-f1d8115182fa82a011a4cc29] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.cleanup_tmp_file.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:398-402\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        Removes any temporary files created from a previous call to\n        get_real_file. file_path must be the path returned from a\n        previous call to get_real_file.\n        \"\"\"\n"
+            },
+            {
+              "unit_id": "local-a62611f7f102adf2db7789cb",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "function",
+              "applies_to": [
+                "test.lib.ansible_test._internal.util.cache"
+              ],
+              "preconditions": [],
+              "statement": "def cache(func: c.Callable[[], TValue]) -> c.Callable[[], TValue]:\n    \"\"\"Enforce exclusive access on a decorated function and cache the result.\"\"\"\n    storage: dict[None, TValue] = {}\n    sentinel = object()\n\n    @functools.wraps(func)\n    def cache_func():\n        \"\"\"Cache the return value from func.\"\"\"\n        if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()\n\n        return value\n\n    wrapper = mutex(cache_func)\n\n    return wrapper\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "test/lib/ansible_test/_internal/util.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 142,
+                  "line_end": 157,
+                  "exact_excerpt": "def cache(func: c.Callable[[], TValue]) -> c.Callable[[], TValue]:\n    \"\"\"Enforce exclusive access on a decorated function and cache the result.\"\"\"\n    storage: dict[None, TValue] = {}\n    sentinel = object()\n\n    @functools.wraps(func)\n    def cache_func():\n        \"\"\"Cache the return value from func.\"\"\"\n        if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()\n\n        return value\n\n    wrapper = mutex(cache_func)\n\n    return wrapper\n"
+                }
+              ],
+              "claim_role": "existing_behavior",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "abc",
+                "collections.abc",
+                "enum",
+                "fcntl",
+                "functools",
+                "importlib",
+                "inspect",
+                "json",
+                "keyword",
+                "os",
+                "pkgutil",
+                "platform",
+                "random",
+                "re",
+                "shlex",
+                "shutil",
+                "stat",
+                "string",
+                "struct.pack",
+                "struct.unpack",
+                "subprocess",
+                "sys",
+                "termios.TIOCGWINSZ",
+                "test.lib.ansible_test._internal.constants.SUPPORTED_PYTHON_VERSIONS",
+                "test.lib.ansible_test._internal.encoding.to_bytes",
+                "test.lib.ansible_test._internal.encoding.to_optional_bytes",
+                "test.lib.ansible_test._internal.encoding.to_optional_text",
+                "test.lib.ansible_test._internal.io.open_binary_file",
+                "test.lib.ansible_test._internal.io.read_text_file",
+                "test.lib.ansible_test._internal.locale_util.CONFIGURED_LOCALE",
+                "test.lib.ansible_test._internal.locale_util.LOCALE_WARNING",
+                "test.lib.ansible_test._internal.thread.WrappedThread",
+                "test.lib.ansible_test._internal.thread.mutex",
+                "time",
+                "typing",
+                "warnings"
+              ],
+              "serialized_payload": "[local-a62611f7f102adf2db7789cb] Role: existing_behavior\nApplies to: test.lib.ansible_test._internal.util.cache\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:test/lib/ansible_test/_internal/util.py:142-157\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef cache(func: c.Callable[[], TValue]) -> c.Callable[[], TValue]:\n    \"\"\"Enforce exclusive access on a decorated function and cache the result.\"\"\"\n    storage: dict[None, TValue] = {}\n    sentinel = object()\n\n    @functools.wraps(func)\n    def cache_func():\n        \"\"\"Cache the return value from func.\"\"\"\n        if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()\n\n        return value\n\n    wrapper = mutex(cache_func)\n\n    return wrapper\n"
+            }
+          ],
+          "tokens": 519,
+          "scores": {
+            "coverage": 0.4063027416478749,
+            "relevance": 0.12593058712197686,
+            "redundancy_penalty": 0.051821609483972256,
+            "exposure_penalty": 0.020000000000000004,
+            "total": 0.4604117192858795
+          },
+          "decisions": [
+            {
+              "unit_id": "local-25e600d5456fe4da2612fe7e",
+              "marginal": 0.4023937791118469
+            },
+            {
+              "unit_id": "local-f1d8115182fa82a011a4cc29",
+              "marginal": 0.04808632096242227
+            },
+            {
+              "unit_id": "local-a62611f7f102adf2db7789cb",
+              "marginal": 0.009931619211610287
+            }
+          ]
+        },
+        "H-link": {
+          "method": "H-link",
+          "indices": [
+            6,
+            1
+          ],
+          "units": [
+            {
+              "unit_id": "local-43b3acd2b248ade157be8951",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "docstring",
+              "applies_to": [
+                "lib.ansible.parsing.dataloader.DataLoader.__doc__"
+              ],
+              "preconditions": [],
+              "statement": "    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 35,
+                  "line_end": 50,
+                  "exact_excerpt": "    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n"
+                }
+              ],
+              "claim_role": "documented_contract",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "ansible.constants",
+                "ansible.errors.AnsibleFileNotFound",
+                "ansible.errors.AnsibleParserError",
+                "ansible.module_utils.basic.is_executable",
+                "ansible.module_utils.common.text.converters.to_bytes",
+                "ansible.module_utils.common.text.converters.to_native",
+                "ansible.module_utils.common.text.converters.to_text",
+                "ansible.module_utils.six.binary_type",
+                "ansible.module_utils.six.text_type",
+                "ansible.parsing.quoting.unquote",
+                "ansible.parsing.utils.yaml.from_yaml",
+                "ansible.parsing.vault.PromptVaultSecret",
+                "ansible.parsing.vault.VaultLib",
+                "ansible.parsing.vault.b_HEADER",
+                "ansible.parsing.vault.is_encrypted",
+                "ansible.parsing.vault.is_encrypted_file",
+                "ansible.parsing.vault.parse_vaulttext_envelope",
+                "ansible.utils.display.Display",
+                "ansible.utils.path.unfrackpath",
+                "copy",
+                "os",
+                "re",
+                "tempfile",
+                "typing"
+              ],
+              "serialized_payload": "[local-43b3acd2b248ade157be8951] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:35-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n"
+            },
+            {
+              "unit_id": "local-af001a9639376b614f883a11",
+              "repository": "ansible/ansible",
+              "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "kind": "function",
+              "applies_to": [
+                "lib.ansible.parsing.dataloader.DataLoader.load_from_file"
+              ],
+              "preconditions": [],
+              "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n",
+              "verification_pattern": null,
+              "source_spans": [
+                {
+                  "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+                  "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+                  "line_start": 80,
+                  "line_end": 104,
+                  "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+                }
+              ],
+              "claim_role": "existing_behavior",
+              "version_status": "supported",
+              "dependencies": [
+                "__future__.annotations",
+                "ansible.constants",
+                "ansible.errors.AnsibleFileNotFound",
+                "ansible.errors.AnsibleParserError",
+                "ansible.module_utils.basic.is_executable",
+                "ansible.module_utils.common.text.converters.to_bytes",
+                "ansible.module_utils.common.text.converters.to_native",
+                "ansible.module_utils.common.text.converters.to_text",
+                "ansible.module_utils.six.binary_type",
+                "ansible.module_utils.six.text_type",
+                "ansible.parsing.quoting.unquote",
+                "ansible.parsing.utils.yaml.from_yaml",
+                "ansible.parsing.vault.PromptVaultSecret",
+                "ansible.parsing.vault.VaultLib",
+                "ansible.parsing.vault.b_HEADER",
+                "ansible.parsing.vault.is_encrypted",
+                "ansible.parsing.vault.is_encrypted_file",
+                "ansible.parsing.vault.parse_vaulttext_envelope",
+                "ansible.utils.display.Display",
+                "ansible.utils.path.unfrackpath",
+                "copy",
+                "os",
+                "re",
+                "tempfile",
+                "typing"
+              ],
+              "serialized_payload": "[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+            }
+          ],
+          "tokens": 640,
+          "scores": {
+            "coverage": 0.5666666666666667,
+            "relevance": 0.12634600961237688,
+            "redundancy_penalty": 0.05777894212948847,
+            "exposure_penalty": 0.1,
+            "total": 0.5352337341495551
+          },
+          "decisions": [
+            {
+              "unit_id": "local-43b3acd2b248ade157be8951",
+              "marginal": 0.37504469089505327
+            },
+            {
+              "unit_id": "local-af001a9639376b614f883a11",
+              "marginal": 0.16018904325450184
+            }
+          ]
+        }
+      },
+      "messages": {
+        "N": null,
+        "M-local": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n\n\n[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n\n\n[local-25e600d5456fe4da2612fe7e] Role: documented_contract\nApplies to: lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/cli/vault.py:475-475\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n",
+        "H-sim": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-25e600d5456fe4da2612fe7e] Role: documented_contract\nApplies to: lib.ansible.cli.vault.VaultCLI.execute_rekey.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/cli/vault.py:475-475\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        ''' re-encrypt a vaulted file with a new secret, the previous secret is required '''\n\n\n[local-f1d8115182fa82a011a4cc29] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.cleanup_tmp_file.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:398-402\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        Removes any temporary files created from a previous call to\n        get_real_file. file_path must be the path returned from a\n        previous call to get_real_file.\n        \"\"\"\n\n\n[local-a62611f7f102adf2db7789cb] Role: existing_behavior\nApplies to: test.lib.ansible_test._internal.util.cache\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:test/lib/ansible_test/_internal/util.py:142-157\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef cache(func: c.Callable[[], TValue]) -> c.Callable[[], TValue]:\n    \"\"\"Enforce exclusive access on a decorated function and cache the result.\"\"\"\n    storage: dict[None, TValue] = {}\n    sentinel = object()\n\n    @functools.wraps(func)\n    def cache_func():\n        \"\"\"Cache the return value from func.\"\"\"\n        if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()\n\n        return value\n\n    wrapper = mutex(cache_func)\n\n    return wrapper\n",
+        "H-link": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-43b3acd2b248ade157be8951] Role: documented_contract\nApplies to: lib.ansible.parsing.dataloader.DataLoader.__doc__\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:35-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    The DataLoader class is used to load and parse YAML or JSON content,\n    either from a given file name or from a string that was previously\n    read in through other means. A Vault password can be specified, and\n    any vault-encrypted files will be decrypted.\n\n    Data read from files will also be cached, so the file will never be\n    read from disk more than once.\n\n    Usage:\n\n        dl = DataLoader()\n        # optionally: dl.set_vault_secrets([('default', ansible.parsing.vault.PrompVaultSecret(...),)])\n        ds = dl.load('...')\n        ds = dl.load_from_file('/path/to/file')\n    '''\n\n\n[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+      },
+      "common_charge_seconds": 213.2870779169025,
+      "prefix_remaining_seconds": 521.145883457968,
+      "remaining_after_common_charge": 307.8588055410655,
+      "model_load_seconds": 3.138098374940455,
+      "source_relation_quality": "NOT_YET_INDEPENDENTLY_CHECKED",
+      "no_supported_context": false,
+      "checkpoint_relative": "prefixes/instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59/checkpoints/E1"
+    }
+  ],
+  "cells": [
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "H-link",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "H-sim",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "N",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "M-local",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "M-local",
+      "repeat": 2
+    },
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "H-sim",
+      "repeat": 2
+    },
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "H-link",
+      "repeat": 2
+    },
+    {
+      "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "arm": "N",
+      "repeat": 2
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "H-sim",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "N",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "M-local",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "H-link",
+      "repeat": 1
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "H-link",
+      "repeat": 2
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "N",
+      "repeat": 2
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "M-local",
+      "repeat": 2
+    },
+    {
+      "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "arm": "H-sim",
+      "repeat": 2
+    }
+  ]
+}

@@ -1,0 +1,405 @@
+{
+  "M-local": {
+    "method": "M-local",
+    "indices": [
+      3,
+      7,
+      4
+    ],
+    "units": [
+      {
+        "unit_id": "local-1fb2ec53b48837d33259778c-4e1a7382",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.plugins.strategy.linear.StrategyModule._get_next_task_lockstep.block_123"
+        ],
+        "preconditions": [],
+        "statement": "    def _get_next_task_lockstep(self, hosts, iterator):\n        '''\n        Returns a list of (host, task) tuples, where the task may\n        be a noop task to keep the iterator in lock step across\n        all hosts.\n        '''\n\n        noop_task = Task()\n        noop_task.action = 'meta'\n        noop_task.args['_raw_params'] = 'noop'\n        noop_task.implicit = True\n        noop_task.set_loader(iterator._play._loader)\n\n        host_tasks = {}\n        display.debug(\"building list of next tasks for hosts\")\n        for host in hosts:\n            host_tasks[host.name] = iterator.get_next_task_for_host(host, peek=True)\n        display.debug(\"done building task lists\")\n\n        num_setups = 0\n        num_tasks = 0\n        num_rescue = 0\n        num_always = 0\n\n        display.debug(\"counting tasks in each state of execution\")\n        host_tasks_to_run = [(host, state_task)\n                             for host, state_task in host_tasks.items()\n                             if state_task and state_task[1]]\n\n        if host_tasks_to_run:\n            try:\n                lowest_cur_block = min(\n                    (iterator.get_active_state(s).cur_block for h, (s, t) in host_tasks_to_run\n                     if s.run_state != PlayIterator.ITERATING_COMPLETE))\n            except ValueError:\n                lowest_cur_block = None\n        else:\n            # empty host_tasks_to_run will just run till the end of the function\n            # without ever touching lowest_cur_block\n            lowest_cur_block = None\n\n        for (k, v) in host_tasks_to_run:\n            (s, t) = v\n\n            s = iterator.get_active_state(s)\n            if s.cur_block > lowest_cur_block:\n                # Not the current block, ignore it\n                continue\n\n            if s.run_state == PlayIterator.ITERATING_SETUP:\n                num_setups += 1\n            elif s.run_state == PlayIterator.ITERATING_TASKS:\n                num_tasks += 1\n            elif s.run_state == PlayIterator.ITERATING_RESCUE:\n                num_rescue += 1\n            elif s.run_state == PlayIterator.ITERATING_ALWAYS:\n                num_always += 1\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/strategy/linear.py",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 82,
+            "line_end": 138,
+            "exact_excerpt": "    def _get_next_task_lockstep(self, hosts, iterator):\n        '''\n        Returns a list of (host, task) tuples, where the task may\n        be a noop task to keep the iterator in lock step across\n        all hosts.\n        '''\n\n        noop_task = Task()\n        noop_task.action = 'meta'\n        noop_task.args['_raw_params'] = 'noop'\n        noop_task.implicit = True\n        noop_task.set_loader(iterator._play._loader)\n\n        host_tasks = {}\n        display.debug(\"building list of next tasks for hosts\")\n        for host in hosts:\n            host_tasks[host.name] = iterator.get_next_task_for_host(host, peek=True)\n        display.debug(\"done building task lists\")\n\n        num_setups = 0\n        num_tasks = 0\n        num_rescue = 0\n        num_always = 0\n\n        display.debug(\"counting tasks in each state of execution\")\n        host_tasks_to_run = [(host, state_task)\n                             for host, state_task in host_tasks.items()\n                             if state_task and state_task[1]]\n\n        if host_tasks_to_run:\n            try:\n                lowest_cur_block = min(\n                    (iterator.get_active_state(s).cur_block for h, (s, t) in host_tasks_to_run\n                     if s.run_state != PlayIterator.ITERATING_COMPLETE))\n            except ValueError:\n                lowest_cur_block = None\n        else:\n            # empty host_tasks_to_run will just run till the end of the function\n            # without ever touching lowest_cur_block\n            lowest_cur_block = None\n\n        for (k, v) in host_tasks_to_run:\n            (s, t) = v\n\n            s = iterator.get_active_state(s)\n            if s.cur_block > lowest_cur_block:\n                # Not the current block, ignore it\n                continue\n\n            if s.run_state == PlayIterator.ITERATING_SETUP:\n                num_setups += 1\n            elif s.run_state == PlayIterator.ITERATING_TASKS:\n                num_tasks += 1\n            elif s.run_state == PlayIterator.ITERATING_RESCUE:\n                num_rescue += 1\n            elif s.run_state == PlayIterator.ITERATING_ALWAYS:\n                num_always += 1\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.executor.play_iterator.PlayIterator",
+          "ansible.module_utils._text.to_text",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.included_file.IncludedFile",
+          "ansible.playbook.task.Task",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.strategy.StrategyBase",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display"
+        ],
+        "serialized_payload": "[local-1fb2ec53b48837d33259778c-4e1a7382] Role: existing_behavior\nApplies to: lib.ansible.plugins.strategy.linear.StrategyModule._get_next_task_lockstep.block_123\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/plugins/strategy/linear.py:82-138\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _get_next_task_lockstep(self, hosts, iterator):\n        '''\n        Returns a list of (host, task) tuples, where the task may\n        be a noop task to keep the iterator in lock step across\n        all hosts.\n        '''\n\n        noop_task = Task()\n        noop_task.action = 'meta'\n        noop_task.args['_raw_params'] = 'noop'\n        noop_task.implicit = True\n        noop_task.set_loader(iterator._play._loader)\n\n        host_tasks = {}\n        display.debug(\"building list of next tasks for hosts\")\n        for host in hosts:\n            host_tasks[host.name] = iterator.get_next_task_for_host(host, peek=True)\n        display.debug(\"done building task lists\")\n\n        num_setups = 0\n        num_tasks = 0\n        num_rescue = 0\n        num_always = 0\n\n        display.debug(\"counting tasks in each state of execution\")\n        host_tasks_to_run = [(host, state_task)\n                             for host, state_task in host_tasks.items()\n                             if state_task and state_task[1]]\n\n        if host_tasks_to_run:\n            try:\n                lowest_cur_block = min(\n                    (iterator.get_active_state(s).cur_block for h, (s, t) in host_tasks_to_run\n                     if s.run_state != PlayIterator.ITERATING_COMPLETE))\n            except ValueError:\n                lowest_cur_block = None\n        else:\n            # empty host_tasks_to_run will just run till the end of the function\n            # without ever touching lowest_cur_block\n            lowest_cur_block = None\n\n        for (k, v) in host_tasks_to_run:\n            (s, t) = v\n\n            s = iterator.get_active_state(s)\n            if s.cur_block > lowest_cur_block:\n                # Not the current block, ignore it\n                continue\n\n            if s.run_state == PlayIterator.ITERATING_SETUP:\n                num_setups += 1\n            elif s.run_state == PlayIterator.ITERATING_TASKS:\n                num_tasks += 1\n            elif s.run_state == PlayIterator.ITERATING_RESCUE:\n                num_rescue += 1\n            elif s.run_state == PlayIterator.ITERATING_ALWAYS:\n                num_always += 1\n"
+      },
+      {
+        "unit_id": "local-e955da194c8736905302c456",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/user_guide/playbooks_error_handling.rst:142"
+        ],
+        "preconditions": [],
+        "statement": "Ansible lets you define when a particular task has \"changed\" a remote node using the ``changed_when`` conditional. This lets you determine, based on return codes or output, whether a change should be reported in Ansible statistics and whether a handler should be triggered or not. As with all conditionals in Ansible, lists of multiple ``changed_when`` conditions are joined with an implicit ``and``, meaning the task only reports a change when *all* conditions are met. If you want to report a change when any of the conditions is met, you must define the conditions in a string with an explicit ``or`` operator. For example:\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/user_guide/playbooks_error_handling.rst",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 142,
+            "line_end": 142,
+            "exact_excerpt": "Ansible lets you define when a particular task has \"changed\" a remote node using the ``changed_when`` conditional. This lets you determine, based on return codes or output, whether a change should be reported in Ansible statistics and whether a handler should be triggered or not. As with all conditionals in Ansible, lists of multiple ``changed_when`` conditions are joined with an implicit ``and``, meaning the task only reports a change when *all* conditions are met. If you want to report a change when any of the conditions is met, you must define the conditions in a string with an explicit ``or`` operator. For example:\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-e955da194c8736905302c456] Role: documented_contract\nApplies to: docs/docsite/rst/user_guide/playbooks_error_handling.rst:142\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:docs/docsite/rst/user_guide/playbooks_error_handling.rst:142-142\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nAnsible lets you define when a particular task has \"changed\" a remote node using the ``changed_when`` conditional. This lets you determine, based on return codes or output, whether a change should be reported in Ansible statistics and whether a handler should be triggered or not. As with all conditionals in Ansible, lists of multiple ``changed_when`` conditions are joined with an implicit ``and``, meaning the task only reports a change when *all* conditions are met. If you want to report a change when any of the conditions is met, you must define the conditions in a string with an explicit ``or`` operator. For example:\n"
+      },
+      {
+        "unit_id": "local-ba04dc77b4cad4476528455a",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/dev_guide/developing_collections_structure.rst:216"
+        ],
+        "preconditions": [],
+        "statement": "  Content in a collection that Ansible needs to load from another location or that has been deprecated/removed.\n  The top level keys of ``plugin_routing`` are types of plugins, with individual plugin names as subkeys.\n  To define a new location for a plugin, set the ``redirect`` field to another name.\n  To deprecate a plugin, use the ``deprecation`` field to provide a custom warning message and the removal version or date. If the plugin has been renamed or moved to a new location, the ``redirect`` field should also be provided. If a plugin is being removed entirely, ``tombstone`` can be used for the fatal error message and removal version or date.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/dev_guide/developing_collections_structure.rst",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 216,
+            "line_end": 219,
+            "exact_excerpt": "  Content in a collection that Ansible needs to load from another location or that has been deprecated/removed.\n  The top level keys of ``plugin_routing`` are types of plugins, with individual plugin names as subkeys.\n  To define a new location for a plugin, set the ``redirect`` field to another name.\n  To deprecate a plugin, use the ``deprecation`` field to provide a custom warning message and the removal version or date. If the plugin has been renamed or moved to a new location, the ``redirect`` field should also be provided. If a plugin is being removed entirely, ``tombstone`` can be used for the fatal error message and removal version or date.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-ba04dc77b4cad4476528455a] Role: documented_contract\nApplies to: docs/docsite/rst/dev_guide/developing_collections_structure.rst:216\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:docs/docsite/rst/dev_guide/developing_collections_structure.rst:216-219\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n  Content in a collection that Ansible needs to load from another location or that has been deprecated/removed.\n  The top level keys of ``plugin_routing`` are types of plugins, with individual plugin names as subkeys.\n  To define a new location for a plugin, set the ``redirect`` field to another name.\n  To deprecate a plugin, use the ``deprecation`` field to provide a custom warning message and the removal version or date. If the plugin has been renamed or moved to a new location, the ``redirect`` field should also be provided. If a plugin is being removed entirely, ``tombstone`` can be used for the fatal error message and removal version or date.\n"
+      }
+    ],
+    "tokens": 1107,
+    "scores": {
+      "coverage": 0.40356509676832214,
+      "relevance": 0.17585903652362378,
+      "redundancy_penalty": 0.09018950816016119,
+      "exposure_penalty": 0.05,
+      "total": 0.4392346251317847
+    },
+    "decisions": [
+      {
+        "unit_id": "local-1fb2ec53b48837d33259778c-4e1a7382",
+        "mmr": 0.4622563546040978
+      },
+      {
+        "unit_id": "local-e955da194c8736905302c456",
+        "mmr": 0.30896893310963025
+      },
+      {
+        "unit_id": "local-ba04dc77b4cad4476528455a",
+        "mmr": 0.24684167659338327
+      }
+    ]
+  },
+  "H-sim": {
+    "method": "H-sim",
+    "indices": [
+      6,
+      16,
+      5,
+      3
+    ],
+    "units": [
+      {
+        "unit_id": "local-288d1d9f9e2afca7481ef928",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/reference_appendices/special_variables.rst:6"
+        ],
+        "preconditions": [],
+        "statement": "Magic variables\n---------------\nThese variables cannot be set directly by the user; Ansible will always override them to reflect internal state.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/reference_appendices/special_variables.rst",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 6,
+            "line_end": 8,
+            "exact_excerpt": "Magic variables\n---------------\nThese variables cannot be set directly by the user; Ansible will always override them to reflect internal state.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-288d1d9f9e2afca7481ef928] Role: documented_contract\nApplies to: docs/docsite/rst/reference_appendices/special_variables.rst:6\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:docs/docsite/rst/reference_appendices/special_variables.rst:6-8\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nMagic variables\n---------------\nThese variables cannot be set directly by the user; Ansible will always override them to reflect internal state.\n"
+      },
+      {
+        "unit_id": "local-c20cbdcc7b626c17ebecf4f6",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/user_guide/playbooks_error_handling.rst:88"
+        ],
+        "preconditions": [],
+        "statement": "Ansible lets you define what \"failure\" means in each task using the ``failed_when`` conditional. As with all conditionals in Ansible, lists of multiple ``failed_when`` conditions are joined with an implicit ``and``, meaning the task only fails when *all* conditions are met. If you want to trigger a failure when any of the conditions is met, you must define the conditions in a string with an explicit ``or`` operator.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/user_guide/playbooks_error_handling.rst",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 88,
+            "line_end": 88,
+            "exact_excerpt": "Ansible lets you define what \"failure\" means in each task using the ``failed_when`` conditional. As with all conditionals in Ansible, lists of multiple ``failed_when`` conditions are joined with an implicit ``and``, meaning the task only fails when *all* conditions are met. If you want to trigger a failure when any of the conditions is met, you must define the conditions in a string with an explicit ``or`` operator.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-c20cbdcc7b626c17ebecf4f6] Role: documented_contract\nApplies to: docs/docsite/rst/user_guide/playbooks_error_handling.rst:88\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:docs/docsite/rst/user_guide/playbooks_error_handling.rst:88-88\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nAnsible lets you define what \"failure\" means in each task using the ``failed_when`` conditional. As with all conditionals in Ansible, lists of multiple ``failed_when`` conditions are joined with an implicit ``and``, meaning the task only fails when *all* conditions are met. If you want to trigger a failure when any of the conditions is met, you must define the conditions in a string with an explicit ``or`` operator.\n"
+      },
+      {
+        "unit_id": "local-b83537a57963246211b0b9cf",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/dev_guide/module_lifecycle.rst:14"
+        ],
+        "preconditions": [],
+        "statement": "3. If a module's or plugin's target API changes radically, or if someone creates a better implementation of its functionality, we may mark it deprecated. Modules and plugins that are deprecated are still available but they are reaching the end of their life cycle. We retain deprecated modules and plugins for 4 release cycles with deprecation warnings to help users update playbooks and roles that use them.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/dev_guide/module_lifecycle.rst",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 14,
+            "line_end": 14,
+            "exact_excerpt": "3. If a module's or plugin's target API changes radically, or if someone creates a better implementation of its functionality, we may mark it deprecated. Modules and plugins that are deprecated are still available but they are reaching the end of their life cycle. We retain deprecated modules and plugins for 4 release cycles with deprecation warnings to help users update playbooks and roles that use them.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-b83537a57963246211b0b9cf] Role: documented_contract\nApplies to: docs/docsite/rst/dev_guide/module_lifecycle.rst:14\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:docs/docsite/rst/dev_guide/module_lifecycle.rst:14-14\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n3. If a module's or plugin's target API changes radically, or if someone creates a better implementation of its functionality, we may mark it deprecated. Modules and plugins that are deprecated are still available but they are reaching the end of their life cycle. We retain deprecated modules and plugins for 4 release cycles with deprecation warnings to help users update playbooks and roles that use them.\n"
+      },
+      {
+        "unit_id": "local-1fb2ec53b48837d33259778c-4e1a7382",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.plugins.strategy.linear.StrategyModule._get_next_task_lockstep.block_123"
+        ],
+        "preconditions": [],
+        "statement": "    def _get_next_task_lockstep(self, hosts, iterator):\n        '''\n        Returns a list of (host, task) tuples, where the task may\n        be a noop task to keep the iterator in lock step across\n        all hosts.\n        '''\n\n        noop_task = Task()\n        noop_task.action = 'meta'\n        noop_task.args['_raw_params'] = 'noop'\n        noop_task.implicit = True\n        noop_task.set_loader(iterator._play._loader)\n\n        host_tasks = {}\n        display.debug(\"building list of next tasks for hosts\")\n        for host in hosts:\n            host_tasks[host.name] = iterator.get_next_task_for_host(host, peek=True)\n        display.debug(\"done building task lists\")\n\n        num_setups = 0\n        num_tasks = 0\n        num_rescue = 0\n        num_always = 0\n\n        display.debug(\"counting tasks in each state of execution\")\n        host_tasks_to_run = [(host, state_task)\n                             for host, state_task in host_tasks.items()\n                             if state_task and state_task[1]]\n\n        if host_tasks_to_run:\n            try:\n                lowest_cur_block = min(\n                    (iterator.get_active_state(s).cur_block for h, (s, t) in host_tasks_to_run\n                     if s.run_state != PlayIterator.ITERATING_COMPLETE))\n            except ValueError:\n                lowest_cur_block = None\n        else:\n            # empty host_tasks_to_run will just run till the end of the function\n            # without ever touching lowest_cur_block\n            lowest_cur_block = None\n\n        for (k, v) in host_tasks_to_run:\n            (s, t) = v\n\n            s = iterator.get_active_state(s)\n            if s.cur_block > lowest_cur_block:\n                # Not the current block, ignore it\n                continue\n\n            if s.run_state == PlayIterator.ITERATING_SETUP:\n                num_setups += 1\n            elif s.run_state == PlayIterator.ITERATING_TASKS:\n                num_tasks += 1\n            elif s.run_state == PlayIterator.ITERATING_RESCUE:\n                num_rescue += 1\n            elif s.run_state == PlayIterator.ITERATING_ALWAYS:\n                num_always += 1\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/strategy/linear.py",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 82,
+            "line_end": 138,
+            "exact_excerpt": "    def _get_next_task_lockstep(self, hosts, iterator):\n        '''\n        Returns a list of (host, task) tuples, where the task may\n        be a noop task to keep the iterator in lock step across\n        all hosts.\n        '''\n\n        noop_task = Task()\n        noop_task.action = 'meta'\n        noop_task.args['_raw_params'] = 'noop'\n        noop_task.implicit = True\n        noop_task.set_loader(iterator._play._loader)\n\n        host_tasks = {}\n        display.debug(\"building list of next tasks for hosts\")\n        for host in hosts:\n            host_tasks[host.name] = iterator.get_next_task_for_host(host, peek=True)\n        display.debug(\"done building task lists\")\n\n        num_setups = 0\n        num_tasks = 0\n        num_rescue = 0\n        num_always = 0\n\n        display.debug(\"counting tasks in each state of execution\")\n        host_tasks_to_run = [(host, state_task)\n                             for host, state_task in host_tasks.items()\n                             if state_task and state_task[1]]\n\n        if host_tasks_to_run:\n            try:\n                lowest_cur_block = min(\n                    (iterator.get_active_state(s).cur_block for h, (s, t) in host_tasks_to_run\n                     if s.run_state != PlayIterator.ITERATING_COMPLETE))\n            except ValueError:\n                lowest_cur_block = None\n        else:\n            # empty host_tasks_to_run will just run till the end of the function\n            # without ever touching lowest_cur_block\n            lowest_cur_block = None\n\n        for (k, v) in host_tasks_to_run:\n            (s, t) = v\n\n            s = iterator.get_active_state(s)\n            if s.cur_block > lowest_cur_block:\n                # Not the current block, ignore it\n                continue\n\n            if s.run_state == PlayIterator.ITERATING_SETUP:\n                num_setups += 1\n            elif s.run_state == PlayIterator.ITERATING_TASKS:\n                num_tasks += 1\n            elif s.run_state == PlayIterator.ITERATING_RESCUE:\n                num_rescue += 1\n            elif s.run_state == PlayIterator.ITERATING_ALWAYS:\n                num_always += 1\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.executor.play_iterator.PlayIterator",
+          "ansible.module_utils._text.to_text",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.included_file.IncludedFile",
+          "ansible.playbook.task.Task",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.strategy.StrategyBase",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display"
+        ],
+        "serialized_payload": "[local-1fb2ec53b48837d33259778c-4e1a7382] Role: existing_behavior\nApplies to: lib.ansible.plugins.strategy.linear.StrategyModule._get_next_task_lockstep.block_123\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/plugins/strategy/linear.py:82-138\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _get_next_task_lockstep(self, hosts, iterator):\n        '''\n        Returns a list of (host, task) tuples, where the task may\n        be a noop task to keep the iterator in lock step across\n        all hosts.\n        '''\n\n        noop_task = Task()\n        noop_task.action = 'meta'\n        noop_task.args['_raw_params'] = 'noop'\n        noop_task.implicit = True\n        noop_task.set_loader(iterator._play._loader)\n\n        host_tasks = {}\n        display.debug(\"building list of next tasks for hosts\")\n        for host in hosts:\n            host_tasks[host.name] = iterator.get_next_task_for_host(host, peek=True)\n        display.debug(\"done building task lists\")\n\n        num_setups = 0\n        num_tasks = 0\n        num_rescue = 0\n        num_always = 0\n\n        display.debug(\"counting tasks in each state of execution\")\n        host_tasks_to_run = [(host, state_task)\n                             for host, state_task in host_tasks.items()\n                             if state_task and state_task[1]]\n\n        if host_tasks_to_run:\n            try:\n                lowest_cur_block = min(\n                    (iterator.get_active_state(s).cur_block for h, (s, t) in host_tasks_to_run\n                     if s.run_state != PlayIterator.ITERATING_COMPLETE))\n            except ValueError:\n                lowest_cur_block = None\n        else:\n            # empty host_tasks_to_run will just run till the end of the function\n            # without ever touching lowest_cur_block\n            lowest_cur_block = None\n\n        for (k, v) in host_tasks_to_run:\n            (s, t) = v\n\n            s = iterator.get_active_state(s)\n            if s.cur_block > lowest_cur_block:\n                # Not the current block, ignore it\n                continue\n\n            if s.run_state == PlayIterator.ITERATING_SETUP:\n                num_setups += 1\n            elif s.run_state == PlayIterator.ITERATING_TASKS:\n                num_tasks += 1\n            elif s.run_state == PlayIterator.ITERATING_RESCUE:\n                num_rescue += 1\n            elif s.run_state == PlayIterator.ITERATING_ALWAYS:\n                num_always += 1\n"
+      }
+    ],
+    "tokens": 1138,
+    "scores": {
+      "coverage": 0.42492983598314055,
+      "relevance": 0.20934511905518632,
+      "redundancy_penalty": 0.14699118753197993,
+      "exposure_penalty": 0.05,
+      "total": 0.43728376750634695
+    },
+    "decisions": [
+      {
+        "unit_id": "local-288d1d9f9e2afca7481ef928",
+        "marginal": 0.34582652964208305
+      },
+      {
+        "unit_id": "local-c20cbdcc7b626c17ebecf4f6",
+        "marginal": 0.06105319303328283
+      },
+      {
+        "unit_id": "local-b83537a57963246211b0b9cf",
+        "marginal": 0.018125817434170743
+      },
+      {
+        "unit_id": "local-1fb2ec53b48837d33259778c-4e1a7382",
+        "marginal": 0.012278227396810337
+      }
+    ]
+  },
+  "H-link": {
+    "method": "H-link",
+    "indices": [
+      2,
+      19,
+      5
+    ],
+    "units": [
+      {
+        "unit_id": "local-5c9e4906274f22d4bccfbd43-f39a13b8",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.executor.play_iterator.HostState.__str__._run_state_to_string.block_60"
+        ],
+        "preconditions": [],
+        "statement": "        def _run_state_to_string(n):\n            states = [\"ITERATING_SETUP\", \"ITERATING_TASKS\", \"ITERATING_RESCUE\", \"ITERATING_ALWAYS\", \"ITERATING_COMPLETE\"]\n            try:\n                return states[n]\n            except IndexError:\n                return \"UNKNOWN STATE\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/executor/play_iterator.py",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 58,
+            "line_end": 63,
+            "exact_excerpt": "        def _run_state_to_string(n):\n            states = [\"ITERATING_SETUP\", \"ITERATING_TASKS\", \"ITERATING_RESCUE\", \"ITERATING_ALWAYS\", \"ITERATING_COMPLETE\"]\n            try:\n                return states[n]\n            except IndexError:\n                return \"UNKNOWN STATE\"\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.task.Task",
+          "ansible.utils.display.Display",
+          "fnmatch"
+        ],
+        "serialized_payload": "[local-5c9e4906274f22d4bccfbd43-f39a13b8] Role: existing_behavior\nApplies to: lib.ansible.executor.play_iterator.HostState.__str__._run_state_to_string.block_60\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/executor/play_iterator.py:58-63\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        def _run_state_to_string(n):\n            states = [\"ITERATING_SETUP\", \"ITERATING_TASKS\", \"ITERATING_RESCUE\", \"ITERATING_ALWAYS\", \"ITERATING_COMPLETE\"]\n            try:\n                return states[n]\n            except IndexError:\n                return \"UNKNOWN STATE\"\n"
+      },
+      {
+        "unit_id": "local-fbd437373f6b5790be9f43cb-94562871",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.executor.play_iterator.PlayIterator._check_failed_state.branch_473"
+        ],
+        "preconditions": [],
+        "statement": "    def _check_failed_state(self, state):\n        if state is None:\n            return False\n        elif state.run_state == self.ITERATING_RESCUE and self._check_failed_state(state.rescue_child_state):\n            return True\n        elif state.run_state == self.ITERATING_ALWAYS and self._check_failed_state(state.always_child_state):\n            return True\n        elif state.fail_state != self.FAILED_NONE:\n            if state.run_state == self.ITERATING_RESCUE and state.fail_state & self.FAILED_RESCUE == 0:\n                return False\n            elif state.run_state == self.ITERATING_ALWAYS and state.fail_state & self.FAILED_ALWAYS == 0:\n                return False\n            else:\n                return not (state.did_rescue and state.fail_state & self.FAILED_ALWAYS == 0)\n        elif state.run_state == self.ITERATING_TASKS and self._check_failed_state(state.tasks_child_state):\n            cur_block = state._blocks[state.cur_block]\n            if len(cur_block.rescue) > 0 and state.fail_state & self.FAILED_RESCUE == 0:\n                return False\n            else:\n                return True\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/executor/play_iterator.py",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 472,
+            "line_end": 491,
+            "exact_excerpt": "    def _check_failed_state(self, state):\n        if state is None:\n            return False\n        elif state.run_state == self.ITERATING_RESCUE and self._check_failed_state(state.rescue_child_state):\n            return True\n        elif state.run_state == self.ITERATING_ALWAYS and self._check_failed_state(state.always_child_state):\n            return True\n        elif state.fail_state != self.FAILED_NONE:\n            if state.run_state == self.ITERATING_RESCUE and state.fail_state & self.FAILED_RESCUE == 0:\n                return False\n            elif state.run_state == self.ITERATING_ALWAYS and state.fail_state & self.FAILED_ALWAYS == 0:\n                return False\n            else:\n                return not (state.did_rescue and state.fail_state & self.FAILED_ALWAYS == 0)\n        elif state.run_state == self.ITERATING_TASKS and self._check_failed_state(state.tasks_child_state):\n            cur_block = state._blocks[state.cur_block]\n            if len(cur_block.rescue) > 0 and state.fail_state & self.FAILED_RESCUE == 0:\n                return False\n            else:\n                return True\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.task.Task",
+          "ansible.utils.display.Display",
+          "fnmatch"
+        ],
+        "serialized_payload": "[local-fbd437373f6b5790be9f43cb-94562871] Role: existing_behavior\nApplies to: lib.ansible.executor.play_iterator.PlayIterator._check_failed_state.branch_473\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:lib/ansible/executor/play_iterator.py:472-491\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _check_failed_state(self, state):\n        if state is None:\n            return False\n        elif state.run_state == self.ITERATING_RESCUE and self._check_failed_state(state.rescue_child_state):\n            return True\n        elif state.run_state == self.ITERATING_ALWAYS and self._check_failed_state(state.always_child_state):\n            return True\n        elif state.fail_state != self.FAILED_NONE:\n            if state.run_state == self.ITERATING_RESCUE and state.fail_state & self.FAILED_RESCUE == 0:\n                return False\n            elif state.run_state == self.ITERATING_ALWAYS and state.fail_state & self.FAILED_ALWAYS == 0:\n                return False\n            else:\n                return not (state.did_rescue and state.fail_state & self.FAILED_ALWAYS == 0)\n        elif state.run_state == self.ITERATING_TASKS and self._check_failed_state(state.tasks_child_state):\n            cur_block = state._blocks[state.cur_block]\n            if len(cur_block.rescue) > 0 and state.fail_state & self.FAILED_RESCUE == 0:\n                return False\n            else:\n                return True\n"
+      },
+      {
+        "unit_id": "local-b83537a57963246211b0b9cf",
+        "repository": "ansible/ansible",
+        "source_revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/dev_guide/module_lifecycle.rst:14"
+        ],
+        "preconditions": [],
+        "statement": "3. If a module's or plugin's target API changes radically, or if someone creates a better implementation of its functionality, we may mark it deprecated. Modules and plugins that are deprecated are still available but they are reaching the end of their life cycle. We retain deprecated modules and plugins for 4 release cycles with deprecation warnings to help users update playbooks and roles that use them.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/dev_guide/module_lifecycle.rst",
+            "revision": "cd64e0b070f8630e1dcc021e594ed42ea7afe304",
+            "line_start": 14,
+            "line_end": 14,
+            "exact_excerpt": "3. If a module's or plugin's target API changes radically, or if someone creates a better implementation of its functionality, we may mark it deprecated. Modules and plugins that are deprecated are still available but they are reaching the end of their life cycle. We retain deprecated modules and plugins for 4 release cycles with deprecation warnings to help users update playbooks and roles that use them.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-b83537a57963246211b0b9cf] Role: documented_contract\nApplies to: docs/docsite/rst/dev_guide/module_lifecycle.rst:14\nSource: ansible/ansible@cd64e0b070f8630e1dcc021e594ed42ea7afe304:docs/docsite/rst/dev_guide/module_lifecycle.rst:14-14\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n3. If a module's or plugin's target API changes radically, or if someone creates a better implementation of its functionality, we may mark it deprecated. Modules and plugins that are deprecated are still available but they are reaching the end of their life cycle. We retain deprecated modules and plugins for 4 release cycles with deprecation warnings to help users update playbooks and roles that use them.\n"
+      }
+    ],
+    "tokens": 744,
+    "scores": {
+      "coverage": 0.3333333333333333,
+      "relevance": 0.148251424373791,
+      "redundancy_penalty": 0.06644726132537869,
+      "exposure_penalty": 0.1,
+      "total": 0.3151374963817456
+    },
+    "decisions": [
+      {
+        "unit_id": "local-5c9e4906274f22d4bccfbd43-f39a13b8",
+        "marginal": 0.20212040893618127
+      },
+      {
+        "unit_id": "local-fbd437373f6b5790be9f43cb-94562871",
+        "marginal": 0.08065995439742873
+      },
+      {
+        "unit_id": "local-b83537a57963246211b0b9cf",
+        "marginal": 0.03235713304813559
+      }
+    ]
+  }
+}

@@ -10,9 +10,9 @@
 ## 3. Frozen functional validation
 - [x] 3.1 Qualify and preregister source-ordered tasks, model, prompts, budgets and repeat order.
 - [x] 3.2 Freeze methods and generate at most three public prefixes once each.
-- [ ] 3.3 Save new predictions/packs then perform non-tuning source review.
-- [ ] 3.4 Execute fixed four-arm tails and independently verify original candidates.
+- [x] 3.3 Save new predictions/packs then perform non-tuning source review.
+- [x] 3.4 Execute fixed four-arm tails and independently verify original candidates (8 actual tails; 8 symmetric preprocessing-unavailable UNKNOWN cells retained).
 ## 4. Delivery
-- [ ] 4.1 Export functional/component results, costs, replay and Chinese algorithm retrospective.
+- [x] 4.1 Export functional/component results, costs, replay and Chinese algorithm retrospective.
 - [ ] 4.2 Independent evidence review, compatibility checks and final integrity verification.
 - [ ] 4.3 Push new stacked Draft PR and verify same-HEAD CI without merge or promotion.

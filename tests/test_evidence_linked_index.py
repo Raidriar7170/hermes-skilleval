@@ -126,3 +126,47 @@ def test_complete_conditional_view_does_not_claim_if_guard_for_else(tmp_path):
     assert view.preconditions == ()
     assert "if merge:" in view.statement and "else:" in view.statement
     assert "return a | b" in view.statement
+
+
+def test_content_based_scope_includes_languages_and_extensionless_sources(tmp_path):
+    sources = {
+        "module.psm1": "function Invoke-Demo { Write-Output 'hello' }\n",
+        "Module.cs": "class Module { public void Run() {} }\n",
+        "env-setup": "#!/bin/sh\nexport DEMO=yes\n",
+        "empty": "",
+        "test/integration/aliases": "posix\nshippable/posix/group1\n",
+    }
+    for name, text in sources.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+    for name, data in {
+        "nul": b"abc\x00def",
+        "control.cs": b"abc\x01def",
+        "nonutf": b"\xff",
+    }.items():
+        (tmp_path / name).write_bytes(data)
+    (tmp_path / "vendor").mkdir()
+    (tmp_path / "vendor" / "legal.cs").write_text("class Vendored {}")
+    (tmp_path / "generated.psm1").write_text("# generated file\nWrite-Output hello")
+    (tmp_path / "copied.cs").write_text("// vendored copy\nclass Copy {}")
+    (tmp_path / "outside.cs").symlink_to(tmp_path / "Module.cs")
+    index = build_index(tmp_path, repository="r", revision="a" * 40)
+    assert set(index["files"]) == set(sources)
+    assert set(index["parsing"].values()) == {"text"}
+    assert index["edges"] == []
+    assert all(not node["calls"] and not node["imports"] for node in index["nodes"])
+    assert all(
+        node["role"] == "existing_behavior"
+        for node in index["nodes"]
+        if not node["path"].startswith("test/")
+    )
+    assert index["excluded"] == {
+        "nul": "binary",
+        "control.cs": "binary",
+        "nonutf": "non_utf8",
+        "vendor/legal.cs": "excluded_scope",
+        "generated.psm1": "declared_generated",
+        "copied.cs": "declared_third_party_source",
+        "outside.cs": "symlink",
+    }

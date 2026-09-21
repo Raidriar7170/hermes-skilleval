@@ -1,0 +1,626 @@
+{
+  "review_type": "MODEL_ASSISTED_FINITE_BLIND_PACK_REVIEW",
+  "scope": "12 blinded packs using prior independent unit review; no mappings, method names, scores, reference, hidden tests or functional outcomes read.",
+  "prior_reviews": [
+    "blind-development-v4-review.json",
+    "blind-development-v5-review.json"
+  ],
+  "ratio_basis": "Unit count, not token count. PRECONDITION and CONTRADICTION_CONTEXT are useful context but are not proof of expected behavior. UNKNOWN is separate from TOPICAL_ONLY.",
+  "states": [
+    {
+      "state": "iterator-state-enum-compatibility",
+      "requirement_aliases": {
+        "I0": "req-1ed4723386114151",
+        "I1": "req-9953bcd578b4d6ac",
+        "I2": "req-532ff9583d3937b4",
+        "I3": "req-83f2c9915a0ca325",
+        "I4": "req-52a06ded4386a538",
+        "I5": "req-3f4e4f7cbfb4692f",
+        "I6": "req-5559441660994dbf",
+        "I7": "req-1b2d31aef26c50a6",
+        "I8": "req-e6f42b38eaac0d2f"
+      },
+      "pack_source_matches_reviewed_v5": true,
+      "packs": [
+        {
+          "blind_pack_id": "P1",
+          "units": [
+            "Q21",
+            "Q12",
+            "Q19"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q21",
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_aliases": [
+                "I6"
+              ]
+            },
+            {
+              "blind_id": "Q12",
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_aliases": [
+                "I3",
+                "I5",
+                "I7"
+              ]
+            },
+            {
+              "blind_id": "Q19",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            }
+          ],
+          "topical_only_count": 1,
+          "unknown_count": 0,
+          "unit_count": 3,
+          "topical_only_fraction": 0.3333333333333333,
+          "topical_units": [
+            "Q19"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q21: old run-name helper; Q12: failed-state recursion and bit checks.",
+            "missing": "No enum declarations/values, class or instance deprecation dispatch, warning behavior, full HostState string, public regression tests, or linear migration.",
+            "prerequisites": "Q21 contains only the run helper. Q12 keeps mutually exclusive predicates but omits terminal return False; conditions=[] is not unconditional execution.",
+            "conflict": "Q21 contradicts the problem narrative that prior strings are purely numeric; Q19 module lifecycle does not specify Python attribute deprecation timing.",
+            "conclusion": "PARTIAL_IMPLEMENTATION_CONTEXT"
+          }
+        },
+        {
+          "blind_pack_id": "P2",
+          "units": [
+            "Q02",
+            "Q24",
+            "Q10"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q02",
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_aliases": [
+                "I3",
+                "I4",
+                "I7"
+              ]
+            },
+            {
+              "blind_id": "Q24",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            },
+            {
+              "blind_id": "Q10",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            }
+          ],
+          "topical_only_count": 2,
+          "unknown_count": 0,
+          "unit_count": 3,
+          "topical_only_fraction": 0.6666666666666666,
+          "topical_units": [
+            "Q24",
+            "Q10"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q02: linear class-constant comparisons and current-block state counting.",
+            "missing": "Failure bit semantics, HostState string conversion, enum definitions, instance compatibility, warnings, and regression tests absent.",
+            "prerequisites": "Q02 retains current-block and host-task filters but stops before task-selection continuation.",
+            "conflict": "Q24 changed_when boolean or and Q10 plugin-routing deprecation cannot be transferred to enum flags or attribute warnings.",
+            "conclusion": "PARTIAL_IMPLEMENTATION_CONTEXT"
+          }
+        },
+        {
+          "blind_pack_id": "P3",
+          "units": [
+            "Q22",
+            "Q15",
+            "Q19",
+            "Q02"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q22",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            },
+            {
+              "blind_id": "Q15",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            },
+            {
+              "blind_id": "Q19",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            },
+            {
+              "blind_id": "Q02",
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_aliases": [
+                "I3",
+                "I4",
+                "I7"
+              ]
+            }
+          ],
+          "topical_only_count": 3,
+          "unknown_count": 0,
+          "unit_count": 4,
+          "topical_only_fraction": 0.75,
+          "topical_units": [
+            "Q22",
+            "Q15",
+            "Q19"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q02 only supplies concrete target state comparisons.",
+            "missing": "Same target gaps as P2; no additional target evidence from Q22/Q15/Q19.",
+            "prerequisites": "Q02 filtering and truncation limits apply.",
+            "conflict": "Magic variables, failed_when logic, and module lifecycle are different contracts.",
+            "conclusion": "MOSTLY_TOPICAL_CONTEXT"
+          }
+        }
+      ]
+    },
+    {
+      "state": "invalid-host-field-errors",
+      "requirement_aliases": {
+        "H1": "req-d47e5a779288ca22",
+        "H2": "req-048046dde9bcd352",
+        "H3": "req-3ec9dfba43c0396a",
+        "H4": "req-91b3705e38086575",
+        "H5": "req-5e582318a0f01b8e",
+        "H6": "req-887442c8a811ed50",
+        "H7": "req-90b65445d48e1eaa",
+        "H8": "req-6cfd1237aaa98495",
+        "H9": "req-1469b4eddc13ccd8",
+        "H10": "req-03a58942bb999cf8"
+      },
+      "pack_source_matches_reviewed_v5": true,
+      "packs": [
+        {
+          "blind_pack_id": "P1",
+          "units": [
+            "Q10",
+            "Q02"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q10",
+              "relation": "CONTRADICTION_CONTEXT",
+              "requirement_aliases": [
+                "H1",
+                "H2",
+                "H3",
+                "H5",
+                "H6"
+              ]
+            },
+            {
+              "blind_id": "Q02",
+              "relation": "PRECONDITION",
+              "requirement_aliases": [
+                "H4",
+                "H9"
+              ]
+            }
+          ],
+          "topical_only_count": 0,
+          "unknown_count": 0,
+          "unit_count": 2,
+          "topical_only_fraction": 0.0,
+          "topical_units": [],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q10: old load/name bug path; Q02: validator dispatch signature and lifecycle.",
+            "missing": "Actual is_sequence definition, get_name body, empty-play regression, precise new messages and all invalid input branch tests absent.",
+            "prerequisites": "Q10 applies its name/hosts guard only to that branch; list-specific join and all(None) must not become generic sequence/any(None). Q02 dispatch does not enforce original _ds membership.",
+            "conflict": "Q10 mutates input, derives name in load, and contains old error text; use as contradiction context only.",
+            "conclusion": "TARGETED_BUG_AND_DISPATCH_CONTEXT"
+          }
+        },
+        {
+          "blind_pack_id": "P2",
+          "units": [
+            "Q10",
+            "Q12",
+            "Q02"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q10",
+              "relation": "CONTRADICTION_CONTEXT",
+              "requirement_aliases": [
+                "H1",
+                "H2",
+                "H3",
+                "H5",
+                "H6"
+              ]
+            },
+            {
+              "blind_id": "Q12",
+              "relation": "PRECONDITION",
+              "requirement_aliases": [
+                "H4",
+                "H9"
+              ]
+            },
+            {
+              "blind_id": "Q02",
+              "relation": "PRECONDITION",
+              "requirement_aliases": [
+                "H4",
+                "H9"
+              ]
+            }
+          ],
+          "topical_only_count": 0,
+          "unknown_count": 0,
+          "unit_count": 3,
+          "topical_only_fraction": 0.0,
+          "topical_units": [],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "P1 contexts plus Q12 distinguishes attribute defaults, required and post-validation.",
+            "missing": "Same direct behavior/test gaps as P1.",
+            "prerequisites": "Q12 is generic attribute schema, not a hosts-specific rule; preserve absence versus default-valued attribute distinction.",
+            "conflict": "Old Q10 behavior conflicts with new expectations; no source contradicts the authoritative new request.",
+            "conclusion": "TARGETED_BUG_AND_LIFECYCLE_CONTEXT"
+          }
+        },
+        {
+          "blind_pack_id": "P3",
+          "units": [
+            "Q10"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q10",
+              "relation": "CONTRADICTION_CONTEXT",
+              "requirement_aliases": [
+                "H1",
+                "H2",
+                "H3",
+                "H5",
+                "H6"
+              ]
+            }
+          ],
+          "topical_only_count": 0,
+          "unknown_count": 0,
+          "unit_count": 1,
+          "topical_only_fraction": 0.0,
+          "topical_units": [],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Only old Play.load bug path.",
+            "missing": "Validator calling convention, original _ds guard, actual sequence predicate, get_name implementation and public tests absent.",
+            "prerequisites": "Q10 omits the rest of load; its guard and list-only behavior are local context.",
+            "conflict": "Old mutation/join/all(None)/error text are not normative new behavior.",
+            "conclusion": "NARROW_CONTRADICTION_CONTEXT"
+          }
+        }
+      ]
+    },
+    {
+      "state": "empty-keyed-group-naming",
+      "requirement_aliases": {
+        "K0": "req-ddf2c829c5d45a64",
+        "K1": "req-19b091da00abd6f7",
+        "K2": "req-e9d2a8d705ba8abc",
+        "K3": "req-d40385cd807b44f9",
+        "K4": "req-4745be28b20228ae",
+        "K5": "req-952ddca435378bbd",
+        "K6": "req-1415df6631cfbe11",
+        "K7": "req-6d37a3dfc9942ece",
+        "K8": "req-9541aced9606c3d2",
+        "K9": "req-38991f87362681ec",
+        "K10": "req-90710b86716b25cc",
+        "K11": "req-3a2634c4cf914021",
+        "K12": "req-74cbe13d26bb9d8e"
+      },
+      "pack_source_matches_reviewed_v5": true,
+      "packs": [
+        {
+          "blind_pack_id": "P1",
+          "units": [
+            "Q23",
+            "Q03",
+            "Q08"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q23",
+              "relation": "CONTRACT_SUPPORT",
+              "requirement_aliases": [
+                "K12"
+              ]
+            },
+            {
+              "blind_id": "Q03",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            },
+            {
+              "blind_id": "Q08",
+              "relation": "PRECONDITION",
+              "requirement_aliases": [
+                "K0"
+              ]
+            }
+          ],
+          "topical_only_count": 1,
+          "unknown_count": 0,
+          "unit_count": 3,
+          "topical_only_fraction": 0.3333333333333333,
+          "topical_units": [
+            "Q03"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q23: existing prefix/separator contract; Q08: compose-before-group dependency when composed variables are used.",
+            "missing": "Target implementation, new default_value/trailing_separator branches, exact mutual-exclusion error and existing separator tests absent.",
+            "prerequisites": "Retain leading_separator rule, distinction between dictionary internal separator and outer separator, strict and available-variable conditions. Q08 applies only to composed-variable dependency.",
+            "conflict": "Q03 generic mutual-exclusion helper raises TypeError, not required AnsibleParserError; cannot supply exact keyed_groups error.",
+            "conclusion": "PARTIAL_EXISTING_CONTRACT_AND_PRECONDITION"
+          }
+        },
+        {
+          "blind_pack_id": "P2",
+          "units": [
+            "Q05",
+            "Q13"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q05",
+              "relation": "CONTRACT_SUPPORT",
+              "requirement_aliases": [
+                "K12"
+              ]
+            },
+            {
+              "blind_id": "Q13",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            }
+          ],
+          "topical_only_count": 1,
+          "unknown_count": 0,
+          "unit_count": 2,
+          "topical_only_fraction": 0.5,
+          "topical_units": [
+            "Q13"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q05: existing prefix/separator/leading_separator contract.",
+            "missing": "Same new branch and implementation/test gaps as P1; no compose-order context.",
+            "prerequisites": "Q05 leading_separator applies only with empty prefix; mapping internal separator remains separate.",
+            "conflict": "Q13 INI parsing types are not a required input source for this public scenario.",
+            "conclusion": "PARTIAL_EXISTING_CONTRACT"
+          }
+        },
+        {
+          "blind_pack_id": "P3",
+          "units": [
+            "Q04",
+            "Q08",
+            "Q16"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q04",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            },
+            {
+              "blind_id": "Q08",
+              "relation": "PRECONDITION",
+              "requirement_aliases": [
+                "K0"
+              ]
+            },
+            {
+              "blind_id": "Q16",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            }
+          ],
+          "topical_only_count": 2,
+          "unknown_count": 0,
+          "unit_count": 3,
+          "topical_only_fraction": 0.6666666666666666,
+          "topical_units": [
+            "Q04",
+            "Q16"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q08 only: conditional data-availability precondition.",
+            "missing": "All concrete naming, default options, substitution, omission, mutual exclusion and target tests absent.",
+            "prerequisites": "Compose ordering matters only if the selected key depends on composed variables.",
+            "conflict": "Q04 required_by and Q16 shell security do not define the target behavior.",
+            "conclusion": "NO_TARGET_NAMING_BEHAVIOR_EVIDENCE"
+          }
+        }
+      ]
+    },
+    {
+      "state": "mapping-subtype-combination",
+      "requirement_aliases": {
+        "M0": "req-aa47f0dbd0839c23",
+        "M1": "req-735d77ff1dc1f8e6",
+        "M2": "req-824b3c2e63262631",
+        "M3": "req-47e4311a878f0bfd",
+        "M4": "req-7b51cb4817418f65",
+        "M5": "req-3d9ba007d2e598f9",
+        "M6": "req-cfb3a7352c582f59",
+        "M7": "req-58cbf915ad559f5a"
+      },
+      "pack_source_matches_reviewed_v5": true,
+      "packs": [
+        {
+          "blind_pack_id": "P1",
+          "units": [
+            "Q13",
+            "Q12",
+            "Q19"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q13",
+              "relation": "IMPLEMENTATION_CONTEXT",
+              "requirement_aliases": [
+                "M0",
+                "M6"
+              ]
+            },
+            {
+              "blind_id": "Q12",
+              "relation": "CONTRACT_SUPPORT",
+              "requirement_aliases": [
+                "M6"
+              ]
+            },
+            {
+              "blind_id": "Q19",
+              "relation": "UNKNOWN",
+              "requirement_aliases": []
+            }
+          ],
+          "topical_only_count": 0,
+          "unknown_count": 1,
+          "unit_count": 3,
+          "topical_only_fraction": 0.0,
+          "topical_units": [],
+          "unknown_units": [
+            "Q19"
+          ],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q13: actual replace a|b callsite; Q12: MutableMapping validation contract.",
+            "missing": "VarsWithSources class, new special methods, reflected dispatch, in-place update semantics and replace precedence tests absent.",
+            "prerequisites": "Q13 full if/else remains authoritative: merge=False takes union even with merge configuration. Q12 validation errors are AnsibleError. Q19 has no demonstrated VarsWithSources operand.",
+            "conflict": "Do not treat Q12 as support for direct operator TypeError, or Q19 fact-cache augmented union as proven target behavior.",
+            "conclusion": "TARGETED_CALLSITE_WITH_UNKNOWN_ADJACENT_UNION"
+          }
+        },
+        {
+          "blind_pack_id": "P2",
+          "units": [
+            "Q06",
+            "Q12"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q06",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            },
+            {
+              "blind_id": "Q12",
+              "relation": "CONTRACT_SUPPORT",
+              "requirement_aliases": [
+                "M6"
+              ]
+            }
+          ],
+          "topical_only_count": 1,
+          "unknown_count": 0,
+          "unit_count": 2,
+          "topical_only_fraction": 0.5,
+          "topical_units": [
+            "Q06"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "Q12 only provides the target helper MutableMapping boundary.",
+            "missing": "replace callsite, VarsWithSources, operator dispatch, new/in-place result guarantees and public target tests absent.",
+            "prerequisites": "Q06 is merge_hash: its recursive/list handling is a different configured path.",
+            "conflict": "merge_hash precedence must not be promoted to proof that a|b succeeds or has identical subclass behavior.",
+            "conclusion": "NARROW_TYPE_BOUNDARY_WITH_TOPICAL_MERGE"
+          }
+        },
+        {
+          "blind_pack_id": "P3",
+          "units": [
+            "Q24"
+          ],
+          "unit_relations": [
+            {
+              "blind_id": "Q24",
+              "relation": "TOPICAL_ONLY",
+              "requirement_aliases": []
+            }
+          ],
+          "topical_only_count": 1,
+          "unknown_count": 0,
+          "unit_count": 1,
+          "topical_only_fraction": 1.0,
+          "topical_units": [
+            "Q24"
+          ],
+          "unknown_units": [],
+          "duplicate_unit_ids": false,
+          "identical_source_text_duplicates": false,
+          "mechanical_blocker": false,
+          "assessment": {
+            "targeted": "None established.",
+            "missing": "Every target-specific implementation, validation, dispatch and verification anchor absent.",
+            "prerequisites": "Q24 network dict_merge accepts dict inputs and has list merging/deduplication semantics.",
+            "conflict": "Different function and list semantics; cannot substitute for VarsWithSources union.",
+            "conclusion": "TOPICAL_ONLY_NO_POSITIVE_TARGET_RELATION"
+          }
+        }
+      ]
+    }
+  ],
+  "global_limits": [
+    "No pack establishes all public requirements or repairs the task.",
+    "Target gaps, topical content and low information density are selection-quality limitations, not by themselves malformed-input or mechanical execution blockers.",
+    "No observed within-pack duplicate unit IDs or identical source texts. Broader thematic overlap must not be counted as independent evidence.",
+    "All v4 anchor omissions and row-versus-unique-obligation coverage caveats remain.",
+    "Empty conditions does not erase predicates in source text.",
+    "No winner, deployment, continuation efficacy, or freeze authorization is inferred. Whether the active contract requires a stronger gate remains a parent-task decision."
+  ],
+  "mechanical_input_blockers_observed": []
+}

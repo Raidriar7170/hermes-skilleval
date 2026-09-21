@@ -33,21 +33,6 @@ EXCLUDED_PARTS = {
     "dist",
     "build",
 }
-TEXT_SUFFIXES = {
-    ".py",
-    ".md",
-    ".rst",
-    ".txt",
-    ".yaml",
-    ".yml",
-    ".ini",
-    ".cfg",
-    ".sh",
-    ".ps1",
-    ".json",
-    ".toml",
-    ".j2",
-}
 
 
 @dataclass
@@ -441,8 +426,6 @@ def build_index(base, *, repository, revision):
             reason = "symlink"
         if p.is_dir():
             continue
-        if reason is None and p.suffix.lower() not in TEXT_SUFFIXES:
-            reason = "non_source_or_binary_extension"
         if reason is None and re.search(
             r"(?:change.?log|release.?notes|porting_guide)", relative, re.I
         ):
@@ -456,7 +439,9 @@ def build_index(base, *, repository, revision):
         except UnicodeError:
             excluded[relative] = "non_utf8"
             continue
-        if "\x00" in text:
+        # Source languages and extensionless scripts are admitted by content.
+        # Reject binary control bytes even when the byte stream decodes as UTF-8.
+        if any(ord(c) < 32 and c not in "\t\n\r\f\b" for c in text):
             excluded[relative] = "binary"
             continue
         header = "\n".join(text.splitlines()[:80])
