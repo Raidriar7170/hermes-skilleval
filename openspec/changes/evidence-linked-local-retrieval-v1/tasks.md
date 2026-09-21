@@ -14,5 +14,5 @@
 - [x] 3.4 Execute fixed four-arm tails and independently verify original candidates (8 actual tails; 8 symmetric preprocessing-unavailable UNKNOWN cells retained).
 ## 4. Delivery
 - [x] 4.1 Export functional/component results, costs, replay and Chinese algorithm retrospective.
-- [ ] 4.2 Independent evidence review, compatibility checks and final integrity verification.
-- [ ] 4.3 Push new stacked Draft PR and verify same-HEAD CI without merge or promotion.
+- [x] 4.2 Independent evidence review, compatibility checks and final integrity verification.
+- [x] 4.3 Push new stacked Draft PR and verify same-HEAD CI without merge or promotion.

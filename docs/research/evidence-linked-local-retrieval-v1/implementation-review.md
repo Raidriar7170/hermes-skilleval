@@ -13,3 +13,5 @@
 原始candidate.patch及版本修复.diff使用gzip无损保存，避免diff上下文空格被发布CI当作文本格式错误。compressed-evidence.json绑定压缩文件及解压原文SHA-256；没有修剪或重写任何原补丁。完整git diff --check通过。
 
 首次公开CI的测试/OpenSpec/复现检查均通过，唯一阻断为export_development.py格式；按固定Ruff 0.15.13格式化并验证AST相同。该导出脚本格式变化不改变历史执行提交或实验输出，冻结旧代码仍从3212908核对。
+
+提交797a2a9001250f76898c3760845aee13ac415d1d的[同HEAD CI](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/35574675815)全部通过。收尾提交再次由同一CI验证，最新状态以Draft PR #53为准。最终完整tracked-diff与冻结/公开证据SHA-256在提交前新鲜读取并保存在本地final-integrity.json，完整性值另记于PR说明，避免自引用哈希循环。
