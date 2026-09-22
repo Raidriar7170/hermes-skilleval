@@ -1,0 +1,60 @@
+{
+  "study": "budgeted-relation-selection-v1",
+  "status": "DEVELOPMENT_NOT_FROZEN",
+  "scope": "exploratory_development_comparison",
+  "primary_outcome": "trusted_target_and_protected_regression",
+  "primary_protocol": "OWN_COST_TOTAL_BUDGET",
+  "primary_contrasts": [
+    "A_minus_M",
+    "A_minus_N"
+  ],
+  "mechanism_protocol": "EQUAL_TAIL_CONTENT",
+  "mechanism_contrasts": [
+    "A_minus_D",
+    "A_minus_M"
+  ],
+  "executor_total_active_seconds": 600,
+  "relation_seconds_max": 60,
+  "relation_fraction_of_postlocal_remaining": 0.2,
+  "relation_unique_pair_cap": 48,
+  "relation_batch_size": 2,
+  "helper_call_deadline_seconds": 20,
+  "candidate_cap": 24,
+  "guidance_token_cap": 1200,
+  "max_pack_units": 4,
+  "dense_seconds_max": 300,
+  "neural_training": false,
+  "old_results_overwrite": false,
+  "model": "gpt-5.6-sol",
+  "effort": "medium",
+  "codex_version": "codex-cli 0.154.0",
+  "image": "hermes-repair-knowledge-executor:v1",
+  "image_id": "sha256:94df6dc8529a805f77b6410007bce1d0f9f0361dad6bf2bcde0930061ec0011b",
+  "order_seed": 20260922,
+  "tail_repeats": 2,
+  "max_research_executions": 26,
+  "warm_index": true,
+  "default_policy": "UNCHANGED",
+  "baseline": "d1ed9cefeb39be856057392c2abd962350dc91a9",
+  "tasks": [
+    {
+      "instance_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "mechanism": "documentation-macro-boundaries",
+      "base_commit": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+      "repo": "ansible/ansible",
+      "source_order": 3
+    },
+    {
+      "instance_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "mechanism": "variable-file-cache",
+      "base_commit": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+      "repo": "ansible/ansible",
+      "source_order": 10
+    }
+  ],
+  "preflight_revision": {
+    "reason": "Eight-pair 20-second helper timed out with acknowledged cancellation; two-pair transport completed in 15.47 and 16.48 seconds. Uniformly use two-pair batches before any functional prefix; no functional labels observed.",
+    "from_batch_size": 8,
+    "to_batch_size": 2
+  }
+}
