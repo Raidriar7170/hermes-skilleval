@@ -8,7 +8,7 @@
 - [x] 2.4 Exercise counterexamples and legacy compatibility.
 ## 3. Development and freeze
 - [x] 3.1 Execute bounded real helper recovery rehearsal and A/S/D mechanism diagnostics.
-- [ ] 3.2 Freeze final index, algorithms, model, timing, tasks and trustworthy acceptance.
+- [x] 3.2 Freeze final index, algorithms, model, timing, tasks and trustworthy acceptance.
 ## 4. Functional comparison
 - [ ] 4.1 Execute two new public prefixes and preregistered P/C tails with original patches.
 - [ ] 4.2 Independently verify trusted target/protected outcomes and budget validity.
