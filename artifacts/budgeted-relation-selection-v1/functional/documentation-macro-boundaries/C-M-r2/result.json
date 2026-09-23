@@ -1,0 +1,87 @@
+{
+  "task_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+  "protocol": "C",
+  "arm": "M",
+  "repeat": 2,
+  "integrity": "CONFIRMED",
+  "target": "PASS",
+  "protected": "PASS",
+  "functional": "PASS",
+  "execution_status": "COMPLETED",
+  "charged_preparation_seconds": 8.775034500053152,
+  "tail_budget_seconds": 562.9353703339584,
+  "budget_status": "VALID",
+  "strict_functional": "PASS",
+  "A_status": "MMR_FALLBACK",
+  "A_relation_limit": 60,
+  "A_relation_seconds": 55.30514979199506,
+  "mechanism": "documentation-macro-boundaries",
+  "execution_sha256": "978d235c195d26042a0fd4ae0f2d8288e3345e9c489387511d1ef2d877c6b095",
+  "candidate": {
+    "sha256": "8e49bd8affc24e8ce559fe0921bf1f5f28d6aaaf357e5e3ff83aae0a7fdf6af7",
+    "gzip_sha256": "65cf409b5f706bd071034bf722e85275888aa8e2f8cd9df9b05bc26c0ecdba0c",
+    "uncompressed_bytes": 3046,
+    "path": "functional/documentation-macro-boundaries/C-M-r2/candidate.patch.gz",
+    "integrity": "VERIFIED",
+    "captured_patch_sha256": "8e49bd8affc24e8ce559fe0921bf1f5f28d6aaaf357e5e3ff83aae0a7fdf6af7",
+    "changed_files": [
+      "lib/ansible/cli/doc.py",
+      "test/units/cli/test_doc.py"
+    ],
+    "before_inventory_sha256": "0a0feecdab2599a9983f11c59ba53f0e02068aa3efdd4f7b80d2e3b108507e8f",
+    "after_inventory_sha256": "86c26fb91eca1679e8bc14ff7416a52183513978527371c048b3fd6719ecff5e"
+  },
+  "checks": {
+    "target": {
+      "required_public_api_absent": false,
+      "valid": true,
+      "passed": true,
+      "returncode": 0,
+      "cases": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "skipped_ids": [],
+      "preexisting_skips": [],
+      "seconds": 1.542577916989103,
+      "selectors": [
+        "test/units/cli/test_doc.py::test_ttyify[HORIZONTALLINE-\\n-------------\\n]",
+        "test/units/cli/test_doc.py::test_ttyify[IBM(International Business Machines)-IBM(International Business Machines)]",
+        "test/units/cli/test_doc.py::test_ttyify[L(the user guide, https://docs.ansible.com/)-the user guide <https://docs.ansible.com/>]",
+        "test/units/cli/test_doc.py::test_ttyify[L(the user guide,https://docs.ansible.com/user-guide.html)-the user guide <https://docs.ansible.com/user-guide.html>]",
+        "test/units/cli/test_doc.py::test_ttyify[R(the user guide, user-guide)-the user guide]",
+        "test/units/cli/test_doc.py::test_ttyify[R(the user guide,user-guide)-the user guide]",
+        "test/units/cli/test_doc.py::test_ttyify[The M(ansible.builtin.yum) module B(MUST) be given the C(package) parameter.  See the R(looping docs,using-loops) for more info-The [ansible.builtin.yum] module *MUST* be given the `package' parameter.  See the looping docs for more info]"
+      ],
+      "complete_expected_cases": true
+    },
+    "regression": {
+      "required_public_api_absent": false,
+      "valid": true,
+      "passed": true,
+      "returncode": 0,
+      "cases": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "skipped_ids": [],
+      "preexisting_skips": [],
+      "seconds": 1.3737714999588206,
+      "selectors": [
+        "test/units/cli/test_doc.py::test_ttyify[B(bold)-*bold*]",
+        "test/units/cli/test_doc.py::test_ttyify[C(/usr/bin/file)-`/usr/bin/file']",
+        "test/units/cli/test_doc.py::test_ttyify[I(italic)-`italic']",
+        "test/units/cli/test_doc.py::test_ttyify[M(ansible.builtin.module)-[ansible.builtin.module]]",
+        "test/units/cli/test_doc.py::test_ttyify[U(https://docs.ansible.com)-https://docs.ansible.com]",
+        "test/units/cli/test_doc.py::test_ttyify[no-op Z(test)-no-op Z(test)]",
+        "test/units/cli/test_doc.py::test_ttyify[no-op-no-op]"
+      ],
+      "complete_expected_cases": true
+    },
+    "policy": {
+      "valid": true,
+      "passed": true
+    }
+  },
+  "reconstruction_version": "frozen-original-patch-v1"
+}
