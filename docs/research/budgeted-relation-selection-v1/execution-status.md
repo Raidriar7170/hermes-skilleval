@@ -1,22 +1,15 @@
-# Development implemented; functional study not yet started
+# 执行已结束，最终交付核对中
 
-Active contract: ../../goals/Hermes_Budgeted_Anytime_Relation_Selection_Codex_Goal.md.
-Baseline: PR53 d1ed9cefeb39be856057392c2abd962350dc91a9, verified open/draft. New branch: codex/hermes-budgeted-relation-selection. Default policy and historical results remain unchanged.
+本轮唯一合同是 [完整 Goal](../../goals/Hermes_Budgeted_Anytime_Relation_Selection_Codex_Goal.md)。基线为 PR53 `d1ed9cefeb39be856057392c2abd962350dc91a9`，新分支 `codex/hermes-budgeted-relation-selection`，叠加 Draft [PR54](https://github.com/Raidriar7170/hermes-skilleval/pull/54)。不合并、不转 ready、不发布、不晋升默认。
 
-Implemented opt-in sparse immutable relations, exact small-set bounds, priority/requirement-round-robin queries, durable method costs, cancellation, current-pack persistence, crash recovery, dense post-lock completion, P/C coordination, final-index preparation/freeze, trusted acceptance and record replay. Full Goal remains active; formal prefix/tails and delivery still pending.
+执行代码 `579f2e44a3029f07b62a9ed29690f9251c992594`；冻结提交 `126ae6d`；计划摘要 `894ba351e433b7f8e012e6e006d09dca575d27ae4b269b0e0746281d455db61e`。后续新增仅为验收重建、导出、测试和说明，冻结研究源码保持不变。
 
-Development evidence is compactly exported in artifacts/budgeted-relation-selection-v1/development.json. Real helper attempts are all retained privately. Macro A-v3: 6 requested, 4 VALID_ZERO, 2 TRANSPORT_MISSING, 330 NOT_ANALYZED, 55.22 seconds, MMR fallback. D-v3: inherited 4 plus 4 new zero labels; 2 missing and 326 not analyzed, PARTIAL. Cache A-v1 also returned fallback; D scope is in the export. These are development states, not new functional study samples. Source relationships did not establish independent functional benefit.
+两条新公共前缀均只执行一次。P 的12条尾程全部完成；C的8条M/A尾程全部完成，4个D格记录 NOT_RUN_UNAVAILABLE。总计22次真实研究执行，不是26次已运行。两个A均返回与M逐字节相同的MMR包，保留全部准备成本。两个D均为PARTIAL，无正关系支持。两个正式A/S隐藏表回放已实际完成，各8行、零模型调用、零修复执行。
 
-Eight-pair/20-second preflight timed out with acknowledged turn/interrupt and confirmed stopped container. Two-pair calls completed in the transport rehearsal. Before any formal prefix, batch size was uniformly revised to 2; helper deadline20, relation budget60 and unique pair cap48 remain unchanged. Transport v2 sends each complete source statement once rather than redundantly repeating it in three metadata fields. Earlier attempts remain original versions; no valid semantic result was redrawn in place.
+原接续进程正常完成D/C，首次EVALUATE在宏P-A-r1的空文件权限重建差异处停止。原source与snapshot完整一致；Git不能表达0600权限，重建为0644。失败树保留，独立目录用绑定补丁和清单摘要的sidecar恢复原权限，通过完整inventory比较后运行相同可信覆盖。仅此格使用修复验收版本，不修改原候选、不删不利文件、不重跑Agent。验收接续会话82017已正常退出。
 
-The actual old322/336 response was imported read-only to a new development store: 301 zero,18 positive,3 rejected,14 missing. Old files and UNKNOWN results were not changed. This import does not prove final-index functionality.
+正式report、记录replay、隐藏表replay、紧凑export均已实际成功。保存的功能结果为20 PASS、0 FAIL、4 UNKNOWN；20个实际尾程预算均有效。P的A−M/A−N与C的A−M观察差均为0；D缺失不支持A−D结论。功能收益与关系获取效率均NOT_ESTABLISHED，默认UNCHANGED。完整分母、成本边界和三张表见[结果](results.md)。
 
-Two newly built final content-admission indices are structurally identical to PR53's final repaired development indices; byte hashes differ because the new atomic serializer uses unescaped Unicode. New exact index hashes will be frozen for the study. Both trusted overlays were installed successfully over simulated candidate test edits, with outside-overlay content unchanged; this is installation evidence, not functional acceptance.
+最终新增权限重建/导出针对性测试7项通过，全套1582项通过（43.49秒）；Ruff与本变更OpenSpec严格校验通过。冻结HEAD的CI已通过；独立证据复核已完成（20个原补丁、80目标/370保护用例及预算）；最终HEAD的CI、完整SHA-256闭合和推送收尾仍在进行，不能提前称Goal完成。
 
-Independent read-only reviews identified and drove fixes for budget coverage, absolute solve deadlines, input identity, complete requirement domain, observed cost estimates, outer and core crash recovery, interrupted-cell preservation, and budget reporting. Report raw functional facts separately from strict budget eligibility. Old reviewer suspicion of inconsistent payload wrappers was disproved: render_pack directly calls render_units.
-
-Focused regression checks cover saved/late/truncated rows, changed inputs, crash after partial write, conservative cost recovery, interrupted original cells, independent fallback and budget-report uncertainty. Formal release/CI and evidence closure remain pending.
-
-Next: verify final development checks, commit implementation, freeze plan/assets, run exactly two new prefixes and the registered P/C cells, perform trusted acceptance only after attempted cells are terminal, export three tables and original patches, final independent review/CI/integrity, push stacked Draft PR. Do not merge, release, promote, extend tasks or replace failed samples.
-
-Local resources: tasks ../hermes-repair-knowledge-private/tasks; overlays ../hermes-evidence-linked-private/test-overlays; output ../hermes-budgeted-relation-private/study-v1. Encoder ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41. Python /opt/anaconda3/bin/python with PYTHONPATH=src. Docker image hermes-repair-knowledge-executor:v1; actual CLI verified codex-cli0.154.0. Matching development ledgers are in ../hermes-evidence-linked-private/study-v3/selection/<instance_id>/ledger.json.
+本轮未覆盖旧UNKNOWN、旧功能结果或旧索引；开发真实辅助调用、预演失败、旧322/336行导入和不同传输版本均保留于开发证据。正式运行前统一将batch从8调整为2，之后未因功能结果调参。局部准备费用仅有合计，细分不可补造。
