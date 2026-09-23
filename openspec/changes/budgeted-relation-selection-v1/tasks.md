@@ -14,7 +14,7 @@
 - [x] 4.2 Independently verify trusted target/protected outcomes and budget validity.
 ## 5. Delivery
 - [x] 5.1 Export three tables, replay commands, architecture and Chinese retrospective.
-- [ ] 5.2 Complete read-only independent evidence review, required CI and final integrity check.
-- [ ] 5.3 Push new stacked Draft PR; keep default unchanged and do not merge.
+- [x] 5.2 Complete read-only independent evidence review, required CI and final integrity check.
+- [x] 5.3 Push new stacked Draft PR; keep default unchanged and do not merge.
 
 Functional scope: two prefixes, 12 P and 8 C tails executed once; four C-D cells remain NOT_RUN_UNAVAILABLE/UNKNOWN because D is partial, as allowed by the Goal. Independent reconstruction and JUnit/budget recomputation verified all20 actual tails; no resampling.

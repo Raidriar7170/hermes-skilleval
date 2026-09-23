@@ -1,4 +1,4 @@
-# 执行已结束，最终交付核对中
+# 执行与证据交付
 
 本轮唯一合同是 [完整 Goal](../../goals/Hermes_Budgeted_Anytime_Relation_Selection_Codex_Goal.md)。基线为 PR53 `d1ed9cefeb39be856057392c2abd962350dc91a9`，新分支 `codex/hermes-budgeted-relation-selection`，叠加 Draft [PR54](https://github.com/Raidriar7170/hermes-skilleval/pull/54)。不合并、不转 ready、不发布、不晋升默认。
 
@@ -10,6 +10,6 @@
 
 正式report、记录replay、隐藏表replay、紧凑export均已实际成功。保存的功能结果为20 PASS、0 FAIL、4 UNKNOWN；20个实际尾程预算均有效。P的A−M/A−N与C的A−M观察差均为0；D缺失不支持A−D结论。功能收益与关系获取效率均NOT_ESTABLISHED，默认UNCHANGED。完整分母、成本边界和三张表见[结果](results.md)。
 
-最终新增权限重建/导出针对性测试7项通过，全套1582项通过（43.49秒）；Ruff与本变更OpenSpec严格校验通过。冻结HEAD的CI已通过；独立证据复核已完成（20个原补丁、80目标/370保护用例及预算）；最终HEAD的CI、完整SHA-256闭合和推送收尾仍在进行，不能提前称Goal完成。
+最终新增权限重建/导出针对性测试7项通过，全套1582项通过（43.49秒）；Ruff与本变更OpenSpec严格校验通过。冻结HEAD的CI已通过；独立证据复核已完成（20个原补丁、80目标/370保护用例及预算）；结果提交 `7d583a1447880d07694bfcf5e38a52f11628c0a9` 的既有GitHub CI已通过；文档收尾提交仍以PR当前CI核对。完整SHA-256闭合使用 verification.md 的明确基线和范围，最终摘要在交付状态中报告。
 
 本轮未覆盖旧UNKNOWN、旧功能结果或旧索引；开发真实辅助调用、预演失败、旧322/336行导入和不同传输版本均保留于开发证据。正式运行前统一将batch从8调整为2，之后未因功能结果调参。局部准备费用仅有合计，细分不可补造。
