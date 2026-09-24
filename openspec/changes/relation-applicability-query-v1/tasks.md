@@ -10,5 +10,5 @@
 - [x] 3.3 Perform blinded online source/package audit, preserving missing and disputed outcomes.
 ## 4. Delivery
 - [x] 4.1 Export four tables, actual reproduction commands and Chinese mechanism account.
-- [ ] 4.2 Complete focused/compatibility checks, independent evidence review and fresh final verification.
-- [ ] 4.3 Commit, push, open stacked Draft PR and verify CI; leave defaults and legacy results unchanged.
+- [x] 4.2 Complete focused/compatibility checks, independent evidence review and fresh final verification.
+- [x] 4.3 Commit, push, open stacked Draft PR and verify CI; leave defaults and legacy results unchanged.

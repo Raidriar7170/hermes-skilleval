@@ -139,6 +139,11 @@ def summarize(root, output):
                 "strict_comparison_eligible": not violations,
                 "protocol_violations": violations,
                 "remaining_seconds": max(0, 60 - f["seconds"]),
+                "setup_seconds": sum(t["cost"]["setup_seconds"] for t in trace),
+                "setup_fraction": sum(t["cost"]["setup_seconds"] for t in trace)
+                / f["seconds"],
+                "repeat_request_positions": len(requested) - len(set(requested)),
+                "batch_count": len(trace),
                 "state": name,
                 "method": f["method"],
                 "seconds": f["seconds"],
