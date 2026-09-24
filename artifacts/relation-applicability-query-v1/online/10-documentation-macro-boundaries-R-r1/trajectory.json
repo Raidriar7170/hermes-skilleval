@@ -1,0 +1,516 @@
+[
+  {
+    "requested": [
+      [
+        "req-956586c98e1f001a",
+        "local-26a268563a52f41052e092be-c20f7105"
+      ],
+      [
+        "req-956586c98e1f001a",
+        "local-ff44477287922e90a2480423-863fabb3"
+      ]
+    ],
+    "position": 2,
+    "seconds": 15.759438917040825,
+    "cost": {
+      "lifecycle": "reuse",
+      "size": 2,
+      "payload_chars": 7835,
+      "input_identity": "54a78c940c374f9d9cd124a74bd0ab0f707cb51757ea8888238ab22bf73b3459",
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "status": "COMPLETED",
+      "started_timestamp": 1790226716.612463,
+      "first_token_seconds": null,
+      "setup_seconds": 0.7437343749916181,
+      "fresh_thread": true,
+      "prepare_seconds": 0.00031504209619015455,
+      "process_connection_seconds": 0.29539220791775733,
+      "model_directory_seconds": 0.44835399999283254,
+      "thread_seconds": 0.08147591690067202,
+      "response_seconds": 11.66114495799411,
+      "parse_seconds": 5.395803600549698e-05,
+      "usage": {
+        "totalTokens": 13387,
+        "inputTokens": 12925,
+        "cachedInputTokens": 8704,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 462,
+        "reasoningOutputTokens": 110
+      },
+      "cancellation": "NO_KNOWN_ACTIVE_TURN",
+      "cancel_seconds": 6.500049494206905e-06,
+      "request_seconds": 11.7445942920167,
+      "seconds": 12.488330209045671,
+      "completed_timestamp": 1790226729.100666,
+      "late": false,
+      "raw_rows": 2,
+      "valid_rows": 2
+    },
+    "pack": {
+      "method": "A",
+      "indices": [
+        5,
+        6
+      ],
+      "units": [
+        {
+          "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+          "repository": "ansible/ansible",
+          "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "kind": "docstring",
+          "applies_to": [
+            "lib.ansible.module_utils.splitter.split_args.__doc__"
+          ],
+          "preconditions": [],
+          "statement": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/module_utils/splitter.py",
+              "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+              "line_start": 69,
+              "line_end": 82,
+              "exact_excerpt": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+            }
+          ],
+          "claim_role": "documented_contract",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.absolute_import",
+            "__future__.division",
+            "__future__.print_function"
+          ],
+          "serialized_payload": "[local-18ad70b4a6a79f6e6077ecaa] Role: documented_contract\nApplies to: lib.ansible.module_utils.splitter.split_args.__doc__\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/module_utils/splitter.py:69-82\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+        },
+        {
+          "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+          "repository": "ansible/ansible",
+          "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "kind": "branch",
+          "applies_to": [
+            "lib.ansible.cli.doc.DocCLI.get_man_text.branch_643"
+          ],
+          "preconditions": [],
+          "statement": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/cli/doc.py",
+              "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+              "line_start": 595,
+              "line_end": 650,
+              "exact_excerpt": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+            }
+          ],
+          "claim_role": "existing_behavior",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.absolute_import",
+            "__future__.division",
+            "__future__.print_function",
+            "ansible.cli.CLI",
+            "ansible.cli.arguments.option_helpers",
+            "ansible.collections.list.list_collection_dirs",
+            "ansible.constants",
+            "ansible.context",
+            "ansible.errors.AnsibleError",
+            "ansible.errors.AnsibleOptionsError",
+            "ansible.module_utils._text.to_native",
+            "ansible.module_utils._text.to_text",
+            "ansible.module_utils.common._collections_compat.Container",
+            "ansible.module_utils.common._collections_compat.Sequence",
+            "ansible.module_utils.common.json.AnsibleJSONEncoder",
+            "ansible.module_utils.six.string_types",
+            "ansible.parsing.plugin_docs.read_docstub",
+            "ansible.parsing.yaml.dumper.AnsibleDumper",
+            "ansible.plugins.loader",
+            "ansible.plugins.loader.action_loader",
+            "ansible.plugins.loader.fragment_loader",
+            "ansible.utils.collection_loader.AnsibleCollectionConfig",
+            "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+            "ansible.utils.display.Display",
+            "ansible.utils.plugin_docs.BLACKLIST",
+            "ansible.utils.plugin_docs.get_docstring",
+            "ansible.utils.plugin_docs.get_versioned_doclink",
+            "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+            "datetime",
+            "json",
+            "os",
+            "textwrap",
+            "traceback",
+            "yaml"
+          ],
+          "serialized_payload": "[local-26a268563a52f41052e092be-c20f7105] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_man_text.branch_643\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:595-650\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+        }
+      ],
+      "tokens": 925,
+      "scores": {
+        "coverage": 0.021428571428571425,
+        "relevance": 0.12296795623986659,
+        "redundancy_penalty": 0.031821894118806156,
+        "exposure_penalty": 0.006382978723404255,
+        "total": 0.10619165482622762
+      },
+      "decisions": []
+    },
+    "solver": {
+      "status": "PROVISIONAL_RELATION_PACK",
+      "lower_indices": [
+        5,
+        6
+      ],
+      "upper_indices": [
+        5,
+        13
+      ],
+      "lower": 0.10619165482622762,
+      "upper": 1.0927031336311692,
+      "mmr_lower": 0.029000312141836855,
+      "stable": false,
+      "feasible_sets": 3190,
+      "bound_scope": "fixed_model_labels_and_candidate_domain_not_semantic_truth"
+    },
+    "update_status": "UPDATED"
+  },
+  {
+    "requested": [
+      [
+        "req-164b17f8ea7552f8",
+        "local-15031e602963cb27dbe2c706"
+      ],
+      [
+        "req-956586c98e1f001a",
+        "local-b062a0c891e34a57e4dd8513-15b58fe9"
+      ]
+    ],
+    "position": 4,
+    "seconds": 28.14748187502846,
+    "cost": {
+      "lifecycle": "reuse",
+      "size": 2,
+      "payload_chars": 5920,
+      "input_identity": "791a103b475c1dfc3892aa2e3b168812e0da77d28829ed934c955aa68a0b070e",
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "status": "COMPLETED",
+      "started_timestamp": 1790226729.169421,
+      "first_token_seconds": null,
+      "setup_seconds": 0.0,
+      "fresh_thread": true,
+      "prepare_seconds": 0.00031749997287988663,
+      "thread_seconds": 0.08217425004113466,
+      "response_seconds": 12.233605375047773,
+      "parse_seconds": 5.808309651911259e-05,
+      "usage": {
+        "totalTokens": 13310,
+        "inputTokens": 12753,
+        "cachedInputTokens": 8704,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 557,
+        "reasoningOutputTokens": 176
+      },
+      "cancellation": "NO_KNOWN_ACTIVE_TURN",
+      "cancel_seconds": 2.791057340800762e-06,
+      "request_seconds": 12.318339832942002,
+      "seconds": 12.318341125035658,
+      "completed_timestamp": 1790226741.487624,
+      "late": false,
+      "raw_rows": 2,
+      "valid_rows": 2
+    },
+    "pack": {
+      "method": "A",
+      "indices": [
+        5,
+        6
+      ],
+      "units": [
+        {
+          "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+          "repository": "ansible/ansible",
+          "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "kind": "docstring",
+          "applies_to": [
+            "lib.ansible.module_utils.splitter.split_args.__doc__"
+          ],
+          "preconditions": [],
+          "statement": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/module_utils/splitter.py",
+              "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+              "line_start": 69,
+              "line_end": 82,
+              "exact_excerpt": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+            }
+          ],
+          "claim_role": "documented_contract",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.absolute_import",
+            "__future__.division",
+            "__future__.print_function"
+          ],
+          "serialized_payload": "[local-18ad70b4a6a79f6e6077ecaa] Role: documented_contract\nApplies to: lib.ansible.module_utils.splitter.split_args.__doc__\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/module_utils/splitter.py:69-82\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+        },
+        {
+          "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+          "repository": "ansible/ansible",
+          "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "kind": "branch",
+          "applies_to": [
+            "lib.ansible.cli.doc.DocCLI.get_man_text.branch_643"
+          ],
+          "preconditions": [],
+          "statement": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/cli/doc.py",
+              "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+              "line_start": 595,
+              "line_end": 650,
+              "exact_excerpt": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+            }
+          ],
+          "claim_role": "existing_behavior",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.absolute_import",
+            "__future__.division",
+            "__future__.print_function",
+            "ansible.cli.CLI",
+            "ansible.cli.arguments.option_helpers",
+            "ansible.collections.list.list_collection_dirs",
+            "ansible.constants",
+            "ansible.context",
+            "ansible.errors.AnsibleError",
+            "ansible.errors.AnsibleOptionsError",
+            "ansible.module_utils._text.to_native",
+            "ansible.module_utils._text.to_text",
+            "ansible.module_utils.common._collections_compat.Container",
+            "ansible.module_utils.common._collections_compat.Sequence",
+            "ansible.module_utils.common.json.AnsibleJSONEncoder",
+            "ansible.module_utils.six.string_types",
+            "ansible.parsing.plugin_docs.read_docstub",
+            "ansible.parsing.yaml.dumper.AnsibleDumper",
+            "ansible.plugins.loader",
+            "ansible.plugins.loader.action_loader",
+            "ansible.plugins.loader.fragment_loader",
+            "ansible.utils.collection_loader.AnsibleCollectionConfig",
+            "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+            "ansible.utils.display.Display",
+            "ansible.utils.plugin_docs.BLACKLIST",
+            "ansible.utils.plugin_docs.get_docstring",
+            "ansible.utils.plugin_docs.get_versioned_doclink",
+            "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+            "datetime",
+            "json",
+            "os",
+            "textwrap",
+            "traceback",
+            "yaml"
+          ],
+          "serialized_payload": "[local-26a268563a52f41052e092be-c20f7105] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_man_text.branch_643\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:595-650\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+        }
+      ],
+      "tokens": 925,
+      "scores": {
+        "coverage": 0.021428571428571425,
+        "relevance": 0.12296795623986659,
+        "redundancy_penalty": 0.031821894118806156,
+        "exposure_penalty": 0.006382978723404255,
+        "total": 0.10619165482622762
+      },
+      "decisions": []
+    },
+    "solver": {
+      "status": "PROVISIONAL_RELATION_PACK",
+      "lower_indices": [
+        5,
+        6
+      ],
+      "upper_indices": [
+        5,
+        13
+      ],
+      "lower": 0.10619165482622762,
+      "upper": 1.0927031336311692,
+      "mmr_lower": 0.029000312141836855,
+      "stable": false,
+      "feasible_sets": 3190,
+      "bound_scope": "fixed_model_labels_and_candidate_domain_not_semantic_truth"
+    },
+    "update_status": "UPDATED"
+  },
+  {
+    "requested": [
+      [
+        "req-956586c98e1f001a",
+        "local-3cbeb4db6ac694587272b3a1-cd107d9f"
+      ]
+    ],
+    "position": 5,
+    "seconds": 35.38240120804403,
+    "cost": {
+      "lifecycle": "reuse",
+      "size": 1,
+      "payload_chars": 7106,
+      "input_identity": "d6a6e4a7a9b6cb7aed27b851c1bf0738066edc8e07d20436fbe8c83d91e1b865",
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "status": "COMPLETED",
+      "started_timestamp": 1790226741.557308,
+      "first_token_seconds": null,
+      "setup_seconds": 0.0,
+      "fresh_thread": true,
+      "prepare_seconds": 0.0002627079375088215,
+      "thread_seconds": 0.07707187498454005,
+      "response_seconds": 7.089779916102998,
+      "parse_seconds": 1.7125043086707592e-05,
+      "usage": {
+        "totalTokens": 13139,
+        "inputTokens": 12907,
+        "cachedInputTokens": 8704,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 232,
+        "reasoningOutputTokens": 0
+      },
+      "cancellation": "NO_KNOWN_ACTIVE_TURN",
+      "cancel_seconds": 3.374996595084667e-06,
+      "request_seconds": 7.168025832972489,
+      "seconds": 7.168026249972172,
+      "completed_timestamp": 1790226748.725246,
+      "late": false,
+      "raw_rows": 1,
+      "valid_rows": 1
+    },
+    "pack": {
+      "method": "A",
+      "indices": [
+        5,
+        6
+      ],
+      "units": [
+        {
+          "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+          "repository": "ansible/ansible",
+          "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "kind": "docstring",
+          "applies_to": [
+            "lib.ansible.module_utils.splitter.split_args.__doc__"
+          ],
+          "preconditions": [],
+          "statement": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/module_utils/splitter.py",
+              "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+              "line_start": 69,
+              "line_end": 82,
+              "exact_excerpt": "    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+            }
+          ],
+          "claim_role": "documented_contract",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.absolute_import",
+            "__future__.division",
+            "__future__.print_function"
+          ],
+          "serialized_payload": "[local-18ad70b4a6a79f6e6077ecaa] Role: documented_contract\nApplies to: lib.ansible.module_utils.splitter.split_args.__doc__\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/module_utils/splitter.py:69-82\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''\n    Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.\n\n    When used in a remote module, we won't ever have to be concerned about\n    jinja2 blocks, however this function is/will be used in the\n    core portions as well before the args are templated.\n\n    example input: a=b c=\"foo bar\"\n    example output: ['a=b', 'c=\"foo bar\"']\n\n    Basically this is a variation shlex that has some more intelligence for\n    how Ansible needs to use it.\n    '''\n"
+        },
+        {
+          "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+          "repository": "ansible/ansible",
+          "source_revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "kind": "branch",
+          "applies_to": [
+            "lib.ansible.cli.doc.DocCLI.get_man_text.branch_643"
+          ],
+          "preconditions": [],
+          "statement": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/cli/doc.py",
+              "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+              "line_start": 595,
+              "line_end": 650,
+              "exact_excerpt": "    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+            }
+          ],
+          "claim_role": "existing_behavior",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.absolute_import",
+            "__future__.division",
+            "__future__.print_function",
+            "ansible.cli.CLI",
+            "ansible.cli.arguments.option_helpers",
+            "ansible.collections.list.list_collection_dirs",
+            "ansible.constants",
+            "ansible.context",
+            "ansible.errors.AnsibleError",
+            "ansible.errors.AnsibleOptionsError",
+            "ansible.module_utils._text.to_native",
+            "ansible.module_utils._text.to_text",
+            "ansible.module_utils.common._collections_compat.Container",
+            "ansible.module_utils.common._collections_compat.Sequence",
+            "ansible.module_utils.common.json.AnsibleJSONEncoder",
+            "ansible.module_utils.six.string_types",
+            "ansible.parsing.plugin_docs.read_docstub",
+            "ansible.parsing.yaml.dumper.AnsibleDumper",
+            "ansible.plugins.loader",
+            "ansible.plugins.loader.action_loader",
+            "ansible.plugins.loader.fragment_loader",
+            "ansible.utils.collection_loader.AnsibleCollectionConfig",
+            "ansible.utils.collection_loader._collection_finder._get_collection_name_from_path",
+            "ansible.utils.display.Display",
+            "ansible.utils.plugin_docs.BLACKLIST",
+            "ansible.utils.plugin_docs.get_docstring",
+            "ansible.utils.plugin_docs.get_versioned_doclink",
+            "ansible.utils.plugin_docs.remove_current_collection_from_versions_and_dates",
+            "datetime",
+            "json",
+            "os",
+            "textwrap",
+            "traceback",
+            "yaml"
+          ],
+          "serialized_payload": "[local-26a268563a52f41052e092be-c20f7105] Role: existing_behavior\nApplies to: lib.ansible.cli.doc.DocCLI.get_man_text.branch_643\nSource: ansible/ansible@662d34b9a7a1b3ab1d4847eeaef201a005826aef:lib/ansible/cli/doc.py:595-650\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def get_man_text(doc, collection_name=''):\n        # Create a copy so we don't modify the original\n        doc = dict(doc)\n\n        DocCLI.IGNORE = DocCLI.IGNORE + (context.CLIARGS['type'],)\n        opt_indent = \"        \"\n        text = []\n        pad = display.columns * 0.20\n        limit = max(display.columns - int(pad), 70)\n\n        plugin_name = doc.get(context.CLIARGS['type'], doc.get('plugin_type'))\n        if collection_name:\n            plugin_name = '%s.%s' % (collection_name, plugin_name)\n\n        text.append(\"> %s    (%s)\\n\" % (plugin_name.upper(), doc.pop('filename')))\n\n        if isinstance(doc['description'], list):\n            desc = \" \".join(doc.pop('description'))\n        else:\n            desc = doc.pop('description')\n\n        text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,\n                                           subsequent_indent=opt_indent))\n\n        if doc.get('deprecated', False):\n            text.append(\"DEPRECATED: \\n\")\n            if isinstance(doc['deprecated'], dict):\n                if 'removed_at_date' in doc['deprecated']:\n                    text.append(\n                        \"\\tReason: %(why)s\\n\\tWill be removed in a release after %(removed_at_date)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated')\n                    )\n                else:\n                    if 'version' in doc['deprecated'] and 'removed_in' not in doc['deprecated']:\n                        doc['deprecated']['removed_in'] = doc['deprecated']['version']\n                    text.append(\"\\tReason: %(why)s\\n\\tWill be removed in: Ansible %(removed_in)s\\n\\tAlternatives: %(alternative)s\" % doc.pop('deprecated'))\n            else:\n                text.append(\"%s\" % doc.pop('deprecated'))\n            text.append(\"\\n\")\n\n        if doc.pop('action', False):\n            text.append(\"  * note: %s\\n\" % \"This module has a corresponding action plugin.\")\n\n        if doc.get('options', False):\n            text.append(\"OPTIONS (= is mandatory):\\n\")\n            DocCLI.add_fields(text, doc.pop('options'), limit, opt_indent)\n            text.append('')\n\n        if doc.get('notes', False):\n            text.append(\"NOTES:\")\n            for note in doc['notes']:\n                text.append(textwrap.fill(DocCLI.tty_ify(note), limit - 6,\n                                          initial_indent=opt_indent[:-2] + \"* \", subsequent_indent=opt_indent))\n            text.append('')\n            text.append('')\n            del doc['notes']\n"
+        }
+      ],
+      "tokens": 925,
+      "scores": {
+        "coverage": 0.021428571428571425,
+        "relevance": 0.12296795623986659,
+        "redundancy_penalty": 0.031821894118806156,
+        "exposure_penalty": 0.006382978723404255,
+        "total": 0.10619165482622762
+      },
+      "decisions": []
+    },
+    "solver": {
+      "status": "PROVISIONAL_RELATION_PACK",
+      "lower_indices": [
+        5,
+        6
+      ],
+      "upper_indices": [
+        5,
+        13
+      ],
+      "lower": 0.10619165482622762,
+      "upper": 1.0927031336311692,
+      "mmr_lower": 0.029000312141836855,
+      "stable": false,
+      "feasible_sets": 3190,
+      "bound_scope": "fixed_model_labels_and_candidate_domain_not_semantic_truth"
+    },
+    "update_status": "UPDATED"
+  }
+]

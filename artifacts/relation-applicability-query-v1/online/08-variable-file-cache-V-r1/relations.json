@@ -1,0 +1,538 @@
+[
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`",
+      "unit_quote": "cache the result",
+      "applicable": false,
+      "condition_basis": "The unit is a generic function-result memoization decorator and does not describe DataLoader.load_from_file, the 'none' cache mode, file parsing, or the internal file cache.",
+      "rationale": "The sources share caching terminology but no specific behavior, symbol, or condition correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`",
+      "unit_quote": "Cache the return value from func.",
+      "applicable": false,
+      "condition_basis": "The helper has no cache-mode parameter and is a separate symbol from `DataLoader.load_from_file` and its internal file cache.",
+      "rationale": "The shared concept of caching is insufficient: this generic decorator neither parses a given file nor specifies behavior for `cache='none'`.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  },
+  {
+    "pair": [
+      "req-ea10c024870ea3ae",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file",
+      "unit_quote": "Cache the return value from func.",
+      "applicable": false,
+      "condition_basis": "The unit has no vaulted-file condition and concerns memoizing an unrelated zero-argument callable.",
+      "rationale": "Generic result caching does not specifically support the required vaulted-file behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "Enforce exclusive access on a decorated function and cache the result.",
+      "applicable": false,
+      "condition_basis": "The unit concerns a decorator that caches a zero-argument function result, not `load_from_file`, vaulted files, or the internal file cache.",
+      "rationale": "The shared cache terminology does not establish behavior, reachability, or a contract for the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`",
+      "unit_quote": "def cache(func: c.Callable[[], TValue])",
+      "applicable": false,
+      "condition_basis": "The unit defines a decorator named cache, not a cache parameter of DataLoader.load_from_file or accepted mode values.",
+      "rationale": "The shared word cache is insufficient to establish a relationship.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "Enforce exclusive access on a decorated function and cache the result.",
+      "applicable": false,
+      "condition_basis": "The unit defines a generic decorator named cache and does not concern DataLoader.load_from_file or a cache argument.",
+      "rationale": "A shared cache term alone does not establish correspondence to the required API or its string values.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-4ae296ee2979469dbd63e268"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used",
+      "unit_quote": "so that the data sources are read only once.",
+      "applicable": false,
+      "condition_basis": "The documented contract concerns LinuxDistribution private attributes and data-source reads, not DataLoader's internal file cache or either cache mode.",
+      "rationale": "Although both sources concern avoiding repeated reads, they govern different symbols, storage, and conditions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used",
+      "unit_quote": "stores that in private instance attributes",
+      "applicable": false,
+      "condition_basis": "The unit concerns storage of Linux distribution data in private instance attributes and contains neither the specified cache modes nor the internal file cache.",
+      "rationale": "Private storage and one-time reads are only broadly related to caching; there is no specific correspondence to the required empty-versus-populated cache states.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "must contain an entry if `cache='vaulted'` is used on a vaulted file",
+      "unit_quote": "storage: dict[None, TValue] = {}",
+      "applicable": false,
+      "condition_basis": "The unit's private decorator storage is unrelated to DataLoader's internal file cache and has no none/vaulted mode distinction.",
+      "rationale": "Both mention cached entries, but there is no specific symbol or condition correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "must contain an entry if `cache='vaulted'` is used on a vaulted file",
+      "unit_quote": "storage: dict[None, TValue] = {}",
+      "applicable": false,
+      "condition_basis": "This separate decorator always uses a single local dictionary key and has no `none` or `vaulted` mode, vaulted-file condition, or DataLoader file-cache symbol.",
+      "rationale": "Although the helper has empty and populated storage states, those states are not tied to the requirement's file-cache modes or vaulted-file prerequisite, so the relationship is merely topical.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-af001a9639376b614f883a11"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "The existing load_from_file implementation checks whether caching is enabled and the resolved file name is already in _FILE_CACHE, then obtains parsed_data from that cache without entering the file-reading branch.",
+      "rationale": "This is specific implementation context for cached subsequent loads, but existing behavior is not a normative contract and the unit uses a boolean cache parameter rather than the required 'vaulted' mode and same-parameters condition.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "The existing DataLoader.load_from_file implementation uses _FILE_CACHE when cache is truthy and the normalized file_name is present; otherwise it calls _get_file_contents.",
+      "rationale": "The unit directly shows the relevant internal cache lookup and avoided read path, while remaining non-normative and not proving cache='vaulted' or equality across all call parameters.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "return the cached result from the internal file cache instead of re-reading the file",
+      "unit_quote": "if (value := storage.get(None, sentinel)) is sentinel:",
+      "applicable": false,
+      "condition_basis": "The unit memoizes a zero-argument callable in decorator-local storage and neither reads files nor addresses load_from_file parameters or vaulted caching.",
+      "rationale": "The generic reuse of a cached result is only a topical similarity.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "if (value := storage.get(None, sentinel)) is sentinel:\n            value = storage[None] = func()",
+      "applicable": false,
+      "condition_basis": "The unit memoizes a zero-argument decorated function and has no file, load_from_file, parameter matching, or vaulted-cache condition.",
+      "rationale": "Generic reuse of a cached result is insufficient to establish reachability or specific behavioral correspondence to the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-4ae296ee2979469dbd63e268"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "instead of re-reading the file",
+      "unit_quote": "the data sources are read only once.",
+      "applicable": false,
+      "condition_basis": "The documented contract applies to LinuxDistribution initialization and subsequent attribute access, not repeated DataLoader.load_from_file calls with cache='vaulted'.",
+      "rationale": "The sources share a one-read concept but lack the required symbol, cache mechanism, parameters, and vaulted-file condition correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "so that the data sources are read only once.",
+      "applicable": false,
+      "condition_basis": "The unit documents caching within LinuxDistribution initialization, not repeated load_from_file calls made with cache='vaulted' and identical parameters.",
+      "rationale": "The general read-once idea is similar, but the documented contract applies to another symbol and does not support the requirement's specified file-cache condition.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  }
+]

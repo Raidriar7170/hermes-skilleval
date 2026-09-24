@@ -80,9 +80,10 @@ class CostEnvelope:
         )
         return max(values) + setup
 
-    def choose(self, ranked, length_fn, remaining, *, cold=False):
+    def choose(self, ranked, length_fn, remaining, *, cold=False, pending_count=None):
+        pending_count = len(ranked) if pending_count is None else pending_count
         for size in (8, 2, 1):
-            if len(ranked) < size:
+            if len(ranked) < size or (size == 1 and pending_count != 1):
                 continue
             batch = ranked[:size]
             estimate = self.estimate(size, length_fn(batch), cold=cold)

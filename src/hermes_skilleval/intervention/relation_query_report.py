@@ -121,9 +121,24 @@ def summarize(root, output):
 
         view = View(records(path.parent / "store.json"))
         requested = [tuple(p) for p in f["requested"]]
+        trace = read(path.parent / "trajectory.json")
+        # Reconstruct distinct pending count before each batch from the full domain.
+        seen = set()
+        violations = []
+        for batch in trace:
+            pairs = [tuple(p) for p in batch["requested"]]
+            if (
+                len(pairs) == 1
+                and len(ledger["requirements"]) * len(pool.candidates) - len(seen) >= 2
+            ):
+                violations.append("SINGLETON_WITH_MULTIPLE_PENDING")
+            seen.update(pairs)
         online.append(
             {
                 "run": path.parent.name,
+                "strict_comparison_eligible": not violations,
+                "protocol_violations": violations,
+                "remaining_seconds": max(0, 60 - f["seconds"]),
                 "state": name,
                 "method": f["method"],
                 "seconds": f["seconds"],
@@ -145,6 +160,8 @@ def summarize(root, output):
                 checks,
             )
         )
+        packages[-1]["strict_comparison_eligible"] = not violations
+        packages[-1]["protocol_violations"] = violations
         atomic_json(output / "online" / path.parent.name / "final.json", f)
         atomic_json(
             output / "online" / path.parent.name / "relations.json",
@@ -204,7 +221,15 @@ def summarize(root, output):
         "same_model_correlated_error_risk": True,
         "controlled_query_replay": "COMPLETE" if len(ranking) == 80 else "PARTIAL",
         "transport_factor_study": "COMPLETE" if len(transport) == 20 else "PARTIAL",
-        "online_acquisition": "COMPLETE" if len(online) == 12 else "PARTIAL",
+        "online_acquisition": "COMPLETE"
+        if len(online) == 12 and all(r["strict_comparison_eligible"] for r in online)
+        else "PARTIAL",
+        "online_attempts": len(online),
+        "strictly_eligible_attempts": sum(
+            r["strict_comparison_eligible"] for r in online
+        ),
+        "execution_commit": "cc1fd7f768a602653681eec86cc8d346afc66755",
+        "post_sampling_fix": "singleton startup guard; no research cell rerun",
         "supported_relation_gain_over_R": "NOT_ESTABLISHED"
         if len(online) == 12
         else "UNKNOWN",
@@ -222,7 +247,11 @@ def summarize(root, output):
         item = {"state": state_name}
         for method in ("A0", "R", "V"):
             group = [
-                r for r in online if r["state"] == state_name and r["method"] == method
+                r
+                for r in online
+                if r["state"] == state_name
+                and r["method"] == method
+                and r["strict_comparison_eligible"]
             ]
             item[method] = {
                 "supported_positive_sum": sum(
@@ -236,7 +265,7 @@ def summarize(root, output):
     # Strict descriptive flag, not significance: both states, both comparators and
     # the uniform-control replay stratum must agree before asserting this gain.
     positive = all(
-        c["V"]["trajectories"] == 2
+        all(c[m]["trajectories"] == 2 for m in ("A0", "R", "V"))
         and all(
             c["V"]["supported_positive_sum"] > c[m]["supported_positive_sum"]
             for m in ("A0", "R")
@@ -292,6 +321,7 @@ def summarize(root, output):
         },
     )
     for file in (
+        "cost-model.json",
         "inputs.json",
         "freeze.json",
         "transport-material.json",
@@ -325,6 +355,32 @@ def summarize(root, output):
         ],
     )
 
+    sessions = []
+    for p in sorted((root / "online").glob("*/transport/sequence.json")):
+        seq = read(p)
+        run = p.parent.parent
+        session = read(run / "batch-000/server/session.json")
+        sessions.append(
+            {
+                "run": run.name,
+                **{k: v for k, v in seq.items() if k != "thread_ids"},
+                "unique_thread_count": len(set(seq["thread_ids"])),
+                "fresh_empty_thread_count": sum(
+                    t["cost"]["fresh_thread"] for t in read(run / "trajectory.json")
+                ),
+                "completed_boundary": session["completed_boundary"],
+                "stopped": session["no_running_tool_confirmation"],
+            }
+        )
+    atomic_json(output / "online-sessions.json", sessions)
+    atomic_json(
+        output / "online-review-samples.json",
+        [
+            {"state": n, **read(root / "online-review" / n / "sample.json")}
+            for n in CHECK
+        ],
+    )
+
     def table(headers, rows):
         return (
             "| "
@@ -354,10 +410,20 @@ def summarize(root, output):
     )
     text += "\n三层明细见 pair-ranking.json；混合面板含 R 构造的相关层，不能解释成全域先验。面板外关系保持未知。\n\n## 真实获取\n\n"
     text += table(
-        ["运行", "请求位置", "合法行", "支持正", "支持零", "秒", "停止原因"],
+        [
+            "运行",
+            "严格合格",
+            "请求位置",
+            "合法行",
+            "支持正",
+            "支持零",
+            "秒",
+            "停止原因",
+        ],
         [
             (
                 r["run"],
+                r["strict_comparison_eligible"],
                 r["request_positions"],
                 r["valid_rows"],
                 r["audit_counts"].get("SUPPORTED_POSITIVE", 0),
@@ -368,7 +434,7 @@ def summarize(root, output):
             for r in online
         ],
     )
-    text += "\n## 接口因素\n\n"
+    text += "\n宏R-r1违反单对批次限制；保留原记录，但严格比较排除。12次尝试、11次严格合格，online_acquisition=PARTIAL。\n\n## 接口因素\n\n"
     text += table(
         ["序列", "生命周期", "批量", "合法行", "完整秒", "初始化秒", "状态"],
         [

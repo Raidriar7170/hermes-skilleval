@@ -494,7 +494,11 @@ def run_policy(root, name, method, out, *, sealed=None):
                 cost = {"seconds": None}
             else:
                 batch, estimate = envelope.choose(
-                    ranked, length, deadline - time.monotonic(), cold=tx.session is None
+                    ranked,
+                    length,
+                    deadline - time.monotonic(),
+                    cold=tx.session is None,
+                    pending_count=sum(failures[p] < 2 for p in store.pending()),
                 )
                 if not batch:
                     reason = "NO_AFFORDABLE_BATCH"

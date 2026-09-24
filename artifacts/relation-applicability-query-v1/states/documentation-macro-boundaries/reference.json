@@ -1,0 +1,3266 @@
+[
+  {
+    "pair": [
+      "req-164b17f8ea7552f8",
+      "local-15031e602963cb27dbe2c706"
+    ],
+    "proposal": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "convert the pipeline streams and host\n        output into the format that Ansible understands",
+      "applicable": false,
+      "condition_basis": "The unit concerns PSRP pipeline-output conversion, not ansible-doc macro formatting.",
+      "rationale": "The sources share only a generic output-formatting topic and have no specific behavior, symbol, or condition correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "PSRP doesn't have the same concept as other protocols with its output.",
+      "applicable": false,
+      "condition_basis": "The unit concerns conversion of PSRP pipeline output, not ansible-doc macro formatting.",
+      "rationale": "The shared concept of output does not establish behavior, symbol, or condition correspondence with ansible-doc macros.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-24aa4b0ea0fdb0b2",
+      "local-18ad70b4a6a79f6e6077ecaa"
+    ],
+    "proposal": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "example input: a=b c=\"foo bar\"",
+      "applicable": false,
+      "condition_basis": "The unit covers splitting command arguments containing whitespace or quotes, not preserving parenthesized documentation text.",
+      "rationale": "It provides neither a contract nor a verification pattern for ansible-doc macro recognition or text preservation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "those that may have been split over a jinja2 block or quotes.",
+      "applicable": false,
+      "condition_basis": "The unit concerns reassembling arguments split across Jinja2 blocks or quotes, not recognizing or preserving parenthesized non-macro text.",
+      "rationale": "Both sources concern textual processing only at a broad level; no documented behavior connects split_args to ansible-doc parenthesis formatting.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-42f0f3f031976fc8",
+      "local-18ad70b4a6a79f6e6077ecaa"
+    ],
+    "proposal": {
+      "requirement_id": "req-42f0f3f031976fc8",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "An optional space after the comma may appear in the input",
+      "unit_quote": "Splits args on whitespace",
+      "applicable": false,
+      "condition_basis": "The documented contract concerns argument splitting and reassembly, not ansible-doc link rendering.",
+      "rationale": "Both mention whitespace handling, but the unit documents split_args and has no correspondence to L(text,url), text <url>, or DocCLI output.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1820,
+        "end": 2027
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-42f0f3f031976fc8",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `L(text,url)` as `text <url>`.",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The unit concerns shell-style argument splitting and contains no `ansible-doc` link-rendering condition.",
+      "rationale": "Both sources concern text containing whitespace, but the documented contract for `split_args` does not specify the `L(text,url)` transformation or its spacing.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1820,
+        "end": 2027
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-653a91d02a6d433e",
+      "local-3200713e4641d668af086dc6"
+    ],
+    "proposal": {
+      "requirement_id": "req-653a91d02a6d433e",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "13 dashes",
+      "unit_quote": "xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The test applies to creation of an XML element whose name contains a dash and dot, not HORIZONTALLINE rendering.",
+      "rationale": "The shared reference to dashes is lexical only; the unit does not verify a newline-delimited sequence of 13 dashes.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 805,
+        "end": 894
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-653a91d02a6d433e",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`HORIZONTALLINE` appears as a newline, 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": "xpath: /business/test-with-dash.and.dot",
+      "applicable": false,
+      "condition_basis": "The test exercises an XML path and value containing dashes and dots, not the `HORIZONTALLINE` token.",
+      "rationale": "The dash characters are merely shared vocabulary; the example does not verify the required newline-delimited sequence of 13 dashes.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 805,
+        "end": 894
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-6589e018e383f91a",
+      "local-3cbeb4db6ac694587272b3a1-cd107d9f"
+    ],
+    "proposal": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-3cbeb4db6ac694587272b3a1-cd107d9f",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "DocCLI.tty_ify(text)",
+      "unit_quote": "text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))",
+      "applicable": true,
+      "condition_basis": "The unit directly invokes the specifically required DocCLI.tty_ify entry point while formatting description text.",
+      "rationale": "This existing-behavior source provides concrete usage context for the exact required symbol, but it is not a documented contract or public test and does not establish correctness of its outputs.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 509,
+          "end": 593
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-3cbeb4db6ac694587272b3a1-cd107d9f",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The public entry point for this transformation must be `DocCLI.tty_ify(text)`",
+      "unit_quote": "text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))",
+      "applicable": true,
+      "condition_basis": "When an option description is a list, each string entry is passed to `DocCLI.tty_ify` before wrapping and appending.",
+      "rationale": "The existing `DocCLI.add_fields` implementation directly calls the specifically required symbol for description transformation, establishing implementation context but not a normative contract or independent verification.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 509,
+          "end": 593
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-8177b699e0468168",
+      "local-2173c9943f9ccd3b6bc59cd4"
+    ],
+    "proposal": {
+      "requirement_id": "req-8177b699e0468168",
+      "unit_id": "local-2173c9943f9ccd3b6bc59cd4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "new public interface",
+      "unit_quote": "def get_default_interfaces(self, ip_path, collected_facts=None):",
+      "applicable": false,
+      "condition_basis": "The requirement excerpt does not identify this network-facts method or any condition applicable to it.",
+      "rationale": "The shared word interface is insufficient; the unit concerns discovering default IPv4 and IPv6 interfaces and has no specific correspondence to the unspecified new public interface.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3005,
+        "end": 3062
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/facts/network/linux.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 64,
+          "end": 97
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8177b699e0468168",
+      "unit_id": "local-2173c9943f9ccd3b6bc59cd4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The patch introduces the following new public interface:",
+      "unit_quote": "def get_default_interfaces(self, ip_path, collected_facts=None):",
+      "applicable": false,
+      "condition_basis": "The unit implements discovery of default network interfaces and supplies no identified connection to the patch's new public interface.",
+      "rationale": "The word `interface` is used in unrelated senses; no specific symbol, behavior, or condition correspondence is present.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3005,
+        "end": 3062
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/facts/network/linux.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 64,
+          "end": 97
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-8d689249b0941fef",
+      "local-18ad70b4a6a79f6e6077ecaa"
+    ],
+    "proposal": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The requirement applies to unsupported macros and words containing parenthesized phrases; the documented contract applies to whitespace splitting and reassembly across quotes or Jinja2 blocks.",
+      "rationale": "Both concern text containing spaces, but the unit does not document preservation of unsupported macros or parenthesized phrases.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Text that is not a supported macro and words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The requirement concerns preservation of unsupported macro-like text; the unit documents whitespace and quoting behavior.",
+      "rationale": "The unit contains no supported-macro recognition, parenthesized-word condition, or unchanged-text guarantee corresponding to the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-8fa5928edfc52c34",
+      "local-237bdd8452b63ba31352f46a-602edd7a"
+    ],
+    "proposal": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-237bdd8452b63ba31352f46a-602edd7a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "visible portions are rendered together",
+      "unit_quote": "all characters except those between \\001 and \\002 are assumed to be `visible'.",
+      "applicable": false,
+      "condition_basis": "The unit concerns terminal color escape sequences and optional wrapping of non-visible characters, not macro tokens combined on one line.",
+      "rationale": "The shared notion of visible text is only topical; the unit provides no behavior for M(), B(), C(), or R() rendering.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": false,
+      "basis_valid": true,
+      "validation_status": "REJECTED_ZERO_COVERAGE",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "REJECTED_PROPOSAL"
+    },
+    "audit": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-237bdd8452b63ba31352f46a-602edd7a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "visible portions are rendered together",
+      "unit_quote": "wrap_nonvisible_chars=False",
+      "applicable": false,
+      "condition_basis": "The requirement concerns the visible output of M, B, C, and R tokens; the unit concerns ANSI color and optional readline markers for non-visible characters.",
+      "rationale": "The shared visible/non-visible terminology does not provide specific macro behavior, symbol correspondence, or evidence that this function participates in the required rendering.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-956586c98e1f001a",
+      "local-26a268563a52f41052e092be-c20f7105"
+    ],
+    "proposal": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Name: tty_ify",
+      "unit_quote": "text.append(\"%s\\n\" % textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "The unit invokes DocCLI.tty_ify when formatting a documentation description for terminal-manual output.",
+      "rationale": "This existing behavior supplies specific call-site context for the named function, but it is neither a documented contract nor a public verification example and does not establish the required transformations.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 650
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Name: tty_ify",
+      "unit_quote": "textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "Within get_man_text, the selected description is passed directly to DocCLI.tty_ify before terminal-width wrapping.",
+      "rationale": "The unit provides a concrete call site and consumer context for tty_ify, but as existing behavior it is not normative support or a public verification example for the required transformations.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 650
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-98de536e8e28e810",
+      "local-54c7ce84d9cf2c940e87b0e4"
+    ],
+    "proposal": {
+      "requirement_id": "req-98de536e8e28e810",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`L(text,URL)` is shown as `text <URL>`",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns",
+      "applicable": false,
+      "condition_basis": "The unit discusses commas in an inventory configuration value, not the L(text,URL) macro or its rendering.",
+      "rationale": "The shared comma-related wording does not establish behavior, a symbol, or a condition corresponding to link-macro formatting.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 603,
+        "end": 692
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-98de536e8e28e810",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`L(text,URL)` is shown as `text <URL>`",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns",
+      "applicable": false,
+      "condition_basis": "The requirement concerns rendering L markup; the unit concerns inventory-ignore configuration values.",
+      "rationale": "The shared mention of comma-separated syntax does not establish any behavioral, symbolic, or conditional correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 603,
+        "end": 692
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-a2d9b99df521dc0d",
+      "local-18ad70b4a6a79f6e6077ecaa"
+    ],
+    "proposal": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `R(text,reference)` as `text`.",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The unit concerns argument splitting and has no condition involving ansible-doc or R(text,reference) rendering.",
+      "rationale": "It supplies no specific behavior, symbol, or condition correspondence to reference-macro formatting.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `R(text,reference)` as `text`.",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The requirement applies to ansible-doc rendering of R markup; the unit documents generic argument splitting.",
+      "rationale": "Whitespace and parsing terminology alone do not connect split_args to the specified CLI rendering behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-b52397f2497776c9",
+      "local-3200713e4641d668af086dc6"
+    ],
+    "proposal": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": "value: xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The example tests an XML element whose name and value contain dashes and dots, not `ansible-doc` macro formatting.",
+      "rationale": "The shared mention of dashes is merely lexical and provides no verification pattern for exactly 13 dashes surrounded by newlines.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": "value: xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The example applies to adding an XML element and contains no ansible-doc or HORIZONTALLINE condition.",
+      "rationale": "The shared mention of dashes is merely lexical and provides no verification pattern for the required 13-dash output.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-c4bd9197537f6403",
+      "local-206da3c97564239792990af3"
+    ],
+    "proposal": {
+      "requirement_id": "req-c4bd9197537f6403",
+      "unit_id": "local-206da3c97564239792990af3",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).",
+      "unit_quote": "Validates if is string is a well-formed fully-qualified collection reference",
+      "applicable": false,
+      "condition_basis": "The unit validates fully qualified collection references and does not describe parsing or displaying `R(text,ref)`.",
+      "rationale": "The word reference is shared, but there is no behavior correspondence for hiding the reference and showing only the text.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 693,
+        "end": 804
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/collection_loader/_collection_finder.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 798,
+          "end": 812
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c4bd9197537f6403",
+      "unit_id": "local-206da3c97564239792990af3",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).",
+      "unit_quote": "Validates if is string is a well-formed fully-qualified collection reference",
+      "applicable": false,
+      "condition_basis": "The unit validates fully qualified collection references and gives no condition for parsing or displaying R(text,ref).",
+      "rationale": "The word reference is shared, but the unit does not specify suppression of an R macro's reference argument.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 693,
+        "end": 804
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/collection_loader/_collection_finder.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 798,
+          "end": 812
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-da0ed55781a49984",
+      "local-15031e602963cb27dbe2c706"
+    ],
+    "proposal": {
+      "requirement_id": "req-da0ed55781a49984",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must correctly format lines containing multiple macros, rendering each macro according to its format while leaving surrounding plain text unchanged.",
+      "unit_quote": "We need some extra logic to convert the pipeline streams and host\n        output into the format that Ansible understands.",
+      "applicable": false,
+      "condition_basis": "The unit concerns conversion of PowerShell pipeline streams and host output, not lines containing multiple documentation macros.",
+      "rationale": "Generic output formatting does not specify per-macro rendering or preservation of surrounding plain text.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2541,
+        "end": 2721
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-da0ed55781a49984",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must correctly format lines containing multiple macros, rendering each macro according to its format while leaving surrounding plain text unchanged.",
+      "unit_quote": "We need some extra logic to convert the pipeline streams and host\n        output into the format that Ansible understands.",
+      "applicable": false,
+      "condition_basis": "The unit concerns conversion of PowerShell pipeline output into rc, stdout, and stderr, with no condition involving ansible-doc lines or multiple macros.",
+      "rationale": "Generic output-format language does not establish macro-by-macro rendering or preservation of surrounding text.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2541,
+        "end": 2721
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-164b17f8ea7552f8",
+      "local-18ad70b4a6a79f6e6077ecaa"
+    ],
+    "proposal": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles\n    those that may have been split over a jinja2 block or quotes.",
+      "applicable": false,
+      "condition_basis": "The unit documents argument splitting around Jinja blocks and quotes, not ansible-doc macros.",
+      "rationale": "There is no correspondence to the named macros or their visible output patterns.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The unit applies to argument splitting across whitespace, Jinja2 blocks, or quotes; it states no condition involving ansible-doc macros.",
+      "rationale": "Argument tokenization does not provide a contract, verification pattern, prerequisite, or implementation linkage for macro rendering.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-24aa4b0ea0fdb0b2",
+      "local-237bdd8452b63ba31352f46a-602edd7a"
+    ],
+    "proposal": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-237bdd8452b63ba31352f46a-602edd7a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "def stringc(text, color, wrap_nonvisible_chars=False):",
+      "applicable": false,
+      "condition_basis": "The unit applies terminal color escape formatting based on `ANSIBLE_COLOR`, not ansible-doc macro parsing or parenthesized-text preservation.",
+      "rationale": "Its generic string-formatting behavior does not specifically correspond to invalid macros or the cited phrase form.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-237bdd8452b63ba31352f46a-602edd7a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "def stringc(text, color, wrap_nonvisible_chars=False):",
+      "applicable": false,
+      "condition_basis": "The unit applies color escape formatting when ANSIBLE_COLOR is enabled and otherwise returns text; it does not address macro recognition or parenthesized phrases.",
+      "rationale": "Generic text formatting and preservation language does not demonstrate that this helper participates in ansible-doc macro handling.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-24aa4b0ea0fdb0b2",
+      "local-98d3c0ff2355c28b85978085"
+    ],
+    "proposal": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-98d3c0ff2355c28b85978085",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "Parse the output of the lsb_release command.",
+      "applicable": false,
+      "condition_basis": "The unit parses colon-delimited lsb_release output and has no condition involving ansible-doc text or macros.",
+      "rationale": "The shared output terminology is generic; no relevant symbol, behavior, or condition corresponds to the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 1072,
+          "end": 1094
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-98d3c0ff2355c28b85978085",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "Parse the output of the lsb_release command.",
+      "applicable": false,
+      "condition_basis": "The unit parses colon-delimited lsb_release lines and has no condition involving ansible-doc or parenthesized macro-like text.",
+      "rationale": "The shared word output is generic; no behavior, symbol, or execution relationship connects distribution parsing to ansible-doc formatting.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 1072,
+          "end": 1094
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-653a91d02a6d433e",
+      "local-97ca3a1c8e43002c0ff38d09"
+    ],
+    "proposal": {
+      "requirement_id": "req-653a91d02a6d433e",
+      "unit_id": "local-97ca3a1c8e43002c0ff38d09",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "appears as a newline",
+      "unit_quote": ":param newline: bool to indicate if newline should be added at end of answer or not",
+      "applicable": false,
+      "condition_basis": "The unit's newline parameter governs whether a newline is appended to a remote-device answer, not rendering of HORIZONTALLINE.",
+      "rationale": "The common newline concept does not establish correspondence to the required newline, 13 dashes, newline transformation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 805,
+        "end": 894
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/cliconf/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 220,
+          "end": 238
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-653a91d02a6d433e",
+      "unit_id": "local-97ca3a1c8e43002c0ff38d09",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`HORIZONTALLINE` appears as a newline, 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": ":param newline: bool to indicate if newline should be added at end of answer or not",
+      "applicable": false,
+      "condition_basis": "The unit's newline parameter governs answers sent to a remote-device prompt and does not apply to `HORIZONTALLINE` rendering.",
+      "rationale": "Mention of a newline alone provides no behavioral, symbol, or condition correspondence with the required horizontal-line transformation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 805,
+        "end": 894
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/cliconf/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 220,
+          "end": 238
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-6589e018e383f91a",
+      "local-52aab05e8c2894bcc47288da"
+    ],
+    "proposal": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-52aab05e8c2894bcc47288da",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "DocCLI.tty_ify(text)",
+      "unit_quote": "text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))",
+      "applicable": true,
+      "condition_basis": "The unit directly invokes the specifically required DocCLI.tty_ify entry point while formatting option descriptions.",
+      "rationale": "This existing-behavior source gives concrete call-site context for the exact required symbol, but it neither documents the public contract nor verifies the required outputs.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 509,
+          "end": 593
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-52aab05e8c2894bcc47288da",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The public entry point for this transformation must be `DocCLI.tty_ify(text)`",
+      "unit_quote": "text.append(textwrap.fill(DocCLI.tty_ify(opt['description']), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))",
+      "applicable": true,
+      "condition_basis": "When an option description is a string rather than a list, `DocCLI.add_fields` passes it to `DocCLI.tty_ify` before wrapping and appending.",
+      "rationale": "The implementation directly uses the required symbol as the transformation entry point in a concrete rendering path, but existing behavior is neither normative support nor a public verification example.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 509,
+          "end": 593
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-8d689249b0941fef",
+      "local-2173c9943f9ccd3b6bc59cd4"
+    ],
+    "proposal": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-2173c9943f9ccd3b6bc59cd4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Text that is not a supported macro",
+      "unit_quote": "words = out.splitlines()[0].split()",
+      "applicable": false,
+      "condition_basis": "The requirement applies to macro-like input text, whereas the unit parses the first line of route-command output.",
+      "rationale": "The unit has no specific behavior, symbol, or condition corresponding to unsupported macros or parenthesized phrases.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/facts/network/linux.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 64,
+          "end": 97
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-2173c9943f9ccd3b6bc59cd4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.",
+      "unit_quote": "words = out.splitlines()[0].split()",
+      "applicable": false,
+      "condition_basis": "The requirement applies to unsupported macro-like text, whereas the unit parses fields from network-command output.",
+      "rationale": "The shared notion of words does not establish behavior, symbol, condition, or reachability correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/facts/network/linux.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 64,
+          "end": 97
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-8fa5928edfc52c34",
+      "local-4a3e33b23a1c0298088eb51e"
+    ],
+    "proposal": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-4a3e33b23a1c0298088eb51e",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "visible portions are rendered together",
+      "unit_quote": "all characters except those between \\001 and \\002 are assumed to be `visible'.",
+      "applicable": false,
+      "condition_basis": "The unit concerns terminal color escape sequences and optional wrapping of non-visible characters, not macro tokens combined on one line.",
+      "rationale": "The shared notion of visible text is only topical; the unit provides no behavior for M(), B(), C(), or R() rendering.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": false,
+      "basis_valid": true,
+      "validation_status": "REJECTED_ZERO_COVERAGE",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "REJECTED_PROPOSAL"
+    },
+    "audit": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-4a3e33b23a1c0298088eb51e",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "visible portions are rendered together",
+      "unit_quote": "wrap_nonvisible_chars=False",
+      "applicable": false,
+      "condition_basis": "The unit applies color and optionally wraps terminal escape sequences; it states no macro-token condition.",
+      "rationale": "The shared visible/non-visible terminology does not establish behavior for rendering multiple documentation macros on one line.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-956586c98e1f001a",
+      "local-89cbc83dc6a7c321a2c2ec61"
+    ],
+    "proposal": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-89cbc83dc6a7c321a2c2ec61",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Output: string",
+      "unit_quote": "If we are only showing one item in the output",
+      "applicable": false,
+      "condition_basis": "The unit formats encrypted vault values as YAML output and does not invoke or describe tty_ify.",
+      "rationale": "The shared output/string terminology is generic and provides no specific correspondence to documentation macro processing.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/vault.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 378,
+          "end": 410
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-89cbc83dc6a7c321a2c2ec61",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "transforms macro-based documentation text into terminal-readable format",
+      "unit_quote": "format it into a yaml block that can be pasted into a playbook",
+      "applicable": false,
+      "condition_basis": "The unit formats encrypted plaintext as YAML and neither calls tty_ify nor processes documentation macros.",
+      "rationale": "Both concern formatting text, but there is no specific symbol, macro, input, or output correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/vault.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 378,
+          "end": 410
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-b52397f2497776c9",
+      "local-97ca3a1c8e43002c0ff38d09"
+    ],
+    "proposal": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-97ca3a1c8e43002c0ff38d09",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": ":param newline: bool to indicate if newline should be added at end of answer or not",
+      "applicable": false,
+      "condition_basis": "The unit's newline parameter governs answers sent to a remote device, not rendering `HORIZONTALLINE` in `ansible-doc` output.",
+      "rationale": "A generic newline option does not correspond to the required pair of newlines and exact 13-dash content.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/cliconf/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 220,
+          "end": 238
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-97ca3a1c8e43002c0ff38d09",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": ":param newline: bool to indicate if newline should be added at end of answer or not",
+      "applicable": false,
+      "condition_basis": "The newline parameter governs answers sent to a remote-device prompt, not ansible-doc macro rendering.",
+      "rationale": "A shared newline term does not demonstrate reachability or correspondence with HORIZONTALLINE formatting.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/cliconf/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 220,
+          "end": 238
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-da0ed55781a49984",
+      "local-98d3c0ff2355c28b85978085"
+    ],
+    "proposal": {
+      "requirement_id": "req-da0ed55781a49984",
+      "unit_id": "local-98d3c0ff2355c28b85978085",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must correctly format lines containing multiple macros",
+      "unit_quote": "Parse the output of the lsb_release command.",
+      "applicable": false,
+      "condition_basis": "The requirement concerns ansible-doc rendering of multiple macros; the unit parses colon-delimited lsb_release output into a dictionary.",
+      "rationale": "Both sources refer generically to lines and output, but they concern different components, symbols, inputs, and behaviors. There is no specific contract, verification pattern, precondition, or implementation correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2541,
+        "end": 2721
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 1072,
+          "end": 1094
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-da0ed55781a49984",
+      "unit_id": "local-98d3c0ff2355c28b85978085",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must correctly format lines containing multiple macros, rendering each macro according to its format while leaving surrounding plain text unchanged.",
+      "unit_quote": "for line in lines:\n            kv = line.strip('\\n').split(':', 1)",
+      "applicable": false,
+      "condition_basis": "The line processing applies only to parsing colon-delimited lsb_release output and does not address ansible-doc macros.",
+      "rationale": "Shared concepts of lines and text processing do not prove correspondence with multiple-macro rendering or preservation of surrounding plain text.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2541,
+        "end": 2721
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 1072,
+          "end": 1094
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-a2d9b99df521dc0d",
+      "local-8323eb02b813840bbf7d2563"
+    ],
+    "proposal": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-8323eb02b813840bbf7d2563",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the rendered output must omit the reference entirely",
+      "unit_quote": "Ansible returns this rendered configuration in the ``rendered`` key in the result.",
+      "applicable": false,
+      "condition_basis": "The unit defines a network-resource-module state and result key, not ansible-doc macro formatting.",
+      "rationale": "The shared word rendered is generic and does not correspond to R(text,reference), tty_ify, or omission of a reference.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 47,
+          "end": 48
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-8323eb02b813840bbf7d2563",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the rendered output must omit the reference entirely",
+      "unit_quote": "Ansible returns this rendered configuration in the ``rendered`` key in the result.",
+      "applicable": false,
+      "condition_basis": "The requirement concerns rendering documentation markup in ansible-doc; the unit defines a network resource-module state.",
+      "rationale": "The word rendered describes unrelated device-native configuration behavior and supplies no contract for R markup.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 47,
+          "end": 48
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-a2d9b99df521dc0d",
+      "local-bc2c9a408374e8a23cc4f773"
+    ],
+    "proposal": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-bc2c9a408374e8a23cc4f773",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the rendered output must omit the reference entirely",
+      "unit_quote": "Ansible returns this rendered configuration in the ``rendered`` key in the result.",
+      "applicable": false,
+      "condition_basis": "The unit defines a network-resource-module state and result key, not ansible-doc macro formatting.",
+      "rationale": "The shared word rendered is generic and does not correspond to R(text,reference), tty_ify, or omission of a reference.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/network/user_guide/network_resource_modules.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 39,
+          "end": 40
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-bc2c9a408374e8a23cc4f773",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the rendered output must omit the reference entirely",
+      "unit_quote": "Ansible renders the provided configuration in the task in the device-native format",
+      "applicable": false,
+      "condition_basis": "The requirement applies to ansible-doc documentation output; the unit applies to offline network configuration rendering.",
+      "rationale": "The shared rendering terminology is generic and does not connect the network-module contract to R markup processing.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/network/user_guide/network_resource_modules.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 39,
+          "end": 40
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-8d689249b0941fef",
+      "local-ddf4a356547c45690b713c4c-c0a2b62d"
+    ],
+    "proposal": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-ddf4a356547c45690b713c4c-c0a2b62d",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "words that merely contain a parenthesized phrase",
+      "unit_quote": "for idp, phrase in enumerate(term.split()):",
+      "applicable": false,
+      "condition_basis": "The requirement concerns recognizing supported macro syntax and preserving other text; the unit parses whitespace-separated lookup parameters.",
+      "rationale": "Generic phrase splitting does not specifically correspond to unsupported-macro recognition or preservation of parenthesized words.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/ini.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 71,
+          "end": 87
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-ddf4a356547c45690b713c4c-c0a2b62d",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.",
+      "unit_quote": "for idp, phrase in enumerate(term.split()):",
+      "applicable": false,
+      "condition_basis": "The requirement concerns macro recognition and preservation; the unit splits lookup parameters and recognizes key assignments.",
+      "rationale": "Its processing of phrases does not identify supported macros or specify preservation of parenthesized words.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/ini.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 71,
+          "end": 87
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-8fa5928edfc52c34",
+      "local-18ad70b4a6a79f6e6077ecaa"
+    ],
+    "proposal": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "In a single line containing multiple tokens, visible portions are rendered together",
+      "unit_quote": "example input: a=b c=\"foo bar\"",
+      "applicable": false,
+      "condition_basis": "The requirement applies to rendering supported macro tokens, while the documented contract applies to splitting arguments on whitespace while preserving quoted or Jinja2 regions.",
+      "rationale": "The shared notions of tokens, whitespace, and grouped text do not provide specific correspondence to M, B, C, or R rendering.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "In a single line containing multiple tokens, visible portions are rendered together",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The requirement concerns rendering visible portions of supported macros; the unit documents argument splitting around whitespace, templates, and quotes.",
+      "rationale": "Multiple-token wording alone does not establish macro-rendering behavior, a shared symbol, or reachability.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-956586c98e1f001a",
+      "local-15031e602963cb27dbe2c706"
+    ],
+    "proposal": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "transforms macro-based documentation text into terminal-readable format",
+      "unit_quote": "convert the pipeline streams and host\n        output into the format that Ansible understands",
+      "applicable": false,
+      "condition_basis": "The contract applies to conversion of PSRP pipeline output, not tty_ify or documentation macros.",
+      "rationale": "Both discuss output conversion, but the unit contains no correspondence to tty_ify or I(), B(), M(), L(), U(), R(), C(), and HORIZONTALLINE.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Class method that transforms macro-based documentation text into terminal-readable format",
+      "unit_quote": "convert the pipeline streams and host\n        output into the format that Ansible understands",
+      "applicable": false,
+      "condition_basis": "The contract applies to finished PowerShell pipeline output, not tty_ify input or documentation macros.",
+      "rationale": "Generic conversion-to-output language does not support the specified tty_ify symbol, input, output, or macro set.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-c4bd9197537f6403",
+      "local-54c7ce84d9cf2c940e87b0e4"
+    ],
+    "proposal": {
+      "requirement_id": "req-c4bd9197537f6403",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns, as shown above.",
+      "applicable": false,
+      "condition_basis": "The unit documents comma-separated inventory-ignore patterns, not `R(text,ref)` display semantics.",
+      "rationale": "The shared comma concept supplies no contract for optional spacing, displaying `text`, or hiding `ref`.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 693,
+        "end": 804
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c4bd9197537f6403",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns, as shown above.",
+      "applicable": false,
+      "condition_basis": "The documented condition concerns configuration values represented as comma-separated pattern lists, not R macro rendering.",
+      "rationale": "Comma-separated configuration syntax does not support the required treatment of R(text,ref).",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 693,
+        "end": 804
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-a2d9b99df521dc0d",
+      "local-54c7ce84d9cf2c940e87b0e4"
+    ],
+    "proposal": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "An optional space after the comma may appear in the input",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns",
+      "applicable": false,
+      "condition_basis": "The unit's comma-separated inventory setting is unrelated to optional spacing inside R(text,reference).",
+      "rationale": "Shared comma terminology alone provides no contract or verification for the required macro rendering.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "An optional space after the comma may appear in the input",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns",
+      "applicable": false,
+      "condition_basis": "The requirement's comma is part of R markup syntax; the unit's commas delimit inventory-ignore patterns.",
+      "rationale": "Shared punctuation terminology does not establish a relationship to ansible-doc rendering or reference omission.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-8fa5928edfc52c34",
+      "local-8323eb02b813840bbf7d2563"
+    ],
+    "proposal": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-8323eb02b813840bbf7d2563",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "visible portions are rendered together",
+      "unit_quote": "Ansible renders the provided configuration in the task in the device-native format",
+      "applicable": false,
+      "condition_basis": "The documented contract applies to the rendered state of network resource modules, not documentation macro text.",
+      "rationale": "The shared word rendered does not establish behavior for combining visible portions of M(), B(), C(), or R() tokens.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 47,
+          "end": 48
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-8323eb02b813840bbf7d2563",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "visible portions are rendered together",
+      "unit_quote": "Ansible renders the provided configuration in the task in the device-native format",
+      "applicable": false,
+      "condition_basis": "The documented contract concerns the rendered state of network resource modules, not macro-based documentation text.",
+      "rationale": "Both sources use rendering terminology, but the unit documents configuration rendering and supplies no corresponding token behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/network/dev_guide/developing_resource_modules_network.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 47,
+          "end": 48
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-8fa5928edfc52c34",
+      "local-3200713e4641d668af086dc6"
+    ],
+    "proposal": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "In a single line containing multiple tokens",
+      "unit_quote": "value: xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The unit is an XML-module example and contains no documentation-macro rendering condition.",
+      "rationale": "It neither specifies nor verifies rendering visible portions of multiple macro tokens together.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "In a single line containing multiple tokens, visible portions are rendered together",
+      "unit_quote": "value: xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The unit is an XML-module task and contains no documentation-macro rendering condition.",
+      "rationale": "The XML element example does not specify or verify the combined rendering of M(), B(), C(), or R() tokens.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-8177b699e0468168",
+      "local-237bdd8452b63ba31352f46a-602edd7a"
+    ],
+    "proposal": {
+      "requirement_id": "req-8177b699e0468168",
+      "unit_id": "local-237bdd8452b63ba31352f46a-602edd7a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The patch introduces the following new public interface:",
+      "unit_quote": "def stringc(text, color, wrap_nonvisible_chars=False):",
+      "applicable": false,
+      "condition_basis": "The requirement excerpt only announces an interface and specifies no behavior, symbol, or applicability condition.",
+      "rationale": "The unit exposes an existing function, but no supplied requirement text identifies stringc or any of its behavior as the new public interface.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3005,
+        "end": 3062
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8177b699e0468168",
+      "unit_id": "local-237bdd8452b63ba31352f46a-602edd7a",
+      "relation": "UNRESOLVED",
+      "requirement_quote": "The patch introduces the following new public interface:",
+      "unit_quote": "def stringc(text, color, wrap_nonvisible_chars=False):",
+      "applicable": null,
+      "condition_basis": "The requirement announces an interface but does not identify it in the supplied text.",
+      "rationale": "The supplied requirement does not establish whether stringc is the referenced interface or otherwise relates to it.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3005,
+        "end": 3062
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "SEMANTIC_UNRESOLVED"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-8d689249b0941fef",
+      "local-2221f52c49c4ba915c3ac117"
+    ],
+    "proposal": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-2221f52c49c4ba915c3ac117",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Text that is not a supported macro and words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.",
+      "unit_quote": "desc = DocCLI.tty_ify(doc['short_description'])",
+      "applicable": true,
+      "condition_basis": "The requirement governs text passed through macro-oriented terminal-text rendering, and this unit explicitly passes description text to DocCLI.tty_ify.",
+      "rationale": "This existing caller is implementation context for the relevant text transformation path, but it is neither a documented contract nor a public test example and does not itself establish the required unchanged result.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 474,
+          "end": 501
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-8d689249b0941fef",
+      "unit_id": "local-2221f52c49c4ba915c3ac117",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Text that is not a supported macro and words that merely contain a parenthesized phrase (for example, `IBM(International Business Machines)`) remain unchanged.",
+      "unit_quote": "desc = DocCLI.tty_ify(doc['short_description'])",
+      "applicable": true,
+      "condition_basis": "The unit passes public documentation text through DocCLI.tty_ify when constructing snippet text.",
+      "rationale": "This is a concrete consumer context in which text transformation may occur, but existing behavior is neither normative support nor verification of the unchanged-text requirement.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1096,
+        "end": 1258
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 474,
+          "end": 501
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-8fa5928edfc52c34",
+      "local-d15f1c3aa937e7f2ca723024"
+    ],
+    "proposal": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-d15f1c3aa937e7f2ca723024",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "In a single line containing multiple tokens",
+      "unit_quote": "Simplify output by omitting earlier 'rendering: ...' messages.",
+      "applicable": false,
+      "condition_basis": "The unit simplifies build logs by removing repeated rendering-status lines; it does not process documentation macros.",
+      "rationale": "References to lines and rendering are generic and do not correspond to the required token transformations.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "test/sanity/code-smell/docs-build.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 98,
+          "end": 131
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8fa5928edfc52c34",
+      "unit_id": "local-d15f1c3aa937e7f2ca723024",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "In a single line containing multiple tokens, visible portions are rendered together",
+      "unit_quote": "Simplify output by omitting earlier 'rendering: ...' messages.",
+      "applicable": false,
+      "condition_basis": "The unit operates on lines beginning with 'rendering: ' and does not process documentation macros.",
+      "rationale": "Its line filtering and joining behavior has no specific correspondence to rendering M(), B(), C(), or R() tokens together.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 895,
+        "end": 1095
+      },
+      "unit_spans": [
+        {
+          "path": "test/sanity/code-smell/docs-build.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 98,
+          "end": 131
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-8177b699e0468168",
+      "local-2221f52c49c4ba915c3ac117"
+    ],
+    "proposal": {
+      "requirement_id": "req-8177b699e0468168",
+      "unit_id": "local-2221f52c49c4ba915c3ac117",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The patch introduces the following new public interface:",
+      "unit_quote": "def get_snippet_text(doc):",
+      "applicable": false,
+      "condition_basis": "The requirement excerpt only announces an interface and specifies no behavior, symbol, or applicability condition.",
+      "rationale": "The unit is existing behavior for snippet generation, but the supplied requirement contains no interface details that specifically correspond to this symbol or behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3005,
+        "end": 3062
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 474,
+          "end": 501
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-8177b699e0468168",
+      "unit_id": "local-2221f52c49c4ba915c3ac117",
+      "relation": "UNRESOLVED",
+      "requirement_quote": "The patch introduces the following new public interface:",
+      "unit_quote": "def get_snippet_text(doc):",
+      "applicable": null,
+      "condition_basis": "The requirement announces an interface but does not identify it in the supplied text.",
+      "rationale": "The supplied requirement does not specify a symbol or behavior that can be compared with get_snippet_text.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3005,
+        "end": 3062
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 474,
+          "end": 501
+        }
+      ],
+      "state": "SEMANTIC_UNRESOLVED"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-956586c98e1f001a",
+      "local-ff44477287922e90a2480423-863fabb3"
+    ],
+    "proposal": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-ff44477287922e90a2480423-863fabb3",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Name: tty_ify",
+      "unit_quote": "DocCLI.tty_ify(desc)",
+      "applicable": true,
+      "condition_basis": "The unit directly invokes the required tty_ify symbol while producing CLI manual text.",
+      "rationale": "This existing-behavior source identifies a concrete caller and usage context for tty_ify, but it does not document or verify the required macro transformations.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 641
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-ff44477287922e90a2480423-863fabb3",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Name: tty_ify",
+      "unit_quote": "textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "Within get_man_text, the selected description is passed directly to DocCLI.tty_ify before terminal-width wrapping.",
+      "rationale": "The unit supplies a concrete invocation context for tty_ify, but its existing behavior does not constitute a documented contract or public test of the specified macro processing.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 641
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-a2d9b99df521dc0d",
+      "local-52aab05e8c2894bcc47288da"
+    ],
+    "proposal": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-52aab05e8c2894bcc47288da",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The `ansible-doc` CLI output must format `R(text,reference)` as `text`.",
+      "unit_quote": "text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))",
+      "applicable": true,
+      "condition_basis": "The unit directly routes ansible-doc field descriptions through DocCLI.tty_ify.",
+      "rationale": "This existing behavior provides a concrete ansible-doc call site where tty_ify output is consumed, but it neither documents nor verifies the required R(text,reference) transformation.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 509,
+          "end": 593
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-52aab05e8c2894bcc47288da",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The `ansible-doc` CLI output must format `R(text,reference)` as `text`.",
+      "unit_quote": "text.append(textwrap.fill(DocCLI.tty_ify(entry), limit, initial_indent=opt_indent, subsequent_indent=opt_indent))",
+      "applicable": true,
+      "condition_basis": "Within DocCLI.add_fields, string description entries are passed through DocCLI.tty_ify before being appended to CLI output.",
+      "rationale": "The unit identifies an existing ansible-doc formatting call path for description text, but it neither documents the R contract nor proves how tty_ify handles R markup.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 509,
+          "end": 593
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-6589e018e383f91a",
+      "local-3200713e4641d668af086dc6"
+    ],
+    "proposal": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "public entry point for this transformation",
+      "unit_quote": "Add an element with dot",
+      "applicable": false,
+      "condition_basis": "The public test example exercises an XML module operation, not a DocCLI text transformation.",
+      "rationale": "The unit neither invokes nor verifies DocCLI.tty_ify(text).",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The public entry point for this transformation must be `DocCLI.tty_ify(text)`",
+      "unit_quote": "value: xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The public test example invokes an XML module and does not call or identify `DocCLI.tty_ify(text)`.",
+      "rationale": "The XML example supplies no verification pattern for the required public transformation entry point.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-164b17f8ea7552f8",
+      "local-54c7ce84d9cf2c940e87b0e4"
+    ],
+    "proposal": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns, as shown above.",
+      "applicable": false,
+      "condition_basis": "The unit documents inventory-ignore configuration patterns, not documentation macros.",
+      "rationale": "The shared word patterns is generic and does not establish behavior or condition correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-54c7ce84d9cf2c940e87b0e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "The value in either case should be a comma-separated list of patterns, as shown above.",
+      "applicable": false,
+      "condition_basis": "The unit applies to inventory-ignore configuration values, not macro syntax or ansible-doc display behavior.",
+      "rationale": "The word patterns refers to inventory filename patterns and has no specific correspondence to the required visible macro patterns.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/user_guide/intro_dynamic_inventory.rst",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 375,
+          "end": 375
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-164b17f8ea7552f8",
+      "local-97ca3a1c8e43002c0ff38d09"
+    ],
+    "proposal": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-97ca3a1c8e43002c0ff38d09",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": ":param output: For devices that support fetching command output in different\n                       format, this keyword argument is used to specify the output in which\n                        response is to be retrieved.",
+      "applicable": false,
+      "condition_basis": "The unit concerns remote-device command output formats, not ansible-doc rendering.",
+      "rationale": "Generic references to output and format do not correspond to the required macro formatting.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/cliconf/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 220,
+          "end": 238
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-97ca3a1c8e43002c0ff38d09",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "Execute specified command on remote device",
+      "applicable": false,
+      "condition_basis": "The unit describes remote-device command execution and retrieval, with no ansible-doc or macro-rendering condition.",
+      "rationale": "Its references to command output are generic and do not establish reachability or correspondence with ansible-doc formatting.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/cliconf/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 220,
+          "end": 238
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-b52397f2497776c9",
+      "local-18ad70b4a6a79f6e6077ecaa"
+    ],
+    "proposal": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The unit documents argument splitting and quote/Jinja2 reassembly, not documentation macro rendering.",
+      "rationale": "It contains no `HORIZONTALLINE` symbol, 13-dash output, or corresponding newline-format rule.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-18ad70b4a6a79f6e6077ecaa",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": "Splits args on whitespace, but intelligently reassembles",
+      "applicable": false,
+      "condition_basis": "The unit concerns argument splitting and states no condition involving ansible-doc, HORIZONTALLINE, or the required 13-dash rendering.",
+      "rationale": "Generic whitespace handling does not establish the specified CLI formatting behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/splitter.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 69,
+          "end": 82
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-6589e018e383f91a",
+      "local-4a3e33b23a1c0298088eb51e"
+    ],
+    "proposal": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-4a3e33b23a1c0298088eb51e",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "producing the outputs above",
+      "unit_quote": "return u\"\\n\".join([fmt % (color_code, t) for t in text.split(u'\\n')])",
+      "applicable": false,
+      "condition_basis": "The unit implements optional color formatting in stringc rather than the required DocCLI.tty_ify public entry point.",
+      "rationale": "Although both transform text, the unit contains no correspondence to the required class, method, or specified outputs.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-6589e018e383f91a",
+      "unit_id": "local-4a3e33b23a1c0298088eb51e",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The public entry point for this transformation must be `DocCLI.tty_ify(text)`",
+      "unit_quote": "def stringc(text, color, wrap_nonvisible_chars=False):",
+      "applicable": false,
+      "condition_basis": "The unit defines the distinct `stringc` color-formatting function and contains no call or reference to `DocCLI.tty_ify`.",
+      "rationale": "A shared `text` parameter and text transformation theme do not establish correspondence with the required public entry point.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2874,
+        "end": 2984
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/color.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 88,
+          "end": 108
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-b52397f2497776c9",
+      "local-15031e602963cb27dbe2c706"
+    ],
+    "proposal": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": "output into the format that Ansible understands.",
+      "applicable": false,
+      "condition_basis": "The unit concerns conversion of PSRP pipeline output, not `ansible-doc` handling of `HORIZONTALLINE`.",
+      "rationale": "The generic concepts of output and formatting do not establish the required macro-to-13-dash rendering behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-b52397f2497776c9",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must format `HORIZONTALLINE` as a newline, exactly 13 dashes, and a newline (`\\n-------------\\n`).",
+      "unit_quote": "convert the pipeline streams and host output into the format that Ansible understands",
+      "applicable": false,
+      "condition_basis": "The requirement governs ansible-doc HORIZONTALLINE formatting; the unit documents conversion of PowerShell pipeline results.",
+      "rationale": "Generic output-format conversion does not correspond to the HORIZONTALLINE symbol, the 13-dash sequence, or its newline conditions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": false,
+      "basis_valid": true,
+      "validation_status": "REJECTED_ZERO_COVERAGE",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2221,
+        "end": 2351
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "REJECTED_PROPOSAL"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-c4bd9197537f6403",
+      "local-36d02034bce85eafae68bef5"
+    ],
+    "proposal": {
+      "requirement_id": "req-c4bd9197537f6403",
+      "unit_id": "local-36d02034bce85eafae68bef5",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).",
+      "unit_quote": "for tag in tag_set.split(u','):",
+      "applicable": false,
+      "condition_basis": "The unit splits comma-separated CLI tag and inventory values, not the arguments of an `R(text,ref)` documentation macro.",
+      "rationale": "Comma processing alone does not establish rendering only `text`, suppressing `ref`, or allowing optional post-comma space.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 693,
+        "end": 804
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 299,
+          "end": 364
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c4bd9197537f6403",
+      "unit_id": "local-36d02034bce85eafae68bef5",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`R(text,ref)` is shown as `text` (the reference is not shown; an optional space after the comma is allowed).",
+      "unit_quote": "for tag in tag_set.split(u','):",
+      "applicable": false,
+      "condition_basis": "The comma splitting applies to CLI tag and skip-tag option processing, not R macro syntax or display.",
+      "rationale": "Comma handling alone provides no specific behavioral correspondence to the optional space or hidden reference requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 693,
+        "end": 804
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/__init__.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 299,
+          "end": 364
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-24aa4b0ea0fdb0b2",
+      "local-218748b66abc55b376272b3e-968bccf9"
+    ],
+    "proposal": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-218748b66abc55b376272b3e-968bccf9",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "desc = DocCLI.tty_ify(doc['short_description'])",
+      "applicable": true,
+      "condition_basis": "This ansible-doc snippet-generation path passes documentation descriptions through `DocCLI.tty_ify` before placing them in output.",
+      "rationale": "The unit identifies an implementation path where ansible-doc description text is formatted, but as existing behavior it does not establish a normative contract or prove preservation of invalid-macro parenthesized phrases.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 474,
+          "end": 498
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-24aa4b0ea0fdb0b2",
+      "unit_id": "local-218748b66abc55b376272b3e-968bccf9",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The `ansible-doc` CLI output must preserve text containing parenthesized phrases that are not valid macros (e.g., `IBM(International Business Machines)`) without any formatting changes.",
+      "unit_quote": "desc = DocCLI.tty_ify(doc['short_description'])",
+      "applicable": true,
+      "condition_basis": "Within DocCLI.get_snippet_text, short descriptions and option descriptions are passed to DocCLI.tty_ify before being placed in generated snippet text.",
+      "rationale": "The unit identifies an ansible-doc rendering call site through which descriptive text is formatted. Because its role is existing_behavior, it supplies implementation context rather than normative support or verification.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2352,
+        "end": 2540
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 474,
+          "end": 498
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-a2d9b99df521dc0d",
+      "local-3200713e4641d668af086dc6"
+    ],
+    "proposal": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the rendered output must omit the reference entirely",
+      "unit_quote": "value: xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The test example exercises XML element creation, not ansible-doc reference-macro rendering.",
+      "rationale": "It contains no verification pattern for R(text,reference) input or the required text-only output.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-a2d9b99df521dc0d",
+      "unit_id": "local-3200713e4641d668af086dc6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the rendered output must omit the reference entirely",
+      "unit_quote": "value: xml tag with dashes and dots",
+      "applicable": false,
+      "condition_basis": "The requirement concerns ansible-doc output; the example exercises XML element creation.",
+      "rationale": "This public test example contains no R markup, reference omission, or ansible-doc verification pattern.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2028,
+        "end": 2220
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/incidental_xml/tasks/test-add-element-implicitly.yml",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  }
+]

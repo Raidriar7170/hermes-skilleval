@@ -509,3 +509,41 @@ def test_connection_failure_streak_resets_on_success_or_different_type():
     assert count == 1
     kind, count = connection_streak(kind, count, "ERROR", "BrokenPipeError: pipe")
     assert count == 2
+
+
+def test_singleton_only_when_one_pending_pair():
+    e = CostEnvelope(
+        [
+            dict(
+                lifecycle="reuse",
+                size=2,
+                status="COMPLETED",
+                valid_rows=2,
+                request_seconds=10,
+                payload_chars=100,
+            )
+        ],
+        "reuse",
+    )
+    # One item fits the length-scaled envelope; two do not. Affordability
+    # must not silently permit an unmeasured singleton while two remain.
+    assert e.choose([1, 2], lambda b: 100 * len(b), 20) == ([], None)
+    assert e.choose([1], lambda b: 100 * len(b), 20)[0] == [1]
+
+
+def test_pair_cap_truncation_does_not_authorize_singleton():
+    e = CostEnvelope(
+        [
+            dict(
+                lifecycle="reuse",
+                size=2,
+                status="COMPLETED",
+                valid_rows=2,
+                request_seconds=10,
+                payload_chars=100,
+            )
+        ],
+        "reuse",
+    )
+    # At 47/48 unique queries ranked can have one item while the domain has many.
+    assert e.choose([1], lambda b: 100, 60, pending_count=97) == ([], None)

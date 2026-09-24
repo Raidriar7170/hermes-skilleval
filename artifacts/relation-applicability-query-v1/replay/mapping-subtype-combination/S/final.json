@@ -1,0 +1,284 @@
+{
+  "state": "mapping-subtype-combination",
+  "method": "S",
+  "requested": [
+    [
+      "req-3d9ba007d2e598f9",
+      "local-054cd339e190cd55a90d344c"
+    ],
+    [
+      "req-3d9ba007d2e598f9",
+      "local-0a095c4b7ef13932f8ef5609"
+    ],
+    [
+      "req-3d9ba007d2e598f9",
+      "local-45d36f96d8a51ad69df16656-d5f664ae"
+    ],
+    [
+      "req-3d9ba007d2e598f9",
+      "local-70388d6aa1c101857cf34f84"
+    ],
+    [
+      "req-3d9ba007d2e598f9",
+      "local-85996f593ceaef0bb32b2a47"
+    ],
+    [
+      "req-3d9ba007d2e598f9",
+      "local-87a87f97143ed4f1c6602cc8"
+    ],
+    [
+      "req-47e4311a878f0bfd",
+      "local-0a095c4b7ef13932f8ef5609"
+    ],
+    [
+      "req-47e4311a878f0bfd",
+      "local-3db64ef1302fd827e187ea6c"
+    ],
+    [
+      "req-58cbf915ad559f5a",
+      "local-0a095c4b7ef13932f8ef5609"
+    ],
+    [
+      "req-58cbf915ad559f5a",
+      "local-3619fe013c2ee9d483b42d91"
+    ],
+    [
+      "req-58cbf915ad559f5a",
+      "local-3db64ef1302fd827e187ea6c"
+    ],
+    [
+      "req-58cbf915ad559f5a",
+      "local-45d36f96d8a51ad69df16656-d5f664ae"
+    ],
+    [
+      "req-58cbf915ad559f5a",
+      "local-7ce549fba3a019806910b95b"
+    ],
+    [
+      "req-58cbf915ad559f5a",
+      "local-87a87f97143ed4f1c6602cc8"
+    ],
+    [
+      "req-58cbf915ad559f5a",
+      "local-8db23cf2afaaf3177dccbe52"
+    ],
+    [
+      "req-735d77ff1dc1f8e6",
+      "local-0a095c4b7ef13932f8ef5609"
+    ],
+    [
+      "req-735d77ff1dc1f8e6",
+      "local-3db64ef1302fd827e187ea6c"
+    ],
+    [
+      "req-735d77ff1dc1f8e6",
+      "local-7ce549fba3a019806910b95b"
+    ],
+    [
+      "req-735d77ff1dc1f8e6",
+      "local-900804ea8ab4983c3d138beb-a4632c3c"
+    ],
+    [
+      "req-735d77ff1dc1f8e6",
+      "local-daca44362aa52da38e31b9bb"
+    ],
+    [
+      "req-7b51cb4817418f65",
+      "local-3db64ef1302fd827e187ea6c"
+    ],
+    [
+      "req-7b51cb4817418f65",
+      "local-7be61e5313126f9d64d13429"
+    ],
+    [
+      "req-7b51cb4817418f65",
+      "local-daca44362aa52da38e31b9bb"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-054cd339e190cd55a90d344c"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-06bee73a222407accecbfeb5-5dd5af2b"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-3082f909104aae21118b75ae-bbae13fd"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-3619fe013c2ee9d483b42d91"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-3db64ef1302fd827e187ea6c"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-45d36f96d8a51ad69df16656-d5f664ae"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-4a55386989d23d75ba19e21e"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-7ce549fba3a019806910b95b"
+    ],
+    [
+      "req-824b3c2e63262631",
+      "local-85996f593ceaef0bb32b2a47"
+    ]
+  ],
+  "pack": {
+    "method": "A",
+    "indices": [
+      1,
+      11
+    ],
+    "units": [
+      {
+        "unit_id": "local-3db64ef1302fd827e187ea6c",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "class",
+        "applies_to": [
+          "lib.ansible.vars.manager.VarsWithSources"
+        ],
+        "preconditions": [],
+        "statement": "class VarsWithSources(MutableMapping):\n    '''\n    Dict-like class for vars that also provides source information for each var\n\n    This class can only store the source for top-level vars. It does no tracking\n    on its own, just shows a debug message with the information that it is provided\n    when a particular var is accessed.\n    '''\n    def __init__(self, *args, **kwargs):\n        ''' Dict-compatible constructor '''\n        self.data = dict(*args, **kwargs)\n        self.sources = {}\n\n    @classmethod\n    def new_vars_with_sources(cls, data, sources):\n        ''' Alternate constructor method to instantiate class with sources '''\n        v = cls(data)\n        v.sources = sources\n        return v\n\n    def get_source(self, key):\n        return self.sources.get(key, None)\n\n    def __getitem__(self, key):\n        val = self.data[key]\n        # See notes in the VarsWithSources docstring for caveats and limitations of the source tracking\n        display.debug(\"variable '%s' from source: %s\" % (key, self.sources.get(key, \"unknown\")))\n        return val\n\n    def __setitem__(self, key, value):\n        self.data[key] = value\n\n    def __delitem__(self, key):\n        del self.data[key]\n\n    def __iter__(self):\n        return iter(self.data)\n\n    def __len__(self):\n        return len(self.data)\n\n    # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict\n    def __contains__(self, key):\n        return self.data.__contains__(key)\n\n    def copy(self):\n        return VarsWithSources.new_vars_with_sources(self.data.copy(), self.sources.copy())\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/vars/manager.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 742,
+            "line_end": 788,
+            "exact_excerpt": "class VarsWithSources(MutableMapping):\n    '''\n    Dict-like class for vars that also provides source information for each var\n\n    This class can only store the source for top-level vars. It does no tracking\n    on its own, just shows a debug message with the information that it is provided\n    when a particular var is accessed.\n    '''\n    def __init__(self, *args, **kwargs):\n        ''' Dict-compatible constructor '''\n        self.data = dict(*args, **kwargs)\n        self.sources = {}\n\n    @classmethod\n    def new_vars_with_sources(cls, data, sources):\n        ''' Alternate constructor method to instantiate class with sources '''\n        v = cls(data)\n        v.sources = sources\n        return v\n\n    def get_source(self, key):\n        return self.sources.get(key, None)\n\n    def __getitem__(self, key):\n        val = self.data[key]\n        # See notes in the VarsWithSources docstring for caveats and limitations of the source tracking\n        display.debug(\"variable '%s' from source: %s\" % (key, self.sources.get(key, \"unknown\")))\n        return val\n\n    def __setitem__(self, key, value):\n        self.data[key] = value\n\n    def __delitem__(self, key):\n        del self.data[key]\n\n    def __iter__(self):\n        return iter(self.data)\n\n    def __len__(self):\n        return len(self.data)\n\n    # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict\n    def __contains__(self, key):\n        return self.data.__contains__(key)\n\n    def copy(self):\n        return VarsWithSources.new_vars_with_sources(self.data.copy(), self.sources.copy())\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleTemplateError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.inventory.helpers.get_group_vars",
+          "ansible.inventory.helpers.sort_groups",
+          "ansible.inventory.host.Host",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.text_type",
+          "ansible.plugins.loader.lookup_loader",
+          "ansible.template.Templar",
+          "ansible.utils.display.Display",
+          "ansible.utils.listify.listify_lookup_plugin_terms",
+          "ansible.utils.unsafe_proxy.wrap_var",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.load_extra_vars",
+          "ansible.utils.vars.load_options_vars",
+          "ansible.vars.clean.clean_facts",
+          "ansible.vars.clean.namespace_facts",
+          "ansible.vars.fact_cache.FactCache",
+          "ansible.vars.plugins.get_vars_from_inventory_sources",
+          "ansible.vars.plugins.get_vars_from_path",
+          "collections.abc.Mapping",
+          "collections.abc.MutableMapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "hashlib.sha1",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "sys"
+        ],
+        "serialized_payload": "[local-3db64ef1302fd827e187ea6c] Role: existing_behavior\nApplies to: lib.ansible.vars.manager.VarsWithSources\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:lib/ansible/vars/manager.py:742-788\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nclass VarsWithSources(MutableMapping):\n    '''\n    Dict-like class for vars that also provides source information for each var\n\n    This class can only store the source for top-level vars. It does no tracking\n    on its own, just shows a debug message with the information that it is provided\n    when a particular var is accessed.\n    '''\n    def __init__(self, *args, **kwargs):\n        ''' Dict-compatible constructor '''\n        self.data = dict(*args, **kwargs)\n        self.sources = {}\n\n    @classmethod\n    def new_vars_with_sources(cls, data, sources):\n        ''' Alternate constructor method to instantiate class with sources '''\n        v = cls(data)\n        v.sources = sources\n        return v\n\n    def get_source(self, key):\n        return self.sources.get(key, None)\n\n    def __getitem__(self, key):\n        val = self.data[key]\n        # See notes in the VarsWithSources docstring for caveats and limitations of the source tracking\n        display.debug(\"variable '%s' from source: %s\" % (key, self.sources.get(key, \"unknown\")))\n        return val\n\n    def __setitem__(self, key, value):\n        self.data[key] = value\n\n    def __delitem__(self, key):\n        del self.data[key]\n\n    def __iter__(self):\n        return iter(self.data)\n\n    def __len__(self):\n        return len(self.data)\n\n    # Prevent duplicate debug messages by defining our own __contains__ pointing at the underlying dict\n    def __contains__(self, key):\n        return self.data.__contains__(key)\n\n    def copy(self):\n        return VarsWithSources.new_vars_with_sources(self.data.copy(), self.sources.copy())\n"
+      },
+      {
+        "unit_id": "local-87a87f97143ed4f1c6602cc8",
+        "repository": "ansible/ansible",
+        "source_revision": "f7234968d241d7171aadb1e873a67510753f3163",
+        "kind": "docstring",
+        "applies_to": [
+          "test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py",
+            "revision": "f7234968d241d7171aadb1e873a67510753f3163",
+            "line_start": 311,
+            "line_end": 322,
+            "exact_excerpt": "    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "ansible.module_utils.basic",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.moves.collections_abc.Mapping",
+          "ansible.module_utils.six.string_types",
+          "ast",
+          "itertools.chain",
+          "json",
+          "operator",
+          "re",
+          "socket"
+        ],
+        "serialized_payload": "[local-87a87f97143ed4f1c6602cc8] Role: documented_contract\nApplies to: test.support.network-integration.collections.ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils.dict_merge.__doc__\nSource: ansible/ansible@f7234968d241d7171aadb1e873a67510753f3163:test/support/network-integration/collections/ansible_collections/ansible/netcommon/plugins/module_utils/network/common/utils.py:311-322\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    \"\"\" Return a new dict object that combines base and other\n\n    This will create a new dict object that is a combination of the key/value\n    pairs from base and other.  When both keys exist, the value will be\n    selected from other.  If the value is a list object, the two lists will\n    be combined and duplicate entries removed.\n\n    :param base: dict object to serve as base\n    :param other: dict object to combine with base\n\n    :returns: new combined dict object\n    \"\"\"\n"
+      }
+    ],
+    "tokens": 719,
+    "scores": {
+      "coverage": 0.275,
+      "relevance": 0.1135688608155034,
+      "redundancy_penalty": 0.032837225648957344,
+      "exposure_penalty": 0.05555555555555556,
+      "total": 0.30017607961099046
+    },
+    "decisions": []
+  },
+  "stop_reason": "PAIR_CAP",
+  "seconds": null,
+  "solver": {
+    "status": "PROVISIONAL_RELATION_PACK",
+    "lower_indices": [
+      1,
+      11
+    ],
+    "upper_indices": [
+      11,
+      0
+    ],
+    "lower": 0.30017607961099046,
+    "upper": 1.0846451315201868,
+    "mmr_lower": 0.07412472722014128,
+    "stable": false,
+    "feasible_sets": 3703,
+    "bound_scope": "fixed_model_labels_and_candidate_domain_not_semantic_truth"
+  },
+  "first_positive": {
+    "position": 7,
+    "batch_completion_position": 7,
+    "seconds": null
+  },
+  "first_non_mmr": {
+    "position": 7,
+    "seconds": null
+  },
+  "input_identity": "c9cbdb53233d044d47585a3508b063f8af4efd172f83246f472b742e79776d0d",
+  "new_repair_agent_calls": 0
+}

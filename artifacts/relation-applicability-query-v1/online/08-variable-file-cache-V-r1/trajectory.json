@@ -1,0 +1,199 @@
+[
+  {
+    "requested": [
+      [
+        "req-ac12c2ea0f060247",
+        "local-a62611f7f102adf2db7789cb"
+      ],
+      [
+        "req-ea10c024870ea3ae",
+        "local-a62611f7f102adf2db7789cb"
+      ],
+      [
+        "req-0421f4c81270bd0f",
+        "local-a62611f7f102adf2db7789cb"
+      ],
+      [
+        "req-c521065d30fc0272",
+        "local-4ae296ee2979469dbd63e268"
+      ],
+      [
+        "req-c521065d30fc0272",
+        "local-a62611f7f102adf2db7789cb"
+      ],
+      [
+        "req-9527987a765a7d30",
+        "local-af001a9639376b614f883a11"
+      ],
+      [
+        "req-9527987a765a7d30",
+        "local-a62611f7f102adf2db7789cb"
+      ],
+      [
+        "req-9527987a765a7d30",
+        "local-4ae296ee2979469dbd63e268"
+      ]
+    ],
+    "position": 8,
+    "seconds": 32.14638220902998,
+    "cost": {
+      "lifecycle": "reuse",
+      "size": 8,
+      "payload_chars": 10706,
+      "input_identity": "fecdaf4df34e32e910803d5d164e0b61cc7989d2fcc02e5d61d4cf4bc8c40255",
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "status": "COMPLETED",
+      "started_timestamp": 1790226644.441497,
+      "first_token_seconds": null,
+      "setup_seconds": 0.7185448750387877,
+      "fresh_thread": true,
+      "prepare_seconds": 0.00032766698859632015,
+      "process_connection_seconds": 0.29543862503487617,
+      "model_directory_seconds": 0.4231116669252515,
+      "thread_seconds": 0.08097204193472862,
+      "response_seconds": 28.678993250010535,
+      "parse_seconds": 0.00011487491428852081,
+      "usage": {
+        "totalTokens": 15194,
+        "inputTokens": 13887,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 1307,
+        "reasoningOutputTokens": 182
+      },
+      "cancellation": "NO_KNOWN_ACTIVE_TURN",
+      "cancel_seconds": 1.2041069567203522e-05,
+      "request_seconds": 28.762158458004706,
+      "seconds": 29.480707542039454,
+      "completed_timestamp": 1790226673.921964,
+      "late": false,
+      "raw_rows": 8,
+      "valid_rows": 8
+    },
+    "pack": {
+      "method": "A",
+      "indices": [
+        1,
+        5
+      ],
+      "units": [
+        {
+          "unit_id": "local-af001a9639376b614f883a11",
+          "repository": "ansible/ansible",
+          "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "kind": "function",
+          "applies_to": [
+            "lib.ansible.parsing.dataloader.DataLoader.load_from_file"
+          ],
+          "preconditions": [],
+          "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+              "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "line_start": 80,
+              "line_end": 104,
+              "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+            }
+          ],
+          "claim_role": "existing_behavior",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.annotations",
+            "ansible.constants",
+            "ansible.errors.AnsibleFileNotFound",
+            "ansible.errors.AnsibleParserError",
+            "ansible.module_utils.basic.is_executable",
+            "ansible.module_utils.common.text.converters.to_bytes",
+            "ansible.module_utils.common.text.converters.to_native",
+            "ansible.module_utils.common.text.converters.to_text",
+            "ansible.module_utils.six.binary_type",
+            "ansible.module_utils.six.text_type",
+            "ansible.parsing.quoting.unquote",
+            "ansible.parsing.utils.yaml.from_yaml",
+            "ansible.parsing.vault.PromptVaultSecret",
+            "ansible.parsing.vault.VaultLib",
+            "ansible.parsing.vault.b_HEADER",
+            "ansible.parsing.vault.is_encrypted",
+            "ansible.parsing.vault.is_encrypted_file",
+            "ansible.parsing.vault.parse_vaulttext_envelope",
+            "ansible.utils.display.Display",
+            "ansible.utils.path.unfrackpath",
+            "copy",
+            "os",
+            "re",
+            "tempfile",
+            "typing"
+          ],
+          "serialized_payload": "[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+        },
+        {
+          "unit_id": "local-c836e0046a19fde732f53558",
+          "repository": "ansible/ansible",
+          "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "kind": "assignment",
+          "applies_to": [
+            "lib.ansible.plugins.lookup.first_found.DOCUMENTATION"
+          ],
+          "preconditions": [],
+          "statement": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n",
+          "verification_pattern": null,
+          "source_spans": [
+            {
+              "path_or_public_url": "lib/ansible/plugins/lookup/first_found.py",
+              "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+              "line_start": 6,
+              "line_end": 50,
+              "exact_excerpt": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+            }
+          ],
+          "claim_role": "documented_contract",
+          "version_status": "supported",
+          "dependencies": [
+            "__future__.annotations",
+            "ansible.errors.AnsibleLookupError",
+            "ansible.errors.AnsibleUndefinedVariable",
+            "ansible.module_utils.six.string_types",
+            "ansible.plugins.lookup.LookupBase",
+            "collections.abc.Mapping",
+            "collections.abc.Sequence",
+            "jinja2.exceptions.UndefinedError",
+            "os",
+            "re"
+          ],
+          "serialized_payload": "[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+        }
+      ],
+      "tokens": 1045,
+      "scores": {
+        "coverage": 0.049999999999999996,
+        "relevance": 0.11962033558485362,
+        "redundancy_penalty": 0.027548837367169867,
+        "exposure_penalty": 0.05111111111111111,
+        "total": 0.09096038710657264
+      },
+      "decisions": []
+    },
+    "solver": {
+      "status": "PROVISIONAL_RELATION_PACK",
+      "lower_indices": [
+        1,
+        5
+      ],
+      "upper_indices": [
+        16,
+        3,
+        4
+      ],
+      "lower": 0.09096038710657264,
+      "upper": 1.0901088172128865,
+      "mmr_lower": 0.0551291284860846,
+      "stable": false,
+      "feasible_sets": 5109,
+      "bound_scope": "fixed_model_labels_and_candidate_domain_not_semantic_truth"
+    },
+    "update_status": "UPDATED"
+  }
+]

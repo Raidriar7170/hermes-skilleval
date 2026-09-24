@@ -1,0 +1,3266 @@
+[
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-a93822d89a48011530d203e8"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-a93822d89a48011530d203e8",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "def load_from_file(self, path, cache=True, unsafe=False):",
+      "applicable": true,
+      "condition_basis": "The mock loader's load_from_file signature includes a cache parameter, although the body does not inspect it or establish support for 'none' and 'vaulted'.",
+      "rationale": "This is specific implementation context for a corresponding mock method and parameter, but it is neither a documented contract nor evidence that the required string values are accepted.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/units/mock/loader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 38,
+          "end": 43
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-a93822d89a48011530d203e8",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "def load_from_file(self, path, cache=True, unsafe=False):",
+      "applicable": true,
+      "condition_basis": "The unit is an existing mock implementation of load_from_file with the same cache parameter surface.",
+      "rationale": "It provides implementation context for a test double whose interface corresponds specifically to load_from_file(cache), but it is neither a documented contract nor a public verification example and does not establish acceptance of the required string values.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/units/mock/loader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 38,
+          "end": 43
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-af001a9639376b614f883a11"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "The cache-hit behavior applies when cache is truthy and file_name exists in self._FILE_CACHE.",
+      "rationale": "The unit is the existing implementation of DataLoader.load_from_file and directly shows retrieval from its internal file cache instead of executing the read branch; it does not normatively establish the requested semantics.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "# if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations",
+      "applicable": true,
+      "condition_basis": "The implementation selects _FILE_CACHE when cache is truthy and file_name is present; otherwise it invokes _get_file_contents.",
+      "rationale": "This is directly relevant existing implementation behavior for the named function and cache, but it is non-normative and does not establish the required vaulted mode or same-parameters rule.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-af001a9639376b614f883a11"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "must not add any entry to the internal file cache",
+      "unit_quote": "self._FILE_CACHE[file_name] = parsed_data",
+      "applicable": true,
+      "condition_basis": "The shown load_from_file implementation bypasses retrieval when cache is false-like but executes the cache assignment unconditionally after reading and parsing the file.",
+      "rationale": "The exact implementation symbol and cache write provide direct context contradicting the required no-entry behavior; existing code is not treated as the contract.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data",
+      "applicable": true,
+      "condition_basis": "The requirement's `cache='none'` call targets this function's cache parameter and forbids insertion; the shown implementation declares a boolean parameter and writes parsed data to `_FILE_CACHE` in its read-and-parse branch.",
+      "rationale": "The unit specifically exposes existing cache behavior inconsistent with the no-entry condition, while remaining non-normative existing behavior.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-af001a9639376b614f883a11"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:",
+      "applicable": true,
+      "condition_basis": "The implementation accepts a boolean `cache` argument, conditionally reads `_FILE_CACHE`, and later assigns `self._FILE_CACHE[file_name] = parsed_data`.",
+      "rationale": "This is specific implementation context for internal file-cache lookup and insertion, but it is existing behavior and does not document the required named cache modes as a contract.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:",
+      "applicable": true,
+      "condition_basis": "The unit reads from _FILE_CACHE when its boolean cache parameter is true and the path is already present, then assigns to _FILE_CACHE after loading.",
+      "rationale": "The unit directly describes internal file-cache behavior, but the supplied source does not connect its boolean parameter to the required string modes 'none' and 'vaulted'. Existing behavior is therefore contextual, not normative support or verification.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-d5b2b8105de9fa82",
+      "local-d0bae047cf489130d4317d80"
+    ],
+    "proposal": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-d0bae047cf489130d4317d80",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "plaintext, vault_id_used, vault_secret_used = self.vault.decrypt_and_get_vault_id(vaulttext)",
+      "applicable": false,
+      "condition_basis": "The unit covers decrypting a file during VaultEditor.edit_file, but specifies neither repeated playbook reads nor reuse of a cached result.",
+      "rationale": "Both concern vaulted-file decryption, but the unit provides no specific correspondence to preventing repeated reads or decryptions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/vault/__init__.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 934,
+          "end": 964
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-d0bae047cf489130d4317d80",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "plaintext, vault_id_used, vault_secret_used = self.vault.decrypt_and_get_vault_id(vaulttext)",
+      "applicable": false,
+      "condition_basis": "The unit concerns explicitly editing and decrypting one vault file; it does not establish playbook file-load caching or avoidance of repeated reads and decryptions.",
+      "rationale": "Vault decryption is the only substantive overlap. This editor behavior supplies no contract, verification pattern, or demonstrated execution path for the playbook caching requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/vault/__init__.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 934,
+          "end": 964
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-ea10c024870ea3ae",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "Enforce exclusive access on a decorated function and cache the result.",
+      "applicable": false,
+      "condition_basis": "The decorator caches an arbitrary zero-argument function result and has no vaulted-file, parsed-file, cache='vaulted', or internal file-cache condition.",
+      "rationale": "Generic result caching is insufficient to establish a specific relationship to the required vaulted-file caching behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "Enforce exclusive access on a decorated function and cache the result.",
+      "applicable": false,
+      "condition_basis": "This is a generic decorator-local cache with no stated connection to vaulted files, parsed file contents, `DataLoader`, or its internal file cache.",
+      "rationale": "Generic result caching is insufficient to establish reachability or specific behavior for the vaulted-file cache requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-af001a9639376b614f883a11"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:",
+      "applicable": true,
+      "condition_basis": "The exact required method has a cache parameter, and its implementation evaluates that parameter in `if cache and file_name in self._FILE_CACHE:`.",
+      "rationale": "The unit directly describes the existing implementation of the required symbol and parameter, but existing behavior is nonnormative and does not establish explicit handling of the values 'none' and 'vaulted'.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-af001a9639376b614f883a11",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:",
+      "applicable": true,
+      "condition_basis": "The unit is the existing implementation of the exact required function and declares and consumes its cache parameter.",
+      "rationale": "It directly supplies implementation context for the required API surface, while its existing boolean annotation and truthiness branch are not a normative contract and do not prove the required values are supported correctly.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-c9c6b77c9bc316c8f0efd2d8-69a01947"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "The cache-hit branch applies when cache is truthy and the resolved file_name is present in self._FILE_CACHE; otherwise _get_file_contents is called.",
+      "rationale": "The existing load_from_file implementation directly supplies context for internal cache retrieval and bypassing a reread, but it neither serves as a normative source nor specifically defines cache='vaulted'.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)",
+      "applicable": true,
+      "condition_basis": "The cache-hit branch applies when cache is truthy and file_name exists in _FILE_CACHE; the else branch reads the file.",
+      "rationale": "The unit exposes the relevant current branch and read path in load_from_file, but as existing behavior it supplies implementation context only and does not normatively specify cache='vaulted' or equality of all call parameters.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-c9c6b77c9bc316c8f0efd2d8-69a01947"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:",
+      "applicable": true,
+      "condition_basis": "The unit is the existing `load_from_file` implementation and directly branches on its `cache` argument while reading and returning parsed file data; its argument is annotated as `bool`, so it does not itself establish the meaning of the string mode `'none'`.",
+      "rationale": "The unit directly implements file parsing, cache lookup, cache insertion, and parsed-data return behavior, making it relevant implementation context, but existing behavior is not a normative contract and does not document the requested string-valued mode.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:",
+      "applicable": true,
+      "condition_basis": "The unit is the existing file-loading implementation and exposes a cache parameter while reading, parsing, and interacting with self._FILE_CACHE.",
+      "rationale": "It directly supplies implementation context for the required file-load and cache behavior, but existing behavior is not normative and does not itself establish the requested cache='none' contract.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-c9c6b77c9bc316c8f0efd2d8-69a01947"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "self._FILE_CACHE[file_name] = parsed_data",
+      "applicable": true,
+      "condition_basis": "The implementation writes a parsed file entry to `_FILE_CACHE` after loading, while cache lookup is guarded by `if cache`.",
+      "rationale": "The branch directly concerns internal file-cache population, but as existing behavior it neither establishes a normative contract nor explicitly represents `cache='none'` and `cache='vaulted'`.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "self._FILE_CACHE[file_name] = parsed_data",
+      "applicable": true,
+      "condition_basis": "The unit contains an assignment to the internal file cache after the file-load path, but states no 'none' or 'vaulted' string-mode condition.",
+      "rationale": "The cache mutation is directly relevant implementation context. The supplied source does not establish how the requested string modes reach this branch, so it does not by itself prove either compliance or contradiction.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-d5b2b8105de9fa82",
+      "local-59321ae9ad82599d75019184"
+    ],
+    "proposal": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": false,
+      "condition_basis": "The documented contract says the lookup returns vaulted-file contents but says nothing about repeated reads, repeated decryptions, or reuse.",
+      "rationale": "The common vaulted-file topic is insufficient to support the required avoidance of repeated work.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": false,
+      "condition_basis": "The contract documents returning file contents, including vaulted contents, but states no reuse, caching, or prohibition on repeated reads or decryptions.",
+      "rationale": "Although both sources concern vaulted files, the documented contract does not specify the required once-only or cached behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-ea10c024870ea3ae",
+      "local-59321ae9ad82599d75019184"
+    ],
+    "proposal": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "CONTRACT_SUPPORT",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": true,
+      "condition_basis": "The documented contract expressly applies to vaulted files and promises their contents as the return value.",
+      "rationale": "It supports the requirement's vaulted-file content-return behavior, but does not document parsing, cache='vaulted', or insertion into an internal file cache.",
+      "weight": 1.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": false,
+      "condition_basis": "The documented contract covers returning file contents through the unvault lookup, but does not document a `cache='vaulted'` mode, parsed data, or insertion into an internal file cache.",
+      "rationale": "The vaulted-file subject overlaps, but the documentation lacks the specific cache condition and required parsed-result caching behavior needed for CONTRACT_SUPPORT.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "DISPUTED",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-c9c6b77c9bc316c8f0efd2d8-69a01947"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:",
+      "applicable": true,
+      "condition_basis": "This branch belongs to the exact required method and makes cache truthiness a condition for reading an existing cached result.",
+      "rationale": "The branch is specific implementation context for cache behavior, but it does not document or verify acceptance and semantics of the required 'none' and 'vaulted' values.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-c9c6b77c9bc316c8f0efd2d8-69a01947",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:",
+      "applicable": true,
+      "condition_basis": "The unit is the existing branch in the exact required function where the cache argument controls reuse of _FILE_CACHE.",
+      "rationale": "The branch has specific symbol and behavior correspondence to load_from_file's cache parameter, so it is implementation context; it is not normative evidence and does not establish semantics for the required string values.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 104
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-59528c96bf98119d07a9ff50-f802ab26"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-59528c96bf98119d07a9ff50-f802ab26",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "The branch applies when cache is truthy and the resolved file_name is already present in self._FILE_CACHE.",
+      "rationale": "This is existing implementation of the named load_from_file cache-hit path and avoids the file-reading else branch, but it is not a normative contract or public test example and does not specifically define the 'vaulted' value.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 98
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-59528c96bf98119d07a9ff50-f802ab26",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "The branch applies when cache is truthy and the resolved file_name is already present in _FILE_CACHE.",
+      "rationale": "The existing load_from_file implementation contains the relevant cache-hit branch and file-read alternative, but existing behavior is not a normative contract and the excerpt does not define cache='vaulted' or same-parameter cache identity.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 98
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "must not add any entry to the internal file cache",
+      "unit_quote": "storage: dict[None, TValue] = {}",
+      "applicable": false,
+      "condition_basis": "The unit is a generic function-result caching decorator and is not DataLoader.load_from_file or its internal file cache.",
+      "rationale": "Shared cache terminology alone does not establish the required no-cache behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "Enforce exclusive access on a decorated function and cache the result.",
+      "applicable": false,
+      "condition_basis": "The unit is a separate generic decorator with no `load_from_file`, file-cache, or `cache='none'` condition.",
+      "rationale": "The word cache alone does not establish behavioral or implementation correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-c836e0046a19fde732f53558"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The documented lookup concerns file discovery and contains no internal cache or vaulted-cache condition.",
+      "rationale": "The unit shares only general file-related subject matter with the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The documented behavior concerns selecting the first matching file and contains no internal-cache or vault-cache condition.",
+      "rationale": "The shared file terminology does not provide behavior, a symbol, or a condition corresponding to the required cache modes.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-cb373e296e1567050492278f"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-cb373e296e1567050492278f",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "Splits the playbook import line up into filename and parameters",
+      "applicable": false,
+      "condition_basis": "The unit concerns parsing an import_playbook filename and parameters, not DataLoader.load_from_file or its cache parameter.",
+      "rationale": "The shared notions of files and parameters do not establish specific behavioral, symbolic, or conditional correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/playbook/playbook_include.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 154,
+          "end": 169
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-cb373e296e1567050492278f",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "playbook import parameter must be a string indicating a file path",
+      "applicable": false,
+      "condition_basis": "The unit concerns validation of an import_playbook file-path parameter, not DataLoader.load_from_file or its cache parameter.",
+      "rationale": "Generic parameter language does not establish correspondence to the required cache values or symbol.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/playbook/playbook_include.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 154,
+          "end": 169
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-c836e0046a19fde732f53558"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The unit documents selecting and returning a file path, not parsing a file under a cache mode.",
+      "rationale": "The shared file terminology is insufficient; the documented contract contains no internal-cache or `cache='none'` behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The unit governs first-found path selection, not file parsing or cache='none' behavior.",
+      "rationale": "The shared subject of files is insufficient; the documented contract returns a path and specifies no internal-cache semantics.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-4ae296ee2979469dbd63e268"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "so that the data sources are read only once.",
+      "applicable": false,
+      "condition_basis": "The unit documents private attributes used to retain Linux-distribution data-source information, not the internal file cache or either requested cache mode.",
+      "rationale": "Reading data sources once is generic caching-related behavior without correspondence to `cache='none'`, `cache='vaulted'`, or vaulted files.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "Subsequent access to the information items uses these private instance attributes, so that the data sources are read only once.",
+      "applicable": false,
+      "condition_basis": "The unit documents initialization-time storage of Linux distribution data, not DataLoader cache modes or vaulted files.",
+      "rationale": "Its read-once storage concept is unrelated to the specified internal file cache and cache='none' or cache='vaulted' conditions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": false,
+      "basis_valid": true,
+      "validation_status": "REJECTED_ZERO_COVERAGE",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "REJECTED_PROPOSAL"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-a62611f7f102adf2db7789cb"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "Enforce exclusive access on a decorated function and cache the result.",
+      "applicable": false,
+      "condition_basis": "The unit is a generic function-result memoization decorator with no file, vault, or cache-mode condition.",
+      "rationale": "The shared word `cache` alone does not establish correspondence with the internal file cache or its required mode-dependent contents.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-a62611f7f102adf2db7789cb",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "Enforce exclusive access on a decorated function and cache the result.",
+      "applicable": false,
+      "condition_basis": "The unit implements result caching for an unrelated test utility decorator and has no file, vault, or cache-mode condition.",
+      "rationale": "The shared word cache does not establish reachability or correspondence with the internal file cache governed by the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "test/lib/ansible_test/_internal/util.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 142,
+          "end": 157
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-c836e0046a19fde732f53558"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The contract documents the first_found lookup's file-search behavior, not DataLoader.load_from_file caching.",
+      "rationale": "References to files and returns are generic topical overlap without matching cache behavior, symbol, or conditions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The contract documents first_found lookup search behavior and contains no condition involving load_from_file, cache='vaulted', or an internal file cache.",
+      "rationale": "File-related terminology alone does not provide behavioral or symbolic correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ea10c024870ea3ae",
+      "local-c836e0046a19fde732f53558"
+    ],
+    "proposal": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The contract applies to locating the first matching path, not reading a vaulted file, parsing its contents, or caching the parsed result.",
+      "rationale": "The shared reference to files does not provide specific behavioral or conditional correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-c836e0046a19fde732f53558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "This lookup checks a list of files and paths and returns the full path to the first combination found.",
+      "applicable": false,
+      "condition_basis": "The documented lookup selects and returns a file path; it does not read a vaulted file, parse its contents, accept `cache='vaulted'`, or populate an internal file cache.",
+      "rationale": "The shared reference to files is generic and supplies no specific contract or verification for the requested vaulted-cache behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/first_found.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 6,
+          "end": 50
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-4ae296ee2979469dbd63e268"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "Subsequent access to the information items uses these private instance\n        attributes, so that the data sources are read only once.",
+      "applicable": false,
+      "condition_basis": "The documented behavior applies to LinuxDistribution information attributes, not load_from_file, cache='vaulted', or the internal file cache.",
+      "rationale": "Although both texts discuss avoiding repeated reads, the documented contract governs a different symbol and conditions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-4ae296ee2979469dbd63e268",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "Subsequent access to the information items uses these private instance\n        attributes, so that the data sources are read only once.",
+      "applicable": false,
+      "condition_basis": "The documentation applies to LinuxDistribution information gathering, not load_from_file calls made with cache='vaulted'.",
+      "rationale": "Although it documents avoiding repeat reads through stored attributes, it is a contract for a different symbol and does not support the specified internal file-cache behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/distro/_distro.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 677,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-59321ae9ad82599d75019184"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": false,
+      "condition_basis": "The documented contract applies to returning contents of vaulted or unvaulted files, but states no cache mode or cache-entry effect.",
+      "rationale": "The vaulted-file correspondence is topical only; the contract does not support the required distinction between `cache='none'` and `cache='vaulted'`.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": false,
+      "condition_basis": "The documented contract covers returning contents from vaulted or non-vaulted files but states no internal-cache or cache-mode condition.",
+      "rationale": "The vaulted-file correspondence is topical, but the unit does not support the required cache='none' and cache='vaulted' state transitions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-d0bae047cf489130d4317d80"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-d0bae047cf489130d4317d80",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`",
+      "unit_quote": "plaintext, vault_id_used, vault_secret_used = self.vault.decrypt_and_get_vault_id(vaulttext)",
+      "applicable": false,
+      "condition_basis": "The unit concerns editing and decrypting a vault file, not a repeated load_from_file call with identical parameters or use of the internal file cache.",
+      "rationale": "The shared vault terminology does not establish specific correspondence to the required cache-hit behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/vault/__init__.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 934,
+          "end": 964
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-d0bae047cf489130d4317d80",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "plaintext, vault_id_used, vault_secret_used = self.vault.decrypt_and_get_vault_id(vaulttext)",
+      "applicable": false,
+      "condition_basis": "The unit concerns interactive editing and decryption of a vault file, not a subsequent `load_from_file` call or its internal file cache.",
+      "rationale": "Vault-related terminology is shared, but the unit provides no behavior, test, prerequisite, or implementation path for cached `load_from_file` results.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/vault/__init__.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 934,
+          "end": 964
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-ba83888052b74cc81c8b2487"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-ba83888052b74cc81c8b2487",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "We tried to add the same line with the same playbook,",
+      "applicable": false,
+      "condition_basis": "The example concerns checking a file after a repeated lineinfile operation, not a load_from_file cache hit.",
+      "rationale": "It provides no call, assertion, cache mode, or internal-cache condition corresponding to the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1066,
+          "end": 1072
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-ba83888052b74cc81c8b2487",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "We tried to add the same line with the same playbook,\n# so nothing has been added:",
+      "applicable": false,
+      "condition_basis": "The example checks repeated lineinfile application, not repeated DataLoader.load_from_file calls or file-cache reads.",
+      "rationale": "A generic repeated-operation pattern does not verify the specified cache-hit behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1066,
+          "end": 1072
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-9527987a765a7d30",
+      "local-dc5e3e7e90f5c23601efc838"
+    ],
+    "proposal": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-dc5e3e7e90f5c23601efc838",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "a subsequent call to `load_from_file` with the same parameters must return the cached result",
+      "unit_quote": "We tried to add the same line with the same playbook",
+      "applicable": false,
+      "condition_basis": "The example repeats a lineinfile playbook operation; it does not call load_from_file or exercise its internal file cache.",
+      "rationale": "Similarity based only on repeating an operation is insufficient for a verification pattern.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1298,
+          "end": 1304
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-9527987a765a7d30",
+      "unit_id": "local-dc5e3e7e90f5c23601efc838",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When a file has already been loaded with `cache='vaulted'`, a subsequent call to `load_from_file` with the same parameters must return the cached result from the internal file cache instead of re-reading the file.",
+      "unit_quote": "We tried to add the same line with the same playbook,\n# so nothing has been added:",
+      "applicable": false,
+      "condition_basis": "The example checks repeated line insertion, not repeated loading with `cache='vaulted'`.",
+      "rationale": "A repeated operation appears in both sources, but the public test does not exercise `load_from_file`, vaulted caching, or avoidance of a file read.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3100,
+        "end": 3316
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1298,
+          "end": 1304
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-a1e1dc13095b077e97891e41-b9b6e43d"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-a1e1dc13095b077e97891e41-b9b6e43d",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the function must return the parsed contents of the given file",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit implements get_real_file behavior for resolving or decrypting a file path, not parsing contents under cache='none'.",
+      "rationale": "Both concern files, but there is no specific symbol, condition, return-value, or cache correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 395
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-a1e1dc13095b077e97891e41-b9b6e43d",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit applies to `get_real_file` and its `decrypt` behavior, not to a `cache='none'` call or the internal file cache.",
+      "rationale": "It concerns file handling but supplies no specific correspondence to parsing without cache insertion.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 395
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-c41c69d9849abb9b0b9e2558"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-c41c69d9849abb9b0b9e2558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit concerns decrypting a vault-encrypted file when `decrypt` is enabled; it does not describe parsing or the `cache='none'` condition.",
+      "rationale": "Both concern file handling, but there is no specific cache-mode, parsed-result, or internal-file-cache correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 395
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-c41c69d9849abb9b0b9e2558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit applies when resolving a real path and optionally decrypting a vault-encrypted file; it does not describe cache='none', parsing, or the internal file cache.",
+      "rationale": "Both sources concern reading files, but the unit has no specific cache-mode or parsed-return correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 395
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-59528c96bf98119d07a9ff50-f802ab26"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-59528c96bf98119d07a9ff50-f802ab26",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "When called with `cache='none'`",
+      "unit_quote": "self._FILE_CACHE[file_name] = parsed_data",
+      "applicable": true,
+      "condition_basis": "In the displayed load_from_file branch, a false-like cache value bypasses cache retrieval through `if cache` but the else branch unconditionally adds parsed_data to _FILE_CACHE.",
+      "rationale": "This existing behavior directly conflicts with the requirement that the no-cache mode must not add an internal cache entry, but it is not itself a normative contract.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 98
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-59528c96bf98119d07a9ff50-f802ab26",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data",
+      "applicable": true,
+      "condition_basis": "The requirement's `cache='none'` call targets this function's cache parameter and forbids insertion; the shown implementation declares that parameter as boolean and unconditionally inserts into `_FILE_CACHE` after the read-and-parse branch.",
+      "rationale": "This existing behavior is direct contradiction context for the no-cache-write condition, but it is not itself a normative contract.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 98
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-d0bae047cf489130d4317d80"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-d0bae047cf489130d4317d80",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "b_vaulttext = self.read_data(filename)",
+      "applicable": false,
+      "condition_basis": "The unit implements editing and re-encrypting a vault file, with no `cache='none'` condition or parsed-file cache behavior.",
+      "rationale": "Its file-reading and vault terminology is only topical and does not correspond to the required return-and-no-cache behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/vault/__init__.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 934,
+          "end": 964
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-d0bae047cf489130d4317d80",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "b_vaulttext = self.read_data(filename)",
+      "applicable": false,
+      "condition_basis": "The unit applies while editing and re-encrypting a vault file, with no cache mode or parsed file-loading contract.",
+      "rationale": "Reading a file during vault editing does not specifically correspond to cache='none', parsed contents, or internal file-cache mutation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/vault/__init__.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 934,
+          "end": 964
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-6244e640babd96f1eea329e4"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-6244e640babd96f1eea329e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "return the parsed contents of the given file",
+      "unit_quote": "Returns a byte string of the file contents",
+      "applicable": false,
+      "condition_basis": "The documented contract is for _get_file_contents and describes returning raw bytes; it does not document load_from_file parsing or cache='none'.",
+      "rationale": "The unit concerns reading the same broad kind of source but does not support the required parsing and no-cache behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 141,
+          "end": 152
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-6244e640babd96f1eea329e4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "Reads the file contents from the given file name",
+      "applicable": false,
+      "condition_basis": "The documentation describes `_get_file_contents` without a `cache='none'` condition or any statement about parsing or internal-cache insertion.",
+      "rationale": "Reading the named file is only a shared topic; the documented contract does not specify the required cache mode or its two required outcomes.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 141,
+          "end": 152
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-f1d8115182fa82a011a4cc29"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-f1d8115182fa82a011a4cc29",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "Removes any temporary files created from a previous call to",
+      "applicable": false,
+      "condition_basis": "The contract covers cleanup of temporary files returned by `get_real_file`, not internal file-cache state.",
+      "rationale": "No cache mode, cache entry, or vaulted-file cache behavior corresponds to the requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 398,
+          "end": 402
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-f1d8115182fa82a011a4cc29",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "Removes any temporary files created from a previous call to\n        get_real_file.",
+      "applicable": false,
+      "condition_basis": "The contract applies to cleanup of temporary files returned by get_real_file, not entries in the internal file cache or cache modes.",
+      "rationale": "Temporary-file cleanup supplies no specific correspondence to the required empty or populated internal-cache states.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 398,
+          "end": 402
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-ba83888052b74cc81c8b2487"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-ba83888052b74cc81c8b2487",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`",
+      "unit_quote": "We tried to add the same line with the same playbook",
+      "applicable": false,
+      "condition_basis": "The public test example checks lineinfile idempotence and contains no load_from_file call, cache='none' condition, parsed-file assertion, or internal-cache assertion.",
+      "rationale": "It is a public test example, but it does not verify the specific required behavior and therefore is not a verification pattern.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1066,
+          "end": 1072
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-ba83888052b74cc81c8b2487",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "We tried to add the same line with the same playbook,\n# so nothing has been added:",
+      "applicable": false,
+      "condition_basis": "The public test example concerns idempotent line insertion and has no `load_from_file` call, cache mode, parsing assertion, or internal-cache assertion.",
+      "rationale": "The example's statement that nothing was added does not verify the specifically required absence of a file-cache entry.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1066,
+          "end": 1072
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-d5b2b8105de9fa82",
+      "local-a93822d89a48011530d203e8"
+    ],
+    "proposal": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-a93822d89a48011530d203e8",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "def load_from_file(self, path, cache=True, unsafe=False):",
+      "applicable": false,
+      "condition_basis": "The mock exposes a `cache` parameter but does not use it and contains no vaulted-file decryption or repeated-read behavior.",
+      "rationale": "A shared file-loading/cache vocabulary alone does not establish correspondence to avoiding repeated reading and decryption.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "test/units/mock/loader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 38,
+          "end": 43
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-a93822d89a48011530d203e8",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "def load_from_file(self, path, cache=True, unsafe=False):",
+      "applicable": false,
+      "condition_basis": "The mock exposes a cache-named parameter but contains no vaulted-file, decryption, repeated-read, or cache-reuse behavior.",
+      "rationale": "A shared cache/file name alone does not establish reachability or correspondence to avoiding repeated vault reads and decryptions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "test/units/mock/loader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 38,
+          "end": 43
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-ea10c024870ea3ae",
+      "local-64ea5484f5a8e20d86083d15-28c39131"
+    ],
+    "proposal": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-64ea5484f5a8e20d86083d15-28c39131",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit applies to producing a path for a temporary decrypted file, not returning parsed contents or populating the internal file cache.",
+      "rationale": "It concerns vaulted files but exposes a different operation and result with no cache='vaulted' correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 369
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-64ea5484f5a8e20d86083d15-28c39131",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit describes `get_real_file` behavior under its separate `decrypt` parameter and returns a path, not parsed contents or a cached parsed result.",
+      "rationale": "It concerns vaulted-file decryption but has no specific correspondence to the required `cache='vaulted'` parsing-and-file-cache behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 369
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-64ea5484f5a8e20d86083d15-28c39131"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-64ea5484f5a8e20d86083d15-28c39131",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "def get_real_file(self, file_path: str, decrypt: bool = True) -> str:",
+      "applicable": false,
+      "condition_basis": "The unit concerns DataLoader.get_real_file input validation, not DataLoader.load_from_file or its cache argument.",
+      "rationale": "Membership in the same class is insufficient without correspondence to the required method, parameter, or values.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 369
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-64ea5484f5a8e20d86083d15-28c39131",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "def get_real_file(self, file_path: str, decrypt: bool = True) -> str:",
+      "applicable": false,
+      "condition_basis": "The unit concerns validation of file_path in get_real_file and contains neither the required load_from_file symbol nor its cache parameter values.",
+      "rationale": "A nearby DataLoader helper does not establish reachability or a contract for load_from_file(cache).",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 369
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-7a2754440890a17931d99bb6-aed956a6"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-7a2754440890a17931d99bb6-aed956a6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "if not file_path or not isinstance(file_path, (binary_type, text_type)):",
+      "applicable": false,
+      "condition_basis": "The cited condition applies to the file_path argument of get_real_file, not to cache values for load_from_file.",
+      "rationale": "It supplies no contract or implementation correspondence for the requested cache modes.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 365
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-7a2754440890a17931d99bb6-aed956a6",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit describes get_real_file behavior and filename validation, not accepted cache values for load_from_file.",
+      "rationale": "Vault-related wording alone does not show that this helper implements or constrains the requested load_from_file parameter contract.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 365
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-ea10c024870ea3ae",
+      "local-ab09db7b6a65359d840ab1a4-db4a326c"
+    ],
+    "proposal": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-ab09db7b6a65359d840ab1a4-db4a326c",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data",
+      "applicable": true,
+      "condition_basis": "The documented method behavior applies when file contents are vault-encrypted and supplies decrypted bytes to its caller.",
+      "rationale": "This is specific implementation context for obtaining decrypted contents of a vaulted file, but it does not parse those contents or add the parsed result to the file cache.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 140,
+          "end": 160
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-ab09db7b6a65359d840ab1a4-db4a326c",
+      "relation": "PRECONDITION",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "if not self.path_exists(b_file_name):\n            raise AnsibleFileNotFound(\"Unable to retrieve file contents\", file_name=file_name)",
+      "applicable": true,
+      "condition_basis": "For this file-content operation to produce decryptable contents, `file_name` must be a valid string-like value and the resolved path must exist; otherwise it raises before reading or decrypting.",
+      "rationale": "The unit states concrete input and existence prerequisites for obtaining the contents of the vaulted file. It does not itself implement or contractually specify parsed-result caching.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 140,
+          "end": 160
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "DISPUTED",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-ba83888052b74cc81c8b2487"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-ba83888052b74cc81c8b2487",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "- name: Stat the file again",
+      "applicable": false,
+      "condition_basis": "The example checks a lineinfile operation by statting a file and does not invoke DataLoader.load_from_file or supply cache values.",
+      "rationale": "Although this is a public test example, it provides no verification pattern for the specified method and cache modes.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1066,
+          "end": 1072
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-ba83888052b74cc81c8b2487",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "- name: Stat the file again",
+      "applicable": false,
+      "condition_basis": "The public test example checks an unrelated lineinfile operation and does not invoke DataLoader.load_from_file or provide either cache value.",
+      "rationale": "Its discussion of a previous step adding nothing has no specific behavioral, symbolic, or conditional correspondence to the required cache parameter.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1066,
+          "end": 1072
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-ea10c024870ea3ae",
+      "local-59528c96bf98119d07a9ff50-f802ab26"
+    ],
+    "proposal": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-59528c96bf98119d07a9ff50-f802ab26",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "The implementation branches on a truthy cache argument and a matching file-cache entry; otherwise it reads and parses the file before assigning the parsed result to self._FILE_CACHE.",
+      "rationale": "This is direct implementation context for returning cached parsed data and storing parsed file data, but it is existing behavior and does not establish the required cache='vaulted' semantics.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 98
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-ea10c024870ea3ae",
+      "unit_id": "local-59528c96bf98119d07a9ff50-f802ab26",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When called with `cache='vaulted'` on a vaulted file, the function must return the parsed contents of the file and also add the parsed result into the internal file cache.",
+      "unit_quote": "if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]",
+      "applicable": true,
+      "condition_basis": "This implementation branch applies when `cache` is truthy and the normalized file name is already present in `_FILE_CACHE`; the supplied signature types `cache` as `bool` and does not itself define the special value `'vaulted'`.",
+      "rationale": "The unit is direct implementation context for returning a cached parsed result and, on a miss, reading and parsing the file before assigning the result to `_FILE_CACHE`. As existing behavior, it is not normative support, and it does not by itself establish the intended semantics of the specific `cache='vaulted'` condition.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2926,
+        "end": 3100
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 80,
+          "end": 98
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-dc5e3e7e90f5c23601efc838"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-dc5e3e7e90f5c23601efc838",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "We tried to add the same line with the same playbook,",
+      "applicable": false,
+      "condition_basis": "The example tests repeated lineinfile behavior and contains no DataLoader.load_from_file call or cache argument.",
+      "rationale": "Repetition involving a file is only a topical similarity; the example does not verify the required parameter values.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1298,
+          "end": 1304
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-dc5e3e7e90f5c23601efc838",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "We tried to add the same line with the same playbook,",
+      "applicable": false,
+      "condition_basis": "The test excerpt concerns repeated lineinfile behavior and supplies no DataLoader.load_from_file call or cache argument.",
+      "rationale": "It does not verify the required parameter or either enumerated value.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1298,
+          "end": 1304
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-c41c69d9849abb9b0b9e2558"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-c41c69d9849abb9b0b9e2558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The unit governs get_real_file behavior when decrypting vault-encrypted files, not cache-mode acceptance by load_from_file.",
+      "rationale": "Vault terminology alone does not create correspondence to the required 'vaulted' cache value.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 395
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-c41c69d9849abb9b0b9e2558",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "if decrypt:",
+      "applicable": false,
+      "condition_basis": "The unit implements optional decryption in get_real_file, but the supplied source does not connect that helper or condition to load_from_file(cache='vaulted').",
+      "rationale": "Concrete vault decryption behavior is topically related to the word 'vaulted', but absent demonstrated reachability it does not support or contextualize the required cache-value acceptance contract.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 395
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-c521065d30fc0272",
+      "local-ab09db7b6a65359d840ab1a4-db4a326c"
+    ],
+    "proposal": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-ab09db7b6a65359d840ab1a4-db4a326c",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "If the contents are vault-encrypted, it will decrypt them and return",
+      "applicable": false,
+      "condition_basis": "The unit discusses decrypting vaulted contents but supplies no cache mode or cache-entry behavior.",
+      "rationale": "Vaulted-file terminology overlaps, but there is no specific correspondence to the required `none` or `vaulted` cache conditions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 140,
+          "end": 160
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-c521065d30fc0272",
+      "unit_id": "local-ab09db7b6a65359d840ab1a4-db4a326c",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "The internal file cache must remain empty if only `cache='none'` is used, and must contain an entry if `cache='vaulted'` is used on a vaulted file.",
+      "unit_quote": "If the contents are vault-encrypted, it will decrypt them and return\n        the decrypted data",
+      "applicable": true,
+      "condition_basis": "The unit concerns the file-reading and vault-decryption path, but supplies no cache-mode condition.",
+      "rationale": "This is implementation context for processing a vaulted file. It neither documents nor verifies the required effects of the 'none' and 'vaulted' cache modes.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3316,
+        "end": 3466
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 140,
+          "end": 160
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "DISPUTED",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-d5b2b8105de9fa82",
+      "local-dc5e3e7e90f5c23601efc838"
+    ],
+    "proposal": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-dc5e3e7e90f5c23601efc838",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "# We tried to add the same line with the same playbook,",
+      "applicable": false,
+      "condition_basis": "The example repeats a lineinfile operation and then stats a remote file; it does not involve vaulted-file reading, decryption, or caching.",
+      "rationale": "The shared playbook/repetition language is not a specific behavioral correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1298,
+          "end": 1304
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-dc5e3e7e90f5c23601efc838",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "We tried to add the same line with the same playbook,",
+      "applicable": false,
+      "condition_basis": "The example repeats a lineinfile operation and then stats a file; it contains no vaulted-file read, decryption, parsing, or cache condition.",
+      "rationale": "The shared notions of a playbook and repetition do not provide specific behavioral correspondence to avoiding repeated vaulted-file reads and decryptions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "test/integration/targets/lineinfile/tasks/main.yml",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 1298,
+          "end": 1304
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-0421f4c81270bd0f",
+      "local-59321ae9ad82599d75019184"
+    ],
+    "proposal": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": false,
+      "condition_basis": "The unit documents the unvault lookup and contains no DataLoader.load_from_file symbol, cache parameter, or accepted cache values.",
+      "rationale": "The shared vaulted-file topic does not establish the required parameter behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-0421f4c81270bd0f",
+      "unit_id": "local-59321ae9ad82599d75019184",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The function `DataLoader.load_from_file` must accept a `cache` parameter with at least the values `'none'` and `'vaulted'`.",
+      "unit_quote": "This lookup returns the contents from vaulted (or not) file(s) on the Ansible controller's file system.",
+      "applicable": false,
+      "condition_basis": "The unit documents the separate unvault lookup and specifies no DataLoader.load_from_file cache parameter or accepted cache values.",
+      "rationale": "The word 'vaulted' is shared, but the documented symbol and behavior do not correspond to the required parameter contract.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2647,
+        "end": 2773
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/unvault.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 5,
+          "end": 21
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-d5b2b8105de9fa82",
+      "local-64ea5484f5a8e20d86083d15-28c39131"
+    ],
+    "proposal": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-64ea5484f5a8e20d86083d15-28c39131",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": true,
+      "condition_basis": "The method's documented implementation behavior applies when the file is vault encrypted and describes producing a temporary decrypted file.",
+      "rationale": "This identifies a concrete decryption pathway relevant to repeated decryption, but the supplied unit does not specify reuse or prevention of repeated reads and is not a public test or normative contract for that requirement.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 369
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-d5b2b8105de9fa82",
+      "unit_id": "local-64ea5484f5a8e20d86083d15-28c39131",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Playbooks should run without repeated re-reading and decrypting of the same vaulted files.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": true,
+      "condition_basis": "The unit specifically applies when the file is vault encrypted and describes producing a temporary decrypted file.",
+      "rationale": "This is implementation context for vaulted-file decryption and temporary materialization, but it does not state whether repeated calls reuse that result or repeat reading and decryption.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2299,
+        "end": 2390
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 357,
+          "end": 369
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-ac12c2ea0f060247",
+      "local-f4fb24213226101fa00f9e3b"
+    ],
+    "proposal": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-f4fb24213226101fa00f9e3b",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "If the file is not encrypted then the path is returned",
+      "applicable": false,
+      "condition_basis": "The documented contract distinguishes encrypted and unencrypted files only to specify which path is returned.",
+      "rationale": "It documents path resolution and temporary decryption, not parsed contents or internal-cache effects under `cache='none'`.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 358,
+          "end": 362
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ac12c2ea0f060247",
+      "unit_id": "local-f4fb24213226101fa00f9e3b",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When called with `cache='none'`, the function must return the parsed contents of the given file and must not add any entry to the internal file cache.",
+      "unit_quote": "If the file is vault encrypted return a path to a temporary decrypted file",
+      "applicable": false,
+      "condition_basis": "The documented contract applies to producing a real or temporary decrypted path, not parsing contents or selecting a cache policy.",
+      "rationale": "The unit documents file decryption and path return behavior only; it provides no support for the required no-cache behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2773,
+        "end": 2926
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/parsing/dataloader.py",
+          "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+          "start": 358,
+          "end": 362
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  }
+]
