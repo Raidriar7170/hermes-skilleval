@@ -1,0 +1,3266 @@
+[
+  {
+    "pair": [
+      "req-1415df6631cfbe11",
+      "local-aa529971b84a32203ce1febd-6fbb5740"
+    ],
+    "proposal": {
+      "requirement_id": "req-1415df6631cfbe11",
+      "unit_id": "local-aa529971b84a32203ce1febd-6fbb5740",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.",
+      "unit_quote": "if not isinstance(values, list):",
+      "applicable": false,
+      "condition_basis": "This unit processes lists reached through a dotted accessor in the unrelated subelements filter, not lists referenced by constructed keyed_groups entries.",
+      "rationale": "The shared concepts of a key and list do not establish correspondence with keyed-group naming, non-empty-element selection, prefixes, or separators.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3265,
+        "end": 3377
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/filter/core.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 493,
+          "end": 534
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-1415df6631cfbe11",
+      "unit_id": "local-aa529971b84a32203ce1febd-6fbb5740",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.",
+      "unit_quote": "if not isinstance(values, list):",
+      "applicable": false,
+      "condition_basis": "The unit's list condition belongs to the unrelated subelements filter rather than keyed_groups processing.",
+      "rationale": "The shared concepts of a key and list do not establish reachability or behavioral correspondence with keyed-group name generation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3265,
+        "end": 3377
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/filter/core.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 493,
+          "end": 534
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-19b091da00abd6f7",
+      "local-6c23918a554dda0e6b850173"
+    ],
+    "proposal": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "keyed_groups:\n    description: Add hosts to group based on the values of a variable.\n    type: list\n    default: []",
+      "applicable": false,
+      "condition_basis": "The unit describes keyed_groups only as a list and does not define default_value, trailing_separator, their types or default, or the empty-string case.",
+      "rationale": "The exact component is mentioned, but the supplied existing behavior has no specific behavior or condition corresponding to the requested entry suboptions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "keyed_groups:\n    description: Add hosts to group based on the values of a variable.\n    type: list\n    default: []",
+      "applicable": false,
+      "condition_basis": "The unit defines keyed_groups only as a top-level list and does not define conditions involving empty group-name values or the requested entry suboptions.",
+      "rationale": "The shared keyed_groups symbol establishes only the broad topic; it does not provide specific behavior for default_value or trailing_separator.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-38991f87362681ec",
+      "local-b466ca2bebbd0dfb229816e7-6ec023f4"
+    ],
+    "proposal": {
+      "requirement_id": "req-38991f87362681ec",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is an empty string and `default_value` is provided, the name should be `gname + separator + default_value`.",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "The mapping branch handles dictionary-valued `key` entries and constructs names from `gname`, separator `sep`, and `gval`.",
+      "rationale": "This is directly relevant existing implementation behavior, but it neither reads `default_value` nor specifies the required empty-string substitution and is not a normative contract.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3790,
+        "end": 3946
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-38991f87362681ec",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is an empty string and `default_value` is provided, the name should be `gname + separator + default_value`.",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "The mapping branch iterates `gname, gval` and constructs the group-name component with the configured separator; it is the implementation location relevant when `key` is a dictionary.",
+      "rationale": "The existing implementation specifically corresponds to dictionary-valued keys and `gname`/`gval` name construction, but it is not a normative contract and does not itself document `default_value` handling.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3790,
+        "end": 3946
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-3a2634c4cf914021",
+      "local-b466ca2bebbd0dfb229816e7-6ec023f4"
+    ],
+    "proposal": {
+      "requirement_id": "req-3a2634c4cf914021",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is the empty string and `default_value` is not defined and `trailing_separator=False` is not set, the name must be `gname + separator`",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "For a truthy dictionary-valued `key`, the mapping branch combines `gname`, `sep`, and `gval`; an empty-string `gval` therefore leaves the separator trailing.",
+      "rationale": "The unit exhibits behavior corresponding to the stated mapping case, but it does not define `default_value` or `trailing_separator` conditions and existing behavior is not normative.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 4109,
+        "end": 4327
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-3a2634c4cf914021",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "if `gval` is the empty string and `default_value` is not defined and `trailing_separator=False` is not set, the name must be `gname + separator`",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "For a mapping entry, the existing expression combines `gname`, `sep`, and `gval`, so an empty `gval` reaches the name-construction logic relevant to a trailing separator.",
+      "rationale": "The unit supplies specific implementation context for dictionary entries and separator placement, but does not normatively define `default_value` or `trailing_separator` conditions.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 4109,
+        "end": 4327
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-4745be28b20228ae",
+      "local-6c23918a554dda0e6b850173"
+    ],
+    "proposal": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string with `default_value` defined",
+      "unit_quote": "Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "The unit discusses keyed groups generally but does not specify an empty string or a defined default_value.",
+      "rationale": "The sources share the keyed-group topic, but the unit is existing behavior and contains no specific contract for substituting default_value when a scalar value is empty.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string with `default_value` defined",
+      "unit_quote": "Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "The unit mentions keyed groups and variable values but does not document empty-string handling, `default_value`, or the required name construction.",
+      "rationale": "The subject area overlaps, but the existing-behavior unit supplies no specific behavioral correspondence and is not a normative contract.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-6d37a3dfc9942ece",
+      "local-6c23918a554dda0e6b850173"
+    ],
+    "proposal": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "for each **empty** element, `prefix + separator + default_value` should be generated if `default_value` was provided",
+      "unit_quote": "If the group name is derived from a mapping the separator is still used to concatenate the items.",
+      "applicable": false,
+      "condition_basis": "The unit's explicit condition is a group name derived from a mapping, while the requirement concerns empty elements of a list and optional default_value.",
+      "rationale": "Both sources concern keyed-group naming and separators, but the unit documents mapping concatenation and does not specify the required empty-list-element behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "for each **empty** element, `prefix + separator + default_value` should be generated if `default_value` was provided",
+      "unit_quote": "Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "The unit generally describes keyed groups but does not document list-valued referenced variables, empty elements, `default_value`, or either required construction branch.",
+      "rationale": "The topical keyed-group overlap lacks the specific condition and output correspondence required for a positive relation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-74cbe13d26bb9d8e",
+      "local-2ba051555c6eda0068ff2783"
+    ],
+    "proposal": {
+      "requirement_id": "req-74cbe13d26bb9d8e",
+      "unit_id": "local-2ba051555c6eda0068ff2783",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`prefix` defaults to `''` and `separator` defaults to `_'` unless explicitly specified",
+      "unit_quote": "If a list is provided to the alias_warnings parameter",
+      "applicable": false,
+      "condition_basis": "The unit documents argument aliases and does not document keyed-group prefix or separator parameters.",
+      "rationale": "Generic parameter and default terminology does not provide the required semantic correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 4328,
+        "end": 4488
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 189,
+          "end": 211
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-74cbe13d26bb9d8e",
+      "unit_id": "local-2ba051555c6eda0068ff2783",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`prefix` defaults to `''` and `separator` defaults to `_'` unless explicitly specified",
+      "unit_quote": ":param parameters: Dictionary of parameters.",
+      "applicable": false,
+      "condition_basis": "The unit documents alias-processing parameters, not keyed-group prefix or separator parameters.",
+      "rationale": "Generic discussion of parameters supplies no contract for the named prefix and separator defaults.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 4328,
+        "end": 4488
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 189,
+          "end": 211
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-90710b86716b25cc",
+      "local-b466ca2bebbd0dfb229816e7-6ec023f4"
+    ],
+    "proposal": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is the empty string",
+      "unit_quote": "for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "This mapping branch constructs names from gname, separator, and gval for every dictionary item, including an empty-string gval; no trailing_separator condition appears in the unit.",
+      "rationale": "The unit is existing implementation of the same dictionary name-construction path, but it is not a normative contract and does not establish required correctness.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "if `gval` is the empty string and `trailing_separator` is `False`, the name must be exactly `gname` (without a separator)",
+      "unit_quote": "name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "In the mapping branch, an empty gval still yields gname followed by sep; the supplied unit has no trailing_separator condition that suppresses that suffix.",
+      "rationale": "This existing behavior directly exposes contrary separator retention for the mapping/empty-value case. It is contradiction context only, not a normative contract or a claim that the existing code is correct.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "DISPUTED",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-952ddca435378bbd",
+      "local-b466ca2bebbd0dfb229816e7-6ec023f4"
+    ],
+    "proposal": {
+      "requirement_id": "req-952ddca435378bbd",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.",
+      "unit_quote": "if key:",
+      "applicable": true,
+      "condition_basis": "An empty string is falsy, so it bypasses the group-construction branch; the unit contains no default_value handling.",
+      "rationale": "The existing implementation directly controls empty-key group construction, but it is not a normative contract and does not encode the complete stated condition.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3126,
+        "end": 3264
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-952ddca435378bbd",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.",
+      "unit_quote": "if key:",
+      "applicable": true,
+      "condition_basis": "An empty string is falsy and therefore does not enter the branch that constructs and adds groups; the unit contains no `default_value` handling.",
+      "rationale": "The existing implementation directly controls group generation for a composed key and is relevant context, but existing behavior is not a normative contract and does not cover the stated absence-of-default condition explicitly.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3126,
+        "end": 3264
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-9541aced9606c3d2",
+      "local-b466ca2bebbd0dfb229816e7-6ec023f4"
+    ],
+    "proposal": {
+      "requirement_id": "req-9541aced9606c3d2",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "for each `(gname, gval)` pair with a non-empty `gval`, the name should be `gname + separator + gval`.",
+      "unit_quote": "for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)\n                                new_raw_group_names.append(name)",
+      "applicable": true,
+      "condition_basis": "The mapping branch processes every pair without checking that gval is non-empty, and the resulting bare name is subsequently passed through an additional prefix/separator construction.",
+      "rationale": "The unit contains the specified gname-separator-gval construction but also exposes behavior that does not match the requirement's non-empty-gval condition and exact naming rule; as existing behavior, it is contradiction context rather than contract support.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3649,
+        "end": 3789
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-9541aced9606c3d2",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, for each `(gname, gval)` pair with a non-empty `gval`, the name should be `gname + separator + gval`.",
+      "unit_quote": "name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "The statement executes for every item when the composed key is a Mapping; it does not test whether `gval` is non-empty.",
+      "rationale": "The existing implementation contains the exact mapping-item concatenation operation, but it is non-normative and does not encode the requirement's non-empty-value condition.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3649,
+        "end": 3789
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "DISPUTED",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-d40385cd807b44f9",
+      "local-6c23918a554dda0e6b850173"
+    ],
+    "proposal": {
+      "requirement_id": "req-d40385cd807b44f9",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.",
+      "unit_quote": "By default, a keyed group that does not have a prefix or a separator provided will have a name that starts with an underscore.",
+      "applicable": true,
+      "condition_basis": "The unit describes how prefix presence and the separator option affect keyed-group names, including the default empty prefix and underscore separator.",
+      "rationale": "It provides specific naming context, but its supplied role is existing_behavior, so it cannot serve as CONTRACT_SUPPORT.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2853,
+        "end": 2967
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-d40385cd807b44f9",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "CONTRACT_SUPPORT",
+      "requirement_quote": "When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.",
+      "unit_quote": "By default, a keyed group that does not have a prefix or a separator provided will have a name that starts with an underscore.",
+      "applicable": true,
+      "condition_basis": "The documented `leading_separator` behavior applies to keyed groups and states that the default empty prefix and `_` separator are reflected in the generated name.",
+      "rationale": "The public option documentation normatively confirms that keyed-group names incorporate the prefix and separator, including the empty-prefix case, although it does not separately describe empty values.",
+      "weight": 0.0,
+      "role_valid": false,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "REJECTED_ZERO_COVERAGE",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2853,
+        "end": 2967
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "REJECTED_PROPOSAL"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-ddf2c829c5d45a64",
+      "local-edcb2b97af5ee22bda5af557"
+    ],
+    "proposal": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "applicable to strings, lists, and dictionaries",
+      "unit_quote": "interpreted as Python literal structures\n          (strings, numbers, tuples, lists, dicts, booleans, None)",
+      "applicable": false,
+      "condition_basis": "The unit documents parsing types in INI inventory values, not deriving constructed group names from empty scalar, list, or mapping values.",
+      "rationale": "The overlap in container and scalar type names is topical only and provides no contract for defaults or separator omission.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "applicable to strings, lists, and dictionaries",
+      "unit_quote": "interpreted as Python literal structures\n          (strings, numbers, tuples, lists, dicts, booleans, None)",
+      "applicable": false,
+      "condition_basis": "The unit documents parsing types for INI inventory values, not the derivation of keyed group names from empty values.",
+      "rationale": "Mentioning strings, lists, and dictionaries is only topical overlap and supplies none of the required naming behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-e9d2a8d705ba8abc",
+      "local-b466ca2bebbd0dfb229816e7-6ec023f4"
+    ],
+    "proposal": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "if both are provided, an `AnsibleParserError` must be raised",
+      "unit_quote": "for keyed in keys:\n                if keyed and isinstance(keyed, dict):",
+      "applicable": true,
+      "condition_basis": "The unit is the existing keyed-group processing routine: it iterates each keyed dictionary entry and already raises AnsibleParserError for several invalid keyed-group conditions, but the supplied text does not show the required option-pair validation.",
+      "rationale": "This is specific implementation context for validation scoped to an individual keyed_groups entry; it is not a normative contract and does not establish that the required mutual-exclusion behavior currently exists.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-b466ca2bebbd0dfb229816e7-6ec023f4",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "if both are provided, an `AnsibleParserError` must be raised with the exact message",
+      "unit_quote": "for keyed in keys:\n                if keyed and isinstance(keyed, dict):",
+      "applicable": true,
+      "condition_basis": "This routine processes each dictionary entry in a supplied list of keyed-group definitions and already raises AnsibleParserError for some invalid keyed-group conditions.",
+      "rationale": "The unit is the concrete keyed-group processing context where per-entry options are read, but it contains no check for simultaneous `default_value` and `trailing_separator` and therefore does not itself provide normative support or verification of the required exception.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-1415df6631cfbe11",
+      "local-6c23918a554dda0e6b850173"
+    ],
+    "proposal": {
+      "requirement_id": "req-1415df6631cfbe11",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.",
+      "unit_quote": "description: Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "The unit mentions keyed-group values but specifies neither a list-valued key nor per-non-empty-element group-name generation.",
+      "rationale": "The sources concern the same general keyed-groups topic, but there is no specific behavioral correspondence for filtering empty list elements or composing prefix, separator, and element.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3265,
+        "end": 3377
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-1415df6631cfbe11",
+      "unit_id": "local-6c23918a554dda0e6b850173",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.",
+      "unit_quote": "If the group name is derived from a mapping the separator is still used to concatenate the items.",
+      "applicable": false,
+      "condition_basis": "The requirement applies when `key` references a list; the unit discusses names derived from a mapping, not list elements.",
+      "rationale": "Both concern keyed-group name construction and separators, but the unit provides no list-specific behavior or non-empty-element generation rule.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3265,
+        "end": 3377
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 9,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-19b091da00abd6f7",
+      "local-c886acf14490a7558ee459c1"
+    ],
+    "proposal": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "keyed_groups:\n    description: Add hosts to group based on the values of a variable.\n    type: list\n    default: []",
+      "applicable": false,
+      "condition_basis": "The documented contract does not specify either required entry suboption or behavior when the group-name value is an empty string.",
+      "rationale": "Documenting keyed_groups as a list is insufficient contract support for accepting default_value and trailing_separator with the specified types and default.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "keyed_groups:\n    description: Add hosts to group based on the values of a variable.\n    type: list\n    default: []",
+      "applicable": false,
+      "condition_basis": "The documented contract contains no entry schema or empty-value condition for keyed_groups.",
+      "rationale": "Although it documents keyed_groups, it does not document either requested suboption, their types, the True default, or their behavior for empty values, so it cannot support the specific contract.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-38991f87362681ec",
+      "local-c8386187429612cc4574275d"
+    ],
+    "proposal": {
+      "requirement_id": "req-38991f87362681ec",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is an empty string and `default_value` is provided, the name should be `gname + separator + default_value`.",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "The mapping branch handles dictionary-valued `key` entries and constructs names from `gname`, separator `sep`, and `gval`.",
+      "rationale": "This is directly relevant existing implementation behavior, but it neither reads `default_value` nor specifies the required empty-string substitution and is not a normative contract.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3790,
+        "end": 3946
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-38991f87362681ec",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is an empty string and `default_value` is provided, the name should be `gname + separator + default_value`.",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "The mapping branch iterates `gname, gval` and constructs the group-name component with the configured separator; it is the implementation location relevant when `key` is a dictionary.",
+      "rationale": "The existing implementation specifically corresponds to dictionary-valued keys and `gname`/`gval` name construction, but it is not a normative contract and does not itself document `default_value` handling.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3790,
+        "end": 3946
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE",
+    "stratum": "relevant"
+  },
+  {
+    "pair": [
+      "req-19b091da00abd6f7",
+      "local-edcb2b97af5ee22bda5af557"
+    ],
+    "proposal": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions",
+      "unit_quote": "INI file based inventory, sections are groups or group related with special `:modifiers`.",
+      "applicable": false,
+      "condition_basis": "The unit documents INI inventory parsing and group sections, not constructed-plugin keyed-group options.",
+      "rationale": "Generic inventory and group terminology does not establish the requested suboptions or their defaults.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions",
+      "unit_quote": "Hosts can have variables defined inline as key/value pairs separated by C(=).",
+      "applicable": false,
+      "condition_basis": "The unit documents INI inventory value parsing and does not document constructed-plugin `keyed_groups` options.",
+      "rationale": "Generic discussion of keys, values, strings, and defaults does not establish the required keyed-group suboptions or their empty-string behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-3a2634c4cf914021",
+      "local-c8386187429612cc4574275d"
+    ],
+    "proposal": {
+      "requirement_id": "req-3a2634c4cf914021",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is the empty string and `default_value` is not defined and `trailing_separator=False` is not set, the name must be `gname + separator`",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "For a truthy dictionary-valued `key`, the mapping branch combines `gname`, `sep`, and `gval`; an empty-string `gval` therefore leaves the separator trailing.",
+      "rationale": "The unit exhibits behavior corresponding to the stated mapping case, but it does not define `default_value` or `trailing_separator` conditions and existing behavior is not normative.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 4109,
+        "end": 4327
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-3a2634c4cf914021",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "if `gval` is the empty string and `default_value` is not defined and `trailing_separator=False` is not set, the name must be `gname + separator`",
+      "unit_quote": "elif isinstance(key, Mapping):\n                            for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "For a mapping entry, the existing expression combines `gname`, `sep`, and `gval`, so an empty `gval` reaches the name-construction logic relevant to a trailing separator.",
+      "rationale": "The unit supplies specific implementation context for dictionary entries and separator placement, but does not normatively define `default_value` or `trailing_separator` conditions.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 4109,
+        "end": 4327
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-4745be28b20228ae",
+      "local-edcb2b97af5ee22bda5af557"
+    ],
+    "proposal": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the value is an empty string with `default_value` defined",
+      "unit_quote": "When declared in a C(:vars) section, INI values are interpreted as strings.",
+      "applicable": false,
+      "condition_basis": "The unit concerns parsing INI inventory values as strings, not handling an empty keyed-group value with default_value.",
+      "rationale": "The string and inventory terminology is shared only at a broad topical level; no group-name construction behavior or matching condition is documented.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the value is an empty string with `default_value` defined",
+      "unit_quote": "When declared in a C(:vars) section, INI values are interpreted as strings.",
+      "applicable": false,
+      "condition_basis": "The unit documents INI value typing but does not establish that the keyed-group path consumes such a value or specify empty-string fallback behavior.",
+      "rationale": "String typing is only topical context; no specific reachability, default substitution, or group-name contract is supplied.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-6d37a3dfc9942ece",
+      "local-c886acf14490a7558ee459c1"
+    ],
+    "proposal": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`prefix + separator + default_value` should be generated if `default_value` was provided",
+      "unit_quote": "This is because the default prefix is \"\" and the default separator is \"_\".",
+      "applicable": false,
+      "condition_basis": "The documented contract states general prefix and separator defaults but does not address empty list elements or default_value.",
+      "rationale": "It lacks the requirement's specific list-empty condition and resulting name construction.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "for each **empty** element, `prefix + separator + default_value` should be generated if `default_value` was provided",
+      "unit_quote": "This is because the default prefix is \"\" and the default separator is \"_\".",
+      "applicable": false,
+      "condition_basis": "The documentation describes general keyed-group prefix and separator defaults, but says nothing about empty list elements or default_value.",
+      "rationale": "The unit is topically related to keyed-group naming but does not document the requirement's specific list-empty/default_value behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-90710b86716b25cc",
+      "local-c8386187429612cc4574275d"
+    ],
+    "proposal": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, if `gval` is the empty string",
+      "unit_quote": "for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "This mapping branch constructs names from gname, separator, and gval for every dictionary item, including an empty-string gval; no trailing_separator condition appears in the unit.",
+      "rationale": "The unit is existing implementation of the same dictionary name-construction path, but it is not a normative contract and does not establish required correctness.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "if `gval` is the empty string and `trailing_separator` is `False`, the name must be exactly `gname` (without a separator)",
+      "unit_quote": "name = '%s%s%s' % (gname, sep, gval)",
+      "applicable": true,
+      "condition_basis": "In the mapping branch, an empty gval still yields gname followed by sep; the supplied unit has no trailing_separator condition that suppresses that suffix.",
+      "rationale": "This existing behavior directly exposes contrary separator retention for the mapping/empty-value case. It is contradiction context only, not a normative contract or a claim that the existing code is correct.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "DISPUTED",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-952ddca435378bbd",
+      "local-edcb2b97af5ee22bda5af557"
+    ],
+    "proposal": {
+      "requirement_id": "req-952ddca435378bbd",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.",
+      "unit_quote": "When declared in a C(:vars) section, INI values are interpreted as strings.",
+      "applicable": false,
+      "condition_basis": "The unit concerns parsing values in INI inventory files, not keyed-group behavior for empty strings or default_value.",
+      "rationale": "The mention of string values is only topical and provides no behavior correspondence.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3126,
+        "end": 3264
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-952ddca435378bbd",
+      "unit_id": "local-edcb2b97af5ee22bda5af557",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.",
+      "unit_quote": "When declared in a C(:vars) section, INI values are interpreted as strings.",
+      "applicable": false,
+      "condition_basis": "The unit describes INI inventory parsing and string interpretation, not keyed-group generation from an empty string.",
+      "rationale": "Mentioning string values does not correspond to the required empty-value, default-value, or no-group behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3126,
+        "end": 3264
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/ini.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-9541aced9606c3d2",
+      "local-c8386187429612cc4574275d"
+    ],
+    "proposal": {
+      "requirement_id": "req-9541aced9606c3d2",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "CONTRADICTION_CONTEXT",
+      "requirement_quote": "for each `(gname, gval)` pair with a non-empty `gval`, the name should be `gname + separator + gval`.",
+      "unit_quote": "for (gname, gval) in key.items():\n                                name = '%s%s%s' % (gname, sep, gval)\n                                new_raw_group_names.append(name)",
+      "applicable": true,
+      "condition_basis": "The mapping branch processes every pair without a non-empty-gval guard, then later constructs the final name with prefix and separator around the bare mapping name.",
+      "rationale": "The implementation specifically corresponds to mapping-name construction but supplies context for divergence from both the stated condition and exact output formula.",
+      "weight": 0.6,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3649,
+        "end": 3789
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-9541aced9606c3d2",
+      "unit_id": "local-c8386187429612cc4574275d",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "When `key` references a dictionary, for each `(gname, gval)` pair with a non-empty `gval`, the name should be `gname + separator + gval`.",
+      "unit_quote": "for (gname, gval) in key.items():",
+      "applicable": true,
+      "condition_basis": "This branch applies when `key` is a Mapping and iterates its `(gname, gval)` pairs, without checking that `gval` is non-empty.",
+      "rationale": "The unit is directly relevant implementation context for mapping-valued keys, but existing code is not normative support or a public verification example.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3649,
+        "end": 3789
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 386,
+          "end": 444
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "DISPUTED",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-d40385cd807b44f9",
+      "local-47afd59db1926a02843e454b"
+    ],
+    "proposal": {
+      "requirement_id": "req-d40385cd807b44f9",
+      "unit_id": "local-47afd59db1926a02843e454b",
+      "relation": "CONTRACT_SUPPORT",
+      "requirement_quote": "When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.",
+      "unit_quote": "this creates a group per distro (distro_CentOS, distro_Debian) and assigns the hosts that have matching values to it,\n        # using the default separator \"_\"\n        - prefix: distro\n          key: ansible_distribution",
+      "applicable": true,
+      "condition_basis": "The documented example uses a scalar distribution value, prefix distro, and the default underscore separator to produce names such as distro_CentOS.",
+      "rationale": "This documented contract demonstrates the specific prefix-plus-separator-plus-value behavior for non-empty scalar keyed-group values.",
+      "weight": 1.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2853,
+        "end": 2967
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 37,
+          "end": 79
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-d40385cd807b44f9",
+      "unit_id": "local-47afd59db1926a02843e454b",
+      "relation": "CONTRACT_SUPPORT",
+      "requirement_quote": "When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.",
+      "unit_quote": "this creates a group per distro (distro_CentOS, distro_Debian) and assigns the hosts that have matching values to it,",
+      "applicable": true,
+      "condition_basis": "The documented keyed-group example uses `prefix: distro`, the default separator `_`, and `key: ansible_distribution`, with resulting names `distro_CentOS` and `distro_Debian`.",
+      "rationale": "The public documented example specifically demonstrates a prefix, separator, and scalar key value composing the resulting group name.",
+      "weight": 1.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2853,
+        "end": 2967
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 37,
+          "end": 79
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-ddf2c829c5d45a64",
+      "local-e6721c99ee8cfba30ea93cf0"
+    ],
+    "proposal": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-e6721c99ee8cfba30ea93cf0",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The system should allow for consistent and meaningful group names even when the source is empty.",
+      "unit_quote": "Use consistent names across modules",
+      "applicable": false,
+      "condition_basis": "The unit gives general module-design guidance rather than a contract for inventory keyed-group names derived from empty values.",
+      "rationale": "The common language about consistent names is insufficient to support any specified empty-value or separator behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_modules_best_practices.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 150,
+          "end": 163
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-e6721c99ee8cfba30ea93cf0",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The system should allow for consistent and meaningful group names even when the source is empty.",
+      "unit_quote": "Use consistent names across modules",
+      "applicable": false,
+      "condition_basis": "The unit is a general module-development naming guideline and states no condition involving empty source values or inventory group derivation.",
+      "rationale": "General consistency guidance does not specify default substitution, separator omission, empty-string suppression, or preservation of unaffected keyed-group behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_modules_best_practices.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 150,
+          "end": 163
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-e9d2a8d705ba8abc",
+      "local-e68e07baef2973e8bf014a15"
+    ],
+    "proposal": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-e68e07baef2973e8bf014a15",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "parameters are mutually exclusive for keyed groups: default_value|trailing_separator",
+      "unit_quote": "internal error: required and default are mutually exclusive for %s",
+      "applicable": false,
+      "condition_basis": "The unit checks a different pair of argument-spec properties—required and default—under a different condition and raises ValueError rather than AnsibleParserError.",
+      "rationale": "The phrase 'mutually exclusive' and the word 'default' are generic overlaps; the behavior, symbols, exception, and message do not correspond to the keyed_groups requirement.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 188,
+          "end": 242
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-e68e07baef2973e8bf014a15",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "parameters are mutually exclusive for keyed groups: default_value|trailing_separator",
+      "unit_quote": "internal error: required and default are mutually exclusive for %s",
+      "applicable": false,
+      "condition_basis": "The unit's condition is an argument-spec option having both a non-None default and `required` set true, not a keyed-group entry containing `default_value` and `trailing_separator`.",
+      "rationale": "Its ValueError, parameters, condition, and message concern a different validation rule, so the shared phrase `mutually exclusive` does not establish support or contradiction for the requested keyed-group contract.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 188,
+          "end": 242
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-6d37a3dfc9942ece",
+      "local-aa529971b84a32203ce1febd-6fbb5740"
+    ],
+    "proposal": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-aa529971b84a32203ce1febd-6fbb5740",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each **empty** element",
+      "unit_quote": "the key %r should point to a list",
+      "applicable": false,
+      "condition_basis": "The unit concerns traversing a list-valued subelement, not constructing keyed-group names from empty list elements.",
+      "rationale": "The shared list/key vocabulary does not establish behavior for prefix, separator, or default_value.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/filter/core.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 493,
+          "end": 534
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-aa529971b84a32203ce1febd-6fbb5740",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each **empty** element",
+      "unit_quote": "the key %r should point to a list",
+      "applicable": false,
+      "condition_basis": "The unit processes a different subelements filter whose accessed value must be a list; it does not govern keyed-group naming.",
+      "rationale": "The shared concepts of a key and list do not establish correspondence with empty keyed-group elements, prefix/separator construction, or default_value.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/filter/core.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 493,
+          "end": 534
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-952ddca435378bbd",
+      "local-826d8e6b7a82e8a34469e39a"
+    ],
+    "proposal": {
+      "requirement_id": "req-952ddca435378bbd",
+      "unit_id": "local-826d8e6b7a82e8a34469e39a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.",
+      "unit_quote": "The default value for the module option if not set",
+      "applicable": false,
+      "condition_basis": "The unit discusses generic module-option defaults, not keyed-group handling of an empty string without default_value.",
+      "rationale": "The shared default terminology does not establish the required group-generation behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3126,
+        "end": 3264
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_modules_general_windows.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 210,
+          "end": 230
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-952ddca435378bbd",
+      "unit_id": "local-826d8e6b7a82e8a34469e39a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.",
+      "unit_quote": "The default value for the module option if not set",
+      "applicable": false,
+      "condition_basis": "The unit discusses defaults for Windows module options, not keyed-group handling of empty string values.",
+      "rationale": "The shared default concept does not establish the required keyed-group behavior or condition.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3126,
+        "end": 3264
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_modules_general_windows.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 210,
+          "end": 230
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-4745be28b20228ae",
+      "local-c886acf14490a7558ee459c1"
+    ],
+    "proposal": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the value is an empty string with `default_value` defined",
+      "unit_quote": "Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "The documented contract covers keyed groups generally but states no condition involving an empty scalar value and default_value.",
+      "rationale": "Although this is keyed-group documentation, it does not document the required default_value substitution or the specified name formula.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the value is an empty string with `default_value` defined",
+      "unit_quote": "Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "Although this is documented contract text for keyed groups, it does not address empty values, `default_value`, or the resulting group name.",
+      "rationale": "General documentation that keyed groups use variable values is insufficient to support the requirement's specific fallback behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-e9d2a8d705ba8abc",
+      "local-1638a61ddde1a4a4982ef971"
+    ],
+    "proposal": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-1638a61ddde1a4a4982ef971",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`default_value` and `trailing_separator` are mutually exclusive within the same `keyed_groups` entry",
+      "unit_quote": "Check mutually exclusive terms against argument parameters",
+      "applicable": false,
+      "condition_basis": "The unit describes generic mutually exclusive terms but does not name default_value, trailing_separator, keyed_groups, AnsibleParserError, or the required message.",
+      "rationale": "It does not document the requirement's specific option pair, entry-level condition, exception type, or exact diagnostic.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/validation.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 71,
+          "end": 80
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-1638a61ddde1a4a4982ef971",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "`default_value` and `trailing_separator` are mutually exclusive within the same `keyed_groups` entry",
+      "unit_quote": "Check mutually exclusive terms against argument parameters",
+      "applicable": false,
+      "condition_basis": "No supplied text shows this generic checker being invoked for `default_value` and `trailing_separator` in a `keyed_groups` entry.",
+      "rationale": "The unit documents generic mutual-exclusion checking and a TypeError outcome, but does not support the required options, AnsibleParserError type, or exact message.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/validation.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 71,
+          "end": 80
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-19b091da00abd6f7",
+      "local-d5b744200e5f4fb3efe369ac"
+    ],
+    "proposal": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-d5b744200e5f4fb3efe369ac",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "# keyed_groups may be used to create custom groups",
+      "applicable": false,
+      "condition_basis": "The examples contain keyed_groups entries but none uses default_value or trailing_separator, and none demonstrates an empty-string group-name value.",
+      "rationale": "The example is topically related to keyed groups but supplies no public test example or documented behavior for the required suboptions and condition.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "test/support/integration/plugins/inventory/aws_ec2.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 112,
+          "end": 179
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-d5b744200e5f4fb3efe369ac",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "# keyed_groups may be used to create custom groups",
+      "applicable": false,
+      "condition_basis": "The examples exercise keyed_groups entries but none uses default_value, trailing_separator, or an empty value used in a group name.",
+      "rationale": "The examples concern the same feature but provide no verification pattern or documented behavior for the requested suboptions and condition.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "test/support/integration/plugins/inventory/aws_ec2.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 112,
+          "end": 179
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-4745be28b20228ae",
+      "local-198eea9174aad178ef090f7c"
+    ],
+    "proposal": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-198eea9174aad178ef090f7c",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string with `default_value` defined, the group name must be `prefix + separator + default_value`.",
+      "unit_quote": "The C(default) filter requires second parameter to be set to C(True)\n        in order to set a default value in the case the variable is not\n        defined",
+      "applicable": false,
+      "condition_basis": "The unit discusses defaults for environment-variable lookup, not keyed-group naming or the condition of a referenced string being empty.",
+      "rationale": "The shared empty-string and default-value concepts concern a different interface and behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/env.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 7,
+          "end": 28
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-198eea9174aad178ef090f7c",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string with `default_value` defined, the group name must be `prefix + separator + default_value`.",
+      "unit_quote": "The C(default) filter requires second parameter to be set to C(True)\n        in order to set a default value in the case the variable is not\n        defined",
+      "applicable": false,
+      "condition_basis": "The unit documents the `env` lookup and a template `default` filter condition for an undefined environment variable, not keyed-group name formation for an empty string.",
+      "rationale": "Although both sources mention empty strings and default values, the unit addresses a different subsystem and condition and provides no contract for `prefix + separator + default_value`.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/env.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 7,
+          "end": 28
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "near_distractor"
+  },
+  {
+    "pair": [
+      "req-90710b86716b25cc",
+      "local-47afd59db1926a02843e454b"
+    ],
+    "proposal": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-47afd59db1926a02843e454b",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the name must be exactly `gname` (without a separator)",
+      "unit_quote": "# using the default separator \"_\"",
+      "applicable": false,
+      "condition_basis": "The example covers keyed-group separator configuration but not dictionary-valued keys, empty gval, or trailing_separator=False.",
+      "rationale": "A general separator example does not verify or contractually support the specified mapping condition.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 37,
+          "end": 79
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-47afd59db1926a02843e454b",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the name must be exactly `gname` (without a separator)",
+      "unit_quote": "# using the default separator \"_\"",
+      "applicable": false,
+      "condition_basis": "The examples show ordinary keyed-group separator usage, but no dictionary-valued key, empty gval, or trailing_separator=False case.",
+      "rationale": "Because the unit is not a public test example and lacks the required condition and result, it neither verifies nor normatively supports the requested behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 37,
+          "end": 79
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-6d37a3dfc9942ece",
+      "local-2cb73296510f8155cec503a4"
+    ],
+    "proposal": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-2cb73296510f8155cec503a4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "if `default_value` was not provided, the name is constructed from the empty element",
+      "unit_quote": "If the option name in a dictionary key is specified, the option names it maps to must all also be specified.",
+      "applicable": false,
+      "condition_basis": "The unit defines co-required module options and does not address whether keyed-group default_value is provided or how list elements form names.",
+      "rationale": "References to keys, names, and sequences do not establish specific correspondence with empty list elements or the required prefix-and-separator output.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_program_flow_modules.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 823,
+          "end": 823
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-2cb73296510f8155cec503a4",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "if `default_value` was not provided, the name is constructed from the empty element",
+      "unit_quote": "Must be a dictionary mapping option names to sequences of option names.",
+      "applicable": false,
+      "condition_basis": "The unit specifies dependencies among module option names, not list-valued keyed-group data or construction from empty elements.",
+      "rationale": "Sequences and option names do not provide specific support for the required group-name behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_program_flow_modules.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 823,
+          "end": 823
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-90710b86716b25cc",
+      "local-e68e07baef2973e8bf014a15"
+    ],
+    "proposal": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-e68e07baef2973e8bf014a15",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "if `gval` is the empty string and `trailing_separator` is `False`",
+      "unit_quote": "default = v.get('default', None)",
+      "applicable": false,
+      "condition_basis": "The unit processes argument aliases and defaults rather than keyed-group dictionary values or separator handling.",
+      "rationale": "Generic dictionary/default operations do not correspond to the required empty-gval and trailing_separator condition.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 188,
+          "end": 242
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-e68e07baef2973e8bf014a15",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a dictionary",
+      "unit_quote": "Modify ``parameters`` by adding a new key for each alias with the supplied\n    value from ``parameters``.",
+      "applicable": false,
+      "condition_basis": "The unit manipulates argument aliases in dictionaries and has no keyed-group mapping-name construction path.",
+      "rationale": "Shared dictionary/key/value terminology is insufficient to connect alias handling with empty gval or trailing_separator behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 188,
+          "end": 242
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-6d37a3dfc9942ece",
+      "local-2ba051555c6eda0068ff2783"
+    ],
+    "proposal": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-2ba051555c6eda0068ff2783",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each **empty** element",
+      "unit_quote": "If a list is provided to the alias_warnings parameter, it will be filled with tuples",
+      "applicable": false,
+      "condition_basis": "The unit's list condition concerns an alias_warnings output list, not elements of a keyed-group value.",
+      "rationale": "The shared list terminology is generic; alias processing provides no contract for empty elements, default_value, or group-name construction.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 189,
+          "end": 211
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "unit_id": "local-2ba051555c6eda0068ff2783",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each **empty** element",
+      "unit_quote": "If a list is provided to the alias_warnings parameter",
+      "applicable": false,
+      "condition_basis": "The unit's lists collect alias warnings or deprecations and are unrelated to a keyed-group variable whose elements generate names.",
+      "rationale": "The occurrence of a list does not correspond to the requirement's empty-element or default-value behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/parameters.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 189,
+          "end": 211
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-d40385cd807b44f9",
+      "local-a2e98823df750e4cefc69b39"
+    ],
+    "proposal": {
+      "requirement_id": "req-d40385cd807b44f9",
+      "unit_id": "local-a2e98823df750e4cefc69b39",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.",
+      "unit_quote": "The three main options from the ``constructed`` documentation fragment are ``compose``, ``keyed_groups``, and ``groups``.",
+      "applicable": false,
+      "condition_basis": "The unit mentions keyed_groups and group generation generally but specifies neither scalar-value conditions nor prefix/separator name construction.",
+      "rationale": "It directs readers to other examples and lacks the behavior correspondence required for a positive relation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2853,
+        "end": 2967
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_inventory.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 289,
+          "end": 289
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-d40385cd807b44f9",
+      "unit_id": "local-a2e98823df750e4cefc69b39",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.",
+      "unit_quote": "the group generation will be able to use the composed variables.",
+      "applicable": false,
+      "condition_basis": "The unit discusses call ordering and availability of composed variables to group generation, not scalar keyed-group naming.",
+      "rationale": "Its reference to `keyed_groups` and group generation does not specify the prefix-plus-separator-plus-value contract.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2853,
+        "end": 2967
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_inventory.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 289,
+          "end": 289
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-4745be28b20228ae",
+      "local-47afd59db1926a02843e454b"
+    ],
+    "proposal": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-47afd59db1926a02843e454b",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string with `default_value` defined, the group name must be `prefix + separator + default_value`.",
+      "unit_quote": "# this creates a group per distro (distro_CentOS, distro_Debian) and assigns the hosts that have matching values to it,\n        # using the default separator \"_\"\n        - prefix: distro\n          key: ansible_distribution",
+      "applicable": false,
+      "condition_basis": "The example documents ordinary nonempty scalar keyed-group naming with a prefix and separator, but not an empty string with `default_value` defined.",
+      "rationale": "Although the same keyed-group fields appear, the decisive empty-string/default-value condition and required resulting name are absent.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 37,
+          "end": 79
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-47afd59db1926a02843e454b",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string and the value is an empty string with `default_value` defined, the group name must be `prefix + separator + default_value`.",
+      "unit_quote": "# using the default separator \"_\"\n        - prefix: distro\n          key: ansible_distribution",
+      "applicable": false,
+      "condition_basis": "The documented example shows a string-valued keyed-group key with a prefix and default separator, but does not cover an empty value or a defined `default_value`.",
+      "rationale": "The unit shares the keyed-group naming topic and relevant fields, but lacks the specific empty-string/default-value condition required for CONTRACT_SUPPORT.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 37,
+          "end": 79
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-1415df6631cfbe11",
+      "local-c886acf14490a7558ee459c1"
+    ],
+    "proposal": {
+      "requirement_id": "req-1415df6631cfbe11",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.",
+      "unit_quote": "description: Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "The documented contract identifies keyed_groups generally but does not state behavior for a key whose value is a list.",
+      "rationale": "It provides no contract for skipping empty elements or generating one prefix-plus-separator-plus-element name per non-empty list element.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3265,
+        "end": 3377
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-1415df6631cfbe11",
+      "unit_id": "local-c886acf14490a7558ee459c1",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.",
+      "unit_quote": "description: Add hosts to group based on the values of a variable.",
+      "applicable": false,
+      "condition_basis": "The requirement applies specifically to list-valued `key` results, while the documentation gives only a general keyed_groups description.",
+      "rationale": "The documented contract identifies the same feature area but does not specify per-element list expansion, exclusion of empty elements, or prefix-and-separator construction.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3265,
+        "end": 3377
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/doc_fragments/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 11,
+          "end": 53
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-ddf2c829c5d45a64",
+      "local-1638a61ddde1a4a4982ef971"
+    ],
+    "proposal": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-1638a61ddde1a4a4982ef971",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "These mechanisms should be mutually exclusive within the same configuration to avoid ambiguity",
+      "unit_quote": "Accepts a single list or list of lists that are groups of terms that should be\n    mutually exclusive with one another",
+      "applicable": false,
+      "condition_basis": "The unit documents a generic parameter-validation helper and does not identify the empty-value naming mechanisms or keyed_groups entries.",
+      "rationale": "Mutual exclusivity is the only correspondence; the documented contract lacks the requirement's specific options, naming behavior, and configuration scope.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/validation.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 71,
+          "end": 80
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-1638a61ddde1a4a4982ef971",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "These mechanisms should be mutually exclusive within the same configuration to avoid ambiguity",
+      "unit_quote": "Accepts a single list or list of lists that are groups of terms that should be\n    mutually exclusive with one another",
+      "applicable": false,
+      "condition_basis": "The documented checker applies to supplied argument-parameter terms, but the source does not connect it to keyed-group configuration or the two required mechanisms.",
+      "rationale": "It documents generic mutual-exclusion validation only; shared terminology does not prove reachability or the required keyed-group behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/module_utils/common/validation.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 71,
+          "end": 80
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-4745be28b20228ae",
+      "local-826d8e6b7a82e8a34469e39a"
+    ],
+    "proposal": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-826d8e6b7a82e8a34469e39a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the group name must be `prefix + separator + default_value`",
+      "unit_quote": "The default value for the module option if not set",
+      "applicable": false,
+      "condition_basis": "The unit's default applies when a module option is not set, not when a keyed-group string value is empty.",
+      "rationale": "The shared concept of a default value is generic; the unit does not address keyed-group name construction, prefix, separator, or empty-string substitution.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_modules_general_windows.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 210,
+          "end": 230
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-826d8e6b7a82e8a34469e39a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "the group name must be `prefix + separator + default_value`",
+      "unit_quote": "The default value for the module option if not set",
+      "applicable": false,
+      "condition_basis": "The unit describes argument-spec defaults when an option is absent, not keyed-group substitution when a referenced string is empty.",
+      "rationale": "The shared concept of a default value does not establish the required condition or group-name behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/dev_guide/developing_modules_general_windows.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 210,
+          "end": 230
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-ddf2c829c5d45a64",
+      "local-0ecca265e724cd514d23f675"
+    ],
+    "proposal": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-0ecca265e724cd514d23f675",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "there should be a mechanism to replace empty values ​​with a default value when deriving names",
+      "unit_quote": "Example of using Sentinel as a default parameter value::",
+      "applicable": false,
+      "condition_basis": "The unit discusses distinguishing an unset parameter from a supplied value, but does not document keyed-group name derivation or empty-source handling.",
+      "rationale": "The shared notion of a default value is generic and does not establish the required substitution, separator, or group-naming behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/sentinel.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 10,
+          "end": 47
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "unit_id": "local-0ecca265e724cd514d23f675",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "replace empty values ​​with a default value when deriving names",
+      "unit_quote": "Example of using Sentinel as a default parameter value::",
+      "applicable": false,
+      "condition_basis": "The unit discusses sentinel defaults generally, not empty values used to derive group names.",
+      "rationale": "The shared default-value concept does not establish behavior for empty strings, lists, dictionaries, separators, or keyed group naming.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/sentinel.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 10,
+          "end": 47
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-e9d2a8d705ba8abc",
+      "local-69af4be04dd297d007de130e"
+    ],
+    "proposal": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-69af4be04dd297d007de130e",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "within the same `keyed_groups` entry",
+      "unit_quote": "Uses Jinja2 to construct vars and groups based on existing inventory.",
+      "applicable": false,
+      "condition_basis": "The constructed-plugin documentation concerns constructing variables and groups but contains no contract for the two options or their mutual-exclusion failure.",
+      "rationale": "The general constructed-group subject does not specifically correspond to the required validation condition or error.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 7,
+          "end": 35
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "unit_id": "local-69af4be04dd297d007de130e",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "within the same `keyed_groups` entry",
+      "unit_quote": "Uses a YAML configuration file with a valid YAML or C(.config) extension to define var expressions and group conditionals",
+      "applicable": false,
+      "condition_basis": "The supplied constructed-plugin documentation does not mention `keyed_groups`, `default_value`, `trailing_separator`, or their joint presence.",
+      "rationale": "The plugin and group-configuration context is too general to establish the required validation behavior; the referenced documentation fragment is not supplied and cannot be inferred.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/constructed.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 7,
+          "end": 35
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-19b091da00abd6f7",
+      "local-2aff71ad9b270ad2f1e98870"
+    ],
+    "proposal": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-2aff71ad9b270ad2f1e98870",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "def load_privatekey(path, passphrase=None, check_passphrase=True, content=None, backend='pyopenssl'):",
+      "applicable": false,
+      "condition_basis": "The unit loads private keys and contains no constructed-plugin keyed_groups entry or relevant suboptions.",
+      "rationale": "Any overlap involving keys, defaults, strings, or empty values is generic terminology and does not correspond to the required keyed-group behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "test/support/integration/plugins/module_utils/crypto.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 225,
+          "end": 287
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-2aff71ad9b270ad2f1e98870",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "to_bytes(passphrase or '')",
+      "applicable": false,
+      "condition_basis": "The unit's empty-string handling applies to private-key passphrases, not empty values used in constructed inventory group names.",
+      "rationale": "An empty string and a defaulted boolean appear in an unrelated cryptographic helper and provide no contract, prerequisite, or implementation context for keyed_groups suboptions.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "test/support/integration/plugins/module_utils/crypto.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 225,
+          "end": 287
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-19b091da00abd6f7",
+      "local-d86abb288ac3ea8d70ead645"
+    ],
+    "proposal": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-d86abb288ac3ea8d70ead645",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions",
+      "unit_quote": "A helper function that expands a given line that contains a pattern",
+      "applicable": false,
+      "condition_basis": "The unit concerns hostname-range expansion, not constructed-plugin keyed-group suboptions.",
+      "rationale": "The inventory context is merely topical; the unit specifies neither `default_value` nor `trailing_separator`.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 59,
+          "end": 69
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-d86abb288ac3ea8d70ead645",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions",
+      "unit_quote": "A helper function that expands a given line that contains a pattern",
+      "applicable": false,
+      "condition_basis": "The unit concerns hostname-range pattern expansion, not constructed-inventory keyed-group suboptions.",
+      "rationale": "No behavior, symbol, or condition in the unit corresponds to `default_value` or `trailing_separator`; the broad inventory context is insufficient.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/inventory/__init__.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 59,
+          "end": 69
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-19b091da00abd6f7",
+      "local-2e38d52d9a46a16360d598c7"
+    ],
+    "proposal": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-2e38d52d9a46a16360d598c7",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "value for the `version` key can be an empty string.",
+      "applicable": false,
+      "condition_basis": "The empty-string condition applies to the version field of deprecation return data, not to a value used in a keyed-group name.",
+      "rationale": "The shared empty-string terminology does not establish any relationship to default_value, trailing_separator, or constructed-plugin keyed_groups entries.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/reference_appendices/common_return_values.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 234,
+          "end": 240
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-19b091da00abd6f7",
+      "unit_id": "local-2e38d52d9a46a16360d598c7",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.",
+      "unit_quote": "value for the `version` key can be an empty string.",
+      "applicable": false,
+      "condition_basis": "The unit permits an empty version string in deprecation return data, not an empty keyed-group value.",
+      "rationale": "The empty-string wording concerns a different data contract and has no specific correspondence to default_value or trailing_separator.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "unit_spans": [
+        {
+          "path": "docs/docsite/rst/reference_appendices/common_return_values.rst",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 234,
+          "end": 240
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-90710b86716b25cc",
+      "local-0ecca265e724cd514d23f675"
+    ],
+    "proposal": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-0ecca265e724cd514d23f675",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "if `gval` is the empty string and `trailing_separator` is `False`",
+      "unit_quote": "Example of using Sentinel to tell whether a dict which has a default value has been changed",
+      "applicable": false,
+      "condition_basis": "The unit discusses sentinel values for optional parameters and dictionary defaults, not keyed-group mapping names.",
+      "rationale": "It contains no gname, gval, separator, or trailing_separator behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/sentinel.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 10,
+          "end": 47
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-90710b86716b25cc",
+      "unit_id": "local-0ecca265e724cd514d23f675",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "if `gval` is the empty string and `trailing_separator` is `False`",
+      "unit_quote": "None is often used as\n    a Sentinel in optional parameters to mean that the parameter was not set by the user.",
+      "applicable": false,
+      "condition_basis": "The unit explains sentinel values for distinguishing an unset optional parameter; it does not describe keyed-group mappings, empty gval, or trailing_separator.",
+      "rationale": "The general unset-parameter concept does not establish the requirement's specific condition or naming behavior.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/utils/sentinel.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 10,
+          "end": 47
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  },
+  {
+    "pair": [
+      "req-4745be28b20228ae",
+      "local-e2ec3f75aa21bf1061e8495a"
+    ],
+    "proposal": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-e2ec3f75aa21bf1061e8495a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string",
+      "unit_quote": "returns key/value pair items from dictionaries",
+      "applicable": false,
+      "condition_basis": "The unit applies to dictionary lookup inputs, whereas the requirement applies to a keyed-group key resolving to an empty string.",
+      "rationale": "The occurrence of key and value is merely lexical; the unit specifies dictionary lookup behavior rather than group-name generation.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/dict.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 7,
+          "end": 19
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-4745be28b20228ae",
+      "unit_id": "local-e2ec3f75aa21bf1061e8495a",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "When `key` references a string",
+      "unit_quote": "returns key/value pair items from dictionaries",
+      "applicable": false,
+      "condition_basis": "The unit concerns a dictionary lookup plugin and does not describe keyed-group keys, empty strings, defaults, or group-name construction.",
+      "rationale": "Shared key/value terminology alone does not create a behavioral relationship.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/lookup/dict.py",
+          "revision": "270f109bb3af5c2498725b384f77ddc26da2fb73",
+          "start": 7,
+          "end": 19
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO",
+    "stratum": "distribution_control"
+  }
+]

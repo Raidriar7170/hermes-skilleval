@@ -1,0 +1,304 @@
+{
+  "requirements": [
+    {
+      "requirement_id": "req-ddf2c829c5d45a64",
+      "parent_requirement": "req-ddf2c829c5d45a64",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1477,
+        "end": 2312
+      },
+      "subject": [
+        "host_",
+        "tag_status_"
+      ],
+      "condition_text": "The system should allow for consistent and meaningful group names even when the source is empty. The current situation is characterized by names like `tag_status_` and `host_`, or the absence of a useful name when the source is an empty string. To be considered resolved, there should be a mechanism to replace empty values ​​with a default value when deriving names (applicable to strings, lists, and dictionaries), and a mechanism to omit the separator when the empty value comes from a dictionary, generating only the base name of the key. If the source is an empty string and no substitution is defined, a group with a trailing separator should not be generated. These mechanisms should be mutually exclusive within the same configuration to avoid ambiguity, and entries that do not use them should retain their previous behavior.\n",
+      "expected_text": "The system should allow for consistent and meaningful group names even when the source is empty. The current situation is characterized by names like `tag_status_` and `host_`, or the absence of a useful name when the source is an empty string. To be considered resolved, there should be a mechanism to replace empty values ​​with a default value when deriving names (applicable to strings, lists, and dictionaries), and a mechanism to omit the separator when the empty value comes from a dictionary, generating only the base name of the key. If the source is an empty string and no substitution is defined, a group with a trailing separator should not be generated. These mechanisms should be mutually exclusive within the same configuration to avoid ambiguity, and entries that do not use them should retain their previous behavior.\n",
+      "case_family": [
+        "list",
+        "mapping",
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-19b091da00abd6f7",
+      "parent_requirement": "req-19b091da00abd6f7",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2336,
+        "end": 2574
+      },
+      "subject": [
+        "True",
+        "default_value",
+        "keyed_groups",
+        "trailing_separator"
+      ],
+      "condition_text": "- Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.\n",
+      "expected_text": "- Each `keyed_groups` entry in the constructed plugin must accept the `default_value` (string) and `trailing_separator` (boolean, defaulting to `True`) suboptions to handle cases where the value used in the group name is an empty string.\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-e9d2a8d705ba8abc",
+      "parent_requirement": "req-e9d2a8d705ba8abc",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2575,
+        "end": 2852
+      },
+      "subject": [
+        "AnsibleParserError",
+        "default_value",
+        "keyed_groups",
+        "trailing_separator"
+      ],
+      "condition_text": "- `default_value` and `trailing_separator` are mutually exclusive within the same `keyed_groups` entry; if both are provided, an `AnsibleParserError` must be raised with the exact message: `parameters are mutually exclusive for keyed groups: default_value|trailing_separator`.\n",
+      "expected_text": "- `default_value` and `trailing_separator` are mutually exclusive within the same `keyed_groups` entry; if both are provided, an `AnsibleParserError` must be raised with the exact message: `parameters are mutually exclusive for keyed groups: default_value|trailing_separator`.\n",
+      "case_family": [
+        "exception"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-d40385cd807b44f9",
+      "parent_requirement": "req-d40385cd807b44f9",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2853,
+        "end": 2967
+      },
+      "subject": [
+        "key"
+      ],
+      "condition_text": "- When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.\n",
+      "expected_text": "- When `key` references a string and the value is non-empty, the group name must be `prefix + separator + value`.\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-4745be28b20228ae",
+      "parent_requirement": "req-4745be28b20228ae",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2968,
+        "end": 3125
+      },
+      "subject": [
+        "default_value",
+        "key"
+      ],
+      "condition_text": "- When `key` references a string and the value is an empty string with `default_value` defined, the group name must be `prefix + separator + default_value`.\n",
+      "expected_text": "- When `key` references a string and the value is an empty string with `default_value` defined, the group name must be `prefix + separator + default_value`.\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-952ddca435378bbd",
+      "parent_requirement": "req-952ddca435378bbd",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3126,
+        "end": 3264
+      },
+      "subject": [
+        "default_value",
+        "key"
+      ],
+      "condition_text": "- When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.\n",
+      "expected_text": "- When `key` references a string and the value is an empty string without a `default_value`, no group should be generated for that entry.\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-1415df6631cfbe11",
+      "parent_requirement": "req-1415df6631cfbe11",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3265,
+        "end": 3377
+      },
+      "subject": [
+        "key"
+      ],
+      "condition_text": "- When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.\n",
+      "expected_text": "- When `key` references a list, for each non-empty element, `prefix + separator + element` should be generated.\n",
+      "case_family": [
+        "list"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-6d37a3dfc9942ece",
+      "parent_requirement": "req-6d37a3dfc9942ece",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3378,
+        "end": 3648
+      },
+      "subject": [
+        "default_value",
+        "key"
+      ],
+      "condition_text": "- When `key` references a list, for each **empty** element, `prefix + separator + default_value` should be generated if `default_value` was provided; if `default_value` was not provided, the name is constructed from the empty element, resulting in `prefix + separator`.\n",
+      "expected_text": "- When `key` references a list, for each **empty** element, `prefix + separator + default_value` should be generated if `default_value` was provided; if `default_value` was not provided, the name is constructed from the empty element, resulting in `prefix + separator`.\n",
+      "case_family": [
+        "list"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-9541aced9606c3d2",
+      "parent_requirement": "req-9541aced9606c3d2",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3649,
+        "end": 3789
+      },
+      "subject": [
+        "gval",
+        "key"
+      ],
+      "condition_text": "- When `key` references a dictionary, for each `(gname, gval)` pair with a non-empty `gval`, the name should be `gname + separator + gval`.\n",
+      "expected_text": "- When `key` references a dictionary, for each `(gname, gval)` pair with a non-empty `gval`, the name should be `gname + separator + gval`.\n",
+      "case_family": [
+        "mapping"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-38991f87362681ec",
+      "parent_requirement": "req-38991f87362681ec",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3790,
+        "end": 3946
+      },
+      "subject": [
+        "default_value",
+        "gval",
+        "key"
+      ],
+      "condition_text": "- When `key` references a dictionary, if `gval` is an empty string and `default_value` is provided, the name should be `gname + separator + default_value`.\n",
+      "expected_text": "- When `key` references a dictionary, if `gval` is an empty string and `default_value` is provided, the name should be `gname + separator + default_value`.\n",
+      "case_family": [
+        "mapping",
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-90710b86716b25cc",
+      "parent_requirement": "req-90710b86716b25cc",
+      "verbatim_span": {
+        "field": "request",
+        "start": 3947,
+        "end": 4108
+      },
+      "subject": [
+        "False",
+        "gname",
+        "gval",
+        "key",
+        "trailing_separator"
+      ],
+      "condition_text": "- When `key` references a dictionary, if `gval` is the empty string and `trailing_separator` is `False`, the name must be exactly `gname` (without a separator).\n",
+      "expected_text": "- When `key` references a dictionary, if `gval` is the empty string and `trailing_separator` is `False`, the name must be exactly `gname` (without a separator).\n",
+      "case_family": [
+        "mapping",
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-3a2634c4cf914021",
+      "parent_requirement": "req-3a2634c4cf914021",
+      "verbatim_span": {
+        "field": "request",
+        "start": 4109,
+        "end": 4327
+      },
+      "subject": [
+        "default_value",
+        "gval",
+        "key"
+      ],
+      "condition_text": "- When `key` references a dictionary, if `gval` is the empty string and `default_value` is not defined and `trailing_separator=False` is not set, the name must be `gname + separator` (i.e., with a trailing separator).\n",
+      "expected_text": "- When `key` references a dictionary, if `gval` is the empty string and `default_value` is not defined and `trailing_separator=False` is not set, the name must be `gname + separator` (i.e., with a trailing separator).\n",
+      "case_family": [
+        "mapping",
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-74cbe13d26bb9d8e",
+      "parent_requirement": "req-74cbe13d26bb9d8e",
+      "verbatim_span": {
+        "field": "request",
+        "start": 4328,
+        "end": 4488
+      },
+      "subject": [
+        "prefix",
+        "separator"
+      ],
+      "condition_text": "- The `prefix` and `separator` parameters retain their usual semantics: `prefix` defaults to `''` and `separator` defaults to `_'` unless explicitly specified.\n",
+      "expected_text": "- The `prefix` and `separator` parameters retain their usual semantics: `prefix` defaults to `''` and `separator` defaults to `_'` unless explicitly specified.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    }
+  ],
+  "weights": {
+    "req-ddf2c829c5d45a64": 0.07692307692307693,
+    "req-19b091da00abd6f7": 0.07692307692307693,
+    "req-e9d2a8d705ba8abc": 0.07692307692307693,
+    "req-d40385cd807b44f9": 0.07692307692307693,
+    "req-4745be28b20228ae": 0.07692307692307693,
+    "req-952ddca435378bbd": 0.07692307692307693,
+    "req-1415df6631cfbe11": 0.07692307692307693,
+    "req-6d37a3dfc9942ece": 0.07692307692307693,
+    "req-9541aced9606c3d2": 0.07692307692307693,
+    "req-38991f87362681ec": 0.07692307692307693,
+    "req-90710b86716b25cc": 0.07692307692307693,
+    "req-3a2634c4cf914021": 0.07692307692307693,
+    "req-74cbe13d26bb9d8e": 0.07692307692307693
+  }
+}

@@ -1,0 +1,270 @@
+[
+  {
+    "pair": [
+      "req-956586c98e1f001a",
+      "local-26a268563a52f41052e092be-c20f7105"
+    ],
+    "proposal": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Class method that transforms macro-based documentation text into terminal-readable format",
+      "unit_quote": "textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "The call to DocCLI.tty_ify(desc) is unconditional after get_man_text selects and normalizes the description value.",
+      "rationale": "The existing get_man_text implementation directly invokes the specifically required tty_ify symbol to transform documentation description text before terminal-oriented wrapping. Because this unit is existing behavior rather than a documented contract or public test example, it supplies implementation context only.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 650
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-26a268563a52f41052e092be-c20f7105",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Class method that transforms macro-based documentation text into terminal-readable format",
+      "unit_quote": "textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "get_man_text passes a documentation description through DocCLI.tty_ify before terminal-oriented wrapping.",
+      "rationale": "This is specific implementation usage of the named transformation, but it does not document or verify all required macro transformations.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 650
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "SUPPORTED_POSITIVE"
+  },
+  {
+    "pair": [
+      "req-956586c98e1f001a",
+      "local-ff44477287922e90a2480423-863fabb3"
+    ],
+    "proposal": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-ff44477287922e90a2480423-863fabb3",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Class method that transforms macro-based documentation text into terminal-readable format",
+      "unit_quote": "textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "The call to DocCLI.tty_ify(desc) is unconditional after get_man_text selects and normalizes the description value.",
+      "rationale": "The existing get_man_text implementation directly invokes the specifically required tty_ify symbol to transform documentation description text before terminal-oriented wrapping. Because this unit is existing behavior rather than a documented contract or public test example, it supplies implementation context only.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 641
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-ff44477287922e90a2480423-863fabb3",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Name: tty_ify",
+      "unit_quote": "DocCLI.tty_ify(desc)",
+      "applicable": true,
+      "condition_basis": "The unit directly invokes the named class method while formatting ansible-doc manual description text.",
+      "rationale": "This call site supplies implementation context for where the specified public interface is consumed, but existing behavior is not normative evidence that the interface meets its contract.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 641
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN"
+  },
+  {
+    "pair": [
+      "req-164b17f8ea7552f8",
+      "local-15031e602963cb27dbe2c706"
+    ],
+    "proposal": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "PSRP doesn't have the same concept as other protocols with its output.",
+      "applicable": false,
+      "condition_basis": "The requirement concerns ansible-doc macro formatting, while the documented contract concerns converting PSRP pipeline output.",
+      "rationale": "The sources do not describe the same behavior, symbol, or condition; generic references to output do not establish contract support.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "audit": {
+      "requirement_id": "req-164b17f8ea7552f8",
+      "unit_id": "local-15031e602963cb27dbe2c706",
+      "relation": "TOPICAL_ONLY",
+      "requirement_quote": "The `ansible-doc` CLI output must continue to format existing macros `I()`, `B()`, `M()`, `U()`, and `C()` with the same visible patterns as before.",
+      "unit_quote": "We need some extra logic to convert the pipeline streams and host\n        output into the format that Ansible understands.",
+      "applicable": false,
+      "condition_basis": "The unit concerns conversion of PowerShell pipeline output, not ansible-doc macro rendering.",
+      "rationale": "Generic output-formatting language does not establish any behavioral, symbolic, or conditional correspondence with the specified ansible-doc macros.",
+      "weight": 0.0,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 2722,
+        "end": 2873
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/plugins/connection/psrp.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 734,
+          "end": 742
+        }
+      ],
+      "state": "VALID_ZERO"
+    },
+    "classification": "CORROBORATED_ZERO"
+  },
+  {
+    "pair": [
+      "req-956586c98e1f001a",
+      "local-b062a0c891e34a57e4dd8513-15b58fe9"
+    ],
+    "proposal": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-b062a0c891e34a57e4dd8513-15b58fe9",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Class method that transforms macro-based documentation text into terminal-readable format, processing I(), B(), M(), L(), U(), R(), C(), and HORIZONTALLINE",
+      "unit_quote": "textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "The existing get_man_text behavior invokes DocCLI.tty_ify on documentation description text before terminal-width wrapping.",
+      "rationale": "The unit specifically shows tty_ify being used in terminal-oriented documentation rendering, but it is existing behavior and neither documents nor verifies the required macro transformations.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 633
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "audit": {
+      "requirement_id": "req-956586c98e1f001a",
+      "unit_id": "local-b062a0c891e34a57e4dd8513-15b58fe9",
+      "relation": "IMPLEMENTATION_CONTEXT",
+      "requirement_quote": "Path: lib/ansible/cli/doc.py",
+      "unit_quote": "textwrap.fill(DocCLI.tty_ify(desc), limit, initial_indent=opt_indent,",
+      "applicable": true,
+      "condition_basis": "The supplied unit is from lib/ansible/cli/doc.py and directly invokes DocCLI.tty_ify on a description.",
+      "rationale": "It provides file-local caller context for the required function, without serving as documented contract or verification of the full transformation behavior.",
+      "weight": 0.3,
+      "role_valid": true,
+      "provenance_valid": true,
+      "basis_valid": true,
+      "validation_status": "VALID_PROPOSAL",
+      "semantic_truth": "MODEL_PROPOSAL_REQUIRES_INDEPENDENT_CHECK",
+      "requirement_span": {
+        "field": "request",
+        "start": 3063,
+        "end": 3358
+      },
+      "unit_spans": [
+        {
+          "path": "lib/ansible/cli/doc.py",
+          "revision": "662d34b9a7a1b3ab1d4847eeaef201a005826aef",
+          "start": 595,
+          "end": 633
+        }
+      ],
+      "state": "VALID_POSITIVE"
+    },
+    "classification": "REVIEW_UNKNOWN"
+  }
+]
