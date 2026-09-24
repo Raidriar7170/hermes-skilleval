@@ -302,8 +302,15 @@ def reference(root, phase):
             )
 
 
-def freeze(root, repo):
+def freeze(root, repo, encoder_path):
     verify_inputs(root)
+    if encoder_path is None:
+        raise ValueError(
+            "Freeze requires the original encoder path for fresh verification"
+        )
+    for name, expected in read(root / "inputs.json")["encoder"]["files"].items():
+        if sha(encoder_path / name) != expected:
+            raise ValueError("Frozen encoder drift")
     paths = [*sorted((repo / "src/hermes_skilleval/intervention").glob("*.py"))]
     atomic_json(
         root / "freeze.json",
@@ -314,6 +321,10 @@ def freeze(root, repo):
             "q_prompt": identity(QUERY_PROMPT),
             "j_prompt": identity(AUDIT_PROMPT),
             "timestamp": time.time(),
+            "encoder_freshly_verified": True,
+            "execution_commit": subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=repo, text=True
+            ).strip(),
         },
     )
 
@@ -407,7 +418,17 @@ def metrics(ledger, store, requested, checks):
         "supported_requirements": len(rids),
         "supported_weight": sum(ledger["weights"][r] for r in rids),
         "relation_counts": store.summary()["counts"],
+        "requested_relation_counts": dict(
+            Counter(store.records[p]["state"] for p in unique)
+        ),
     }
+
+
+def connection_streak(previous, count, status, error):
+    kind = error.split(":", 1)[0] if status == "ERROR" else None
+    if kind not in {"RuntimeError", "BrokenPipeError"}:
+        return None, 0
+    return kind, count + 1 if previous == kind else 1
 
 
 def run_policy(root, name, method, out, *, sealed=None):
@@ -434,6 +455,8 @@ def run_policy(root, name, method, out, *, sealed=None):
     }
     seen, history = [], []
     failures = Counter()
+    connection_failures = 0
+    connection_kind = None
     tx = (
         None
         if sealed
@@ -545,14 +568,21 @@ def run_policy(root, name, method, out, *, sealed=None):
             if not sealed and time.monotonic() >= deadline:
                 reason = "TIME_BUDGET"
                 break
-            if (
-                not sealed
-                and cost["status"] == "ERROR"
-                and not value.get("relations", value.get("rows", []))
-                and "TimeoutError" not in cost.get("error", "")
-            ):
-                reason = "CONNECTION_UNAVAILABLE_PENDING_PRESERVED"
-                break
+            if not sealed:
+                error = cost.get("error", "")
+                connection_kind, connection_failures = connection_streak(
+                    connection_kind, connection_failures, cost["status"], error
+                )
+                if cost["status"] == "ERROR" and (
+                    "Frozen helper model unavailable" in error
+                    or "Forbidden helper tool use" in error
+                ):
+                    reason = "HELPER_UNAVAILABLE"
+                    break
+                if connection_failures >= 2:
+                    reason = "CONNECTION_UNAVAILABLE_PENDING_PRESERVED"
+                    break
+                # Format failures remain pending; terminal semantic rows never retry.
     finally:
         if tx:
             tx.close()
@@ -637,7 +667,27 @@ def acquire(root):
             raise ValueError(
                 "Interrupted online attempt remains reserved; do not overwrite"
             )
-        result = run_policy(root, name, method, out)
+        protected = [root.resolve() / "reference", root.resolve() / "online-review"]
+        profile = "(version 1)(allow default)" + "".join(
+            "(deny file-read* (subpath " + json.dumps(str(p)) + "))" for p in protected
+        )
+        subprocess.run(
+            [
+                "/usr/bin/sandbox-exec",
+                "-p",
+                profile,
+                sys.executable,
+                "-m",
+                "hermes_skilleval.intervention.relation_query_worker",
+                str(root.resolve()),
+                name,
+                method,
+                str(out.resolve()),
+                "online",
+            ],
+            check=True,
+        )
+        result = read(out / "final.json")
         print(
             "online",
             i,
@@ -753,7 +803,7 @@ def main():
     elif a.action == "build-reference":
         reference(a.output, a.phase)
     elif a.action == "freeze":
-        freeze(a.output, a.repo)
+        freeze(a.output, a.repo, a.encoder)
     elif a.action == "replay-queries":
         replay(a.output)
     elif a.action == "run-acquisition":

@@ -7,7 +7,8 @@ from .relation_query_study import run_policy
 
 
 def main():
-    root, name, method, out = sys.argv[1:]
+    root, name, method, out = sys.argv[1:5]
+    online = len(sys.argv) > 5 and sys.argv[5] == "online"
     # Assert enforcement against actual sealed files before executing policy.
     for role in ("Q", "J"):
         try:
@@ -21,7 +22,7 @@ def main():
         print(json.dumps({"requested": batch}), flush=True)
         return json.loads(sys.stdin.readline())
 
-    run_policy(Path(root), name, method, Path(out), sealed=reveal)
+    run_policy(Path(root), name, method, Path(out), sealed=None if online else reveal)
 
 
 if __name__ == "__main__":

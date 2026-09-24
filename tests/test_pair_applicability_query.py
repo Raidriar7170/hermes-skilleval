@@ -413,3 +413,99 @@ def test_reference_empty_connection_error_stops_without_busy_loop(
     assert (
         len(calls) == 4
     )  # PARTIAL can continue, preserving original pending and costs
+
+
+def test_os_replay_worker_cannot_read_qj_and_keeps_outside_unknown(tmp_path):
+    import json
+    import os
+    from pathlib import Path
+    import subprocess
+    import sys
+    import pytest
+    from dataclasses import asdict
+    from hermes_skilleval.intervention.relation_store import atomic_json
+
+    if sys.platform != "darwin":
+        pytest.skip("This study uses measured macOS sandbox-exec isolation")
+    ledger, pool, rows = fixture()
+    root = tmp_path / "study"
+    d = root / "inputs" / "s"
+    fs = build_features(ledger, pool, None)
+    atomic_json(d / "ledger.json", ledger)
+    atomic_json(d / "pool.json", asdict(pool))
+    atomic_json(d / "features.json", fs)
+    pair = fs[0]["pair_id"]
+    atomic_json(d / "panel.json", [{"pair": pair, "stratum": "distribution_control"}])
+    atomic_json(
+        root / "cost-model.json",
+        {
+            "lifecycle": "reuse",
+            "observations": [
+                {
+                    "lifecycle": "reuse",
+                    "size": 2,
+                    "status": "COMPLETED",
+                    "valid_rows": 2,
+                    "request_seconds": 1,
+                    "setup_seconds": 0,
+                    "payload_chars": 100000,
+                }
+            ],
+        },
+    )
+    for role in ("Q", "J"):
+        atomic_json(
+            root / "reference" / "s" / role / "store.json", {"SECRET_UNREVEALED": True}
+        )
+    profile = (
+        "(version 1)(allow default)(deny file-read* (subpath "
+        + json.dumps(str(root / "reference"))
+        + "))"
+    )
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src")}
+    proc = subprocess.Popen(
+        [
+            "/usr/bin/sandbox-exec",
+            "-p",
+            profile,
+            sys.executable,
+            "-m",
+            "hermes_skilleval.intervention.relation_query_worker",
+            str(root),
+            "s",
+            "R",
+            str(root / "out"),
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    try:
+        line = proc.stdout.readline()
+        assert json.loads(line)["requested"] == [pair]
+        proc.stdin.write(json.dumps({"relations": [rows[0]]}) + "\n")
+        proc.stdin.flush()
+        stdout, stderr = proc.communicate(timeout=20)
+        assert proc.returncode == 0, stderr
+        data = json.loads((root / "out/store.json").read_text())
+        assert sum(r["record"]["state"] == "NOT_ANALYZED" for r in data["records"]) == 2
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+
+
+def test_connection_failure_streak_resets_on_success_or_different_type():
+    from hermes_skilleval.intervention.relation_query_study import connection_streak
+
+    kind, count = connection_streak(None, 0, "ERROR", "RuntimeError: exit")
+    assert count == 1
+    kind, count = connection_streak(kind, count, "COMPLETED", "")
+    kind, count = connection_streak(kind, count, "ERROR", "RuntimeError: exit")
+    assert count == 1
+    kind, count = connection_streak(kind, count, "ERROR", "BrokenPipeError: pipe")
+    assert count == 1
+    kind, count = connection_streak(kind, count, "ERROR", "BrokenPipeError: pipe")
+    assert count == 2
