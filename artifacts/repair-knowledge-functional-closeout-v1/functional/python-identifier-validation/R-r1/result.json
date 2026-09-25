@@ -1,0 +1,97 @@
+{
+  "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+  "arm": "R",
+  "repeat": 1,
+  "execution_sha256": "edcb0807bc598431a7f62dd47b0e3a9e3df81036576569e1241a74c25c2766dc",
+  "execution": {
+    "status": "COMPLETED",
+    "turns": 4,
+    "total_seconds": 600,
+    "initial_remaining": 566.4509079160634,
+    "tail_seconds": 166.54224429209717,
+    "preparation_seconds": 48.794441250152886,
+    "policy_initialization_seconds": 47.73658991709817,
+    "prefix_seconds": 33.54909208393656,
+    "model_input_observed": true,
+    "injected": true,
+    "payload_tokens": 648
+  },
+  "budget_binding": {
+    "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+    "arm": "R",
+    "repeat": 1,
+    "charged_seconds": 47.73658991709817,
+    "method_preparation_seconds": 47.41655895917211,
+    "initial_remaining": 566.4509079160634,
+    "payload_sha256": "0b0183e140fbcee1797aac9cd7e358fc6061c19ce69a8a3cfe25e6dc3320dff8",
+    "plan_digest": "14c5401c55365c88b7da9a96a4c709a4c7e1eb28e75d7e983320d763e7bc3c47",
+    "continuation_preparation_seconds": 0.32003095792606473,
+    "shared_auth_seconds": 0.00024541595485061407,
+    "execution_sha256": "edcb0807bc598431a7f62dd47b0e3a9e3df81036576569e1241a74c25c2766dc"
+  },
+  "integrity": "VERIFIED",
+  "changed_files": [
+    "lib/ansible/utils/vars.py",
+    "test/units/utils/test_vars.py"
+  ],
+  "checks": {
+    "target": {
+      "required_public_api_absent": false,
+      "valid": true,
+      "passed": true,
+      "returncode": 0,
+      "cases": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "skipped_ids": [],
+      "preexisting_skips": [],
+      "seconds": 1.4927206659922376,
+      "selectors": [
+        "test/units/utils/test_isidentifier.py::test_non_ascii",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[None-False]",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[123-False]",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[value2-False]",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[alpha-False]",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[_foo-True]",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[__bar__-True]",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[open-True]",
+        "test/units/utils/test_isidentifier.py::test_public_identifier_contract_python3[print-True]"
+      ],
+      "complete_expected_cases": true
+    },
+    "regression": {
+      "required_public_api_absent": false,
+      "valid": true,
+      "passed": true,
+      "returncode": 0,
+      "cases": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "skipped_ids": [],
+      "preexisting_skips": [],
+      "seconds": 1.2928538750857115,
+      "selectors": [
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[   ]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[ foo]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[1234]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[1234abc]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[foo ]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[foo bar]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[no-dashed-names-for-you]",
+        "test/units/utils/test_isidentifier.py::test_invalid_identifier[pass]",
+        "test/units/utils/test_isidentifier.py::test_keywords_not_in_PY2",
+        "test/units/utils/test_isidentifier.py::test_valid_identifier[foo1_23]",
+        "test/units/utils/test_isidentifier.py::test_valid_identifier[foo]"
+      ],
+      "complete_expected_cases": true
+    },
+    "policy": {
+      "valid": true,
+      "passed": true
+    }
+  },
+  "patch_sha256": "dec64d01e743eed73098d7dc311cfea41cfca00fdc9da1501e85e22ce93b33a5"
+}

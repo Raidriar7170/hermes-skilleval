@@ -1,0 +1,409 @@
+{
+  "requirements": [
+    {
+      "requirement_id": "req-bd41745a866fa33f",
+      "parent_requirement": "req-bd41745a866fa33f",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1009,
+        "end": 1191
+      },
+      "subject": [
+        "mathstuff.py",
+        "max",
+        "min"
+      ],
+      "condition_text": "- The `min` and `max` filter functions in `mathstuff.py` must support the keyword arguments (at least 'attribute' and 'case_sensitive') when Jinja2's enhanced filters are available.\n",
+      "expected_text": "- The `min` and `max` filter functions in `mathstuff.py` must support the keyword arguments (at least 'attribute' and 'case_sensitive') when Jinja2's enhanced filters are available.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-d6d3d76cec6191b1",
+      "parent_requirement": "req-d6d3d76cec6191b1",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1192,
+        "end": 1399
+      },
+      "subject": [
+        "do_max",
+        "do_min"
+      ],
+      "condition_text": "- If Jinja2’s enhanced filters (`do_min` and `do_max`) are available, the filters must forward all keyword arguments, including 'attribute' and 'case_sensitive', to the corresponding Jinja2 filter function.\n",
+      "expected_text": "- If Jinja2’s enhanced filters (`do_min` and `do_max`) are available, the filters must forward all keyword arguments, including 'attribute' and 'case_sensitive', to the corresponding Jinja2 filter function.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-c5af1f04d9ac60bf",
+      "parent_requirement": "req-c5af1f04d9ac60bf",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1400,
+        "end": 1760
+      },
+      "subject": [
+        "AnsibleFilterError",
+        "do_max",
+        "do_min",
+        "max",
+        "min"
+      ],
+      "condition_text": "- If Jinja2 is not available or does not support `do_min` or `do_max`, calling `min` or `max` with any keyword argument must raise an `AnsibleFilterError` with the message, where {filter} is `min` or `max` accordingly: \"Ansible's {filter} filter does not support any keyword arguments. You need Jinja2 2.10 or later that provides their version of the filter.\"\n",
+      "expected_text": "- If Jinja2 is not available or does not support `do_min` or `do_max`, calling `min` or `max` with any keyword argument must raise an `AnsibleFilterError` with the message, where {filter} is `min` or `max` accordingly: \"Ansible's {filter} filter does not support any keyword arguments. You need Jinja2 2.10 or later that provides their version of the filter.\"\n",
+      "case_family": [
+        "exception"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-7ea1532056bd9d1c",
+      "parent_requirement": "req-7ea1532056bd9d1c",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1761,
+        "end": 1913
+      },
+      "subject": [],
+      "condition_text": "- The min and max functions must be decorated with `@environmentfilter` to access the Jinja2 environment context required for advanced filter dispatch.\n",
+      "expected_text": "- The min and max functions must be decorated with `@environmentfilter` to access the Jinja2 environment context required for advanced filter dispatch.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-bdce278e38a1e6b0",
+      "parent_requirement": "req-bdce278e38a1e6b0",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1914,
+        "end": 2043
+      },
+      "subject": [
+        "max",
+        "min"
+      ],
+      "condition_text": "- If Jinja2’s enhanced filters are unavailable, calls without keyword arguments must fall back to Python’s built-in `min`/`max`.\n",
+      "expected_text": "- If Jinja2’s enhanced filters are unavailable, calls without keyword arguments must fall back to Python’s built-in `min`/`max`.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    }
+  ],
+  "unresolved": [
+    {
+      "span": {
+        "field": "request",
+        "start": 0,
+        "end": 18
+      },
+      "text": "## Public problem\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 18,
+        "end": 83
+      },
+      "text": "### Issue title: Pass attribute to the max filter and min filter\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 84,
+        "end": 96
+      },
+      "text": "## SUMMARY:\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 97,
+        "end": 303
+      },
+      "text": "The jinja2 filter for max and min allows specifying an attribute to use in an object to determine the max or min value, but it seems the filter in Ansible doesn't allow any other arguments to be passed in.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 304,
+        "end": 320
+      },
+      "text": "## ISSUE TYPE: \n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 321,
+        "end": 334
+      },
+      "text": "Feature Idea\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 335,
+        "end": 355
+      },
+      "text": "## COMPONENT NAME: \n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 356,
+        "end": 367
+      },
+      "text": "max filter\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 368,
+        "end": 379
+      },
+      "text": "min filter\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 380,
+        "end": 407
+      },
+      "text": "## ADDITIONAL INFORMATION:\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 408,
+        "end": 488
+      },
+      "text": "Easily find values in a list of objects, such as the largest mount on a server.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 489,
+        "end": 493
+      },
+      "text": "´´´\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 494,
+        "end": 498
+      },
+      "text": "---\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 499,
+        "end": 522
+      },
+      "text": "- hosts: ['localhost']\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 523,
+        "end": 531
+      },
+      "text": "  vars:\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 532,
+        "end": 605
+      },
+      "text": "    biggest_mount: \"{{ ansible_mounts | max(attribute='block_total') }}\"\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 606,
+        "end": 615
+      },
+      "text": "  tasks:\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 616,
+        "end": 647
+      },
+      "text": "    - debug: var=biggest_mount\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 648,
+        "end": 652
+      },
+      "text": "´´´\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 653,
+        "end": 818
+      },
+      "text": "Currently, the solution seems to be using the sort filter, which does support passing an attribute to use. It works, but it seems more inefficient and more verbose.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 819,
+        "end": 823
+      },
+      "text": "´´´\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 824,
+        "end": 828
+      },
+      "text": "---\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 829,
+        "end": 852
+      },
+      "text": "- hosts: ['localhost']\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 853,
+        "end": 861
+      },
+      "text": "  vars:\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 862,
+        "end": 939
+      },
+      "text": "    big_drive: \"{{ ansible_mounts | sort(attribute='block_total') | last }}\"\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 940,
+        "end": 949
+      },
+      "text": "  tasks:\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 950,
+        "end": 977
+      },
+      "text": "    - debug: var=big_drive\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 978,
+        "end": 985
+      },
+      "text": "´´´in \n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 986,
+        "end": 1009
+      },
+      "text": "## Public requirements\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 2044,
+        "end": 2064
+      },
+      "text": "## Public interface\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 2064,
+        "end": 2098
+      },
+      "text": "No new interfaces are introduced.\n",
+      "reason": "interface_scope_metadata"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 2100,
+        "end": 2436
+      },
+      "text": "Shared environment: public maintenance knowledge is readable at /workspace/public-docs/knowledge.txt and index.json. These are optional source quotations available equally to every continuation. For local tests use PYTHONPATH=lib:test/lib and set ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp and HOME=/workspace/scratch as needed.\n",
+      "reason": "execution_context"
+    }
+  ],
+  "weights": {
+    "req-bd41745a866fa33f": 0.2,
+    "req-d6d3d76cec6191b1": 0.2,
+    "req-c5af1f04d9ac60bf": 0.2,
+    "req-7ea1532056bd9d1c": 0.2,
+    "req-bdce278e38a1e6b0": 0.2
+  },
+  "environment_functional_weight": 0,
+  "association_status": "UNVERIFIED_NO_SEMANTIC_LINKS"
+}
