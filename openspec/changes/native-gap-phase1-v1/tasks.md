@@ -8,4 +8,4 @@
 ## 3. Execution and delivery
 - [x] 3.1 Run each qualified task once and independently verify candidates, or record concrete blockers.
 - [x] 3.2 Complete focused checks, independent evidence review and three reports.
-- [ ] 3.3 Publish scoped commits and stacked Draft PR, check exact-head CI and stop.
+- [x] 3.3 Publish scoped commits and stacked Draft PR, check exact-head CI and stop.

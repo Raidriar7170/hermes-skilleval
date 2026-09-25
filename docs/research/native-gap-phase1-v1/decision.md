@@ -54,3 +54,7 @@ next_step: READY_SKILLS_ONLY_WITH_MEMORY_LIMITATION
 ```
 
 [原生能力](capability.md) · [数据、环境、运行与实际命令](data-environment.md) · [机器记录](../../../artifacts/native-gap-phase1-v1/manifest.json)
+
+## 交付
+
+叠加 [Draft PR #57](https://github.com/Raidriar7170/hermes-skilleval/pull/57)，base 为 `codex/hermes-functional-closeout`。`959afccdf6a93396fc77b8bc539d3b6a8263132f` 的 [CI](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/36192942315) 已通过：1607 passed、3 skipped，OpenSpec 46/46，软件门禁 ALLOW_MERGE。最终记录提交的 exact-head 状态以 PR 检查与最终回复为准。保持 Draft，不合并、不发布。
