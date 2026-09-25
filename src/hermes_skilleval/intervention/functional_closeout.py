@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import random
+import time
 
 from .linked_context_study import read
 from .relation_store import atomic_json
@@ -316,7 +317,9 @@ def run_study(plan, tasks, skills, output, phase):
     from .repair_knowledge import token_count
     from .study import run_once
 
+    auth_started = time.monotonic()
     home, auth = home_auth(output)
+    auth_seconds = time.monotonic() - auth_started
     try:
         if phase == "prefix":
             for task in plan["tasks"]:
@@ -341,6 +344,7 @@ def run_study(plan, tasks, skills, output, phase):
             dest = cell_path(output, cell)
             if (dest / "execution.json").exists():
                 continue
+            preparation_started = time.monotonic()
             root = output / "selection" / cell["task_id"]
             common_path = root / "common.json"
             common = (
@@ -381,7 +385,8 @@ def run_study(plan, tasks, skills, output, phase):
             payload = selected["message"]
             binding = {
                 **cell,
-                "charged_seconds": selected["cost"],
+                "charged_seconds": None,
+                "method_preparation_seconds": selected["cost"],
                 "initial_remaining": common["prefix_remaining_seconds"],
                 "payload_sha256": hashlib.sha256((payload or "").encode()).hexdigest(),
                 "plan_digest": plan["plan_digest"],
@@ -393,6 +398,9 @@ def run_study(plan, tasks, skills, output, phase):
                 atomic_json(binding_path, binding)
             elif read(binding_path) != binding:
                 raise ValueError("Attempt budget binding changed")
+            tokens = token_count(payload or "")
+            continuation_seconds = auth_seconds + time.monotonic() - preparation_started
+            charge = selected["cost"] + continuation_seconds
             result = run_once(
                 tasks / cell["task_id"],
                 dest,
@@ -400,8 +408,8 @@ def run_study(plan, tasks, skills, output, phase):
                 skills,
                 from_checkpoint=cp,
                 payload=payload,
-                payload_tokens=token_count(payload or ""),
-                initialization_seconds=selected["cost"],
+                payload_tokens=tokens,
+                initialization_seconds=charge,
                 image=plan["image"],
                 public_docs=output
                 / "public-knowledge"
@@ -409,6 +417,13 @@ def run_study(plan, tasks, skills, output, phase):
             )
             if not (dest / "execution.json").exists():
                 atomic_json(dest / "execution.json", result)
+            binding.update(
+                charged_seconds=charge,
+                continuation_preparation_seconds=continuation_seconds,
+                shared_auth_seconds=auth_seconds,
+                execution_sha256=sha(dest / "execution.json"),
+            )
+            atomic_json(binding_path, binding)
             print(cell, result["status"], flush=True)
     finally:
         auth.unlink(missing_ok=True)
@@ -878,7 +893,17 @@ def report(plan, output):
             else common.get(row["arm"], {})
         )
         execution = read(cell_path(output, row) / "execution.json")
-        charge, remaining = selected.get("cost"), common.get("prefix_remaining_seconds")
+        binding_path = (
+            output
+            / "cell-budgets"
+            / row["task_id"]
+            / (cell_path(output, row).name + ".json")
+        )
+        binding = read(binding_path) if binding_path.exists() else {}
+        charge, remaining = (
+            binding.get("charged_seconds"),
+            common.get("prefix_remaining_seconds"),
+        )
         spent = execution.get("tail_seconds")
         valid = (
             charge is not None
@@ -890,6 +915,10 @@ def report(plan, output):
         budget_status = (
             ("VALID" if spent <= remaining else "OVER_BUDGET") if valid else "UNKNOWN"
         )
+        measured_budget_status = budget_status
+        cost_gap = bool(plan.get("protocol_gaps")) and row["arm"] in {"M", "R"}
+        if cost_gap:
+            budget_status = "UNKNOWN_PREPARATION_COST"
         costs.append(
             {
                 **{k: row[k] for k in ("task_id", "arm", "repeat")},
@@ -898,6 +927,15 @@ def report(plan, output):
                 if row["arm"] != "N"
                 else 0,
                 "preparation_seconds": charge,
+                "method_preparation_seconds": selected.get("cost"),
+                "continuation_preparation_seconds": binding.get(
+                    "continuation_preparation_seconds"
+                ),
+                "preparation_cost_complete": not cost_gap,
+                "unmeasured_common_checkpoint_verification_seconds": None
+                if cost_gap
+                else 0,
+                "measured_component_budget_status": measured_budget_status,
                 "R_extra_seconds": selected.get("extra_cost"),
                 "R_acquisition_seconds": selected.get("acquisition_seconds"),
                 "R_acquisition_started": selected.get("acquisition_started", False),
@@ -934,6 +972,7 @@ def report(plan, output):
         if (output / "preflight/result.json").exists()
         and starts == len(matrix(plan["tasks"]))
         and starts > 0
+        and not plan.get("protocol_gaps")
         and all(
             (output / "selection" / t["instance_id"] / "common.json").exists()
             for t in plan["tasks"]
