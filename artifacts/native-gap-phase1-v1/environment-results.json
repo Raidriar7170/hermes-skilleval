@@ -1,0 +1,191 @@
+{
+  "qualification_attempts": [
+    {
+      "instance_id": "asottile__pyupgrade-330",
+      "mode": "base",
+      "returncode": 1,
+      "seconds": 1.8289512079999999,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "-v",
+        "$PRIVATE/qualification/asottile__pyupgrade-330:/evidence",
+        "--entrypoint",
+        "/bin/bash",
+        "swerebench/sweb.eval.x86_64.asottile_1776_pyupgrade-330",
+        "-lc",
+        "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 162e74ef019982b8c744276103f1efdbac8459d0\ngit status --short\ngit apply /evidence/test.patch\npython -c 'import pyupgrade; print(pyupgrade.__file__)'\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/format_literals_test.py --junitxml=/evidence/base.xml"
+      ],
+      "revision": "v1",
+      "log_sha256": "b40702ae2646e99543214556194516909afda59549b9cdd8a0c53bdedabbaee0",
+      "log_excerpt": "\\N{snowman} {}\".format(1)]\nPASSED tests/format_literals_test.py::test_format_literals[x = '{0}'.format(1)-x = '{}'.format(1)]\nPASSED tests/format_literals_test.py::test_format_literals[print(\\n    'foo{0}'  # ohai\\n    'bar{1}'.format(1, 2)\\n)-print(\\n    'foo{}'  # ohai\\n    'bar{}'.format(1, 2)\\n)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[}}]\nPASSED tests/format_literals_test.py::test_format_literals_noop[x = ('{0} {1}',)\\n]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{0!s:15}]\nPASSED tests/format_literals_test.py::test_format_literals['''{0}\\n{1}\\n'''.format(1, 2)-'''{}\\n{}\\n'''.format(1, 2)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{{]\nPASSED tests/format_literals_test.py::test_intentionally_not_round_trip[{0!r:}-{0!r}]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{}'.format(1)]\nPASSED tests/format_literals_test.py::test_intentionally_not_round_trip[{0:}-{0}]\nPASSED tests/format_literals_test.py::test_format_literals_noop[(\"{0}\" # {1}\\n\"{2}\").format(1, 2, 3)]\nPASSED tests/format_literals_test.py::test_format_literals[x = \"foo {0}\" \\\\\\n    \"bar {1}\".format(1, 2)-x = \"foo {}\" \\\\\\n    \"bar {}\".format(1, 2)]\nPASSED tests/format_literals_test.py::test_format_literals_noop['}'.format(1)]\nPASSED tests/format_literals_test.py::test_format_literals[(\"{0}\").format(1)-(\"{}\").format(1)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[foo]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{named}]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{0} {0}'.format(1)]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{' '0}'.format(1)]\nPASSED tests/format_literals_test.py::test_format_literals_noop[\"{0}\"format(1)]\nPASSED tests/format_literals_test.py::test_format_literals[print(\\n    'foo{0}'\\n    'bar{1}'.format(1, 2)\\n)-print(\\n    'foo{}'\\n    'bar{}'.format(1, 2)\\n)]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{'.format(1)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{}]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{0}]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{0:<{1}}'.format(1, 4)]\nFAILED tests/format_literals_test.py::test_format_literals_noop[f\"{0}\".format(a)]\n========================= 1 failed, 32 passed in 0.37s =========================\n/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+      "junit_counts": {
+        "tests": 33,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "instance_id": "asottile__pyupgrade-330",
+      "mode": "reference",
+      "returncode": 0,
+      "seconds": 1.8375722079999999,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "-v",
+        "$PRIVATE/qualification/asottile__pyupgrade-330:/evidence",
+        "--entrypoint",
+        "/bin/bash",
+        "swerebench/sweb.eval.x86_64.asottile_1776_pyupgrade-330",
+        "-lc",
+        "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 162e74ef019982b8c744276103f1efdbac8459d0\ngit status --short\ngit apply /evidence/reference.patch\ngit apply /evidence/test.patch\npython -c 'import pyupgrade; print(pyupgrade.__file__)'\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/format_literals_test.py --junitxml=/evidence/reference.xml"
+      ],
+      "revision": "v1",
+      "log_sha256": "6770e72eeda670afad9fea0205c741c029fdbb48414f889069552e73c71e5d5e",
+      "log_excerpt": "(\"{}\").format(1)]\nPASSED tests/format_literals_test.py::test_format_literals_noop[\"\\\\N{snowman} {}\".format(1)]\nPASSED tests/format_literals_test.py::test_format_literals[print(\\n    'foo{0}'\\n    'bar{1}'.format(1, 2)\\n)-print(\\n    'foo{}'\\n    'bar{}'.format(1, 2)\\n)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{0}]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{named}]\nPASSED tests/format_literals_test.py::test_intentionally_not_round_trip[{0:}-{0}]\nPASSED tests/format_literals_test.py::test_format_literals['''{0}\\n{1}\\n'''.format(1, 2)-'''{}\\n{}\\n'''.format(1, 2)]\nPASSED tests/format_literals_test.py::test_format_literals_noop[(\"{0}\" # {1}\\n\"{2}\").format(1, 2, 3)]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{0} {0}'.format(1)]\nPASSED tests/format_literals_test.py::test_format_literals_noop[\"{0}\"format(1)]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{' '0}'.format(1)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{:>5}]\nPASSED tests/format_literals_test.py::test_format_literals_noop['}'.format(1)]\nPASSED tests/format_literals_test.py::test_format_literals_noop[f\"{0}\".format(a)]\nPASSED tests/format_literals_test.py::test_format_literals[print(\\n    'foo{0}'  # ohai\\n    'bar{1}'.format(1, 2)\\n)-print(\\n    'foo{}'  # ohai\\n    'bar{}'.format(1, 2)\\n)]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{}'.format(1)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{0!s:15}]\nPASSED tests/format_literals_test.py::test_roundtrip_text[foo]\nPASSED tests/format_literals_test.py::test_format_literals['{0}'.format(1)-'{}'.format(1)]\nPASSED tests/format_literals_test.py::test_intentionally_not_round_trip[{0!r:}-{0!r}]\nPASSED tests/format_literals_test.py::test_format_literals_noop['{0:<{1}}'.format(1, 4)]\nPASSED tests/format_literals_test.py::test_format_literals[x = '{0}'.format(1)-x = '{}'.format(1)]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{{]\nPASSED tests/format_literals_test.py::test_roundtrip_text[{}]\nPASSED tests/format_literals_test.py::test_intentionally_not_round_trip[{:}-{}]\nPASSED tests/format_literals_test.py::test_format_literals[x = \"foo {0}\" \\\\\\n    \"bar {1}\".format(1, 2)-x = \"foo {}\" \\\\\\n    \"bar {}\".format(1, 2)]\n============================== 33 passed in 0.38s ==============================\n/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+      "junit_counts": {
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "instance_id": "encode__httpx-386",
+      "mode": "base",
+      "returncode": 4,
+      "seconds": 1.8428177079999997,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "-v",
+        "$PRIVATE/qualification/encode__httpx-386:/evidence",
+        "--entrypoint",
+        "/bin/bash",
+        "swerebench/sweb.eval.x86_64.encode_1776_httpx-386",
+        "-lc",
+        "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 31730e709597baaa7b2364fee041dfa985169789\ngit status --short\ngit apply /evidence/test.patch\npython -c 'import httpx; print(httpx.__file__)'\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/models/test_queryparams.py --junitxml=/evidence/base.xml"
+      ],
+      "revision": "v1",
+      "log_sha256": "0946d4eefff86ca2d375028b360f1816fc7b7ce44abd35862b4fc49904bbcba3",
+      "log_excerpt": "/testbed/httpx/__init__.py\nImportError while loading conftest '/testbed/tests/conftest.py'.\ntests/conftest.py:20: in <module>\n    from httpx import URL, AsyncioBackend\nE   ModuleNotFoundError: No module named 'httpx'\n"
+    },
+    {
+      "instance_id": "encode__httpx-386",
+      "mode": "reference",
+      "returncode": 4,
+      "seconds": 1.8691480409999999,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "-v",
+        "$PRIVATE/qualification/encode__httpx-386:/evidence",
+        "--entrypoint",
+        "/bin/bash",
+        "swerebench/sweb.eval.x86_64.encode_1776_httpx-386",
+        "-lc",
+        "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 31730e709597baaa7b2364fee041dfa985169789\ngit status --short\ngit apply /evidence/reference.patch\ngit apply /evidence/test.patch\npython -c 'import httpx; print(httpx.__file__)'\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/models/test_queryparams.py --junitxml=/evidence/reference.xml"
+      ],
+      "revision": "v1",
+      "log_sha256": "0946d4eefff86ca2d375028b360f1816fc7b7ce44abd35862b4fc49904bbcba3",
+      "log_excerpt": "/testbed/httpx/__init__.py\nImportError while loading conftest '/testbed/tests/conftest.py'.\ntests/conftest.py:20: in <module>\n    from httpx import URL, AsyncioBackend\nE   ModuleNotFoundError: No module named 'httpx'\n"
+    },
+    {
+      "instance_id": "encode__httpx-386",
+      "mode": "base",
+      "returncode": 1,
+      "seconds": 5.05157425,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "-v",
+        "$PRIVATE/qualification-v2/encode__httpx-386:/evidence",
+        "--entrypoint",
+        "/bin/bash",
+        "swerebench/sweb.eval.x86_64.encode_1776_httpx-386",
+        "-lc",
+        "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 31730e709597baaa7b2364fee041dfa985169789\ngit status --short\npython -m pip install --no-deps --no-build-isolation -e .\ngit apply /evidence/test.patch\npython -c 'import httpx; print(httpx.__file__)'\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/models/test_queryparams.py --junitxml=/evidence/base.xml"
+      ],
+      "revision": "v2",
+      "log_sha256": "d87677f9d602c7193a6cf0753f65724ad3864bf7bf4f023142b0f267a2f28e47",
+      "log_excerpt": "     137     89    35%   58-59, 63-73, 77-84, 88-101, 105-113, 117-132, 136-147, 155, 160-161, 166, 171-172, 177-178, 184-195, 201-202, 207, 210-217, 221-228, 231-242, 253-256, 260-268, 273-275, 280-290\ntests/dispatch/__init__.py                    0      0   100%\ntests/dispatch/test_connection_pools.py      99     99     0%   1-181\ntests/dispatch/test_connections.py           23     23     0%   1-39\ntests/dispatch/test_http2.py                113    113     0%   1-214\ntests/dispatch/test_proxy_http.py            78     78     0%   1-210\ntests/dispatch/test_threaded.py              59     59     0%   1-112\ntests/dispatch/utils.py                     135    135     0%   1-226\ntests/models/__init__.py                      0      0   100%\ntests/models/test_cookies.py                 37     37     0%   1-50\ntests/models/test_headers.py                 99     99     0%   1-165\ntests/models/test_queryparams.py             47      0   100%\ntests/models/test_requests.py                57     57     0%   1-90\ntests/models/test_responses.py              191    191     0%   1-328\ntests/models/test_url.py                    102    102     0%   1-206\ntests/requests_compat/__init__.py             0      0   100%\ntests/requests_compat/conftest.py             7      7     0%   1-17\ntests/requests_compat/test_api.py            14     14     0%   2-29\ntests/test_api.py                            43     43     0%   1-63\ntests/test_asgi.py                           63     63     0%   1-91\ntests/test_concurrency.py                    18     18     0%   1-38\ntests/test_config.py                        135    135     0%   1-231\ntests/test_decoders.py                       92     92     0%   1-171\ntests/test_multipart.py                      69     69     0%   1-145\ntests/test_status_codes.py                   10     10     0%   1-18\ntests/test_timeouts.py                       29     29     0%   1-60\ntests/test_utils.py                          74     74     0%   1-210\ntests/test_wsgi.py                           55     55     0%   1-95\n-----------------------------------------------------------------------\nTOTAL                                      5522   4427    20%\n\n=========================== short test summary info ============================\nPASSED tests/models/test_queryparams.py::test_queryparams[a=123&a=456&b=789]\nPASSED tests/models/test_queryparams.py::test_queryparam_types\nPASSED tests/models/test_queryparams.py::test_queryparam_setters\nFAILED tests/models/test_queryparams.py::test_queryparams[source1] - assert \"...\nFAILED tests/models/test_queryparams.py::test_queryparams[source2] - assert \"...\n==================== 2 failed, 3 passed, 1 warning in 0.32s ====================\nWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv\nWARNING: There was an error checking the latest version of pip.\n",
+      "junit_counts": {
+        "tests": 5,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "instance_id": "encode__httpx-386",
+      "mode": "reference",
+      "returncode": 0,
+      "seconds": 4.020168333,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "-v",
+        "$PRIVATE/qualification-v2/encode__httpx-386:/evidence",
+        "--entrypoint",
+        "/bin/bash",
+        "swerebench/sweb.eval.x86_64.encode_1776_httpx-386",
+        "-lc",
+        "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 31730e709597baaa7b2364fee041dfa985169789\ngit status --short\ngit apply /evidence/reference.patch\npython -m pip install --no-deps --no-build-isolation -e .\ngit apply /evidence/test.patch\npython -c 'import httpx; print(httpx.__file__)'\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/models/test_queryparams.py --junitxml=/evidence/reference.xml"
+      ],
+      "revision": "v2",
+      "log_sha256": "8705cc15387f1890b8c19142c277e4e5552cfb62dbd5d927227995e03d974c41",
+      "log_excerpt": "est.py                           137     89    35%   58-59, 63-73, 77-84, 88-101, 105-113, 117-132, 136-147, 155, 160-161, 166, 171-172, 177-178, 184-195, 201-202, 207, 210-217, 221-228, 231-242, 253-256, 260-268, 273-275, 280-290\ntests/dispatch/__init__.py                    0      0   100%\ntests/dispatch/test_connection_pools.py      99     99     0%   1-181\ntests/dispatch/test_connections.py           23     23     0%   1-39\ntests/dispatch/test_http2.py                113    113     0%   1-214\ntests/dispatch/test_proxy_http.py            78     78     0%   1-210\ntests/dispatch/test_threaded.py              59     59     0%   1-112\ntests/dispatch/utils.py                     135    135     0%   1-226\ntests/models/__init__.py                      0      0   100%\ntests/models/test_cookies.py                 37     37     0%   1-50\ntests/models/test_headers.py                 99     99     0%   1-165\ntests/models/test_queryparams.py             47      0   100%\ntests/models/test_requests.py                57     57     0%   1-90\ntests/models/test_responses.py              191    191     0%   1-328\ntests/models/test_url.py                    102    102     0%   1-206\ntests/requests_compat/__init__.py             0      0   100%\ntests/requests_compat/conftest.py             7      7     0%   1-17\ntests/requests_compat/test_api.py            14     14     0%   2-29\ntests/test_api.py                            43     43     0%   1-63\ntests/test_asgi.py                           63     63     0%   1-91\ntests/test_concurrency.py                    18     18     0%   1-38\ntests/test_config.py                        135    135     0%   1-231\ntests/test_decoders.py                       92     92     0%   1-171\ntests/test_multipart.py                      69     69     0%   1-145\ntests/test_status_codes.py                   10     10     0%   1-18\ntests/test_timeouts.py                       29     29     0%   1-60\ntests/test_utils.py                          74     74     0%   1-210\ntests/test_wsgi.py                           55     55     0%   1-95\n-----------------------------------------------------------------------\nTOTAL                                      5531   4427    20%\n\n=========================== short test summary info ============================\nPASSED tests/models/test_queryparams.py::test_queryparams[a=123&a=456&b=789]\nPASSED tests/models/test_queryparams.py::test_queryparams[source1]\nPASSED tests/models/test_queryparams.py::test_queryparams[source2]\nPASSED tests/models/test_queryparams.py::test_queryparam_types\nPASSED tests/models/test_queryparams.py::test_queryparam_setters\n========================= 5 passed, 1 warning in 0.39s =========================\nWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv\nWARNING: There was an error checking the latest version of pip.\n",
+      "junit_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "qualified_ids": [
+    "asottile__pyupgrade-330",
+    "encode__httpx-386"
+  ],
+  "reserved_not_executed": [
+    "asottile__pyupgrade-133",
+    "encode__httpx-3412"
+  ],
+  "adaptation": "httpx image missing editable package install; pip --no-deps --no-build-isolation -e /testbed, network disabled. Original failed import qualification retained.",
+  "harness": {
+    "sha": "e4907b7a90eafaa1f0a6428fd04fe31cdd8b4284",
+    "bytes": 903788
+  }
+}

@@ -1,0 +1,130 @@
+[
+  {
+    "instance_id": "asottile__pyupgrade-308",
+    "trajectory_id": "chatcmpl-f367adf5d3611067e8ab321aae3c122b",
+    "author_resolved_label": 1,
+    "exit_status": "submit",
+    "patch_sha256": "55764fab0a1af4c34c36b8ad62388db0524ce16c0820fe532b6b96cb65fa2782",
+    "model_patch_present": true,
+    "problem_excerpt": "py3-plus: AssertionError: del statement in function\npyupgrade 2.4.2\r\n\r\nMinimal test case:\r\n\r\n```py\r\ndef foo(bar):\r\n    del bar\r\n```\r\n\r\n```\r\npyupgrade --py3-plus test.py\r\n```\r\n\r\n```\r\nTraceback (most recent call last):\r\n  File \"./venv/bin/pyupgrade\", line 8, in <module>\r\n    sys.exit(main())\r\n  File \"/home/jon/venv/lib64/python3.8/site-packages/pyupgrade.py\", line 2680, in main\r\n    ret |= _fix_file(filename, args)\r\n  File \"/home/jon/venv/lib64/python3.8/site-packages/pyupgrade.py\", line 2638, in _fix_file\r\n    contents_text = _fix_py3_plus(contents_text, args.min_version)\r\n  File \"/home/jon/venv/lib64/python3.8/site-packages/pyupgrade.py\", line 2002, in _fix_py3_plus\r\n    visitor.visit(ast_obj)\r\n  File \"/usr/lib64/python3.8/ast.py\", line 360, in visit\r\n    return visitor(node)\r\n  File \"/home/jon/venv/lib64/python3.8/site-packages/pyupgrade.py\", line 1705, in generic_visit\r\n    super().gen",
+    "action_excerpt": [
+      {
+        "index": 4,
+        "name": "str_replace_editor",
+        "arguments": {
+          "command": "view",
+          "path": "/workspace"
+        },
+        "id": "chatcmpl-tool-0cf718658dff4b158422a8739e55cb87"
+      },
+      {
+        "index": 6,
+        "name": "str_replace_editor",
+        "arguments": {
+          "path": "/workspace/asottile__pyupgrade__2.4",
+          "command": "view"
+        },
+        "id": "chatcmpl-tool-7efd47e0e8cd467da583c011f9081505"
+      }
+    ],
+    "observation_excerpt": [
+      {
+        "index": 5,
+        "name": "str_replace_editor",
+        "tool_call_id": "chatcmpl-tool-0cf718658dff4b158422a8739e55cb87",
+        "content": "Here's the files and directories up to 2 levels deep in /workspace, excluding hidden items:\n/workspace/\n/workspace/asottile__pyupgrade__2.4/\n/workspace/asottile__pyupgrade__2.4/LICENSE\n/workspace/asottile__pyupgrade__2.4/README.md\n/workspace/asottile__pyupgrade__2.4/azure-pipelines.yml\n/workspace/asottile__pyupgrade__2.4/issue.md\n/workspace/asottile__pyupgrade__2.4/pyupgrade.egg-info/\n/workspace/asottile__pyupgrade__2.4/pyupgrade.py\n/workspace/asottile__pyupgrade__2.4/requirements-dev.txt\n/workspace/asottile__pyupgrade__2.4/setup.cfg\n/workspace/asottile__pyupgrade__2.4/setup.py\n/workspace/asot"
+      },
+      {
+        "index": 7,
+        "name": "str_replace_editor",
+        "tool_call_id": "chatcmpl-tool-7efd47e0e8cd467da583c011f9081505",
+        "content": "Here's the files and directories up to 2 levels deep in /workspace/asottile__pyupgrade__2.4, excluding hidden items:\n/workspace/asottile__pyupgrade__2.4/\n/workspace/asottile__pyupgrade__2.4/LICENSE\n/workspace/asottile__pyupgrade__2.4/README.md\n/workspace/asottile__pyupgrade__2.4/azure-pipelines.yml\n/workspace/asottile__pyupgrade__2.4/issue.md\n/workspace/asottile__pyupgrade__2.4/pyupgrade.egg-info/\n/workspace/asottile__pyupgrade__2.4/pyupgrade.egg-info/PKG-INFO\n/workspace/asottile__pyupgrade__2.4/pyupgrade.egg-info/SOURCES.txt\n/workspace/asottile__pyupgrade__2.4/pyupgrade.egg-info/dependency_li"
+      }
+    ]
+  },
+  {
+    "instance_id": "asottile__pyupgrade-584",
+    "trajectory_id": "chatcmpl-0eb2fe9fe001267babf41342c4812cc9",
+    "author_resolved_label": 0,
+    "exit_status": "submit",
+    "patch_sha256": "634e492c68dba05132e973b7756bd90c9ed4fdebb0851de7db4dcdfb6e14acab",
+    "model_patch_present": true,
+    "problem_excerpt": "Incorrect rewrite of six.reraise with traceback as keyword argument\nReduced from real code in Launchpad:\r\n\r\n```\r\n$ cat t.py\r\nimport sys\r\n\r\nfrom six import reraise\r\n\r\nexc_info = sys.exc_info()\r\nreraise(exc_info[0], exc_info[1], tb=exc_info[2])\r\n$ pyupgrade --py3-plus t.py\r\nRewriting t.py\r\n$ cat t.py\r\nimport sys\r\n\r\nfrom six import reraise\r\n\r\nexc_info = sys.exc_info()\r\nraise exc_info[1].with_traceback(None)\r\n```\r\n\r\npyupgrade has missed the keyword argument here; this should instead be rewritten to `raise exc_info[1].with_traceback(exc_info[2])`.\r\n\r\n(In fact in Python 3 this can end up just being a plain `raise`: the original code was more complicated and had a second possible exception being raised and handled between `sys.exc_info()` and `reraise()`, which in Python 2 would have caused plain `raise` to raise the second exception, but the exception scoping changes in Python 3 mean that a pl",
+    "action_excerpt": [
+      {
+        "index": 4,
+        "name": "str_replace_editor",
+        "arguments": {
+          "command": "view",
+          "path": "/workspace"
+        },
+        "id": "chatcmpl-tool-4dc9f3205ce24e3fb5f97461a5419de4"
+      },
+      {
+        "index": 6,
+        "name": "execute_bash",
+        "arguments": {
+          "command": "cd /workspace/asottile__pyupgrade__2.30 && pwd"
+        },
+        "id": "chatcmpl-tool-1fdc4aaa0aaa47559c79574cf78d0dd0"
+      }
+    ],
+    "observation_excerpt": [
+      {
+        "index": 5,
+        "name": "str_replace_editor",
+        "tool_call_id": "chatcmpl-tool-4dc9f3205ce24e3fb5f97461a5419de4",
+        "content": "Here's the files and directories up to 2 levels deep in /workspace, excluding hidden items:\n/workspace/\n/workspace/asottile__pyupgrade__2.30/\n/workspace/asottile__pyupgrade__2.30/LICENSE\n/workspace/asottile__pyupgrade__2.30/README.md\n/workspace/asottile__pyupgrade__2.30/azure-pipelines.yml\n/workspace/asottile__pyupgrade__2.30/issue.md\n/workspace/asottile__pyupgrade__2.30/pyupgrade/\n/workspace/asottile__pyupgrade__2.30/pyupgrade.egg-info/\n/workspace/asottile__pyupgrade__2.30/requirements-dev.txt\n/workspace/asottile__pyupgrade__2.30/setup.cfg\n/workspace/asottile__pyupgrade__2.30/setup.py\n/worksp"
+      },
+      {
+        "index": 7,
+        "name": "execute_bash",
+        "tool_call_id": "chatcmpl-tool-1fdc4aaa0aaa47559c79574cf78d0dd0",
+        "content": "/workspace/asottile__pyupgrade__2.30\n[The command completed with exit code 0.]\n[Current working directory: /workspace/asottile__pyupgrade__2.30]\n[Python interpreter: /opt/conda/envs/testbed/bin/python]\n[Command finished with exit code 0]"
+      }
+    ]
+  },
+  {
+    "instance_id": "asottile__pyupgrade-208",
+    "trajectory_id": "chatcmpl-1eddbee6dac4154c8e51484018e74a81",
+    "author_resolved_label": 1,
+    "exit_status": "submit",
+    "patch_sha256": "513f46fdb7119b1d7108579596fb9c85f20e49950ff8868fe28d440becc047ea",
+    "model_patch_present": true,
+    "problem_excerpt": "next(six.itervalues(d)) is rewritten to next(d.values())\n```console\r\n$ cat example.py\r\nimport six\r\n\r\n\r\nprint(next(six.itervalues({1: 2})))\r\n$ python example.py\r\n2\r\n```\r\n```console\r\n$ pyupgrade --py36-plus example.py\r\nRewriting example.py\r\n```\r\n```console\r\n$ cat example.py\r\nimport six\r\n\r\n\r\nprint(next({1: 2}.values()))\r\n$ python example.py\r\nTraceback (most recent call last):\r\n  File \"example.py\", line 4, in <module>\r\n    print(next({1: 2}.values()))\r\nTypeError: 'dict_values' object is not an iterator\r\n```\r\n",
+    "action_excerpt": [
+      {
+        "index": 4,
+        "name": "str_replace_editor",
+        "arguments": {
+          "command": "view",
+          "path": "/workspace"
+        },
+        "id": "chatcmpl-tool-ab43788d6df540618db340a00abd2276"
+      },
+      {
+        "index": 6,
+        "name": "str_replace_editor",
+        "arguments": {
+          "path": "/workspace/asottile__pyupgrade__1.24",
+          "command": "view"
+        },
+        "id": "chatcmpl-tool-01b3dfbe523e47cb9f960238fa2fa91d"
+      }
+    ],
+    "observation_excerpt": [
+      {
+        "index": 5,
+        "name": "str_replace_editor",
+        "tool_call_id": "chatcmpl-tool-ab43788d6df540618db340a00abd2276",
+        "content": "Here's the files and directories up to 2 levels deep in /workspace, excluding hidden items:\n/workspace/\n/workspace/asottile__pyupgrade__1.24/\n/workspace/asottile__pyupgrade__1.24/LICENSE\n/workspace/asottile__pyupgrade__1.24/README.md\n/workspace/asottile__pyupgrade__1.24/azure-pipelines.yml\n/workspace/asottile__pyupgrade__1.24/issue.md\n/workspace/asottile__pyupgrade__1.24/pyupgrade.egg-info/\n/workspace/asottile__pyupgrade__1.24/pyupgrade.py\n/workspace/asottile__pyupgrade__1.24/requirements-dev.txt\n/workspace/asottile__pyupgrade__1.24/setup.cfg\n/workspace/asottile__pyupgrade__1.24/setup.py\n/work"
+      },
+      {
+        "index": 7,
+        "name": "str_replace_editor",
+        "tool_call_id": "chatcmpl-tool-01b3dfbe523e47cb9f960238fa2fa91d",
+        "content": "Here's the files and directories up to 2 levels deep in /workspace/asottile__pyupgrade__1.24, excluding hidden items:\n/workspace/asottile__pyupgrade__1.24/\n/workspace/asottile__pyupgrade__1.24/LICENSE\n/workspace/asottile__pyupgrade__1.24/README.md\n/workspace/asottile__pyupgrade__1.24/azure-pipelines.yml\n/workspace/asottile__pyupgrade__1.24/issue.md\n/workspace/asottile__pyupgrade__1.24/pyupgrade.egg-info/\n/workspace/asottile__pyupgrade__1.24/pyupgrade.egg-info/PKG-INFO\n/workspace/asottile__pyupgrade__1.24/pyupgrade.egg-info/SOURCES.txt\n/workspace/asottile__pyupgrade__1.24/pyupgrade.egg-info/dep"
+      }
+    ]
+  }
+]

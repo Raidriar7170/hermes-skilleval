@@ -1,0 +1,113 @@
+[
+  {
+    "instance_id": "asottile__pyupgrade-330",
+    "candidate_sha256": "e519d7fd8b3bb99ae6ebb915bbd8c2ba3d39db2816008b29c497ea212a37e906",
+    "returncode": 0,
+    "seconds": 1.8523950409999999,
+    "junit_counts": {
+      "tests": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "author_label_checks": {
+      "FAIL_TO_PASS": {
+        "tests/format_literals_test.py::test_format_literals_noop[f\"{0}\".format(a)]": "PASSED"
+      },
+      "PASS_TO_PASS": {
+        "tests/format_literals_test.py::test_roundtrip_text[]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[foo]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[{}]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[{0}]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[{named}]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[{!r}]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[{:>5}]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[{{]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[}}]": "PASSED",
+        "tests/format_literals_test.py::test_roundtrip_text[{0!s:15}]": "PASSED",
+        "tests/format_literals_test.py::test_intentionally_not_round_trip[{:}-{}]": "PASSED",
+        "tests/format_literals_test.py::test_intentionally_not_round_trip[{0:}-{0}]": "PASSED",
+        "tests/format_literals_test.py::test_intentionally_not_round_trip[{0!r:}-{0!r}]": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop[\"{0}\"format(1)]": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop['{}'.format(1)]": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop['{'.format(1)]": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop['}'.format(1)]": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop[x": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop['{0}": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop['{0:<{1}}'.format(1,": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop['{'": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop[(\"{0}\"": "PASSED",
+        "tests/format_literals_test.py::test_format_literals_noop[\"\\\\N{snowman}": "PASSED",
+        "tests/format_literals_test.py::test_format_literals['{0}'.format(1)-'{}'.format(1)]": "PASSED",
+        "tests/format_literals_test.py::test_format_literals['{0:x}'.format(30)-'{:x}'.format(30)]": "PASSED",
+        "tests/format_literals_test.py::test_format_literals[x": "PASSED",
+        "tests/format_literals_test.py::test_format_literals['''{0}\\n{1}\\n'''.format(1,": "PASSED",
+        "tests/format_literals_test.py::test_format_literals['{0}'": "PASSED",
+        "tests/format_literals_test.py::test_format_literals[print(\\n": "PASSED",
+        "tests/format_literals_test.py::test_format_literals[(\"{0}\").format(1)-(\"{}\").format(1)]": "PASSED"
+      }
+    },
+    "candidate_applied": true,
+    "functional_result": "PASS",
+    "command": [
+      "docker",
+      "run",
+      "--rm",
+      "--platform",
+      "linux/amd64",
+      "--network",
+      "none",
+      "-v",
+      "$PRIVATE/candidate-verification/asottile__pyupgrade-330:/evidence",
+      "--entrypoint",
+      "/bin/bash",
+      "swerebench/sweb.eval.x86_64.asottile_1776_pyupgrade-330",
+      "-lc",
+      "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 162e74ef019982b8c744276103f1efdbac8459d0\ngit apply --check /evidence/candidate.patch\ngit apply /evidence/candidate.patch\ngit checkout 162e74ef019982b8c744276103f1efdbac8459d0 -- tests/format_literals_test.py\ngit apply /evidence/test.patch\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/format_literals_test.py --junitxml=/evidence/candidate.xml"
+    ],
+    "test_patch_sha256": "145caaf8350d256133b911533ca4ec496e7d2e4aec7f84c193049a5df1bbe0c9",
+    "parser_note": "Pinned author parse_log_pytest splits on whitespace; labels contain truncated parameterized nodeids. JUnit retains full 33-case count. Initial full-nodeid parser UNKNOWN retained separately; no test rerun."
+  },
+  {
+    "instance_id": "encode__httpx-386",
+    "candidate_sha256": "b445dfa23eecc2563872531b6a3cdef6f7cb62cae8ed6bf170fa95ead4b523a4",
+    "returncode": 1,
+    "seconds": 2.462736125,
+    "junit_counts": {
+      "tests": 5,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "author_label_checks": {
+      "FAIL_TO_PASS": {
+        "tests/models/test_queryparams.py::test_queryparams[source1]": "PASSED",
+        "tests/models/test_queryparams.py::test_queryparams[source2]": "FAILED"
+      },
+      "PASS_TO_PASS": {
+        "tests/models/test_queryparams.py::test_queryparams[a=123&a=456&b=789]": "PASSED",
+        "tests/models/test_queryparams.py::test_queryparam_types": "PASSED",
+        "tests/models/test_queryparams.py::test_queryparam_setters": "PASSED"
+      }
+    },
+    "candidate_applied": true,
+    "functional_result": "FAIL",
+    "command": [
+      "docker",
+      "run",
+      "--rm",
+      "--platform",
+      "linux/amd64",
+      "--network",
+      "none",
+      "-v",
+      "$PRIVATE/candidate-verification/encode__httpx-386:/evidence",
+      "--entrypoint",
+      "/bin/bash",
+      "hermes-native-gap-httpx386:v1",
+      "-lc",
+      "set -e\nsource /opt/miniconda3/bin/activate testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 31730e709597baaa7b2364fee041dfa985169789\ngit apply --check /evidence/candidate.patch\ngit apply /evidence/candidate.patch\ngit checkout 31730e709597baaa7b2364fee041dfa985169789 -- tests/models/test_queryparams.py\ngit apply /evidence/test.patch\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/models/test_queryparams.py --junitxml=/evidence/candidate.xml"
+    ],
+    "test_patch_sha256": "a564f8449c8f46194b431c79d9caa9376558d110e4dee85c7df27e136d9d32dc"
+  }
+]

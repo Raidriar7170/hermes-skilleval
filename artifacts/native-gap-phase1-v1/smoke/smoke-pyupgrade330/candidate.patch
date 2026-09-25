@@ -1,0 +1,49 @@
+diff --git a/pyupgrade.py b/pyupgrade.py
+index c463fcf..cca4840 100644
+--- a/pyupgrade.py
++++ b/pyupgrade.py
+@@ -584,6 +584,10 @@ def _remove_fmt(tup: DotFormatPart) -> DotFormatPart:
+ 
+ def _fix_format_literal(tokens: List[Token], end: int) -> None:
+     parts = rfind_string_parts(tokens, end)
++    # An f-string's braces contain Python expressions, not format fields.
++    if any('f' in parse_string_literal(tokens[i].src)[0].lower() for i in parts):
++        return
++
+     parsed_parts = []
+     last_int = -1
+     for i in parts:
+diff --git a/tests/format_literals_test.py b/tests/format_literals_test.py
+index f3610a1..bb47055 100644
+--- a/tests/format_literals_test.py
++++ b/tests/format_literals_test.py
+@@ -41,6 +41,10 @@ def test_intentionally_not_round_trip(s, expected):
+         "'{'.format(1)", "'}'.format(1)",
+         # Don't touch non-format strings
+         "x = ('{0} {1}',)\n",
++        # Braces in f-strings are expressions, even when .format() follows
++        'f"foo {0}".format("bar")',
++        'F"foo {0}".format("bar")',
++        '"foo {0}" f" {1}".format("bar")',
+         # Don't touch non-incrementing integers
+         "'{0} {0}'.format(1)",
+         # Formats can be embedded in formats, leave these alone?
+diff --git a/tests/main_test.py b/tests/main_test.py
+index cd992d1..f1a9c2f 100644
+--- a/tests/main_test.py
++++ b/tests/main_test.py
+@@ -137,6 +137,14 @@ def test_py36_plus_fstrings(tmpdir):
+     assert f.read() == 'f"{hello} {world}"'
+ 
+ 
++def test_py36_plus_format_on_fstring(tmpdir):
++    f = tmpdir.join('f.py')
++    source = 'print(f"foo {0}".format("bar"))\n'
++    f.write(source)
++    assert main((f.strpath, '--py36-plus')) == 0
++    assert f.read() == source
++
++
+ def test_py37_plus_removes_annotations(tmpdir):
+     f = tmpdir.join('f.py')
+     f.write('from __future__ import generator_stop\nx = 1\n')
