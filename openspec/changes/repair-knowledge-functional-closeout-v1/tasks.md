@@ -11,4 +11,4 @@
 - [x] 4.1 Reconstruct original candidates and execute trusted target/protected checks after all attempts end.
 - [x] 4.2 Generate three tables, records-only replay, Chinese closeout and interview facts.
 - [ ] 4.3 Complete independent evidence review, required CI and final integrity verification.
-- [ ] 4.4 Commit, push and create a stacked Draft PR; preserve defaults and stop automatic experiments.
+- [x] 4.4 Commit, push and create a stacked Draft PR; preserve defaults and stop automatic experiments.

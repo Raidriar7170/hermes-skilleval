@@ -1,4 +1,5 @@
 from copy import deepcopy
+from functools import partial
 
 import pytest
 
@@ -35,7 +36,15 @@ def test_unknown_bounds_and_task_equal_weight():
         summarize_rows(tasks, rows)
 
 
-def test_public_adapter_fallback_independent_empty_stores(tmp_path):
+def test_public_adapter_fallback_independent_empty_stores(tmp_path, monkeypatch):
+    from hermes_skilleval.intervention import relation_query_study
+
+    # This invariant tests isolation/fallback, not the optional production tokenizer.
+    monkeypatch.setattr(
+        relation_query_study,
+        "ExactSelector",
+        partial(relation_query_study.ExactSelector, count_tokens=len),
+    )
     ledger, pool, _ = fixture()
     features = build_features(ledger, pool, None)
     model = {"observations": [], "lifecycle": "reuse"}
@@ -68,6 +77,7 @@ def test_functional_and_cost_are_separate_no_refund():
 
 def test_native_ready_runs_without_r_or_m(tmp_path, monkeypatch):
     from hermes_skilleval.intervention import diagnostic, study, repair_content_study
+    from hermes_skilleval.intervention import repair_knowledge
     from hermes_skilleval.intervention.functional_closeout import run_study, sha
     from hermes_skilleval.intervention.relation_store import atomic_json
 
@@ -86,6 +96,7 @@ def test_native_ready_runs_without_r_or_m(tmp_path, monkeypatch):
     )
     auth = tmp_path / "fake-auth"
     auth.touch()
+    monkeypatch.setattr(repair_knowledge, "token_count", len)
     monkeypatch.setattr(diagnostic, "home_auth", lambda _: (tmp_path, auth))
     monkeypatch.setattr(repair_content_study, "verify_checkpoint", lambda _: {})
     started = []

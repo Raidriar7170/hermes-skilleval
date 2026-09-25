@@ -25,3 +25,5 @@
 冻结前缀/获取源码为`f8826f1fa0334d6a62bb37d26c2aea1f0578d6c8`，尾程/验收源码为`c02895d396089cd9f0377e795348f180be8505d4`。交付提交只追加必要导出、复算、文档及证据；不重标旧运行。交付HEAD取本Draft PR当前head；GitHub Validate workflow检出该精确head，运行全量pytest、OpenSpec、release/diagnostic/external-pack及与PR base对比的静态非退化检查。其最终状态以对应head的Checks为准，不能用本地测试代替。
 
 最终完整tracked delta从`b6d9316d6edd84d1a70543f290aaf3f00f7f5b90`计算；新鲜SHA-256记录保存在私有closeout证据，最终答复报告结果。不归档或删除旧研究，不合并、不ready、不发布，交付后停止自动实验。
+
+首轮GitHub CI `36091943800`：静态集成、OpenSpec、release、diagnostic和external-pack通过，但轻量pytest有2失败、1601通过、3跳过。两项新增隔离/后备单元测试意外依赖未安装的可选tiktoken；修复仅在测试中显式注入计数器，不修改正式方法源码或冻结结果。用`sys.modules['tiktoken']=None`运行本文件6项测试全部通过。GitHub步骤的continue-on-error展示不作为通过证据，后续以原始测试结果及汇总终态核对。
