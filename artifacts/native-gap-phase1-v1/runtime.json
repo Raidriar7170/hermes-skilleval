@@ -1,0 +1,76 @@
+{
+  "client": "0.155.0-alpha.16.4",
+  "model": "gpt-6-sol",
+  "effort": "high",
+  "authentication_type": "ChatGPT",
+  "os": "macOS",
+  "host_architecture": "arm64",
+  "docker_host_architecture": "aarch64",
+  "task_image_architecture": "amd64",
+  "task_execution": "x86_64 emulation on Apple Silicon",
+  "client_execution": "native aarch64 Linux binary, same version",
+  "images": [
+    {
+      "reference": "swerebench/sweb.eval.x86_64.asottile_1776_pyupgrade-330",
+      "id": "sha256:70df76bbb91152cb75440bfaac8c8427528d6080c538e94396529e1d342a1870",
+      "digests": [
+        "swerebench/sweb.eval.x86_64.asottile_1776_pyupgrade-330@sha256:70df76bbb91152cb75440bfaac8c8427528d6080c538e94396529e1d342a1870"
+      ],
+      "architecture": "amd64",
+      "os": "linux",
+      "uncompressed_image_bytes": 1344794163
+    },
+    {
+      "reference": "swerebench/sweb.eval.x86_64.encode_1776_httpx-386",
+      "id": "sha256:0713cde3c418fcd1dd7e825838b057d7bcd28f4b80605b856c273b3d8ab94cf8",
+      "digests": [
+        "swerebench/sweb.eval.x86_64.encode_1776_httpx-386@sha256:0713cde3c418fcd1dd7e825838b057d7bcd28f4b80605b856c273b3d8ab94cf8"
+      ],
+      "architecture": "amd64",
+      "os": "linux",
+      "uncompressed_image_bytes": 1373157685
+    },
+    {
+      "reference": "hermes-native-gap-httpx386:v1",
+      "id": "sha256:4308351f8afa8af817ca0100f193fe16450fd4c9619ff8da5ba9dd01765a37c4",
+      "digests": [
+        "hermes-native-gap-httpx386@sha256:4308351f8afa8af817ca0100f193fe16450fd4c9619ff8da5ba9dd01765a37c4"
+      ],
+      "architecture": "amd64",
+      "os": "linux",
+      "uncompressed_image_bytes": 1376602474
+    }
+  ],
+  "client_installs": [
+    {
+      "version": "0.155.0-alpha.16.4-linux-x64",
+      "url": "https://registry.npmjs.org/@openai/codex/-/codex-0.155.0-alpha.16.4-linux-x64.tgz",
+      "bytes": 147300928,
+      "sha256": "f0f0e1ae3913906a657e50e75656c7a65587f7c5521fe37e529b702e8cbf93e1",
+      "seconds": 3.330804917
+    },
+    {
+      "version": "0.155.0-alpha.16.4-linux-arm64",
+      "url": "https://registry.npmjs.org/@openai/codex/-/codex-0.155.0-alpha.16.4-linux-arm64.tgz",
+      "bytes": 140282630,
+      "sha256": "f9aa6c39e4baff400400d0ddb0e6fcf290bac8c06f03d0afbec8ed9285e821f0",
+      "seconds": 3.7786833750000004
+    }
+  ],
+  "configuration_change_history": [
+    "v1 four synthetic requests: installed CLI 0.154.0 rejected gpt-6-sol with ChatGPT auth",
+    "v2 same probe semantics and model using desktop 0.155.0-alpha.16.4: four completed",
+    "Linux x64 same client failed seccomp preflight without model execution; Linux arm64 same version passed sandbox canaries"
+  ],
+  "limitations": [
+    "Preconfigured repository maintenance, web and tool network disabled",
+    "Six bundled system skills are listed but their bodies under /state/skills are denied by credential-state isolation; four user skills are readable",
+    "No installed personal plugins, user skills or personal memories copied",
+    "Native default agent features not explicitly disabled, but subtask capability was not directly probed",
+    "No complete initial context visibility",
+    "No warm memory baseline"
+  ],
+  "image_network_transfer_bytes": null,
+  "image_download_seconds": null,
+  "cost_limitation": "Docker pull layer reuse and total duration not instrumented; image Size is storage size, not actual downloaded bytes; cold-start total UNKNOWN"
+}

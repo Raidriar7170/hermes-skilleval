@@ -1,0 +1,114 @@
+diff --git a/httpx/models.py b/httpx/models.py
+index f70fdf4..bd00e8d 100644
+--- a/httpx/models.py
++++ b/httpx/models.py
+@@ -46,13 +46,14 @@ if typing.TYPE_CHECKING:  # pragma: no cover
+     from .dispatch.base import AsyncDispatcher  # noqa: F401
+ 
+ PrimitiveData = typing.Optional[typing.Union[str, int, float, bool]]
++QueryParamValue = typing.Union[PrimitiveData, typing.List[str]]
+ 
+ URLTypes = typing.Union["URL", str]
+ 
+ QueryParamTypes = typing.Union[
+     "QueryParams",
+-    typing.Mapping[str, PrimitiveData],
+-    typing.List[typing.Tuple[str, PrimitiveData]],
++    typing.Mapping[str, QueryParamValue],
++    typing.List[typing.Tuple[str, QueryParamValue]],
+     str,
+ ]
+ 
+@@ -320,8 +321,12 @@ class QueryParams(typing.Mapping[str, str]):
+         else:
+             items = value.items()  # type: ignore
+ 
+-        self._list = [(str(k), str_query_param(v)) for k, v in items]
+-        self._dict = {str(k): str_query_param(v) for k, v in items}
++        self._list = [
++            (str(key), str_query_param(item))
++            for key, value in items
++            for item in (value if isinstance(value, list) else [value])
++        ]
++        self._dict = dict(self._list)
+ 
+     def getlist(self, key: typing.Any) -> typing.List[str]:
+         return [item_value for item_key, item_value in self._list if item_key == key]
+@@ -348,8 +353,16 @@ class QueryParams(typing.Mapping[str, str]):
+             return
+ 
+         params = QueryParams(params)
+-        for param in params:
+-            self[param] = params[param]
++        for key in params:
++            values = params.getlist(key)
++            indexes = [
++                index for index, (item_key, _) in enumerate(self._list)
++                if item_key == key
++            ]
++            self._list = [(k, v) for k, v in self._list if k != key]
++            index = indexes[0] if indexes else len(self._list)
++            self._list[index:index] = [(key, value) for value in values]
++            self._dict[key] = values[-1]
+ 
+     def __getitem__(self, key: typing.Any) -> str:
+         return self._dict[key]
+diff --git a/tests/client/test_queryparams.py b/tests/client/test_queryparams.py
+index 852593c..af1c57d 100644
+--- a/tests/client/test_queryparams.py
++++ b/tests/client/test_queryparams.py
+@@ -54,3 +54,18 @@ def test_client_queryparams_echo():
+     assert response.url == URL(
+         "http://example.org/echo_queryparams?first=str&second=dict"
+     )
++
++
++def test_client_queryparams_list_values():
++    url = "http://example.org/echo_queryparams"
++    with Client(
++        dispatch=MockDispatch(), params={"documentIds": ["old", "older"]}
++    ) as client:
++        response = client.get(
++            url, params={"documentIds": ["first", "second"], "other": "value"}
++        )
++
++    assert response.url == URL(
++        "http://example.org/echo_queryparams?"
++        "documentIds=first&documentIds=second&other=value"
++    )
+diff --git a/tests/models/test_queryparams.py b/tests/models/test_queryparams.py
+index 8c4df49..b2e2911 100644
+--- a/tests/models/test_queryparams.py
++++ b/tests/models/test_queryparams.py
+@@ -53,6 +53,20 @@ def test_queryparam_types():
+     assert str(q) == "a=123"
+ 
+ 
++def test_queryparam_list_values():
++    q = QueryParams({"documentIds": ["first", "second"], "other": "value"})
++    assert str(q) == "documentIds=first&documentIds=second&other=value"
++    assert q.getlist("documentIds") == ["first", "second"]
++    assert q["documentIds"] == "second"
++    assert QueryParams(q) == q
++    assert QueryParams({"empty": [], "other": "value"}) == QueryParams(
++        "other=value"
++    )
++    assert QueryParams(documentIds=["first", "second"]) == QueryParams(
++        "documentIds=first&documentIds=second"
++    )
++
++
+ def test_queryparam_setters():
+     q = QueryParams({"a": 1})
+     q.update([])
+@@ -62,3 +76,10 @@ def test_queryparam_setters():
+     q = QueryParams([("a", 1), ("a", 2)])
+     q["a"] = "3"
+     assert str(q) == "a=3"
++
++
++def test_queryparam_update_preserves_list_values():
++    q = QueryParams("a=old&a=older&b=keep")
++    q.update({"a": ["first", "second"]})
++    assert str(q) == "a=first&a=second&b=keep"
++    assert q.getlist("a") == ["first", "second"]
